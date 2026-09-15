@@ -18,6 +18,9 @@ venv/
 .vscode/
 .DS_Store
 
+# 本地助手工作数据（含个人笔记，不入公开仓库）
+.workbuddy/
+
 # 实验产物
 outputs/
 checkpoints/

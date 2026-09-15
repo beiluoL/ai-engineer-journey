@@ -4,6 +4,32 @@
 > 通过项目驱动的方式，从 Python 0 基础一路学到 AI 应用开发、RAG、Agent、PyTorch、
 > Transformer、微调、评估、量化、vLLM、Docker 部署，最终能自己实现和训练简化版语言模型。
 
+**一句话定位：从 Python 到 AI Engineer 的项目驱动学习路线。**
+
+## 适合谁
+
+```text
+Java / 前端 / 后端开发者（Python 零基础）
+    ↓
+Python → Python 工程 → AI Application → LLM
+    ↓
+RAG → Agent → PyTorch → Transformer
+    ↓
+Fine-tuning → Evaluation / Quantization → Deployment
+    ↓
+独立开发 AI 产品、微调模型、部署模型、实现自己的 TinyGPT
+```
+
+## 学习目标
+
+- **Python**：独立开发 Python 项目（FastAPI / asyncio / Pydantic / 测试 / 调试）
+- **AI 应用**：LLM API、Streaming、Prompt、Tool Calling、RAG、Agent、MCP
+- **模型工程**：理解 Token / Embedding / Attention / Transformer，会用 PyTorch 与开源模型
+- **微调**：数据准备、SFT、LoRA / QLoRA、评估、量化
+- **部署**：GPU 推理、vLLM、Docker、前后端联调
+- **造模型**：亲手实现简化版 Transformer 与 TinyGPT
+- **工程判断力**：面对需求能判断该用 Prompt、RAG、Agent、微调还是训练
+
 这不只是一个"教程仓库"，而是一套完整的学习系统：
 
 ```text
@@ -56,6 +82,16 @@ python main.py
 ## 当前状态
 
 见 [PROGRESS.md](PROGRESS.md)。当前阶段：**Phase 0 — Python Foundation**，同步建设 **Project 01**。
+
+同步维护于 GitHub 与 Gitee 两个仓库（origin = GitHub 主仓库，gitee = Gitee 镜像，每次提交双推）。
+
+## 如何参与
+
+欢迎 Issue / PR：勘误、补充练习、踩坑记录、文章素材。见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## License
+
+[MIT](LICENSE)
 
 ## 安全约定
 
