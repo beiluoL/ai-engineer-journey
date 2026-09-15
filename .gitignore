@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 环境变量与密钥 —— 严禁提交
+.env
+.env.local
+*.key
+
+# IDE / 系统
+.idea/
+.vscode/
+.DS_Store
+
+# 实验产物
+outputs/
+checkpoints/
+*.pt
+*.safetensors
