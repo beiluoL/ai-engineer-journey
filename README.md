@@ -51,16 +51,25 @@ Fine-tuning → Evaluation / Quantization → Deployment
 
 ```text
 ai-engineer-journey/
+│
 ├── README.md              # 本文件
-├── ROADMAP.md             # 总路线图（14 个 Phase）
+├── ROADMAP.md             # 总路线图（Phase 0 ~ 13）
 ├── PROGRESS.md            # 当前进度（每次学习后更新）
 ├── KNOWLEDGE-MAP.md       # 知识地图（节点依赖关系）
-├── 00-python-foundation/  # Phase 0：Python 基础课程（17 篇）
-├── projects/              # 项目代码
-│   └── 01-python-ai-assistant/   # Project 01：Python AI CLI Assistant
-├── exercises/             # 练习体系（01-basic / 02-practice / 03-project / 04-challenge）
-├── mistakes/              # 错题本（问题→错误答案→为什么错→正确理解→如何避免）
-└── content/               # 自媒体内容（articles / diagrams / scripts / notes / videos）
+├── CONTRIBUTING.md        # 参与规范
+│
+├── 00-python-foundation/  # Phase 0：Python 基础
+│   ├── lessons/           #   14 课
+│   ├── exercises/         #   练习
+│   └── projects/          #   Project 01：Python AI CLI Assistant
+│
+├── 01-python-engineering/ ~ 12-mini-llm/  # Phase 1~12
+├── 13-capstone/           # Phase 13：毕业项目
+│
+├── content/               # 自媒体内容（articles / diagrams / scripts / video / social）
+├── mistakes/              # 错题本（python / ai / llm / project）
+├── exercises/             # 跨阶段练习
+└── docs/                  # 术语表 / FAQ / 学习规则 / 开发规则
 ```
 
 ## 快速开始
