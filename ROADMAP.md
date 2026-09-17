@@ -1,195 +1,188 @@
 # AI Engineer Journey Roadmap
 
-## Phase 0 — Python Foundation
+## 路线图
 
-**目标**：通过 AI 项目学习 AI 开发真正需要的 Python 基础。
+```text
+01 Python Foundation
+02 Python Engineering
+03 AI Application
+04 RAG
+05 Agent / Tool / MCP
+06 PyTorch
+07 Hugging Face
+08 Transformer / LLM
+09 Fine-tuning
+10 Evaluation / Quantization
+11 Inference
+12 Deployment
+13 Mini LLM
+14 Capstone
+```
 
-**核心技术**：变量、类型、list、dict、JSON、函数、模块、异常、文件、HTTP、async
+## 章节详情
 
-**主要项目**：Project 01 — Python AI CLI Assistant
+### 01 — Python Foundation
 
-**完成标准**：能独立看懂和编写 LLM API 调用代码
+**目标**：掌握 AI 开发所需 Python 基础。
+
+**项目**：Python AI CLI Assistant（v0.1 → v1.0）
+
+**核心技术**：变量 / 类型 / list / dict / JSON / 函数 / 模块 / 异常 / 文件 / HTTP
 
 **状态**：🔄 进行中
 
 ---
 
-## Phase 1 — Python Engineering
+### 02 — Python Engineering
 
-**目标**：掌握 Python 工程化能力。
+**目标**：让项目工程化。
 
-**核心技术**：venv、pip、模块化、测试、日志、async、类型提示
+**项目**：AI Assistant Service
 
-**主要项目**：Project 01 升级 / Project 02 起步
-
-**完成标准**：能写出结构清晰的 Python 项目
+**核心技术**：venv / pip / 模块化 / 测试 / 日志 / async / 类型提示 / FastAPI
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 2 — AI Application
+### 03 — AI Application
 
-**目标**：掌握 AI 应用开发基础。
+**目标**：直接调用和编排模型。
 
-**核心技术**：HTTP/API、FastAPI、Pydantic、SSE、LLM API、Prompt、Streaming
+**项目**：AI Chat Web
 
-**主要项目**：Project 02 — AI Chat Web
-
-**完成标准**：能独立调用 LLM API，写出 Web 端 AI 聊天
+**核心技术**：HTTP / FastAPI / Pydantic / SSE / Prompt / Streaming / Function Calling
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 3 — Embedding & RAG
+### 04 — RAG
 
-**目标**：掌握 RAG 的完整链路。
+**目标**：给模型加上外部知识。
 
-**核心技术**：Token、Embedding、Chunk、向量库、RAG、Rerank
+**项目**：Personal RAG
 
-**主要项目**：Project 03 — AI Document Assistant / Project 04 — Personal RAG
-
-**完成标准**：能搭建 RAG 系统并理解各环节原理
+**核心技术**：Token / Embedding / Chunk / 向量库 / RAG Pipeline / Rerank
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 4 — Agent / Tool Calling / MCP
+### 05 — Agent / Tool / MCP
 
-**目标**：掌握 Agent 架构。
+**目标**：让模型能自主调用工具。
 
-**核心技术**：Function Calling、Agent、Memory、Planning、MCP
+**项目**：Research Agent
 
-**主要项目**：Project 05 — Research Agent
-
-**完成标准**：能写出自主多步任务的 Agent
+**核心技术**：Tool / Agent / Planning / Memory / MCP Protocol
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 5 — PyTorch
+### 06 — PyTorch
 
-**目标**：掌握 PyTorch 基础和训练循环。
+**目标**：掌握 PyTorch 训练基础。
 
-**核心技术**：张量、梯度、DataLoader、训练循环、GPU
+**项目**：Tiny Language Model
 
-**主要项目**：Project 07 — Tiny Language Model
-
-**完成标准**：能手写训练循环
+**核心技术**：Tensor / Grad / Autograd / DataLoader / Model / Training Loop
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 6 — Transformer / LLM
+### 07 — Hugging Face
 
-**目标**：理解 Transformer 架构。
+**目标**：接触真实开源模型生态。
 
-**核心技术**：Attention、Multi-Head、FFN、LayerNorm、位置编码
+**项目**：Local Open Source LLM
 
-**主要项目**：Project 06 — Mini Transformer
-
-**完成标准**：能手写 Attention 和 Transformer Block
+**核心技术**：Transformers / Tokenizer / Model Loading / Datasets
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 7 — Hugging Face / 开源大模型
+### 08 — Transformer / LLM
 
-**目标**：掌握 Hugging Face 生态。
+**目标**：理解 Transformer 内部原理。
 
-**核心技术**：HF Transformers、Tokenizer、Generation、模型加载
+**项目**：Mini Transformer
 
-**主要项目**：Project 08 — Local Open Source LLM
-
-**完成标准**：能本地加载和运行开源模型
+**核心技术**：Embedding / Attention / Multi-Head / FFN / LayerNorm / Decoder
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 8 — Fine-tuning
+### 09 — Fine-tuning
 
-**目标**：掌握微调技术。
+**目标**：掌握模型微调。
 
-**核心技术**：SFT、PEFT、LoRA、QLoRA、训练参数、数据准备
+**项目**：LoRA / QLoRA
 
-**主要项目**：Project 09 — LoRA / Project 10 — QLoRA
-
-**完成标准**：能独立完成 LoRA / QLoRA 微调
+**核心技术**：SFT / PEFT / LoRA / QLoRA / 数据准备 / 训练参数
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 9 — Evaluation / Quantization
+### 10 — Evaluation / Quantization
 
-**目标**：掌握模型评估和量化。
+**目标**：评估和量化模型。
 
-**核心技术**：评估集、自动/人工评估、量化(INT8/INT4)
+**项目**：LLM Evaluation
 
-**主要项目**：Project 11 — LLM Evaluation
-
-**完成标准**：能系统评估和量化模型
+**核心技术**：评估集 / 自动评估 / 人工评估 / INT8 / INT4 量化
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 10 — Inference / vLLM
+### 11 — Inference
 
-**目标**：掌握高性能推理。
+**目标**：高性能推理服务化。
 
-**核心技术**：vLLM、OpenAI-compatible API、Batching、PagedAttention
+**项目**：LLM Serving
 
-**主要项目**：Project 12 — LLM Serving
-
-**完成标准**：能用 vLLM 部署模型服务
+**核心技术**：vLLM / Batching / PagedAttention / KV Cache / 并发服务
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 11 — Docker / Deployment
+### 12 — Deployment
 
-**目标**：掌握生产部署。
+**目标**：生产部署。
 
-**核心技术**：Docker、Compose、前后端联调、生产部署
+**项目**：AI Platform
 
-**主要项目**：Project 13 — AI Platform
-
-**完成标准**：能部署完整 AI 应用平台
+**核心技术**：Docker / GPU 部署 / 前后端联调 / API 网关 / 监控
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 12 — Mini LLM
+### 13 — Mini LLM
 
-**目标**：从零实现简化版语言模型。
+**目标**：从零实现简化版 GPT。
 
-**核心技术**：Tokenizer → Embedding → Training → Inference
+**项目**：TinyGPT
 
-**主要项目**：Project 14 — TinyGPT
-
-**完成标准**：能独立实现和训练 TinyGPT
+**核心技术**：Tokenizer / Embedding / Transformer / Training / Inference
 
 **状态**：⬜ 未开始
 
 ---
 
-## Phase 13 — Capstone
+### 14 — Capstone
 
 **目标**：综合运用所有技能，做真实 AI 产品。
 
-**核心技术**：Vue + FastAPI + RAG + Agent + vLLM
+**项目**：完整 AI 产品
 
-**主要项目**：Capstone 产品
-
-**完成标准**：能独立开发一个完整 AI 产品
+**核心技术**：架构设计 / 前后端 / RAG + Agent / 部署 / 产品化
 
 **状态**：⬜ 未开始

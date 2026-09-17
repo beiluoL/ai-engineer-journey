@@ -1,6 +1,6 @@
 # AI Engineer Journey Knowledge Map
 
-## 全局路线
+## 全局知识网络
 
 ```text
 Python
@@ -9,7 +9,7 @@ Python Engineering
  ↓
 AI Application
  ↓
-Embedding & RAG
+RAG
  ↓
 Agent / MCP
  ↓
@@ -25,7 +25,7 @@ Evaluation / Quantization
  ↓
 Inference / vLLM
  ↓
-Docker / Deployment
+Deployment
  ↓
 Mini LLM
 ```
@@ -44,19 +44,7 @@ HTTP API
 LLM Messages (system / user / assistant)
 ```
 
-## 节点依赖（Python 基础）
+## 章节依赖
 
-| 节点 | 前置 | 后续 | Java 类比 |
-|------|------|------|-----------|
-| variables/types | — | 全部 | Java 变量与类型 |
-| input/output | variables | 全部 | Scanner / println |
-| list | variables | for, messages | ArrayList |
-| dict | variables | json, messages | HashMap |
-| json | dict | http/api | Jackson |
-| function | if/for | module, class | Java 方法 |
-| module | function | 全部 | Java 包/类路径 |
-| class | function | exception | Java 类 |
-| exception | function | file/json | try/catch |
-| file/json | dict | RAG 文档解析 | Jackson |
-| http/api | json | LLM API | HttpClient |
-| async | function | FastAPI SSE | CompletableFuture |
+每个 Chapter README 内部有更详细的知识-项目对应关系。
+本文件只维护全局导航。

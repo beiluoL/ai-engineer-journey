@@ -3,44 +3,45 @@
 ## Current
 
 ```text
-Current Phase:
-Phase 0 — Python Foundation
+Current Chapter:
+01 — Python Foundation
 
 Current Lesson:
-Lesson 02 — List / Dict, JSON and AI Messages
+02 — List / Dict, JSON and AI Messages
+
+Current Project Version:
+Python AI CLI Assistant（有真实 API 调用骨架）
 
 Completed:
 - Lesson 01 — Variables, Types and I/O
+- Lesson 02 — List / Dict, JSON and AI Messages
 
 In Progress:
-- Lesson 02 — List / Dict, JSON and AI Messages
+- Lesson 02（正在学习）
 
 Next:
 - Lesson 03 — Condition / Loop
+- Lesson 04 — Function
+- Lesson 05 — Module / Package
+- ...
+- Lesson 10 — Real LLM API（串起所有知识）
 ```
 
-## Phase 0 课程状态
+## 章节状态
 
-| # | 课程 | 状态 |
+| # | 章节 | 状态 |
 |---|------|------|
-| 01 | Variables, Types and I/O | ✅ |
-| 02 | List / Dict, JSON and AI Messages | 🔄 |
-| 03 | Condition / Loop | ⬜ |
-| 04 | Function | ⬜ |
-| 05 | Module / Package | ⬜ |
-| 06 | Class / OOP | ⬜ |
-| 07 | Exception | ⬜ |
-| 08 | File / JSON | ⬜ |
-| 09 | venv / pip | ⬜ |
-| 10 | HTTP / API | ⬜ |
-| 11 | Async | ⬜ |
-| 12 | Typing / Dataclass | ⬜ |
-| 13 | Config / Environment | ⬜ |
-| 14 | Testing / Debugging | ⬜ |
-
-## 项目状态
-
-| # | 项目 | 阶段 | 状态 |
-|---|------|------|------|
-| 01 | Python AI CLI | Phase 0 | 🟡 有骨架 |
-| 02-14 | 后续项目 | Phase 1-13 | ⬜ |
+| 01 | Python Foundation | 🔄 |
+| 02 | Python Engineering | ⬜ |
+| 03 | AI Application | ⬜ |
+| 04 | RAG | ⬜ |
+| 05 | Agent / Tool / MCP | ⬜ |
+| 06 | PyTorch | ⬜ |
+| 07 | Hugging Face | ⬜ |
+| 08 | Transformer / LLM | ⬜ |
+| 09 | Fine-tuning | ⬜ |
+| 10 | Evaluation / Quantization | ⬜ |
+| 11 | Inference | ⬜ |
+| 12 | Deployment | ⬜ |
+| 13 | Mini LLM | ⬜ |
+| 14 | Capstone | ⬜ |

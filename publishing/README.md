@@ -1,26 +1,25 @@
 # Publishing — 对外发布内容
 
-Publishing 是内容输出层，不是第二套知识库。
+## 定位
+
+Publishing 是输出层，不是第二套课程。
 
 ## 内容来源
 
 ```text
-Curriculum + Labs + Projects + 真实踩坑
+Chapters + Project Practice + 真实踩坑
         ↓
-整理 / 提炼 / 转化
+    整理提炼
         ↓
-Publishing
+  Publishing
 ```
 
 ## 目录
 
-| 目录 | 内容 |
-|------|------|
-| articles/ | 技术文章 |
-| videos/ | 视频口播稿 |
-| diagrams/ | 架构图 / 数据流图 |
-| social/ | 社媒短内容 |
+- [articles/](articles/) — 技术文章
 
-## 状态
+## 规则
 
-🟡 架构已建立。articles/00-python-foundation/ 有 2 篇文章。
+- 面向初学者，少 AI 套话
+- 多真实代码、多真实问题、多踩坑
+- 一次只讲一个知识点
