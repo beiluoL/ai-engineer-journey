@@ -29,5 +29,5 @@ Knowledge 负责：
 
 ## 当前状态
 
-🟡 架构已建立。当前只有全局知识地图在根目录 KNOWLEDGE-MAP.md。
+🟡 架构已建立。当前只有全局知识地图在根目录 knowledge/map/python-foundation.md。
 后续按课程推进逐步填充 map/、glossary/、concepts/。

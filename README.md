@@ -40,7 +40,7 @@ ai-engineer-journey/
 ├── README.md                  # 本文件
 ├── ROADMAP.md                 # 总路线图
 ├── PROGRESS.md                # 当前进度
-├── KNOWLEDGE-MAP.md           # 知识关系地图
+├── knowledge/map/python-foundation.md           # 知识关系地图
 │
 ├── curriculum/                # 核心课程（Phase 0 ~ 13）
 │   └── 00-python-foundation/
@@ -62,7 +62,7 @@ ai-engineer-journey/
 ├── publishing/                # 对外内容（articles / videos / diagrams / social）
 │
 ├── docs/                      # 学习与维护规范
-└── mistakes/                  # 错题本
+└── （错题本暂未启用）                  # 错题本
 ```
 
 ## 当前状态

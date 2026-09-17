@@ -1,29 +1,6 @@
-# KNOWLEDGE-MAP — 知识关系地图
+# Python Foundation — 知识关系地图
 
-> 描述知识节点的依赖关系。学新知识前，先在这里确认前置节点已掌握。
-> 详情见 [knowledge/map/](knowledge/map/)
-
-## Python Foundation
-
-```text
-Python Foundation
-│
-├── Variables
-├── Types (str / int / float / bool / None)
-├── Input / Output
-├── List
-├── Dict
-├── JSON
-├── Function
-├── Module / Package
-├── OOP / Class
-├── Exception
-├── File
-├── HTTP / API
-└── Async
-```
-
-## 关键路径
+## 核心路径
 
 ```text
 Variables
@@ -65,7 +42,7 @@ Evaluation / Quantization
 vLLM / Docker / 生产部署
 ```
 
-## 节点依赖（Python 基础）
+## 节点依赖
 
 | 节点 | 前置 | 后续 | Java 类比 |
 |------|------|------|-----------|

@@ -9,7 +9,7 @@
  ↓
 做 exercises/ 练习
  ↓
-记录错题到 mistakes/
+记录错题到 （错题本暂未启用）
  ↓
 更新 PROGRESS.md + progress/
  ↓
