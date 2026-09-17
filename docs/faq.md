@@ -25,10 +25,10 @@ Phase 0-4 不需要。Phase 5（PyTorch）开始需要基础线性代数和微�
 复杂度自然增长：script → function → module → package → application → AI service。
 从最简单的开始，每学一课升级一版，最终自然达到 v1.0 完整 CLI。
 
-### Q: 仓库根目录的 projects/ 和 00-python-foundation/projects/ 有什么区别？
+### Q: 仓库根目录的 projects/ 和 projects/01-python-ai-cli/ 有什么区别？
 
 根目录 `projects/` 是早期实验性实现（已实现真实 API 调用），可作为参考。
-`00-python-foundation/projects/` 是随课程逐步搭建的学习版本，是主线。
+`projects/01-python-ai-cli/` 是随课程逐步搭建的学习版本，是主线。
 
 ## Git
 

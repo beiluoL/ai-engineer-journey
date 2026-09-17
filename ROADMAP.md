@@ -1,9 +1,8 @@
 # ROADMAP — 总路线图
 
-> 维护规则：每个 Phase 必须有 学习目标 / 前置知识 / 知识地图 / 项目 / 代码 / 实验 / 练习 /
-> 常见错误 / 复习内容 / 文章素材 / 项目总结。禁止知识跳跃，严格按依赖推进。
->
 > 状态标记：`[ ]` 未开始 · `[~]` 进行中 · `[x]` 完成
+
+## 学习路线
 
 ```text
 [~] Phase 0  Python Foundation
@@ -13,7 +12,7 @@
 [ ] Phase 4  Agent / Tool Calling / MCP
 [ ] Phase 5  PyTorch
 [ ] Phase 6  Transformer / LLM
-[ ] Phase 7  Hugging Face / Open-source LLM
+[ ] Phase 7  Hugging Face / 开源大模型
 [ ] Phase 8  Fine-tuning
 [ ] Phase 9  Evaluation / Quantization
 [ ] Phase 10 Inference / vLLM
@@ -43,17 +42,15 @@
 
 ## 每个 Phase 的完成标准
 
-不只是"教程写完"，必须满足：
+1. 知识点能独立阅读、修改、运行
+2. 能写出该阶段对应的小程序
+3. 项目对应功能真实可用
+4. 有练习记录和错题记录
+5. 有文章素材沉淀到 publishing/
 
-1. 知识点能独立阅读、修改、运行；
-2. 能写出该阶段对应的小程序；
-3. 项目对应功能真实可用；
-4. 有练习记录和错题记录；
-5. 有文章素材沉淀到 `content/`。
+## 当前阶段：Phase 0 — Python Foundation
 
-## 当前阶段详情：Phase 0 — Python Foundation
-
-课程目录：[00-python-foundation/](00-python-foundation/)
+课程目录：[curriculum/00-python-foundation/](curriculum/00-python-foundation/)
 
 ```text
 01-variables       02-list-dict      03-condition-loop  04-function
@@ -62,4 +59,4 @@
 13-config-env      14-testing-debugging
 ```
 
-所有课程服务于 **Project 01 — Python AI CLI Assistant**：每学完几个知识点，就把它用于项目。
+所有课程服务于 [Project 01 — Python AI CLI Assistant](projects/01-python-ai-cli/)。
