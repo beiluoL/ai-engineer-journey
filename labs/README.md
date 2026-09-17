@@ -1,34 +1,26 @@
-# Labs — 实验
+# Labs — 小实验
 
-> Curriculum 回答「学什么」，Labs 回答「怎么通过小实验验证」。
+Labs 用于验证单个技术概念，不承担完整项目职责。
 
-## 规范
-
-每个 Lab 对应一个小主题，独立可运行：
+## 与其他模块的区别
 
 ```text
-labs/
-├── 01-list-mutation/
-│   └── main.py        # 单个 Python 脚本，演示 list 可变行为
-├── 02-json-serialization/
-│   └── main.py        # dict ↔ JSON 互转
-└── ...
+Curriculum → 学什么
+Labs       → 怎么验证这个单点知识
+Projects   → 怎么做成完整可运行的软件
 ```
 
-## 与 Curriculum 的关系
+## 分类
 
-```text
-Curriculum Lesson
-      ↓
-读完概念
-      ↓
-Lab
-      ↓
-动手验证
-      ↓
-理解更深
-```
+| 目录 | 用途 |
+|------|------|
+| python/ | Python 语法验证 |
+| llm/ | LLM API 实验 |
+| rag/ | RAG 基础实验 |
+| agent/ | Agent / Tool Calling 实验 |
+| model/ | 模型内部机制实验 |
+| deployment/ | 部署与性能实验 |
 
-## 当前状态
+## 状态
 
-🟡 架构已建立。随课程推进逐步补充。
+🟡 架构已建立。随课程推进逐步补充实验。

@@ -1,60 +1,68 @@
-# Maintenance — 长期维护规则
+# Maintenance — 仓库维护规则
 
-## Single Source of Truth【单一事实源】
+## 七个模块的职责边界
 
 ```text
-Curriculum  = 核心学习内容
-Labs        = 实验验证
+Curriculum  = 正式课程源（唯一事实源）
+Labs        = 单点技术实验
 Projects    = 完整可运行项目
-Assessments = 能力验证
-Knowledge   = 知识关系与索引（不是第二套课程）
+Assessments = 能力验证（quizzes / coding / interviews / benchmarks）
+Knowledge   = 知识关系与索引（不复制 Curriculum 正文）
 Progress    = 学习状态追踪
 Publishing  = 对外发布内容（不是知识源）
 ```
 
-禁止同一知识完整复制 2~3 份。
+## 核心规则
 
-## 维护清单
+### 单一事实源
 
-每次提交前检查：
+同一个知识内容不要完整维护两份。
 
-- [ ] 没有把课程正文复制到 Publishing 或 Knowledge
-- [ ] 项目代码没有复制到 Curriculum
-- [ ] 没有提前生成未来所有课程正文
-- [ ] 没有留下失效的 Markdown 链接
-- [ ] 没有修改远程地址
-- [ ] 没有 Push Token / API Key / 私钥
-- [ ] Demo 代码在当前环境可运行
-- [ ] Commit message 符合规范
+- Curriculum 是唯一的课程正文来源
+- Knowledge 只存索引、关系、术语
+- Publishing 是二次加工的输出，不是知识源
 
-## 迁移优先 git mv
+### 目录命名
 
-目录迁移和重命名优先：
+统一 kebab-case：
 
-```bash
-git mv old new
+```text
+02-list-dict/
+python-ai-cli/
+fine-tuning/
 ```
 
-保持 Git 历史可追踪。
+### Git 提交规范
 
-## 修改前先扫描
+```text
+feat:     新功能/新课程/新项目
+fix:      修复
+docs:     文档
+refactor: 重构
+test:     测试
+chore:    杂项
+```
 
-大改动前必做：
+### 安全红线
+
+严禁提交：API Key / Token / 密码 / SSH 私钥 / `.env`。
+
+### 迁移优先 git mv
+
+目录迁移和重命名优先 git mv，保持 Git 历史可追踪。
+
+### 修改前先扫描
+
+大改动前：
 
 ```bash
-# 扫描旧路径引用
 grep -rl "旧路径" . --exclude-dir=.git
-
-# 查看文件统计
-find . -type f | sort
-
-# 查看 git 状态
-git status
+git diff --stat
 ```
 
-## 每次完成后运行
+### 每次完成后
 
 ```bash
-git diff --stat        # 确认改动范围合理
-python -m compileall . # 确认 Python 文件无语法错误（如有）
+python -m compileall .  # Python 语法检查
+git diff --stat          # 确认改动范围合理
 ```

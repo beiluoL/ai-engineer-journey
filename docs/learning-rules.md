@@ -1,40 +1,49 @@
-# Learning Rules — 学习规则
+# Learning Rules — 长期学习规则
 
-## 学习闭环
+## 1. 项目驱动
 
-```text
-阅读 lesson.md
- ↓
-手敲 demo/ 运行
- ↓
-做 exercises/ 练习
- ↓
-记录错题到 （错题本暂未启用）
- ↓
-更新 PROGRESS.md + progress/
- ↓
-（可选）沉淀文章到 publishing/articles/
-```
+每个知识点都落到真实项目上，不堆纯知识。
 
-## 十模块规则
+## 2. 先理解再框架
 
-```text
-1. 一章一个 Curriculum 目录
-2. 一章一个 lesson.md
-3. Demo 放章节 demo/
-4. 练习放章节 exercises/
-5. 完整项目放 projects/
-6. 小型实验放 labs/
-7. 能力验证放 assessments/
-8. 知识关系放 knowledge/
-9. 学习状态放 progress/
-10. 对外内容放 publishing/
-```
+先手写理解原理，再用框架提高效率。
 
-## 原则
+## 3. Python 与 Java 对照
 
-- 不允许知识跳跃（按依赖推进）
-- 主动回忆：不看答案自己回答 3-5 题
-- 复杂度自然增长：script → function → module → package → application → AI service
-- 不假装学会：代码生成 ≠ 掌握
-- Java 对照：用已会的概念搭桥，明确机制差异
+用已会的 Java 概念搭桥，但明确机制差异。
+
+## 4. 一章一个正式 lesson
+
+每章 = curriculum/NN-topic/ 下的 lesson.md。
+
+## 5. 一章一个 demo 区
+
+每章 demo/ 目录下放最小可运行代码。
+
+## 6. 一章一个 exercises 区
+
+每章 exercises/ 目录下放练习。
+
+## 7. 完整项目独立放 projects/
+
+真正可运行的完整项目放 projects/，不放 curriculum/。
+
+## 8. Lab 只做单点实验
+
+Labs/ 用于验证单个技术概念，不承担完整项目职责。
+
+## 9. Assessment 用来验证能力
+
+Assessments/ 回答「我到底会不会」。
+
+## 10. Publishing 不作为知识源
+
+Publishing 是对外输出层，不是第二套知识库。
+
+## 11. 核心知识保持单一事实源
+
+同一个知识内容不要完整维护两份。Curriculum 是唯一事实源。
+
+## 12. 不提前学习未来内容
+
+只学当前 Phase 的内容，按依赖顺序推进。
