@@ -1268,8 +1268,8 @@ Model
 本章最终在 GitHub 中：
 
 ```text
-chapters/
-└── 01-python-foundation/
+projects/
+└── 01-python-ai-cli/
     └── 01-variables/
         ├── README.md
         ├── lesson.md

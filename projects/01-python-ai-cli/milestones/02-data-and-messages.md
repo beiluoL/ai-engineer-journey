@@ -1663,8 +1663,8 @@ JSON
 本章建议：
 
 ```text
-chapters/
-└── 01-python-foundation/
+projects/
+└── 01-python-ai-cli/
     └── 02-list-dict/
         ├── README.md
         ├── lesson.md

@@ -1,47 +1,50 @@
-# AI Engineer Journey Progress
+# AI Engineer Journey — Progress
 
 ## Current
 
 ```text
-Current Chapter:
-01 — Python Foundation
+Current Project:
+Project 01 — Python AI CLI Assistant
 
-Current Lesson:
-02 — List / Dict, JSON and AI Messages
+Current Version:
+v0.2（有真实 LLM API 骨架）
 
-Current Project Version:
-Python AI CLI Assistant（有真实 API 调用骨架）
+Current Milestone:
+02 — Data and Messages
 
 Completed:
-- Lesson 01 — Variables, Types and I/O
-- Lesson 02 — List / Dict, JSON and AI Messages
+✅ Milestone 01 — Python Basics
+✅ Milestone 02 — Data and Messages
 
 In Progress:
-- Lesson 02（正在学习）
+🔄 项目代码已有完整骨架
 
 Next:
-- Lesson 03 — Condition / Loop
-- Lesson 04 — Function
-- Lesson 05 — Module / Package
-- ...
-- Lesson 10 — Real LLM API（串起所有知识）
+⬜ Milestone 03 — Control Flow
+⬜ Milestone 04 — Functions
+⬜ Milestone 05 — Modules and Packages
+⬜ Milestone 06 — Classes and OOP
+⬜ Milestone 07 — Exceptions
+⬜ Milestone 08 — Persistence
+⬜ Milestone 09 — Environment and Deps
+⬜ Milestone 10 — HTTP API
+⬜ Milestone 11 — Real LLM API（串起所有知识）
+
+Capability:
+Python 基础语法 + AI 项目数据结构 + 真实 LLM API 调用骨架
 ```
 
-## 章节状态
+## 项目状态
 
-| # | 章节 | 状态 |
+| # | 项目 | 状态 |
 |---|------|------|
-| 01 | Python Foundation | 🔄 |
-| 02 | Python Engineering | ⬜ |
-| 03 | AI Application | ⬜ |
-| 04 | RAG | ⬜ |
-| 05 | Agent / Tool / MCP | ⬜ |
-| 06 | PyTorch | ⬜ |
-| 07 | Hugging Face | ⬜ |
-| 08 | Transformer / LLM | ⬜ |
-| 09 | Fine-tuning | ⬜ |
-| 10 | Evaluation / Quantization | ⬜ |
-| 11 | Inference | ⬜ |
-| 12 | Deployment | ⬜ |
-| 13 | Mini LLM | ⬜ |
-| 14 | Capstone | ⬜ |
+| 01 | Python AI CLI | 🔄 |
+| 02 | AI Assistant Service | ⬜ |
+| 03 | AI Chat Web | ⬜ |
+| 04 | Personal RAG | ⬜ |
+| 05 | Research Agent | ⬜ |
+| 06 | Mini Transformer | ⬜ |
+| 07 | Local Open Source LLM | ⬜ |
+| 08 | Fine-tuning | ⬜ |
+| 09 | Evaluation & Inference | ⬜ |
+| 10 | TinyGPT Capstone | ⬜ |

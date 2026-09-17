@@ -1,68 +1,52 @@
 # AI Engineer Journey
 
-> Project-based journey from software developer to AI Engineer.
+> Project-first journey from software developer to AI Engineer.
 
 ## 项目定位
 
 面向有 Java / 前端基础、但 Python 和 AI 基础薄弱的开发者，
-通过项目驱动方式，从 Python 基础一路学到 AI 应用、大模型、RAG、Agent、
-PyTorch、Transformer、微调、评估、量化、部署，并最终能够自己实现 TinyGPT。
+通过**连续项目**逐步构建 AI Engineer 能力。
+
+**不是课程。不是知识库。是一组持续演进、可以运行、可以展示的工程项目。**
 
 ## 核心学习方式
 
-**项目驱动，章节就是项目升级过程。**
-
 ```text
-项目需要这个能力
+项目遇到问题
         ↓
-学习必要概念
+学习必要知识
         ↓
-修改项目
+知识进入代码
         ↓
-验证
+运行 / 验证 / 调试
         ↓
-继续升级项目
+项目升级
         ↓
-最终形成 AI Engineer 能力
+形成可迁移能力
+        ↓
+进入下一个更复杂项目
 ```
 
-一个章节 = 一个学习阶段 + 一个持续演进的项目。
+## Project First 原则
 
-## 学习路线
-
-```text
-01 Python Foundation
-02 Python Engineering
-03 AI Application
-04 RAG
-05 Agent / Tool / MCP
-06 PyTorch
-07 Hugging Face
-08 Transformer / LLM
-09 Fine-tuning
-10 Evaluation / Quantization
-11 Inference
-12 Deployment
-13 Mini LLM
-14 Capstone
+```
+Project > Milestone > Knowledge > Code > Practice > Documentation
 ```
 
-## 项目路线（持续演进）
+## 学习路线（10 个项目）
 
-```text
-Python AI CLI Assistant
-v0.1 → v0.2 → v0.3 → ... → v1.0
-      ↓
-AI Assistant Service（Phase 2）
-      ↓
-AI Chat Web（Phase 3）
-      ↓
-Personal RAG（Phase 4）
-      ↓
-...
-      ↓
-Capstone 完整 AI 产品（Phase 14）
-```
+| # | 项目 | 核心能力 | 状态 |
+|---|------|----------|------|
+| 01 | [Python AI CLI](projects/01-python-ai-cli/) | Python 基础 + AI API 调用 | 🔄 |
+| 02 | [AI Assistant Service](projects/02-ai-assistant/) | Python Engineering + FastAPI | ⬜ |
+| 03 | [AI Chat Web](projects/03-ai-application/) | Prompt / Streaming / Function Calling | ⬜ |
+| 04 | [Personal RAG](projects/04-rag/) | Embedding / Chunk / Vector DB / RAG | ⬜ |
+| 05 | [Research Agent](projects/05-agent-mcp/) | Agent / Tool / MCP Protocol | ⬜ |
+| 06 | [Mini Transformer](projects/06-pytorch-transformer/) | PyTorch / Attention / Transformer | ⬜ |
+| 07 | [Local Open Source LLM](projects/07-open-source-llm/) | Hugging Face / Tokenizer / 本地推理 | ⬜ |
+| 08 | [Fine-tuning](projects/08-fine-tuning/) | SFT / LoRA / QLoRA | ⬜ |
+| 09 | [Evaluation & Inference](projects/09-evaluation-inference/) | 评估 / 量化 / vLLM 服务化 | ⬜ |
+| 10 | [TinyGPT Capstone](projects/10-mini-llm-capstone/) | 从零实现小型 LLM | ⬜ |
 
 ## 仓库结构
 
@@ -70,58 +54,53 @@ Capstone 完整 AI 产品（Phase 14）
 ai-engineer-journey/
 │
 ├── README.md              # 本文件
-├── ROADMAP.md             # 路线图
-├── PROGRESS.md            # 当前进度
-├── KNOWLEDGE-MAP.md       # 全局知识网络
+├── ROADMAP.md             # 路线图（接下来要构建哪些项目）
+├── PROGRESS.md            # 当前状态
+├── KNOWLEDGE-MAP.md       # 能力关系网（只展示关联，不复制正文）
 ├── LICENSE
 ├── .gitignore
 │
-├── chapters/              # 核心内容（唯一事实源）
-│   ├── 01-python-foundation/
-│   │   ├── README.md        # 章节导航 + 项目目标
-│   │   ├── 01-variables.md
-│   │   ├── 02-list-dict-json.md
-│   │   ├── ...
-│   │   └── project/python-ai-cli/
-│   ├── 02-python-engineering/
-│   └── ...（共 14 章）
+├── projects/              # 核心内容（唯一事实源）
+│   ├── 01-python-ai-cli/
+│   │   ├── README.md          # 项目主页
+│   │   ├── milestones/       # 学习里程碑（知识 + 问题 + 实现）
+│   │   └── src/              # 项目代码
+│   ├── 02-ai-assistant/
+│   └── ...
 │
 └── publishing/            # 对外发布内容（输出层，不是知识源）
-    ├── README.md
-    └── articles/
+    ├── articles/
+    ├── videos/
+    └── diagrams/
 ```
 
-## 当前进度
+## 单一事实源
 
-Phase 01 — Python Foundation
-
-```text
-✅ 01-variables.md          完整
-🔄 02-list-dict-json.md     完整
-⬜ 03-condition-loop.md ~ 14-testing-debugging.md   占位
-```
+所有知识只维护在 `projects/*/milestones/` 中。
+其他目录只做引用、关联或派生输出。
 
 ## 如何开始
 
 ```bash
-# 1. 确认 Python
-python3 --version
+# 1. 克隆
+git clone <repo> && cd ai-engineer-journey
 
-# 2. 读第一章
-open chapters/01-python-foundation/README.md
+# 2. 读第一个项目主页
+open projects/01-python-ai-cli/README.md
 
-# 3. 读 Lesson 01
-open chapters/01-python-foundation/01-variables.md
-
-# 4. 跑项目
-cd chapters/01-python-foundation/project/python-ai-cli
+# 3. 跑项目
+cd projects/01-python-ai-cli/src
+cp .env.example .env   # 填入 API Key
 python3 main.py
+
+# 4. 学 Milestone
+open projects/01-python-ai-cli/milestones/01-python-basics.md
 ```
 
 ## 安全约定
 
-- API Key 只通过环境变量 / `.env` 提供，`.env` 永不入库
-- 仓库只有 `.env.example` 模板
+- API Key 只通过环境变量 / `.env` 提供
+- `.env` 永不入库，仓库只有 `.env.example`
 
 ## 双远程
 

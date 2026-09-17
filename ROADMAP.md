@@ -1,188 +1,172 @@
-# AI Engineer Journey Roadmap
+# AI Engineer Journey — Roadmap
 
-## 路线图
+> 接下来要构建哪些项目？
+
+## 10 个项目路线
 
 ```text
-01 Python Foundation
-02 Python Engineering
-03 AI Application
-04 RAG
-05 Agent / Tool / MCP
-06 PyTorch
-07 Hugging Face
-08 Transformer / LLM
-09 Fine-tuning
-10 Evaluation / Quantization
-11 Inference
-12 Deployment
-13 Mini LLM
-14 Capstone
+Stage 01  Python AI CLI
+          ↓  学 Python 基础 + AI API
+Stage 02  AI Assistant Service
+          ↓  学 Python Engineering + FastAPI
+Stage 03  AI Chat Web
+          ↓  学 LLM Application（Prompt / Streaming / Tool Calling）
+Stage 04  Personal RAG
+          ↓  学 RAG（Embedding / Chunk / Vector DB）
+Stage 05  Research Agent
+          ↓  学 Agent + MCP Protocol
+Stage 06  Mini Transformer
+          ↓  学 PyTorch / Attention / Transformer 内部原理
+Stage 07  Local Open Source LLM
+          ↓  学 Hugging Face 生态 + 本地推理
+Stage 08  Fine-tuning
+          ↓  学 SFT / LoRA / QLoRA
+Stage 09  Evaluation & Inference
+          ↓  学评估 / 量化 / vLLM 服务化
+Stage 10  TinyGPT Capstone
+          ↓  从零实现小型 LLM（把所有知识串起来）
 ```
 
-## 章节详情
+## 项目详情
 
-### 01 — Python Foundation
+### Stage 01 — Python AI CLI
 
-**目标**：掌握 AI 开发所需 Python 基础。
+**为什么存在**：AI 项目全是 Python 写的。从 Python 基础 + 真实 LLM API 切入。
 
-**项目**：Python AI CLI Assistant（v0.1 → v1.0）
+**核心技术**：变量 / 类型 / list / dict / JSON / 函数 / OOP / 异常 / 文件 / HTTP
 
-**核心技术**：变量 / 类型 / list / dict / JSON / 函数 / 模块 / 异常 / 文件 / HTTP
+**最终交付**：v1.0 的 CLI AI Assistant（能真实调用 LLM）
 
 **状态**：🔄 进行中
 
 ---
 
-### 02 — Python Engineering
+### Stage 02 — AI Assistant Service
 
-**目标**：让项目工程化。
+**为什么存在**：脚本级代码无法扩展，需要工程化。
 
-**项目**：AI Assistant Service
+**核心技术**：venv / pip / 模块化 / async / FastAPI / 类型提示 / 测试
 
-**核心技术**：venv / pip / 模块化 / 测试 / 日志 / async / 类型提示 / FastAPI
-
-**状态**：⬜ 未开始
-
----
-
-### 03 — AI Application
-
-**目标**：直接调用和编排模型。
-
-**项目**：AI Chat Web
-
-**核心技术**：HTTP / FastAPI / Pydantic / SSE / Prompt / Streaming / Function Calling
+**最终交付**：HTTP 服务化的 AI Assistant
 
 **状态**：⬜ 未开始
 
 ---
 
-### 04 — RAG
+### Stage 03 — AI Chat Web
 
-**目标**：给模型加上外部知识。
+**为什么存在**：会调 API 不等于会做 AI 应用。
 
-**项目**：Personal RAG
+**核心技术**：Prompt Engineering / Streaming / SSE / Function Calling / Structured Output
 
-**核心技术**：Token / Embedding / Chunk / 向量库 / RAG Pipeline / Rerank
-
-**状态**：⬜ 未开始
-
----
-
-### 05 — Agent / Tool / MCP
-
-**目标**：让模型能自主调用工具。
-
-**项目**：Research Agent
-
-**核心技术**：Tool / Agent / Planning / Memory / MCP Protocol
+**最终交付**：Web 端 AI Chat 应用
 
 **状态**：⬜ 未开始
 
 ---
 
-### 06 — PyTorch
+### Stage 04 — Personal RAG
 
-**目标**：掌握 PyTorch 训练基础。
+**为什么存在**：LLM 有知识截止日期，幻觉不可避免。
 
-**项目**：Tiny Language Model
+**核心技术**：Token / Embedding / Chunk / 向量库 / Retrieval / Rerank
 
-**核心技术**：Tensor / Grad / Autograd / DataLoader / Model / Training Loop
-
-**状态**：⬜ 未开始
-
----
-
-### 07 — Hugging Face
-
-**目标**：接触真实开源模型生态。
-
-**项目**：Local Open Source LLM
-
-**核心技术**：Transformers / Tokenizer / Model Loading / Datasets
+**最终交付**：接入个人知识库的 AI Assistant
 
 **状态**：⬜ 未开始
 
 ---
 
-### 08 — Transformer / LLM
+### Stage 05 — Research Agent
 
-**目标**：理解 Transformer 内部原理。
+**为什么存在**：RAG 解决了知识问题，但 AI 还不能主动做事。
 
-**项目**：Mini Transformer
+**核心技术**：Tool / Function Calling / Agent Loop / MCP Protocol / Memory
 
-**核心技术**：Embedding / Attention / Multi-Head / FFN / LayerNorm / Decoder
-
-**状态**：⬜ 未开始
-
----
-
-### 09 — Fine-tuning
-
-**目标**：掌握模型微调。
-
-**项目**：LoRA / QLoRA
-
-**核心技术**：SFT / PEFT / LoRA / QLoRA / 数据准备 / 训练参数
+**最终交付**：能自主规划和调用工具的 Agent
 
 **状态**：⬜ 未开始
 
 ---
 
-### 10 — Evaluation / Quantization
+### Stage 06 — Mini Transformer
 
-**目标**：评估和量化模型。
+**为什么存在**：会调用 LLM 不等同于理解 LLM。
 
-**项目**：LLM Evaluation
+**核心技术**：PyTorch / Tensor / Autograd / Attention / Multi-Head / Decoder
 
-**核心技术**：评估集 / 自动评估 / 人工评估 / INT8 / INT4 量化
-
-**状态**：⬜ 未开始
-
----
-
-### 11 — Inference
-
-**目标**：高性能推理服务化。
-
-**项目**：LLM Serving
-
-**核心技术**：vLLM / Batching / PagedAttention / KV Cache / 并发服务
+**最终交付**：从零构建的 Mini Transformer
 
 **状态**：⬜ 未开始
 
 ---
 
-### 12 — Deployment
+### Stage 07 — Local Open Source LLM
 
-**目标**：生产部署。
+**为什么存在**：生产不可能全靠商业 API，必须掌握开源模型生态。
 
-**项目**：AI Platform
+**核心技术**：Hugging Face / Tokenizer / Model Loading / 本地推理
 
-**核心技术**：Docker / GPU 部署 / 前后端联调 / API 网关 / 监控
-
-**状态**：⬜ 未开始
-
----
-
-### 13 — Mini LLM
-
-**目标**：从零实现简化版 GPT。
-
-**项目**：TinyGPT
-
-**核心技术**：Tokenizer / Embedding / Transformer / Training / Inference
+**最终交付**：本地跑通的开源 LLM
 
 **状态**：⬜ 未开始
 
 ---
 
-### 14 — Capstone
+### Stage 08 — Fine-tuning
 
-**目标**：综合运用所有技能，做真实 AI 产品。
+**为什么存在**：RAG 是外挂知识，Fine-tuning 是烧进模型。
 
-**项目**：完整 AI 产品
+**核心技术**：SFT / PEFT / LoRA / QLoRA / 数据准备 / 显存优化
 
-**核心技术**：架构设计 / 前后端 / RAG + Agent / 部署 / 产品化
+**最终交付**：自己微调的领域模型
 
 **状态**：⬜ 未开始
+
+---
+
+### Stage 09 — Evaluation & Inference
+
+**为什么存在**：训练完只是第一步，上线前必须评估、量化、服务化。
+
+**核心技术**：评估集 / Benchmark / INT8 INT4 量化 / vLLM / Batching / PagedAttention
+
+**最终交付**：高性能推理服务
+
+**状态**：⬜ 未开始
+
+---
+
+### Stage 10 — TinyGPT Capstone
+
+**为什么存在**：把前面 9 个项目的所有知识串成一个完整工程。
+
+**核心技术**：Tokenizer / Embedding / Transformer / Training / Inference / Deployment
+
+**最终交付**：自己实现的小型 LLM 工程（从 Tokenizer 到部署全链路）
+
+**状态**：⬜ 未开始
+
+---
+
+## 能力递进关系
+
+```text
+Python          ← Stage 01-02
+    ↓
+LLM Application ← Stage 03
+    ↓
+RAG             ← Stage 04
+    ↓
+Agent / MCP     ← Stage 05
+    ↓
+模型原理        ← Stage 06
+    ↓
+开源生态        ← Stage 07
+    ↓
+微调            ← Stage 08
+    ↓
+评估 + 服务化   ← Stage 09
+    ↓
+综合实现        ← Stage 10
+```
