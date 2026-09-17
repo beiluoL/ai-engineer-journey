@@ -55,7 +55,7 @@ v1.0  Real LLM (项目接入真实 AI)
 
 | # | Milestone | 状态 | 核心能力 |
 |---|-----------|------|----------|
-| 01 | [Python Basics](milestones/01-python-basics.md) | ✅ | 变量 / 5 种基础类型 / type() / input() / print() / f-string |
+| 01 | [Python Basics](Chapter%2001：Variables【变量】—%20让程序开始记住信息.md) | ✅ | 变量 / 5 种基础类型 / type() / input() / print() / f-string |
 | 02 | [Data and Messages](milestones/02-data-and-messages.md) | ✅ | List / Dict 嵌套 / JSON 序列化 / AI messages 数据结构 |
 | 03 | [Control Flow](milestones/03-control-flow.md) | ⬜ | if / for / while / break / continue |
 | 04 | [Functions](milestones/04-functions.md) | ⬜ | def / 参数 / 返回值 / 作用域 |
