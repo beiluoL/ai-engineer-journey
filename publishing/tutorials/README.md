@@ -10,6 +10,7 @@
 |---|------|------|
 | 01 | [Python 从哪里来，凭什么这么火？](01-python-origin-history-ecosystem.md) | [Markdown](01-python-origin-history-ecosystem.md) · [HTML](01-python-origin-history-ecosystem.html) |
 | 02 | [Python 安装与上手：从装环境到跑通第一个 AI 项目](02-python-install-usage-roadmap.md) | [Markdown](02-python-install-usage-roadmap.md) · [HTML](02-python-install-usage-roadmap.html) |
+| 03 | [第一次微调实战 Day1：Qwen + LLaMA-Factory + 第一份 Java 面试训练数据](03-llm-finetune-day1-colab-llamafactory-qwen.md) | [Markdown](03-llm-finetune-day1-colab-llamafactory-qwen.md) · [HTML](03-llm-finetune-day1-colab-llamafactory-qwen.html) |
 
 ## 配图规范
 
