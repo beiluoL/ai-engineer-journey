@@ -16,7 +16,8 @@ Chapters + Project Practice + 真实踩坑
 
 ## 目录
 
-- [articles/](articles/) — 技术文章
+- [articles/](articles/) — 技术文章（课程学习笔记）
+- [tutorials/](tutorials/) — 图文教程（独立成篇的长文，Markdown + HTML 双格式）
 
 ## 规则
 

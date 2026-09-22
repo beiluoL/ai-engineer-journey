@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 安装与上手 — AI Engineer Journey 图文教程</title>
+<style>
+  :root { --blue:#3776AB; --yellow:#FFD43B; --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --bg:#f6f8fa; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--ink); background:var(--bg); line-height:1.85; }
+  .wrap { max-width:880px; margin:0 auto; padding:48px 28px 80px; }
+  article { background:#fff; border:1px solid var(--line); border-radius:18px; padding:56px 60px; box-shadow:0 8px 30px rgba(15,23,42,.05); }
+  .kicker { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .logo-dot { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--blue),#2c5d8f); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; }
+  .kicker span { font-size:13px; color:var(--muted); font-weight:600; letter-spacing:.5px; }
+  h1 { font-size:34px; line-height:1.35; margin-bottom:14px; }
+  .meta { font-size:13px; color:var(--muted); padding-bottom:26px; border-bottom:1px solid var(--line); margin-bottom:34px; }
+  h2 { font-size:23px; margin:44px 0 16px; padding-left:14px; border-left:4px solid var(--blue); }
+  h3 { font-size:17px; margin:26px 0 10px; }
+  p { margin-bottom:14px; }
+  ul,ol { margin:0 0 14px 22px; } li { margin-bottom:6px; }
+  a { color:var(--blue); }
+  strong { color:#0f172a; }
+  code { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.88em; background:#eef2f7; border:1px solid #dbe3ec; border-radius:5px; padding:1px 6px; color:#b3541e; }
+  pre { background:#16181d; color:#d6dce5; border-radius:12px; padding:18px 20px; overflow-x:auto; margin:18px 0 22px; font-size:13.5px; line-height:1.7; }
+  pre code { background:none; border:none; color:inherit; padding:0; }
+  pre .cm { color:#6b7280; } pre .out { color:#9aa4b2; } pre .hl { color:#7cd4ff; }
+  blockquote { border-left:4px solid var(--yellow); background:#fffbea; padding:12px 18px; border-radius:0 10px 10px 0; margin:18px 0; color:#57534e; }
+  figure { margin:26px 0 30px; text-align:center; }
+  figure img { max-width:100%; border:1px solid var(--line); border-radius:12px; box-shadow:0 6px 18px rgba(15,23,42,.08); }
+  figcaption { font-size:12.5px; color:var(--muted); margin-top:10px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:14px; }
+  th { background:#f1f5f9; text-align:left; }
+  th,td { border:1px solid var(--line); padding:9px 13px; }
+  tr:nth-child(even) td { background:#fafbfd; }
+  .toc { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:18px 24px; margin-bottom:8px; font-size:14px; }
+  .toc b { color:var(--blue); }
+  .toc a { text-decoration:none; }
+  .foot { margin-top:46px; padding-top:20px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); }
+  .next { display:flex; gap:12px; margin-top:30px; }
+  .next a { flex:1; border:1px solid var(--line); border-radius:12px; padding:14px 18px; text-decoration:none; font-size:14px; background:#fafbfd; }
+  .next a:hover { border-color:var(--blue); }
+  .next .label { display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; }
+  @media (max-width:640px){ article{padding:32px 22px;} h1{font-size:26px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<article>
+  <div class="kicker"><div class="logo-dot">Py</div><span>AI ENGINEER JOURNEY · 图文教程 02</span></div>
+  <h1>Python 安装与上手：从装环境到跑通第一个 AI 项目</h1>
+  <div class="meta">写给有 Java / 前端基础、Python 零基础的开发者 · 所有终端截图均为本机真实运行结果（macOS + Python 3.13）· 2026-09-22</div>
+
+  <div class="toc"><b>目录</b> —
+    <a href="#s1">一、安装</a> ·
+    <a href="#s2">二、第一次运行</a> ·
+    <a href="#s3">三、真实场景</a> ·
+    <a href="#s4">四、venv 与 pip</a> ·
+    <a href="#s5">五、学习路线</a> ·
+    <a href="#s6">六、练什么项目</a> ·
+    <a href="#s7">七、常见的坑</a> ·
+    <a href="#s8">八、小结</a>
+  </div>
+
+  <figure><img src="assets/site-python-downloads.png" alt="Python 官方下载页"><figcaption>Python 官方下载页（python.org/downloads 实拍）</figcaption></figure>
+
+  <h2 id="s1">一、安装：四种方式怎么选</h2>
+  <figure><img src="assets/diagram-install.png" alt="四种安装方式对比"><figcaption>四种安装方式对比（自制图表）</figcaption></figure>
+  <p>新手建议：<strong>Windows / macOS 都直接用官网安装包</strong>，别一上来就整 Anaconda。</p>
+  <p>具体步骤（macOS 为例）：</p>
+  <ol>
+    <li>打开 <a href="https://www.python.org/downloads/" target="_blank">python.org/downloads</a>，点黄色大按钮下载（截图中是 Python 3.14.7，带 .pkg 安装包）</li>
+    <li>双击安装，一路下一步</li>
+    <li>Windows 用户注意：第一屏务必勾选 <strong>"Add Python to PATH"</strong>（不勾 = 命令行里找不到 python，新手第一大坑）</li>
+    <li>验证安装 ↓</li>
+  </ol>
+  <pre><code>python3 --version</code></pre>
+  <figure><img src="assets/term-version.png" alt="验证安装"><figcaption>验证安装的真实输出（本机截图）</figcaption></figure>
+  <p><code>--version</code> 正常输出版本号，就等于 Java 里 <code>java -version</code> 成功了。顺手用 <code>which python3</code> 看看它装在哪，相当于确认 <code>JAVA_HOME</code>。</p>
+  <blockquote>小知识：macOS 自带一个老版本 Python 是系统内部用的，别去动它。装完新版后用 <code>python3</code> 命令调用的就是你自己的版本。</blockquote>
+
+  <h2 id="s2">二、第一次运行：三种打开方式</h2>
+  <h3>方式一：交互式解释器（REPL）—— Python 的 jshell</h3>
+  <pre><code>python3</code></pre>
+  <figure><img src="assets/term-repl.png" alt="REPL"><figcaption>REPL 真实运行截图（本机）</figcaption></figure>
+  <p>输入 <code>exit()</code> 或按 <code>Ctrl+D</code> 退出。适合随手验证一行代码，学语法时天天开。</p>
+  <h3>方式二：脚本文件 —— 正式的运行方式</h3>
+  <p>新建 <code>hello.py</code>：</p>
+  <pre><code><span class="cm"># 我的第一个 Python 程序</span>
+print("Hello, AI Engineer Journey!")
+
+name = "Beiluo"
+year = 2026
+print(f"{name} 开始学 Python 的年份: {year}")</code></pre>
+  <p>运行：</p>
+  <pre><code>python3 hello.py</code></pre>
+  <figure><img src="assets/term-hello.png" alt="hello.py 运行结果"><figcaption>hello.py 真实运行截图（本机）</figcaption></figure>
+  <h3>Java 对照：最大的体验差异在这里</h3>
+  <table>
+    <tr><th></th><th>Java</th><th>Python</th></tr>
+    <tr><td>编译</td><td>需要 <code>javac</code> 编译成 .class</td><td><strong>无需编译</strong>，直接跑源码</td></tr>
+    <tr><td>入口</td><td>必须 main 方法</td><td>脚本从上往下执行，没有入口仪式</td></tr>
+    <tr><td>变量</td><td>必须声明类型</td><td>直接赋值，类型跟着值走</td></tr>
+    <tr><td>输出</td><td><code>System.out.println()</code></td><td><code>print()</code></td></tr>
+  </table>
+  <p>Python 也有 <code>.pyc</code> 字节码缓存（在 <code>__pycache__</code> 目录），机制上和 JVM 有相通之处，但它把编译步骤隐藏了。</p>
+
+  <h2 id="s3">三、直接上真实场景：list + dict</h2>
+  <p>光 print 不过瘾。AI 项目里最高频的数据结构是 <strong>list + dict 组合</strong>——LLM 的对话历史就是这样的结构：</p>
+  <pre><code>history = []
+history.append({"role": "user", "content": "什么是 Token？"})
+history.append({"role": "assistant", "content": "模型处理文本的最小单位。"})
+history.append({"role": "user", "content": "那 Embedding 呢？"})
+
+for i, m in enumerate(history, start=1):
+    print(f"{i}. [{m['role']:9s}] {m['content']}")
+
+<span class="cm"># 列表推导式：一行提取所有用户提问（Java Stream 的极简版）</span>
+questions = [m["content"] for m in history if m["role"] == "user"]</code></pre>
+  <figure><img src="assets/term-data.png" alt="对话消息运行结果"><figcaption>对话消息示例真实运行截图（本机）</figcaption></figure>
+  <p>Java 对照：<code>list</code> ≈ <code>ArrayList</code>，<code>dict</code> ≈ <code>HashMap</code>，列表推导式 ≈ <code>stream().filter().map().toList()</code>。<strong>记住一个事实：LLM API 的请求体就是「一个 dict，里面套一个 list of dict」</strong>，看懂这个，AI 代码就祛魅了一半。</p>
+
+  <h2 id="s4">四、venv 与 pip：把 Maven 那套经验搬过来</h2>
+  <p>Java 里每个项目有独立的 <code>pom.xml</code> 依赖集，Python 里对应的是<strong>虚拟环境（venv）</strong>：</p>
+  <pre><code>python3 -m venv demo-venv        <span class="cm"># 创建（相当于初始化一个项目级依赖目录）</span>
+source demo-venv/bin/activate    <span class="cm"># 激活（Windows: demo-venv\Scripts\activate）</span>
+pip list                         <span class="cm"># 查看已装的包（相当于 mvn dependency:list）</span>
+deactivate                       <span class="cm"># 退出</span></code></pre>
+  <figure><img src="assets/term-venv.png" alt="venv 运行结果"><figcaption>venv + pip 真实运行截图（本机）</figcaption></figure>
+  <p>三个关键对应关系：</p>
+  <table>
+    <tr><th>Java</th><th>Python</th><th>备注</th></tr>
+    <tr><td>Maven Central</td><td>PyPI</td><td>近 90 万个包</td></tr>
+    <tr><td><code>pom.xml</code></td><td><code>requirements.txt</code></td><td>依赖清单</td></tr>
+    <tr><td><code>mvn install</code></td><td><code>pip install -r requirements.txt</code></td><td>一键还原依赖</td></tr>
+    <tr><td>JDK 版本切换</td><td>venv 可指定不同 Python 版本</td><td></td></tr>
+  </table>
+  <p>新手规则只有一条：<strong>每个项目都建 venv，别往全局装包。</strong></p>
+
+  <h2 id="s5">五、学习路线：从 Python 到 AI Engineer</h2>
+  <figure><img src="assets/diagram-roadmap.png" alt="学习路线图"><figcaption>AI Engineer Journey 学习路线（自制图表）</figcaption></figure>
+  <p>这是我自己在走的路线（仓库 README 有完整版），核心思路是 <strong>Project First</strong>：</p>
+  <ol>
+    <li><strong>Phase 0-1</strong>：Python 基础 + 工程化 —— 不单独背语法，直接在项目里学</li>
+    <li><strong>Phase 2</strong>：AI 应用开发 —— HTTP、FastAPI、LLM API、流式输出</li>
+    <li><strong>Phase 3-4</strong>：RAG 与 Agent —— Embedding、向量库、Tool Calling、MCP</li>
+    <li><strong>Phase 5-7</strong>：深度学习 —— PyTorch、Attention、Transformer 原理</li>
+    <li><strong>Phase 8-9</strong>：微调与评估 —— LoRA / QLoRA、量化</li>
+    <li><strong>Phase 10-13</strong>：部署与毕业设计 —— vLLM、Docker、从零训练 TinyGPT</li>
+  </ol>
+  <p>给 Java 同行的学习建议：</p>
+  <ul>
+    <li><strong>别抱着语法书啃</strong>。有编程基础的人，Python 语法两周就能上手感，重点是尽快进入项目</li>
+    <li><strong>盯紧动态类型的坑</strong>：<code>"1" + 1</code> 会报错（强类型）、变量可以随便换类型（动态类型）、<code>True/False/None</code> 首字母大写、缩进就是语法块</li>
+    <li><strong>每学一个知识点就跑一个 Demo</strong>，用 REPL 随手验证</li>
+  </ul>
+
+  <h2 id="s6">六、练什么项目：从入门到 AI</h2>
+  <figure><img src="assets/diagram-projects.png" alt="推荐项目清单"><figcaption>推荐练手项目清单（自制图表）</figcaption></figure>
+  <p>我自己正在做的第一个真项目就是图里的第五个：<strong>AI 命令行助手</strong>（输入问题 → 调用 LLM API → 输出答案）。整个仓库就是按这个项目驱动的方式组织的：</p>
+  <figure><img src="assets/term-tree.png" alt="仓库结构"><figcaption>ai-engineer-journey 仓库真实结构（本机截图）</figcaption></figure>
+  <p>它已经能真实跑起来了——下面是本机真实运行的结果（调用 DeepSeek API）：</p>
+  <figure><img src="assets/term-project01.png" alt="Project 01 真实运行"><figcaption>Project 01 真实运行：调用 DeepSeek API 回答问题（本机截图）</figcaption></figure>
+  <p>从「输入一个问题」到「AI 回答」，核心只涉及：dict 构造请求体 + JSON 序列化 + HTTP POST + 异常处理。<strong>这些恰好就是 Python 入门知识点的全集</strong>——所以它能当第一个项目。</p>
+
+  <h2 id="s7">七、新手常踩的坑（我踩过的）</h2>
+  <ol>
+    <li><strong>Windows 没勾 Add to PATH</strong> → 重装，勾上</li>
+    <li><strong><code>python</code> 命令不存在</strong>：macOS/Linux 用 <code>python3</code></li>
+    <li><strong>pip 装错环境</strong>：装包前先激活 venv，用 <code>which pip</code> 确认指向 venv 内</li>
+    <li><strong>Tab 和空格混用</strong> → <code>IndentationError</code>，全用 4 空格（交给编辑器）</li>
+    <li><strong>中文输出乱码</strong>：读文件时显式 <code>encoding="utf-8"</code></li>
+  </ol>
+
+  <h2 id="s8">八、小结</h2>
+  <ol>
+    <li>装环境：官网安装包 → <code>python3 --version</code> 验证，10 分钟搞定</li>
+    <li>跑代码：REPL 随手试 + 脚本文件正式跑，无需编译</li>
+    <li>管依赖：venv 隔离 + pip 安装，Maven 经验直接平移</li>
+    <li>学路线：Project First，别脱离项目背语法</li>
+    <li>练项目：从 CLI 小工具一路练到 AI 命令行助手、RAG 知识库</li>
+  </ol>
+
+  <div class="next">
+    <a href="01-python-origin-history-ecosystem.html"><span class="label">← 上一篇</span><strong>Python 从哪里来，凭什么这么火？</strong></a>
+  </div>
+
+  <div class="foot">本文是 AI Engineer Journey 的图文教程系列。所有终端截图均为本机真实运行结果，环境：macOS 15 + Python 3.13。仓库：github.com/beiluoL/ai-engineer-journey</div>
+</article>
+</div>
+</body>
+</html>
