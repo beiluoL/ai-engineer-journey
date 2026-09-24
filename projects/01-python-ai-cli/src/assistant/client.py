@@ -1,9 +1,9 @@
 """LLMClient：封装对 DeepSeek API 的调用（v0.1 单轮问答）。
 
-教学说明（对应 01-python-foundation/11-class.md、14-json.md）：
+教学说明（对应 milestones/10-real-llm-api.md 的 HTTP 调用链路）：
 - v0.1 刻意使用标准库 urllib，不引入任何第三方依赖，
   让你先看清一次 HTTP + JSON 调用的完整链路；
-- Phase 1 会引入 requests/httpx，并回答"框架替我们解决了什么"。
+- Project 02 会引入 httpx，并回答"框架替我们解决了什么"。
 """
 
 from __future__ import annotations

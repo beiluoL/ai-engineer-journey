@@ -643,7 +643,7 @@ httpx
 创建：
 
 ```text
-curriculum/00-python-foundation/09-http-api/demo/01-get.py
+projects/01-python-ai-cli/exercises/09-http-api/demo/01-get.py
 ```
 
 代码：

@@ -1,6 +1,6 @@
 # Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 本章目标：**不单独背 Python 语法，而是在完成一个真实小项目的过程中学会 Python 基础。**
 
@@ -1172,7 +1172,7 @@ AI Engineer Profile
 # 25. 本章在 AI Engineer Journey 中的位置
 
 ```text
-Phase 0 — Python Foundation
+Project 01 — Python AI CLI Assistant
 
 Lesson 01
 变量 / 类型 / 输入输出

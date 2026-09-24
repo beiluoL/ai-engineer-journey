@@ -67,9 +67,9 @@ ai-engineer-journey/
 │   └── ...（共 10 个项目）
 │
 └── publishing/            # 对外发布内容（输出层，不是知识源）
-    ├── articles/
-    ├── videos/
-    └── diagrams/
+    ├── articles/          # 课程学习笔记型文章
+    ├── tutorials/         # 独立成篇的图文教程（md + html + assets/）
+    └── finetune-series/   # 微调系列草稿库（未校对，择优转正为 tutorials）
 ```
 
 ## 单一事实源

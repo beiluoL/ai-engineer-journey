@@ -1,6 +1,6 @@
 # Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 主线项目：Python AI CLI Assistant  
 > 本章目标：通过给已有项目制造真实错误，学习 Exception【异常】、try / except、else、finally、raise，并建立 AI 工程中的错误处理思维。

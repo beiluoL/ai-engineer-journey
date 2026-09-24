@@ -1,6 +1,6 @@
 # Lesson 05 — Module / Package：把 AI CLI Assistant 从脚本变成 Python 项目
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 主线项目：Python AI CLI Assistant  
 > 本章目标：通过拆分现有项目，理解 Module【模块】、Package【包】、import，以及基本的 Python 项目结构。

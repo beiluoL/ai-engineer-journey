@@ -1,4 +1,4 @@
-"""配置加载：环境变量 + 本地 .env 文件（对应 01-python-foundation/15-env.md）。
+"""配置加载：环境变量 + 本地 .env 文件（对应 milestones/08-venv-pip.md 的环境变量部分）。
 
 安全约定：
 - 真实 Key 只存在于环境变量或本地 .env（已被 .gitignore 排除）；

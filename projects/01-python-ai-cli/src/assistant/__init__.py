@@ -1,9 +1,9 @@
 """assistant —— Project 01 的核心包。
 
-模块划分（对应 01-python-foundation/10-module.md）：
-- config:  读取配置与 API Key（对应 15-env）
-- errors:  异常层级（对应 12-exception）
-- client:  LLMClient 类，封装对 DeepSeek API 的调用（对应 11-class / 14-json）
+模块划分（对应 milestones/05-module-package.md）：
+- config:  读取配置与 API Key（对应 08-venv-pip 的环境变量部分）
+- errors:  异常层级（对应 06-exception）
+- client:  LLMClient 类，封装对 DeepSeek API 的调用（对应 10-real-llm-api）
 """
 
 from assistant.client import LLMClient

@@ -1,6 +1,6 @@
 # Lesson 07 — File / JSON：让 AI CLI Assistant 记住历史
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 主线项目：Python AI CLI Assistant  
 > 本章目标：通过给 AI CLI Assistant 增加“保存聊天记录”和“恢复聊天记录”能力，学习文件操作、JSON 持久化、路径、上下文管理器，以及文件相关异常处理。

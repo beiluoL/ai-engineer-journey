@@ -1,6 +1,6 @@
 # Lesson 03 — Condition / Loop：让 AI CLI Assistant 开始运行起来
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 本章主线项目：Python AI CLI Assistant  
 > 本章目标：使用 `if / for / while` 让程序具备持续运行、判断命令和遍历消息的能力。
@@ -1682,8 +1682,8 @@ AI API
 本章建议保存：
 
 ```text
-curriculum/
-└── 00-python-foundation/
+projects/01-python-ai-cli/
+└── exercises/
     └── 03-condition-loop/
         ├── README.md
         ├── lesson.md

@@ -1,6 +1,6 @@
 # Lesson 02 — List / Dict → JSON → AI Messages
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 本章项目：AI Engineer 学习档案升级版 + CLI 对话记录器
 
@@ -2283,7 +2283,7 @@ Python 数据结构
 # 53. AI Engineer Journey 当前进度
 
 ```text
-Phase 0 — Python Foundation
+Project 01 — Python AI CLI Assistant
 
 ✅ Lesson 01
 Python Variables / Types / Input / Output

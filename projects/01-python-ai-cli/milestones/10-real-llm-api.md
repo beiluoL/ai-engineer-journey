@@ -2311,7 +2311,7 @@ LLM API
 # 第一阶段正式完成
 
 ```text
-00-python-foundation
+Project 01 — Python AI CLI Assistant
 ```
 
 已经从：

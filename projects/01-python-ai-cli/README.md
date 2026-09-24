@@ -27,7 +27,7 @@ AI 项目全是 Python 写的。不理解 Python，就看不懂、写不出、�
 ## 技术栈
 
 - Python 3.x
-- `requests`（HTTP）
+- 标准库 `urllib`（HTTP；v0.1 刻意零依赖，后续里程碑引入 requests/httpx 时会对比"框架解决了什么"）
 - `json`（标准库）
 - `os`（环境变量）
 - 主流 LLM API（OpenAI / 兼容接口）

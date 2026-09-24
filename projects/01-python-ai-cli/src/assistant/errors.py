@@ -1,4 +1,4 @@
-"""错误层级：Project 01 的异常体系（对应 01-python-foundation/12-exception.md）。
+"""错误层级：Project 01 的异常体系（对应 milestones/06-exception.md）。
 
 设计原则：
 - 调用方只需要捕获 LLMError 基类；

@@ -1,6 +1,6 @@
 # Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”
 
-> AI Engineer Journey · Phase 0 — Python Foundation  
+> AI Engineer Journey · Project 01 — Python AI CLI Assistant  
 > 学习方式：Project-Based Learning【项目驱动学习】  
 > 主线项目：Python AI CLI Assistant  
 > 本章目标：通过重构已有项目，理解函数、参数、返回值、作用域，并建立最基本的代码模块化思维。
