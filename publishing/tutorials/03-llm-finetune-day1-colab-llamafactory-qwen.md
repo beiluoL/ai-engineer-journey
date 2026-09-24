@@ -2,7 +2,7 @@
 
 > 写给有 Java / 后端基础、想上手大模型微调的开发者。
 > 本文是「第一次微调实战」系列第一篇：**今天不训练，只把整条链路的环境搭通、把数据备好、把流程真正看懂。**
-> 所有终端截图均为**本机实机运行结果**（macOS + Python 3.13 + LLaMA-Factory 0.9.6）；Colab 内部界面需登录 Google 账号后操作，对应步骤以「操作指引卡」呈现；GPU 输出为标注清楚的「预期输出参考卡」。抓取时间：2026-09-22。
+> 所有终端截图均为**本机实机运行结果**（macOS + Python 3.13 + LLaMA-Factory 0.9.6）；其中 GPU 检查与 git clone 两步附有 **Colab 真实运行截图**（T4 实机）；Colab 其余内部界面以「操作指引卡」呈现，GPU 预期输出保留「参考卡」并与真实截图对照。抓取时间：2026-09-22。
 
 ---
 
@@ -108,6 +108,12 @@ Colab 默认 **不带 GPU**（CPU 模式），必须手动切换。
 
 *预期输出参考卡（T4 示例，以实际为准）：看到 `Tesla T4` + `15360MiB` 显存 = GPU 就绪*
 
+**Colab 真实运行截图**（2026-09-22 实机，可与参考卡逐项对照）：
+
+![Colab T4 真实输出](assets/colab-nvidia-smi-t4.png)
+
+*Colab T4 实机截图：Tesla T4 / 15360MiB / CUDA 13.0 / Driver 580.82.07——和参考卡对上了*
+
 > 如果报 `command not found`，回到 `修改 → 笔记本设置` 确认真选了 GPU，保存后**重新运行**第一格代码。
 
 ---
@@ -182,7 +188,13 @@ Colab 自带 Python，不用装，只需要确认版本 + 升级 pip：
 
 *本机实机演示：SSH 通道克隆成功。注意仓库里的 `data/` 目录——Day2 注册数据集要用*
 
-> Colab 到 GitHub 的网络一般很好，直接 `!git clone https://...` 即可；本机练习时遇到超时就换 SSH。
+> 本机练习时遇到 HTTPS 超时就换 SSH；Colab 到 GitHub 的网络一般很好，直接 `!git clone https://...` 即可。
+
+**Colab 里实际克隆的样子**（2026-09-22 实机：28,386 个对象 / 13.80 MiB / 21.41 MiB/s，一次成功无需换通道）：
+
+![Colab git clone 实录](assets/colab-git-clone-llamafactory.png)
+
+*Colab 实机截图：`git clone` 直连成功。注意 cloned 仓库就落在 notebook 工作目录里，`%cd LLaMA-Factory` 进入*
 
 ### 5.3 安装
 
