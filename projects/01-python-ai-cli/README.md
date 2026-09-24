@@ -105,6 +105,9 @@ src/
 │   └── errors.py         # 自定义异常
 └── tests/
     └── test_all.py
+
+exercises/                 # 配套练习（01-basic ~ 04-challenge，做完打 ✅）
+└── 01-basic/README.md    # Milestone 01-02 的 8 道练习
 ```
 
 运行：
