@@ -22,3 +22,14 @@
 
 A1-A3 + B1-B4 全部亲手跑通 = Milestone 01 ✅ + Milestone 02 可标记 🎓。
 B5 做不出来没关系，学到 Milestone 06 回来补刀。
+
+## 参考答案
+
+写完再看：[`answers.py`](answers.py)（带 Java 类比注释）
+
+```bash
+python3 answers.py                # 用示例数据跑一遍，看输出
+python3 answers.py --interactive  # 交互模式，真的等你输入
+```
+
+规矩：**先自己敲、跑通了再对照**。只准看卡住的那一个函数，不要整份抄。

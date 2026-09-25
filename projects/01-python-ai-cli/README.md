@@ -68,7 +68,7 @@ v1.0  Real LLM API — 项目接入真实 AI
 | 06 | [Exception](milestones/06-exception.md) | ⬜ | try / except / raise / 自定义异常 |
 | 07 | [File / JSON Persistence](milestones/07-file-json.md) | ⬜ | 文件读写 / JSON 文件 / 持久化消息 |
 | 08 | [venv / pip / Environment](milestones/08-venv-pip.md) | ⬜ | venv / pip / requirements.txt |
-| 09 | [HTTP / API](milestones/09-http-api.md) | ⬜ | requests / HTTP 基础 / REST API |
+| 09 | [HTTP / API](milestones/09-http-api.md) | ⬜ | urllib / HTTP 基础 / REST API |
 | 10 | [Real LLM API](milestones/10-real-llm-api.md) | ⬜ | 真实 LLM 调用 / 串起所有知识 |
 
 ## 当前状态
@@ -106,8 +106,11 @@ src/
 └── tests/
     └── test_all.py
 
-exercises/                 # 配套练习（01-basic ~ 04-challenge，做完打 ✅）
-└── 01-basic/README.md    # Milestone 01-02 的 8 道练习
+exercises/                 # 配套练习（做完打 ✅，每题亲手敲）
+├── 01-basic/             # M01-02 · 8 道题 + 参考答案 answers.py
+├── 02-practice/          # M03-06 · 条件循环 / 函数 / 模块包 / 异常（已播种）
+├── 03-project/           # M07-09 · 往 src/ 里加功能的实战题（已播种）
+└── 04-challenge/         # M10 · v1.0 综合挑战（已播种）
 ```
 
 运行：
