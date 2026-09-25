@@ -23,15 +23,14 @@
 | Day0.6 | [自己采购硬件](Day0.6-自己采购硬件.md) |
 | Day0.7 | [企业级硬件采购视角](Day0.7-企业级硬件采购视角.md) |
 
-> 已知问题：Day1–Day10 十篇的文档内标题同为「第一次微调实战」，只能靠文件名区分。
-> 校对时顺手把文首 H1 改成可区分的标题（如「Day7 — 第一次微调实战：<具体主题>」）。
+> Day1–Day10 已修复：文件名与文首 H1 均已改为可区分的主题标题。
 
 ### 第一次微调实战（Day1-10）
 | 篇 | 文件 |
 |----|------|
-| Day1 | [第一次微调实战](Day1-第一次微调实战.md)（已改写为教程 03） |
-| Day2 | [01](Day2-01-第一次微调实战.md) · [02](Day2-02-第一次微调实战.md) · [03](Day2-03-第一次微调实战.md) |
-| Day3-10 | [Day3](Day3-第一次微调实战.md) · [Day4](Day4-第一次微调实战.md) · [Day5](Day5-第一次微调实战.md) · [Day6](Day6-第一次微调实战.md) · [Day7](Day7-第一次微调实战.md) · [Day8](Day8-第一次微调实战.md) · [Day9](Day9-第一次微调实战.md) · [Day10](Day10-第一次微调实战.md) |
+| Day1 | [第一次微调实战](Day1-Colab跑通Qwen-LLaMA-Factory.md)（已改写为教程 03） |
+| Day2 | [01](Day2-01-数据集注册-dataset-info.md) · [02](Day2-02-QLoRA训练配置-train-yaml.md) · [03](Day2-03-启动QLoRA训练.md) |
+| Day3-10 | [Day3](Day3-LoRA接入Ollama-SpringBoot.md) · [Day4](Day4-RAG结合LoRA构建Agent.md) · [Day5](Day5-SpringBoot-Milvus-RAG.md) · [Day6](Day6-RAG-LoRA-ToolCalling-Agent.md) · [Day7](Day7-Agent生产级工程化.md) · [Day8](Day8-包装成求职项目.md) · [Day9](Day9-模拟AI工程师面试.md) · [Day10](Day10-面试100问与项目答辩.md) |
 
 ### 企业级部署与平台（Day11-30）
 | 篇 | 文件 |

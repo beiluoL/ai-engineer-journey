@@ -1,4 +1,4 @@
-# 第一次微调实战 Day8
+# 大模型微调实战 Day8：把 Agent 包装成真实求职项目
 
 # 把 Java AI Interview Agent 包装成真实求职项目
 

@@ -1,4 +1,4 @@
-# 第一次微调实战 Day2-01
+# 大模型微调实战 Day2-01：把 java_interview.json 注册进 LLaMA-Factory 数据集系统
 
 # 把 `java_interview.json` 注册到 LLaMA-Factory 数据集系统
 

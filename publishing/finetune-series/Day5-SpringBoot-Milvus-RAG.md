@@ -1,4 +1,4 @@
-# 第一次微调实战 Day5
+# 大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline
 
 # Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline
 

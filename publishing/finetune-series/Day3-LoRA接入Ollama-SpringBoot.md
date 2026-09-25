@@ -1,4 +1,4 @@
-# 第一次微调实战 Day3
+# 大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot
 
 # 把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j
 

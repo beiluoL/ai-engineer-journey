@@ -1,4 +1,4 @@
-# 第一次微调实战 Day2-02
+# 大模型微调实战 Day2-02：创建 QLoRA 训练配置 train.yaml
 
 # 创建 QLoRA 训练配置文件 `train.yaml`
 

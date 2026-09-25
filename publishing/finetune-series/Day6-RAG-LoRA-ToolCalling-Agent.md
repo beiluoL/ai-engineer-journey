@@ -1,4 +1,4 @@
-# 第一次微调实战 Day6
+# 大模型微调实战 Day6：实现完整 Agent（RAG + LoRA + Tool Calling）
 
 # 实现完整 Agent：RAG + LoRA + Tool Calling
 

@@ -1,4 +1,4 @@
-# 第一次微调实战 Day7
+# 大模型微调实战 Day7：Spring Boot + LangChain4j Agent 生产级工程化
 
 # Spring Boot + LangChain4j Agent 生产级工程化
 

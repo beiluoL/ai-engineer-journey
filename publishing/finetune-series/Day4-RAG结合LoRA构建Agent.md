@@ -1,4 +1,4 @@
-# 第一次微调实战 Day4
+# 大模型微调实战 Day4：RAG + LoRA 结合，构建可用的 Java AI Interview Agent
 
 # 把 RAG + LoRA 结合：构建真正可用的 Java AI Interview Agent
 
