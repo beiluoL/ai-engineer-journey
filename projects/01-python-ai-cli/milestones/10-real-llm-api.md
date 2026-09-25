@@ -77,6 +77,10 @@ Python
 
 > **你的第一个真正 AI 应用诞生了。**
 
+这不是效果图，是本项目真实跑出来的一次调用：
+
+![真实调用 DeepSeek API 的输出](../assets/term-real-llm-call.png)
+
 ---
 
 # 二、先不要急着写代码
@@ -360,6 +364,10 @@ BASE_URL=你的服务地址
 ```
 
 中忽略。
+
+这就是为什么项目在「缺 Key」时不会崩溃，而是给出带修复指引的提示 —— 这是 `config.py` 抛出的 `LLMConfigError`：
+
+![缺 Key 时的友好报错](../assets/term-config-error.png)
 
 ---
 

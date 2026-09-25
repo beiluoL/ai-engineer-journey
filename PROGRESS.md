@@ -32,8 +32,8 @@
 
 | 部分 | 状态 |
 |------|------|
-| Project 01 milestones 01-10 | ✅ 全部成文 |
-| Project 01 src + tests | ✅ v0.2 骨架，6 个 unittest 全绿 |
+| Project 01 milestones 01-10 | ✅ 全部成文；08 / 09 / 10 与 README 已配真实运行截图 |
+| Project 01 src + tests | ✅ v0.2 骨架，6 个 unittest 全绿（已实测真实调用 DeepSeek API 成功） |
 | Project 01 exercises | ✅ 01-basic 有 8 题 + 参考答案；02 / 03 / 04 已播种（待做） |
 | Project 02 milestones | 📝 00 / 01 / 03 / 04 / 05 / 07 成文（草稿待校对，缺 02 / 06 / 08 / 09） |
 | Project 02 src | ⬜ 空（文档先行，代码未动） |

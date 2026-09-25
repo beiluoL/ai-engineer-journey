@@ -92,6 +92,22 @@ Next:
 
 **v0.2** — 有真实 LLM API 调用骨架，10 个 Milestone 完成 2 个。
 
+## 运行效果
+
+以下是本仓库当前代码的**真实运行输出**（不是效果图）。
+
+接入真实 LLM API 后，一行命令就能问答：
+
+![真实调用 LLM API](assets/term-real-llm-call.png)
+
+单元测试保持全绿（每次改代码后都会跑）：
+
+![单元测试 6/6 通过](assets/term-unittest.png)
+
+没配 Key 时不会崩溃，而是给出修复指引（异常层在起作用）：
+
+![缺 Key 时的友好报错](assets/term-config-error.png)
+
 ## 项目结构
 
 ```

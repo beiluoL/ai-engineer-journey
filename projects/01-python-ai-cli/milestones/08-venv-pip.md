@@ -303,6 +303,10 @@ projects/01-python-ai-cli/
 └── ...
 ```
 
+下面是完整的创建 → 激活 → 装依赖 → 导出 → 退出流程实测（输出有节选）：
+
+![venv 创建到退出的完整流程实测](../assets/term-venv-flow.png)
+
 ---
 
 # 六、为什么目录叫 `.venv`？

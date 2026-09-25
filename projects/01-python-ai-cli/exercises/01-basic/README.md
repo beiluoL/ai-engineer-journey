@@ -32,4 +32,8 @@ python3 answers.py                # 用示例数据跑一遍，看输出
 python3 answers.py --interactive  # 交互模式，真的等你输入
 ```
 
+参考答案的运行输出（真实跑出来的）：
+
+![answers.py 运行输出](../../assets/term-exercise-answers.png)
+
 规矩：**先自己敲、跑通了再对照**。只准看卡住的那一个函数，不要整份抄。

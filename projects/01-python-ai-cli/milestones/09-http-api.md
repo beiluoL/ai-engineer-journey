@@ -556,6 +556,10 @@ Body：
 → 服务端处理有问题
 ```
 
+看一个真实例子 —— 用标准库 `urllib` 发一个 GET 请求，拿到 200：
+
+![urllib GET 请求实测：状态码 200](../assets/term-http-urllib.png)
+
 ---
 
 # 十四、一个非常重要的面试点：401 vs 403
