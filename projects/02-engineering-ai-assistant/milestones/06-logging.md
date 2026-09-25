@@ -314,4 +314,8 @@ logger.exception("失败")    # ❌ 没有异常上下文，堆栈是 None
 - [ ] 敏感信息（API Key / Authorization 头）已脱敏
 - [ ] 关键路径有耗时打点，能从日志算出一次调用的延迟
 
+实际效果——`LOG_FORMAT=json` 切换后，一次调用带出 model / prompt_tokens / completion_tokens：
+
+![JSON 结构化日志](../assets/term-json-logs.png)
+
 下一章：[07-testing-and-debugging.md](07-testing-and-debugging.md) —— 让改动不再心慌。

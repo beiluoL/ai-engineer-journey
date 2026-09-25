@@ -1303,3 +1303,9 @@ Reusable Async LLM Client
 > **Chapter 03 — Type Hints【类型提示】**
 
 这一章会开始解决 Python 动态类型在大型 AI 项目中的可维护性问题，并把 `dict` 和裸数据逐步变成更明确的数据结构。
+
+---
+
+> **实跑验证**（2026-09-26）：基于本章的 httpx 客户端 + SSE 解析，`--stream` 参数已能逐段输出：
+
+![流式输出实测](../assets/term-stream.png)

@@ -307,4 +307,8 @@ class Settings:
 - [ ] 敏感字段用 `field(repr=False)` 隐藏
 - [ ] 测试里能造一个假 `Settings` 注入进 client，不需要真实 Key
 
+实际效果——没配 Key 时得到的是友好提示而不是 traceback：
+
+![未配置 Key 时的友好报错](../assets/term-config-error.png)
+
 下一章：[06-logging.md](06-logging.md) —— 让程序会「说话」。

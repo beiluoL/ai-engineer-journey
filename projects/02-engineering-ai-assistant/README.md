@@ -77,7 +77,21 @@ Engineering AI Assistant Service
 
 ## 当前版本
 
-**v0.1** — 文档齐备，`src/` 正在落地（async CLI → FastAPI）。
+**v0.1** — async CLI 已落地并真实调通 DeepSeek API；FastAPI 层（Chapter 09）待实现。
+
+## 运行效果
+
+以下全部来自真实运行（26 项 pytest 不联网，LLM 调用为真实 API）：
+
+![真实调用 DeepSeek API](assets/term-real-call.png)
+
+多轮对话——第二轮能记住第一轮说的名字，说明 Conversation 的历史累积生效：
+
+![多轮对话，历史累积生效](assets/term-interactive.png)
+
+测试全程用 FakeClient，不联网、不花钱、16 毫秒跑完：
+
+![pytest 26 项全部通过](assets/term-pytest.png)
 
 ## 项目结构
 
