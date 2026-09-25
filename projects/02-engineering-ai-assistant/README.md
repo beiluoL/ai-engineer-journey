@@ -51,25 +51,27 @@ Engineering AI Assistant Service
 
 | # | Milestone | 状态 | 核心能力 |
 |---|-----------|------|----------|
-| 00 | Classes and OOP | ⬜ | class / self / 构造函数 / 继承 / 封装 |
-| 01 | Async / Await | ⬜ | asyncio / coroutine / event loop |
+| 00 | Classes and OOP | 📝 | class / self / 构造函数 / 继承 / 封装 |
+| 01 | Async / Await | 📝 | asyncio / coroutine / event loop |
 | 02 | Async HTTP Client | ⬜ | aiohttp / httpx / 异步请求 |
-| 03 | Type Hints | ⬜ | typing / 泛型 / 函数签名 |
-| 04 | Dataclass | ⬜ | dataclass / pydantic model |
-| 05 | Config / Environment | ⬜ | .env / python-dotenv / 配置管理 |
+| 03 | Type Hints | 📝 | typing / 泛型 / 函数签名 |
+| 04 | Dataclass | 📝 | dataclass / pydantic model |
+| 05 | Config / Environment | 📝 | .env / python-dotenv / 配置管理 |
 | 06 | Logging | ⬜ | logging / 日志级别 / 结构化日志 |
-| 07 | Testing / Debugging | ⬜ | pytest / 单元测试 / 调试方法 |
+| 07 | Testing / Debugging | 📝 | pytest / 单元测试 / 调试方法 |
 | 08 | Packaging | ⬜ | pyproject.toml / 发布 / 安装 |
 | 09 | FastAPI | ⬜ | FastAPI / 路由 / 中间件 / 依赖注入 |
 
 ## 当前状态
 
-⬜ 未开始
+📝 部分成文（草稿待校对）：6 / 10 个 Milestone 已有内容，缺 02 / 06 / 08 / 09。
+`src/` 仍是空的 —— 文档先行，代码尚未开始。
 
-从 Project 01 继承的占位文件（待填充）：
+已成文文件（均为 📝 草稿，未人工校对）：
 - `00-classes-and-oop.md`（原 Project 01 OOP 内容）
 - `01-async-await.md`（原 Project 01 async 内容）
-- `03-type-hints-and-dataclass.md`（原 Project 01 typing 内容）
+- `03-type-hints.md`（原 Project 01 typing 内容）
+- `04-dataclass.md`（原 Project 01 dataclass 内容）
 - `05-config-and-environment.md`（原 Project 01 config 内容）
 - `07-testing-and-debugging.md`（原 Project 01 testing 内容）
 

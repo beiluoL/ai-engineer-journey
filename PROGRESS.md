@@ -34,11 +34,14 @@
 |------|------|
 | Project 01 milestones 01-10 | ✅ 全部成文 |
 | Project 01 src + tests | ✅ v0.2 骨架，6 个 unittest 全绿 |
-| Project 02 milestones | 📝 00 / 01 / 03 / 04 / 05 / 07 成文（草稿待校对，缺 02 / 06） |
+| Project 01 exercises | ✅ 01-basic 有 8 题 + 参考答案；02 / 03 / 04 已播种（待做） |
+| Project 02 milestones | 📝 00 / 01 / 03 / 04 / 05 / 07 成文（草稿待校对，缺 02 / 06 / 08 / 09） |
+| Project 02 src | ⬜ 空（文档先行，代码未动） |
 | Project 03-10 | ⬜ 空壳（README 就绪） |
 | publishing/tutorials | ✅ 4 篇图文教程已发布（md + html） |
-| publishing/finetune-series | 📝 35 篇草稿（未校对，择优转正 tutorials） |
+| publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials） |
 | publishing/articles | 📝 2 篇 |
+| CI | ✅ GitHub Actions：单测 + 死链坏图扫描 + 密钥文件检查 |
 
 ## 10 项目状态总览
 
@@ -57,6 +60,14 @@
 
 ## Next
 
-1. 学完 Milestone 02（练习见 `projects/01-python-ai-cli/exercises/`）
-2. 逐篇校对 Project 02 草稿章节（📝 → ✅），补齐 02 / 06 编号缺口
-3. 校对 finetune-series 草稿，择优改写为 tutorial 05+
+1. 做完 `exercises/01-basic` 的 8 题（**先自己敲，再对照 `answers.py`**）→ M02 标记 🎓
+2. 逐篇校对 Project 02 草稿章节（📝 → ✅），补齐 02 / 06 / 08 / 09
+3. 校对 finetune-series 草稿，择优改写为 tutorial 05+；顺手修掉 Day1-10 重复的文内标题
+4. Project 02 开工：把 `src/` 从空壳做到 async 版 CLI（文档已经就位）
+
+## 维护工具
+
+```bash
+python3 scripts/check_links.py --strict   # 死链 + 坏图体检（CI 也在跑）
+cd projects/01-python-ai-cli/src && python3 -m unittest discover -s tests
+```

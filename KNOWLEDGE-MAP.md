@@ -55,8 +55,8 @@ Mini LLM（Tokenizer → Transformer → Training → Inference → Deploy）
 | Classes and OOP | 00-classes-and-oop | 数据 + 行为封装 |
 | Async / Await | 01-async-await | 并发基础 |
 | Async HTTP Client | 02-async-http-client | 异步请求 |
-| Type Hints | 03-type-hints-and-dataclass | 类型安全 |
-| Dataclass | 03-type-hints-and-dataclass | 数据类 |
+| Type Hints | 03-type-hints | 类型安全 |
+| Dataclass | 04-dataclass | 数据类 |
 | Config / Environment | 05-config-and-environment | 配置管理 |
 | Logging | （待创建）| 可观测性 |
 | Testing / Debugging | 07-testing-and-debugging | 质量保证 |

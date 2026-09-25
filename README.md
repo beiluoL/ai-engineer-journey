@@ -33,7 +33,7 @@ Documentation
 | # | 项目 | 核心能力 | 状态 |
 |---|------|----------|------|
 | 01 | [Python AI CLI Assistant](projects/01-python-ai-cli/) | Python 基础 + 真实 LLM API | 🔄 |
-| 02 | [Engineering AI Assistant](projects/02-engineering-ai-assistant/) | Python 工程化 + FastAPI | ⬜ |
+| 02 | [Engineering AI Assistant](projects/02-engineering-ai-assistant/) | Python 工程化 + FastAPI | 📝 |
 | 03 | [AI Application](projects/03-ai-application/) | Prompt / Streaming / Function Calling | ⬜ |
 | 04 | [AI Knowledge Base / RAG](projects/04-rag/) | Embedding / Chunk / Vector DB / RAG | ⬜ |
 | 05 | [Research Agent / MCP](projects/05-agent-mcp/) | Agent / Tool / MCP Protocol | ⬜ |
@@ -50,18 +50,23 @@ ai-engineer-journey/
 │
 ├── README.md              # 本文件
 ├── ROADMAP.md             # 10 项目路线图
-├── PROGRESS.md            # 当前状态
+├── PROGRESS.md            # 双轨进度（学习进度 / 内容生产）
 ├── KNOWLEDGE-MAP.md       # 能力关系网（只展示关联，不复制正文）
+├── CONTRIBUTING.md        # 维护规范（单一事实源 / 命名 / 分级 / Git 约定）
 ├── LICENSE
 ├── .gitignore
+│
+├── mistakes/              # 错题本：真实踩过的坑（日期 + 原因 + 修复）
+│   └── README.md
 │
 ├── projects/              # 核心内容（唯一事实源）
 │   ├── 01-python-ai-cli/
 │   │   ├── README.md          # 项目主页（必须对齐规范模板）
-│   │   ├── milestones/       # 学习里程碑（14 段 Project First 模板）
+│   │   ├── milestones/       # 学习里程碑（Project First 模板）
 │   │   │   ├── 01-variables.md
 │   │   │   ├── 02-list-dict-json.md
-│   │   │   └── ...
+│   │   │   └── ...（共 10 个）
+│   │   ├── exercises/        # 配套练习（01-basic 已有题，02/03/04 待播种）
 │   │   └── src/              # 项目代码
 │   ├── 02-engineering-ai-assistant/
 │   └── ...（共 10 个项目）
