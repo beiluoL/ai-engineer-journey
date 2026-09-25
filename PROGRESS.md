@@ -36,7 +36,7 @@
 | Project 01 src + tests | ✅ v0.2 骨架，6 个 unittest 全绿（已实测真实调用 DeepSeek API 成功） |
 | Project 01 exercises | ✅ 01-basic 有 8 题 + 参考答案；02 / 03 / 04 已播种（待做） |
 | Project 02 milestones | 10/10 齐备：6 篇已校对（00/05/06/07/08/09），4 篇迁移草稿待校对（01-04） |
-| Project 02 src | ✅ v0.1 async CLI 落地：分层抽象 + httpx 连接池 + FakeClient，26 项 pytest 全绿（离线），真实调通 DeepSeek |
+| Project 02 src | ✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek |
 | Project 03-10 | ⬜ 空壳（README 就绪） |
 | publishing/tutorials | ✅ 4 篇图文教程已发布（md + html） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials） |
@@ -48,7 +48,7 @@
 | # | 项目 | 学习进度 | 内容状态 |
 |---|------|---------|---------|
 | 01 | Python AI CLI Assistant | 🔄 M02 | ✅ v0.2 |
-| 02 | Engineering AI Assistant | ⬜ | 🔄 v0.1 async CLI 落地 |
+| 02 | Engineering AI Assistant | ⬜ | ✅ v0.2 CLI + API 双形态 |
 | 03 | AI Application | ⬜ | ⬜ |
 | 04 | AI Knowledge Base / RAG | ⬜ | ⬜ |
 | 05 | Research Agent / MCP | ⬜ | ⬜ |
@@ -61,7 +61,7 @@
 ## Next
 
 1. 做完 `exercises/01-basic` 的 8 题（**先自己敲，再对照 `answers.py`**）→ M02 标记 🎓
-2. Project 02 继续：Chapter 09 FastAPI 层（`api.py` + SSE 流式 + TestClient 集成测试）
+2. Project 02 收尾：逐篇校对迁移草稿（01-04），P02 学习进度推进
 3. 校对 finetune-series 草稿，择优改写为 tutorial 05+；顺手修掉 Day1-10 重复的文内标题
 4. 逐篇校对 Project 02 迁移草稿（01-04，📝 → ✅）
 

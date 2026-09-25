@@ -409,3 +409,10 @@ app.add_middleware(
 ```
 
 回到总纲：[../OVERVIEW.md](../OVERVIEW.md)
+
+---
+
+> **实跑验证**（2026-09-26）：uvicorn 启动后，三个端点全部真实调通——
+> `/health` 探活、`/chat` 一次性返回、`/chat/stream` SSE 逐段推送：
+
+![FastAPI 三端点实测](../assets/term-fastapi.png)
