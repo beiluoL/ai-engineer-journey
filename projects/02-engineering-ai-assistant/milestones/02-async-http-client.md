@@ -1,5 +1,11 @@
 # Project 02 — Chapter 02：Async HTTP Client【异步 HTTP 客户端】
 
+> **本章 ↔ `src/` 对照**（校对时补：本章概念在真实代码里的落点）
+> - `src/assistant/client.py: DeepSeekClient` — 用 `httpx.AsyncClient` 当**长连接池**（`__init__` 创建、`aclose()` 释放），不是每次请求新建一个
+> - 同文件 `_request()` — 对 `429` / 超时做**指数退避重试**；分层 timeout（连接 / 读取分开设）
+> - 同文件 `FakeClient` — 与 `DeepSeekClient` 同接口（`BaseLLMClient` 子类）的离线替身，测试用它不联网不花钱
+> - `src/assistant/errors.py` — HTTP 状态码被翻译成业务异常（`LLMRateLimitError` / `LLMAuthError` / `LLMResponseError`），上层不裸接 httpx 异常
+
 ## 1. 项目问题
 
 上一章我们已经知道：

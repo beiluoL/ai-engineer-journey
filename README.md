@@ -33,7 +33,7 @@ Documentation
 | # | 项目 | 核心能力 | 状态 |
 |---|------|----------|------|
 | 01 | [Python AI CLI Assistant](projects/01-python-ai-cli/) | Python 基础 + 真实 LLM API | 🔄 |
-| 02 | [Engineering AI Assistant](projects/02-engineering-ai-assistant/) | Python 工程化 + FastAPI | 📝 |
+| 02 | [Engineering AI Assistant](projects/02-engineering-ai-assistant/) | Python 工程化 + FastAPI | ✅ |
 | 03 | [AI Application](projects/03-ai-application/) | Prompt / Streaming / Function Calling | ⬜ |
 | 04 | [AI Knowledge Base / RAG](projects/04-rag/) | Embedding / Chunk / Vector DB / RAG | ⬜ |
 | 05 | [Research Agent / MCP](projects/05-agent-mcp/) | Agent / Tool / MCP Protocol | ⬜ |
@@ -42,6 +42,9 @@ Documentation
 | 08 | [LoRA / QLoRA Fine-Tuning](projects/08-fine-tuning/) | SFT / LoRA / QLoRA | ⬜ |
 | 09 | [LLM Evaluation / Inference](projects/09-evaluation-inference/) | 评估 / 量化 / vLLM 服务化 | ⬜ |
 | 10 | [Tiny LLM Capstone](projects/10-tiny-llm-capstone/) | 从零实现小型 LLM | ⬜ |
+
+> 状态列指**内容状态**：✅ 已完成 / 🔄 进行中 / 📝 草稿 / ⬜ 未开始。
+> 「我是否真的学会了」另记在 [PROGRESS.md](PROGRESS.md) 的学习进度轨 —— 文档就绪 ≠ 已掌握。
 
 ## 仓库结构
 

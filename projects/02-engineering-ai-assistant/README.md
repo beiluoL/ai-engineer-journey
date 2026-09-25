@@ -53,10 +53,10 @@ Engineering AI Assistant Service
 |---|-----------|------|----------|
 | — | [总纲：从 Script 到 Application](OVERVIEW.md) | ✅ | 为什么要工程化 + 10 章路线 |
 | 00 | [Classes and OOP](milestones/00-classes-and-oop.md) | ✅ | class / self / 构造函数 / 继承 / 封装 |
-| 01 | [Async / Await](milestones/01-async-await.md) | 📝 | asyncio / coroutine / event loop |
-| 02 | [Async HTTP Client](milestones/02-async-http-client.md) | 📝 | httpx / 连接池 / 超时 / 重试 |
-| 03 | [Type Hints](milestones/03-type-hints.md) | 📝 | typing / 泛型 / Protocol |
-| 04 | [Dataclass](milestones/04-dataclass.md) | 📝 | dataclass / frozen / field |
+| 01 | [Async / Await](milestones/01-async-await.md) | ✅ | asyncio / coroutine / event loop |
+| 02 | [Async HTTP Client](milestones/02-async-http-client.md) | ✅ | httpx / 连接池 / 超时 / 重试 |
+| 03 | [Type Hints](milestones/03-type-hints.md) | ✅ | typing / 泛型 / Protocol |
+| 04 | [Dataclass](milestones/04-dataclass.md) | ✅ | dataclass / frozen / field |
 | 05 | [Config / Environment](milestones/05-config-and-environment.md) | ✅ | .env / Settings / 依赖注入 |
 | 06 | [Logging](milestones/06-logging.md) | ✅ | logging / 级别 / 结构化日志 |
 | 07 | [Testing / Debugging](milestones/07-testing-and-debugging.md) | ✅ | pytest / Fake / fixture |
@@ -67,7 +67,13 @@ Engineering AI Assistant Service
 
 ## 当前状态
 
-**10 / 10 个 Milestone 全部有内容**，其中 6 篇已校对（00、05、06、07、08、09），4 篇为迁移草稿（01–04，源自 Project 01，待逐篇校对）。
+**10 / 10 个 Milestone 全部有内容且已校对。**
+
+校对的口径（01–04 为迁移长文，共 4970 行）：
+
+- 172 个 Python 代码块全部 `ast.parse()` 通过（13 处报错经逐条确认均为有意的示意片段，如 `async def chat(...)`）
+- 与真实 `src/` 逐项核对类名 / 文件名，不一致处已在各章开头补「本章 ↔ `src/` 对照」块
+- 例如 04 章练习里的 `LLMConfig` / `ChatSession`，真实代码里是 `Settings` / `Conversation`（见该章对照表）
 
 历史遗留已修复：
 

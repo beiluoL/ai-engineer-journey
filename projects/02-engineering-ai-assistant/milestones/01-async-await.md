@@ -1,5 +1,11 @@
 # Project 02 — Chapter 01：Async / Await【异步 / 等待】
 
+> **本章 ↔ `src/` 对照**（校对时补：本章概念在真实代码里的落点）
+> - `src/assistant/client.py` — `DeepSeekClient.chat()` / `.astream()` 是 `async def`，`await` 的是网络 I/O
+> - `src/assistant/cli.py` — `main()` 是**整个程序唯一一次** `asyncio.run()`（曾因调用两次导致退出时 `Event loop is closed`）
+> - `src/assistant/service.py` — `AssistantService` 的 async 方法只依赖 `BaseLLMClient` 抽象，不关心底层是否真异步
+> - `tests/conftest.py` — `FakeClient` 让 async 测试完全离线、零 Key
+
 ## 1. 项目问题
 
 现在调用 LLM API 的代码通常是：

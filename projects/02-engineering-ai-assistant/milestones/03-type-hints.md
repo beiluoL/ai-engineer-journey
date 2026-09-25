@@ -1,5 +1,11 @@
 # Project 02 — Chapter 03：Type Hints【类型提示】
 
+> **本章 ↔ `src/` 对照**（校对时补：本章概念在真实代码里的落点）
+> - `src/assistant/settings.py: Settings` — 每个字段都有类型注解，`from_env()` 负责 `str → float/int` 转换
+> - `src/assistant/client.py: BaseLLMClient` — 抽象基类 + 完整签名类型；`DeepSeekClient` / `FakeClient` 都实现它
+> - `src/assistant/conversation.py` — 历史统一为 `list[dict[str, str]]`，与 OpenAI 的 messages 契约对齐
+> - `src/assistant/api.py` — FastAPI 用 Pydantic `BaseModel` 做**运行时**校验（类型提示只管静态，边界还得靠它）
+
 ## 1. 项目问题
 
 上一章我们已经把 AI Assistant 的网络层升级成：

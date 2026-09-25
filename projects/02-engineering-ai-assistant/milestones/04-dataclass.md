@@ -1,5 +1,19 @@
 # Project 02 — Chapter 04：Dataclass【数据类】
 
+> **本章 ↔ `src/` 对照**（校对时补：本章练习里的类名与真实代码的对应关系）
+>
+> 本章 Task 里让你造的三个类，在真实代码里**换了名字**（练习名更直白，真实名更贴合职责）：
+>
+> | 本章练习 | 真实代码 | 位置 |
+> |---|---|---|
+> | `LLMConfig` | `Settings` | `src/assistant/settings.py` |
+> | `ChatSession` | `Conversation` | `src/assistant/conversation.py` |
+> | `Message`（dataclass） | `dict[str, str]` | 沿用 OpenAI 的 messages 契约，未单独建模 |
+>
+> 两处做得比本章练习更进一步：
+> - `Settings` 用 `@dataclass(frozen=True)`，且 `api_key` 设 `Field(repr=False)` —— **打印对象不会泄露 Key**
+> - `Conversation` 没有直接暴露 `messages` 字段，而是用 `@property` 返回**副本** —— 外部拿到也改不动内部历史
+
 ## 1. 项目问题
 
 上一章我们已经把 AI Assistant 的类型边界逐渐建立起来：
