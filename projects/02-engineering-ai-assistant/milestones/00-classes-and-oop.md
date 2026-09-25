@@ -1,850 +1,354 @@
-# Project 02 — Python Engineering【Python 工程化】
+# Project 02 — Chapter 00：Classes and OOP【类与面向对象】
 
-## 一、项目定位
-
-上一阶段：
-
-> Project 01 — Python AI CLI Assistant
-
-我们已经完成：
-
-```text
-Python 基础
-↓
-数据结构
-↓
-控制流
-↓
-函数
-↓
-模块
-↓
-异常
-↓
-持久化
-↓
-虚拟环境
-↓
-HTTP API
-↓
-真实 LLM API
-```
-
-现在进入：
-
-> **Project 02 — Python Engineering【Python 工程化】**
-
-核心任务：
-
-> **把一个“能运行的 AI CLI 程序”，升级成“真正的 Python AI 工程”。**
+> 状态：✅ 已校对
+> 前置：Project 01 v1.0（已有 `LLMClient` 类）
+> 对应代码：`src/assistant/`
 
 ---
 
-# 二、为什么需要这个项目
+## 1. 项目要增加什么能力
 
-Project 01 可以运行，但继续开发后会遇到新的问题：
-
-```text
-请求一多
-↓
-程序被阻塞
-
-代码一复杂
-↓
-类型越来越混乱
-
-配置一多
-↓
-环境难以管理
-
-程序一出问题
-↓
-不知道发生在哪里
-
-功能越来越多
-↓
-修改一个地方可能影响其他地方
-
-代码完成
-↓
-却不知道是不是正确
-```
-
-所以 Python Engineering 这一阶段，不再主要解决：
-
-> “Python 语法怎么写？”
-
-而是解决：
-
-> **“Python 项目怎么工程化？”**
-
----
-
-# 三、项目目标
-
-最终把：
-
-```text
-Python CLI Script
-```
-
-升级成：
-
-```text
-Engineering AI Assistant
-```
-
-具备：
-
-```text
-异步能力
-+
-可靠 HTTP Client
-+
-类型系统
-+
-结构化数据
-+
-配置管理
-+
-日志
-+
-测试
-+
-Debugging【调试】
-+
-Packaging【打包】
-+
-FastAPI
-```
-
-最终架构：
-
-```text
-CLI / HTTP Request
-        ↓
-Application Layer
-        ↓
-AI Service
-        ↓
-Async HTTP Client
-        ↓
-LLM API
-        ↓
-Response
-        ↓
-Logging / Error Handling
-        ↓
-Response
-```
-
----
-
-# 四、Chapter / Milestone 正式路线
-
-```text
-Project 02
-Engineering AI Assistant
-
-Chapter 01
-Async / Await【异步 / 等待】
-
-Chapter 02
-Async HTTP Client【异步 HTTP 客户端】
-
-Chapter 03
-Type Hints【类型提示】
-
-Chapter 04
-Dataclass【数据类】
-
-Chapter 05
-Config / Environment【配置 / 环境变量】
-
-Chapter 06
-Logging【日志】
-
-Chapter 07
-Testing / Debugging【测试 / 调试】
-
-Chapter 08
-Packaging【打包】
-
-Chapter 09
-FastAPI【Python Web 框架】
-
-                ↓
-
-Final Project
-Engineering AI Assistant
-```
-
----
-
-# 五、项目演进关系
-
-Project 01：
-
-```text
-用户
-↓
-CLI
-↓
-LLM API
-↓
-返回结果
-```
-
-Project 02：
-
-```text
-用户 / HTTP
-↓
-API Layer
-↓
-Application Service
-↓
-Async HTTP Client
-↓
-LLM API
-↓
-Response
-↓
-Logging
-↓
-Testing
-↓
-Service
-```
-
-联系描述：
-
-Project 01 主要让程序“能调用模型”。
-
-Project 02 开始解决真实工程中的并发、可维护性、配置、日志、测试和服务化问题。
-
-因此 Project 02 并不是重新学一套 Python，而是在 **Project 01 的代码基础上持续重构**。
-
----
-
-# 六、Chapter 01 — Async / Await【异步 / 等待】
-
-## 1. 项目问题
-
-现在调用 LLM API 的代码通常是：
+Project 01 的 `LLMClient` **已经是一个类**了：
 
 ```python
-response = chat(messages)
+class LLMClient:
+    def __init__(self, config: Config, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> None:
+        self.config = config
+        self.system_prompt = system_prompt
+
+    def ask(self, question: str) -> str:
+        ...
 ```
 
-假设：
+但 Project 02 要面对新需求：
 
 ```text
-HTTP 请求耗时 3 秒
+需求 1：换成另一个模型厂商（OpenAI / 通义 / 本地 vLLM）怎么办？
+需求 2：想给「问答」加一层缓存、重试、日志，代码往哪放？
+需求 3：单元测试时，怎么在不联网的情况下测业务逻辑？
+需求 4：对话历史谁来管？散落在 main.py 里还是归某个对象？
 ```
 
-那么当前线程可能一直等待：
+这四个问题的答案都指向同一件事：
 
-```text
-开始请求
-   ↓
-等待网络
-   ↓
-等待服务器
-   ↓
-等待模型
-   ↓
-收到响应
-```
+> **用「抽象 + 继承 + 封装」把代码分层，而不是继续往一个类里堆方法。**
 
-在等待期间：
+本章目标：
 
-```text
-当前执行路径
-    ↓
-基本无法继续处理其他任务
-```
-
-对于 AI 应用尤其明显。
-
-因为：
-
-> **AI API 大量时间是在等待网络和模型响应。**
+> **把「一个类包打天下」重构成「抽象基类 + 具体实现 + 会话对象」的分层结构。**
 
 ---
 
-# 2. 同步 vs 异步
+## 2. 为什么需要这个知识
 
-### Synchronous【同步】
-
-```text
-任务 A
- ↓
-等待
- ↓
-完成
- ↓
-任务 B
- ↓
-等待
- ↓
-完成
-```
-
-### Asynchronous【异步】
+脚本阶段（Project 01）的代码是**按执行顺序**组织的：
 
 ```text
-任务 A
- ↓
-等待网络
- ──────────────┐
-               ↓
-任务 B          完成
- ↓
-等待网络
- ──────────────┘
+读配置 → 构造请求 → 发 HTTP → 解析 JSON → 打印
 ```
 
-注意：
+工程阶段（Project 02）的代码要**按职责**组织：
 
-**异步不等于“一个请求一定更快”。**
+```text
+谁负责配置？  → Config / Settings
+谁负责发请求？ → LLMClient（可以有多种实现）
+谁负责记住对话？ → Conversation
+谁负责业务流程？ → AssistantService
+谁负责对外接口？ → CLI / FastAPI
+```
 
-它主要解决的是：
+区别在哪里？脚本关心「**怎么做**」，工程关心「**谁来做**」。
 
-> **等待 I/O【输入输出】时，不要让程序只能干等。**
+而表达「谁来做」的工具，就是**类**。
 
 ---
 
-# 3. Coroutine【协程】
+## 3. 核心概念
 
-Python 中：
+### 3.1 class 与 instance【类与实例】
 
 ```python
-async def
+class LLMClient:          # 类：图纸
+    def __init__(self, api_key: str) -> None:
+        self.api_key = api_key   # 实例属性：每个对象各自一份
+
+    def ask(self, q: str) -> str:
+        return f"[{self.api_key[:4]}...] {q}"
+
+a = LLMClient("sk-aaaa")  # 实例：按图纸造出来的房子
+b = LLMClient("sk-bbbb")
 ```
 
-定义的是一个协程函数。
+Java 对照：
 
-例如：
+```java
+public class LLMClient {
+    private final String apiKey;
+    public LLMClient(String apiKey) { this.apiKey = apiKey; }
+    public String ask(String q) { return "[" + apiKey.substring(0,4) + "...] " + q; }
+}
+```
+
+### 3.2 `self` 到底是什么
+
+`self` **就是「当前这个对象」**，等价于 Java 的 `this`。
+
+不同点只有一个：Java 的 `this` 是编译器隐式提供的，Python 必须**显式写进第一个参数**。
 
 ```python
-async def chat():
-    print("开始请求")
-    ...
+def ask(self, question: str) -> str:   # 必须写 self
+    return self.config.model           # 用 self 访问自己的属性
 ```
 
-调用：
+调用时不用传它 —— `client.ask("你好")` 里，Python 会自动把 `client` 填进 `self`。
+
+### 3.3 `__init__` 是构造函数
 
 ```python
-chat()
+def __init__(self, config: Config) -> None:
+    self.config = config
 ```
 
-并不会像普通函数一样直接执行完毕。
+对应 Java：
 
-通常需要：
+```java
+public LLMClient(Config config) { this.config = config; }
+```
+
+注意：Python 的 `__init__` **不是**真正的构造函数（真正的是 `__new__`），它只是「对象创建完之后自动调用的第一个方法」。99% 的场景你只需要 `__init__`。
+
+### 3.4 继承：抽出共同点
+
+需求 1 说要支持多家厂商。它们的共同点：
+
+```text
+共同点：都有 api_key、都要发 chat 请求、都返回一段文本
+不同点：base_url 不同、请求体字段名可能不同、鉴权头格式略有差异
+```
+
+**共同点放进父类，不同点留给子类**：
 
 ```python
-await chat()
+from abc import ABC, abstractmethod
+
+class BaseLLMClient(ABC):                 # 抽象基类：不能被实例化
+    def __init__(self, api_key: str, base_url: str) -> None:
+        self.api_key = api_key
+        self.base_url = base_url
+
+    @abstractmethod
+    async def chat(self, messages: list[dict[str, str]]) -> str:
+        """子类必须实现这个方法。"""
+        ...
+
+class DeepSeekClient(BaseLLMClient):
+    async def chat(self, messages: list[dict[str, str]]) -> str:
+        # DeepSeek 特有的实现
+        ...
+
+class MockClient(BaseLLMClient):          # 测试用：不联网
+    async def chat(self, messages: list[dict[str, str]]) -> str:
+        return "这是假回答"
 ```
 
-或者：
+`@abstractmethod` 的作用：**强制子类实现**。如果子类忘了写 `chat`，实例化时直接报错，而不是等到运行到那一行才崩。
+
+这解决了需求 1 和需求 3：换厂商 = 换一个子类；测试 = 用 `MockClient`。
+
+### 3.5 封装：把「状态 + 操作状态的方法」放在一起
+
+需求 4（对话历史谁管）的答案是：**新建一个对象专门管**。
 
 ```python
-asyncio.run(chat())
+class Conversation:
+    def __init__(self, system_prompt: str) -> None:
+        self._messages: list[dict[str, str]] = [
+            {"role": "system", "content": system_prompt}
+        ]
+
+    def add_user(self, text: str) -> None:
+        self._messages.append({"role": "user", "content": text})
+
+    def add_assistant(self, text: str) -> None:
+        self._messages.append({"role": "assistant", "content": text})
+
+    @property
+    def messages(self) -> list[dict[str, str]]:
+        """只读视图：外部不能绕过方法直接改内部列表。"""
+        return self._messages.copy()
+
+    def clear(self) -> None:
+        self._messages = self._messages[:1]   # 保留 system
 ```
 
----
+三个关键点：
 
-# 4. async / await 的关系
+1. **下划线 `_messages`** 表示「内部实现，外部别碰」（约定，不是强制）
+2. **`@property`** 让 `conv.messages` 像属性一样读，但背后是方法（可以加逻辑）
+3. **返回 `.copy()`** 防止外部拿到引用后偷偷改内部状态
+
+### 3.6 组合优先于继承
+
+`AssistantService` 需要 client 和 conversation，但**它不是它们的子类**，它是「拥有」它们：
 
 ```python
-async def chat():
-    result = await request_llm()
-    return result
+class AssistantService:
+    def __init__(self, client: BaseLLMClient) -> None:
+        self._client = client              # 组合：持有另一个对象
+        self._conversation = Conversation(...)
+
+    async def ask(self, text: str) -> str:
+        self._conversation.add_user(text)
+        answer = await self._client.chat(self._conversation.messages)
+        self._conversation.add_assistant(answer)
+        return answer
 ```
 
-这里：
+这是 Java 里天天在写的**依赖注入**：`AssistantService` 不关心传进来的是 DeepSeek 还是 Mock，只关心它实现了 `chat`。
 
-`async def`
-
-表示：
-
-> 这个函数可以以协程方式运行。
-
-`await`
-
-表示：
-
-> 当前协程遇到需要等待的操作时，把执行权让出去。
-
-可以理解为：
-
-```text
-async def
-    ↓
-定义“可以暂停”的任务
-
-await
-    ↓
-在这里等待 I/O，同时允许其他协程推进
-```
+> 这也正是后面 Chapter 03 的 `Protocol`、Chapter 09 的 FastAPI `Depends` 的基础。
 
 ---
 
-# 5. Event Loop【事件循环】
+## 4. 项目代码
 
-异步系统的核心之一：
-
-```text
-Event Loop【事件循环】
-```
-
-它负责调度：
+本章在 `src/` 下建立的分层（Chapter 01 会把 `chat` 改成 async）：
 
 ```text
-Coroutine A
-Coroutine B
-Coroutine C
+src/assistant/
+├── errors.py        # 异常层级（P01 已有）
+├── config.py        # 配置对象（P01 已有，Chapter 05 升级）
+├── client.py        # BaseLLMClient + DeepSeekClient（本章）
+├── conversation.py  # Conversation：管对话历史（本章）
+└── service.py       # AssistantService：业务流程（本章）
 ```
 
-例如：
+调用链：
 
 ```text
-A：等待 HTTP
-      ↓
-事件循环
-      ↓
-执行 B
-
-B：等待 HTTP
-      ↓
-事件循环
-      ↓
-执行 C
-
-C：完成
-      ↓
-事件循环
-      ↓
-恢复 A
+CLI / FastAPI
+    ↓ 调用
+AssistantService.ask()
+    ↓ 先记历史
+Conversation.add_user()
+    ↓ 再发请求
+BaseLLMClient.chat()   ← 可以是 DeepSeekClient，也可以是 MockClient
 ```
 
-联系描述：
-
-事件循环并不是同时把所有代码都执行一遍，而是在任务遇到可等待的 I/O 操作时切换到其他可运行任务，从而提高等待期间的资源利用率。
+**上层不依赖下层的具体类型，只依赖抽象。** 这就是能测试、能换厂商、能加缓存的原因。
 
 ---
 
-# 6. Project 02 的第一个重构
+## 5. Java ↔ Python 对比
 
-Project 01 中：
+| Java | Python | 说明 |
+|------|--------|------|
+| `class X {}` | `class X:` | 同 |
+| `this.field` | `self.field` | Python 必须显式声明 `self` 参数 |
+| `public X(...)` 构造器 | `def __init__(self, ...)` | 同类 |
+| `abstract class` | `class X(ABC)` | Python 靠继承 `ABC` |
+| `abstract 方法` | `@abstractmethod` | 同 |
+| `extends` | `class Sub(Base):` | 括号里写父类 |
+| `implements` | 直接继承（Python 无接口关键字） | 抽象基类 / `Protocol` 代替 |
+| `super.method()` | `super().method()` | 同 |
+| `private String x` | `self._x`（约定） | Python 没有真正的私有 |
+| `public String getX()` | `@property def x(self)` | 调用方写 `obj.x` |
+| `final` | 无关键字（约定全大写 / `frozen dataclass`） | 靠自律 |
+| `interface` | `typing.Protocol` | Chapter 03 细讲 |
+
+---
+
+## 6. 常见坑
+
+### 坑 1：可变默认参数
 
 ```python
-def chat(messages):
-    response = httpx.post(...)
-    return response.json()
+def __init__(self, messages: list = []) -> None:   # ❌ 灾难
+    self.messages = messages
 ```
 
-Project 02 开始变成：
+`[]` 在**函数定义时**就创建了一次，所有实例共享同一个列表。改一个，全都变。
+
+正确写法：
 
 ```python
-import httpx
-
-async def chat(messages):
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            url,
-            json=payload,
-            timeout=60
-        )
-
-    response.raise_for_status()
-    return response.json()
+def __init__(self, messages: list | None = None) -> None:
+    self.messages = messages if messages is not None else []
 ```
 
-这里出现三个关键变化：
-
-```text
-httpx.post()
-↓
-client.post()
-
-普通函数
-↓
-async def
-
-普通调用
-↓
-await
-```
-
----
-
-# 7. Java 对比
-
-你有 Java 背景，所以可以这样理解。
-
-Java 中常见：
-
-```text
-CompletableFuture【可完成 Future】
-```
-
-Python 中：
-
-```text
-Coroutine【协程】
-+
-async / await
-+
-Event Loop【事件循环】
-```
-
-它们都可以用于组织异步任务，但运行模型并不完全相同。
-
-不要简单记成：
-
-```text
-Python async = Java CompletableFuture
-```
-
-更准确的是：
-
-> 两者都可以用于异步编程，但 Python `asyncio` 的核心抽象是协程与事件循环；Java 的 `CompletableFuture` 是 Future/CompletionStage 异步组合模型。
-
----
-
-# 8. 第一个项目改造
-
-Project 02 第一个版本：
-
-```text
-Engineering AI Assistant v1
-```
-
-目标：
-
-把：
-
-```text
-同步 LLM Client
-```
-
-改造成：
-
-```text
-异步 LLM Client
-```
-
-推荐结构：
-
-```text
-project/
-├── README.md
-├── milestones/
-│   └── 01-async-await.md
-└── src/
-    └── ai_assistant/
-        ├── __init__.py
-        ├── main.py
-        ├── assistant.py
-        └── api_client.py
-```
-
----
-
-# 9. 改造后的调用链
-
-```text
-用户输入
-   ↓
-main()
-   ↓
-await assistant.chat()
-   ↓
-await api_client.chat()
-   ↓
-await HTTP Request
-   ↓
-等待网络 / LLM
-   ↓
-Event Loop 调度其他任务
-   ↓
-收到 Response
-   ↓
-返回 Assistant
-   ↓
-CLI 输出
-```
-
-联系描述：
-
-用户输入进入 `main()` 后调用异步 Assistant。Assistant 再调用异步 HTTP Client。当 HTTP 请求进入等待阶段时，当前协程可以暂停，由事件循环继续处理其他任务；网络响应到达后，协程恢复执行，解析模型响应并最终返回 CLI。
-
----
-
-# 10. 为什么 AI 项目特别需要异步
-
-因为 AI 应用中经常出现：
-
-```text
-LLM API
-Embedding API
-Vector Database
-Web Search
-Database
-File I/O
-MCP Tool
-```
-
-大量操作属于：
-
-**I/O Bound【I/O 密集型】**
-
-而不是纯计算：
-
-**CPU Bound【CPU 密集型】**
-
-例如一个 Agent：
-
-```text
-LLM
- ↓
-Web Search
- ↓
-LLM
- ↓
-Database
- ↓
-Tool
- ↓
-LLM
-```
-
-等待网络的时间可能非常长。
-
-异步能力因此会成为后面：
-
-```text
-AI Application
-RAG
-Agent
-MCP
-```
-
-的重要基础。
-
----
-
-# 11. 常见误区
-
-### 误区 1
-
-> async = 多线程
-
-不完全正确。
-
-`asyncio` 主要是协作式异步，并不等同于创建多个线程。
-
----
-
-### 误区 2
-
-> async 一定比同步快
-
-错误。
-
-单个请求本身不一定变快。
-
-优势主要体现在：
-
-> **并发等待 I/O 时提高整体吞吐和资源利用率。**
-
----
-
-### 误区 3
-
-> 所有代码都应该 async
-
-错误。
-
-同步代码依然有合理使用场景。
-
-应该根据任务类型决定。
-
----
-
-# 12. 实战挑战
-
-把 Project 01 的：
+### 坑 2：类属性被所有实例共享
 
 ```python
-generate_response(messages)
+class Client:
+    history: list = []      # ❌ 类属性，所有实例共用
+
+a, b = Client(), Client()
+a.history.append("hi")
+print(b.history)            # ['hi'] —— b 也被改了
 ```
 
-改造成：
+要每个实例独立，就放进 `__init__` 里用 `self.`。
+
+### 坑 3：忘记 `self`
 
 ```python
-async def generate_response(messages):
-    ...
+class Client:
+    def ask(self, q):
+        return config.model    # ❌ NameError: name 'config' is not defined
 ```
 
-然后使用：
+实例属性必须 `self.config`。
+
+### 坑 4：以为 `_x` 真的私有
 
 ```python
-asyncio.run(main())
+conv._messages.append({"role": "user", "content": "绕过方法"})
 ```
 
-启动程序。
+Python 不会拦你。`_x` 只是「我和你约定别碰」。要真正保护，用 `@property` 返回副本（见 3.5）。
 
----
-
-# 13. 第二个挑战：并发请求
-
-实现：
-
-```text
-问题 A → LLM
-问题 B → LLM
-问题 C → LLM
-```
-
-并发发送。
-
-核心概念：
+### 坑 5：抽象基类没实现完就想实例化
 
 ```python
-asyncio.gather(...)
+class MyClient(BaseLLMClient):
+    pass
+
+MyClient()   # TypeError: Can't instantiate abstract class MyClient
 ```
 
-目标不是追求“炫技”。
-
-而是亲自观察：
-
-```text
-串行
-vs
-并发
-```
-
-在 I/O 等待场景下的差异。
+这是好事——错误提前暴露，而不是运行到一半崩。
 
 ---
 
-# 14. 主动回忆
+## 7. 实战挑战
 
-不要看上面的内容，回答：
+**挑战 1**：写一个 `EchoClient(BaseLLMClient)`，它的 `chat()` 把最后一条 user 消息原样返回。用它跑通 `AssistantService`，验证「换实现不用改上层」。
 
-### Q1
+**挑战 2**：给 `Conversation` 加一个 `token_estimate()` 方法，粗略估算历史长度（`len(text) // 2`），并在超过 2000 时自动丢弃最早的 user/assistant 对（保留 system）。
 
-为什么 AI API 调用特别适合异步？
-
-### Q2
-
-`async def` 和普通 `def` 有什么区别？
-
-### Q3
-
-`await` 到底在做什么？
-
-### Q4
-
-Event Loop 的作用是什么？
-
-### Q5
-
-异步是不是多线程？
-
-### Q6
-
-为什么 async 不一定让单个请求更快？
-
-### Q7
-
-Python asyncio 和 Java CompletableFuture 有什么相似点和区别？
+**挑战 3（进阶）**：把 `BaseLLMClient` 改写成 `typing.Protocol`（不继承、只声明方法签名），体会「结构化子类型」与「继承」的区别。
 
 ---
 
-# 15. 面试话术
+## 8. 主动回忆
 
-可以形成这样的标准回答：
+遮住答案，看你能不能答出来：
 
-> Python 的异步编程主要基于 `asyncio`、Coroutine【协程】和 Event Loop【事件循环】。对于 AI 应用来说，大量操作属于 I/O 密集型，例如调用 LLM API、访问数据库、调用外部工具，这些操作大量时间都在等待网络。使用 `async def` 定义协程，并通过 `await` 在等待 I/O 时挂起当前协程，可以让事件循环继续调度其他任务，从而提高并发场景下的资源利用率。它的核心价值不是让单个请求本身一定更快，而是减少 I/O 等待造成的整体阻塞。
-
----
-
-# 16. 本章完成标准
-
-必须做到：
-
-```text
-[ ] 理解同步 / 异步
-[ ] 理解 I/O Bound
-[ ] 理解 Coroutine
-[ ] 理解 async def
-[ ] 理解 await
-[ ] 理解 Event Loop
-[ ] 能使用 asyncio.run()
-[ ] 能使用 httpx.AsyncClient
-[ ] 能将 LLM API 调用改造成异步
-[ ] 能解释 Python async 与 Java CompletableFuture 的区别
-[ ] 能完成一次并发请求实验
-```
+1. `self` 是谁？调用时为什么不用传？
+2. `__init__` 和 Java 构造器有什么本质区别？
+3. `@abstractmethod` 解决了什么问题？
+4. 为什么可变默认参数 `[]` 是坑？怎么修？
+5. 「组合」和「继承」分别在什么场景下用？为什么本项目选组合？
+6. Python 的 `_x` 私有吗？怎么才算真正的封装？
 
 ---
 
-# 17. Project 02 当前进度
+## 9. 本节完成标准
 
-```text
-Project 02 — Engineering AI Assistant
+- [ ] 能说清 `class / self / __init__ / 继承 / 封装` 各自解决什么问题
+- [ ] 实现 `BaseLLMClient`（抽象基类）+ 至少一个具体子类
+- [ ] 实现 `Conversation`，并用 `@property` 暴露只读 `messages`
+- [ ] 实现 `AssistantService`，它**只依赖抽象**，不依赖具体厂商
+- [ ] 用 `MockClient` 在不联网的情况下跑通一次完整问答
 
-Chapter 01
-Async / Await
-████░░░░░░
-
-Chapter 02
-Async HTTP Client
-□□□□□□□□□□
-
-Chapter 03
-Type Hints
-□□□□□□□□□□
-
-Chapter 04
-Dataclass
-□□□□□□□□□□
-
-Chapter 05
-Config / Environment
-□□□□□□□□□□
-
-Chapter 06
-Logging
-□□□□□□□□□□
-
-Chapter 07
-Testing / Debugging
-□□□□□□□□□□
-
-Chapter 08
-Packaging
-□□□□□□□□□□
-
-Chapter 09
-FastAPI
-□□□□□□□□□□
-```
-
----
-
-# 18. 本项目最终要得到什么
-
-Project 02 结束时，你应该已经不再只是：
-
-> “会 Python。”
-
-而应该能够说：
-
-> **“我可以使用 Python 构建一个具备异步 I/O、类型约束、配置管理、日志、测试、打包和 Web API 的 AI 应用服务。”**
-
-这才是 **Python Engineering【Python 工程化】** 的真正目标。
+下一章：[01-async-await.md](01-async-await.md) —— 把 `chat()` 变成异步，解决并发。

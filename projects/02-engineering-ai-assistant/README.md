@@ -51,50 +51,61 @@ Engineering AI Assistant Service
 
 | # | Milestone | 状态 | 核心能力 |
 |---|-----------|------|----------|
-| 00 | Classes and OOP | 📝 | class / self / 构造函数 / 继承 / 封装 |
-| 01 | Async / Await | 📝 | asyncio / coroutine / event loop |
-| 02 | Async HTTP Client | ⬜ | aiohttp / httpx / 异步请求 |
-| 03 | Type Hints | 📝 | typing / 泛型 / 函数签名 |
-| 04 | Dataclass | 📝 | dataclass / pydantic model |
-| 05 | Config / Environment | 📝 | .env / python-dotenv / 配置管理 |
-| 06 | Logging | ⬜ | logging / 日志级别 / 结构化日志 |
-| 07 | Testing / Debugging | 📝 | pytest / 单元测试 / 调试方法 |
-| 08 | Packaging | ⬜ | pyproject.toml / 发布 / 安装 |
-| 09 | FastAPI | ⬜ | FastAPI / 路由 / 中间件 / 依赖注入 |
+| — | [总纲：从 Script 到 Application](OVERVIEW.md) | ✅ | 为什么要工程化 + 10 章路线 |
+| 00 | [Classes and OOP](milestones/00-classes-and-oop.md) | ✅ | class / self / 构造函数 / 继承 / 封装 |
+| 01 | [Async / Await](milestones/01-async-await.md) | 📝 | asyncio / coroutine / event loop |
+| 02 | [Async HTTP Client](milestones/02-async-http-client.md) | 📝 | httpx / 连接池 / 超时 / 重试 |
+| 03 | [Type Hints](milestones/03-type-hints.md) | 📝 | typing / 泛型 / Protocol |
+| 04 | [Dataclass](milestones/04-dataclass.md) | 📝 | dataclass / frozen / field |
+| 05 | [Config / Environment](milestones/05-config-and-environment.md) | ✅ | .env / Settings / 依赖注入 |
+| 06 | [Logging](milestones/06-logging.md) | ✅ | logging / 级别 / 结构化日志 |
+| 07 | [Testing / Debugging](milestones/07-testing-and-debugging.md) | ✅ | pytest / Fake / fixture |
+| 08 | [Packaging](milestones/08-packaging.md) | ✅ | pyproject.toml / src layout |
+| 09 | [FastAPI](milestones/09-fastapi.md) | ✅ | 路由 / Depends / SSE 流式 |
+
+状态：✅ 已校对 · 📝 草稿待校对
 
 ## 当前状态
 
-📝 部分成文（草稿待校对）：6 / 10 个 Milestone 已有内容，缺 02 / 06 / 08 / 09。
-`src/` 仍是空的 —— 文档先行，代码尚未开始。
+**10 / 10 个 Milestone 全部有内容**，其中 6 篇已校对（00、05、06、07、08、09），4 篇为迁移草稿（01–04，源自 Project 01，待逐篇校对）。
 
-已成文文件（均为 📝 草稿，未人工校对）：
-- `00-classes-and-oop.md`（原 Project 01 OOP 内容）
-- `01-async-await.md`（原 Project 01 async 内容）
-- `03-type-hints.md`（原 Project 01 typing 内容）
-- `04-dataclass.md`（原 Project 01 dataclass 内容）
-- `05-config-and-environment.md`（原 Project 01 config 内容）
-- `07-testing-and-debugging.md`（原 Project 01 testing 内容）
+历史遗留已修复：
+
+- `00-classes-and-oop.md` 原为「项目总纲 + Chapter 01」混装 → 总纲拆出为 `OVERVIEW.md`，Chapter 01 归位为 `01-async-await.md`，00 重写为真正的 classes/OOP
+- `01-async-await.md` 装的其实是 Chapter 02 → 已重命名为 `02-async-http-client.md`
+- `05` / `07` 原为 39 行占位空壳 → 已补写完整
 
 ## 当前版本
 
-还未开始。
+**v0.1** — 文档齐备，`src/` 正在落地（async CLI → FastAPI）。
 
 ## 项目结构
 
+```text
+projects/02-engineering-ai-assistant/
+├── README.md               # 本文件
+├── OVERVIEW.md             # 总纲：为什么要工程化 + 10 章路线
+├── milestones/             # 00 - 09 共 10 章
+├── src/assistant/          # 工程化代码（async CLI + FastAPI）
+├── tests/                  # pytest（用 Fake 对象，不联网）
+├── pyproject.toml          # 打包配置（src layout）
+└── .env.example            # 配置键清单（.env 不进 git）
 ```
-src/
-├── ...（继承自 Project 01）
-└── ...（新增工程化代码）
-```
+
+## 下一步
+
+按 Chapter 00 → 09 的顺序落地 `src/`：
+
+1. `client.py` / `conversation.py` / `service.py` —— 分层 + 抽象基类（00）
+2. 把 `chat()` 改异步，用 httpx 连接池（01、02）
+3. `settings.py` 收敛配置、`logging_setup.py` 替换 print（05、06）
+4. `tests/` 用 FakeClient 覆盖业务逻辑（07）
+5. `pyproject.toml` 打包出 `ai-assistant` 命令（08）
+6. `api.py` 加 FastAPI + SSE 流式（09）
 
 ## 已掌握能力
 
 - Project 01 的所有 Python 基础
 - 真实 LLM API 调用骨架
-
-## 下一步
-
-完成 Project 01 的 v1.0，让 CLI 真正可用。
-然后开始 Project 02 的工程化升级。
 
 **前置项目**：[Project 01 — Python AI CLI Assistant](../01-python-ai-cli/)
