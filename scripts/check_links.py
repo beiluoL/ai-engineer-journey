@@ -17,6 +17,14 @@ import sys
 SKIP_DIRS = {".git", ".workbuddy", ".obsidian", ".venv", "node_modules", "__pycache__"}
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+# 代码块与行内代码里的 [x](y) 不是链接，先抹掉再扫，否则像
+# `REGISTRY[name](**args)` 这种代码会被误报成死链。
+FENCE_RE = re.compile(r"```.*?```", re.S)
+INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+
+
+def strip_code(text: str) -> str:
+    return INLINE_CODE_RE.sub("", FENCE_RE.sub("", text))
 
 
 def is_external(target: str) -> bool:
@@ -33,6 +41,7 @@ def scan(roots):
                     continue
                 path = os.path.join(dirpath, name)
                 text = open(path, encoding="utf-8", errors="ignore").read()
+                text = strip_code(text)
 
                 for m in LINK_RE.finditer(text):
                     target = m.group(1).strip().split("#")[0].strip()
