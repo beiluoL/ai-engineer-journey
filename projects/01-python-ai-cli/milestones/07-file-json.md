@@ -760,6 +760,8 @@ indent=2
 
 对于开发和调试更友好。
 
+![真实运行：open w/a 模式、json.dump(indent=2) 持久化 messages 并读回校验](../assets/term-file-json.png)
+
 ---
 
 # 20. 读取历史

@@ -138,6 +138,8 @@ payload = {
 }
 ```
 
+![真实运行：四个 Profile 的请求体 + temperature / top_p / penalty / max_tokens 的实际影响](../assets/term-params.png)
+
 ---
 
 ## 5. Java ↔ Python 对比

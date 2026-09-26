@@ -14,13 +14,16 @@
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from .errors import DependencyMissingError, EmbeddingError
 from .models import Chunk
 from .similarity import cosine_similarity_matrix, cosine_similarity
 
 MODEL_KEY = "_model"
+MODEL_SIDECAR = "_model"      # 落盘的模型名文件，刻意不带后缀
 
 
 class BaseVectorStore(ABC):
@@ -174,7 +177,18 @@ class ChromaVectorStore(BaseVectorStore):
             name=collection_name,
             metadata={"hnsw:space": "cosine"},
         )
-        self.model_name: str = ""
+        # 11 章坑 4：模型名必须**随库一起持久化**。
+        # 上一版把 model_name 只放在实例属性上，进程一重启就变成空字符串，
+        # check_model() 这道护栏当场失效 —— 用 bge-m3 建的库，
+        # 重启后用 text-embedding-v3 检索也不会报警，两个空间直接混着用。
+        #
+        # 为什么不用 collection.modify(metadata=...)：Chroma 把 metadata 里的
+        # hnsw:space 当成「距离函数」，一修改就报
+        #     ValueError: Changing the distance function of a collection ...
+        # 而 embedding 模型名是我们应用层的知识，不是 Chroma 的 ——
+        # 所以老老实实写一个小 sidecar 文件。文件名故意不带后缀，
+        # 免得被 expand_paths 当成待摄入的 .txt 文档。
+        self.model_name = self._load_model()
 
     def add(self, chunks: list[Chunk], vectors: list[list[float]],
             model: str = "") -> None:
@@ -183,11 +197,45 @@ class ChromaVectorStore(BaseVectorStore):
             ids=[c.chunk_id for c in chunks],
             embeddings=[[float(x) for x in v] for v in vectors],
             documents=[c.text for c in chunks],
-            metadatas=[{**c.metadata, "doc_id": c.doc_id, "index": c.index,
-                        MODEL_KEY: model} for c in chunks],
+            metadatas=[self._meta_of(c, model) for c in chunks],
         )
-        if model:
+        if model and model != self.model_name:
             self.model_name = model
+            self._save_model(model)
+
+    # ---- 模型名的持久化（11 章坑 4）----
+
+    def _model_file(self) -> Path:
+        return Path(self.persist_directory) / MODEL_SIDECAR
+
+    def _load_model(self) -> str:
+        p = self._model_file()
+        return p.read_text(encoding="utf-8").strip() if p.is_file() else ""
+
+    def _save_model(self, model: str) -> None:
+        p = self._model_file()
+        if model:
+            p.write_text(model, encoding="utf-8")
+        elif p.exists():
+            p.unlink()
+
+    @staticmethod
+    def _meta_of(chunk: Chunk, model: str) -> dict:
+        """Chunk.metadata → Chroma 能吃的 metadata 字典。
+
+        这是「接真实服务」第一次真跑才炸出来的坑（11 章记录过现场）：
+        MdParser 把 Markdown 的 headings 存成 **list**，而 Chroma 的 metadata
+        只接受 str / int / float / bool，list 会直接抛
+            ValueError: Expected metadata list value for key 'headings' to be non-empty in upsert
+        另外 metadata 里可能混入 None（手工构造的 Document 常见），Chroma 也不收。
+        所以入库前统一做一次「降维 + 去空」，而不是等线上炸了再查。
+        """
+        out = {"doc_id": chunk.doc_id, "index": chunk.index, MODEL_KEY: model}
+        for k, v in chunk.metadata.items():
+            flat = _to_scalar(v)
+            if flat is not None:
+                out[k] = flat
+        return out
 
     def search(self, query_vector: list[float], top_k: int = 5,
                filter: dict | None = None) -> list[tuple[Chunk, float]]:
@@ -217,6 +265,7 @@ class ChromaVectorStore(BaseVectorStore):
         self._collection = self._client.get_or_create_collection(
             name=name, metadata={"hnsw:space": "cosine"})
         self.model_name = ""
+        self._save_model("")
 
     def delete(self, ids: list[str]) -> None:
         self._collection.delete(ids=ids)
@@ -228,6 +277,27 @@ class ChromaVectorStore(BaseVectorStore):
 def similarity_from_distance(distance: float) -> float:
     """Chroma 的距离 → 相似度（04 §3.4：score = 1 - distance）。"""
     return 1.0 - float(distance)
+
+
+def _to_scalar(value: object) -> str | int | float | bool | None:
+    """任意 Python 值 → Chroma metadata 允许的标量；没法转就返回 None（表示丢弃）。"""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple, set)):
+        joined = ";".join(str(x) for x in value)   # headings 这类列表 → 字符串
+        return joined or None
+    if isinstance(value, dict):
+        try:
+            return json.dumps(value, ensure_ascii=False)
+        except (TypeError, ValueError):
+            return str(value)
+    return str(value)
 
 
 def _match(meta: dict, filter: dict | None) -> bool:

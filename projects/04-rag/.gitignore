@@ -11,6 +11,7 @@ htmlcov/
 
 # 向量库是可再生的派生数据，源文档才是 source of truth（04 章坑 2）
 data/chroma/
+chroma_db/
 reports/
 
 # demo 的 stdout 存档（渲染 PNG 的原料）

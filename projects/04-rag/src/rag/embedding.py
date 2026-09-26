@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import os
 from abc import ABC, abstractmethod
 
 from .errors import EmbeddingError, EmbeddingRateLimitError
@@ -93,8 +94,19 @@ class FakeEmbeddingClient(BaseEmbeddingClient):
         return int.from_bytes(digest, "big") % self.dim
 
 
-class SiliconFlowEmbeddingClient(BaseEmbeddingClient):
-    """真实 API 实现（httpx 异步 + 分批 + 指数退避）。
+class _OpenAIStyleEmbeddingClient(BaseEmbeddingClient):
+    """OpenAI `/v1/embeddings` 协议客户端的公共骨架（httpx 异步 + 分批 + 指数退避）。
+
+    为什么要抽这一层（11 章展开）：SiliconFlow、阿里云百炼、OpenAI、乃至你自己
+    vLLM 部署的 bge，实现的都是**同一套协议** ——
+        请求 {"model": ..., "input": [...]}
+        响应 {"data": [{"index": i, "embedding": [...]}, ...]}
+    差异只有三样：base_url、模型名、单批上限。
+    于是协议细节（分批 / 按 index 还原顺序 / 429 指数退避 / 错误分层）只写一遍，
+   「换云厂商」= 复制三行子类。**这是接入真实服务时最值钱的 20 行代码。**
+
+    子类只需声明 5 个类属性：
+        BASE_URL / ENV_VAR / model_name / dim / DEFAULT_BATCH_SIZE
 
     两个容易忽略的细节（03 §3.3）：
         - 响应里按 `index` 字段重新排序（有的服务不保证返回顺序与请求一致）；
@@ -103,26 +115,38 @@ class SiliconFlowEmbeddingClient(BaseEmbeddingClient):
     注意本项目不鼓励在测试里触达这里：单测一律用 FakeEmbeddingClient。
     """
 
-    model_name = DEFAULT_EMBEDDING_MODEL
-    dim = DEFAULT_DIM
+    BASE_URL: str = ""
+    ENV_VAR: str = ""              # 没传 api_key 时，从哪个环境变量兜底
+    model_name: str = ""
+    dim: int = 0
+    DEFAULT_BATCH_SIZE: int = 32
+    MAX_RETRIES: int = 3
+    TIMEOUT: float = 30.0
+    MAX_CHARS: int = 8000          # 单条最长字符数，超出直接截断（03 坑 3）
 
-    BASE_URL = "https://api.siliconflow.cn/v1/embeddings"
-    BATCH_SIZE = 32
-    MAX_RETRIES = 3
-    TIMEOUT = 30.0
-
-    def __init__(self, api_key: str, batch_size: int = BATCH_SIZE):
-        if not api_key:
-            raise EmbeddingError("api_key 为空，无法调用 embedding 接口")
-        self.api_key = api_key
-        self.batch_size = batch_size
+    def __init__(self, api_key: str | None = None, model: str = "",
+                 batch_size: int | None = None):
+        key = api_key or os.getenv(self.ENV_VAR, "")
+        if not key:
+            raise EmbeddingError(
+                f"api_key 为空，无法调用 embedding 接口 —— 显式传入，"
+                f"或设置环境变量 {self.ENV_VAR}"
+            )
+        self.api_key = key
+        self.model_name = model or self.model_name
+        self.batch_size = batch_size or self.DEFAULT_BATCH_SIZE
+        # 计量：demo / 文档要靠它证明「批量接口省了多少次往返」（11 章）
+        self.request_count = 0
+        self.latencies: list[float] = []
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
+        """核心契约：输入 n 条文本，返回 n 个向量，顺序与输入一一对应。"""
+        if not texts:
+            return []
         vectors: list[list[float]] = []
         for i in range(0, len(texts), self.batch_size):
-            batch = [t[:8000] for t in texts[i:i + self.batch_size]]  # 超长截断（03 坑 3）
-            batch_vectors = await self._embed_batch_with_retry(batch)
-            vectors.extend(batch_vectors)
+            batch = [t[:self.MAX_CHARS] for t in texts[i:i + self.batch_size]]
+            vectors.extend(await self._embed_batch_with_retry(batch))
         if len(vectors) != len(texts):
             raise EmbeddingError(
                 f"向量条数与输入不一致: {len(texts)} 条文本 → {len(vectors)} 个向量")
@@ -141,14 +165,19 @@ class SiliconFlowEmbeddingClient(BaseEmbeddingClient):
         raise EmbeddingError("重试次数耗尽")  # pragma: no cover - 理论上到不了
 
     async def _embed_batch(self, batch: list[str]) -> list[list[float]]:
+        import time
+
         import httpx
 
+        started = time.perf_counter()
+        self.request_count += 1
         async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
             resp = await client.post(
                 self.BASE_URL,
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={"model": self.model_name, "input": batch},
             )
+        self.latencies.append(time.perf_counter() - started)
         if resp.status_code == 429:
             raise EmbeddingRateLimitError("embedding 触发限流（429）")
         if resp.status_code in (401, 403):
@@ -163,6 +192,39 @@ class SiliconFlowEmbeddingClient(BaseEmbeddingClient):
         return [item["embedding"] for item in data]
 
 
+class SiliconFlowEmbeddingClient(_OpenAIStyleEmbeddingClient):
+    """SiliconFlow 托管 bge 系列（httpx）。中文最强开源系之一，多语言、8192 长文本。"""
+
+    BASE_URL = "https://api.siliconflow.cn/v1/embeddings"
+    ENV_VAR = "SILICONFLOW_API_KEY"
+    model_name = DEFAULT_EMBEDDING_MODEL
+    dim = DEFAULT_DIM
+    DEFAULT_BATCH_SIZE = 32
+
+
+class DashScopeEmbeddingClient(_OpenAIStyleEmbeddingClient):
+    """阿里云百炼（DashScope）compatible-mode 兼容接口。
+
+    为什么有它：百炼是国内最容易跑通「注册 → 拿 key → 出向量」的一站式平台，
+    形如 text-embedding-v3 的模型与 bge-m3 同族，**默认 1024 维**，和
+    SiliconFlow 的 bge-m3 对齐 —— 这意味着 04 章讲的 Chroma 维度不用改。
+
+    两个实测结论（11 章有截图证据）：
+        1. 单批上限 10 条：超过会直接报错，所以 DEFAULT_BATCH_SIZE 必须比
+           SiliconFlow 那家更小 —— **别把 batch_size 当成全局常数**。
+        2. 响应体的 data 带 index，别假设顺序，老老实实排序。
+
+    百炼还有一套非兼容的老接口 /api/v1/services/aigc/...，
+    这里只用 compatible-mode（OpenAI 兼容），因为换 provider 的成本才是我们要练的。
+    """
+
+    BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings"
+    ENV_VAR = "DASHSCOPE_API_KEY"
+    model_name = "text-embedding-v3"
+    dim = 1024
+    DEFAULT_BATCH_SIZE = 10
+
+
 async def _sleep(seconds: float) -> None:
     import asyncio
 
@@ -175,4 +237,7 @@ def create_embedding_client(provider: str = "fake", **kwargs) -> BaseEmbeddingCl
         return FakeEmbeddingClient(**kwargs)
     if provider == "siliconflow":
         return SiliconFlowEmbeddingClient(**kwargs)
-    raise EmbeddingError(f"未知 embedding provider: {provider!r}（可选 fake / siliconflow）")
+    if provider == "dashscope":
+        return DashScopeEmbeddingClient(**kwargs)
+    raise EmbeddingError(
+        f"未知 embedding provider: {provider!r}（可选 fake / siliconflow / dashscope）")

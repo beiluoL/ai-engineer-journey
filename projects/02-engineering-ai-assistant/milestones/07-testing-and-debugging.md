@@ -244,6 +244,8 @@ pytest --cov=assistant             # 覆盖率（需 pytest-cov）
 
 ---
 
+![真实运行：7 个用例里故意写错一个断言，看到 pytest 展开的断言细节与 FAIL，改完代码后 7 passed](../assets/term-pytest-ch07.png)
+
 ## 5. Java ↔ Python 对比
 
 | Java | Python | 说明 |

@@ -315,6 +315,18 @@ def create_vector_store(config: dict) -> BaseVectorStore:
 
 ---
 
+## 7. 真实运行截图（第十一章补充）
+
+第十一章用 `ChromaVectorStore` 把向量库从内存换成了持久化落盘。两张截图分别展示「Chroma 落盘与重启恢复」和「换模型时的护栏」：
+
+![Chroma 落盘、重启恢复与语义检索](../assets/real-chroma.png)
+
+![Fake vs 真实与换模型护栏](../assets/real-guard.png)
+
+> 关键结论：持久化目录里出现 `_model` sidecar 文件，专门用来在进程重启后恢复 `model_name`，否则 `check_model()` 这道换模型护栏会失效；Chroma 的 metadata 也不收 `list`，入库前要把 `headings` 这类列表压成字符串。
+
+---
+
 上一章：[03-embedding.md](03-embedding.md) —— 文本变成了向量，语义第一次可以被计算
 
 下一章：[05-retrieval.md](05-retrieval.md) —— 库建好了，检索链路怎么把"最近的几条"变成模型的上下文？

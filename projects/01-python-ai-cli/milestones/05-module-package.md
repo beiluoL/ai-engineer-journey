@@ -1115,6 +1115,8 @@ assistant/
 
 现代 Python 某些场景下可以不依赖它来识别包，但作为初学者和传统项目结构学习，我们先保留这种明确写法。
 
+![真实运行：导入两层包 pkgdemo、__init__.py 与 __name__ == "__main__"](../assets/term-module-package.png)
+
 ---
 
 # 27. 进入更合理的项目结构

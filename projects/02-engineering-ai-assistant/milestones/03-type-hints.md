@@ -991,6 +991,8 @@ response["usage"]
 
 ---
 
+![真实运行：读注解对比 __annotations__ 与 get_type_hints()、泛型 T 的解析、pydantic 在边界上做运行时校验，以及注解被 from __future__ import annotations 变成字符串后的修复办法](../assets/term-typehints.png)
+
 # 23. 本章知识地图
 
 ```text

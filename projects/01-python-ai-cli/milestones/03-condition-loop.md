@@ -949,6 +949,8 @@ AI: 可用命令：
 
 # 21. 现在运行一次
 
+![真实运行：if/elif、while+break 主循环与字符频率统计](../assets/term-condition-loop.png)
+
 输入：
 
 ```text

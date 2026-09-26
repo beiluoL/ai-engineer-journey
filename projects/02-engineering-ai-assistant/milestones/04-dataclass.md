@@ -622,6 +622,8 @@ message.content
 
 ---
 
+![真实运行：frozen 配置改字段报 FrozenInstanceError、default_factory 让实例互不共享、__post_init__ 校验、replace 派生新对象，以及手写类与 dataclass 的 repr / eq 对比](../assets/term-dataclass.png)
+
 # 14. 什么时候用 TypedDict，什么时候用 Dataclass
 
 可以先建立一个工程判断表。

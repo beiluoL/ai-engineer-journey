@@ -78,6 +78,8 @@ def trim_to_budget(turns: list[dict], budget: int) -> list[dict]:
 3. 按「轮」剪切，不要切在工具调用的中间（见 Chapter 02 坑 5）
 ```
 
+![真实运行：预算裁剪的逐轮前后对比（FakeClient 离线，8 轮后历史停止增长）](../assets/term-memory.png)
+
 ### 3.3 策略二：摘要压缩
 
 裁剪是「丢掉」，摘要是「压缩」。做法：

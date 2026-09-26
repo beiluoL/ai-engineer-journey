@@ -239,6 +239,8 @@ BaseLLMClient.chat()   ← 可以是 DeepSeekClient，也可以是 MockClient
 
 ---
 
+![真实运行：dataclass 模型类自带的 __repr__ / __eq__、抽象基类拦住没实现方法的子类、同一个调用切换实现，以及 AssistantService 只依赖抽象照样跑通](../assets/term-oop.png)
+
 ## 5. Java ↔ Python 对比
 
 | Java | Python | 说明 |

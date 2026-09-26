@@ -85,6 +85,8 @@ messages 拼错了 → 模型表现诡异，而且很难定位
 
 **`assistant` 那条是自己上一轮的回复，必须回灌。** 少了它，模型就不知道自己说过什么，也不知道「小明」是谁说的。
 
+![真实运行：多轮 messages 的完整请求体、tool 往返与 token 估算](../assets/term-messages.png)
+
 ### 3.3 代码里怎么累积
 
 ```python

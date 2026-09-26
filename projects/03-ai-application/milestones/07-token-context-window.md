@@ -159,6 +159,8 @@ class Budget:
         return int((self.context_window - self.reserved_output) * self.history_ratio)
 ```
 
+![真实运行：中英混排的 token 估算、1 token 等于多少字符、上下文占用条与成本](../assets/term-token.png)
+
 ---
 
 ## 5. Java ↔ Python 对比

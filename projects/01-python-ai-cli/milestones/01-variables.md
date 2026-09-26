@@ -684,6 +684,8 @@ f"姓名：{name}"
 
 > 在字符串中把 `name` 当前保存的值插入进去。
 
+![真实运行：变量、type()、input() 与 f-string 的完整输出](../assets/term-variables-types.png)
+
 ---
 
 # 15. 最终项目 v1.0

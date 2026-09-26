@@ -224,6 +224,8 @@ except:
 
 程序不会直接崩掉。
 
+![真实运行：未捕获异常的 Traceback 与 try/except/else/finally/raise](../assets/term-exception.png)
+
 ---
 
 # 7. 这到底发生了什么？

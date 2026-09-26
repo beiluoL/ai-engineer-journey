@@ -207,17 +207,42 @@ def parse_file(path: Path | str) -> list[Document]:
     return get_parser(p).parse(p)
 
 
-def expand_paths(paths) -> list[Path]:
-    """把「文件 / 目录 / 通配」都摊平成文件列表，供 --index 用。"""
+def supported_extensions() -> tuple[str, ...]:
+    """注册表支持的全部后缀。目录递归要靠它过滤（11 章坑 3）。"""
+    out: list[str] = []
+    for cls in PARSER_CLASSES:
+        for ext in cls.supported_extensions:
+            if ext not in out:
+                out.append(ext)
+    return tuple(out)
+
+
+def expand_paths(paths, skip_report: bool = False) -> list[Path]:
+    """把「文件 / 目录 / 通配」都摊平成文件列表，供 --index 用。
+
+    11 章的坑 3（真实跑才会炸）：目录递归**必须按白名单过滤后缀**。
+    当我们把 Chroma 的落盘目录放在 data/ 下面时，`rglob("*")` 会把
+    `data/chroma-real/<uuid>/data_level0.bin` 也当成待摄入文件，然后
+        IngestionError: 不支持的格式: '.bin'
+    —— 炸在「我自己刚写出来的目录」上。这类 bug 单测永远照不到，
+    因为它要求「先落盘、再摄入」的执行顺序，而单元测试用的是空目录。
+    """
+    exts = supported_extensions()
     out: list[Path] = []
     for item in paths:
         p = Path(item)
         if p.is_dir():
             for child in sorted(p.rglob("*")):
-                if child.is_file():
+                if not child.is_file():
+                    continue
+                if child.suffix.lower() in exts:
                     out.append(child)
+                elif skip_report:
+                    print(f"  [skip] {child}（不支持的后缀 {child.suffix!r}）")
         elif p.exists() or any(ch in str(p) for ch in "*?["):
-            out.extend(sorted(Path(x) for x in glob.glob(str(p))))
+            for hit in sorted(Path(x) for x in glob.glob(str(p))):
+                if hit.suffix.lower() in exts or not skip_report:
+                    out.append(hit)
         else:
             out.append(p)
     return out

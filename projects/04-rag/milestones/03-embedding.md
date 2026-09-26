@@ -274,6 +274,18 @@ query_vector = await client.embed_one(question)
 
 ---
 
+## 7. 真实运行截图（第十一章补充）
+
+第十一章用百炼 `text-embedding-v3` 把本章的离线替身换成了真实服务，两个截图直接把「批量上限」与「真实链路」可视化：
+
+![探测百炼单批上限](../assets/real-batch-limit.png)
+
+![真实 embedding 与批量请求](../assets/real-embed.png)
+
+> 关键结论：`batch_size` 不是全局常数 —— 百炼的单批上限是 10，第 11 条会直接报 `400 batch size is invalid`；21 个 chunk 按 batch_size=10 只发 3 次 HTTP，真实返回 1024 维向量。
+
+---
+
 上一章：[02-chunking.md](02-chunking.md) —— 把文档切成大小合适、边界完整的块
 
 下一章：[04-vector-database.md](04-vector-database.md) —— 几十万条向量，怎么在毫秒内找到最近的那些？
