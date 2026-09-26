@@ -191,6 +191,8 @@ Fake 的"语义"当然为零（哈希向量与语义无关，相同文本相同�
 
 ---
 
+![真实运行：FakeEmbeddingClient 离线产出 64 维单位向量，字面越近余弦越大](../assets/term-embed.png)
+
 ## 4. 动手实现（设计稿）
 
 以下代码将在 `src/rag/embedding.py` 落地时实现。目标结构：

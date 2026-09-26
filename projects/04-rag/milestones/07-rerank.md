@@ -146,6 +146,8 @@ rerank 是拿**延迟**换**质量**，值不值看场景：
 
 ---
 
+![真实运行：向量粗召回 top-5，精排重打分取 top-2，粗排第 3 名被提到第 2](../assets/term-rerank.png)
+
 ## 4. 动手实现（设计稿）
 
 > 以下代码将在 `src/rag/reranker.py` 落地时实现，这里先当设计稿读。目标：pipeline 侧一行切换「有/无 rerank」。

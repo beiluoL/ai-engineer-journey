@@ -1,0 +1,17 @@
+.venv/
+.env
+*.egg-info/
+dist/
+build/
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+.tmp/
+
+# 向量库是可再生的派生数据，源文档才是 source of truth（04 章坑 2）
+data/chroma/
+reports/
+
+# demo 的 stdout 存档（渲染 PNG 的原料）
+demos/out/

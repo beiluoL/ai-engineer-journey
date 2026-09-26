@@ -117,6 +117,8 @@ class EvalCase:
 
 ---
 
+![真实运行：7 条 EvalCase 的逐条明细与 hit_rate / MRR / 拒答指标汇总](../assets/term-eval.png)
+
 ## 4. 动手实现（设计稿）
 
 以下代码将在 `src/rag/evaluation.py` 落地，这里先当设计稿读。评估只依赖 Chapter 09 `RAGService` 的公开接口（`ask()` 返回的 `RAGAnswer` 里有 `retrieved_sources` 和 `citations`），内部零件对评估代码是黑盒。

@@ -175,6 +175,8 @@ class InMemoryVectorStore(BaseVectorStore):
 
 **Java 里这就像 SQL 的 `WHERE` 在 `ORDER BY ... LIMIT` 之前生效——你不会先 `LIMIT 5` 再 WHERE，同样的直觉。**
 
+![真实运行：InMemoryVectorStore 的 add / count / search，以及 filter「先过滤后搜」](../assets/term-store.png)
+
 ### 3.4 阶段 ②：ChromaVectorStore
 
 ```python

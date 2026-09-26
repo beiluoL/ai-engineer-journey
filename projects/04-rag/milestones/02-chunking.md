@@ -92,6 +92,8 @@ def estimate_tokens(text: str) -> int:
 
 ---
 
+![真实运行：1553 字符切成 4 块，相邻块带 80 字符 overlap，中文按句号降级切分](../assets/term-chunk.png)
+
 ## 4. 动手实现（设计稿）
 
 以下代码将在 `src/rag/chunker.py` 落地时实现，现在当设计稿读。

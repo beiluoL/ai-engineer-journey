@@ -129,6 +129,8 @@ frozen 的意义和 Java 里的不可变对象（`record` / builder 产出的 im
 
 ---
 
+![真实运行：RAGService.ask() 离线端到端问答，检索为空时拒答且一次 LLM 都不调](../assets/term-pipeline.png)
+
 ## 4. 动手实现（设计稿）
 
 以下代码将在 `src/rag/pipeline.py` 和 `src/rag/service.py` 落地，这里先当设计稿读。
@@ -306,6 +308,8 @@ class RAGService:
 ```
 
 ---
+
+![真实运行：离线测试套件 113 passed，不联网、不写系统临时目录](../assets/term-pytest.png)
 
 ## 6. 自检清单
 

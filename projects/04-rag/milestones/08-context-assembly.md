@@ -118,6 +118,8 @@ citations = [
 
 ---
 
+![真实运行：带编号与来源锚点的 context_text、citations 列表与 token 预算占用](../assets/term-assemble.png)
+
 ## 4. 动手实现（设计稿）
 
 以下代码将在 `src/rag/assembly.py` 落地，这里先当设计稿读。

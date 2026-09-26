@@ -32,15 +32,15 @@
 
 | 部分 | 状态 |
 |------|------|
-| Project 01 milestones 01-10 | ✅ 全部成文；08 / 09 / 10 与 README 已配真实运行截图 |
+| Project 01 milestones 01-10 | ✅ 全部成文；01-10 每章均配真实运行截图 |
 | Project 01 src + tests | ✅ v0.2 骨架，6 个 unittest 全绿（已实测真实调用 DeepSeek API 成功） |
 | Project 01 exercises | ✅ 01-basic 8 题参考答案已跑通并判卷 8/8 🎓；02 / 03 / 04 已播种（待做） |
-| Project 02 milestones | ✅ 10/10 全部已校对（01-04 为 4970 行迁移长文：代码块全通 + 补「本章 ↔ src/ 对照」） |
+| Project 02 milestones | ✅ 10/10 全部已校对；每章均配真实运行截图 |
 | Project 02 src | ✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek |
-| Project 03 milestones | ✅ 9/9 全部成文 |
+| Project 03 milestones | ✅ 9/9 全部成文；每章均配真实运行截图 |
 | Project 03 src + tests | ✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图 |
 | Project 04 milestones | ✅ 10/10 全部成文（ingestion → chunking → embedding → vector db → retrieval → similarity → rerank → context → pipeline → evaluation） |
-| Project 04 src | ⬜ 待落地（10 章文档即设计稿：FakeEmbeddingClient + InMemory/Chroma 双实现 + 离线测试） |
+| Project 04 src | ✅ v0.2 落地：15 个模块，113 项 pytest 离线全绿，FakeEmbeddingClient + InMemory/Chroma 双实现，10 章全部配真实运行截图 |
 | Project 05-10 | ⬜ 未开始 |
 | publishing/tutorials | ✅ 5 篇图文教程已发布（md + html） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials） |
@@ -54,7 +54,7 @@
 | 01 | Python AI CLI Assistant | 🎓 M02 | ✅ v0.2 |
 | 02 | Engineering AI Assistant | ⬜ | ✅ v0.2 CLI + API 双形态 |
 | 03 | AI Application | ⬜ | ✅ v0.2 文档+代码+测试 |
-| 04 | AI Knowledge Base / RAG | ⬜ | ✅ 10/10 文档先行（src 待落地） |
+| 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.2 文档+代码+测试+截图 |
 | 05 | Research Agent / MCP | ⬜ | ⬜ |
 | 06 | Mini Transformer / LLM | ⬜ | ⬜ |
 | 07 | Open Source LLM | ⬜ | ⬜ |
@@ -65,7 +65,7 @@
 ## Next
 
 1. 动手复现 `exercises/01-basic` 8 题：先自己敲，再对照 `answers.py`，把 🎓 从「参考答案已判卷」变成「我真的会了」
-2. 落地 Project 04 `src/`：按 10 章 Milestone 文档实现（先 FakeEmbeddingClient + InMemoryVectorStore 离线跑通全链路，再接 SiliconFlow 真实 embedding 与 Chroma）
+2. Project 04 接真实 Embedding + Chroma：用 SiliconFlow bge-m3 跑真实数据，做持久化增量索引
 3. finetune-series 草稿择优转正：Day4 RAG + LoRA 作为 tutorial 06 备选
 4. P02 学习进度推进：读完 `OVERVIEW.md` + 10 章，对着 `src/` 逐文件看
 

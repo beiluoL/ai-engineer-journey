@@ -192,6 +192,8 @@ Java 里你可能习惯用 UUID 或自增 ID。但知识库会**重复摄入**�
 
 ---
 
+![真实运行：6 个文件解析成 Document，doc_id 是内容哈希，md 文档还带 headings 元数据](../assets/term-ingest.png)
+
 ## 4. 动手实现（设计稿）
 
 以下代码将在 `src/rag/` 落地时实现，现在当设计稿读。目标文件结构：
