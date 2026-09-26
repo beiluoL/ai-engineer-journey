@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j — AI Engineer Journey 图文教程</title>
+<style>
+  :root { --blue:#3776AB; --yellow:#FFD43B; --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --bg:#f6f8fa; --green:#2f9e5f; --amber:#b8860b; --purple:#7c5cd6; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--ink); background:var(--bg); line-height:1.85; }
+  .wrap { max-width:880px; margin:0 auto; padding:48px 28px 80px; }
+  article { background:#fff; border:1px solid var(--line); border-radius:18px; padding:56px 60px; box-shadow:0 8px 30px rgba(15,23,42,.05); }
+  .kicker { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .logo-dot { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#2563eb,#1e3a8a); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; }
+  .kicker span { font-size:13px; color:var(--muted); font-weight:600; letter-spacing:.5px; }
+  h1 { font-size:32px; line-height:1.35; margin-bottom:14px; }
+  .meta { font-size:13px; color:var(--muted); padding-bottom:26px; border-bottom:1px solid var(--line); margin-bottom:34px; }
+  h2 { font-size:23px; margin:44px 0 16px; padding-left:14px; border-left:4px solid var(--purple); }
+  h3 { font-size:17px; margin:26px 0 10px; }
+  p { margin-bottom:14px; }
+  ul,ol { margin:0 0 14px 22px; } li { margin-bottom:6px; }
+  a { color:var(--blue); }
+  strong { color:#0f172a; }
+  code { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.88em; background:#eef2f7; border:1px solid #dbe3ec; border-radius:5px; padding:1px 6px; color:#b3541e; }
+  pre { background:#16181d; color:#d6dce5; border-radius:12px; padding:18px 20px; overflow-x:auto; margin:18px 0 22px; font-size:13px; line-height:1.7; }
+  pre code { background:none; border:none; color:inherit; padding:0; }
+  pre .cm { color:#6b7280; } pre .hl { color:#7cd4ff; }
+  blockquote { border-left:4px solid var(--yellow); background:#fffbea; padding:12px 18px; border-radius:0 10px 10px 0; margin:18px 0; color:#57534e; }
+  blockquote b { color:#92400e; }
+  figure { margin:26px 0 30px; text-align:center; }
+  figure img { max-width:100%; border:1px solid var(--line); border-radius:12px; box-shadow:0 6px 18px rgba(15,23,42,.08); }
+  figcaption { font-size:12.5px; color:var(--muted); margin-top:10px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13.5px; }
+  th { background:#f1f5f9; text-align:left; }
+  th,td { border:1px solid var(--line); padding:9px 13px; }
+  tr:nth-child(even) td { background:#fafbfd; }
+  .toc { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:18px 24px; margin-bottom:8px; font-size:14px; }
+  .toc b { color:var(--purple); }
+  .toc ol { margin:8px 0 0 20px; }
+  .note { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:14px 20px; font-size:13.5px; color:#14532d; margin-bottom:24px; }
+  .warn { background:#fffbea; border:1px solid #fde68a; border-radius:12px; padding:14px 20px; font-size:13.5px; color:#78350f; margin-bottom:24px; }
+  .goal { background:#eff6ff; border:1px solid #bfdbfe; border-radius:14px; padding:20px 26px; font-size:15px; }
+  .goal .chain { font-family:"SF Mono",Menlo,monospace; font-size:13px; line-height:2; color:#1e3a8a; margin-top:8px; }
+  .foot { margin-top:46px; padding-top:20px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); }
+  .next { display:flex; gap:12px; margin-top:30px; }
+  .next a { flex:1; border:1px solid var(--line); border-radius:12px; padding:14px 18px; text-decoration:none; font-size:14px; background:#fafbfd; }
+  .next a:hover { border-color:var(--purple); }
+  .next .label { display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; }
+  .next a.disabled { color:#94a3b8; pointer-events:none; }
+  @media (max-width:640px){ article{padding:32px 22px;} h1{font-size:25px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<article>
+  <div class="kicker"><div class="logo-dot">AI</div><span>AI ENGINEER JOURNEY · 图文教程 05 · 大模型微调实战</span></div>
+  <h1>大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j</h1>
+  <div class="meta">最后更新：2026-09-26 · 本文同步发表于 <a href="https://github.com/beiluoL/ai-engineer-journey">github.com/beiluoL/ai-engineer-journey</a></div>
+  <div class="toc"><b>目录</b><ol><li><a href="#一-今天要做出什么">一、今天要做出什么</a></li><li><a href="#二-先搞懂-LoRA-不能直接给-Ollama">二、先搞懂：LoRA 不能直接给 Ollama</a></li><li><a href="#三-Day3-整体路线">三、Day3 整体路线</a></li><li><a href="#四-Step1-合并-LoRA-Colab">四、Step1：合并 LoRA（Colab）</a></li><li><a href="#五-Step2-先测试合并后的模型">五、Step2：先测试合并后的模型</a></li><li><a href="#六-Step3-转成-Ollama-支持的-GGUF">六、Step3：转成 Ollama 支持的 GGUF</a></li><li><a href="#七-Step4-导入-Ollama">七、Step4：导入 Ollama</a></li><li><a href="#八-Step5-测试-Ollama">八、Step5：测试 Ollama</a></li><li><a href="#九-Step6-Spring-Boot-LangChain4j-接入">九、Step6：Spring Boot + LangChain4j 接入</a></li><li><a href="#十-升级成真正的-AI-Agent">十、升级成真正的 AI Agent</a></li><li><a href="#十一-你的最终简历项目">十一、你的最终简历项目</a></li><li><a href="#十二-现实约束与部署建议">十二、现实约束与部署建议</a></li><li><a href="#十三-下一步-Day4-把-RAG-LoRA-结合">十三、下一步：Day4 把 RAG + LoRA 结合</a></li></ol></div>
+<blockquote><p>写给有 Java / 后端基础、昨天刚用 LLaMA-Factory 训出一个 LoRA 适配器、今天想让它真正被自己程序调用的开发者。
+本文用「合并 → 转 GGUF → 进 Ollama → Spring Boot 调用」的顺序，一次走通从「训练产物」到「业务可调用」的最后一公里。</p>
+<p><strong>配图真实性说明</strong>：① 架构图 / 流程图均为本教程自制的示意框图（蓝黄主色）；② 文中代码块为真实可执行的片段，但终端与 Ollama 界面截图因依赖真实 Colab / 本地 GPU 环境，本教程以「预期输出」形式给出而非伪造截图；③ 涉及版本号、依赖坐标请以下载时官网为准。</p></blockquote>
+<h2 id="一-今天要做出什么">一、今天要做出什么</h2>
+<p>昨天你只是「训练出了一个模型插件」，今天要让 Java 程序真正调用它。最终目标是做出：</p>
+<p><strong>Java AI Interview Agent【Java AI 面试智能体】</strong></p>
+<p>整体架构如下：</p>
+<figure><img src="assets/diagram5-arch.png" alt="Java AI Interview Agent 架构"><figcaption>Java AI Interview Agent 架构</figcaption></figure>
+<pre><code class="text">用户
+  ↓
+Vue 前端
+  ↓
+Spring Boot
+  ↓
+LangChain4j
+  ↓
+LLM 接口
+  ↓
+Qwen + Java Interview LoRA
+  ↓
+面试回答</code></pre>
+<h2 id="二-先搞懂-LoRA-不能直接给-Ollama">二、先搞懂：LoRA 不能直接给 Ollama</h2>
+<p>这是很多新手第一个坑。你昨天训练出来的产物叫：</p>
+<pre><code class="text">java-interview-lora</code></pre>
+<p>它不是完整模型，它只是：</p>
+<pre><code class="text">Adapter【适配器】</code></pre>
+<p>用个类比：你买了一台手机，Qwen 模型是手机本体，LoRA 是一个专业插件。两者组合，才变成「Java 面试专家模型」。</p>
+<pre><code class="text">Qwen
+  +
+Java Interview LoRA
+  =
+Java 面试专家模型</code></pre>
+<p>所以正确的流程是：</p>
+<pre><code class="text">LoRA
+  ↓
+合并（merge）
+  ↓
+完整模型
+  ↓
+Ollama 加载</code></pre>
+<div class="note"><p>LoRA 只保存了「相对原模型的增量权重」。没有基座模型，它自己什么都干不了。任何「直接把 LoRA 丢给 Ollama」的尝试都会失败。</p></div>
+<h2 id="三-Day3-整体路线">三、Day3 整体路线</h2>
+<p>今天要按顺序走完六步：</p>
+<pre><code class="text">Step1  Colab 合并 LoRA
+Step2  导出 HuggingFace 模型
+Step3  转换 GGUF
+Step4  导入 Ollama
+Step5  Spring Boot 调用
+Step6  LangChain4j 接入</code></pre>
+<p>完整链路如下图：</p>
+<figure><img src="assets/diagram5-pipeline.png" alt="LoRA 到 Spring Boot 的部署链路"><figcaption>LoRA 到 Spring Boot 的部署链路</figcaption></figure>
+<h2 id="四-Step1-合并-LoRA-Colab">四、Step1：合并 LoRA（Colab）</h2>
+<p>回到昨天训练用的 Colab。假设你的训练输出在：</p>
+<pre><code class="text">output/java-interview-lora</code></pre>
+<p>现在需要把 <code>Qwen2.5-3B</code> 基座和这个 adapter 合并成完整模型。</p>
+<p>先安装依赖：</p>
+<pre><code class="python">!pip install peft transformers accelerate</code></pre>
+<p>创建 <code>merge_lora.py</code>：</p>
+<pre><code class="python">from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+
+base_model = &quot;Qwen/Qwen2.5-3B-Instruct&quot;
+adapter_path = &quot;./output/java-interview-lora&quot;
+
+# 加载基础模型
+model = AutoModelForCausalLM.from_pretrained(
+    base_model,
+    device_map=&quot;auto&quot;,
+)
+
+# 加载 LoRA
+model = PeftModel.from_pretrained(model, adapter_path)
+
+# 合并（把增量权重写回基座权重）
+model = model.merge_and_unload()
+
+# 保存
+model.save_pretrained(&quot;./java-interview-qwen&quot;)
+
+tokenizer = AutoTokenizer.from_pretrained(base_model)
+tokenizer.save_pretrained(&quot;./java-interview-qwen&quot;)
+
+print(&quot;merge success&quot;)</code></pre>
+<p>运行：</p>
+<pre><code class="bash">python merge_lora.py</code></pre>
+<p>预期得到目录 <code>java-interview-qwen</code>，这就是合并后的完整模型。</p>
+<h2 id="五-Step2-先测试合并后的模型">五、Step2：先测试合并后的模型</h2>
+<p>别急着上 Ollama，先用 Python 验证合并没出错：</p>
+<pre><code class="python">from transformers import pipeline
+
+pipe = pipeline(
+    &quot;text-generation&quot;,
+    model=&quot;./java-interview-qwen&quot;,
+)
+
+result = pipe(
+    &quot;HashMap 为什么线程不安全？&quot;,
+    max_new_tokens=300,
+)
+
+print(result)</code></pre>
+<p>观察输出里有没有你的「面试风格」（比如它会按 核心原理 / 源码分析 / 项目实践 / 面试话术 来组织回答）。如果还是通用口吻，说明 LoRA 没合并进去，回去检查 adapter 路径。</p>
+<h2 id="六-Step3-转成-Ollama-支持的-GGUF">六、Step3：转成 Ollama 支持的 GGUF</h2>
+<p>Ollama 推荐用 <strong>GGUF</strong> 格式。原因很直接：</p>
+<pre><code class="text">原模型：float16，几十 GB  →  个人电脑跑不动
+GGUF  ：量化后，几 GB    →  本地 Mac 就能跑</code></pre>
+<p>安装 llama.cpp（Mac 用 brew，其他平台用源码）：</p>
+<pre><code class="bash">brew install llama.cpp
+# 或源码方式：
+git clone https://github.com/ggerganov/llama.cpp</code></pre>
+<p>转换：</p>
+<pre><code class="bash">python convert_hf_to_gguf.py \
+  java-interview-qwen \
+  --outfile java-interview.gguf</code></pre>
+<p>预期得到 <code>java-interview.gguf</code>。</p>
+<div class="warn"><p>GGUF 的量化等级（q4_K_M / q8_0 等）会直接影响回答质量。量化越狠文件越小，但 LoRA 学到的「面试话术」细节越容易丢。先用 q8_0 保质量，体积能接受再降档。</p></div>
+<h2 id="七-Step4-导入-Ollama">七、Step4：导入 Ollama</h2>
+<p>你的 Mac 应该已经装了 Ollama。先创建一个 <code>Modelfile</code>：</p>
+<pre><code class="dockerfile">FROM ./java-interview.gguf
+
+PARAMETER temperature 0.7
+
+SYSTEM &quot;&quot;&quot;
+你是一名 Java 高级工程师面试官。
+回答需要按照：
+1. 核心原理
+2. 源码分析
+3. 项目实践
+4. 面试话术
+输出。
+&quot;&quot;&quot;</code></pre>
+<p>创建模型：</p>
+<pre><code class="bash">ollama create java-interviewer \
+  -f Modelfile</code></pre>
+<p>查看：</p>
+<pre><code class="bash">ollama list</code></pre>
+<p>预期列表里出现 <code>java-interviewer</code>。</p>
+<h2 id="八-Step5-测试-Ollama">八、Step5：测试 Ollama</h2>
+<pre><code class="bash">ollama run java-interviewer</code></pre>
+<p>输入：</p>
+<pre><code class="text">ConcurrentHashMap 为什么线程安全？</code></pre>
+<p>预期类似：</p>
+<pre><code class="text">JDK8 取消了 Segment。
+核心：
+1. CAS
+2. synchronized
+3. Node
+4. TreeBin
+面试回答：……</code></pre>
+<div class="note"><p>这一步是「模型能力验证」。Ollama 能答对，才说明前面合并 + 转换 + 导入都对了。不要跳过直接进 Spring Boot，否则查错会非常痛苦。</p></div>
+<h2 id="九-Step6-Spring-Boot-LangChain4j-接入">九、Step6：Spring Boot + LangChain4j 接入</h2>
+<p>你的主场来了——Spring Boot + LangChain4j。</p>
+<p>Maven 加依赖：</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;dev.langchain4j&lt;/groupId&gt;
+    &lt;artifactId&gt;langchain4j-ollama-spring-boot-starter&lt;/artifactId&gt;
+    &lt;version&gt;最新版本&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<p>配置 <code>application.yml</code>：</p>
+<pre><code class="yaml">langchain4j:
+  ollama:
+    chat-model:
+      base-url: http://localhost:11434
+      model-name: java-interviewer
+      temperature: 0.7</code></pre>
+<p>定义 AI Service 接口：</p>
+<pre><code class="java">public interface InterviewAssistant {
+    String answer(String question);
+}</code></pre>
+<p>绑定实现：</p>
+<pre><code class="java">@Bean
+InterviewAssistant assistant(OllamaChatModel model) {
+    return AiServices.create(InterviewAssistant.class, model);
+}</code></pre>
+<p>调用：</p>
+<pre><code class="java">assistant.answer(&quot;HashMap 为什么线程不安全？&quot;);</code></pre>
+<p>完整调用链路：</p>
+<pre><code class="text">Spring Boot
+  ↓
+LangChain4j
+  ↓
+Ollama
+  ↓
+java-interviewer
+  ↓
+Qwen + LoRA
+  ↓
+答案</code></pre>
+<h2 id="十-升级成真正的-AI-Agent">十、升级成真正的 AI Agent</h2>
+<p>现在你已经有「Java Interview LLM」这个能力。下一步是把它升级成 Agent——加上 <strong>RAG</strong>：</p>
+<pre><code class="text">用户问题
+  ↓
+Retriever
+  ↓
+Java 知识库
+  ↓
+Qwen LoRA
+  ↓
+回答</code></pre>
+<p>也就是 <strong>RAG 提供企业知识 + Fine-tuning 改变模型行为</strong>。两者不是二选一，而是叠加。</p>
+<h2 id="十一-你的最终简历项目">十一、你的最终简历项目</h2>
+<p>这套东西可以直接包装成简历项目：</p>
+<p><strong>Java AI Interview Agent</strong></p>
+<p>技术栈：<code>Spring Boot</code> · <code>LangChain4j</code> · <code>Qwen2.5</code> · <code>QLoRA</code> · <code>LoRA</code> · <code>LLaMA-Factory</code> · <code>Ollama</code> · <code>Milvus</code> · <code>RAG</code> · <code>Agent</code></p>
+<p>功能：</p>
+<ul>
+<li>上传简历</li>
+<li>自动生成面试题</li>
+<li>AI 模拟面试</li>
+<li>评分</li>
+<li>错题复习</li>
+<li>个性化回答</li>
+</ul>
+<h2 id="十二-现实约束与部署建议">十二、现实约束与部署建议</h2>
+<p>你现在的 Mac 是 <code>16G ARM</code>，能做什么、不能做什么要心里有数：</p>
+<pre><code class="text">✅ Ollama 运行 3B / 7B 量化模型
+✅ 开发 Spring Boot
+✅ 做 RAG
+❌ 不适合长期运行合并后的 16bit 模型（显存不够）</code></pre>
+<p>所以生产建议是「分工」：</p>
+<pre><code class="text">LoRA 训练  →  云 GPU
+导出 GGUF  →  Mac Ollama 测试
+服务器部署  →  vLLM</code></pre>
+<div class="note"><p>本地 Ollama 适合「验证 + 开发」，真正的并发服务交给云上的 vLLM（参考教程 04 的企业级部署路线）。</p></div>
+<h2 id="十三-下一步-Day4-把-RAG-LoRA-结合">十三、下一步：Day4 把 RAG + LoRA 结合</h2>
+<p>因为真正的企业项目不是「训练一个模型」，而是：</p>
+<blockquote><p><strong>RAG 提供企业知识 + Fine-tuning 改变模型行为</strong></p></blockquote>
+<p>下一步我们要做出：</p>
+<pre><code class="text">Java AI Interview Agent V1
+  = Qwen LoRA
+  + Milvus 知识库
+  + LangChain4j
+  + Spring Boot</code></pre>
+<p>这会直接贴近你现在的 Java + AI 求职方向。</p>
+  <div class="foot">
+    转载请注明来源。技术栈与版本号请以实际下载时官方文档为准。
+  </div>
+  <div class="next">
+    <a href="04-enterprise-llm-deploy-gpu-vllm-springboot.html" class=""><span class="label">上一篇</span>企业级大模型部署从 0 到 1</a>
+    <a href="#" class="disabled"><span class="label">下一篇</span>Day4 RAG + LoRA（待发布）</a>
+  </div>
+</article>
+</div>
+</body>
+</html>

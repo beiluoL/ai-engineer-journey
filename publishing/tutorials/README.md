@@ -12,6 +12,7 @@
 | 02 | [Python 安装与上手：从装环境到跑通第一个 AI 项目](02-python-install-usage-roadmap.md) | [Markdown](02-python-install-usage-roadmap.md) · [HTML](02-python-install-usage-roadmap.html) |
 | 03 | [第一次微调实战 Day1：Qwen + LLaMA-Factory + 第一份 Java 面试训练数据](03-llm-finetune-day1-colab-llamafactory-qwen.md) | [Markdown](03-llm-finetune-day1-colab-llamafactory-qwen.md) · [HTML](03-llm-finetune-day1-colab-llamafactory-qwen.html) |
 | 04 | [企业级大模型部署从 0 到 1：租 GPU 服务器 → Ubuntu → Docker → Qwen → vLLM → Spring Boot](04-enterprise-llm-deploy-gpu-vllm-springboot.md) | [Markdown](04-enterprise-llm-deploy-gpu-vllm-springboot.md) · [HTML](04-enterprise-llm-deploy-gpu-vllm-springboot.html) |
+| 05 | [大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j](05-llm-finetune-day3-lora-ollama-springboot.md) | [Markdown](05-llm-finetune-day3-lora-ollama-springboot.md) · [HTML](05-llm-finetune-day3-lora-ollama-springboot.html) |
 
 ## 配图规范
 
