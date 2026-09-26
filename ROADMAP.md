@@ -115,7 +115,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：接入个人知识库的 RAG Assistant
 
-**状态**：⬜ 未开始
+**状态**：✅ 10/10 Milestone 成文（文档先行，src/ 待落地）
 
 **10 个 Milestone**：
 ```
