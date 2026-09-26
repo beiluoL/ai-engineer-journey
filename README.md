@@ -34,7 +34,7 @@ Documentation
 |---|------|----------|------|
 | 01 | [Python AI CLI Assistant](projects/01-python-ai-cli/) | Python 基础 + 真实 LLM API | 🔄 |
 | 02 | [Engineering AI Assistant](projects/02-engineering-ai-assistant/) | Python 工程化 + FastAPI | ✅ |
-| 03 | [AI Application](projects/03-ai-application/) | Prompt / Streaming / Function Calling | ⬜ |
+| 03 | [AI Application](projects/03-ai-application/) | Prompt / Streaming / Function Calling | ✅ |
 | 04 | [AI Knowledge Base / RAG](projects/04-rag/) | Embedding / Chunk / Vector DB / RAG | ⬜ |
 | 05 | [Research Agent / MCP](projects/05-agent-mcp/) | Agent / Tool / MCP Protocol | ⬜ |
 | 06 | [Mini Transformer / LLM](projects/06-mini-transformer-llm/) | PyTorch / Attention / Transformer | ⬜ |

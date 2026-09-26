@@ -90,7 +90,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：Web 端 AI Chat 应用
 
-**状态**：⬜ 未开始
+**状态**：✅ 9/9 Milestone 成文 + `src/` 代码落地 + 61 项离线测试全绿
 
 **9 个 Milestone**：
 ```

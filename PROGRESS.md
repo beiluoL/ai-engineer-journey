@@ -37,7 +37,9 @@
 | Project 01 exercises | ✅ 01-basic 有 8 题 + 参考答案；02 / 03 / 04 已播种（待做） |
 | Project 02 milestones | ✅ 10/10 全部已校对（01-04 为 4970 行迁移长文：代码块全通 + 补「本章 ↔ src/ 对照」） |
 | Project 02 src | ✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek |
-| Project 03-10 | ⬜ 空壳（README 就绪） |
+| Project 03 milestones | ✅ 9/9 全部成文 |
+| Project 03 src + tests | ✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图 |
+| Project 04-10 | ⬜ 未开始 |
 | publishing/tutorials | ✅ 4 篇图文教程已发布（md + html） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials） |
 | publishing/articles | 📝 2 篇 |
