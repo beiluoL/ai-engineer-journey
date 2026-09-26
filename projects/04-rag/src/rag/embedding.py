@@ -231,6 +231,19 @@ async def _sleep(seconds: float) -> None:
     await asyncio.sleep(seconds)
 
 
+# ---------------------------------------------------------------------------
+# 同步 / 异步两种调用姿势
+# ---------------------------------------------------------------------------
+# 真实 embedding 客户端是 async 的（httpx.AsyncClient），而 CLI、demo、pytest
+# 都是同步上下文。run_sync() 用 asyncio.run() 每次新建事件循环，把它们串起来。
+#
+# 但 uvicorn 的 lifespan 本身**跑在事件循环里**，在那里调 asyncio.run() 会抛
+#     RuntimeError: asyncio.run() cannot be called from a running event loop
+# 解法不是把客户端改成同步，而是把「同步的那一段工作」整体丢进线程池
+# （asyncio.to_thread）—— 线程里没有 running loop，asyncio.run 就合法了。
+# Web API 的启动装配正是这样写的，见 api.py 的 lifespan。
+
+
 def create_embedding_client(provider: str = "fake", **kwargs) -> BaseEmbeddingClient:
     """客户端工厂：上层（入库流水线）只依赖 BaseEmbeddingClient。"""
     if provider == "fake":

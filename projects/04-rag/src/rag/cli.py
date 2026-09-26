@@ -39,8 +39,30 @@ from .store import InMemoryVectorStore                         # noqa: E402
 QUIET_META = ("format", "size_bytes", "parsed_at", META_HEADINGS, "code_ranges")
 
 
+def build_embedding_client_from_env():
+    """挑一个「本机真的能跑起来」的 embedding provider。
+
+    默认 SiliconFlow（bge-m3），但机器上没有它的 key、百炼的 key 却在时，
+    直接报「api_key 为空」只会让人以为环境坏了。所以按 key 探测降级：
+        有 SILICONFLOW_API_KEY → SiliconFlow bge-m3
+        否则有 DASHSCOPE_API_KEY → 百炼 text-embedding-v3（同为 1024 维）
+        都没有 → 交给客户端自己报那句明确的错
+
+    换 provider 在本项目里应该是「改环境变量」而不是「改代码」，
+    这条约束就是这么来的。
+    """
+    from .embedding import DashScopeEmbeddingClient, SiliconFlowEmbeddingClient
+
+    if os.environ.get("SILICONFLOW_API_KEY"):
+        return SiliconFlowEmbeddingClient(api_key=os.environ["SILICONFLOW_API_KEY"])
+    if os.environ.get("DASHSCOPE_API_KEY"):
+        return DashScopeEmbeddingClient(api_key=os.environ["DASHSCOPE_API_KEY"])
+    return SiliconFlowEmbeddingClient(api_key="")
+
+
 def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
-                     index_paths: list[str] | None = None, quiet: bool = False):
+                     index_paths: list[str] | None = None, quiet: bool = False,
+                     llm=None):
     """按 profile 组装依赖，返回 (settings, embedding_client, store, retriever, service)。
 
     fake=True → FakeEmbeddingClient + NoopReranker，全链路不联网；
@@ -48,6 +70,9 @@ def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
 
     index_paths 不为空时，在**同一个进程内**先建索引再服务
     （内存向量库不跨进程，这也是 demo 里一次跑完的原因）。
+
+    llm 用来覆盖「生成侧」：默认值是 FakeLLMClient，Web API 会传真实的
+    DeepSeekLLMClient 进来 —— 检索侧(fake)与生成侧(真实)本来就该能各自开关。
     """
     settings = RAGSettings.for_profile(profile).validate().replace(top_k=top_k)
 
@@ -55,10 +80,11 @@ def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
         embedding_client = FakeEmbeddingClient()
         reranker = NoopReranker()
     else:
-        api_key = os.environ.get("SILICONFLOW_API_KEY", "")
-        embedding_client = SiliconFlowEmbeddingClient(api_key=api_key)
+        embedding_client = build_embedding_client_from_env()
         # rerank 是可选增强：有 key 才走真实接口，否则退回 FakeReranker 保持可跑
-        reranker = SiliconFlowReranker(api_key=api_key) if api_key else FakeReranker()
+        reranker = (SiliconFlowReranker(api_key=os.environ.get(
+            "SILICONFLOW_API_KEY", "")) if os.environ.get("SILICONFLOW_API_KEY")
+            else FakeReranker())
 
     store = InMemoryVectorStore()
     retriever = Retriever(embedding_client=embedding_client, vector_store=store)
@@ -66,7 +92,7 @@ def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
         retriever=retriever,
         reranker=reranker,
         assembler=ContextAssembler(min_score=settings.min_score),
-        llm=FakeLLMClient(),
+        llm=llm if llm is not None else FakeLLMClient(),
         settings=settings,
     )
     if index_paths:

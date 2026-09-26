@@ -16,6 +16,7 @@ RAG = 多了索引链路的 chat 应用。这两条链的触发时机、失败�
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -33,6 +34,17 @@ from .store import BaseVectorStore
 logger = logging.getLogger(__name__)
 
 NO_RESULT_ANSWER = "知识库中没有相关资料，无法回答这个问题。"
+
+# 拒答判据用「关键词命中」而不是「等于某个字符串」。
+# 真实模型不会原样复述拒答话术 —— 它更常回一句「知识库中没有相关资料。」
+# （只有半句）。字符串完全匹配会漏掉这类改写，于是前端拿到 refused=False，
+# 却已经把「我不知道」当答案展示出去了。宁可放宽匹配，也不要漏判。
+REFUSAL_MARKERS = ("无法回答", "知识库中没有相关资料", "没有相关资料",
+                   "没有找到相关资料", "资料中没有")
+
+
+def looks_refused(text: str) -> bool:
+    return any(marker in (text or "") for marker in REFUSAL_MARKERS)
 
 
 @dataclass(frozen=True)
@@ -142,7 +154,33 @@ class RAGAnswer:
 
     @property
     def refused(self) -> bool:
-        return NO_RESULT_ANSWER in self.answer
+        return looks_refused(self.answer)
+
+
+@dataclass(frozen=True)
+class _PreparedQuery:
+    """ask() 与 stream_answer() 的中间产物，两者共用同一段检索 + 组装。"""
+
+    query: str
+    messages: list
+    context: AssembledContext
+    system: str
+    retrieved: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class AnswerEvent:
+    """流式问答的一次事件 —— 它就是 SSE 每帧的 payload（13 章的接口契约）。
+
+    kind 取值固定四种：
+        "retrieved"  检索完成，带上来源与引用（前端可以先把「已找到资料」显示出来）
+        "delta"      增量文本，前端往缓冲区里追加
+        "done"       完整答案 + citations，前端一次性提交
+        "error"      生成失败，前端按错误提示兜底
+    """
+
+    kind: str
+    payload: dict = field(default_factory=dict)
 
 
 class RAGService:
@@ -158,7 +196,13 @@ class RAGService:
         self._llm = llm
         self.settings = settings or RAGSettings()
 
-    def ask(self, query: str, budget: int | None = None) -> RAGAnswer:
+    def _prepare(self, query: str, budget: int | None = None) -> _PreparedQuery:
+        """ask() 与 stream_answer() 共用的「检索 + 组装」段。
+
+        拆出来是为了让两条出路（一次性、流式）的**前置行为完全一致**：
+        同样是 top_k、同样过 min_score、同样受 token 预算约束。一旦有人改了
+        其中一条路而忘了另一条，必然出现「流式答的和一次性答的不是一回事」。
+        """
         settings = self.settings
         budget = budget if budget is not None else settings.budget_tokens
 
@@ -172,26 +216,37 @@ class RAGService:
 
         ctx: AssembledContext = self._assembler.build(query, scored, budget)
 
-        # 失败语义 2：检索为空（分数全低于 min_score 或被预算截断）→ 不调 LLM
-        if not ctx.used_chunks:
-            return RAGAnswer(answer=NO_RESULT_ANSWER, citations=[],
-                             context_tokens=ctx.context_tokens, retrieved_sources=[],
-                             used_chunks=[])
-
         system = RAG_SYSTEM_RULES + "【参考资料】\n" + ctx.context_text
         messages = [
             {"role": "system", "content": system},
             {"role": "user", "content": query},
         ]
+        return _PreparedQuery(query=query, messages=messages, context=ctx,
+                              system=system, retrieved=scored)
+
+    @staticmethod
+    def _refused_answer(ctx: AssembledContext) -> RAGAnswer:
+        """失败语义 2：检索为空 → 不调 LLM，直接拒答（省钱 + 防幻觉）。"""
+        return RAGAnswer(answer=NO_RESULT_ANSWER, citations=[],
+                         context_tokens=ctx.context_tokens, retrieved_sources=[],
+                         used_chunks=[])
+
+    def ask(self, query: str, budget: int | None = None) -> RAGAnswer:
+        prepared = self._prepare(query, budget)
+        ctx = prepared.context
+        # 失败语义 2
+        if not ctx.used_chunks:
+            return self._refused_answer(ctx)
+
         # 失败语义 3：生成失败重试一次，仍失败要报错，绝不返回空字符串
         try:
-            answer = self._llm.chat(messages)
+            answer = self._llm.chat(prepared.messages)
         except RAGError:
             raise
         except Exception as e:  # noqa: BLE001
             logger.warning("LLM 调用失败，重试一次: %s", e)
             try:
-                answer = self._llm.chat(messages)
+                answer = self._llm.chat(prepared.messages)
             except Exception as e2:  # noqa: BLE001
                 raise RAGError(f"LLM 调用失败（已重试一次）: {e2}") from e2
 
@@ -201,5 +256,69 @@ class RAGService:
             context_tokens=ctx.context_tokens,
             retrieved_sources=[sc.chunk.source for sc in ctx.used_chunks],
             used_chunks=ctx.used_chunks,
-            system_prompt=system,
+            system_prompt=prepared.system,
         )
+
+    def stream_answer(self, query: str, budget: int | None = None,
+                      ) -> Iterator[AnswerEvent]:
+        """流式版 ask()：产出一串事件，交给 API 层封装成 SSE（13 章）。
+
+        事件顺序是契约，前端照着消费即可：
+            retrieved → (delta * N) → done
+            检索为空        → 直接 done(refused=True)，一次 LLM 都不调
+            生成中途失败     → error，然后结束
+        """
+        prepared = self._prepare(query, budget)
+        ctx = prepared.context
+        sources = [sc.chunk.source for sc in ctx.used_chunks]
+
+        if not ctx.used_chunks:
+            yield AnswerEvent("done", {"answer": NO_RESULT_ANSWER, "refused": True,
+                                       "citations": [], "sources": [],
+                                       "context_tokens": ctx.context_tokens})
+            return
+
+        yield AnswerEvent("retrieved", {
+            "query": query,
+            "context_tokens": ctx.context_tokens,
+            "sources": sources,
+            "citations": [c.anchor() for c in ctx.citations],
+        })
+
+        buf: list[str] = []
+        sent_any = False
+        try:
+            for tok in self._llm.iter_tokens(prepared.messages):
+                if not tok:
+                    continue
+                buf.append(tok)
+                sent_any = True
+                yield AnswerEvent("delta", {"text": tok})
+        except RAGError:
+            raise
+        except Exception as e:  # noqa: BLE001
+            # 失败语义 3 在流式下的特殊之处：已经吐出去的 delta 收不回来。
+            # 此时再「重试一次」只会让前端拿到两段拼起来的内容，
+            # 所以只在「一个字都没吐」时才重试。
+            if sent_any:
+                logger.warning("LLM 流式生成中断（已发出部分内容）: %s", e)
+            else:
+                logger.warning("LLM 调用失败，重试一次: %s", e)
+                try:
+                    for tok in self._llm.iter_tokens(prepared.messages):
+                        if not tok:
+                            continue
+                        buf.append(tok)
+                        yield AnswerEvent("delta", {"text": tok})
+                except Exception as e2:  # noqa: BLE001
+                    yield AnswerEvent("error", {"message": str(e2)})
+                    return
+
+        answer = "".join(buf)
+        yield AnswerEvent("done", {
+            "answer": answer,
+            "refused": looks_refused(answer),
+            "citations": [c.anchor() for c in ctx.citations],
+            "sources": sources,
+            "context_tokens": ctx.context_tokens,
+        })

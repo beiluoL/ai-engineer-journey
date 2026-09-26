@@ -1,0 +1,152 @@
+[
+  {
+    "question": "生成器为什么能省内存？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["惰性", "一次", "列表推导式", "内存"]
+  },
+  {
+    "question": "yield 在生成器里起什么作用？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["yield", "暂停", "返回"]
+  },
+  {
+    "question": "生成器表达式和列表推导式有什么区别？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["生成器表达式", "列表推导式", "惰性"]
+  },
+  {
+    "question": "如何构造一个生成器函数？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["def", "yield", "生成器对象"]
+  },
+  {
+    "question": "用生成器处理大文件有什么好处？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["内存", "一行", "流式"]
+  },
+  {
+    "question": "为什么遍历超大列表会卡住？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["列表推导式", "内存", "一次性"]
+  },
+  {
+    "question": "迭代器和生成器有什么关系？",
+    "expected_source": "python-generators.md",
+    "expected_keywords": ["迭代器", "__iter__", "__next__"]
+  },
+  {
+    "question": "装饰器在 Python 里到底做了什么？",
+    "expected_source": "python-decorators.md",
+    "expected_keywords": ["闭包", "@", "函数"]
+  },
+  {
+    "question": "写一个装饰器需要哪几个要素？",
+    "expected_source": "python-decorators.md",
+    "expected_keywords": ["嵌套函数", "wrapper", "闭包"]
+  },
+  {
+    "question": "什么是闭包？它和装饰器有什么关系？",
+    "expected_source": "python-decorators.md",
+    "expected_keywords": ["闭包", "自由变量", "嵌套函数"]
+  },
+  {
+    "question": "带参数的装饰器是怎么实现的？",
+    "expected_source": "python-decorators.md",
+    "expected_keywords": ["三层嵌套", "参数", "返回装饰器"]
+  },
+  {
+    "question": "Python 里 @classmethod 和 @staticmethod 本质是什么？",
+    "expected_source": "python-decorators.md",
+    "expected_keywords": ["装饰器", "描述符", "第一个参数"]
+  },
+  {
+    "question": "GIL 是什么？它为什么会限制多线程？",
+    "expected_source": "python-gil.md",
+    "expected_keywords": ["GIL", "全局解释器锁", "互斥"]
+  },
+  {
+    "question": "为什么 Python 多线程不适合 CPU 密集型任务？",
+    "expected_source": "python-gil.md",
+    "expected_keywords": ["GIL", "CPU", "多进程"]
+  },
+  {
+    "question": "多进程为什么能绕过 GIL？",
+    "expected_source": "python-gil.md",
+    "expected_keywords": ["多进程", "独立解释器", "IPC"]
+  },
+  {
+    "question": "异步 IO 为什么比多线程更适合高并发网络请求？",
+    "expected_source": "python-gil.md",
+    "expected_keywords": ["asyncio", "事件循环", "协程"]
+  },
+  {
+    "question": "Token 是什么？为什么大模型按 token 计费？",
+    "expected_source": "llm-tokenization.md",
+    "expected_keywords": ["token", "分词", "词表"]
+  },
+  {
+    "question": "中英文 token 长度为什么不一样？",
+    "expected_source": "llm-tokenization.md",
+    "expected_keywords": ["BPE", "中文", "字符"]
+  },
+  {
+    "question": "分词对 prompt 工程有什么影响？",
+    "expected_source": "llm-tokenization.md",
+    "expected_keywords": ["token 数", "截断", "格式"]
+  },
+  {
+    "question": "temperature 是什么？它怎么影响模型输出？",
+    "expected_source": "llm-sampling.txt",
+    "expected_keywords": ["temperature", "随机性", "确定性"]
+  },
+  {
+    "question": "top_p 和 top_k 有什么异同？",
+    "expected_source": "llm-sampling.txt",
+    "expected_keywords": ["top_p", "top_k", "候选"]
+  },
+  {
+    "question": "向量检索和关键词检索各自擅长什么场景？",
+    "expected_source": "llm-retrieval.md",
+    "expected_keywords": ["向量检索", "关键词检索", "语义"]
+  },
+  {
+    "question": "为什么 RAG 里要混合向量检索和关键词检索？",
+    "expected_source": "llm-retrieval.md",
+    "expected_keywords": ["混合检索", "BM25", "同义词"]
+  },
+  {
+    "question": "ls -l 和 ls -lh 有什么区别？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  },
+  {
+    "question": "HashMap 在 Java 里为什么线程不安全？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  },
+  {
+    "question": "TCP 三次握手的过程是什么？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  },
+  {
+    "question": "Spring Boot 的自动装配原理是什么？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  },
+  {
+    "question": "HTTP 状态码 502 和 504 有什么区别？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  },
+  {
+    "question": "Redis 的持久化机制有哪几种？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  },
+  {
+    "question": "React 的 useEffect 依赖数组有什么作用？",
+    "expected_source": "not-in-kb.md",
+    "should_refuse": true
+  }
+]

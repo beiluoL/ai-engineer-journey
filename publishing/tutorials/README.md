@@ -13,6 +13,7 @@
 | 03 | [第一次微调实战 Day1：Qwen + LLaMA-Factory + 第一份 Java 面试训练数据](03-llm-finetune-day1-colab-llamafactory-qwen.md) | [Markdown](03-llm-finetune-day1-colab-llamafactory-qwen.md) · [HTML](03-llm-finetune-day1-colab-llamafactory-qwen.html) |
 | 04 | [企业级大模型部署从 0 到 1：租 GPU 服务器 → Ubuntu → Docker → Qwen → vLLM → Spring Boot](04-enterprise-llm-deploy-gpu-vllm-springboot.md) | [Markdown](04-enterprise-llm-deploy-gpu-vllm-springboot.md) · [HTML](04-enterprise-llm-deploy-gpu-vllm-springboot.html) |
 | 05 | [大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j](05-llm-finetune-day3-lora-ollama-springboot.md) | [Markdown](05-llm-finetune-day3-lora-ollama-springboot.md) · [HTML](05-llm-finetune-day3-lora-ollama-springboot.html) |
+| 06 | [大模型微调实战 Day4：RAG + LoRA 结合，构建带工具调用的 Agent](06-rag-lora-agent.md) | [Markdown](06-rag-lora-agent.md) · [HTML](06-rag-lora-agent.html) |
 
 ## 配图规范
 

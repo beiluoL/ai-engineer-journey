@@ -30,7 +30,7 @@ ANSWERS = {
 }
 
 
-def _service(kind: str = "hit"):
+def _service(kind: str = "hit", answers: dict | None = None):
     from rag.assembler import ContextAssembler
     from rag.cli import build_components
     from rag.pipeline import RAGService
@@ -40,7 +40,8 @@ def _service(kind: str = "hit"):
     data_dir = Path(__file__).resolve().parents[1] / "data"
     settings, _emb, _store, retriever, _svc = build_components(
         profile="dev", fake=True, top_k=5, index_paths=[str(data_dir)])
-    llm = EchoLLM(ANSWERS[kind])
+    pool = {**ANSWERS, **(answers or {})}
+    llm = EchoLLM(pool[kind])
     return RAGService(retriever=retriever, reranker=NoopReranker(),
                       assembler=ContextAssembler(min_score=settings.min_score),
                       llm=llm, settings=settings)
@@ -76,6 +77,22 @@ def test_evaluate_拒答案例只算refusal():
                       should_refuse=True)]
     report = evaluate(_service("refuse"), cases)
     assert report.refusal_pass_rate == 1.0 and report.keyword_pass_rate == 0.0
+
+
+def test_evaluate_拒答话术被改写后仍然判对():
+    """13 章的回归：真实模型改写拒答话术后，evaluate() 不能漏判。
+
+    evaluate() 曾写死 `NO_RESULT_ANSWER in answer`，一旦模型只回半句（真实
+    DeepSeek 回的是「知识库中没有相关资料。」）就判成 refused=False，
+    refusal_pass_rate 被拉低。现在统一走 answer.refused 的关键词判据。
+    """
+    answers = {"refuse": "资料中没有相关内容，我不了解这一点。"}
+    cases = [EvalCase(question="今天天气？", expected_source="nonexistent.md",
+                      should_refuse=True)]
+    # 旧口径（写死整句）会判失败；新口径命中「资料中没有」标记
+    report = evaluate(_service("refuse", answers=answers), cases)
+    assert report.refusal_pass_rate == 1.0
+    assert not report.failed_cases
 
 
 def test_指标都落在0到1之间():

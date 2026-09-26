@@ -13,7 +13,7 @@ from rag.cli import build_components
 from rag.embedding import FakeEmbeddingClient
 from rag.errors import RAGError
 from rag.llm import BaseLLMClient
-from rag.pipeline import IngestionPipeline, RAGService
+from rag.pipeline import IngestionPipeline, RAGService, looks_refused
 from rag.reranker import NoopReranker
 from rag.retriever import Retriever
 from rag.settings import RAGSettings
@@ -148,3 +148,90 @@ def test_离线装置本身可用(offline):                             # 保护
     assert isinstance(store, InMemoryVectorStore)
     assert isinstance(retriever, Retriever)
     assert store.count() > 0
+
+
+# ---------------------------------------------------------------------------
+# 流式问答（13 章）：一次性与流式必须共用同一段检索
+# ---------------------------------------------------------------------------
+
+def _stream_events(comp, llm, query="生成器为什么能省内存？", min_score=None, **kw):
+    """comp = offline 夹具的返回值（不能在这里解包，会比 pytest 先执行）。
+
+    min_score 可以单独抬高 —— 因为 FakeEmbeddingClient 对任何查询都召回东西，
+    "检索为空"在离线下只能靠把阈值抬到不可能达到来构造（11 章的发现）。
+    """
+    settings, embedding, store, retriever, _svc = comp
+    threshold = settings.min_score if min_score is None else min_score
+    service = RAGService(retriever=retriever, reranker=NoopReranker(),
+                         assembler=ContextAssembler(min_score=threshold),
+                         llm=llm, settings=settings)
+    return [ev for ev in service.stream_answer(query, **kw)]
+
+
+def test_stream事件序列为retrieved_delta_done(offline):
+    llm = RecordingLLM()
+    kinds = [ev.kind for ev in _stream_events(offline, llm)]
+    assert kinds[0] == "retrieved"
+    assert kinds[-1] == "done"
+    assert set(kinds[1:-1]) == {"delta"}
+
+
+def test_流式与一次性拿到同一份参考资料(offline):
+    """两条路共用 _prepare()：system_prompt 必须逐字相同。"""
+    settings, embedding, store, retriever, _svc = offline
+    llm = RecordingLLM()
+    service = RAGService(retriever=retriever, reranker=NoopReranker(),
+                         assembler=ContextAssembler(min_score=settings.min_score),
+                         llm=llm, settings=settings)
+    q = "生成器为什么能省内存？"
+    once = service.ask(q)
+    streamed = [ev for ev in service.stream_answer(q)]
+    meta = next(ev for ev in streamed if ev.kind == "retrieved")
+    done = next(ev for ev in streamed if ev.kind == "done")
+    assert meta.payload["context_tokens"] == once.context_tokens
+    assert meta.payload["sources"] == once.retrieved_sources
+    assert done.payload["answer"] == once.answer
+
+
+def test_逐帧增量累加等于最终答案(offline):
+    from rag.llm import FakeLLMClient   # 它按句产出多帧，才能验证「一帧一句」
+    llm = FakeLLMClient()
+    parts = [ev.payload["text"] for ev in _stream_events(offline, llm) if ev.kind == "delta"]
+    done = next(ev for ev in _stream_events(offline, llm) if ev.kind == "done")
+    assert len(parts) > 1                      # 确实分成了多帧
+    assert "".join(parts) == done.payload["answer"]
+    # 帧与帧之间不能是重复内容（累积前缀会让前端读到同一段两遍）
+
+
+def test_检索为空时流式直接拒答且不吐delta(offline):
+    class SilentLLM(RecordingLLM):
+        def chat(self, messages):          # 被调用就说明闸门漏了
+            self.calls += 1
+            return "我不该被调用"
+
+    llm = SilentLLM()
+    events = _stream_events(offline, llm, query="生成器省内存", min_score=1.01)
+    kinds = [ev.kind for ev in events]
+    assert kinds == ["done"]
+    assert events[0].payload["refused"] is True
+    assert llm.calls == 0
+
+
+def test_拒答判据能认出被改写的话术():
+    """真实模型不会原样复述拒答话术（实测它只回「知识库中没有相关资料。」）。"""
+    assert looks_refused("知识库中没有相关资料。")
+    assert looks_refused("抱歉，我无法回答这个问题。")
+    assert not looks_refused("生成器是边算边吐的 [1]。")
+    assert not looks_refused("")
+
+
+def test_流式done的refused与一次性答案一致(offline):
+    settings, embedding, store, retriever, _svc = offline
+    llm = RecordingLLM()
+    service = RAGService(retriever=retriever, reranker=NoopReranker(),
+                         assembler=ContextAssembler(min_score=settings.min_score),
+                         llm=llm, settings=settings)
+    q = "生成器为什么能省内存？"
+    once = service.ask(q)
+    events = list(service.stream_answer(q))
+    assert events[-1].payload["refused"] == once.refused

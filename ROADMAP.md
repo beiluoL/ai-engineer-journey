@@ -115,9 +115,9 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：接入个人知识库的 RAG Assistant
 
-**状态**：✅ 10/10 Milestone 成文 · ✅ src/rag/ 落地（15 模块） · ✅ 113 项 pytest 离线全绿 · ✅ 11 张真实运行截图
+**状态**：✅ 14/14 Milestone 成文 · ✅ src/rag/ 落地（17 模块） · ✅ 142 项 pytest 离线全绿 · ✅ 25 张真实运行截图
 
-**10 个 Milestone**：
+**14 个 Milestone**：
 ```
 01 — Document Ingestion
 02 — Chunking
@@ -129,6 +129,10 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 08 — Context Assembly
 09 — RAG Pipeline
 10 — RAG Evaluation
+11 — Real Service Integration
+12 — Real LLM Integration
+13 — FastAPI Web API
+14 — Real RAG Evaluation
 ```
 
 ---

@@ -39,10 +39,10 @@
 | Project 02 src | ✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek |
 | Project 03 milestones | ✅ 9/9 全部成文；每章均配真实运行截图 |
 | Project 03 src + tests | ✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图 |
-| Project 04 milestones | ✅ 12/12 全部成文（ingestion → chunking → embedding → vector db → retrieval → similarity → rerank → context → pipeline → evaluation → real-service → real-llm） |
-| Project 04 src | ✅ v0.4 落地：15 个模块，129 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM 均已跑通，新增忠实度审计，12 章全部配真实运行截图 |
+| Project 04 milestones | ✅ 14/14 全部成文（ingestion → chunking → embedding → vector db → retrieval → similarity → rerank → context → pipeline → evaluation → real-service → real-llm → fastapi-web-api → real-rag-evaluation） |
+| Project 04 src | ✅ v0.5 落地：17 个模块，142 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估均已跑通，14 章全部配真实运行截图 |
 | Project 05-10 | ⬜ 未开始 |
-| publishing/tutorials | ✅ 5 篇图文教程已发布（md + html） |
+| publishing/tutorials | ✅ 6 篇图文教程已发布（md + html） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials） |
 | publishing/articles | 📝 2 篇 |
 | CI | ✅ GitHub Actions：单测 + 死链坏图扫描 + 密钥文件检查 |
@@ -54,7 +54,7 @@
 | 01 | Python AI CLI Assistant | 🎓 M02 | ✅ v0.2 |
 | 02 | Engineering AI Assistant | ⬜ | ✅ v0.2 CLI + API 双形态 |
 | 03 | AI Application | ⬜ | ✅ v0.2 文档+代码+测试 |
-| 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.4 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计 |
+| 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.5 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估 |
 | 05 | Research Agent / MCP | ⬜ | ⬜ |
 | 06 | Mini Transformer / LLM | ⬜ | ⬜ |
 | 07 | Open Source LLM | ⬜ | ⬜ |
@@ -65,9 +65,8 @@
 ## Next
 
 1. 动手复现 `exercises/01-basic` 8 题：先自己敲，再对照 `answers.py`，把 🎓 从「参考答案已判卷」变成「我真的会了」
-2. Project 04 下一步：给 RAG 加 FastAPI Web API（复用 P03 SSE），做真实 RAG 评估（20–50 条 EvalCase）
-3. finetune-series 草稿择优转正：Day4 RAG + LoRA 作为 tutorial 06 备选
-4. P02 学习进度推进：读完 `OVERVIEW.md` + 10 章，对着 `src/` 逐文件看
+2. Project 04 下一步：接入真实 reranker；加监控与可观测（latency / 召回分数分布 / 调用次数）
+3. P02 学习进度推进：读完 `OVERVIEW.md` + 10 章，对着 `src/` 逐文件看
 
 ## 维护工具
 

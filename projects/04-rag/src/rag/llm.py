@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 from .errors import RAGError
 
@@ -48,6 +49,18 @@ class BaseLLMClient(ABC):
     def chat(self, messages: list[dict]) -> str:
         """messages = [{"role": "system"|"user", "content": str}] → 回答文本。"""
 
+    def iter_tokens(self, messages: list[dict]) -> Iterator[str]:
+        """逐块产出回答，**默认整段一次性返回**。
+
+        13 章 SSE 的能力边界就在这：client 每 yield 一次，前端就收到一帧。
+        真实客户端必须 override 成「边收边 yield」，否则 /ask/stream 会先卡住
+        等模型把整段生成完再一起吐出来 —— 流式的意义就没了。
+
+        之所以不设成抽象方法：是给「我只想同步拿结果」的旧实现留退路，
+        补实现的人至少还能跑；但接真实模型时 override 是必修课。
+        """
+        yield self.chat(messages)
+
 
 class FakeLLMClient(BaseLLMClient):
     """离线替身：从 system 里的【参考资料】中抽取与 user 问题重叠最多的句子。
@@ -63,6 +76,7 @@ class FakeLLMClient(BaseLLMClient):
         # 至少命中这么多个 query 词才肯作答，否则视作「资料与问题无关」→ 拒答。
         # 这一条对应 09 章的失败语义 2：宁可说「不知道」，也不要胡编。
         self.min_overlap = min_overlap
+        self._answer = ""
 
     def chat(self, messages: list[dict]) -> str:
         system = next((m["content"] for m in messages if m["role"] == "system"), "")
@@ -94,7 +108,30 @@ class FakeLLMClient(BaseLLMClient):
         if not chosen:
             return "知识库中没有相关资料，无法回答这个问题。"
         lines = [f"[{no}] {sent}（来源: {source}）" for no, sent, source in chosen]
-        return "根据知识库资料回答：" + "；".join(lines) + "。"
+        text = "根据知识库资料回答：" + "；".join(lines) + "。"
+        self._answer = text
+        return text
+
+    def iter_tokens(self, messages: list[dict]) -> Iterator[str]:
+        """按句切成若干块逐块 yield —— 离线也要能演示「分批到达」。
+
+        真实模型一帧就是一个 token，Fake 这里一帧是一句。前端拿到的两种体验
+        一致（都是增量追加），这正是抽象该有的样子。
+        """
+        text = self.chat(messages)
+        if not text:
+            return
+        # 每帧推**新增**的那一句，不是累积的完整前缀：
+        # 前端按「追加」消费，拼接结果必须恰好等于 chat() 的返回值。
+        pos = 0
+        for sent in _split_sentences(text):
+            if pos >= len(text):
+                break
+            piece = text[pos:pos + len(sent)]
+            pos += len(piece)
+            yield piece
+        if pos < len(text):
+            yield text[pos:]
 
 
 class RAGLLMError(RAGError):
@@ -178,13 +215,14 @@ class OpenAICompatibleLLMClient(BaseLLMClient):
             raise RAGLLMError(f"LLM 返回没有 choices: {str(data)[:200]}")
         return (choices[0].get("message") or {}).get("content") or ""
 
-    def stream(self, messages: list[dict]) -> str:
-        """返回整段文本（demo 里演示流式，但对外仍收成一个字符串）。
+    def iter_tokens(self, messages: list[dict]) -> Iterator[str]:
+        """真流式：HTTP 响应一到来就 yield，不等整段生成完。
 
-        直接 yield token 的生成器更利于 SSE；这里先收敛成字符串，
-        是为了和 chat() 共用一套调用点，避免「流式路径和同步路径行为不一致」。
+        注意这里用 httpx.Client.stream()（连接级流式）而不是 post()，
+        后者会等服务端把整个 body 读进内存才返回 —— 那样拿到的是「一次性」。
         """
         import httpx
+        import json
 
         payload = {"model": self.model_name, "messages": messages,
                    "stream": True, "temperature": self.temperature}
@@ -201,13 +239,19 @@ class OpenAICompatibleLLMClient(BaseLLMClient):
                     payload_str = line[5:].strip()
                     if payload_str in ("[DONE]", ""):
                         continue
-                    import json
-
                     delta = json.loads(payload_str)["choices"][0]["delta"]
                     # 坑 3：有的 chunk 只有 role，content 是 None
                     if delta.get("content"):
                         chunks.append(delta["content"])
-        return "".join(chunks)
+                        yield delta["content"]
+
+    def stream(self, messages: list[dict]) -> str:
+        """返回整段文本：给「只想同步拿结果」的调用点用。
+
+        内部走 iter_tokens()，所以同步路径和流式路径的抓取逻辑永远一致 ——
+        不会出现「流式路径漏了一个字段、同步路径没事」这类玄学 bug。
+        """
+        return "".join(self.iter_tokens(messages))
 
 
 class DeepSeekLLMClient(OpenAICompatibleLLMClient):

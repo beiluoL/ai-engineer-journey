@@ -18,12 +18,12 @@ RAG 链路是三段接力，整体效果差时必须能定位是哪一段出了�
 
 from __future__ import annotations
 
-from .llm import _split_sentences, parse_answer_refs
-
 import json
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
+from .llm import _split_sentences, parse_answer_refs
 
 
 @dataclass(frozen=True)
@@ -105,7 +105,9 @@ def evaluate(service, eval_cases: list[EvalCase], budget: int | None = None) -> 
 
         # —— 第三段：生成质量（确定性子集：拒答 + 关键词）——
         if case.should_refuse:
-            if "没有相关资料" in answer.answer:
+            # 用 answer.refused（pipeline 里的关键词判据），不要在这里重写一遍字符串。
+            # 13 章踩过坑：真实模型会改写拒答话术，写死的字符串会漏判。
+            if answer.refused:
                 ref_pass += 1
             else:
                 failed.append(f"#{i} 应拒答却作答: {case.question}")
