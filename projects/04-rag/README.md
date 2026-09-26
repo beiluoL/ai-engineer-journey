@@ -74,27 +74,30 @@ Personal RAG v1.0
 | 09 | [RAG Pipeline](milestones/09-rag-pipeline.md) | ✅ | 完整 Pipeline 整合 |
 | 10 | [RAG Evaluation](milestones/10-rag-evaluation.md) | ✅ | Hit Rate / MRR / 忠实度 |
 | 11 | [Real Service Integration](milestones/11-real-service-integration.md) | ✅ | 真实 embedding + Chroma 持久化 |
+| 12 | [Real LLM Integration](milestones/12-real-llm-integration.md) | ✅ | 真实 LLM 生成 + 忠实度审计 |
 
 状态：✅ 内容已就绪 · ✅ 代码已落地 · ✅ 测试全绿 · ✅ 已配真实运行截图
 
 ## 当前状态
 
-**11 / 11 个 Milestone 文档 + `src/rag/` + 离线/真实服务测试 + 真实运行截图** 全部完成。RAG 两条链路（离线索引 `parse → chunk → embed → store`、在线问答 `retrieve → rerank → assemble → llm`）已跑通，并新增「真实 embedding + Chroma 持久化」一章及 4 张真实运行截图。
+**12 / 12 个 Milestone 文档 + `src/rag/` + 离线/真实服务测试 + 真实运行截图** 全部完成。RAG 两条链路（离线索引 `parse → chunk → embed → store`、在线问答 `retrieve → rerank → assemble → llm`）已跑通；新增真实 embedding + Chroma 持久化、真实 LLM + 忠实度审计两章。
 
 ## 当前版本
 
-**v0.3 真实服务可跑**：`src/rag/` 共 15 个模块，120 项 pytest 全绿（新增 7 项离线护栏测试）。真实链路已跑通：
+**v0.4 真实 LLM 可跑**：`src/rag/` 共 15 个模块，129 项 pytest 全绿。真实链路已跑通：
 
 - `DashScopeEmbeddingClient` 接百炼 `text-embedding-v3`
 - `ChromaVectorStore` 落盘 `chroma_db/rag_chunks/`，重启后数据可恢复
-- CLI 支持 `--index` 与 `--ask --fake` 全离线演示，`demo_12_real_service.py` 支持真实服务全流程演示
+- `DeepSeekLLMClient` 接入 RAGService；`RAGAnswer.system_prompt` 留档可回放
+- 忠实度审计 + 注入式自测，可离线验证审计判据有区分度
+- CLI 支持 `--index` 与 `--ask --fake` 全离线演示；`demo_12/13` 支持真实服务全流程演示
 
 ## 项目结构
 
 ```text
 projects/04-rag/
 ├── data/               # 示例知识库（真实 .md/.txt 样本）
-├── demos/              # 11 个真实运行 demo + 1 个 pytest 运行脚本
+├── demos/              # 12 个真实运行 demo + 1 个 pytest 运行脚本
 ├── src/rag/            # 五层结构（见 09 章，呼应 P03）
 │   ├── cli.py          # 接入层：python -m rag.cli --index/--ask
 │   ├── pipeline.py     # 编排层：IngestionPipeline + RAGService
@@ -112,7 +115,7 @@ projects/04-rag/
 │   ├── errors.py       # 支撑层：RAGError 层级
 │   └── llm.py          # 复用/兼容层：LLMClient 封装
 ├── tests/              # 全部离线（FakeEmbeddingClient + InMemoryVectorStore）
-└── assets/             # 15 张真实运行截图
+└── assets/             # 18 张真实运行截图
 ```
 
 ## 已掌握能力
@@ -121,12 +124,14 @@ projects/04-rag/
 - 文档解析、Chunk 切分、Embedding 向量化、向量检索（hybrid + MMR）、重排序、上下文组装
 - 可离线跑通的完整 RAG 流水线，120 项 pytest 验证
 - 真实 embedding（百炼 text-embedding-v3）与 Chroma 持久化落盘，重启恢复验证
+- 真实 LLM（DeepSeek）生成、token 计量、拒答闸门、流式接入
+- 忠实度审计，逐句标出无出处内容，并可用注入式自测验证判据
 
 ## 下一步
 
-1. 接入真实 LLM：把 `RAGService.ask()` 后面的 LLM 从 `FakeLLMClient` 换成 DeepSeek / Qwen
-2. 复用 P03 的 FastAPI + SSE 模式，给 RAG 加上 Web API（`api.py`）
-3. 做真实 RAG 评估：手写 20-50 条 EvalCase，跑 Hit Rate@k / MRR
+1. 复用 P03 的 FastAPI + SSE 模式，给 RAG 加上 Web API（`api.py`）
+2. 做真实 RAG 评估：手写 20–50 条 EvalCase，跑 Hit Rate@k / MRR / 忠实度
+3. 接入真实 reranker（可选增强）
 4. 监控与可观测：记录检索 latency、召回分数分布、embedding/llm 调用次数
 
 **前置项目**：[Project 03 — AI Application](../03-ai-application/)

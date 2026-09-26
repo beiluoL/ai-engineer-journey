@@ -27,8 +27,21 @@ from .errors import (
     RetrievalError,
     RerankError,
 )
-from .evaluation import EvalCase, EvalReport, evaluate
-from .llm import BaseLLMClient, FakeLLMClient
+from .evaluation import (
+    EvalCase,
+    EvalReport,
+    FaithfulnessReport,
+    check_answer_faithfulness,
+    check_faithfulness,
+    evaluate,
+)
+from .llm import (
+    BaseLLMClient,
+    DeepSeekLLMClient,
+    FakeLLMClient,
+    OpenAICompatibleLLMClient,
+    parse_answer_refs,
+)
 from .models import Chunk, Document, ScoredChunk
 from .parsing import BaseParser, MdParser, PdfParser, TxtParser, get_parser, parse_file
 from .pipeline import IngestionPipeline, RAGAnswer, RAGService
@@ -68,4 +81,7 @@ __all__ = [
     "IngestionPipeline", "RAGService", "RAGAnswer", "FakeLLMClient", "BaseLLMClient",
     # 10 评估
     "EvalCase", "EvalReport", "evaluate",
+    # 12 真实生成侧
+    "FaithfulnessReport", "check_faithfulness", "check_answer_faithfulness",
+    "OpenAICompatibleLLMClient", "DeepSeekLLMClient", "parse_answer_refs",
 ]

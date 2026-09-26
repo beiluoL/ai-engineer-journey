@@ -6,7 +6,8 @@ import json
 from pathlib import Path
 
 from rag.evaluation import (EvalCase, EvalReport, build_default_eval_cases,
-                           check_expected_sources, evaluate)
+                           check_answer_faithfulness, check_expected_sources,
+                           check_faithfulness, evaluate)
 from rag.llm import BaseLLMClient
 
 
@@ -114,3 +115,38 @@ def test_check_expected_sources_能自检评测集():
 def test_eval_report_字段即口径():
     r = EvalReport()
     assert r.n_cases == 0 and r.mrr == 0.0
+
+
+# --------------------------------------------------------------------------
+# 忠实度审计（12 章）：接真实模型之后才需要它，所以判据要能被离线验证
+# --------------------------------------------------------------------------
+
+CTX = ("【参考资料】\n"
+       "[1] (source: a.md)\n"
+       "生成器不会一次性把所有结果都造出来，而是边算边吐，算完就丢。\n"
+       "列表推导式会一次性把 100 万个整数全部造出来，占用几十 MB。\n")
+
+
+def test_忠实答案记为有依据():
+    r = check_faithfulness("生成器是边算边吐的 [1]。", CTX)
+    assert r.n_supported == 1
+    assert r.ratio == 1.0
+    assert not r.cites_nothing
+
+
+def test_注入的数字型编造被抓出来():
+    """覆盖「词面重合但事实是编的」—— 光算覆盖率抓不到。"""
+    r = check_faithfulness("这个优化把内存占用降到了 3.14 MB。", CTX)
+    assert r.unsupported
+    assert r.ratio < 1.0
+
+
+def test_没有引用编号时标记cites_nothing():
+    r = check_faithfulness("生成器是边算边吐的。", CTX)
+    assert r.cites_nothing          # 无从溯源，即便内容是对的
+    assert r.n_supported == 1       # 内容本身仍有依据，两件事分开报
+
+
+def test_空答案不炸():
+    r = check_faithfulness("", CTX)
+    assert r.n_sentences == 0 and r.ratio == 0.0

@@ -8,9 +8,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from rag.assembler import ContextAssembler
 from rag.cli import build_components
-from rag.llm import FakeLLMClient
+from rag.errors import RAGError
+from rag.llm import DeepSeekLLMClient, FakeLLMClient, parse_answer_refs
 from rag.pipeline import RAGService
 from rag.retriever import Retriever
 from rag.reranker import NoopReranker
@@ -63,3 +66,99 @@ def test_空资料直接拒答():
         [{"role": "system", "content": "【参考资料】\n（无）"},
          {"role": "user", "content": "生成器"}])
     assert "无法回答" in answer
+
+
+# --------------------------------------------------------------------------
+# 真实客户端：不联网，用假 httpx 顶替，只验证「请求怎么发的、结果怎么取的」
+# --------------------------------------------------------------------------
+
+
+class _FakeResponse:
+    def __init__(self, payload: dict, status: int = 200):
+        self._payload = payload
+        self.status_code = status
+        self.text = str(payload)
+
+    def json(self) -> dict:
+        return self._payload
+
+
+class _FakeClient:
+    """替换 httpx.Client，把请求体记下来再返回预设响应。"""
+
+    instances: list["_FakeClient"] = []
+
+    def __init__(self, timeout=None):
+        self.timeout = timeout
+        self.payload: dict = {}
+        _FakeClient.instances.append(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc) -> bool:
+        return False
+
+    def post(self, url, headers=None, json=None):     # noqa: A002 - 对齐 httpx 签名
+        self.url = url
+        self.headers = headers
+        self.payload = json or {}
+        if self.payload.get("__fail__"):
+            return _FakeResponse({"error": "boom"}, status=500)
+        return _FakeResponse({"choices": [{"message": {"role": "assistant",
+                                                       "content": "WIN"}}],
+                              "usage": {"prompt_tokens": 7,
+                                        "completion_tokens": 2,
+                                        "total_tokens": 9}})
+
+
+@pytest.fixture
+def fake_httpx(monkeypatch):
+    _FakeClient.instances = []
+    monkeypatch.setattr("httpx.Client", _FakeClient)
+    return _FakeClient
+
+
+def test_真实客户端_发出去的请求符合openai协议(fake_httpx):
+    client = DeepSeekLLMClient(api_key="sk-test")
+    out = client.chat([{"role": "user", "content": "hi"}])
+    sent = _FakeClient.instances[0]
+    assert out == "WIN"
+    assert sent.url == "https://api.deepseek.com/chat/completions"
+    assert sent.headers["Authorization"] == "Bearer sk-test"
+    assert sent.payload["model"] == "deepseek-chat"
+    assert sent.payload["temperature"] == 0.0      # RAG 默认要可复现
+    assert sent.payload["stream"] is False
+
+
+def test_超时必须显式设置():
+    """httpx 默认 5s 对生成接口远远不够（12 章坑 1）。"""
+    client = DeepSeekLLMClient(api_key="sk-test")
+    assert client.timeout == 60.0
+    with pytest.raises(RAGError):                  # 没 key 必须当场炸，不许糊默认值
+        DeepSeekLLMClient(api_key="")
+
+
+def test_usage_被记下来供日志与计费(fake_httpx):
+    client = DeepSeekLLMClient(api_key="sk-test")
+    client.chat([{"role": "user", "content": "hi"}])
+    assert client.last_usage == {"prompt_tokens": 7, "completion_tokens": 2,
+                                "total_tokens": 9}
+
+
+def test_接口报错时抛RAGError而不是返回空串(fake_httpx, monkeypatch):
+    class _Fail(_FakeClient):
+        def post(self, url, headers=None, json=None):  # noqa: A002
+            return _FakeResponse({"error": "boom"}, status=500)
+
+    monkeypatch.setattr("httpx.Client", _Fail)
+    with pytest.raises(RAGError):
+        DeepSeekLLMClient(api_key="sk-test").chat(
+            [{"role": "user", "content": "hi"}])
+    # 契约：失败要抛，绝不能返回 "" —— 空串会让上层误以为模型答了「不知道」
+
+
+def test_parse_answer_refs_去重并保持出现顺序():
+    assert parse_answer_refs("[3] 这是一个 [1] 测试 [3]") == [3, 1]
+    assert parse_answer_refs("没有编号的一句话") == []
+    assert parse_answer_refs("") == []

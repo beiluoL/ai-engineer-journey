@@ -136,6 +136,9 @@ class RAGAnswer:
     context_tokens: int = 0
     retrieved_sources: list[str] = field(default_factory=list)
     used_chunks: list = field(default_factory=list)
+    # 12 章：把真正发给模型的 system 内容留档。RAG 最难复现的 bug 是
+    # 「模型答的不是我喂给它的那段」，留档之后可以原样回放给模型自己判。
+    system_prompt: str = ""
 
     @property
     def refused(self) -> bool:
@@ -175,9 +178,9 @@ class RAGService:
                              context_tokens=ctx.context_tokens, retrieved_sources=[],
                              used_chunks=[])
 
+        system = RAG_SYSTEM_RULES + "【参考资料】\n" + ctx.context_text
         messages = [
-            {"role": "system",
-             "content": RAG_SYSTEM_RULES + "【参考资料】\n" + ctx.context_text},
+            {"role": "system", "content": system},
             {"role": "user", "content": query},
         ]
         # 失败语义 3：生成失败重试一次，仍失败要报错，绝不返回空字符串
@@ -198,4 +201,5 @@ class RAGService:
             context_tokens=ctx.context_tokens,
             retrieved_sources=[sc.chunk.source for sc in ctx.used_chunks],
             used_chunks=ctx.used_chunks,
+            system_prompt=system,
         )

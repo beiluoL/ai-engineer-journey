@@ -105,3 +105,132 @@ def _split_sentences(text: str) -> list[str]:
     """按中英文句末标点切句，供 FakeLLMClient 抽取句子用。"""
     parts = re.split(r"(?<=[。！？!?])", text)
     return [p for p in (s.strip() for s in parts) if p]
+
+
+# --------------------------------------------------------------------------
+# 真实接入层
+# --------------------------------------------------------------------------
+# 踩坑记录（milestone 12）：
+#   1. httpx 默认超时只有 5 秒，DeepSeek 首次推理经常 20s+ → 必须显式设 timeout，
+#      否则表现为「本地跑得好好的，上线后间歇性 500」。
+#   2. 重试只有一层。RAGService 已经会重试一次，client 内部再退避重试就是
+#      两层叠加（4 次请求），一次网络抖动的花费翻倍 —— 边界划在「谁离网络近谁重试」。
+#   3. 流式的第一个 chunk 常常只有 role、content 为 None，直接拼接会写出 "None"。
+# --------------------------------------------------------------------------
+
+
+_REF_RE = re.compile(r"\[(\d+)\]")
+
+
+class OpenAICompatibleLLMClient(BaseLLMClient):
+    """OpenAI /chat/completions 协议的骨架。
+
+    现在几乎所有国产模型（DeepSeek、通义、智谱、Moonshot……）都兼容这个协议，
+    区别只有 base_url 和模型名。把协议骨架抽出来，接新厂商只改两个类属性
+    —— 这一点和 03 章的 embedding 层是同一套做法。
+
+    对外只暴露两个方法：
+        chat(messages) -> str          同步一次拿全（RAGService 的契约）
+        stream(messages) -> Iterator   增量吐字（给 Web 端做 SSE 用，P03 已验证）
+    """
+
+    BASE_URL = "https://api.deepseek.com/chat/completions"
+    MODEL = "deepseek-chat"
+    TIMEOUT = 60.0          # 不是 5 秒：生成类接口首 token 可能等十几秒
+
+    def __init__(self, api_key: str, *, model: str = "", timeout: float = TIMEOUT,
+                 temperature: float = 0.0):
+        if not api_key:
+            raise RAGLLMError("api_key 为空，无法调用大模型接口")
+        self.api_key = api_key
+        self.model_name = model or self.MODEL
+        self.timeout = timeout
+        # 12 章：RAG 是「把一段资料复述出来」的任务，不需要创意。
+        # temperature 默认给 0：同一个问题两次调用应当基本同结果，
+        # 否则你的评测报告每次都在变，前后对比失去意义。
+        self.temperature = temperature
+        # 12 章：把真实花费记下来。RAG 问答是「每次请求都要付钱」的在线链路，
+        # 没计量就等于没上线 —— 出问题时你不知道是模型变贵了还是 prompt 变长了。
+        self.last_usage: dict | None = None
+
+    def _headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"}
+
+    def chat(self, messages: list[dict]) -> str:
+        import httpx
+
+        payload = {"model": self.model_name, "messages": messages,
+                   "stream": False, "temperature": self.temperature}
+        # 显式 timeout：httpx 默认 5s，对生成接口远远不够
+        with httpx.Client(timeout=self.timeout) as client:
+            resp = client.post(self.BASE_URL, headers=self._headers(),
+                               json=payload)
+            if resp.status_code >= 400:
+                raise RAGLLMError(
+                    f"LLM 返回 {resp.status_code}: {resp.text[:200]}")
+            data = resp.json()
+        # 返回体里的 model 可能和你请求时写的不一致（deepseek-chat 实际跑的是
+        # deepseek-flash），计费与追踪别拿请求参数当模型名，读返回体。
+        self.last_usage = data.get("usage") or None
+        choices = data.get("choices") or []
+        if not choices:
+            raise RAGLLMError(f"LLM 返回没有 choices: {str(data)[:200]}")
+        return (choices[0].get("message") or {}).get("content") or ""
+
+    def stream(self, messages: list[dict]) -> str:
+        """返回整段文本（demo 里演示流式，但对外仍收成一个字符串）。
+
+        直接 yield token 的生成器更利于 SSE；这里先收敛成字符串，
+        是为了和 chat() 共用一套调用点，避免「流式路径和同步路径行为不一致」。
+        """
+        import httpx
+
+        payload = {"model": self.model_name, "messages": messages,
+                   "stream": True, "temperature": self.temperature}
+        chunks: list[str] = []
+        with httpx.Client(timeout=self.timeout) as client:
+            with client.stream("POST", self.BASE_URL, headers=self._headers(),
+                               json=payload) as resp:
+                if resp.status_code >= 400:
+                    raise RAGLLMError(
+                        f"LLM 返回 {resp.status_code}: {resp.text[:200]}")
+                for line in resp.iter_lines():
+                    if not line or not line.startswith("data:"):
+                        continue
+                    payload_str = line[5:].strip()
+                    if payload_str in ("[DONE]", ""):
+                        continue
+                    import json
+
+                    delta = json.loads(payload_str)["choices"][0]["delta"]
+                    # 坑 3：有的 chunk 只有 role，content 是 None
+                    if delta.get("content"):
+                        chunks.append(delta["content"])
+        return "".join(chunks)
+
+
+class DeepSeekLLMClient(OpenAICompatibleLLMClient):
+    """DeepSeek 直连（兼容 OpenAI 协议）。
+
+    用法：
+        client = DeepSeekLLMClient(api_key=os.environ["DEEPSEEK_API_KEY"])
+    没配 key 时直接抛 RAGLLMError，不要用默认值糊过去。
+    """
+
+    BASE_URL = "https://api.deepseek.com/chat/completions"
+    MODEL = "deepseek-chat"
+
+
+def parse_answer_refs(answer: str) -> list[int]:
+    """从答案里抽模型标出来的引用编号，去重并保持出现顺序。
+
+    真实模型经常不按 prompt 里写的格式标 [1]，而是写在括号里或干脆不标。
+    拿不到编号时 cites_nothing=True，上层据此决定「整段算来源不明」。
+    """
+    seen: list[int] = []
+    for m in _REF_RE.finditer(answer or ""):
+        n = int(m.group(1))
+        if n not in seen:
+            seen.append(n)
+    return seen

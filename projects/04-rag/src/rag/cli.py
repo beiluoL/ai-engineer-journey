@@ -40,7 +40,7 @@ QUIET_META = ("format", "size_bytes", "parsed_at", META_HEADINGS, "code_ranges")
 
 
 def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
-                     index_paths: list[str] | None = None):
+                     index_paths: list[str] | None = None, quiet: bool = False):
     """按 profile 组装依赖，返回 (settings, embedding_client, store, retriever, service)。
 
     fake=True → FakeEmbeddingClient + NoopReranker，全链路不联网；
@@ -75,8 +75,9 @@ def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
             pipeline = IngestionPipeline(list(PARSER_CLASSES), embedding_client,
                                          store, retriever)
             report = pipeline.ingest(files)
-            print(f"索引 {report.files_total} 个文件：成功 {report.files_ok}，"
-                  f"失败 {len(report.files_failed)}，切出 {report.chunks_stored} 个 chunk")
+            if not quiet:      # demo 里一个进程要装配多次，静默装配免得刷屏
+                print(f"索引 {report.files_total} 个文件：成功 {report.files_ok}，"
+                      f"失败 {len(report.files_failed)}，切出 {report.chunks_stored} 个 chunk")
     return settings, embedding_client, store, retriever, service
 
 
