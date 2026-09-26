@@ -70,11 +70,35 @@ AI Chat Web v1.0
 
 ## 当前状态
 
-**9 / 9 个 Milestone 已全部成文**（文档先行，作为 `src/` 落地的设计依据）。
+**9 / 9 个 Milestone 已全部成文 + `src/` 代码落地 + 61 个离线测试全绿**（文档先行 → 代码落地 → 测试覆盖 → 真实运行验证）。
 
 ## 当前版本
 
-**v0.1 文档就绪**，`src/` 正在落地：目标是把 `prompts.py` / `schema.py` / `tools.py` / `tokens.py` / `memory.py` / `agent.py` 真实跑通。
+**v0.2 文档 + 代码双全**：四条核心路径（普通问答 / 流式 / 结构化 / 工具调用）已用 `FakeClient` 离线跑通，无需真实 Key 即可复现。接入真实 DeepSeek 只需在 `.env` 填入 `DEEPSEEK_API_KEY`。
+
+## 真实运行（离线冒烟，FakeClient）
+
+下列截图全部由 `src/` 真实运行产出（`ai-app ... --fake` 或脚本化 `FakeClient`），不联网、不花钱，可复现：
+
+**① 普通问答**
+
+![普通问答](assets/term-qa.png)
+
+**② 流式输出（打字机）**
+
+![流式输出](assets/term-stream.png)
+
+**③ 结构化输出（Pydantic + JSON Mode）**
+
+![结构化输出](assets/term-structured.png)
+
+**④ 工具调用（Function Calling）**
+
+![工具调用](assets/term-agent.png)
+
+**⑤ 离线测试 61 / 61 通过**
+
+![pytest 61 passed](assets/term-pytest.png)
 
 ## 项目结构
 
@@ -94,7 +118,9 @@ tests/                  # 全部离线（FakeClient），不联网、不用真�
 
 ## 下一步
 
-1. 按 9 章文档落地 `src/`，真实调通四条路径：普通问答 / 流式 / 结构化 / 工具调用
-2. 跑通后配真实运行截图，P03 从「文档就绪」转为「文档 + 代码」双全
+1. ✅ 已落地 `src/` 并跑通四条路径（普通问答 / 流式 / 结构化 / 工具调用）
+2. ✅ 已配真实运行截图，P03 从「文档就绪」转为「文档 + 代码 + 测试」双全
+3. 接入真实 DeepSeek：复制 `.env.example` 为 `.env` 填入 `DEEPSEEK_API_KEY`，去掉 `--fake` 即可对比真模型效果
+4. 进阶：把 `api.py`（FastAPI）部署成服务，或在前端接一个聊天 UI（呼应 Project 02 的 AI Chat Web）
 
 **前置项目**：[Project 02 — Engineering AI Assistant](../02-engineering-ai-assistant/)

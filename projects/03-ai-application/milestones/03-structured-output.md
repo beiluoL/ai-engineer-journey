@@ -254,3 +254,9 @@ JSON Mode 只保证**语法是合法 JSON**，`{"error": "我不知道"}` 也是
 - [ ] 有真实调用验证：返回的是强类型对象，不是字符串
 
 下一章：[04-streaming.md](04-streaming.md) —— 让等待不那么难熬。
+
+## 真实运行
+
+结构化输出路径（`ai-app "..." --structured skill`），`schema.py` 解析 + Pydantic 校验后拿到强类型对象：
+
+![结构化输出](../assets/term-structured.png)

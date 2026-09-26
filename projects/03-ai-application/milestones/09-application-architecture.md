@@ -261,3 +261,9 @@ Prompt 工程 + 消息结构 + 结构化输出 + 流式 + 记忆
 
 回到项目主页：[../README.md](../README.md)
 下一步：Project 04 —— 让应用拥有外部知识（RAG）。
+
+## 测试策略
+
+整套 `src/` 用 `FakeClient`（不联网、不用真实 Key）做离线测试，当前 **61 / 61 通过**：
+
+![pytest 61 passed](../assets/term-pytest.png)

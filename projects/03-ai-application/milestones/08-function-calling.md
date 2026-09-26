@@ -297,3 +297,9 @@ description 是模型唯一的决策依据，值得认真写。
 
 上一章：[07-token-context-window.md](07-token-context-window.md)
 下一章：[09-application-architecture.md](09-application-architecture.md) —— 把九章组装成一个应用。
+
+## 真实运行
+
+工具调用路径（`ai-app "..." --agent`）：模型先返回 `tool_calls`，程序执行本地函数后把结果回灌，模型再生成最终回答：
+
+![工具调用](../assets/term-agent.png)

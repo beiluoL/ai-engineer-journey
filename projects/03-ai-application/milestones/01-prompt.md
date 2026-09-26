@@ -277,3 +277,9 @@ template = '请输出 JSON：{{"name": "{name}"}}'
 - [ ] 改一句 Prompt 不需要改调用方代码
 
 下一章：[02-messages.md](02-messages.md) —— 把 Prompt 装进模型认得的消息结构里。
+
+## 真实运行
+
+普通问答路径（`ai-app "..."`），Prompt 经 `DEFAULT_SYSTEM` 模板渲染后注入：
+
+![普通问答](../assets/term-qa.png)

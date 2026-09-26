@@ -266,3 +266,9 @@ decoder.decode(value, {stream: true})      // ✅
 
 上一章：[03-structured-output.md](03-structured-output.md)
 下一章：[05-conversation-memory.md](05-conversation-memory.md) —— 历史越来越长怎么办。
+
+## 真实运行
+
+流式路径（`ai-app "..." --stream`），token 边生成边打印，呈现「打字机」效果：
+
+![流式输出](../assets/term-stream.png)
