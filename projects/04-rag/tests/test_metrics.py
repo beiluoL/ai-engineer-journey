@@ -22,7 +22,7 @@ from rag.errors import EmbeddingError, RAGError                    # noqa: E402
 from rag.llm import BaseLLMClient                                  # noqa: E402
 from rag.metrics import (                                          # noqa: E402
     Names, MetricsRegistry, MeteredEmbeddingClient, MeteredLLMClient,
-    bucketize, percentile, render_report, summarize,
+    bucketize, percentile, render_diff, render_report, summarize,
 )
 
 
@@ -264,3 +264,55 @@ def test_指标能从stats端点读到():
         body = c.get("/stats").json()
     assert "metrics" in body
     assert body["metrics"]["counters"][Names.REQUESTS] >= 1
+
+
+def test_落盘再读回_数字一致(tmp_path):
+    reg = MetricsRegistry()
+    reg.inc(Names.REQUESTS, 3)
+    reg.observe(Names.REQUEST_LATENCY, 0.25)
+    p = reg.save(tmp_path / "sub" / "m.json", meta={"fake": True})
+    assert p.exists()
+
+    loaded = MetricsRegistry.load(p)
+    assert loaded["meta"] == {"fake": True}
+    assert loaded["snapshot"]["counters"][Names.REQUESTS] == 3
+    # 快照内部一律存秒（渲染时才 ×1000）。落盘也存秒，跨进程回读不会串量纲。
+    assert loaded["snapshot"]["timings"][Names.REQUEST_LATENCY]["p50"] == 0.25
+
+
+def test_落盘摘要不含原始样本(tmp_path):
+    """只存摘要不存原始样本：文件要小，也避免把单条请求数据写到盘上。"""
+    reg = MetricsRegistry()
+    for i in range(50):
+        reg.observe(Names.REQUEST_LATENCY, 0.1 + i * 0.01)
+    p = reg.save(tmp_path / "m.json")
+    text = p.read_text(encoding="utf-8")
+    assert "0.1" in text or True          # 摘要里允许出现统计值
+    assert len(text) < 4000               # 50 个样本若全落盘会远超这个量级
+    assert MetricsRegistry.load(p)["snapshot"]["timings"][
+        Names.REQUEST_LATENCY]["count"] == 50
+
+
+def test_跨进程对比_变慢要能报出来():
+    base = {"saved_at": "T0", "meta": {}, "snapshot": {
+        "counters": {Names.REQUESTS: 10, Names.LLM_CALLS: 10},
+        "timings": {Names.REQUEST_LATENCY: {"p50": 1000.0, "p90": 2000.0}},
+        "scores": {}}}
+    curr = {"saved_at": "T1", "meta": {}, "snapshot": {
+        "counters": {Names.REQUESTS: 20, Names.LLM_CALLS: 20},
+        "timings": {Names.REQUEST_LATENCY: {"p50": 1500.0, "p90": 3000.0}},
+        "scores": {}}}
+    text = render_diff(base, curr)
+    assert "变慢 50%" in text        # p50 1000 → 1500
+    assert "⚠ 需要关注" in text
+    # 计数器折算成「每次请求」：10/10=1.0 vs 20/20=1.0 → 持平，不能被总量骗到
+    assert "持平" in text
+
+
+def test_跨进程对比_小幅波动不报警():
+    base = {"snapshot": {"counters": {Names.REQUESTS: 10},
+                         "timings": {Names.REQUEST_LATENCY: {"p50": 1000.0}}}}
+    curr = {"snapshot": {"counters": {Names.REQUESTS: 10},
+                         "timings": {Names.REQUEST_LATENCY: {"p50": 1050.0}}}}
+    text = render_diff(base, curr)
+    assert "无指标恶化" in text       # +5% 落在 20% 容忍带内

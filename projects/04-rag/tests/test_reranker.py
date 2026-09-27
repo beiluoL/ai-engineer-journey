@@ -9,7 +9,8 @@ import pytest
 
 from rag.errors import RerankError
 from rag.models import Chunk, ScoredChunk
-from rag.reranker import BaseReranker, FakeReranker, NoopReranker, SiliconFlowReranker
+from rag.reranker import (BaseReranker, FakeReranker, LLMReranker, NoopReranker,
+                          SiliconFlowReranker, _parse_ranking)
 from rag.retriever import Retriever
 
 
@@ -75,3 +76,65 @@ def test_rerank_插进链路_只改变顺序不改集合(fake_store, fake_client
     recalled = {h.chunk_id for h in hits}
     after = FakeReranker().rerank("生成器省内存", hits, top_n=2)
     assert len(after) == 2 and {s.chunk_id for s in after} <= recalled
+
+
+class _ScriptedLLM:
+    """按调用次序返回预设文本的 LLM 替身（不联网）。"""
+
+    model_name = "scripted"
+
+    def __init__(self, replies):
+        self._replies = list(replies)
+        self.prompts: list[str] = []
+
+    def chat(self, messages: list[dict]) -> str:
+        self.prompts.append(messages[-1]["content"])
+        return self._replies.pop(0) if self._replies else ""
+
+
+def test_llm_rerank_按模型给的顺序重排():
+    items = _scored([("装饰器", 0.9), ("生成器省内存", 0.8), ("yield 惰性", 0.7)])
+    llm = _ScriptedLLM(["1,2,0"])
+    out = LLMReranker(llm).rerank("生成器为什么省内存", items, top_n=3)
+    assert [s.chunk.text for s in out] == ["生成器省内存", "yield 惰性", "装饰器"]
+    # 分数只表达名次：严格递减即可，不要求等于任何余弦分
+    assert out[0].score > out[1].score > out[2].score
+
+
+def test_llm_rerank_输出解析不出时降级为原顺序():
+    items = _scored([("a", 0.9), ("b", 0.8)])
+    out = LLMReranker(_ScriptedLLM(["我觉得都差不多吧"])).rerank("q", items, top_n=2)
+    assert [s.chunk.text for s in out] == ["a", "b"]
+
+
+def test_llm_rerank_编号越界或重复要过滤掉():
+    items = _scored([("a", 0.9), ("b", 0.8), ("c", 0.7)])
+    out = LLMReranker(_ScriptedLLM(["2,2,99,0"])).rerank("q", items, top_n=3)
+    # 2 在前、0 在后，剩下没被点名的 1 垫底；越界的 99 被丢弃
+    assert [s.chunk.text for s in out] == ["c", "a", "b"]
+
+
+def test_llm_rerank_超出max_candidates的候选不会被丢掉():
+    items = _scored([(f"doc{i}", 0.9 - i * 0.01) for i in range(5)])
+    out = LLMReranker(_ScriptedLLM(["1,0"]), max_candidates=2).rerank("q", items, top_n=5)
+    assert len(out) == 5
+    assert {s.chunk.text for s in out} == {f"doc{i}" for i in range(5)}
+
+
+def test_llm_rerank_调用失败要显式报错():
+    class _Boom:
+        model_name = "boom"
+
+        def chat(self, messages):
+            raise RuntimeError("网络炸了")
+
+    with pytest.raises(RerankError):
+        LLMReranker(_Boom()).rerank("q", _scored([("a", 0.9)]), top_n=1)
+
+
+def test_解析编号序列的边界():
+    assert _parse_ranking("0,2,4", 5) == [0, 2, 4]
+    assert _parse_ranking("[0] [2]", 5) == [0, 2]
+    assert _parse_ranking("", 5) is None
+    assert _parse_ranking("abc", 5) is None
+    assert _parse_ranking("7,8", 3) is None        # 全越界 → 等于没解析出来

@@ -25,7 +25,8 @@ from common import WIDTH, head, rule  # noqa: E402
 
 from rag.cli import build_components  # noqa: E402
 from rag.llm import DeepSeekLLMClient  # noqa: E402
-from rag.metrics import Names, render_report  # noqa: E402
+from rag.metrics import (MetricsRegistry, Names, render_diff,  # noqa: E402
+                         render_report)
 
 QUESTIONS = [
     "生成器为什么能省内存？",
@@ -148,8 +149,29 @@ def main(argv: list[str]) -> int:
     print("  · rag.retrieve.score   = 截断之后、min_score 过滤之前 —— 这才是 top_k 拿到的质量")
     print("  · 指标只累加不自动清零，进程重启归零；跨进程对比要自己落盘")
 
+    # ---- 落盘 / 跨进程对比 ----
+    save_path = _arg(argv, "--save")
+    baseline_path = _arg(argv, "--baseline")
+    if save_path:
+        p = service.metrics.save(save_path, meta={
+            "fake": fake, "questions": len(QUESTIONS)})
+        print(f"\n  已落盘：{p}（下次用 --baseline 对比这份）")
+    if baseline_path:
+        rule("⑦ 与基线对比（跨进程）")
+        print(render_diff(MetricsRegistry.load(baseline_path), {
+            "saved_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "meta": {"fake": fake, "questions": len(QUESTIONS)},
+            "snapshot": service.metrics.snapshot(),
+        }))
+
     rule()
     return 0
+
+
+def _arg(argv: list[str], flag: str) -> str:
+    """取 `--save xxx` / `--baseline xxx` 的值；没给返回空串。"""
+    return argv[argv.index(flag) + 1] if flag in argv and \
+        argv.index(flag) + 1 < len(argv) else ""
 
 
 if __name__ == "__main__":

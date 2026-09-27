@@ -78,16 +78,17 @@ Personal RAG v1.0
 | 13 | [FastAPI Web API](milestones/13-fastapi-web-api.md) | ✅ | POST /ask + SSE /ask/stream |
 | 14 | [Real RAG Evaluation](milestones/14-real-rag-evaluation.md) | ✅ | 30 条 EvalCase + 真实 embedding/LLM 评估 |
 | 15 | [Observability](milestones/15-observability.md) | ✅ | metrics 埋点：latency / 分数分布 / 调用计数 |
+| 16 | [Real Reranker & Calibration](milestones/16-real-reranker-and-calibration.md) | ✅ | LLM 精排 A/B + min_score 阈值校准 + 指标跨进程对比 |
 
 状态：✅ 内容已就绪 · ✅ 代码已落地 · ✅ 测试全绿 · ✅ 已配真实运行截图
 
 ## 当前状态
 
-**15 / 15 个 Milestone 文档 + `src/rag/` + 离线/真实服务测试 + 真实运行截图** 全部完成。RAG 两条链路（离线索引 `parse → chunk → embed → store`、在线问答 `retrieve → rerank → assemble → llm`）已跑通；新增真实 embedding + Chroma 持久化、真实 LLM、FastAPI Web API、真实 RAG 评估、可观测性五章。
+**16 / 16 个 Milestone 文档 + `src/rag/` + 离线/真实服务测试 + 真实运行截图** 全部完成。RAG 两条链路（离线索引 `parse → chunk → embed → store`、在线问答 `retrieve → rerank → assemble → llm`）已跑通；新增真实 embedding + Chroma 持久化、真实 LLM、FastAPI Web API、真实 RAG 评估、可观测性、真实精排与阈值校准六章。
 
 ## 当前版本
 
-**v0.6 可观测**：`src/rag/` 共 18 个模块，160 项 pytest 全绿。真实链路已跑通：
+**v0.7 精排与校准**：`src/rag/` 共 18 个模块，170 项 pytest 全绿。真实链路已跑通：
 
 - `DashScopeEmbeddingClient` 接百炼 `text-embedding-v3`
 - `ChromaVectorStore` 落盘 `chroma_db/rag_chunks/`，重启后数据可恢复
@@ -96,20 +97,22 @@ Personal RAG v1.0
 - FastAPI Web API：`POST /ask` + `POST /ask/stream`（SSE）+ `/health` + `/stats` + `/index`
 - 30 条手写 EvalCase，真实 embedding + DeepSeek 跑出完整评估报告
 - 可观测性：`MetricsRegistry` + 计量壳（embedding/LLM），四段耗时、分数分桶、`/stats` 直接读
-- CLI 支持 `--index` 与 `--ask --fake` 全离线演示；`demo_12/13/14/15/16` 支持真实服务全流程演示
+- 真实精排 `LLMReranker`（DeepSeek listwise）：MRR 0.711→0.767；`min_score` 按 F1 扫描校准（余弦量纲最优 0.60）
+- 指标落盘 `--save/--baseline` 跨进程对比，20% 容忍带不误报
+- CLI 支持 `--index` 与 `--ask --fake` 全离线演示；`demo_12/13/14/15/16/17` 支持真实服务全流程演示
 
 ## 项目结构
 
 ```text
 projects/04-rag/
 ├── data/               # 示例知识库（真实 .md/.txt 样本 + 30 条 EvalCase）
-├── demos/              # 16 个真实运行 demo（demo_01～16）+ 公共装置
+├── demos/              # 17 个真实运行 demo（demo_01～17）+ 公共装置
 ├── src/rag/            # 五层结构（见 09 章，呼应 P03）
 │   ├── api.py          # 接入层：FastAPI Web API（SSE 流式）
 │   ├── cli.py          # 接入层：python -m rag.cli --index/--ask
 │   ├── pipeline.py     # 编排层：IngestionPipeline + RAGService
 │   ├── retriever.py    # 能力层：vector / hybrid(RRF) / MMR
-│   ├── reranker.py     # 能力层：BaseReranker + NoopReranker + FakeReranker
+│   ├── reranker.py     # 能力层：Noop / Fake / SiliconFlow / LLMReranker（16 章）
 │   ├── assembler.py    # 能力层：ContextAssembler（编号溯源 + token 预算）
 │   ├── chunker.py      # 能力层：chunk_text / recursive_split
 │   ├── parsing.py      # 能力层：BaseParser + Txt/Md/Pdf/Docx
@@ -123,7 +126,7 @@ projects/04-rag/
 │   ├── errors.py       # 支撑层：RAGError 层级
 │   └── llm.py          # 复用/兼容层：LLMClient 封装
 ├── tests/              # 全部离线（FakeEmbeddingClient + InMemoryVectorStore）
-└── assets/             # 35 张真实运行截图
+└── assets/             # 39 张真实运行截图
 ```
 
 ## 已掌握能力
@@ -139,8 +142,8 @@ projects/04-rag/
 
 ## 下一步
 
-1. 接入真实 reranker（可选增强，并按分数分布校准 min_score）
-2. 产品化：前端 Chat UI、会话历史、多轮追问
-3. 指标落盘与跨进程对比（当前进程内累计，重启归零）
+1. 产品化：前端 Chat UI、会话历史、多轮追问
+2. 有 cross-encoder 权限后，把 `LLMReranker` 换成 `bge-reranker-v2-m3`（阈值重扫一遍）
+3. 把 pytest/CI 接到 GitHub Actions，PR 上跑 check_links + 全量测试
 
 **前置项目**：[Project 03 — AI Application](../03-ai-application/)

@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.pybridge: DEBUG
+
+python:
+  service:
+    # 关键：地址、超时、重试一律外置到配置，绝不写死在 Java 代码里。
+    # 换环境（本地 / Docker / K8s）只改这一个值。
+    base-url: http://127.0.0.1:8000
+    connect-timeout-ms: 1000
+    read-timeout-ms: 10000
+    max-retries: 2
+    backoff-ms: 200

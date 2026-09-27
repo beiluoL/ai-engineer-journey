@@ -17,11 +17,14 @@ rerank 之后以 rerank 分数为准全盘重排，向量分数只留给日志/�
 
 from __future__ import annotations
 
+import logging
 import re
 from abc import ABC, abstractmethod
 
 from .errors import RerankError
 from .models import ScoredChunk
+
+logger = logging.getLogger(__name__)
 
 _TOKEN_RE = re.compile(r"[一-鿿]|[A-Za-z_][A-Za-z0-9_]*|\d+")
 
@@ -144,6 +147,95 @@ class SiliconFlowReranker(BaseReranker):
         return out[:top_n]                      # 双保险：即使 API 忽略 top_n 也截断
 
 
+class LLMReranker(BaseReranker):
+    """用真实 LLM 做 listwise 精排（真实 cross-encoder 不可用时的落地方案）。
+
+    为什么会有这个实现：cross-encoder（bge-reranker-v2-m3）本该是首选，但它依赖
+    SiliconFlow / 百炼的 rerank 接口 —— 本机既没有 SILICONFLOW_API_KEY，百炼的
+    gte-rerank 也返回 403 AccessDenied（账号未开通）。与其在文档里假装接了真实
+    reranker，不如用**真能调通**的 DeepSeek 做同样的事：把 (query, 候选) 一起
+    送进模型，让它输出编号序列 —— 这正是 cross-encoder「逐对一起看」的思想。
+
+    实测（deepseek-chat，5 条候选）：0.82s、157 token，排序准确。
+
+    两条必须知道的取舍：
+        ① **分数只表达顺序，不表达置信度**。LLM 不给分，这里按名次线性递减
+           造一个分数，它只能用于排序，不能和余弦分数比大小、也不能设阈值；
+        ② **成本是 O(候选数)**。所以默认只看前 max_candidates 条，且每条截断
+           max_doc_chars —— 这正是 07 章「粗召回宁多勿漏、精排只做少量」的边界。
+    """
+
+    model_name = "llm-listwise"
+
+    def __init__(self, llm, max_candidates: int = 12,
+                 max_doc_chars: int = 300, temperature: float = 0.0):
+        self._llm = llm
+        self.max_candidates = max_candidates
+        self.max_doc_chars = max_doc_chars
+        self.temperature = temperature
+        # 降级是可观测信号：它频次一高就说明 prompt 或模型选得不对，
+        # 而不是「偶发抖动」。不记下来就只能靠猜。
+        self.degraded = 0
+        self.degraded_queries: list[str] = []
+
+    def rerank(self, query: str, chunks: list[ScoredChunk], top_n: int = 5
+               ) -> list[ScoredChunk]:
+        if not chunks:
+            return []
+        top_n = min(top_n, len(chunks))
+        # 只让模型看前 max_candidates 条；后面的按原顺序垫底，不会被丢掉。
+        head = chunks[: self.max_candidates]
+        tail = chunks[self.max_candidates:]
+
+        prompt = self._build_prompt(query, head)
+        try:
+            raw = self._llm.chat([{"role": "user", "content": prompt}])
+        except Exception as e:  # noqa: BLE001 - 服务故障要显式报错，交给接入层降级
+            raise RerankError(f"LLM rerank 调用失败: {e}") from e
+
+        order = _parse_ranking(raw, len(head))
+        if order is None:
+            # 模型没按格式答：这是「模型行为」不是「服务故障」，降级为原顺序，
+            # 顺序是次优的但仍然可用 —— 不该让一次格式抖动就把整条问答链路打断。
+            self.degraded += 1
+            self.degraded_queries.append(query)
+            logger.warning("LLM rerank 输出无法解析为编号序列，降级为原顺序: %r",
+                           raw[:80])
+            order = list(range(len(head)))
+
+        ranked = [head[i] for i in order] + [head[i] for i in range(len(head))
+                                             if i not in order] + tail
+        out: list[ScoredChunk] = []
+        for rank, sc in enumerate(ranked):
+            # 名次 → 分数：只保证单调递减，数值本身没有概率含义
+            out.append(ScoredChunk(chunk=sc.chunk, score=round(1.0 - rank * 0.05, 4)))
+        return out[:top_n]
+
+    def _build_prompt(self, query: str, chunks: list[ScoredChunk]) -> str:
+        lines = [f"[{i}] {c.chunk.text[: self.max_doc_chars]}"
+                 for i, c in enumerate(chunks)]
+        return (
+            "下面是若干候选片段，判断它们能回答该问题的程度，从高到低排序。\n"
+            f"只输出前 {min(len(chunks), 10)} 个编号，用逗号分隔，不要输出任何解释。\n\n"
+            f"问题：{query}\n\n候选：\n" + "\n".join(lines) + "\n\n编号序列："
+        )
+
+
+_RANK_NUM_RE = re.compile(r"\d+")
+
+
+def _parse_ranking(text: str, n: int) -> list[int] | None:
+    """把「0,2,4」这类输出解析成去重且合法的编号列表；解析不出返回 None。"""
+    if not text:
+        return None
+    order: list[int] = []
+    for tok in _RANK_NUM_RE.findall(text):
+        idx = int(tok)
+        if 0 <= idx < n and idx not in order:
+            order.append(idx)
+    return order or None
+
+
 def create_reranker(provider: str = "noop", **kwargs) -> BaseReranker:
     """rerank 工厂：接入层按配置选择实现，pipeline 只依赖抽象。"""
     if provider in ("noop", "none", ""):
@@ -152,4 +244,7 @@ def create_reranker(provider: str = "noop", **kwargs) -> BaseReranker:
         return FakeReranker(**kwargs)
     if provider == "siliconflow":
         return SiliconFlowReranker(**kwargs)
-    raise RerankError(f"未知 rerank provider: {provider!r}（可选 noop/fake/siliconflow）")
+    if provider == "llm":
+        return LLMReranker(**kwargs)
+    raise RerankError(
+        f"未知 rerank provider: {provider!r}（可选 noop/fake/siliconflow/llm）")

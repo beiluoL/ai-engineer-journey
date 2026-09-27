@@ -23,12 +23,14 @@ RAG 上线后最先被问到的三个问题，都不是「功能对不对」，�
 
 from __future__ import annotations
 
+import json
 import threading
 import time
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 
 from .embedding import BaseEmbeddingClient
 from .llm import BaseLLMClient
@@ -202,6 +204,29 @@ class MetricsRegistry:
             "score_buckets": {k: bucketize(v) for k, v in scores.items()},
         }
 
+    def save(self, path: str | Path, meta: Mapping | None = None) -> Path:
+        """把快照落盘，供**另一个进程**回读对比（15 → 16 章的跨进程需求）。
+
+        为什么不存原始样本：一次压测几万条耗时样本全写进去，文件能到几 MB，
+        而对比只需要分位数。摘要是「够用的最小集合」，也避免把单条请求数据
+        （可能含业务信息）落到盘上。
+        """
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "saved_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "meta": dict(meta or {}),
+            "snapshot": self.snapshot(),
+        }
+        p.write_text(json.dumps(payload, ensure_ascii=False, indent=2),
+                     encoding="utf-8")
+        return p
+
+    @staticmethod
+    def load(path: str | Path) -> dict:
+        """读回 save() 写下的文件；返回带 saved_at / meta / snapshot 的 dict。"""
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+
     def reset(self) -> None:
         with self._lock:
             self._counters.clear()
@@ -281,6 +306,91 @@ def render_report(snapshot: Mapping) -> str:
     else:
         lines.append("  （无）")
 
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------
+# 跨进程对比
+# --------------------------------------------------------------------------
+
+# 对比只看这几个：它们是「变慢了 / 变贵了 / 变笨了」的直接证据。
+# 全量对比会把 n=1 的样本也算进去，那些波动没有意义，只会淹没真信号。
+DIFF_METRICS: tuple[tuple[str, str], ...] = (
+    (Names.REQUEST_LATENCY, "p50"),
+    (Names.REQUEST_LATENCY, "p90"),
+    (Names.RETRIEVE_LATENCY, "p50"),
+    (Names.GENERATE_LATENCY, "p50"),
+    (Names.LLM_LATENCY, "p50"),
+    (Names.EMBED_LATENCY, "p50"),
+)
+
+DIFF_COUNTERS: tuple[str, ...] = (
+    Names.REQUESTS, Names.REFUSALS, Names.LLM_CALLS,
+    Names.EMBED_CALLS, Names.LLM_ERRORS,
+)
+
+
+def render_diff(baseline: Mapping, current: Mapping,
+                tolerance: float = 0.20) -> str:
+    """把两次运行的快照并排对比。baseline / current = save() 读回的 dict。
+
+    判读规则：耗时类恶化超过 tolerance（默认 20%）才报警。为什么不设得更严？
+    真实 LLM 的 p50 本身就有 ±15% 的抖动（14 章实测同一问题连问 5 次有 4 种答案），
+    阈值低于抖动幅度只会天天误报 —— 报警要报在噪声之上。
+
+    对比的是**比率不是绝对值**：两次运行的问题数可能不同，所以计数器一律
+    折算成「每次请求」再比，否则问 6 题和问 20 题的调用次数根本没有可比性。
+    """
+    base_snap = baseline.get("snapshot", baseline)
+    curr_snap = current.get("snapshot", current)
+    lines: list[str] = []
+    lines.append(f"基线 {baseline.get('saved_at', '?')}   meta={baseline.get('meta', {})}")
+    lines.append(f"当前 {current.get('saved_at', '?')}   meta={current.get('meta', {})}")
+    lines.append("")
+    lines.append(f"{'指标（耗时 ms）':<34}{'基线':>10}{'当前':>10}{'变化':>10}   判读")
+    lines.append("-" * 76)
+
+    warnings: list[str] = []
+    for name, stat in DIFF_METRICS:
+        b = base_snap.get("timings", {}).get(name, {})
+        c = curr_snap.get("timings", {}).get(name, {})
+        # 快照内部存秒（render_report 里也是渲染时才 ×1000），这里同样要换算，
+        # 否则表里的 0.25 会被当成 250ms 之外的另一个量纲。
+        bv, cv = float(b.get(stat, 0.0)) * 1000, float(c.get(stat, 0.0)) * 1000
+        if not bv and not cv:
+            continue
+        delta = (cv - bv) / bv if bv else 0.0
+        verdict = "持平"
+        if bv and delta > tolerance:
+            verdict = f"⚠ 变慢 {delta:.0%}"
+            warnings.append(f"{name} {stat} 恶化 {delta:.0%}")
+        elif bv and delta < -tolerance:
+            verdict = f"✅ 变快 {-delta:.0%}"
+        lines.append(f"{name + ' ' + stat:<34}{bv:>10.1f}{cv:>10.1f}"
+                     f"{delta:>+9.0%}   {verdict}")
+
+    b_req = float(base_snap.get("counters", {}).get(Names.REQUESTS, 0.0))
+    c_req = float(curr_snap.get("counters", {}).get(Names.REQUESTS, 0.0))
+    for name in DIFF_COUNTERS:
+        b_raw = float(base_snap.get("counters", {}).get(name, 0.0))
+        c_raw = float(curr_snap.get("counters", {}).get(name, 0.0))
+        bv = b_raw / b_req if b_req else b_raw
+        cv = c_raw / c_req if c_req else c_raw
+        delta = (cv - bv) / bv if bv else 0.0
+        verdict = "持平"
+        if bv and abs(delta) > tolerance:
+            verdict = f"{'⚠ 变高' if delta > 0 else '✅ 变低'} {abs(delta):.0%}"
+            if delta > 0 and name in (Names.LLM_ERRORS, Names.REFUSALS):
+                warnings.append(f"{name}/请求 上升 {delta:.0%}")
+        lines.append(f"{name + ' /请求':<34}{bv:>10.2f}{cv:>10.2f}"
+                     f"{delta:>+9.0%}   {verdict}")
+
+    lines.append("")
+    if warnings:
+        lines.append("⚠ 需要关注：" + "；".join(warnings))
+    else:
+        lines.append("✅ 无指标恶化超过 "
+                     f"{tolerance:.0%}（低于这个幅度通常是真实抖动，不是回归）")
     return "\n".join(lines)
 
 

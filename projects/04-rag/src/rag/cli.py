@@ -63,7 +63,7 @@ def build_embedding_client_from_env():
 
 def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
                      index_paths: list[str] | None = None, quiet: bool = False,
-                     llm=None):
+                     llm=None, reranker=None, min_score: float | None = None):
     """按 profile 组装依赖，返回 (settings, embedding_client, store, retriever, service)。
 
     fake=True → FakeEmbeddingClient + NoopReranker，全链路不联网；
@@ -74,18 +74,29 @@ def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
 
     llm 用来覆盖「生成侧」：默认值是 FakeLLMClient，Web API 会传真实的
     DeepSeekLLMClient 进来 —— 检索侧(fake)与生成侧(真实)本来就该能各自开关。
+
+    reranker 用来覆盖「精排侧」：默认 fake→Noop / 真实→SiliconFlow(有 key)或 Fake。
+    传 LLMReranker(llm=...) 即可用真实 DeepSeek 做 listwise 精排。
+
+    min_score 用来覆盖阈值：阈值必须按实际 embedding 的分数分布校准（16 章），
+    所以它必须能在装配时注入，而不是写死在 settings 里。
     """
     settings = RAGSettings.for_profile(profile).validate().replace(top_k=top_k)
+    if min_score is not None:
+        settings = settings.replace(min_score=min_score)
 
-    if fake:
-        embedding_client = FakeEmbeddingClient()
-        reranker = NoopReranker()
-    else:
-        embedding_client = build_embedding_client_from_env()
-        # rerank 是可选增强：有 key 才走真实接口，否则退回 FakeReranker 保持可跑
-        reranker = (SiliconFlowReranker(api_key=os.environ.get(
-            "SILICONFLOW_API_KEY", "")) if os.environ.get("SILICONFLOW_API_KEY")
-            else FakeReranker())
+    # embedding：fake 用替身，否则按 key 探测真实客户端
+    embedding_client = (FakeEmbeddingClient() if fake
+                        else build_embedding_client_from_env())
+
+    if reranker is None:
+        # 调用方没指定时的默认：fake 直通；真实链路有 SiliconFlow key 才走真实接口
+        if fake:
+            reranker = NoopReranker()
+        elif os.environ.get("SILICONFLOW_API_KEY"):
+            reranker = SiliconFlowReranker(api_key=os.environ["SILICONFLOW_API_KEY"])
+        else:
+            reranker = FakeReranker()
 
     metrics = MetricsRegistry()
     store = InMemoryVectorStore()

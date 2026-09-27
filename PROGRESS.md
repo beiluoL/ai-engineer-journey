@@ -39,8 +39,8 @@
 | Project 02 src | ✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek |
 | Project 03 milestones | ✅ 9/9 全部成文；每章 2 张真实运行截图（assets 共 18 张，新增 prompt / structured / stream / agent / architecture 五个真实 demo） |
 | Project 03 src + tests | ✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图 |
-| Project 04 milestones | ✅ 15/15 全部成文（ingestion → … → fastapi-web-api → real-rag-evaluation → observability） |
-| Project 04 src | ✅ v0.6 落地：18 个模块，160 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估 + 可观测性均已跑通，15 章每章 2+ 张真实运行截图（assets 共 35 张） |
+| Project 04 milestones | ✅ 16/16 全部成文（ingestion → … → fastapi-web-api → real-rag-evaluation → observability → real-reranker-and-calibration） |
+| Project 04 src | ✅ v0.7 落地：18 个模块，170 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估 + 可观测性 + LLMReranker 真实精排与阈值校准均已跑通，16 章每章 2+ 张真实运行截图（assets 共 39 张） |
 | Project 05-10 | ⬜ 未开始 |
 | publishing/tutorials | ✅ 7 篇图文教程已发布（md + html） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5） |
@@ -54,7 +54,7 @@
 | 01 | Python AI CLI Assistant | 🎓 M02 | ✅ v0.2 |
 | 02 | Engineering AI Assistant | ⬜ | ✅ v0.2 CLI + API 双形态 |
 | 03 | AI Application | ⬜ | ✅ v0.2 文档+代码+测试 |
-| 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.6 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估+可观测性 |
+| 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.7 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估+可观测性+真实精排与阈值校准 |
 | 05 | Research Agent / MCP | ⬜ | ⬜ |
 | 06 | Mini Transformer / LLM | ⬜ | ⬜ |
 | 07 | Open Source LLM | ⬜ | ⬜ |
@@ -65,7 +65,7 @@
 ## Next
 
 1. 动手复现 `exercises/01-basic` 8 题：先自己敲，再对照 `answers.py`，把 🎓 从「参考答案已判卷」变成「我真的会了」
-2. Project 04 下一步：接入真实 reranker 并按分数分布校准 min_score；指标落盘支持跨进程对比
+2. Project 04 下一步：产品化（前端 Chat UI、会话历史、多轮追问）；有 cross-encoder 权限后替换 LLMReranker 并重扫阈值
 3. P02 学习进度推进：读完 `OVERVIEW.md` + 10 章，对着 `src/` 逐文件看
 
 ## 维护工具
