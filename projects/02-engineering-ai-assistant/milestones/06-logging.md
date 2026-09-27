@@ -318,4 +318,6 @@ logger.exception("失败")    # ❌ 没有异常上下文，堆栈是 None
 
 ![JSON 结构化日志](../assets/term-json-logs.png)
 
+![真实运行：坑——标准 extra={'model': ...} 不会进 JSON（静默丢失），必须写 extra={'extra_fields': {...}}；异常堆栈进 exc 字段；Authorization 头脱敏成 ***](../assets/term-logging-extra.png)
+
 下一章：[07-testing-and-debugging.md](07-testing-and-debugging.md) —— 让改动不再心慌。

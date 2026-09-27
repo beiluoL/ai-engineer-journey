@@ -216,6 +216,8 @@ pytest -v                              # 测试
 
 ![真实运行：解析 pyproject.toml 的每个字段、用 importlib.metadata 读回元数据与控制台入口点、真的打出一个 wheel，并验证 python -m assistant.cli 可用](../assets/term-packaging.png)
 
+![真实运行：真的打出一个 wheel（18.7 KB）并列出里面的文件，以及 [project.scripts] 生成的 ai-assistant 控制台入口点](../assets/term-packaging-wheel.png)
+
 ## 5. Java ↔ Python 对比
 
 | 概念 | Java / Maven | Python |

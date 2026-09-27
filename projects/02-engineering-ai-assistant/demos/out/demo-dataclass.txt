@@ -1,0 +1,44 @@
+==============================================================
+1. 手写类 vs @dataclass
+==============================================================
+  手写 PlainMessage : PlainMessage(role='user', content='讲讲 RAG')
+  dataclass Message : Message(role='user', content='讲讲 RAG')
+  两者比较 : True / True
+  Message 自带方法 : ['__init__', '__repr__', '__eq__']
+  完全不写方法的类: <__main__.RawMessage object at 0x102da6120>
+
+==============================================================
+2. 默认值、repr=False（Key 不进日志）
+==============================================================
+  config          : LLMConfig(model='deepseek-chat', temperature=0.7, max_tokens=1024, timeout=60.0, tags=[])
+  config.api_key  : sk-test-xxxx   ← 访问得到，只是不出现在 repr 里
+
+==============================================================
+3. frozen=True：改一个字段试试
+==============================================================
+  frozen          : FrozenConfig(model='deepseek-chat', temperature=0.7)
+  FrozenInstanceError: cannot assign to field 'temperature'
+  replace(...) 派生: FrozenConfig(model='deepseek-chat', temperature=1.0)
+  原对象没被改    : 0.7
+
+  真实项目代码 src/assistant/settings.py: Settings 也是 frozen + repr=False
+  repr 里看不见 api_key: True（但 deepseek-chat 照常可读）
+
+==============================================================
+4. 可变默认值：default_factory 让每个实例各有一份
+==============================================================
+  A 加了 1 条 → A=1 条，B=0 条
+  A.messages is B.messages : False
+  反例（类属性）→ bad1=['污染']，bad2=['污染']
+
+==============================================================
+5. __post_init__：构造完立刻校验
+==============================================================
+  合法: 'user'
+  非法 {'role': 'tool', 'content': 'ok'} → ValueError: role 非法: 'tool'
+  非法 {'role': 'user', 'content': '   '} → ValueError: content 不能为空
+
+==============================================================
+6. asdict(): 内部模型 → 请求体
+==============================================================
+  {"model": "deepseek-chat", "temperature": 0.7, "messages": [{"role": "user", "content": "第一轮"}]}

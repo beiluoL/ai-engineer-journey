@@ -1315,3 +1315,5 @@ Reusable Async LLM Client
 > **实跑验证**（2026-09-26）：基于本章的 httpx 客户端 + SSE 解析，`--stream` 参数已能逐段输出：
 
 ![流式输出实测](../assets/term-stream.png)
+
+![真实运行：本机起服务用 httpx.AsyncClient 实测——串行 0.948s vs 并发 0.315s（3.01x）、AsyncClient 的 is_closed 生命周期、TimeoutException 与 ConnectError 两类错误分开接](../assets/term-async-http.png)

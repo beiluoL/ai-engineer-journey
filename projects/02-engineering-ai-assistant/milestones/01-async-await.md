@@ -510,6 +510,8 @@ vs
 
 ![真实运行：0.3 秒的假 I/O 跑 3 次，串行 0.9 秒、并发 0.3 秒，以及「事件循环里再调一次 asyncio.run」的报错](../assets/term-async.png)
 
+![真实运行：gather 默认一失败就整体抛出、return_exceptions=True 把失败项变成异常对象，以及事件循环内部再调 asyncio.run() 的 RuntimeError](../assets/term-async-gather.png)
+
 # 14. 主动回忆
 
 不要看上面的内容，回答：

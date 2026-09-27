@@ -1,0 +1,18 @@
+$ cd <临时目录> && python3 -m pytest -q --tb=short
+....F..                                                                  [100%]
+=================================== FAILURES ===================================
+___________________ test_estimate_tokens_two_chars_per_token ___________________
+test_ch07_calc.py:26: in test_estimate_tokens_two_chars_per_token
+    assert estimate_tokens("RAG 是什么") == 3  # 7 字符 // 2 = 3
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert 2 == 3
+E    +  where 2 = estimate_tokens('RAG 是什么')
+=========================== short test summary info ============================
+FAILED test_ch07_calc.py::test_estimate_tokens_two_chars_per_token - Assertio...
+1 failed, 6 passed in 0.08s
+
+# estimate_tokens 里 // 3 是笔误，改成 // 2（真实的改动发生在下一行）
+$ python3 -m pytest -q --tb=short   # 改完之后
+.......                                                                  [100%]
+7 passed in 0.03s
+

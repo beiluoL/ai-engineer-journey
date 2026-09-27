@@ -1,0 +1,29 @@
+============================================================
+1. @dataclass：__repr__ / __eq__ 都是自动生成的
+============================================================
+repr : Message(role='user', content='RAG 是怎么工作的？')
+字段 : role='user' content='RAG 是怎么工作的？' tokens≈5
+__eq__: True   # 字段相同即相等
+
+============================================================
+2. @abstractmethod：实现不全 → 实例化时直接报错
+============================================================
+BaseLLMClient 是抽象基类: frozenset({'chat'})
+TypeError: Can't instantiate abstract class IncompleteClient without an implementation for abstract method 'chat'
+
+============================================================
+3. 继承 + 多态：上层只认 BaseLLMClient
+============================================================
+EchoClient(name='echo')            → chat() → 讲讲 RAG
+DeepSeekClient(name='deepseek')    → chat() → [fake:deepseek] 你问的是：讲讲 RAG
+
+AssistantService 只依赖抽象（组合而非继承）：
+  第 1 轮: RAG 是什么
+  第 2 轮: 它和微调有什么区别
+  历史长度: 5 条（system + 2 问 + 2 答 = 5）
+
+============================================================
+4. @property 返回副本：外部改不动对象内部状态
+============================================================
+内部 _messages 长度: 2
+外部 append 后 → 拿到的副本=3 条，内部仍是 2 条

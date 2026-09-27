@@ -311,4 +311,6 @@ class Settings:
 
 ![未配置 Key 时的友好报错](../assets/term-config-error.png)
 
+![真实运行：缺 Key 报的是「照着做」的错而不是 KeyError；repr(settings) 里看不到 api_key（repr=False 防泄露但字段照常可读）；环境变量可覆盖 model / timeout / json_logs；非法 base_url 与 timeout 被 validate() 拦下](../assets/term-config-env.png)
+
 下一章：[06-logging.md](06-logging.md) —— 让程序会「说话」。

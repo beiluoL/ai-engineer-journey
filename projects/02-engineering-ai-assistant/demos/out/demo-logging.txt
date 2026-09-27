@@ -1,0 +1,34 @@
+===== 1. print() 打出来的「日志」缺了什么 =====
+请求发出 model=deepseek-chat
+  → 没有时间、级别、模块名，也没法按级别关掉；生产环境不可接受
+
+===== 2. 文本格式（给人看）=====
+2026-09-27 20:30:23,931 INFO    demo.text | 请求发出
+2026-09-27 20:30:23,931 WARNING demo.text | 重试第 1 次
+  → 本地开发看这个；一行到底发生了什么，肉眼可读
+
+===== 3. JSON 格式（给机器看，一行一个对象）=====
+  {"ts": "2026-09-27T20:30:23", "level": "INFO", "logger": "demo.json", "msg": "请求发出"}
+  {"ts": "2026-09-27T20:30:23", "level": "WARNING", "logger": "demo.json", "msg": "重试第 1 次", "retry": 1, "reason": "timeout"}
+  → 一行一个 JSON，可被 Filebeat / Loki 直接采集并按字段过滤
+
+===== 4. 坑：标准 extra= 不会进 JSON =====
+  写法 A  logger.info(..., extra={'model': 'deepseek-chat'})
+  结果    {"ts": "2026-09-27T20:30:23", "level": "INFO", "logger": "demo.json", "msg": "请求发出"}
+  → model 不见了，而且不报错（静默丢失）
+  写法 B  logger.info(..., extra={'extra_fields': {'model': ..., 'tokens': ...}})
+  结果    {"ts": "2026-09-27T20:30:23", "level": "INFO", "logger": "demo.json", "msg": "请求发出", "model": "deepseek-chat", "tokens": 128}
+  → JsonFormatter 只读 record.extra_fields；想结构化就显式传这个键
+
+===== 5. 异常堆栈要进日志 =====
+  {"ts": "2026-09-27T20:30:23", "level": "ERROR", "logger": "demo.json", "msg": "请求最终失败", "exc": "Traceback (most recent call last):\n  File \"/Users/be ...
+  → JsonFormatter 把堆栈放进 exc 字段，一行 JSON 也能带完整上下文
+
+===== 6. 敏感头必须脱敏后再记 =====
+  原始: {'Authorization': 'Bearer sk-real-key-must-not-leak', 'Content-Type': 'application/json', 'X-Request-Id': 'req-7f3a'}
+  脱敏: {'Authorization': '***', 'Content-Type': 'application/json', 'X-Request-Id': 'req-7f3a'}
+  → 直接 logger.info(headers) 等于把 Key 写进日志文件
+
+===== 7. setup_logging(json_format=True) 的真实效果 =====
+{"ts": "2026-09-27T20:30:23", "level": "INFO", "logger": "assistant.demo", "msg": "服务启动完成", "model": "deepseek-chat", "port": 8000}
+  → 上面这行就是标准输出里的 JSON，可直接被采集

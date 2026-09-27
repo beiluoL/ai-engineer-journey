@@ -1,0 +1,52 @@
+==============================================================
+1. __annotations__ vs get_type_hints()
+==============================================================
+chat.__annotations__:
+    model: <class 'str'>
+    messages: list[__main__.Message]
+    temperature: float | None
+    return: <class '__main__.LLMResponse'>
+typing.get_type_hints(chat):
+    model: <class 'str'>
+    messages: list[__main__.Message]
+    temperature: float | None
+    return: <class '__main__.LLMResponse'>
+
+Optional[str] 和 str | None 其实是同一个东西：
+  legacy_style.__annotations__ = {'a': typing.Optional[str], 'b': typing.Union[int, float], 'return': typing.Optional[int]}
+  get_type_hints(legacy_style) = {'a': typing.Optional[str], 'b': typing.Union[int, float], 'return': typing.Optional[int]}
+
+==============================================================
+2. 泛型 Generic[T]：一份代码服务多种类型
+==============================================================
+  Box[int](item=42).item = 42，__orig_class__ = __main__.Box[int]
+  get_type_hints(Box.__init__) = {'item': ~T, 'return': <class 'NoneType'>}
+  get_type_hints(first_of)     = {'items': list[~T], 'return': typing.Optional[~T]}
+  first_of(['a','b']) = 'a'   first_of([]) = None
+
+==============================================================
+3. 坑：写了 int 也拦不住你（所以边界要真校验）
+==============================================================
+  合法输入: model='deepseek-chat' temperature=0.7 max_tokens=1024
+  非法输入被拦下 → loc=('temperature',) type=float_parsing msg=Input should be a valid number, unable to parse string as a number
+  → 类型提示管静态检查；真正挡住脏数据的是运行时校验
+
+==============================================================
+4. 坑：from __future__ import annotations 把注解变成字符串
+==============================================================
+[A] 没有 future import，注解却被前向引用（类定义在函数后面）
+    NameError: name 'Message' is not defined
+    → 不用 future import 时，注解在类定义时就要求值，前向引用直接炸
+
+[B] 加了 from __future__ import annotations：模块能导入了
+    ask.__annotations__ = {'messages': 'list[Message]', 'return': 'LLMResponse'}
+    → 全是字符串，pydantic / 序列化框架拿到手没法直接用
+
+[C] 用 typing.get_type_hints 把字符串 eval 回真类型
+    get_type_hints(ask) = {'messages': list[mod_future.Message], 'return': <class 'mod_future.LLMResponse'>}
+
+[D] 但名字根本不存在时，get_type_hints 一样会炸
+    NameError: name 'Message' is not defined
+
+结论：注解可能是字符串，也可能是解析不出来的名字；
+      想拿类型就统一用 get_type_hints，别直接读 __annotations__。

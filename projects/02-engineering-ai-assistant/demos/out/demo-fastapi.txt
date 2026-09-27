@@ -1,0 +1,30 @@
+uvicorn 已启动：http://127.0.0.1:8782（app 来自 assistant.api，lifespan 换成 FakeClient）
+
+===== 1. GET /health（探活，不碰模型）=====
+  状态码: 200
+  响应体: {"status":"ok"}
+
+===== 2. POST /chat（走完整 service → client 链路）=====
+  状态码: 200
+  响应体: {"reply":"[fake] 这是 FakeClient 的固定回答，用来验证链路而不是烧额度。","model":"unknown"}
+
+===== 3. POST /chat/stream（SSE，逐帧到达）=====
+  Content-Type: text/event-stream; charset=utf-8
+  [   0ms] data: {"delta": "["}
+  [   0ms] data: {"delta": "f"}
+  [   0ms] data: {"delta": "a"}
+  [   0ms] data: {"delta": "k"}
+  [   0ms] data: {"delta": "e"}
+  [   0ms] data: {"delta": "]"}
+  ...（共 41 帧，以上只打印前 6 帧）
+  最后一帧 [0ms] data: [DONE]
+
+===== 4. POST /reset（清空会话）=====
+  状态码: 200
+  响应体: {"status":"reset"}
+
+===== 5. 入参校验：空 message 会被 Pydantic 挡住（422）=====
+  状态码: 422
+  响应体: {"detail":[{"type":"string_too_short","loc":["body","message"],"msg":"String should have at least 1 character","input":"","ctx":{"min_length":1}}]}
+
+服务已关闭

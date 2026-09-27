@@ -1,0 +1,26 @@
+$ .venv/bin/python -m pytest -v
+platform darwin -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0 -- /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/02-engineering-ai-assistant/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/02-engineering-ai-assistant
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 33 items
+
+tests/test_api.py::test_health PASSED                                    [  3%]
+tests/test_api.py::test_chat_returns_reply PASSED                        [  6%]
+tests/test_api.py::test_chat_validates_empty_message PASSED              [  9%]
+tests/test_api.py::test_chat_validates_too_long PASSED                   [ 12%]
+tests/test_api.py::test_reset_clears_history PASSED                      [ 15%]
+tests/test_api.py::test_stream_sse_format PASSED                         [ 18%]
+tests/test_api.py::test_stream_records_full_answer_in_history PASSED     [ 21%]
+tests/test_conversation.py::test_initial_messages_contains_only_system PASSED [ 24%]
+tests/test_conversation.py::test_add_user_and_assistant PASSED           [ 27%]
+tests/test_conversation.py::test_messages_returns_copy_not_reference PASSED [ 30%]
+tests/test_conversation.py::test_clear_keeps_system_prompt PASSED        [ 33%]
+tests/test_conversation.py::test_token_estimate_grows_with_content PASSED [ 36%]
+tests/test_conversation.py::test_trim_drops_oldest_and_keeps_system PASSED [ 39%]
+tests/test_conversation.py::test_each_instance_has_own_state PASSED      [ 42%]
+tests/test_service.py::test_ask_returns_client_reply PASSED              [ 45%]
+tests/test_service.py::test_ask_records_history PASSED                   [ 48%]

@@ -416,3 +416,5 @@ app.add_middleware(
 > `/health` 探活、`/chat` 一次性返回、`/chat/stream` SSE 逐段推送：
 
 ![FastAPI 三端点实测](../assets/term-fastapi.png)
+
+![真实运行：真的起 uvicorn 打四个端点——/health 200、/chat 200、/chat/stream 41 帧 SSE、/reset 200，以及空 message 被 Pydantic 挡成 422](../assets/term-fastapi-live.png)

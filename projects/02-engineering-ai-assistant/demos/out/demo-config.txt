@@ -1,0 +1,28 @@
+当前工作目录: 02-engineering-ai-assistant
+
+===== 1. 缺 Key：报错要能照着做 =====
+
+LLMConfigError:
+    未设置 DEEPSEEK_API_KEY。
+    请复制 .env.example 为 .env 并填入你的 Key：
+        cp .env.example .env
+  → 不是 KeyError('DEEPSEEK_API_KEY')，而是告诉你下一步该敲什么命令
+
+===== 2. 有 Key：正常构建，且 repr 里看不到 api_key =====
+
+  repr(settings) : Settings(base_url='https://api.deepseek.com', model='deepseek-chat', timeout=30.0, max_retries=2, log_level='INFO', json_logs=False, system_prompt='你是一个简洁、耐心的中文 AI 助手。')
+  'sk-' 出现在 repr 里吗 : False
+  api_key 长度/前缀      : 24 / sk-demo...
+  → repr=False 挡住了日志泄露，但字段本身照常可用
+
+===== 3. 环境变量覆盖默认值 =====
+
+  默认 model / timeout / json_logs : str / 30.0 / False
+  覆盖后 model / timeout / json_logs : deepseek-reasoner / 12.5 / True
+  → 改配置不改动代码：Docker / K8s 里靠的就是这个
+
+===== 4. 非法值：validate() 拦下来 =====
+
+  LLMConfigError: base_url 必须以 http:// 或 https:// 开头，当前: api.deepseek.com
+  LLMConfigError: timeout 必须 > 0，当前: 0
+  → 起步就校验，别等第一次请求才发现配置是坏的
