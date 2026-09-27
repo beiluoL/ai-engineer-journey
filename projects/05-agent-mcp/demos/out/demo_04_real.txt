@@ -1,0 +1,32 @@
+
+==========================================================================
+① 完整 ReAct 轨迹
+==========================================================================
+  [1] thought：I'll search the knowledge base for information about Project 04's session persistence.
+  [1] ✓ 调用 rag_search({"query": "Project 04 会话是怎么落盘的"})
+         ↳ [1] Project 04 会话与多轮（p04-session）：Turn 不可变、会话落盘走 mkstemp+fsync+os.replace 原子写，历史拼进 promp
+         ↳ [2] Project 04 Personal RAG（p04-rag）：解析分块 embedding 向量库相似度检索重排上下文组装，最后拼成一条带引用的回答。
+         ↳ [3] Project 01 AI CLI Assistant（p01-cli）：Python 标准库 argparse 搭单轮问答 CLI，循环读 stdin，回车退出，零第
+  [2] thought：Project 04 的会话落盘采用 mkstemp + fsync + os.replace 的原子写方式，且 Turn 不可变，历史拼进 prompt 的顺序是 syste
+  [2] answer：Project 04 的会话落盘采用 mkstemp + fsync + os.replace 的原子写方式，且 Turn 不可变，历史拼进 prompt 的顺序是 syste
+
+  答案：Project 04 的会话落盘采用 mkstemp + fsync + os.replace 的原子写方式，且 Turn 不可变，历史拼进 prompt 的顺序是 system、历史、本次提问。
+  步数：4   工具调用：['rag_search']
+
+==========================================================================
+② AgentResult.trace()：这就是能贴到文档里的那一段
+==========================================================================
+问题：Project 04 的会话是怎么落盘的？
+  [1] thought：I'll search the knowledge base for information about Project 04's session persistence.
+  [1] 调用 rag_search({"query": "Project 04 会话是怎么落盘的"})
+        → [1] Project 04 会话与多轮（p04-session）：Turn 不可变、会话落盘走 mkstemp+fsync+os.replace 原子写，历史拼进 prompt 的顺序是 system 历史 本次提问。
+        → [2] Project 04 Personal RAG（p04-rag）：解析分块 embedding 向量库相似度检索重排上下文组装，最后拼成一条带引用的回答。
+        → [3] Project 01 AI CLI Assistant（p01-cli）：Python 标准库 argparse 搭单轮问答 CLI，循环读 stdin，回车退出，零第三方依赖。
+  [2] thought：Project 04 的会话落盘采用 mkstemp + fsync + os.replace 的原子写方式，且 Turn 不可变，历史拼进 prompt 的顺序是 system、历史、本次提问。
+  [2] answer：Project 04 的会话落盘采用 mkstemp + fsync + os.replace 的原子写方式，且 Turn 不可变，历史拼进 prompt 的顺序是 system、历史、本次提问。
+答案：Project 04 的会话落盘采用 mkstemp + fsync + os.replace 的原子写方式，且 Turn 不可变，历史拼进 prompt 的顺序是 system、历史、本次提问。
+
+==========================================================================
+③ 真实链路
+==========================================================================
+  模型 deepseek-chat，真实 HTTP 往返已完成，轨迹见上方。

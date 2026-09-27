@@ -1,0 +1,87 @@
+
+==========================================================================
+① 完整的一段工具声明：模型真正看到的东西
+==========================================================================
+  {
+    "type": "function",
+    "function": {
+      "name": "calculator",
+      "description": "计算算术表达式（支持 + - * / // % 与括号，不支持变量和函数）。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "expression": {
+            "type": "string",
+            "description": "算术表达式，例如 (12+8)*3/7"
+          }
+        },
+        "required": [
+          "expression"
+        ]
+      }
+    }
+  }
+
+==========================================================================
+② 手写 schema 容易写的两种错，框架直接拦
+==========================================================================
+  parameters.type 不是 object → ToolSchemaError: parameters.type 必须是 object
+  required 里的字段没有对应属性 → ToolSchemaError: required 里的「nope」没有对应的 property
+
+==========================================================================
+③ 签名推导：改了参数忘记改 schema 是最经典的线上事故
+==========================================================================
+  改前 schema：required = ['k']
+  改后 schema：required = ['k']
+  → 自动推导跟着代码一起变，不存在「改了代码忘了改 schema」这种事故。
+  {
+    "type": "object",
+    "properties": {
+      "k": {
+        "type": "integer"
+      },
+      "mode": {
+        "type": "string",
+        "description": "默认 'fast'"
+      }
+    },
+    "required": [
+      "k"
+    ]
+  }
+
+==========================================================================
+④ 参数纠偏：模型给的类型不总是对的（小模型高频失误）
+==========================================================================
+  [✓]     '3' + type=integer  → 3            
+  [✓]     3.0 + type=integer  → 3            
+  [✓]    '12' + type=number   → 12.0         
+  [✓]  'true' + type=boolean  → True         
+  [✓]       1 + type=boolean  → True         
+  [✗]     'x' + type=integer  → None         期望整数，收到字符串 'x'
+
+==========================================================================
+⑤ 真实派发：字符串 '4' 被纠偏成整数后才进 run()
+==========================================================================
+       ↳ run() 拿到的类型：a=int, b=int
+  [✓] {"a": "4", "b": 6}               → ok=True 10
+  [✗] {"a": 1}                         → ok=False 缺少必填参数「b」
+  [✗] {"a": 1, "b": 2, "c": 3}         → ok=False 参数「c」不存在于 add 的声明中
+
+==========================================================================
+⑥ 声明里没有的参数，模型编出来也要被挡住
+==========================================================================
+  error = '参数「c」不存在于 add 的声明中'
+  回灌文本 = '[工具执行失败] add: 参数「c」不存在于 add 的声明中'
+
+==========================================================================
+⑦ 一个合格的 schema 的最小形态
+==========================================================================
+Traceback (most recent call last):
+  File "/Users/beiluo/Documents/alProject/ai-engineer-journey/projects/05-agent-mcp/demos/demo_02_tool_schema.py", line 112, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/beiluo/Documents/alProject/ai-engineer-journey/projects/05-agent-mcp/demos/demo_02_tool_schema.py", line 106, in main
+    print(f"  ✓ {s['name']:<12} properties={list(s['parameters']['properties'])}"
+                 ~^^^^^^^^
+KeyError: 'name'

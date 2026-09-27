@@ -1,0 +1,57 @@
+
+==========================================================================
+① 第一回合：模型只是「想」调用，什么都没执行
+==========================================================================
+  [0] role=user       'Project 04 的会话是怎么落盘的？'
+  [1] role=assistant  "I'll look that up in the project knowledge base."  tool_calls=rag_search
+
+  解析出调用：id='call_00_DK8JF94ttEpyVgtvdW0V2527' name='rag_search' arguments={"query": "Project 04 会话是怎么落盘的？", "k": 5}
+
+==========================================================================
+② 宿主执行，并把结果装成一条 tool 消息
+==========================================================================
+  ToolResult.ok = True
+  这条消息有三个字段缺一不可：role=tool / tool_call_id / name
+  [0] role=user       'Project 04 的会话是怎么落盘的？'
+  [1] role=assistant  "I'll look that up in the project knowledge base."  tool_calls=rag_search
+  [2] role=tool       '[1] Project 04 会话与多轮（p04-session）：Turn 不可变、会话落盘走 mkstemp+f'  tool_call_id=call_00_DK8JF94ttEpyVgtvdW0V2527
+
+==========================================================================
+③ 第二回合：模型看到工具结果，给出最终回答
+==========================================================================
+  [0] role=user       'Project 04 的会话是怎么落盘的？'
+  [1] role=assistant  "I'll look that up in the project knowledge base."  tool_calls=rag_search
+  [2] role=tool       '[1] Project 04 会话与多轮（p04-session）：Turn 不可变、会话落盘走 mkstemp+f'  tool_call_id=call_00_DK8JF94ttEpyVgtvdW0V2527
+  [3] role=assistant  'Project 04 的会话落盘方式（来自知识库笔记 `p04-session`）：  **核心机制：原子写**  '
+
+  最终答案：Project 04 的会话落盘方式（来自知识库笔记 `p04-session`）：
+
+**核心机制：原子写**
+
+落盘走的是 **`mkstemp` + `fsync` + `os.replace`** 这套原子写流程：
+
+1. `mkstemp` —— 在目标目录创建临时文件，拿到文件描述符；
+2. 写入内容后 `fsync` —— 强制把数据刷到磁盘，确保不丢；
+3. `os.replace` —— 原子地把临时文件重命名覆盖到正式文件上。
+
+这样即使写入中途崩溃，也不会留下半截损坏的会话文件，读到的要么是旧版本、要么是完整的新版本。
+
+**配套设计**
+
+- **Turn 不可变**：每一轮对话记录（Turn）一旦生成就不再修改，追加式地组织历史。
+- **历史拼进 prompt 的顺序**：`system` → `历史` → `本次提问`。
+
+需要我进一步展开某一部分（比如原子写的失败处理，或 prompt 拼接的具体格式）吗？
+
+==========================================================================
+④ 真实链路信息
+==========================================================================
+  模型：deepseek-chat   真实 HTTP 往返 2 次
+  环境变量 DEEPSEEK_API_KEY 已读取（长度 35）
+
+==========================================================================
+⑤ 一次失败：模型编了个不存在的工具
+==========================================================================
+  ok = False
+  回灌给模型 → [工具执行失败] search_online: 未知工具「search_online」。当前可用：calculator, now, rag_search
+  模型下一轮可以自己改成 rag_search —— 一次工具失败不该打死整轮任务。
