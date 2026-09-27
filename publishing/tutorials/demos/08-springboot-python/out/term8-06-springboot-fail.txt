@@ -1,0 +1,19 @@
+# 模拟 Python 服务挂掉
+$ pkill -f "uvicorn text_service:app"
+
+# Java 接口仍然可访问，只是明确告诉调用方：下游不可用
+$ curl -s -w "\nHTTP_CODE=%{http_code}\n" "http://127.0.0.1:8080/api/analyze?text=hello%20world"
+{"error":"python_unavailable","detail":"python service unreachable: I/O error on POST request for \"http://127.0.0.1:8000/v1/analyze\": Connection refused"}
+HTTP_CODE=503
+
+# Java 侧日志：重试 2 次（共 3 次尝试）后放弃，异常映射成 503 而不是 500
+2026-09-27T21:41:21.941+08:00  WARN 29042 --- [nio-8080-exec-4] c.e.pybridge.client.TextServiceClient : python /v1/analyze attempt 1/2 error, retrying: ResourceAccessException: I/O error on POST request for "http://127.0.0.1:8000/v1/analyze": Connection refused
+2026-09-27T21:41:22.152+08:00  WARN 29042 --- [nio-8080-exec-4] c.e.pybridge.client.TextServiceClient : python /v1/analyze attempt 2/2 error, retrying: ResourceAccessException: I/O error on POST request for "http://127.0.0.1:8000/v1/analyze": Connection refused
+2026-09-27T21:41:22.563+08:00 ERROR 29042 --- [nio-8080-exec-4] c.e.pybridge.client.TextServiceClient : python /v1/analyze unreachable after 3 attempts
+Caused by: java.net.ConnectException: Connection refused
+
+# 重启 Python 服务后立刻恢复，Java 不用重启
+$ /path/to/.venv/bin/python -m uvicorn text_service:app --host 127.0.0.1 --port 8000 &
+$ curl -s "http://127.0.0.1:8080/api/analyze?text=Spring%20Boot%20calls%20Python%20and%20Python%20answers%20with%20JSON.&topK=3"
+{"chars":54,"words":9,"sentences":1,"top_words":[["python",2],["spring",1],["boot",1]],"elapsed_ms":0.181,"engine":"python-fastapi"}
+2026-09-27T21:41:43.557+08:00  INFO 29042 --- [nio-8080-exec-5] c.e.pybridge.client.TextServiceClient : python /v1/analyze ok: cost=16ms, attempt=1

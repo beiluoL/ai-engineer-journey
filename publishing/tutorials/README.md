@@ -15,6 +15,7 @@
 | 05 | [大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j](05-llm-finetune-day3-lora-ollama-springboot.md) | [Markdown](05-llm-finetune-day3-lora-ollama-springboot.md) · [HTML](05-llm-finetune-day3-lora-ollama-springboot.html) |
 | 06 | [大模型微调实战 Day4：RAG + LoRA 结合，构建带工具调用的 Agent](06-rag-lora-agent.md) | [Markdown](06-rag-lora-agent.md) · [HTML](06-rag-lora-agent.html) |
 | 07 | [大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline](07-springboot-langchain4j-milvus-rag.md) | [Markdown](07-springboot-langchain4j-milvus-rag.md) · [HTML](07-springboot-langchain4j-milvus-rag.html) |
+| 08 | [Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单](08-springboot-calls-python.md) | [Markdown](08-springboot-calls-python.md) · [HTML](08-springboot-calls-python.html) |
 
 ## 配图规范
 

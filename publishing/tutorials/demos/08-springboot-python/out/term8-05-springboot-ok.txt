@@ -1,0 +1,22 @@
+$ cd publishing/tutorials/demos/08-springboot-python/java/springboot-text-client
+$ mvn spring-boot:run
+  :: Spring Boot ::                (v3.3.4)
+2026-09-27T21:40:34.495+08:00  INFO 29042 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-09-27T21:40:34.682+08:00  INFO 29042 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-09-27T21:40:34.687+08:00  INFO 29042 --- [main] c.example.pybridge.PyBridgeApplication   : Started PyBridgeApplication in 0.728 seconds
+
+# 1) 先看 Java 能不能看到 Python
+$ curl -s http://127.0.0.1:8080/api/python-health
+{"status":"ok","engine":"python-fastapi","version":"1.0.0"}
+
+# 2) 走完整链路：浏览器 → Java 8080 → Python 8000 → 回
+$ curl -s "http://127.0.0.1:8080/api/analyze?text=Spring%20Boot%20calls%20Python%20and%20Python%20answers%20with%20JSON.&topK=3"
+{"chars":54,"words":9,"sentences":1,"top_words":[["python",2],["spring",1],["boot",1]],"elapsed_ms":0.181,"engine":"python-fastapi"}
+
+# Java 侧日志（application.yml 里开了 DEBUG）
+2026-09-27T21:41:43.557+08:00  INFO 29042 --- [nio-8080-exec-5] c.e.pybridge.client.TextServiceClient : python /v1/analyze ok: cost=16ms, attempt=1
+
+# Python 侧日志
+INFO:     127.0.0.1:60605 - "POST /v1/analyze HTTP/1.1" 200 OK
+
+# top_words 有值 —— 说明 @JsonNaming 把 snake_case 正确映射到了 record 的 topWords

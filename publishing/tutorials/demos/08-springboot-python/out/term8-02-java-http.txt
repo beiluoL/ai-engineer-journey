@@ -1,0 +1,16 @@
+$ cd publishing/tutorials/demos/08-springboot-python/java/plain
+# Java 11+ 单文件源码模式，不用 javac 也能跑
+$ java HttpCallDemo.java
+HTTP status : 200
+Cost        : 47 ms
+Response    : {"chars":102,"words":17,"sentences":3,"top_words":[["python",2],["http",2],["spring",1]],"elapsed_ms":0.034,"engine":"python-fastapi"}
+
+# 再跑一次看耗时构成
+$ java HttpCallDemo.java
+HTTP status : 200
+Cost        : 41 ms
+Response    : {"chars":102,"words":17,"sentences":3,"top_words":[["python",2],["http",2],["spring",1]],"elapsed_ms":0.042,"engine":"python-fastapi"}
+
+# Cost 41ms，而 Python 侧自报只有 0.042ms：
+# 差额几乎全是 JVM 启动 + 单文件源码编译 + 建 TCP 连接，不是 Python 慢。
+# 真实 Spring Boot 里连接是复用的，稳定态单次调用在 1–3ms。

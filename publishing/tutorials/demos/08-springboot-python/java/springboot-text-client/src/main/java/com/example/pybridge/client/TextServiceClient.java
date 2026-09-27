@@ -14,6 +14,8 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +54,13 @@ public class TextServiceClient {
                 .baseUrl(baseUrl)
                 .requestFactory(factory)
                 .defaultStatusHandler(HttpStatusCode::isError, (request, response) -> {
-                    String body = response.getBody().length() > 0
-                            ? new String(response.getBody())
-                            : "<empty>";
+                    String body;
+                    try {
+                        byte[] bytes = response.getBody().readAllBytes();
+                        body = bytes.length > 0 ? new String(bytes, StandardCharsets.UTF_8) : "<empty>";
+                    } catch (IOException e) {
+                        body = "<unreadable>";
+                    }
                     throw new PythonServiceException(
                             "python service error: status=" + response.getStatusCode() + ", body=" + body,
                             response.getStatusCode().value());

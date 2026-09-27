@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei',Arial,sans-serif">
+  <rect width="1200" height="540" fill="#FFFFFF"/>
+  <text x="40" y="34" font-size="22" font-weight="700" fill="#0F172A">方案 B：ProcessBuilder 起子进程时，真正要管的三根管道</text>
+  <text x="40" y="56" font-size="13" fill="#64748B">这个方案简单，但 90% 的线上事故都出在「stdout 没人读」和「进程没人杀」</text>
+
+  <!-- Java -->
+  <rect x="40" y="80" width="300" height="230" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="60" y="108" font-size="15" font-weight="700" fill="#1E3A8A">Java（JVM 主线程）</text>
+  <line x1="60" y1="120" x2="320" y2="120" stroke="#BFDBFE"/>
+  <text x="60" y="144" font-size="12" fill="#0F172A">ProcessBuilder pb = new ProcessBuilder(</text>
+  <text x="60" y="162" font-size="12" fill="#0F172A">    pythonBin, scriptAbsPath);</text>
+  <text x="60" y="180" font-size="12" fill="#0F172A">pb.directory(脚本所在目录)</text>
+  <text x="60" y="204" font-size="12" fill="#0F172A">① 写 stdin 后立刻 close</text>
+  <text x="60" y="226" font-size="12" fill="#0F172A">② 另开线程 drain stderr</text>
+  <text x="60" y="248" font-size="12" fill="#0F172A">③ 读 stdout 全文</text>
+  <text x="60" y="270" font-size="12" fill="#0F172A">④ waitFor(20, SECONDS)</text>
+  <text x="60" y="292" font-size="12" fill="#B91C1C">⑤ 超时 → destroyForcibly()</text>
+
+  <!-- Python -->
+  <rect x="880" y="80" width="280" height="230" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="900" y="108" font-size="15" font-weight="700" fill="#065F46">Python 子进程</text>
+  <line x1="900" y1="120" x2="1140" y2="120" stroke="#A7F3D0"/>
+  <text x="900" y="144" font-size="12" fill="#0F172A">解释器启动（100–800 ms）</text>
+  <text x="900" y="166" font-size="12" fill="#0F172A">↓ import 依赖（torch 更慢）</text>
+  <text x="900" y="188" font-size="12" fill="#0F172A">↓ sys.stdin.readline() 收 JSON</text>
+  <text x="900" y="210" font-size="12" fill="#0F172A">↓ 计算</text>
+  <text x="900" y="232" font-size="12" fill="#0F172A">↓ print(json) → stdout</text>
+  <text x="900" y="254" font-size="12" fill="#0F172A">↓ 日志全部 print(…, file=sys.stderr)</text>
+  <text x="900" y="276" font-size="12" fill="#334155">sys.exit(0) / 非 0 表示失败</text>
+
+  <!-- 管道 -->
+  <path d="M340 140 H875" stroke="#2563EB" stroke-width="2" fill="none"/>
+  <path d="M875 140 l10 -5 v10 z" fill="#2563EB"/>
+  <rect x="470" y="118" width="270" height="26" rx="6" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="605" y="136" font-size="12" fill="#0F172A" text-anchor="middle">stdin：一行 JSON（写完必须关）</text>
+
+  <path d="M875 196 H345" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M345 196 l-10 -5 v10 z" fill="#059669"/>
+  <rect x="470" y="174" width="270" height="26" rx="6" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="605" y="192" font-size="12" fill="#0F172A" text-anchor="middle">stdout：只允许一行 JSON</text>
+
+  <path d="M875 252 H345" stroke="#D97706" stroke-width="2" fill="none"/>
+  <path d="M345 252 l-10 -5 v10 z" fill="#D97706"/>
+  <rect x="470" y="230" width="270" height="26" rx="6" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="605" y="248" font-size="12" fill="#0F172A" text-anchor="middle">stderr：日志，必须有人读</text>
+
+  <!-- 中间说明 -->
+  <rect x="360" y="280" width="500" height="30" rx="6" fill="#FEF2F2" stroke="#DC2626"/>
+  <text x="610" y="300" font-size="12" fill="#B91C1C" text-anchor="middle">管道缓冲区只有几十 KB：stderr 没人读 → Python 写阻塞 → 进程永久假死</text>
+
+  <!-- 底部要点 -->
+  <rect x="40" y="336" width="1120" height="180" rx="10" fill="#F1F5F9" stroke="#CBD5E1"/>
+  <text x="64" y="364" font-size="14" font-weight="700" fill="#0F172A">什么时候用 / 什么时候别用</text>
+
+  <text x="64" y="390" font-size="12.5" fill="#334155">✅ 适合：定时任务、离线批处理、一天跑几次的数据脚本、本机小工具 —— 频率低，起进程的开销可以接受。</text>
+  <text x="64" y="414" font-size="12.5" fill="#334155">❌ 不适合：在线请求链路。每秒起一次 Python 进程，光 import torch 就要几秒，QPS 直接被打回个位数，还会把 CPU 和内存吃满。</text>
+  <text x="64" y="438" font-size="12.5" fill="#334155">⚠ 解释器路径写死必踩坑：开发机 /usr/bin/python3、服务器 venv、容器 /opt/venv/bin/python 各不相同 —— 做成配置项，别硬编码。</text>
+  <text x="64" y="462" font-size="12.5" fill="#334155">⚠ 相对路径陷阱：设了 pb.directory() 之后，脚本的相对路径基准就变了，本地能跑、线上报 “can't open file”。一律先 toAbsolutePath().normalize()。</text>
+  <text x="64" y="492" font-size="12.5" fill="#B91C1C">判断标准很简单：如果 QPS 上到个位数以上，或者单次调用要在 1 秒内返回，就该把它改成常驻的 HTTP 服务。</text>
+</svg>

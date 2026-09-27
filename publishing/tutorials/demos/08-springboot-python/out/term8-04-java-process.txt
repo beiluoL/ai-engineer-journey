@@ -1,0 +1,16 @@
+$ cd publishing/tutorials/demos/08-springboot-python/java/plain
+$ java ProcessCallDemo.java /path/to/.venv/bin/python ../../python/text_stats_cli.py
+[python:stderr] start analyzing
+Exit code  : 0
+Cost       : 43 ms
+Stdout     : {"chars": 79, "words": 13, "top_words": [["python", 2], ["spring", 1], ["boot", 1]], "elapsed_ms": 2.036, "engine": "python-cli"}
+
+# 对比：用错相对路径时的报错（未转绝对路径，directory 改变了解析基准）
+$ java ProcessCallDemo.java /path/to/.venv/bin/python ../../python/text_stats_cli.py
+Exit code  : 2
+[python:stderr] /path/to/.venv/bin/python: can't open file '.../python/../../python/text_stats_cli.py': [Errno 2] No such file or directory
+Cost       : 55 ms
+Stdout     :
+
+# 注意 Exit code = 2：脚本没跑起来，Java 侧如果只看 stdout 会是空串，
+# 必须先判退出码再解析 JSON，否则空指针一路抛到 Controller

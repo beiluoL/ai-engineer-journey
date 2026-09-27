@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei',Arial,sans-serif">
+  <rect width="1200" height="640" fill="#FFFFFF"/>
+
+  <text x="40" y="46" font-size="24" font-weight="700" fill="#0F172A">Java 调 Python 的五条路：先把选项摆全，再谈选型</text>
+  <text x="40" y="72" font-size="13" fill="#64748B">两个进程之间只有三种东西能传：字节流、消息、共享协议 —— 所谓跨语言调用，就是挑一种</text>
+
+  <!-- 1 HTTP -->
+  <g>
+    <rect x="20" y="96" width="216" height="380" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+    <circle cx="46" cy="126" r="13" fill="#2563EB"/>
+    <text x="46" y="131" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="68" y="131" font-size="16" font-weight="700" fill="#1E3A8A">HTTP / REST</text>
+    <text x="40" y="152" font-size="11" fill="#3B82F6">Spring RestClient → FastAPI</text>
+    <line x1="40" y1="166" x2="216" y2="166" stroke="#BFDBFE"/>
+    <text x="40" y="190" font-size="12" fill="#0F172A">Java 侧：RestClient / WebClient</text>
+    <text x="40" y="212" font-size="12" fill="#0F172A">Python 侧：FastAPI / Flask</text>
+    <text x="40" y="234" font-size="12" fill="#0F172A">数据：JSON</text>
+    <text x="40" y="256" font-size="12" fill="#0F172A">延迟：单次 1–50 ms</text>
+    <text x="40" y="278" font-size="12" fill="#0F172A">部署：各自独立进程 / 容器</text>
+    <text x="40" y="300" font-size="12" fill="#0F172A">扩容：两边分别加实例</text>
+    <text x="40" y="330" font-size="12" font-weight="700" fill="#1E3A8A">适用</text>
+    <text x="40" y="350" font-size="12" fill="#334155">Python 是常驻服务、需要被</text>
+    <text x="40" y="368" font-size="12" fill="#334155">多处复用、要独立发版扩容</text>
+    <text x="40" y="398" font-size="12" fill="#334155">（模型推理、RAG、算法服务）</text>
+    <rect x="40" y="424" width="176" height="28" rx="14" fill="#2563EB"/>
+    <text x="128" y="443" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">首选 · 覆盖 80% 场景</text>
+  </g>
+
+  <!-- 2 子进程 -->
+  <g>
+    <rect x="256" y="96" width="216" height="380" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+    <circle cx="282" cy="126" r="13" fill="#64748B"/>
+    <text x="282" y="131" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="304" y="131" font-size="16" font-weight="700" fill="#0F172A">子进程 CLI</text>
+    <text x="276" y="152" font-size="11" fill="#64748B">ProcessBuilder → python xx.py</text>
+    <line x1="276" y1="166" x2="452" y2="166" stroke="#CBD5E1"/>
+    <text x="276" y="190" font-size="12" fill="#0F172A">Java 侧：ProcessBuilder</text>
+    <text x="276" y="212" font-size="12" fill="#0F172A">Python 侧：一次性脚本</text>
+    <text x="276" y="234" font-size="12" fill="#0F172A">数据：stdin / stdout（JSON）</text>
+    <text x="276" y="256" font-size="12" fill="#0F172A">延迟：＋ 100–800 ms 启动</text>
+    <text x="276" y="278" font-size="12" fill="#0F172A">部署：同一台机器 / 同一镜像</text>
+    <text x="276" y="300" font-size="12" fill="#0F172A">扩容：只能靠线程池排队</text>
+    <text x="276" y="330" font-size="12" font-weight="700" fill="#0F172A">适用</text>
+    <text x="276" y="350" font-size="12" fill="#334155">离线批处理、定时任务、</text>
+    <text x="276" y="368" font-size="12" fill="#334155">几秒一次的脚本型调用，</text>
+    <text x="276" y="398" font-size="12" fill="#334155">且不想多维护一个服务</text>
+    <rect x="276" y="424" width="176" height="28" rx="14" fill="#E2E8F0"/>
+    <text x="364" y="443" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">轻量起步 · 勿用于高频</text>
+  </g>
+
+  <!-- 3 消息队列 -->
+  <g>
+    <rect x="492" y="96" width="216" height="380" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+    <circle cx="518" cy="126" r="13" fill="#64748B"/>
+    <text x="518" y="131" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="540" y="131" font-size="16" font-weight="700" fill="#0F172A">消息队列</text>
+    <text x="512" y="152" font-size="11" fill="#64748B">Java 投递 → Python 消费</text>
+    <line x1="512" y1="166" x2="688" y2="166" stroke="#CBD5E1"/>
+    <text x="512" y="190" font-size="12" fill="#0F172A">Java 侧：生产者 + 回调接口</text>
+    <text x="512" y="212" font-size="12" fill="#0F172A">Python 侧：常驻 worker</text>
+    <text x="512" y="234" font-size="12" fill="#0F172A">数据：消息体（JSON）</text>
+    <text x="512" y="256" font-size="12" fill="#0F172A">延迟：秒级 ~ 分钟级</text>
+    <text x="512" y="278" font-size="12" fill="#0F172A">部署：多一个 MQ 组件</text>
+    <text x="512" y="300" font-size="12" fill="#0F172A">扩容：加 worker 即可</text>
+    <text x="512" y="330" font-size="12" font-weight="700" fill="#0F172A">适用</text>
+    <text x="512" y="350" font-size="12" fill="#334155">耗时分钟级、允许异步、</text>
+    <text x="512" y="368" font-size="12" fill="#334155">需要削峰和重试队列</text>
+    <text x="512" y="398" font-size="12" fill="#334155">（微调、批处理、报告生成）</text>
+    <rect x="512" y="424" width="176" height="28" rx="14" fill="#E2E8F0"/>
+    <text x="600" y="443" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">长任务专用</text>
+  </g>
+
+  <!-- 4 gRPC -->
+  <g>
+    <rect x="728" y="96" width="216" height="380" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+    <circle cx="754" cy="126" r="13" fill="#64748B"/>
+    <text x="754" y="131" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="776" y="131" font-size="16" font-weight="700" fill="#0F172A">gRPC</text>
+    <text x="748" y="152" font-size="11" fill="#64748B">protobuf stub ↔ server</text>
+    <line x1="748" y1="166" x2="924" y2="166" stroke="#CBD5E1"/>
+    <text x="748" y="190" font-size="12" fill="#0F172A">Java 侧：生成的 stub</text>
+    <text x="748" y="212" font-size="12" fill="#0F172A">Python 侧：grpc server</text>
+    <text x="748" y="234" font-size="12" fill="#0F172A">数据：protobuf（二进制）</text>
+    <text x="748" y="256" font-size="12" fill="#0F172A">延迟：亚毫秒 ~ 几毫秒</text>
+    <text x="748" y="278" font-size="12" fill="#0F172A">部署：各自独立进程</text>
+    <text x="748" y="300" font-size="12" fill="#0F172A">扩容：两边分别加实例</text>
+    <text x="748" y="330" font-size="12" font-weight="700" fill="#0F172A">适用</text>
+    <text x="748" y="350" font-size="12" fill="#334155">高频、低延迟、字段稳定、</text>
+    <text x="748" y="368" font-size="12" fill="#334155">内网服务间调用</text>
+    <text x="748" y="398" font-size="12" fill="#334155">（流式推理、特征服务）</text>
+    <rect x="748" y="424" width="176" height="28" rx="14" fill="#E2E8F0"/>
+    <text x="836" y="443" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">性能敏感时再上</text>
+  </g>
+
+  <!-- 5 嵌入式 -->
+  <g>
+    <rect x="964" y="96" width="216" height="380" rx="10" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <circle cx="990" cy="126" r="13" fill="#DC2626"/>
+    <text x="990" y="131" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="1012" y="131" font-size="16" font-weight="700" fill="#7F1D1D">嵌入式解释器</text>
+    <text x="984" y="152" font-size="11" fill="#DC2626">Jython / JEP / GraalPy</text>
+    <line x1="984" y1="166" x2="1160" y2="166" stroke="#FECACA"/>
+    <text x="984" y="190" font-size="12" fill="#0F172A">Java 侧：JVM 内直接调用</text>
+    <text x="984" y="212" font-size="12" fill="#0F172A">Python 侧：无独立进程</text>
+    <text x="984" y="234" font-size="12" fill="#0F172A">数据：内存对象</text>
+    <text x="984" y="256" font-size="12" fill="#0F172A">延迟：最低（无网络）</text>
+    <text x="984" y="278" font-size="12" fill="#0F172A">部署：打进同一个 jar</text>
+    <text x="984" y="300" font-size="12" fill="#0F172A">扩容：无法独立扩容</text>
+    <text x="984" y="330" font-size="12" font-weight="700" fill="#7F1D1D">风险</text>
+    <text x="984" y="350" font-size="12" fill="#334155">Jython 只支持 Python 2.7，</text>
+    <text x="984" y="368" font-size="12" fill="#334155">numpy / torch 基本跑不了；</text>
+    <text x="984" y="398" font-size="12" fill="#334155">崩溃会带走整个 JVM</text>
+    <rect x="984" y="424" width="176" height="28" rx="14" fill="#DC2626"/>
+    <text x="1072" y="443" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">别选 · 除非你很清楚代价</text>
+  </g>
+
+  <rect x="20" y="500" width="1160" height="104" rx="10" fill="#F1F5F9" stroke="#CBD5E1"/>
+  <text x="44" y="528" font-size="14" font-weight="700" fill="#0F172A">一句话结论</text>
+  <text x="44" y="554" font-size="13" fill="#334155">• 先做 HTTP：它是唯一一条「Java 和 Python 都能独立发版、独立扩容、独立排查」的路，成本也最低。</text>
+  <text x="44" y="578" font-size="13" fill="#334155">• 只有「一个任务跑几分钟、结果不需要同步返回」才值得引入消息队列；gRPC 是 HTTP 扛不住之后的性能优化，不是起点。</text>
+  <text x="44" y="600" font-size="13" fill="#B91C1C">• 看到「用 Jython 在 JVM 里跑 Python」的旧文章直接跳过：它是 Python 2 时代的解法，装不了现代 AI 依赖。</text>
+</svg>

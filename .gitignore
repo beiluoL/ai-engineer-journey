@@ -27,3 +27,10 @@ outputs/
 checkpoints/
 *.pt
 *.safetensors
+
+# Java
+target/
+*.class
+
+# 演示运行日志（截图已渲染，原始日志不入库）
+demos/**/out/*.log

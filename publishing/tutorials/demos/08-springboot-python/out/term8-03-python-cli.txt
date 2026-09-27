@@ -1,0 +1,17 @@
+$ cd publishing/tutorials/demos/08-springboot-python/python
+# 正常输入：stdin 一行 JSON，stdout 一行 JSON；日志走 stderr（这里混在终端显示）
+$ echo '{"text":"Spring Boot calls Python as a subprocess. Python reads stdin and writes stdout.","top_k":3}' \
+    | /path/to/.venv/bin/python text_stats_cli.py
+start analyzing
+{"chars": 79, "words": 13, "top_words": [["python", 2], ["spring", 1], ["boot", 1]], "elapsed_ms": 2.076, "engine": "python-cli"}
+$ echo $?
+0
+
+# 异常输入：报错走 stderr，退出码非 0 —— Java 靠 exitValue() 判断成败
+$ echo 'not-json' | /path/to/.venv/bin/python text_stats_cli.py
+bad request: Expecting value: line 1 column 1 (char 0)
+$ echo $?
+2
+
+# 关键约定：stdout 里永远只有一行业务 JSON。
+# 只要有一句 print("debug") 混进 stdout，Java 侧 json.loads 就会在半夜炸掉。

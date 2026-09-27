@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei',Arial,sans-serif">
+  <rect width="1200" height="560" fill="#FFFFFF"/>
+  <text x="40" y="34" font-size="22" font-weight="700" fill="#0F172A">方案 A：Java → HTTP → Python 的完整链路</text>
+  <text x="40" y="56" font-size="13" fill="#64748B">把「调一次接口」拆成 7 个必须明确的环节 —— 出问题时，你就是在其中某一环上没定义清楚</text>
+
+  <!-- Java 侧 -->
+  <rect x="40" y="80" width="250" height="230" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="60" y="108" font-size="15" font-weight="700" fill="#1E3A8A">Spring Boot（JVM）</text>
+  <line x1="60" y1="120" x2="270" y2="120" stroke="#BFDBFE"/>
+  <text x="60" y="144" font-size="12" fill="#0F172A">Controller  /api/analyze</text>
+  <text x="60" y="166" font-size="12" fill="#0F172A">↓ 参数校验</text>
+  <text x="60" y="188" font-size="12" fill="#0F172A">TextServiceClient（RestClient）</text>
+  <text x="60" y="210" font-size="12" fill="#0F172A">↓ 序列化：对象 → JSON</text>
+  <text x="60" y="232" font-size="12" fill="#0F172A">↓ 连接池取连接</text>
+  <text x="60" y="254" font-size="12" fill="#0F172A">↓ 超时：connect 1s / read 10s</text>
+  <text x="60" y="276" font-size="12" fill="#0F172A">↓ 失败：重试 2 次（退避 200/400ms）</text>
+  <text x="60" y="298" font-size="12" fill="#B91C1C">超过重试上限 → 503 python_unavailable</text>
+
+  <!-- 通道 -->
+  <rect x="330" y="80" width="540" height="230" rx="10" fill="#F8FAFC" stroke="#94A3B8"/>
+  <text x="600" y="108" font-size="14" font-weight="700" fill="#0F172A" text-anchor="middle">HTTP / JSON —— 唯一的契约</text>
+  <line x1="350" y1="120" x2="850" y2="120" stroke="#CBD5E1"/>
+
+  <!-- 请求 -->
+  <rect x="350" y="132" width="500" height="66" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="366" y="154" font-size="12" font-weight="700" fill="#334155">POST /v1/analyze</text>
+  <text x="366" y="176" font-size="12" fill="#0F172A">Content-Type: application/json</text>
+  <text x="366" y="192" font-size="12" fill="#0F172A">X-Trace-Id: 8f3c… （把 Java 的 traceId 带过去，日志才能串起来）</text>
+
+  <!-- 响应 -->
+  <rect x="350" y="212" width="500" height="80" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="366" y="234" font-size="12" font-weight="700" fill="#334155">200 OK</text>
+  <text x="366" y="256" font-size="12" fill="#0F172A">{"chars":102,"words":17,"sentences":3,</text>
+  <text x="366" y="272" font-size="12" fill="#0F172A"> "top_words":[["python",2]],"elapsed_ms":0.256}</text>
+  <text x="366" y="288" font-size="12" fill="#B91C1C">⚠ top_words / elapsed_ms 是 snake_case，Java record 要加 @JsonNaming</text>
+
+  <!-- Python 侧 -->
+  <rect x="910" y="80" width="250" height="230" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="930" y="108" font-size="15" font-weight="700" fill="#065F46">Python（FastAPI）</text>
+  <line x1="930" y1="120" x2="1140" y2="120" stroke="#A7F3D0"/>
+  <text x="930" y="144" font-size="12" fill="#0F172A">uvicorn 监听 127.0.0.1:8000</text>
+  <text x="930" y="166" font-size="12" fill="#0F172A">↓ 路由 /v1/analyze</text>
+  <text x="930" y="188" font-size="12" fill="#0F172A">↓ pydantic 校验入参</text>
+  <text x="930" y="210" font-size="12" fill="#0F172A">↓ 业务函数（模型 / 算法）</text>
+  <text x="930" y="232" font-size="12" fill="#0F172A">↓ 返回 dict → 自动转 JSON</text>
+  <text x="930" y="254" font-size="12" fill="#0F172A">/health 供 Java 与容器探针</text>
+  <text x="930" y="276" font-size="12" fill="#334155">进程独立：Python 崩了，</text>
+  <text x="930" y="294" font-size="12" fill="#334155">Java 只是收到一个 5xx</text>
+
+  <!-- 箭头 -->
+  <path d="M290 170 H325" stroke="#2563EB" stroke-width="2" fill="none"/>
+  <path d="M325 170 l10 -5 v10 z" fill="#2563EB"/>
+  <path d="M875 200 H905" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M905 200 l10 -5 v10 z" fill="#059669"/>
+  <path d="M875 240 H905" stroke="#94A3B8" stroke-width="2" fill="none"/>
+  <path d="M905 240 l-10 -5 v10 z" fill="#94A3B8"/>
+  <text x="600" y="330" font-size="12" font-weight="700" fill="#475569" text-anchor="middle">请求 →</text>
+  <text x="600" y="348" font-size="12" font-weight="700" fill="#475569" text-anchor="middle">← 响应</text>
+
+  <!-- 底部要点 -->
+  <rect x="40" y="360" width="1120" height="176" rx="10" fill="#F1F5F9" stroke="#CBD5E1"/>
+  <text x="64" y="388" font-size="14" font-weight="700" fill="#0F172A">这一版的四个工程要点</text>
+
+  <text x="64" y="414" font-size="12.5" fill="#334155">① 超时必须显式设置 —— RestClient 默认不设读超时，Python 一旦卡住，Tomcat 线程会被慢慢吃光，整个服务假死。</text>
+  <text x="64" y="438" font-size="12.5" fill="#334155">② 非 2xx 要转成自己的异常 —— 默认的 HttpClientErrorException 不带响应体；把 Python 的报错 body 记进日志，排查时才不至于两眼一抹黑。</text>
+  <text x="64" y="462" font-size="12.5" fill="#334155">③ 只重试 5xx 和超时 —— 4xx 说明请求本身错了，重试十次只会把错误放大十倍。</text>
+  <text x="64" y="486" font-size="12.5" fill="#334155">④ 地址、超时、重试次数全部外置到 application.yml —— 本地、Docker、K8s 三套环境只改配置，不改代码。</text>
+  <text x="64" y="514" font-size="12.5" fill="#B91C1C">反例：把 base-url 写成 http://localhost:8000 硬编码 —— 上线那天，你会花两小时找一个「本地明明能跑」的 bug。</text>
+</svg>

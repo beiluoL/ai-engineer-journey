@@ -1,0 +1,17 @@
+$ cd publishing/tutorials/demos/08-springboot-python/python
+# 用项目 venv 里的解释器，不要用系统 python3 —— 依赖装在哪，就用哪个
+$ /path/to/.venv/bin/python -m uvicorn text_service:app --host 127.0.0.1 --port 8000
+INFO:     Started server process [29080]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+# 另开一个终端自测：健康检查
+$ curl -s http://127.0.0.1:8000/health
+{"status":"ok","engine":"python-fastapi","version":"1.0.0"}
+
+# 业务端点
+$ curl -s -X POST http://127.0.0.1:8000/v1/analyze \
+       -H 'Content-Type: application/json' \
+       -d '{"text":"Spring Boot calls Python over HTTP. Python answers with JSON. HTTP is the firewall between two worlds.","top_k":3}'
+{"chars":102,"words":17,"sentences":3,"top_words":[["python",2],["http",2],["spring",1]],"elapsed_ms":0.256,"engine":"python-fastapi"}

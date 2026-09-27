@@ -42,7 +42,7 @@
 | Project 04 milestones | ✅ 16/16 全部成文（ingestion → … → fastapi-web-api → real-rag-evaluation → observability → real-reranker-and-calibration） |
 | Project 04 src | ✅ v0.7 落地：18 个模块，170 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估 + 可观测性 + LLMReranker 真实精排与阈值校准均已跑通，16 章每章 2+ 张真实运行截图（assets 共 39 张） |
 | Project 05-10 | ⬜ 未开始 |
-| publishing/tutorials | ✅ 7 篇图文教程已发布（md + html） |
+| publishing/tutorials | ✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5） |
 | publishing/articles | 📝 2 篇 |
 | CI | ✅ GitHub Actions：单测 + 死链坏图扫描 + 密钥文件检查 |
