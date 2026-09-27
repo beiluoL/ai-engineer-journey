@@ -86,6 +86,8 @@ print(cosine)   # 0.2437...  ← 完全相等
 
 ![真实运行：归一化后 dot(na, nb) 与 cosine(a, b) 在小数点后 12 位完全一致](../assets/term-similarity.png)
 
+![真实运行：a 与 7a 的余弦仍为 1（与模长无关）；零向量直接抛错，绝不返回 nan](../assets/term-similarity-scale.png)
+
 ### 3.3 手写实现：纯 Python 版与 NumPy 批量版
 
 先写纯 Python 版，逼自己直面每个循环（面试也常考）：

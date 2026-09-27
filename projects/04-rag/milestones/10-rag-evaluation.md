@@ -272,6 +272,8 @@ python -m rag.evaluation --profile dev --report reports/after.json
         对比只允许同口径、同评测集前后对照
 ```
 
+![真实运行：失败明细定位到「缺关键词」；报告 dump → load 往返一致，保证同口径对比](../assets/term-eval-report.png)
+
 ---
 
 ## 6. 自检清单

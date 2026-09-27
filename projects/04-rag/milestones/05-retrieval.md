@@ -128,6 +128,8 @@ Java 里这就像给 `LinkedHashSet` 去重，只是这里的「重复」是向�
 
 ![真实运行：同一个问题在 vector / hybrid(RRF) / mmr 三种模式下的召回差异](../assets/term-retrieve.png)
 
+![真实运行：换一个问题（GIL）再跑一遍，三种模式的差异不是巧合](../assets/term-retrieve-gil.png)
+
 ## 4. 动手实现（设计稿）
 
 > 以下代码将在 `src/rag/retriever.py` 落地时实现，这里先当设计稿读。它组合前几章的两个抽象：`BaseEmbeddingClient`（Chapter 03）和 `BaseVectorStore`（Chapter 04）。

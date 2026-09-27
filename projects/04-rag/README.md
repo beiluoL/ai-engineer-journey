@@ -121,7 +121,7 @@ projects/04-rag/
 │   ├── errors.py       # 支撑层：RAGError 层级
 │   └── llm.py          # 复用/兼容层：LLMClient 封装
 ├── tests/              # 全部离线（FakeEmbeddingClient + InMemoryVectorStore）
-└── assets/             # 25 张真实运行截图
+└── assets/             # 32 张真实运行截图
 ```
 
 ## 已掌握能力

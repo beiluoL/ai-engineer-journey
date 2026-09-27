@@ -163,6 +163,8 @@ class DocxParser(BaseParser):
         return _make_doc(path, "\n\n".join(lines), {})
 ```
 
+![真实运行：md 解析器自动抽出 headings 元数据，txt 解析器没有](../assets/term-ingest-headings.png)
+
 ### 3.3 解析器注册表与入口
 
 用注册表代替 if-elif，新增格式 = 新增一个类 + 注册一行，老代码零改动：
