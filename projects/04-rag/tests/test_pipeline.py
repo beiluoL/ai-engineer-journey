@@ -11,9 +11,10 @@ import pytest
 from rag.assembler import ContextAssembler
 from rag.cli import build_components
 from rag.embedding import FakeEmbeddingClient
-from rag.errors import RAGError
+from rag.errors import RAGError, SessionError
 from rag.llm import BaseLLMClient
 from rag.pipeline import IngestionPipeline, RAGService, looks_refused
+from rag.session import Session, Turn
 from rag.reranker import NoopReranker
 from rag.retriever import Retriever
 from rag.settings import RAGSettings
@@ -224,6 +225,90 @@ def test_拒答判据能认出被改写的话术():
     assert looks_refused("抱歉，我无法回答这个问题。")
     assert not looks_refused("生成器是边算边吐的 [1]。")
     assert not looks_refused("")
+
+
+class MessageRecorder(BaseLLMClient):
+    """把最后一次收到的 messages 记下来：用来验证「多轮历史确实进到了 prompt」。"""
+
+    model_name = "recorder"
+
+    def __init__(self) -> None:
+        self.messages: list = []
+
+    def chat(self, messages):
+        self.messages = list(messages)
+        return "收到"
+
+
+def _service_with(offline, llm, settings):
+    _s, _e, _store, retriever, _d = offline
+    return RAGService(retriever=retriever, reranker=NoopReranker(),
+                      assembler=ContextAssembler(min_score=settings.min_score),
+                      llm=llm, settings=settings)
+
+
+def test_多轮历史夹在system与本次提问之间(offline):
+    settings, _e, _store, _r, _d = offline
+    llm = MessageRecorder()
+    service = _service_with(offline, llm, settings)
+
+    session = Session()
+    session = session.with_turn(Turn(role="user", content="什么是生成器？"))
+    session = session.with_turn(Turn(role="assistant", content="边算边吐的迭代器。"))
+
+    service.ask("那它为什么省内存？", history=session.messages())
+
+    system, *rest = llm.messages
+    # system 不变（参考资料仍然来自本轮检索，不被历史污染）
+    assert system["role"] == "system" and "【参考资料】" in system["content"]
+    assert rest == [
+        {"role": "user", "content": "什么是生成器？"},
+        {"role": "assistant", "content": "边算边吐的迭代器。"},
+        {"role": "user", "content": "那它为什么省内存？"},
+    ]
+
+
+def test_单轮时messages只有system与question(offline):
+    settings, _e, _store, _r, _d = offline
+    llm = MessageRecorder()
+    _service_with(offline, llm, settings).ask("什么是生成器？")
+    assert llm.messages[0]["role"] == "system"
+    assert llm.messages[1:] == [{"role": "user", "content": "什么是生成器？"}]
+
+
+def test_历史按条数裁剪(offline):
+    settings, _e, _store, _r, _d = offline
+    llm = MessageRecorder()
+    service = _service_with(offline, llm, settings.replace(max_history_turns=2))
+    turns = [{"role": "user", "content": f"第{i}轮"} for i in range(10)]
+    service.ask("最新问题", history=turns)
+    # 10 轮历史只留最近 2 轮，再拼上本次提问
+    assert [m["content"] for m in llm.messages][1:] == ["第8轮", "第9轮", "最新问题"]
+
+
+def test_历史按字符裁剪且保序(offline):
+    settings, _e, _store, _r, _d = offline
+    llm = MessageRecorder()
+    service = _service_with(offline, llm, settings.replace(max_history_chars=40))
+    turns = [{"role": "user", "content": "x" * 100} for i in range(4)]
+    service.ask("最新问题", history=turns)
+    contents = [m["content"] for m in llm.messages][1:]
+    assert len(contents) == 1                  # 4×100 字 > 40，只装得下一轮
+    assert contents[0] == "最新问题"
+
+
+def test_非法历史项被拒绝():
+    settings = RAGSettings().validate()
+    llm = MessageRecorder()
+    service = RAGService(retriever=None, reranker=NoopReranker(),
+                         assembler=ContextAssembler(min_score=settings.min_score),
+                         llm=llm, settings=settings)
+    try:
+        service.ask("问题", history=[{"role": "robot", "content": "hi"}])
+    except SessionError as e:
+        assert "无法识别" in str(e) or "非法历史项" in str(e)
+    else:                                       # pragma: no cover
+        raise AssertionError("应该抛错")
 
 
 def test_流式done的refused与一次性答案一致(offline):

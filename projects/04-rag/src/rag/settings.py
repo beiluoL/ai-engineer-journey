@@ -48,6 +48,10 @@ class RAGSettings:
     reserved_output: int = 2_048
     # —— 模型侧 ——
     embedding_model: str = "BAAI/bge-m3"
+    # —— 会话侧（17 章）——
+    # 历史裁剪：一轮问答按 ~200 中文字估算，8 轮约 1600 字，占预算的一小部分
+    max_history_turns: int = 8
+    max_history_chars: int = 3000
 
     @classmethod
     def for_profile(cls, profile: str = "dev") -> "RAGSettings":
@@ -87,4 +91,10 @@ class RAGSettings:
             )
         if self.top_k <= 0:
             raise ConfigurationError(f"top_k 必须为正，当前 {self.top_k}")
+        if self.max_history_turns < 0:
+            raise ConfigurationError(
+                f"max_history_turns 不能为负，当前 {self.max_history_turns}")
+        if self.max_history_chars < 0:
+            raise ConfigurationError(
+                f"max_history_chars 不能为负，当前 {self.max_history_chars}")
         return self

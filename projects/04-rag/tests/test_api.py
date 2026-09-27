@@ -13,6 +13,7 @@ import json
 import os
 
 os.environ["RAG_FAKE"] = "1"          # 必须在 import rag.api 之前就位
+os.environ.pop("RAG_SESSIONS_DIR", None)   # 17 章：默认纯内存，别把测试写进仓库
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -81,6 +82,84 @@ def test_index可以重新入库():
     assert r.status_code == 200
     assert r.json()["files_ok"] > 0
     assert r.json()["chunks"] >= before
+
+
+# —— 17 章：会话与多轮 ——
+
+def test_sessions端点全流程():
+    with _client() as c:
+        created = c.post("/sessions", json={"title": "写一个会话"})
+        assert created.status_code == 200
+        sid = created.json()["id"]
+        assert created.json()["turn_count"] == 0
+
+        listed = c.get("/sessions").json()
+        assert [s["id"] for s in listed] == [sid]
+        assert listed[0]["title"] == "写一个会话"
+
+        detail = c.get(f"/sessions/{sid}").json()
+        assert detail["turns"] == []
+
+        renamed = c.patch(f"/sessions/{sid}", json={"title": "改过的名字"})
+        assert renamed.status_code == 200 and renamed.json()["title"] == "改过的名字"
+
+        deleted = c.delete(f"/sessions/{sid}")
+        assert deleted.status_code == 200 and deleted.json()["status"] == "deleted"
+        assert c.get("/sessions").json() == []
+        assert c.get(f"/sessions/{sid}").status_code == 404
+
+
+def test_访问不存在的会话返回404():
+    with _client() as c:
+        assert c.get("/sessions/deadbeef").status_code == 404
+
+
+def test_ask带session_id会把问答记进历史():
+    with _client() as c:
+        sid = c.post("/sessions", json={}).json()["id"]
+        first = c.post("/ask", json={"query": "生成器为什么能省内存？",
+                                     "session_id": sid})
+        assert first.status_code == 200
+        sid_back = first.json()["session_id"]
+        assert sid_back == sid and first.json()["turn_id"]
+        turns = c.get(f"/sessions/{sid}").json()["turns"]
+        assert len(turns) == 2                       # 一条 user + 一条 assistant
+        assert turns[0]["role"] == "user"
+        assert turns[1]["role"] == "assistant"
+        # 引用挂在助手那一轮上，前端渲染时直接拿得到
+        assert turns[1]["sources"]
+
+
+def test_ask不带session_id时不产生会话():
+    with _client() as c:
+        r = c.post("/ask", json={"query": "生成器为什么能省内存？"})
+        assert r.json().get("session_id") is None
+        assert c.get("/sessions").json() == []
+
+
+def test_stream带session_id时done事件带回会话信息():
+    with _client() as c:
+        sid = c.post("/sessions", json={}).json()["id"]
+        with c.stream("POST", "/ask/stream",
+                      json={"query": "生成器为什么能省内存？", "session_id": sid}) as resp:
+            assert resp.status_code == 200
+            events = [json.loads(ln.removeprefix("data: ").strip()) for ln in resp.iter_lines()
+                      if ln.startswith("data: ") and ln != "data: [DONE]"]
+    assert events[0]["kind"] == "retrieved"
+    assert events[-1]["kind"] == "done"
+    done = events[-1]
+    assert done["session_id"] == sid
+    assert done["turn_id"]            # 客户端拿到它就能定位这一轮
+    turns = c.get(f"/sessions/{sid}").json()["turns"]
+    assert len(turns) == 2 and turns[0]["content"] == "生成器为什么能省内存？"
+    assert "".join(e["text"] for e in events if e["kind"] == "delta") == done["answer"]
+
+
+def test_stream用非法session_id直接404():
+    with _client() as c:
+        with c.stream("POST", "/ask/stream",
+                      json={"query": "生成器为什么能省内存？", "session_id": "nope"}) as resp:
+            assert resp.status_code == 404
 
 
 def test_service来自dependency而不是重新装配():

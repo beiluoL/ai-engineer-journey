@@ -30,6 +30,8 @@ from .models import Chunk
 from .parsing import BaseParser
 from .retriever import Retriever
 from .reranker import BaseReranker
+from .session import Turn, fit_history
+from .errors import SessionError
 from .settings import RAGSettings
 from .store import BaseVectorStore
 
@@ -168,6 +170,8 @@ class _PreparedQuery:
     context: AssembledContext
     system: str
     retrieved: list = field(default_factory=list)
+    # 本轮真正喂给模型的历史（已按 settings 裁剪过）
+    history: list = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -202,14 +206,47 @@ class RAGService:
         # 外部要读指标就取 service.metrics —— 免去改 build_components 的返回签名。
         self.metrics = metrics or MetricsRegistry()
 
-    def _prepare(self, query: str, budget: int | None = None) -> _PreparedQuery:
+    @staticmethod
+    def _normalize_history(history) -> list[Turn]:
+        """把调用方给的历史统一成 list[Turn]。
+
+        允许传 `Session.messages()` 那种裸 dict，是为了让 CLI 与测试写起来短一点；
+        但内部一律用 Turn —— 字段缺失会在这里报错，而不是等到喂给模型时
+        才冒出一个 KeyError。
+        """
+        from .session import Turn
+
+        if not history:
+            return []
+        out: list[Turn] = []
+        for item in history:
+            if isinstance(item, Turn):
+                out.append(item)
+            elif isinstance(item, dict):
+                role = item.get("role")
+                content = item.get("content")
+                if role not in ("user", "assistant") or not content:
+                    raise SessionError(f"非法历史项: {item!r}")
+                out.append(Turn(role=role, content=str(content)))
+            else:
+                raise SessionError(f"无法识别的历史类型: {type(item).__name__}")
+        return out
+
+    def _prepare(self, query: str, budget: int | None = None,
+                 history=None) -> _PreparedQuery:
         """ask() 与 stream_answer() 共用的「检索 + 组装」段。
 
         拆出来是为了让两条出路（一次性、流式）的**前置行为完全一致**：
         同样是 top_k、同样过 min_score、同样受 token 预算约束。一旦有人改了
         其中一条路而忘了另一条，必然出现「流式答的和一次性答的不是一回事」。
+
+        history 是上一轮的对话（list[Turn] 或 [{role, content}]）；多轮追问时
+        它在 system 之后、本次 query 之前进入 messages。
         """
         settings = self.settings
+        history_turns = fit_history(
+            self._normalize_history(history),
+            settings.max_history_turns, settings.max_history_chars)
         budget = budget if budget is not None else settings.budget_tokens
 
         mode = "hybrid" if settings.hybrid else "vector"
@@ -233,12 +270,13 @@ class RAGService:
             self.metrics.inc(Names.RETRIEVE_FILTERED, dropped)
 
         system = RAG_SYSTEM_RULES + "【参考资料】\n" + ctx.context_text
-        messages = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": query},
-        ]
+        messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+        # 多轮：历史夹在 system 与本次 query 之间。放后面不行 —— 最后一条消息
+        # 必须是本次问题，否则一部分模型会把「上一轮的提问」当成当前任务。
+        messages.extend(t.to_message() for t in history_turns)
+        messages.append({"role": "user", "content": query})
         return _PreparedQuery(query=query, messages=messages, context=ctx,
-                              system=system, retrieved=scored)
+                              system=system, retrieved=scored, history=history_turns)
 
     @staticmethod
     def _refused_answer(ctx: AssembledContext) -> RAGAnswer:
@@ -247,24 +285,28 @@ class RAGService:
                          context_tokens=ctx.context_tokens, retrieved_sources=[],
                          used_chunks=[])
 
-    def ask(self, query: str, budget: int | None = None) -> RAGAnswer:
+    def ask(self, query: str, budget: int | None = None,
+            history=None) -> RAGAnswer:
         """一次性问答。指标在这里记端到端，拒答单独计数。
 
         端到端计时用 try/finally 而不是包住 return：失败的请求往往最慢，
         只记成功的会把 p99 洗得很好看，而 p99 恰恰是用户投诉的来源。
+
+        history 见 `_prepare`：多轮追问时把上一轮的 turns 传进来。
         """
         self.metrics.inc(Names.REQUESTS)
         t0 = time.perf_counter()
         try:
-            answer = self._ask_once(query, budget)
+            answer = self._ask_once(query, budget, history)
             if answer.refused:
                 self.metrics.inc(Names.REFUSALS)
             return answer
         finally:
             self.metrics.observe(Names.REQUEST_LATENCY, time.perf_counter() - t0)
 
-    def _ask_once(self, query: str, budget: int | None = None) -> RAGAnswer:
-        prepared = self._prepare(query, budget)
+    def _ask_once(self, query: str, budget: int | None = None,
+                  history=None) -> RAGAnswer:
+        prepared = self._prepare(query, budget, history)
         ctx = prepared.context
         # 失败语义 2
         if not ctx.used_chunks:
@@ -293,7 +335,7 @@ class RAGService:
         )
 
     def stream_answer(self, query: str, budget: int | None = None,
-                      ) -> Iterator[AnswerEvent]:
+                      history=None) -> Iterator[AnswerEvent]:
         """流式版 ask()：产出一串事件，交给 API 层封装成 SSE（13 章）。
 
         事件顺序是契约，前端照着消费即可：
@@ -308,7 +350,7 @@ class RAGService:
         t0 = time.perf_counter()
         refused = False
         try:
-            for event in self._stream_events(query, budget):
+            for event in self._stream_events(query, budget, history):
                 if event.kind == "done" and event.payload.get("refused"):
                     refused = True
                 yield event
@@ -318,8 +360,8 @@ class RAGService:
                 self.metrics.inc(Names.REFUSALS)
 
     def _stream_events(self, query: str, budget: int | None = None,
-                       ) -> Iterator[AnswerEvent]:
-        prepared = self._prepare(query, budget)
+                       history=None) -> Iterator[AnswerEvent]:
+        prepared = self._prepare(query, budget, history)
         ctx = prepared.context
         sources = [sc.chunk.source for sc in ctx.used_chunks]
 

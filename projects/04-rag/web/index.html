@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人知识库助手 · Project 04 RAG</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 左侧：会话列表 -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">个人知识库助手</div>
+        <div class="brand-sub" id="stats">加载中…</div>
+      </div>
+      <button class="btn btn-primary" id="new-session">+ 新建对话</button>
+      <div class="section-label">历史会话</div>
+      <ul class="session-list" id="session-list"></ul>
+      <div class="footer">
+        <div class="conn" id="conn"><span class="dot"></span><span id="conn-text">未连接</span></div>
+        <div class="hint">Enter 发送 · Shift+Enter 换行</div>
+      </div>
+    </aside>
+
+    <!-- 右侧：对话 -->
+    <main class="chat">
+      <div class="messages" id="messages"></div>
+      <div class="composer">
+        <textarea id="input" rows="2" placeholder="问点知识库里的问题…（例如：生成器为什么能省内存？）"></textarea>
+        <div class="composer-actions">
+          <span class="error" id="error"></span>
+          <button class="btn btn-primary" id="send">发送</button>
+          <button class="btn" id="stop" disabled>中止</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

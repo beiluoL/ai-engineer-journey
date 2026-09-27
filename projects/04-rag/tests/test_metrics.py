@@ -266,11 +266,11 @@ def test_指标能从stats端点读到():
     assert body["metrics"]["counters"][Names.REQUESTS] >= 1
 
 
-def test_落盘再读回_数字一致(tmp_path):
+def test_落盘再读回_数字一致(workdir):
     reg = MetricsRegistry()
     reg.inc(Names.REQUESTS, 3)
     reg.observe(Names.REQUEST_LATENCY, 0.25)
-    p = reg.save(tmp_path / "sub" / "m.json", meta={"fake": True})
+    p = reg.save(workdir / "sub" / "m.json", meta={"fake": True})
     assert p.exists()
 
     loaded = MetricsRegistry.load(p)
@@ -280,12 +280,12 @@ def test_落盘再读回_数字一致(tmp_path):
     assert loaded["snapshot"]["timings"][Names.REQUEST_LATENCY]["p50"] == 0.25
 
 
-def test_落盘摘要不含原始样本(tmp_path):
+def test_落盘摘要不含原始样本(workdir):
     """只存摘要不存原始样本：文件要小，也避免把单条请求数据写到盘上。"""
     reg = MetricsRegistry()
     for i in range(50):
         reg.observe(Names.REQUEST_LATENCY, 0.1 + i * 0.01)
-    p = reg.save(tmp_path / "m.json")
+    p = reg.save(workdir / "m.json")
     text = p.read_text(encoding="utf-8")
     assert "0.1" in text or True          # 摘要里允许出现统计值
     assert len(text) < 4000               # 50 个样本若全落盘会远超这个量级

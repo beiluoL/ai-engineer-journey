@@ -24,28 +24,36 @@ import logging
 import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .assembler import ContextAssembler
 from .cli import build_components
-from .errors import RAGError
+from .errors import RAGError, SessionNotFoundError
 from .llm import FakeLLMClient
-from .pipeline import RAGService
+from .pipeline import RAGService, looks_refused
+from .session import Session, SessionStore, Turn, build_session_store
 
 logger = logging.getLogger(__name__)
 
 # 默认只索引 data/ 下的示例语料；想要别的目录在 /index 里显式传 paths
 DEFAULT_INDEX_PATHS = ["data/"]
+# 会话落盘目录。空 → 纯内存（重启即丢）。改环境变量即可，代码不需要动。
+SESSION_DIR = os.getenv("RAG_SESSIONS_DIR", "")
+# 前端静态资源（原生 HTML/JS，零构建）。存在才挂载，不存在不影响接口。
+WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 
 
 class AskRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
     budget: int | None = None      # 覆盖本次的【参考资料】token 预算
     top_k: int | None = None       # 非 None 时按指定条数重跑检索
+    session_id: str | None = None  # 17 章：带上就是多轮追问，答案与提问都会记进历史
 
 
 class AskResponse(BaseModel):
@@ -54,10 +62,55 @@ class AskResponse(BaseModel):
     sources: list[str] = Field(default_factory=list)
     context_tokens: int = 0
     refused: bool = False
+    session_id: str | None = None  # 回给前端，下一轮带着它就行
+    turn_id: str | None = None
+
+
+class CreateSessionRequest(BaseModel):
+    title: str = "新对话"
+
+
+class RenameRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=24)
+
+
+class TurnOut(BaseModel):
+    id: str
+    role: str
+    content: str
+    created_at: float = 0.0
+    sources: list[str] = Field(default_factory=list)
+    refused: bool = False
+
+
+class SessionInfo(BaseModel):
+    """列表页用的精简视图：不带历史，详情端点才有。"""
+
+    id: str
+    title: str
+    turn_count: int = 0
+    created_at: float = 0.0
+    updated_at: float = 0.0
+
+
+class SessionDetail(SessionInfo):
+    turns: list[TurnOut] = Field(default_factory=list)
 
 
 class IndexRequest(BaseModel):
     paths: list[str] = Field(default_factory=lambda: list(DEFAULT_INDEX_PATHS))
+
+
+def _info(session: Session) -> SessionInfo:
+    return SessionInfo(id=session.session_id, title=session.title,
+                       turn_count=session.turn_count,
+                       created_at=session.created_at, updated_at=session.updated_at)
+
+
+def _detail(session: Session) -> SessionDetail:
+    info = _info(session)
+    return SessionDetail(**info.model_dump(),
+                         turns=[TurnOut(**t.to_dict()) for t in session.turns])
 
 
 def _build_llm(fake: bool):
@@ -104,8 +157,13 @@ def _make_lifespan(paths: list[str]):
     return lifespan
 
 
-def create_app(index_paths: list[str] | None = None) -> FastAPI:
-    """构造应用。`index_paths` 传给 lifespan，决定是否启动时先建索引。"""
+def create_app(index_paths: list[str] | None = None,
+               session_store: SessionStore | None = None) -> FastAPI:
+    """构造应用。`index_paths` 传给 lifespan，决定是否启动时先建索引。
+
+    `session_store` 可以外部注入（测试与 demo 用内存实现），否则按
+    `RAG_SESSIONS_DIR` 决定「落盘」还是「纯内存」。
+    """
     paths = list(index_paths if index_paths is not None else DEFAULT_INDEX_PATHS)
     app = FastAPI(title="Personal RAG API (Project 04)", version="0.1.0",
                   lifespan=_make_lifespan(paths))
@@ -146,32 +204,150 @@ def create_app(index_paths: list[str] | None = None) -> FastAPI:
             "metrics": service.metrics.snapshot() if service else {},
         }
 
+    app.state.session_store = session_store or build_session_store(SESSION_DIR)
+
+    def get_session_store(request: Request) -> SessionStore:
+        store = getattr(request.app.state, "session_store", None)
+        if store is None:
+            raise HTTPException(status_code=503, detail="会话存储尚未就绪")
+        return store
+
+    # —— 17 章：会话端点 ——
+
+    @app.post("/sessions", response_model=SessionInfo)
+    async def create_session(req: CreateSessionRequest,
+                             request: Request) -> SessionInfo:
+        store = get_session_store(request)
+        return _info(store.create(req.title.strip() or "新对话"))
+
+    @app.get("/sessions", response_model=list[SessionInfo])
+    async def list_sessions(request: Request) -> list[SessionInfo]:
+        return [_info(s) for s in get_session_store(request).list()]
+
+    @app.get("/sessions/{session_id}", response_model=SessionDetail)
+    async def get_session(session_id: str, request: Request) -> SessionDetail:
+        try:
+            return _detail(get_session_store(request).get(session_id))
+        except SessionNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+
+    @app.patch("/sessions/{session_id}", response_model=SessionInfo)
+    async def rename_session(session_id: str, req: RenameRequest,
+                             request: Request) -> SessionInfo:
+        store = get_session_store(request)
+        try:
+            return _info(store.rename(session_id, req.title))
+        except SessionNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        except RAGError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
+    @app.delete("/sessions/{session_id}")
+    async def delete_session(session_id: str, request: Request) -> dict:
+        store = get_session_store(request)
+        try:
+            store.delete(session_id)
+        except SessionNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        return {"status": "deleted", "id": session_id}
+
     @app.post("/ask", response_model=AskResponse)
-    async def ask(req: AskRequest, service: RAGService = Depends(get_service)) -> AskResponse:
+    async def ask(req: AskRequest, service: RAGService = Depends(get_service),
+                  request: Request = None) -> AskResponse:
+        store = get_session_store(request) if req.session_id else None
+        session = None
+        if store is not None:
+            try:
+                session = store.get(req.session_id)   # 不存在 → 统一的 404 语义
+            except SessionNotFoundError as e:
+                raise HTTPException(status_code=404, detail=str(e)) from e
         # 同步链路 + 同步的 embedding 客户端（内部 run_sync → asyncio.run），
         # 在 async 端点里直接调用就会撞
         #     RuntimeError: asyncio.run() cannot be called from a running event loop
         # 所以整段丢线程池：线程里没有 running loop，且 I/O 等待也不会堵住事件循环。
         try:
-            answer = await asyncio.to_thread(service.ask, req.query, req.budget)
+            answer = await asyncio.to_thread(
+                service.ask, req.query, req.budget,
+                history=session.messages() if session else None)
         except RAGError as e:
             logger.warning("问答失败: %s", e)
             raise HTTPException(status_code=502, detail=str(e)) from e
+        if session is None:
+            return AskResponse(answer=answer.answer,
+                               citations=[c.anchor() for c in answer.citations],
+                               sources=answer.retrieved_sources,
+                               context_tokens=answer.context_tokens,
+                               refused=answer.refused)
+        # 一轮问答 = 两条 Turn，先 user 后 assistant；顺序错了历史就废了
+        session = store.append_turn(session.session_id, Turn(role="user", content=req.query))
+        session = store.append_turn(session.session_id, Turn(
+            role="assistant", content=answer.answer,
+            sources=answer.retrieved_sources, refused=answer.refused))
         return AskResponse(
             answer=answer.answer,
             citations=[c.anchor() for c in answer.citations],
             sources=answer.retrieved_sources,
             context_tokens=answer.context_tokens,
             refused=answer.refused,
+            session_id=session.session_id,
+            turn_id=session.last_turn.turn_id if session.last_turn else None,
         )
 
     @app.post("/ask/stream")
-    async def ask_stream(req: AskRequest,
-                         service: RAGService = Depends(get_service)) -> StreamingResponse:
+    async def ask_stream(req: AskRequest, service: RAGService = Depends(get_service),
+                         request: Request = None) -> StreamingResponse:
+        store = get_session_store(request) if req.session_id else None
+        session = None
+        if store is not None:
+            try:
+                session = store.get(req.session_id)     # 非法 id → 先报错，别吐一半
+            except SessionNotFoundError as e:
+                raise HTTPException(status_code=404, detail=str(e)) from e
+            # 提问先落库：客户端中途关掉页面，这一轮也不会丢在半路上。
+            # 注意顺序 —— 历史快照必须在 append 之前取，否则刚写进去的
+            # user turn 会变成「这一轮的历史」，下一轮就重了一整轮。
+            history = session.messages()
+            session = store.append_turn(session.session_id,
+                                        Turn(role="user", content=req.query))
+            session_id = session.session_id
+
+            def _record_answer(answer_text: str, sources: list[str], refused: bool) -> None:
+                """流结束后补上助手那一轮。
+
+                为什么放在这里而不是换个线程：生成器是同步的，它跑在线程池里，
+                此时再起线程去写文件没有意义；而用户按「中止」也会走到底，
+                所以**已生成的内容必须补记** —— 不然历史里只剩用户问过什么。
+                """
+                store.append_turn(session_id, Turn(
+                    role="assistant", content=answer_text,
+                    sources=sources, refused=refused))
+        else:
+            session_id = None
+            history = None
+
+            def _record_answer(answer_text: str, sources: list[str], refused: bool) -> None:
+                return None                             # 没带 session 就不记历史
+
+        def sync_gen():
+            buf: list[str] = []
+            for event in service.stream_answer(req.query, budget=req.budget,
+                                               history=history):
+                if event.kind == "delta":
+                    buf.append(event.payload.get("text", ""))
+                yield event
+            answer_text = "".join(buf)
+            # 流式路径拿不到 assembled 结构的引用，来源留空；一次性 /ask 才有完整引用
+            _record_answer(answer_text, [], looks_refused(answer_text))
+
         async def gen() -> AsyncIterator[str]:
             try:
-                async for event in _to_async(service.stream_answer(req.query, budget=req.budget)):
-                    payload = json.dumps({"kind": event.kind, **event.payload},
+                async for event in _to_async(sync_gen()):
+                    extra = {}
+                    if session_id:
+                        extra = {"session_id": session_id}
+                        if event.kind == "done":
+                            extra["turn_id"] = session.last_turn.turn_id
+                    payload = json.dumps({"kind": event.kind, **extra, **event.payload},
                                          ensure_ascii=False)
                     yield f"data: {payload}\n\n"
             except RAGError as e:
@@ -207,6 +383,12 @@ def create_app(index_paths: list[str] | None = None) -> FastAPI:
             "chunks_stored": report.chunks_stored,
             "failed": len(report.files_failed), "chunks": store.count(),
         }
+
+    # 前端静态页（原生 HTML/JS，零构建）**必须最后挂**：Starlette 的路由按注册顺序
+    # 匹配，`mount("/", ...)` 如果注册在 /health 之前，会把所有接口都吃成 404 ——
+    # 这个坑只有真起服务才看得见，TestClient 因为走的是 ASGI 直连也复现不出来。
+    if WEB_DIR.is_dir():
+        app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 
     return app
 

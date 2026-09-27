@@ -11,12 +11,14 @@
     ├── EmbeddingError         向量化失败（03 章）
     │   └── EmbeddingRateLimitError  429，可指数退避后重试
     └── RetrievalError         检索 / 精排失败（05、07 章）
+    └── SessionError           会话读写失败（17 章）
+        └── SessionNotFoundError  会话 id 不存在
 """
 
 from __future__ import annotations
 
 
-class RAGError(Exception):
+class RAGError(Exception):  # noqa: D101 - 见下方层级说明
     """所有本项目异常的基类。上层写 except RAGError 即可兜住整条链路。"""
 
 
@@ -55,3 +57,11 @@ class RetrievalError(RAGError):
 
 class RerankError(RetrievalError):
     """精排失败（07 章）。降级路径是 NoopReranker。"""
+
+
+class SessionError(RAGError):
+    """会话读写失败（17 章）。上面只认「写入失败」，不认「查不到」。"""
+
+
+class SessionNotFoundError(SessionError):
+    """会话 id 不存在。"""

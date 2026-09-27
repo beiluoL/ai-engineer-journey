@@ -79,16 +79,17 @@ Personal RAG v1.0
 | 14 | [Real RAG Evaluation](milestones/14-real-rag-evaluation.md) | ✅ | 30 条 EvalCase + 真实 embedding/LLM 评估 |
 | 15 | [Observability](milestones/15-observability.md) | ✅ | metrics 埋点：latency / 分数分布 / 调用计数 |
 | 16 | [Real Reranker & Calibration](milestones/16-real-reranker-and-calibration.md) | ✅ | LLM 精排 A/B + min_score 阈值校准 + 指标跨进程对比 |
+| 17 | [Chat UI & Session History](milestones/17-chat-ui-and-session-history.md) | ✅ | 前端 Chat UI / 会话历史 / 多轮追问 |
 
 状态：✅ 内容已就绪 · ✅ 代码已落地 · ✅ 测试全绿 · ✅ 已配真实运行截图
 
 ## 当前状态
 
-**16 / 16 个 Milestone 文档 + `src/rag/` + 离线/真实服务测试 + 真实运行截图** 全部完成。RAG 两条链路（离线索引 `parse → chunk → embed → store`、在线问答 `retrieve → rerank → assemble → llm`）已跑通；新增真实 embedding + Chroma 持久化、真实 LLM、FastAPI Web API、真实 RAG 评估、可观测性、真实精排与阈值校准六章。
+**17 / 17 个 Milestone 文档 + `src/rag/` + 离线/真实服务测试 + 真实运行截图** 全部完成。RAG 两条链路（离线索引 `parse → chunk → embed → store`、在线问答 `retrieve → rerank → assemble → llm`）已跑通；新增真实 embedding + Chroma 持久化、真实 LLM、FastAPI Web API、真实 RAG 评估、可观测性、真实精排与阈值校准六章。
 
 ## 当前版本
 
-**v0.7 精排与校准**：`src/rag/` 共 18 个模块，170 项 pytest 全绿。真实链路已跑通：
+**v0.8 产品化**：`src/rag/` 共 19 个模块 + `web/` 原生前端，197 项 pytest 全绿。真实链路已跑通：
 
 - `DashScopeEmbeddingClient` 接百炼 `text-embedding-v3`
 - `ChromaVectorStore` 落盘 `chroma_db/rag_chunks/`，重启后数据可恢复
@@ -99,18 +100,20 @@ Personal RAG v1.0
 - 可观测性：`MetricsRegistry` + 计量壳（embedding/LLM），四段耗时、分数分桶、`/stats` 直接读
 - 真实精排 `LLMReranker`（DeepSeek listwise）：MRR 0.711→0.767；`min_score` 按 F1 扫描校准（余弦量纲最优 0.60）
 - 指标落盘 `--save/--baseline` 跨进程对比，20% 容忍带不误报
-- CLI 支持 `--index` 与 `--ask --fake` 全离线演示；`demo_12/13/14/15/16/17` 支持真实服务全流程演示
+- 前端零构建 Chat UI：会话列表 / 流式打字 / 引用来源 / 中止生成；SSE 增量渲染 + 历史自动落库
+- CLI 支持 `--index` 与 `--ask --fake` 全离线演示；`demo_12/13/14/15/16/17/18` 支持真实服务全流程演示
 
 ## 项目结构
 
 ```text
 projects/04-rag/
-├── data/               # 示例知识库（真实 .md/.txt 样本 + 30 条 EvalCase）
-├── demos/              # 17 个真实运行 demo（demo_01～17）+ 公共装置
+├── data/               # 示例知识库 + 30 条 EvalCase；会话落盘 data/sessions/（可选）
+├── demos/              # 18 个真实运行 demo（demo_01～18）+ 公共装置
 ├── src/rag/            # 五层结构（见 09 章，呼应 P03）
-│   ├── api.py          # 接入层：FastAPI Web API（SSE 流式）
+│   ├── api.py          # 接入层：FastAPI Web API（SSE 流式 + 会话端点 + 静态页挂载）
 │   ├── cli.py          # 接入层：python -m rag.cli --index/--ask
-│   ├── pipeline.py     # 编排层：IngestionPipeline + RAGService
+│   ├── pipeline.py     # 编排层：IngestionPipeline + RAGService（支持多轮 history）
+│   ├── session.py      # 会话层：Turn / Session / 内存与 JSON 文件存储（17 章）
 │   ├── retriever.py    # 能力层：vector / hybrid(RRF) / MMR
 │   ├── reranker.py     # 能力层：Noop / Fake / SiliconFlow / LLMReranker（16 章）
 │   ├── assembler.py    # 能力层：ContextAssembler（编号溯源 + token 预算）
@@ -126,7 +129,8 @@ projects/04-rag/
 │   ├── errors.py       # 支撑层：RAGError 层级
 │   └── llm.py          # 复用/兼容层：LLMClient 封装
 ├── tests/              # 全部离线（FakeEmbeddingClient + InMemoryVectorStore）
-└── assets/             # 39 张真实运行截图
+├── web/                # 17 章：零构建原生 Chat UI（index.html / style.css / app.js）
+└── assets/             # 44 张真实运行截图
 ```
 
 ## 已掌握能力
@@ -139,11 +143,12 @@ projects/04-rag/
 - 忠实度审计，逐句标出无出处内容，并可用注入式自测验证判据
 - 真实 RAG 评估：30 条 EvalCase，top_k 对照、忠实度审计、可复现性验证
 - 可观测性：四段耗时占比、召回分数分桶、embedding/LLM 调用计数（并发安全）
+- 产品化：零构建前端 Chat UI、会话历史、多轮追问
 
 ## 下一步
 
-1. 产品化：前端 Chat UI、会话历史、多轮追问
-2. 有 cross-encoder 权限后，把 `LLMReranker` 换成 `bge-reranker-v2-m3`（阈值重扫一遍）
-3. 把 pytest/CI 接到 GitHub Actions，PR 上跑 check_links + 全量测试
+1. 有 cross-encoder 权限后，把 `LLMReranker` 换成 `bge-reranker-v2-m3`（阈值重扫一遍）
+2. 把 pytest/CI 接到 GitHub Actions，PR 上跑 check_links + 全量测试
+3. 前端 UI 继续打磨：移动端适配、Markdown 渲染、代码块高亮、深色模式
 
 **前置项目**：[Project 03 — AI Application](../03-ai-application/)
