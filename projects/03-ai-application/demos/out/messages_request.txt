@@ -1,0 +1,67 @@
+=== 1. 每条消息的角色与内容 ===
+[0] system    你是一个简洁、耐心的中文 AI 助手。
+[1] user      我叫小明，写了 5 年 Java 后端。
+[2] assistant 你好小明，想把它做成 AI 应用？
+[3] user      对，想把简历里的技能抽成结构化数据。
+[4] assistant 好的，我先调一次技能抽取工具。 → tool_calls:extract_skills
+[5] tool      {"skills":["Java","Spr…
+[6] assistant 抽到了：Java、Spring Boot，工…
+
+=== 2. 完整 messages 数组（json.dumps）===
+[
+  {
+    "role": "system",
+    "content": "你是一个简洁、耐心的中文 AI 助手。"
+  },
+  {
+    "role": "user",
+    "content": "我叫小明，写了 5 年 Java 后端。"
+  },
+  {
+    "role": "assistant",
+    "content": "你好小明，想把它做成 AI 应用？"
+  },
+  {
+    "role": "user",
+    "content": "对，想把简历里的技能抽成结构化数据。"
+  },
+  {
+    "role": "assistant",
+    "content": "好的，我先调一次技能抽取工具。",
+    "tool_calls": [
+      {
+        "id": "call_1",
+        "type": "function",
+        "function": {
+          "name": "extract_skills",
+          "arguments": "{}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "call_1",
+    "content": "{\"skills\":[\"Java\",\"Spring Boot\"],\"years\":5}"
+  },
+  {
+    "role": "assistant",
+    "content": "抽到了：Java、Spring Boot，工作 5 年。"
+  }
+]
+
+=== 3. 请求体里除 messages 之外的字段 ===
+  model        = deepseek-chat
+  stream       = False
+  temperature  = 0.7
+  top_p        = 1.0
+  max_tokens   = 1024
+
+=== 4. token 估算 ===
+  消息条数        = 7
+  正文字符数      = 160
+  估算 token      = 208（estimate_messages_tokens）
+  含 role 开销后  = 1 个字符约 1.30 个 token
+
+=== 5. 发送前校验（故意把 role 写成 AI）===
+  ValueError: 第 2 条消息 role 非法: 'AI'

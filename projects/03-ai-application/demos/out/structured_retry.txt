@@ -1,0 +1,31 @@
+===== 1. 三种常见输出，都能抠出 JSON =====
+  裸 JSON       → {'skills': ['Java'], 'years': 5}
+  ```json 围栏   → {'skills': ['Java', 'Spring Boot'], 'years': 5}
+  前后带解释        → {'skills': ['Java'], 'years': 5}
+
+===== 2. 完全不是 JSON =====
+  输入 '抱歉，我做不到。'
+  → StructuredOutputError: 输出不是合法 JSON：没有找到 JSON 结构: line 1 column 1 (char 0)
+  输入 '技能：Java、Spring Boot'
+  → StructuredOutputError: 输出不是合法 JSON：没有找到 JSON 结构: line 1 column 1 (char 0)
+
+===== 3. 是 JSON 但字段不对 =====
+  {"skills": ["Java"], "years": 999}
+  → StructuredOutputError: 字段校验失败：years: Input should be less than or equal to 50
+  {"skills": ["Java"]}
+  → StructuredOutputError: 字段校验失败：years: Field required
+  {"skills": "Java", "years": 5}
+  → StructuredOutputError: 字段校验失败：skills: Input should be a valid list
+  → 错误信息要带上「哪错了」，才能回灌给模型让它改
+
+===== 4. 真跑一次：第一次坏、重试后成功 =====
+结构化输出第 1 次重试：输出不是合法 JSON：没有找到 JSON 结构: line 1 column 1 (char 0)
+  模型被调用了几次 : 2
+  最终结果         : skills=['Java', 'Spring Boot'] years=5
+  类型             : SkillSet（已经是对象，不是字符串）
+  → max_retry=1 意味着最多重试一次；重试次数要设上限，否则坏模型会无限循环
+
+===== 5. 一直坏下去会怎样 =====
+结构化输出第 1 次重试：输出不是合法 JSON：没有找到 JSON 结构: line 1 column 1 (char 0)
+  StructuredOutputError: 结构化输出重试 2 次仍失败：输出不是合法 JSON：没有找到 JSON 结构: line 1 column 1 (char 0)
+  → 失败必须是显式异常，不能返回 None 让调用方拿到空对象

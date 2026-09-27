@@ -1,0 +1,26 @@
+===== 1. 模板本身 vs 渲染结果 =====
+  模板 : '你是一个简洁、耐心的中文 AI 助手。\n回答控制在 {max_sentences} 句话以内，直接给结论，不要复述问题。'
+  必填变量 : ('max_sentences',)
+  渲染后 :
+    你是一个简洁、耐心的中文 AI 助手。
+    回答控制在 3 句话以内，直接给结论，不要复述问题。
+
+===== 2. 缺变量：直接报错，不静默渲染 =====
+  ValueError: Prompt「default-system」缺少变量: ['max_sentences']
+
+===== 3. 变量名拼错：也报错 =====
+  ValueError: Prompt「default-system」传入了模板中不存在的变量: ['max_sentense']
+  → 拼错不报的话，模型会看到一句没渲染的 {max_sentences}，答案就废了
+
+===== 4. 换 system prompt，发出去的第一条就变了 =====
+  [default-system] system 首条: 你是一个简洁、耐心的中文 AI 助手。
+回答控制在 3 句话以内，直接给结论，不...
+         messages 共 2 条，估算 66 token
+  [strict] system 首条: 你是严谨的技术审稿人。回答不超过 3 句，必须给结论。...
+         messages 共 2 条，估算 53 token
+
+===== 5. system 的长短直接进 token 预算 =====
+  空 system           system   0 字符 → 整包估算  21 token
+  默认 system          system  46 字符 → 整包估算  66 token
+  长 system（加规则）      system  87 字符 → 整包估算  97 token
+  → system 是每条请求都带的固定开销；轮数一多，它就是最先该精简的地方

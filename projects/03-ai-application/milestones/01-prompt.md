@@ -283,3 +283,5 @@ template = '请输出 JSON：{{"name": "{name}"}}'
 普通问答路径（`ai-app "..."`），Prompt 经 `DEFAULT_SYSTEM` 模板渲染后注入：
 
 ![普通问答](../assets/term-qa.png)
+
+![真实运行：换一句 system prompt 发出去的第一条就变了（66 vs 53 token）；system 长短直接进预算（空 21 / 默认 66 / 加规则 97 token）](../assets/term-prompt-render.png)

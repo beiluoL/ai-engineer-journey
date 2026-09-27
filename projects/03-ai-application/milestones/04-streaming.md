@@ -272,3 +272,5 @@ decoder.decode(value, {stream: true})      // ✅
 流式路径（`ai-app "..." --stream`），token 边生成边打印，呈现「打字机」效果：
 
 ![流式输出](../assets/term-stream.png)
+
+![真实运行：65 块增量累加严格等于一次性答案（应进 CI 的断言）；反例——若分块发累积前缀，前端按追加消费会把同一段重复显示](../assets/term-stream-chunks.png)

@@ -1,0 +1,39 @@
+=== 1. 预算配置 ===
+  context_window  = 1600（输入与输出共享）
+  reserved_output = 128（预留给本次回答）
+  history_budget  = 736（历史可用的上限）
+  软阈值：超过 736 → trim（裁剪）
+  硬阈值：超过 1472 → overflow（报错）
+
+=== 2. 逐轮提问：发送前 vs 实际发出（FakeClient 离线）===
+  第  1 轮：发送前  0 条 /   25 token → 实际发送  2 条 /   98 token  判定 ok
+  第  2 轮：发送前  2 条 /  197 token → 实际发送  4 条 /  270 token  判定 ok
+  第  3 轮：发送前  4 条 /  369 token → 实际发送  6 条 /  442 token  判定 ok
+  第  4 轮：发送前  6 条 /  541 token → 实际发送  8 条 /  614 token  判定 ok
+  第  5 轮：发送前  8 条 /  713 token → 实际发送 10 条 /  786 token  判定 ok
+  第  6 轮：发送前 10 条 /  885 token → 实际发送 10 条 /  786 token  判定 trim
+  第  7 轮：发送前 10 条 /  885 token → 实际发送 10 条 /  786 token  判定 trim
+  第  8 轮：发送前 10 条 /  885 token → 实际发送 10 条 /  786 token  判定 trim
+  → memory.py 共打了 3 次裁剪 WARNING，例如：
+    历史超预算，裁剪掉 2 条（预算 736 token）
+
+=== 3. 最后一轮的裁剪前 / 后对比 ===
+  裁剪前：history 10 条 / 估算 885 token（判定 trim）
+  裁剪后：history 8 条 / 估算 786 token（含 system 与本轮输入）
+  丢弃   ：2 条 / 约 99 token
+  预算上限 history_budget = 736 token
+  system 仍排在首位   ：True
+  最后一轮 user 仍保留：True
+
+=== 4. 单独调用 trim_to_budget()（超长历史，一次裁到位）===
+  裁剪前：24 条 / 2149 token
+  丢弃   ：16 条
+  裁剪后：8 条 / 733 token
+  裁剪后首条 role = user、末条 role = assistant
+  首条是 user：这次刚好落在「轮」的边界上
+
+=== 5. 会话隔离（SessionStore）===
+  会话 user-A：2 条，本轮输入 = 我是 A 用户，我在学 Rust。
+  会话 user-B：2 条，本轮输入 = 我是 B 用户，我在学 Go。
+  两个会话是不同对象：True
+  A 的历史里没有 B：True

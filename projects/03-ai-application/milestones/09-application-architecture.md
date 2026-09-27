@@ -267,3 +267,5 @@ Prompt 工程 + 消息结构 + 结构化输出 + 流式 + 记忆
 整套 `src/` 用 `FakeClient`（不联网、不用真实 Key）做离线测试，当前 **61 / 61 通过**：
 
 ![pytest 61 passed](../assets/term-pytest.png)
+
+![真实运行：真起 uvicorn 把五层一次打通——/health /chat /chat/stream（37 帧 SSE）/chat/structured /chat/agent /reset；schema_name 写错在 API 层挡成 400、空 message 挡成 422；最后全量测试 61 passed](../assets/term-arch-e2e.png)

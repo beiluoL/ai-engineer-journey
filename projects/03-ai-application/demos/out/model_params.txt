@@ -1,0 +1,26 @@
+=== 1. 同一段 messages，四个场景的真实请求体 ===
+  extract   temperature=0.0  top_p=1.0  max_tokens=512
+  code      temperature=0.2  top_p=1.0  max_tokens=1024
+  chat      temperature=0.7  top_p=1.0  max_tokens=1024
+  creative  temperature=1.0  top_p=1.0  max_tokens=2048
+  原始默认值：temperature=0.7 top_p=1.0 max_tokens=1024
+  PROFILES 里可选的场景：extract, code, chat, creative
+
+=== 2. temperature 改了什么（对同一份原始打分做 softmax）===
+  原始打分：答案=3.2  结论=2.6  可能=2.0  也许=1.2  不好说=0.5
+  temperature=0.0  最高概率词=答案(1.00)  概率分布={答案:1.00, 结论:0.00, 可能:0.00, 也许:0.00, 不好说:0.00}
+                top_p=0.9 过滤后只剩 1 个候选：答案
+  temperature=0.7  最高概率词=答案(0.59)  概率分布={答案:0.59, 结论:0.25, 可能:0.11, 也许:0.03, 不好说:0.01}
+                top_p=0.9 过滤后只剩 3 个候选：答案、结论、可能
+  temperature=1.2  最高概率词=答案(0.44)  概率分布={答案:0.44, 结论:0.27, 可能:0.16, 也许:0.08, 不好说:0.05}
+                top_p=0.9 过滤后只剩 4 个候选：答案、结论、可能、也许
+
+=== 3. presence_penalty 改了什么（「答案」已经说过一次）===
+  penalty=0.0  最高概率词=答案(0.59)  「答案」的概率=0.59
+  penalty=1.5  最高概率词=结论(0.53)  「答案」的概率=0.15
+
+=== 4. max_tokens 决定输出会不会被截断 ===
+  这段回复估算 = 205 token（312 个字符）
+  max_tokens=  128 → 会被截断，finish_reason=length，尾部 77 token 丢掉
+  max_tokens=  512 → 完整输出，还剩 307 token 余量
+  max_tokens= 2048 → 完整输出，还剩 1843 token 余量

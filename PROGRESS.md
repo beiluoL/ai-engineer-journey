@@ -32,15 +32,15 @@
 
 | 部分 | 状态 |
 |------|------|
-| Project 01 milestones 01-10 | ✅ 全部成文；01-10 每章均配真实运行截图 |
+| Project 01 milestones 01-10 | ✅ 全部成文；每章 2 张真实运行截图（assets 共 22 张，新增 08/09 两个真实可跑 demo） |
 | Project 01 src + tests | ✅ v0.2 骨架，6 个 unittest 全绿（已实测真实调用 DeepSeek API 成功） |
 | Project 01 exercises | ✅ 01-basic 8 题参考答案已跑通并判卷 8/8 🎓；02 / 03 / 04 已播种（待做） |
-| Project 02 milestones | ✅ 10/10 全部已校对；每章均配真实运行截图 |
+| Project 02 milestones | ✅ 10/10 全部已校对；每章 2 张真实运行截图（assets 共 23 张，新增 async-http / config / logging / fastapi 四个真实 demo） |
 | Project 02 src | ✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek |
-| Project 03 milestones | ✅ 9/9 全部成文；每章均配真实运行截图 |
+| Project 03 milestones | ✅ 9/9 全部成文；每章 2 张真实运行截图（assets 共 18 张，新增 prompt / structured / stream / agent / architecture 五个真实 demo） |
 | Project 03 src + tests | ✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图 |
 | Project 04 milestones | ✅ 14/14 全部成文（ingestion → chunking → embedding → vector db → retrieval → similarity → rerank → context → pipeline → evaluation → real-service → real-llm → fastapi-web-api → real-rag-evaluation） |
-| Project 04 src | ✅ v0.5 落地：17 个模块，142 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估均已跑通，14 章全部配真实运行截图 |
+| Project 04 src | ✅ v0.5 落地：17 个模块，142 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估均已跑通，14 章每章 2+ 张真实运行截图（assets 共 32 张） |
 | Project 05-10 | ⬜ 未开始 |
 | publishing/tutorials | ✅ 6 篇图文教程已发布（md + html） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials） |

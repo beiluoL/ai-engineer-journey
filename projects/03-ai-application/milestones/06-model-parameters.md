@@ -140,6 +140,8 @@ payload = {
 
 ![真实运行：四个 Profile 的请求体 + temperature / top_p / penalty / max_tokens 的实际影响](../assets/term-params.png)
 
+![真实运行：presence_penalty=1.5 把「答案」的概率从 0.59 压到 0.15（最高词换成「结论」）；max_tokens=128 会被截断、finish_reason=length，尾部 77 token 丢掉](../assets/term-params-penalty.png)
+
 ---
 
 ## 5. Java ↔ Python 对比

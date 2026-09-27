@@ -303,3 +303,5 @@ description 是模型唯一的决策依据，值得认真写。
 工具调用路径（`ai-app "..." --agent`）：模型先返回 `tool_calls`，程序执行本地函数后把结果回灌，模型再生成最终回答：
 
 ![工具调用](../assets/term-agent.png)
+
+![真实运行：完整两轮循环的消息轨迹（assistant tool_calls → tool 回灌带 tool_call_id → assistant 最终回答）；工具不存在时返回 {'error': ...} 交给模型纠正；一直要调工具则轮数到 4 抛 ToolLoopError](../assets/term-agent-loop.png)

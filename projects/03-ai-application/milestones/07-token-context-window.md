@@ -161,6 +161,8 @@ class Budget:
 
 ![真实运行：中英混排的 token 估算、1 token 等于多少字符、上下文占用条与成本](../assets/term-token.png)
 
+![真实运行：上下文占用条（200 轮后占满 29.7%，窗口是输入输出共享的）；成本随轮数超线性增长——30 轮输入是单轮的 465 倍](../assets/term-token-window.png)
+
 ---
 
 ## 5. Java ↔ Python 对比

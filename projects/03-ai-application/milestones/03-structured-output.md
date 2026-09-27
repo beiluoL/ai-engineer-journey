@@ -260,3 +260,5 @@ JSON Mode 只保证**语法是合法 JSON**，`{"error": "我不知道"}` 也是
 结构化输出路径（`ai-app "..." --structured skill`），`schema.py` 解析 + Pydantic 校验后拿到强类型对象：
 
 ![结构化输出](../assets/term-structured.png)
+
+![真实运行：字段不对时 StructuredOutputError 会点名哪个字段错了（可回灌重试）；第一次坏、第二次好的真实重试过程（调用 2 次）；一直坏则抛异常而不是返回空对象](../assets/term-structured-retry.png)

@@ -87,6 +87,8 @@ messages 拼错了 → 模型表现诡异，而且很难定位
 
 ![真实运行：多轮 messages 的完整请求体、tool 往返与 token 估算](../assets/term-messages.png)
 
+![真实运行：请求体里除 messages 之外的字段（model / stream / temperature / top_p / max_tokens）、token 估算（1 字符 ≈ 1.30 token），以及把 role 写成 AI 时发送前校验报 ValueError](../assets/term-messages-payload.png)
+
 ### 3.3 代码里怎么累积
 
 ```python

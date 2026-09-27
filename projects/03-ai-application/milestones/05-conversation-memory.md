@@ -80,6 +80,8 @@ def trim_to_budget(turns: list[dict], budget: int) -> list[dict]:
 
 ![真实运行：预算裁剪的逐轮前后对比（FakeClient 离线，8 轮后历史停止增长）](../assets/term-memory.png)
 
+![真实运行：裁剪前 10 条 885 token → 裁剪后 8 条 786 token（system 仍在首位、本轮 user 仍保留）；trim_to_budget() 一次裁到位（24 条 → 8 条）；两个 session 互不串台](../assets/term-memory-trim.png)
+
 ### 3.3 策略二：摘要压缩
 
 裁剪是「丢掉」，摘要是「压缩」。做法：

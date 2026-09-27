@@ -115,7 +115,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：接入个人知识库的 RAG Assistant
 
-**状态**：✅ 14/14 Milestone 成文 · ✅ src/rag/ 落地（17 模块） · ✅ 142 项 pytest 离线全绿 · ✅ 25 张真实运行截图
+**状态**：✅ 14/14 Milestone 成文 · ✅ src/rag/ 落地（17 模块） · ✅ 142 项 pytest 离线全绿 · ✅ 32 张真实运行截图
 
 **14 个 Milestone**：
 ```
