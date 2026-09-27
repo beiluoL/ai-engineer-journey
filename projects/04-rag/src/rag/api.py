@@ -137,10 +137,13 @@ def create_app(index_paths: list[str] | None = None) -> FastAPI:
     async def stats(request: Request) -> dict:
         store = getattr(request.app.state, "store", None)
         settings = getattr(request.app.state, "settings", None)
+        service = getattr(request.app.state, "service", None)
         return {
             "chunks": store.count() if store else 0,
             "embedding_model": (store.model_name if store else "") or settings.embedding_model,
             "top_k": settings.top_k if settings else 0,
+            # 15 章：指标直接挂在 service 上，这里只做搬运，不加工
+            "metrics": service.metrics.snapshot() if service else {},
         }
 
     @app.post("/ask", response_model=AskResponse)

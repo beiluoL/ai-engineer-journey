@@ -144,7 +144,8 @@ def test_budget参数可覆盖settings(offline):
 
 def test_离线装置本身可用(offline):                             # 保护 demo 依赖的组合
     settings, embedding, store, retriever, _svc = offline
-    assert isinstance(embedding, FakeEmbeddingClient)
+    # 15 章起 embedding 外面包了计量壳，穿透 .inner 断言真正的实现
+    assert isinstance(getattr(embedding, "inner", embedding), FakeEmbeddingClient)
     assert isinstance(store, InMemoryVectorStore)
     assert isinstance(retriever, Retriever)
     assert store.count() > 0

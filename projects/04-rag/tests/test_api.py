@@ -91,7 +91,8 @@ def test_service来自dependency而不是重新装配():
     with TestClient(app) as c:
         service = c.app.state.service
         assert isinstance(service, RAGService)
-        assert isinstance(service._llm, FakeLLMClient)
+        # 15 章起 LLM 外面包了一层计量壳，穿透 .inner 才能看到真正用的是哪个实现
+        assert isinstance(getattr(service._llm, "inner", service._llm), FakeLLMClient)
         # 同一进程内多次请求复用同一个 service（否则每次都要重建索引）
         first = c.post("/ask", json={"query": "生成器为什么能省内存？"}).json()
         second = c.post("/ask", json={"query": "生成器为什么能省内存？"}).json()

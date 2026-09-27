@@ -28,6 +28,7 @@ from .embedding import FakeEmbeddingClient, SiliconFlowEmbeddingClient  # noqa: 
 from .errors import RAGError                                   # noqa: E402
 from .evaluation import build_default_eval_cases, evaluate     # noqa: E402
 from .llm import FakeLLMClient                                 # noqa: E402
+from .metrics import MeteredEmbeddingClient, MeteredLLMClient, MetricsRegistry  # noqa: E402
 from .models import META_HEADINGS                              # noqa: E402
 from .pipeline import IngestionPipeline, RAGAnswer, RAGService  # noqa: E402
 from .parsing import PARSER_CLASSES, expand_paths, parse_file  # noqa: E402
@@ -86,14 +87,19 @@ def build_components(profile: str = "dev", fake: bool = False, top_k: int = 5,
             "SILICONFLOW_API_KEY", "")) if os.environ.get("SILICONFLOW_API_KEY")
             else FakeReranker())
 
+    metrics = MetricsRegistry()
     store = InMemoryVectorStore()
+    # 计量是「包一层」而不是改 client 内部：不包就是原客户端，行为完全不变。
+    # 索引阶段的 embedding 调用也会记进来 —— 建索引同样是花钱的。
+    embedding_client = MeteredEmbeddingClient(embedding_client, metrics)
     retriever = Retriever(embedding_client=embedding_client, vector_store=store)
     service = RAGService(
         retriever=retriever,
         reranker=reranker,
         assembler=ContextAssembler(min_score=settings.min_score),
-        llm=llm if llm is not None else FakeLLMClient(),
+        llm=MeteredLLMClient(llm if llm is not None else FakeLLMClient(), metrics),
         settings=settings,
+        metrics=metrics,
     )
     if index_paths:
         files = expand_paths(index_paths)
