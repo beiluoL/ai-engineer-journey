@@ -1,0 +1,47 @@
+===== 1. 创建之前的 python / pip 在哪 =====
+which python3 -> /Users/beiluo/.workbuddy/binaries/python/versions/3.13.12/bin/python3
+Python 3.13.12
+
+===== 2. python3 -m venv .venv 创建独立环境 =====
+退出码 0
+bin
+include
+lib
+pyvenv.cfg
+
+===== 3. 产生的目录结构 =====
+Activate.ps1
+activate
+activate.csh
+activate.fish
+pip
+pip3
+pip3.13
+python
+python3
+python3.13
+
+===== 4. 激活之后：python / pip 已经指向虚拟环境 =====
+which python -> /private/tmp/p01-venv-demo/.venv/bin/python
+which pip    -> /private/tmp/p01-venv-demo/.venv/bin/pip
+Python 3.13.12
+pip 25.3 from /private/tmp/p01-venv-demo/.venv/lib/python3.13/site-packages/pip (python 3.13)
+
+===== 5. pip list：一个干净环境里只有这些 =====
+Package Version
+------- -------
+pip     25.3
+
+===== 6. 装一个包，看它被装到哪 =====
+
+[notice] A new release of pip is available: 25.3 -> 26.2.1
+[notice] To update, run: pip install --upgrade pip
+six 路径: /private/tmp/p01-venv-demo/.venv/lib/python3.13/site-packages/six.py
+→ 路径在 .venv 里面，系统环境不受影响
+
+===== 7. pip freeze > requirements.txt（可复现的依赖清单）=====
+six==1.17.0
+
+===== 8. deactivate：退出后回到系统 python =====
+which python3 -> /Users/beiluo/.workbuddy/binaries/python/versions/3.13.12/bin/python3
+VIRTUAL_ENV=（已清空）

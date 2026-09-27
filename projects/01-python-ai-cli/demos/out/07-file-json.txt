@@ -1,0 +1,122 @@
+===== 0. pathlib.Path 是什么 =====
+临时目录已建好： /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos/tmp-demo07
+  它是 Path 对象吗： True
+  .name   = tmp-demo07
+  .suffix = .txt
+  拼路径：BASE / 'notes.txt' = /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos/tmp-demo07/notes.txt
+  用 os.path 拼出来    = /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos/tmp-demo07/notes.txt
+
+>>> 用 Path 之后，不再需要 os.path.join、os.path.exists 这一串函数，
+>>> 直接 Path('a') / 'b' 和 path.exists() 就行。
+
+文件现在存在吗： False
+
+===== 1. "w" 模式：新建或清空 =====
+第一次用 w 写完，读回来是：
+    第一条笔记：Python 里 open() 默认就是 'r' 模式。
+
+>>> 现在再用 w 打开一次，写点别的东西：
+读回来发现第一条已经不见了：
+    第二条笔记：'w' 会先把原来的内容清空。
+>>> 这就是 'w' 的坑：删掉原文之前没有任何提示。
+
+===== 2. "a" 模式：追加 =====
+追加完再读一遍：
+    第二条笔记：'w' 会先把原来的内容清空。
+第三条笔记：'a' 是 append，写在文件的最后。
+第四条笔记：历史记录一定要用 'a' 保存。
+
+===== 3. with open(...) =====
+写完了，但还没 close，此时 f.closed = False
+手动 close 之后，f.closed = True
+>>> 忘了 close 会怎样？文件句柄占着不放，
+>>> Windows 上甚至没法删，而且内容可能还没真正落盘。
+  在 with 里面，f2.closed = False
+  出了 with，f2.closed = True
+>>> with 会在代码块结束时自动 close，不用担心忘记。
+
+三种模式速查：
+   'r' read   = 读，文件必须存在
+   'w' write  = 写，不存在就新建，存在就清空
+   'a' append = 追加，不存在就新建，存在就写到末尾
+   还有 'r+'(读写) / 'w+'(新建读写) / 'rb'(二进制读) 等等
+
+===== 4. 读文件 =====
+整个文件一次性读完（read()）：
+第二条笔记：'w' 会先把原来的内容清空。
+第三条笔记：'a' 是 append，写在文件的最后。
+第四条笔记：历史记录一定要用 'a' 保存。
+
+readlines() 拿到一个列表： ["第二条笔记：'w' 会先把原来的内容清空。\n", "第三条笔记：'a' 是 append，写在文件的最后。\n", "第四条笔记：历史记录一定要用 'a' 保存。\n"]
+列表长度： 3
+逐行打印：
+   第 1 行：第二条笔记：'w' 会先把原来的内容清空。
+   第 2 行：第三条笔记：'a' 是 append，写在文件的最后。
+   第 3 行：第四条笔记：历史记录一定要用 'a' 保存。
+
+===== 5. json.dump() 保存 messages =====
+内存里的 messages 有 4 条：
+   [system] 你是一个耐心的 Python 老师
+   [user] 什么是 f-string？
+   [assistant] f-string 就是在字符串前面加 f，用 {} 里放变量。
+   [user] 那它和 .format() 有啥区别？
+
+>>> 注意：messages 里是中文，dump 的时候一定要写 ensure_ascii=False，
+>>> 否则中文会变成 \uXXXX 这种看不懂的转义。
+内存里的对象 -> 文件里的内容（下面是文件原文）：
+====================
+[
+  {
+    "role": "system",
+    "content": "你是一个耐心的 Python 老师"
+  },
+  {
+    "role": "user",
+    "content": "什么是 f-string？"
+  },
+  {
+    "role": "assistant",
+    "content": "f-string 就是在字符串前面加 f，用 {} 里放变量。"
+  },
+  {
+    "role": "user",
+    "content": "那它和 .format() 有啥区别？"
+  }
+]
+====================
+文件大小（字节）： 351
+
+===== 6. json.load() 读回来 =====
+读回来的类型： list
+和内存里那一堆是相等的吗： True
+条数： 4
+
+逐条校验：
+   1. role = system    合法吗：True
+   2. role = user      合法吗：True
+   3. role = assistant 合法吗：True
+   4. role = user      合法吗：True
+
+>>> dumps/load 处理「字符串 -> 字符串」，dump/load 处理「文件」。
+>>> 名字对照：dumps = dump string，loads = load string。
+>>> 读回来之后，它就是普通的 list of dict，操作方式和内存里一模一样。
+
+===== 7. 读的时候可能出问题 =====
+文件不存在 -> FileNotFoundError： [Errno 2] No such file or directory: '/Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos/tmp-demo07/not-exist.json'
+>>> 第一次启动、或者用户换过电脑，就是这种情况。
+
+故意写坏一个文件： [{"role": "user", "content": "你好",}]
+内容不是合法 JSON -> JSONDecodeError： Illegal trailing comma before end of object: line 1 column 34 (char 33)
+   出错第 1 行，第 34 列： Illegal trailing comma before end of object
+
+===== 8. 清理临时文件 =====
+删除前，目录里有： ['broken.json', 'history.json', 'no-with.txt', 'notes.txt', 'with.txt']
+已经删除整个临时目录： /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos/tmp-demo07 还存在吗： False
+
+================ 小结 ================
+1. 用 pathlib.Path，路径拼装不用再纠结斜杠。
+2. 'r' 读 / 'w' 覆盖写 / 'a' 追加，读写都要写 encoding='utf-8'。
+3. 一律用 with open(...) as f，它会帮你 close。
+4. json.dump 写文件、json.load 读文件；dumps/loads 只处理字符串。
+5. 存中文加 ensure_ascii=False，调 indent=2 方便人肉查看。
+6. 历史记录文件第一次读会 FileNotFoundError，属于正常情况。

@@ -1,0 +1,33 @@
+本地服务已启动：http://127.0.0.1:8765（标准库 http.server，进程内线程）
+
+===== 1. GET 命中：200 =====
+
+--- GET http://127.0.0.1:8765/python ---
+状态码        : 200
+Content-Type  : application/json; charset=utf-8
+响应体        : {"ok": true, "data": {"name": "Python", "year": 1991, "author": "Guido van Rossum"}}
+解析成 dict   : {'ok': True, 'data': {'name': 'Python', 'year': 1991, 'author': 'Guido van Rossum'}}
+
+===== 2. GET 没命中：404（用 HTTPError 接住，不是崩溃）=====
+
+--- GET http://127.0.0.1:8765/rust ---
+状态码        : 404 （HTTPError 不是崩溃，是服务端的正常应答）
+响应体        : {"ok": false, "error": "没有这门语言: rust"}
+
+===== 3. POST 发 JSON，服务端回 JSON =====
+
+--- POST http://127.0.0.1:8765/ ---
+状态码        : 200
+Content-Type  : application/json; charset=utf-8
+响应体        : {"ok": true, "echo": {"model": "deepseek-chat", "messages": [{"role": "user", "content": "你好"}]}, "received_bytes": 75}
+解析成 dict   : {'ok': True, 'echo': {'model': 'deepseek-chat', 'messages': [{'role': 'user', 'content': '你好'}]}, 'received_bytes': 75}
+
+===== 4. POST 一段坏 JSON：400 =====
+状态码        : 400
+响应体        : {"ok": false, "error": "JSON 解析失败: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"}
+
+===== 5. 连一个没人监听的端口：连接被拒绝 =====
+URLError      : [Errno 61] Connection refused
+→ 这是「服务没起来」，和 404「服务起来了但没这个资源」是两类错误
+
+服务已关闭

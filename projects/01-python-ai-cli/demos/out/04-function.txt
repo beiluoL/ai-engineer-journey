@@ -1,0 +1,84 @@
+===== 1. 定义一个最简单的函数 =====
+你好，小明！欢迎开始今天的 Python 学习。
+你好，Beiluo！欢迎开始今天的 Python 学习。
+函数本身只是一个对象： <function greet at 0x1004e94e0>
+类型也是函数类型： function
+
+===== 2. 默认参数 =====
+只传问题： {'model': 'gpt-4o-mini', 'question': 'Python 里的列表和数组是一回事吗？', 'max_tokens': 500}
+传自定义模型： {'model': 'deepseek-chat', 'question': '什么是 f-string？', 'max_tokens': 500}
+关键字乱序： {'model': 'qwen-turbo', 'question': '怎么读一个 json 文件？', 'max_tokens': 1024}
+
+注意：默认参数必须放在普通参数的后面，不然 def 这一行直接就过不了。
+
+===== 3. 返回多个值 =====
+原文： 学习 AI 一共用了 30 天
+中文部分： 学习一共用了天
+英文部分： ai
+数字部分： 30
+其实返回的是一个元组： ('学习一共用了天', 'ai', '30')
+
+===== 4. *args 与 **kwargs =====
+一个参数： 共 1 件，合计 9.90 人民币
+三个参数： 共 3 件，合计 34.80 人民币
+零个参数： 0.0
+换个货币： 共 2 件，合计 29.80 美元
+收到的 kwargs 类型是： dict
+内容： {'role': 'user', 'content': '你好'}
+收到的 kwargs 类型是： dict
+内容： {}
+a=1, b=2
+args=(3, 4)
+kwargs={'name': '小红', 'age': 18}
+
+===== 5. 可变默认参数陷阱（重要！）=====
+第一次调用 add_word_bad('apple')： ['apple']
+第二次调用 add_word_bad('banana')： ['apple', 'banana']
+第三次调用 add_word_bad('cherry')： ['apple', 'banana', 'cherry']
+
+>>> 上面三次调用结果越来越长，而且 'apple' 也在！
+>>> 原因：带默认值的参数在 def 那一行就被创建、只创建一次，
+>>> 之后每次调用都复用同一个列表对象。
+>>> 所以一定要传新的空列表，而不是复用同一个。
+
+正确写法 1：默认参数用 None，函数里面再新建。
+第一次： ['apple']
+第二次： ['banana']
+第三次： ['cherry']
+
+正确写法 2：调用时自己传一个新列表。
+第一次： ['apple']
+第二次： ['banana']
+第三次： ['cherry']
+
+===== 6. lambda 与 sorted(key=...) =====
+原始顺序（一条条看）：
+   user      -> 帮我解释一下什么是递归
+   assistant -> 递归就是函数自己调用自己。
+   user      -> 那什么时候该用 while 呢？
+   assistant -> 次数未知时用 while，次数已知时用 for。
+
+按 content 长度从短到长排：
+   user      -> 11 字 | 帮我解释一下什么是递归
+   assistant -> 13 字 | 递归就是函数自己调用自己。
+   user      -> 16 字 | 那什么时候该用 while 呢？
+   assistant -> 24 字 | 次数未知时用 while，次数已知时用 for。
+
+按 role 分组排（system < user < assistant）：
+   assistant -> 递归就是函数自己调用自己。
+   assistant -> 次数未知时用 while，次数已知时用 for。
+   user      -> 帮我解释一下什么是递归
+   user      -> 那什么时候该用 while 呢？
+
+lambda 就是一个「只有一行的小函数」：
+   len_of = lambda text: len(text)
+   等价于 def len_of(text): return len(text)
+   len_of('hello') = 5
+
+================ 小结 ================
+1. 函数是为了「一次定义，到处复用」。
+2. 默认参数放在普通参数后面。
+3. 多返回值本质是元组，可以一次解包。
+4. *args 装成元组，**kwargs 装成字典。
+5. 默认参数千万别用 [] / {} / set()，要写 None。
+6. sorted(key=lambda ...) 用来按自己的规则排序。

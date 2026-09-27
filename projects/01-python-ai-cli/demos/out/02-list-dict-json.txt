@@ -1,0 +1,60 @@
+===== 1. List：一个变量保存多个值 =====
+directions = ['Python', 'LLM', 'RAG', 'Agent']
+长度 len() = 4
+下标 0 是 Python，下标 -1 是 Agent
+append 之后 = ['Python', 'LLM', 'RAG', 'Agent', 'Transformer']
+
+===== 2. List 推导式：一行生成新列表 =====
+[d.upper() for d in directions] = ['PYTHON', 'LLM', 'RAG', 'AGENT', 'TRANSFORMER']
+[d for d in directions if len(d) <= 3] = ['LLM', 'RAG']
+
+===== 3. Dict：一条数据里有多个字段 =====
+python_skill = {'name': 'Python', 'status': '学习中', 'progress': 80}
+python_skill["name"]     = Python
+python_skill["progress"] = 80
+python_skill.get("level")           = None
+python_skill.get("level", "未设置") = 未设置
+"status" 在不在里面？ True
+
+===== 4. List + Dict：真正的结构化数据 =====
+skills[0]           = {'name': 'Python', 'status': '学习中', 'progress': 80}
+skills[0]["name"]   = Python
+skills[2]["name"]   = RAG
+所有技能进度之和 = 100
+
+===== 5. AI messages：List + Dict 就是对话历史 =====
+system: 你是一名 Python 教师。
+user: 什么是 list？
+assistant: list 是有顺序的一组数据。
+user: 它和 Java 的 List 类似吗？
+
+===== 6. json.dumps：Python 对象 -> JSON 字符串 =====
+[
+  {
+    "role": "system",
+    "content": "你是一名 Python 教师。"
+  },
+  {
+    "role": "user",
+    "content": "什么是 list？"
+  },
+  {
+    "role": "assistant",
+    "content": "list 是有顺序的一组数据。"
+  },
+  {
+    "role": "user",
+    "content": "它和 Java 的 List 类似吗？"
+  }
+]
+
+===== 7. json.loads：JSON 字符串 -> 读回 Python 对象 =====
+读回来的类型 = list
+第 0 条消息 = {'role': 'system', 'content': '你是一名 Python 教师。'}
+读回来的第 3 条 role = user
+和原来一模一样吗？ True
+
+===== 8. 不加 indent 的样子（对比用） =====
+[{"role": "system", "content": "你是一名 Python 教师。"}, {"role": "user", "content": "什么是 list？"}, {"role": "assistant", "content": "list 是有顺序的一组数据。"}, {"role": "user", "content": "它和 Java 的 List 类似吗？"}]
+上面是一整行；indent=2 会展开成前面那种好看的格式。
+真正写进文件用 json.dump()，读回文件用 json.load()，第 07 章会做。

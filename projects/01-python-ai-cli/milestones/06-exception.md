@@ -226,6 +226,8 @@ except:
 
 ![真实运行：未捕获异常的 Traceback 与 try/except/else/finally/raise](../assets/term-exception.png)
 
+![真实运行：第 5-6 节——else/finally 在正常与出错两条路径下的执行顺序，finally 先于 return 执行](../assets/term-exception-finally.png)
+
 ---
 
 # 7. 这到底发生了什么？

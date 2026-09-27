@@ -951,6 +951,8 @@ AI: 可用命令：
 
 ![真实运行：if/elif、while+break 主循环与字符频率统计](../assets/term-condition-loop.png)
 
+![真实运行：第 3-4 节——while + break + continue 的 CLI 主循环，以及字符频率统计小程序](../assets/term-loop-main.png)
+
 输入：
 
 ```text

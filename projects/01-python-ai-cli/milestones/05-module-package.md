@@ -1117,6 +1117,8 @@ assistant/
 
 ![真实运行：导入两层包 pkgdemo、__init__.py 与 __name__ == "__main__"](../assets/term-module-package.png)
 
+![真实运行：第 5-7 节——两层包的导入路径、`__name__` 在直接运行与被导入时的差别、`python -m` 方式](../assets/term-package-name.png)
+
 ---
 
 # 27. 进入更合理的项目结构

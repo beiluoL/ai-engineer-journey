@@ -977,6 +977,8 @@ Python
 
 ![真实运行：list / dict 操作与 json.dumps(indent=2)、json.loads 读回](../assets/term-list-dict-json.png)
 
+![真实运行：第 6-8 节——json.dumps 序列化、json.loads 读回的类型变化、不加 indent 的对比](../assets/term-json-roundtrip.png)
+
 ---
 
 # 24. 项目第一次真正保存数据

@@ -307,6 +307,8 @@ projects/01-python-ai-cli/
 
 ![venv 创建到退出的完整流程实测](../assets/term-venv-flow.png)
 
+![真实运行：激活后 python/pip 指向 .venv、pip list 只有 pip、装包装进 .venv、pip freeze 生成 requirements.txt](../assets/term-venv-pip.png)
+
 ---
 
 # 六、为什么目录叫 `.venv`？

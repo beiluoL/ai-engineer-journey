@@ -686,6 +686,8 @@ f"姓名：{name}"
 
 ![真实运行：变量、type()、input() 与 f-string 的完整输出](../assets/term-variables-types.png)
 
+![真实运行：第 4-7 节——重新赋值后 id() 变化、input() 永远返回字符串、f-string 与动态类型](../assets/term-variables-id.png)
+
 ---
 
 # 15. 最终项目 v1.0

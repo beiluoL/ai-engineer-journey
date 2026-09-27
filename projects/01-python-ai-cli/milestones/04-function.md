@@ -446,6 +446,8 @@ print_message("assistant", "你好，有什么可以帮助你？")
 
 ![真实运行：默认参数、*args/**kwargs、可变默认参数陷阱与 lambda 排序](../assets/term-function.png)
 
+![真实运行：第 5-6 节——可变默认参数陷阱（两次调用共用同一个 list）与 lambda + sorted(key=)](../assets/term-function-trap.png)
+
 ---
 
 # 11. 一个非常重要的区别：参数 vs 实际传入值

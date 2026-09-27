@@ -762,6 +762,8 @@ indent=2
 
 ![真实运行：open w/a 模式、json.dump(indent=2) 持久化 messages 并读回校验](../assets/term-file-json.png)
 
+![真实运行：第 6-8 节——json.load() 读回来、读的时候可能出问题、清理临时文件](../assets/term-file-persist.png)
+
 ---
 
 # 20. 读取历史

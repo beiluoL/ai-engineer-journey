@@ -1,0 +1,98 @@
+===== 0. sys.path 是什么 =====
+当前解释器： /Users/beiluo/.workbuddy/binaries/python/versions/3.13.12/bin/python3
+当前工作目录： /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli
+sys.path 里的前 5 个查找位置：
+   1. /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos
+   2. /Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/vendor/shim
+   3. /Users/beiluo/.workbuddy/binaries/python/versions/3.13.12/lib/python313.zip
+   4. /Users/beiluo/.workbuddy/binaries/python/versions/3.13.12/lib/python3.13
+   5. /Users/beiluo/.workbuddy/binaries/python/versions/3.13.12/lib/python3.13/lib-dynload
+
+>>> 注意第 1 条：它就是 demos 这个目录。
+>>> 因为 python3 在跑 demos/05-module-package.py 时，
+>>> 会自动把「脚本所在的目录」放到 sys.path 最前面。
+>>> 所以 pkgdemo 就在 demos/ 里面，这里才能直接 import。
+
+===== 1. 第一次 import pkgdemo =====
+[pkgdemo/__init__.py] 我被执行了
+import 完了，pkgdemo.__version__ = 0.1.0
+pkgdemo.__file__ = /Users/beiluo/Documents/alProject/ai-engineer-journey/projects/01-python-ai-cli/demos/pkgdemo/__init__.py
+>>> 注意上面 __init__.py 里的 print 在 import 时就自动执行了。
+
+===== 2. 再 import 一次 pkgdemo =====
+还是同一个对象吗？ True
+>>> 是同一份，Python 有缓存（sys.modules），不会重复执行。
+sys.modules 里的键，只看和 pkgdemo 有关的：
+   pkgdemo
+
+===== 3. import 与 from ... import ... =====
+from 之后可以直接用： chat / count_messages
+chat 来自哪个文件： pkgdemo.llm
+用 import 方式： chat
+>>> 两种方式都能拿到同一个函数，只是写法不同。
+
+===== 4. 调用 pkgdemo 里的模块 =====
+提问前 messages：
+   [system] 你是一个 Python 老师
+   [user] 什么是列表推导式？
+得到回复： [模拟回复] 你刚才问的是：什么是列表推导式？
+回复里的模型名： mock-llm
+现在 messages 的统计： {'system': 1, 'user': 1, 'assistant': 1}
+
+===== 5. 两层包 =====
+目录结构是这样的：
+   demos/pkgdemo/__init__.py      <- 一层包
+   demos/pkgdemo/llm.py           <- 一层包里的模块
+   demos/pkgdemo/utils.py
+   demos/pkgdemo/cli/__init__.py  <- 二层包
+   demos/pkgdemo/cli/main.py      <- 二层包里的模块
+[pkgdemo/cli/__init__.py] 我被执行了
+导入 pkgdemo.cli.main 成功了。
+cli_main.__name__ = pkgdemo.cli.main
+cli_main.run 是不是一个函数： True
+>>> 注意上面 pkgdemo/cli/__init__.py 的 print 也执行了。
+>>> 但是 cli_main.run() 没有被调用，因为 main.py 里
+>>> `if __name__ == "__main__"` 为假，跳过了。
+
+===== 6. __name__ 是什么 =====
+当前这个 demo 文件的 __name__ = __main__
+当直接运行 python3 一个 .py 文件时，它的 __name__ 是 '__main__'；
+但当被 import 时，它的 __name__ 就是模块名。
+[cli.main] __name__ = '__main__'，所以这一段会被执行
+[cli.main] 开始跑 CLI 了
+[cli.main] 当前时间： 2026-09-27 20:21:33
+[cli.main] 提问记录：
+   1. [system] 你是一个 Python 老师
+   2. [user] 什么是列表推导式？
+[cli.main] 模型回复： [模拟回复] 你刚才问的是：什么是列表推导式？
+[cli.main] 现在 messages 里有： {'system': 1, 'user': 1, 'assistant': 1}
+[cli.main] 结束，用时： 2026-09-27 20:21:33
+
+>>> 现在用 run_name="__main__" 把 main.py 当成脚本跑一遍：
+>>> （上面那段输出就是 main.py 自己打印出来的）
+>>> runpy.run_path 的返回值里存着 main.py 执行完的全局变量
+main.py 里的 __name__ = __main__
+>>> 只有它是 '__main__' 的时候，runpy 才会让 main.py 里的
+>>> `if __name__ == "__main__"` 成立、把 run() 执行起来。
+
+===== 7. 以 -m 模块方式运行 main.py =====
+退出码： 0
+输出内容：
+   [pkgdemo/__init__.py] 我被执行了
+   [pkgdemo/cli/__init__.py] 我被执行了
+   [cli.main] __name__ = '__main__'，所以这一段会被执行
+   [cli.main] 开始跑 CLI 了
+   [cli.main] 当前时间： 2026-09-27 20:21:33
+   [cli.main] 提问记录：
+      1. [system] 你是一个 Python 老师
+      2. [user] 什么是列表推导式？
+   [cli.main] 模型回复： [模拟回复] 你刚才问的是：什么是列表推导式？
+   [cli.main] 现在 messages 里有： {'system': 1, 'user': 1, 'assistant': 1}
+   [cli.main] 结束，用时： 2026-09-27 20:21:33
+
+================ 小结 ================
+1. 模块就是一个 .py 文件，import 时会把文件跑一遍。
+2. from x import y 和 import x.y 都能用，看场景。
+3. 包 = 带 __init__.py 的目录，点号的层级就是目录层级。
+4. __name__ == "__main__" 用来区分「被导入」和「被直接运行」。
+5. sys.path 是 Python 找模块的搜索路径清单。

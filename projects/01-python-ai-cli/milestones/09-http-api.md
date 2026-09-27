@@ -560,6 +560,8 @@ Body：
 
 ![urllib GET 请求实测：状态码 200](../assets/term-http-urllib.png)
 
+![真实运行：本机起 HTTP 服务，GET 200 / 404、POST 发 JSON、坏 JSON 400、端口没监听 Connection refused](../assets/term-http-local.png)
+
 ---
 
 # 十四、一个非常重要的面试点：401 vs 403

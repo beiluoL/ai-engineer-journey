@@ -1,0 +1,89 @@
+===== 1. 不处理异常会怎样 =====
+下面这段程序是对的写法，但没有 try，我们让它真的崩一次：
+
+    def divide(a, b):
+        return a / b
+
+    print(divide(1, 0))
+
+命令的退出码（非 0 就是崩了）： 1
+程序自己打印到 stdout 的内容： ''
+Python 打印到 stderr 的内容，原文如下：
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+    print('结果：', divide(1, 0))
+                    ~~~~~~^^^^^^
+  File "<string>", line 2, in divide
+    return a / b
+           ~~^~~
+ZeroDivisionError: division by zero
+
+>>> 看到了吗：程序没有给出任何提示就「炸」了，
+>>> 用户只看到一段天书一样的报错信息，完全不知道该干啥。
+
+===== 2. try + except =====
+出错了：除数不能是 0，请重新输入一个非零数字
+程序继续往下跑了，没有崩。
+
+===== 3. 三种具体的异常 =====
+--- 3.1 除以 0 ---
+捕获 ZeroDivisionError： division by zero
+
+--- 3.2 打开一个不存在的文件 ---
+捕获 FileNotFoundError： [Errno 2] No such file or directory: 'demos/06-not-exist.txt'
+>>> 第一次启动时历史文件还不存在，就是这种情况。
+
+--- 3.3 解析一段写坏的 JSON ---
+坏掉的 JSON 内容： {"role": "user", "content": "你好",}
+捕获 json.JSONDecodeError： Illegal trailing comma before end of object: line 1 column 33 (char 32)
+异常对象里的三个信息：lineno = 1 / colno = 33 / msg = Illegal trailing comma before end of object
+
+--- 3.4 把一个不是数字的字符串转成 int ---
+捕获 ValueError： invalid literal for int() with base 10: '我不是一个数字'
+
+===== 4. 异常对象里有什么 =====
+   '10' -> 转成 10，类型是 int
+   '3.5' -> 转不了，异常类型 ValueError，信息：invalid literal for int() with base 10: '3.5'
+   'abc' -> 转不了，异常类型 ValueError，信息：invalid literal for int() with base 10: 'abc'
+
+===== 5. else / finally 的执行顺序 =====
+--- 情况 A：一切正常 ---
+  [函数] 开始处理
+  [try] 真正干活
+  [else] 没有异常，做额外收尾（比如写日志）
+  [finally] 无论有没有异常，这里都会执行
+  [函数] 处理结束
+--- 情况 B：中途出错 ---
+  [函数] 开始处理
+  [try] 真正干活
+  [except] 捕获到异常： 模拟：这一步出了问题
+  [finally] 无论有没有异常，这里都会执行
+  [函数] 处理结束
+
+--- finally 在 return 之前也会先执行 ---
+  [finally] 在 return 之前先跑完
+  返回值： 这是 return 出去的值
+>>> 所以释放文件、关闭连接这类事情，最适合写在 finally 里。
+
+===== 6. raise 自定义异常 =====
+正常提问： {'role': 'assistant', 'content': '[模拟回复] 什么是列表推导式？'}
+
+第一次提问：空字符串
+  被 EmptyQuestionError 接住： 问题不能为空，请输入你想问的内容
+第二次提问：全是空格
+  被 EmptyQuestionError 接住： 问题不能为空，请输入你想问的内容
+第三次提问：余额不足
+  被 RateLimitError 接住： 余额不足，请充值后再问
+第四次提问：正常
+  收到的回复： [模拟回复] Python 怎么读文件？
+
+>>> 技术层问题（文件不存在 / 网络断了）用 Python 自带的异常；
+>>> 业务层问题（问题为空 / 余额不足）用 raise 抛自己的异常；
+>>> 两者在 UI 层的表现可以完全不一样。
+
+================ 小结 ================
+1. 不处理异常，程序就会崩掉并打印一段红色的报错信息。
+2. try 包住「可能出错」的那一小段，except 接住具体异常。
+3. except 拿到的 e 里有类型、信息、出错行号，够你定位问题。
+4. else 只在没异常时跑，finally 不管怎样都跑。
+5. raise 用来表达「业务规则不满足」。
