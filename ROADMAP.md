@@ -148,20 +148,20 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：能自主规划和调用工具的 Agent System
 
-**状态**：🔄 进行中（5/10 Milestone）
+**状态**：✅ 已完成（10/10 Milestone，v1.0 收官）
 
 **10 个 Milestone**：
 ```
 01 — Tool                  ✅ 工具三件套 / ToolResult / 检索即工具 / ast 沙箱
 02 — Tool Schema          ✅ JSON Schema / 签名推导 / 参数纠偏
 03 — Function Calling     ✅ tool 消息三字段 / 协议顺序 / 真实链路三坑
-04 — Agent                ✅ ReAct 循环 / 两道闸门 / 轨迹落盘 / CLI 入口
+04 — Agent                ✅ ReAct 循环 / 三道闸门 / 轨迹落盘 / CLI 入口
 05 — Agent Loop           ✅ 工作记忆裁剪 / 草稿纸 / 第三道闸门 / 多步骤任务
-06 — Multi-Step Task      ⬜
-07 — MCP
-08 — MCP Server
-09 — MCP Client
-10 — Agent Workflow
+06 — Multi-Step Task      ✅ 显式 Plan / 依赖拓扑 / 失败传播 / 计划工具
+07 — MCP                  ✅ JSON-RPC 2.0 / 四种消息 / stdio 帧格式
+08 — MCP Server           ✅ 工具跨进程暴露 / 两类错误 / 错误码选择
+09 — MCP Client           ✅ 握手 / Schema 转换 / 桥接进 ToolRegistry
+10 — Agent Workflow       ✅ 多 Worker 编排 / 上下文隔离 / 规模扫描
 ```
 
 ---
@@ -174,22 +174,20 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：从零构建的 Mini Transformer Decoder
 
-**状态**：⬜ 未开始
+**状态**：🔄 进行中（v0.1：已完成「项目架构梳理」+「Tokenizer 字符级/BPE 双实现」，51 pytest 全绿，3 张手写 SVG + 2 张真实终端截图；M03+ 未开始）
 
-**12 个 Milestone**：
+> 备注：本项目的 Milestone 实际执行顺序已调整为「架构优先」——先做 `01-project-architecture`（五层契约 / 目录约定）→ `02-tokenizer`（P05 里 token 只是账单单位，这里进入模型内部），与上方原始 12 项「Tensor 优先」列表不同。README 的勾选表以实际落地的 10 项为准。
+
+**Milestone（实际执行顺序）**：
 ```
-01 — Tensor
-02 — Autograd
-03 — Dataset / DataLoader
-04 — Neural Network
-05 — Training Loop
-06 — Tokenization
-07 — Embedding
-08 — Attention
-09 — Self-Attention
-10 — Transformer
-11 — Decoder-Only LLM
-12 — Mini LLM Training
+01 — Project Architecture  ✅ 五层契约 / 目录约定 / 手写架构图
+02 — Tokenizer            ✅ 字符级 + BPE 双实现 / 往返一致性 / 词表增长曲线
+03 — Embedding            待做（用 Tokenizer 产出的 id 查 (V, d_model) 嵌入矩阵 + 位置编码）
+04 — Attention            待做
+05 — Transformer          待做
+06 — Training Loop        待做
+07 — Inference            待做
+08 — …                    …
 ```
 
 ---

@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="900" height="400" fill="#ffffff"/>
+
+  <text x="20" y="30" font-size="17" font-weight="700" fill="#1f2328">词表越大，序列越短（demos/demo_01_tokenizer.py 第 5 节真实测量）</text>
+  <text x="20" y="52" font-size="12" fill="#57606a">语料 1224 字符 / 295 个唯一字符；横轴 = BPE 目标 vocab_size，纵轴 = 编码后 token 数</text>
+
+  <!-- 绘图区 -->
+  <rect x="80" y="70" width="740" height="230" fill="#fbfcfd" stroke="#e1e4e8"/>
+  <g stroke="#eaeef2" stroke-width="1">
+    <line x1="80" y1="91.9" x2="820" y2="91.9"/>
+    <line x1="80" y1="149.4" x2="820" y2="149.4"/>
+    <line x1="80" y1="206.9" x2="820" y2="206.9"/>
+    <line x1="80" y1="264.4" x2="820" y2="264.4"/>
+  </g>
+  <g stroke="#d0d7de" stroke-width="1.2">
+    <line x1="80" y1="300" x2="820" y2="300"/>
+    <line x1="80" y1="70" x2="80" y2="300"/>
+    <line x1="820" y1="70" x2="820" y2="300"/>
+  </g>
+
+  <!-- 左轴刻度：语料 token 数 -->
+  <g font-size="11" fill="#0969da" text-anchor="end">
+    <text x="72" y="76">1300</text>
+    <text x="72" y="133">1100</text>
+    <text x="72" y="190">900</text>
+    <text x="72" y="248">700</text>
+    <text x="72" y="304">500</text>
+  </g>
+  <text x="20" y="185" font-size="12" fill="#0969da" transform="rotate(-90 20 185)">整份语料 token 数</text>
+
+  <!-- 右轴刻度：样本句 token 数 -->
+  <g font-size="11" fill="#bc4c00" text-anchor="start">
+    <text x="828" y="76">40</text>
+    <text x="828" y="133">30</text>
+    <text x="828" y="190">20</text>
+    <text x="828" y="248">10</text>
+  </g>
+  <text x="884" y="185" font-size="12" fill="#bc4c00" transform="rotate(90 884 185)">样本句 token 数</text>
+
+  <!-- 横轴刻度 -->
+  <g font-size="11" fill="#57606a" text-anchor="middle">
+    <text x="121" y="320">299（纯字符）</text>
+    <text x="232" y="320">350</text>
+    <text x="341" y="320">400</text>
+    <text x="450" y="320">450</text>
+    <text x="559" y="320">500</text>
+    <text x="776" y="320">600</text>
+  </g>
+  <text x="450" y="344" font-size="12" fill="#57606a" text-anchor="middle">BPE 目标 vocab_size</text>
+
+  <!-- 折线 1：语料 token 数 1224 / 917 / 815 / 755 / 705 / 605 -->
+  <polyline points="121,91.9 232,180.1 341,209.4 450,226.7 559,241.1 776,269.8"
+            fill="none" stroke="#0969da" stroke-width="2.5"/>
+  <g fill="#0969da">
+    <circle cx="121" cy="91.9" r="4"/>
+    <circle cx="232" cy="180.1" r="4"/>
+    <circle cx="341" cy="209.4" r="4"/>
+    <circle cx="450" cy="226.7" r="4"/>
+    <circle cx="559" cy="241.1" r="4"/>
+    <circle cx="776" cy="269.8" r="4"/>
+  </g>
+  <g font-size="11" fill="#0969da" text-anchor="middle">
+    <text x="121" y="84">1224</text>
+    <text x="232" y="172">917</text>
+    <text x="341" y="201">815</text>
+    <text x="450" y="219">755</text>
+    <text x="559" y="233">705</text>
+    <text x="776" y="262">605</text>
+  </g>
+
+  <!-- 折线 2：样本句 token 数 35 / 25 / 25 / 21 / 20 / 15 -->
+  <polyline points="121,108.3 232,185 341,185 450,215.7 559,223.3 776,261.7"
+            fill="none" stroke="#bc4c00" stroke-width="2.5" stroke-dasharray="7 4"/>
+  <g fill="#bc4c00">
+    <circle cx="121" cy="108.3" r="4"/>
+    <circle cx="232" cy="185" r="4"/>
+    <circle cx="341" cy="185" r="4"/>
+    <circle cx="450" cy="215.7" r="4"/>
+    <circle cx="559" cy="223.3" r="4"/>
+    <circle cx="776" cy="261.7" r="4"/>
+  </g>
+  <g font-size="11" fill="#bc4c00" text-anchor="start">
+    <text x="130" y="112">35 token</text>
+    <text x="241" y="180">25</text>
+    <text x="350" y="180">25</text>
+    <text x="459" y="211">21</text>
+    <text x="568" y="218">20</text>
+    <text x="700" y="257">15</text>
+  </g>
+
+  <!-- 图例 -->
+  <g font-size="12">
+    <line x1="80" y1="368" x2="112" y2="368" stroke="#0969da" stroke-width="2.5"/>
+    <text x="120" y="372" fill="#1f2328">整份语料（左轴）</text>
+    <line x1="260" y1="368" x2="292" y2="368" stroke="#bc4c00" stroke-width="2.5" stroke-dasharray="7 4"/>
+    <text x="300" y="372" fill="#1f2328">样本句「Transformer 是一种…」（右轴）</text>
+  </g>
+  <text x="620" y="372" font-size="12" fill="#57606a">压缩率 1.00× → 2.02×</text>
+</svg>

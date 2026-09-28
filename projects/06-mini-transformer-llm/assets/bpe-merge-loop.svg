@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 430" width="880" height="430" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="430" fill="#ffffff"/>
+  <text x="20" y="30" font-size="17" font-weight="700" fill="#1f2328">BPE 训练循环：反复合并出现次数最多的相邻符号</text>
+  <text x="20" y="52" font-size="12" fill="#57606a">src/tokenizer/bpe.py · BPETokenizer.train() —— 语料 1224 字符上真实跑出 201 次合并</text>
+
+  <!-- 第 1 步：预切分 -->
+  <rect x="30" y="80" width="170" height="66" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="115" y="106" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">1. 预切分 word</text>
+  <text x="115" y="126" font-size="11" text-anchor="middle" fill="#57606a">连续英文 / 数字 / 汉字串</text>
+  <text x="115" y="141" font-size="11" text-anchor="middle" fill="#57606a">空白单独成词，不跨空格合并</text>
+
+  <!-- 第 2 步：统计 pair -->
+  <rect x="250" y="80" width="180" height="66" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="340" y="106" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">2. 统计相邻 pair 频次</text>
+  <text x="340" y="126" font-size="11" text-anchor="middle" fill="#57606a">按 word 出现次数加权</text>
+  <text x="340" y="141" font-size="11" text-anchor="middle" fill="#57606a">Counter((a, b)) += freq</text>
+
+  <!-- 第 3 步：取最高频 -->
+  <rect x="480" y="80" width="180" height="66" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="570" y="106" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">3. 取最高频 pair</text>
+  <text x="570" y="126" font-size="11" text-anchor="middle" fill="#57606a">频次优先，同频按字典序</text>
+  <text x="570" y="141" font-size="11" text-anchor="middle" fill="#57606a">保证训练可复现</text>
+
+  <!-- 第 4 步：合并 -->
+  <rect x="710" y="80" width="150" height="66" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="785" y="106" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">4. 合并成新 token</text>
+  <text x="785" y="126" font-size="11" text-anchor="middle" fill="#57606a">vocab["en"] = 下一个 id</text>
+  <text x="785" y="141" font-size="11" text-anchor="middle" fill="#57606a">merges.append(("e","n"))</text>
+
+  <!-- 第 5 步：改写语料 -->
+  <rect x="710" y="200" width="150" height="66" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="785" y="226" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">5. 改写整份语料</text>
+  <text x="785" y="246" font-size="11" text-anchor="middle" fill="#57606a">所有 word 里的 (a,b)</text>
+  <text x="785" y="261" font-size="11" text-anchor="middle" fill="#57606a">都换成 "ab"</text>
+
+  <!-- 判定 -->
+  <rect x="430" y="200" width="200" height="66" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="530" y="226" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">6. 词表够大了吗？</text>
+  <text x="530" y="246" font-size="11" text-anchor="middle" fill="#57606a">len(vocab) ≥ vocab_size</text>
+  <text x="530" y="261" font-size="11" text-anchor="middle" fill="#57606a">或 已经没有可合并的 pair</text>
+
+  <!-- 结束 -->
+  <rect x="150" y="200" width="180" height="66" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="240" y="226" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">7. 保存 vocab + merges</text>
+  <text x="240" y="246" font-size="11" text-anchor="middle" fill="#57606a">merges 必须按学习顺序存</text>
+  <text x="240" y="261" font-size="11" text-anchor="middle" fill="#57606a">顺序变了 encode 结果就变</text>
+
+  <!-- 主流程箭头 -->
+  <g stroke="#57606a" stroke-width="1.6" fill="none" marker-end="url(#a2)">
+    <line x1="200" y1="113" x2="246" y2="113"/>
+    <line x1="430" y1="113" x2="476" y2="113"/>
+    <line x1="660" y1="113" x2="706" y2="113"/>
+    <line x1="785" y1="146" x2="785" y2="196"/>
+    <line x1="710" y1="233" x2="634" y2="233"/>
+    <line x1="430" y1="233" x2="334" y2="233"/>
+  </g>
+
+  <!-- 回环 -->
+  <g stroke="#0969da" stroke-width="1.6" fill="none" marker-end="url(#a2)">
+    <polyline points="530,200 530,168 340,168 340,150"/>
+  </g>
+  <text x="352" y="162" font-size="11.5" fill="#0969da">不够大 → 回到第 2 步（本语料真实回环 201 次）</text>
+
+  <text x="240" y="288" font-size="11" fill="#4a9d5f" text-anchor="middle">是</text>
+  <text x="470" y="288" font-size="11" fill="#57606a" text-anchor="middle">否</text>
+
+  <!-- 学到的合并：真实输出 -->
+  <rect x="30" y="316" width="830" height="94" rx="8" fill="#fbfcfd" stroke="#e1e4e8"/>
+  <text x="46" y="338" font-size="12" font-weight="600" fill="#1f2328">本语料学到的前 4 条 + 中文合并（demos/out/demo_01_tokenizer.txt 第 3 节）</text>
+  <text x="46" y="358" font-size="11.5" fill="#57606a">#0 'e'+'n' → 'en'　　#1 'k'+'en' → 'ken'　　#2 'o'+'ken' → 'oken'　　#3 't'+'oken' → 'token'</text>
+  <text x="46" y="378" font-size="11.5" fill="#57606a">中文 48 条：一个 · 模型 · 训练 · 词表 · 切成 · 句子 · 意力 · 推理 · 注意力 · 表示 · 分词 · 分词器 · 网络</text>
+  <text x="46" y="398" font-size="11.5" fill="#57606a">注意：'token' 是 4 次合并拼出来的，不是一次到位的 —— 这就是 BPE 的贪心本质。</text>
+</svg>
