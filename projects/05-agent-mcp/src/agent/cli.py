@@ -16,9 +16,10 @@ import sys
 from .agent import ReActAgent
 from .errors import AgentError
 from .llm import DeepSeekLLM, FakeLLM, LLM, LLMMessage, RecordingLLM
+from .memory import Scratchpad
 from .registry import ToolRegistry
 from .settings import AgentSettings
-from .tools import ToolCall
+from .tools import ToolCall, default_tools
 
 __all__ = ["main", "build_llm", "mock_responder"]
 
@@ -90,12 +91,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mock", action="store_true", help="强制使用离线剧本")
     parser.add_argument("--trace", default="", help="把完整轨迹写成 JSON")
     parser.add_argument("--list-tools", action="store_true", help="只打印工具清单")
+    parser.add_argument(
+        "--notes",
+        action="store_true",
+        help="打开草稿纸：额外挂载 write_note / read_notes 两个工具（Milestone 05，多步骤任务用）",
+    )
     args = parser.parse_args(argv)
 
     settings = AgentSettings.from_env()
     if args.trace:
         settings = settings.replace(trace_dir=args.trace)
-    registry = ToolRegistry()
+    # Milestone 05：草稿纸必须**一张纸给一对工具共用**，所以在这里建一次再往下分发；
+    # 让 WriteNoteTool / ReadNotesTool 各自 new 一张就互相不通了。
+    pad = Scratchpad() if args.notes else None
+    registry = ToolRegistry(default_tools(pad) if pad is not None else None)
 
     if args.list_tools:
         # schemas() 返回的是完整工具对象（{"type":"function","function":{...}}），
@@ -114,12 +123,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     llm, real = build_llm(settings, mock=args.mock)
-    agent = ReActAgent(llm, registry, settings=settings)
+    agent = ReActAgent(llm, registry, settings=settings, scratchpad=pad)
 
     print(f"# 模型：{llm.name}   工具：{', '.join(registry.names())}   {'（真实模型）' if real else '（离线剧本）'}")
     result = agent.run(args.question, max_steps=args.max_steps)
     print()
     print(result.trace())
+    if args.notes:
+        pad_notes = result.notes
+        print()
+        print(f"草稿纸：{len(pad_notes)} 条")
+        for key, value in pad_notes.items():
+            print(f"  · {key}：{value}")
     return 0
 
 

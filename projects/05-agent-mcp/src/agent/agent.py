@@ -25,16 +25,44 @@
 
 ③ **必须有步数上限**。模型偶尔会进入"换个思路—再调用—再换个思路"的
    空转，没有上限就会一直烧 token。步数上限是 Agent 的成本闸门。
+
+Milestone 05 在这上面补了三件事（详见 `memory.py`）：
+
+④ **重复调用检测**：空转不一定报错。模型反复用完全相同的参数调同一个工具、
+   拿回完全相同的结果，失败闸门一次都没涨，只能等步数烧完 ——
+   所以要按「工具名 + 参数」的签名单独计数。
+
+⑤ **工作记忆裁剪**：多步骤任务里历史膨胀很快，按 token 预算裁剪早期工具结果。
+   裁剪时 assistant(tool_calls) 与它的 tool 消息必须**同进同出**，
+   留下孤儿 tool 消息会直接 400。
+
+⑥ **草稿纸（Scratchpad）**：中间结论不能只活在对话流里 —— 那个流是要被裁的。
+   把它显式写进循环之外的便签，Plan → Act → Observe 才真的闭环。
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Sequence
 
-from .errors import InvalidToolCallError, MaxStepsExceeded, TooManyToolFailures
-from .llm import LLM, LLMMessage, RecordingLLM, ROLE_ASSISTANT, ROLE_SYSTEM, ROLE_TOOL, ROLE_USER
+from .errors import (
+    InvalidToolCallError,
+    MaxStepsExceeded,
+    RepeatedToolCall,
+    TooManyToolFailures,
+)
+from .llm import (
+    LLM,
+    FakeLLM,
+    LLMMessage,
+    RecordingLLM,
+    ROLE_ASSISTANT,
+    ROLE_SYSTEM,
+    ROLE_TOOL,
+    ROLE_USER,
+)
+from .memory import Scratchpad, estimate_messages_tokens, trim_history
 from .registry import ToolRegistry
 from .settings import AGENT_SYSTEM_PROMPT, AgentSettings
 from .tools import Tool, ToolCall, ToolResult, default_tools
@@ -64,6 +92,16 @@ class AgentResult:
     answer: str
     steps: tuple[Step, ...] = ()
     question: str = ""
+    notes: dict[str, str] = field(default_factory=dict)
+    """任务结束时草稿纸上留下的笔记（Milestone 05）。
+
+    它和 ``steps`` 是两个维度的证据：轨迹告诉你「做了什么动作」，
+    笔记告诉你「留下了什么结论」—— 后者才是多步骤任务真正想要的东西。
+    """
+
+    @property
+    def used_scratchpad(self) -> bool:
+        return bool(self.notes)
 
     @property
     def steps_used(self) -> int:
@@ -88,6 +126,10 @@ class AgentResult:
                     lines.append(f"        → ...（共 {len(body)} 行）")
             else:
                 lines.append(f"  [{s.index}] {s.kind}：{s.text}")
+        if self.notes:
+            lines.append("草稿纸：")
+            for key, value in self.notes.items():
+                lines.append(f"  · {key}：{value[:120]}{'…' if len(value) > 120 else ''}")
         lines.append(f"答案：{self.answer}")
         return "\n".join(lines)
 
@@ -95,6 +137,7 @@ class AgentResult:
         return {
             "question": self.question,
             "answer": self.answer,
+            "notes": dict(self.notes),
             "steps": [
                 {
                     "index": s.index,
@@ -119,25 +162,30 @@ class ReActAgent:
         *,
         settings: AgentSettings | None = None,
         system_prompt: str | None = None,
+        scratchpad: Scratchpad | None = None,
     ) -> None:
         self.llm = llm
         self.registry = registry
         self.settings = settings or AgentSettings()
         self.system_prompt = system_prompt or AGENT_SYSTEM_PROMPT
+        self.scratchpad = scratchpad
         self._recorder = RecordingLLM(llm)
 
     # ------------------------------------------------------------------ 运行
     def run(self, question: str, *, max_steps: int | None = None, verbose: bool = False) -> AgentResult:
         limit = max_steps if max_steps is not None else self.settings.max_steps
         steps: list[Step] = []
+        pad = self.scratchpad
 
         messages: list[LLMMessage] = [
-            LLMMessage(role=ROLE_SYSTEM, content=self.system_prompt),
+            LLMMessage(role=ROLE_SYSTEM, content=self._system_text()),
             LLMMessage(role=ROLE_USER, content=question),
         ]
 
         consecutive_failures = 0
         last_error: str | None = None
+        call_signatures: dict[str, int] = {}
+        trimmed_rounds = 0
 
         for index in range(1, limit + 1):
             reply = self._recorder.chat(messages, tools=self.registry.schemas())
@@ -158,15 +206,29 @@ class ReActAgent:
                 if not answer:
                     raise InvalidToolCallError("模型在没有工具调用的情况下返回了空内容")
                 steps.append(Step(index=index, kind="answer", text=answer))
-                _maybe_dump_trace(self.settings, self._recorder, steps, question, answer)
-                return AgentResult(answer=answer, steps=tuple(steps), question=question)
+                _maybe_dump_trace(self.settings, self._recorder, steps, question, answer, pad)
+                return AgentResult(
+                    answer=answer,
+                    steps=tuple(steps),
+                    question=question,
+                    notes=pad.to_dict() if pad is not None else {},
+                )
 
             # ② 逐个执行
             batch: list[Step] = []
             for call in reply.tool_calls:
-                # 这里不再校验 call.id：ToolCall 构造时就已经保证 id/name 非空，
-                # 缺 id 会被 LLM 层（_load_tool_calls）当成协议错误拦下。
-                # 与其写一段永远走不到的防御代码，不如把校验放在唯一该管它的地方。
+                # ④ 重复调用闸门：同一个「工具名 + 参数」再调一次，说明它在原地打转。
+                #    注意要用 sort_keys=True 序列化——模型可能把 {"a":1,"b":2} 写成
+                #    {"b":2,"a":1}，那是同一次调用，不该被算成两个签名。
+                signature = call.name + ":" + json.dumps(call.arguments, sort_keys=True, ensure_ascii=False)
+                seen = call_signatures.get(signature, 0) + 1
+                call_signatures[signature] = seen
+                if seen > self.settings.max_repeats:
+                    raise RepeatedToolCall(
+                        f"{call.name}({signature.split(':', 1)[1]}) 已被调用 {seen} 次"
+                        f"（上限 {self.settings.max_repeats}），模型在原地打转，主动终止。"
+                    )
+
                 result = self.registry.call(call)
                 batch.append(Step(index=index, kind="tool", text=result.render(), call=call, result=result))
                 # ③ 结果文本回灌
@@ -192,12 +254,42 @@ class ReActAgent:
             else:
                 consecutive_failures = 0
 
+            # ⑤ 工作记忆裁剪：发出去之前压进预算。
+            #    这一步必须在 tool 回灌之后、下一次 chat 之前做；
+            #    而且 trim 返回的是新列表，Recorder 里那份快照不会被污染。
+            before = estimate_messages_tokens(messages)
+            if before > self.settings.context_budget:
+                messages = trim_history(
+                    messages,
+                    budget=self.settings.context_budget,
+                    keep_recent=self.settings.keep_recent_steps,
+                )
+                trimmed_rounds += 1
+                if verbose:
+                    after = estimate_messages_tokens(messages)
+                    print(f"[trim] {before} → {after} tokens（{self.settings.context_budget} 预算）")
+            # system 里带着草稿纸，每轮要重建：笔记可能刚被更新过
+            if pad is not None:
+                messages[0] = LLMMessage(role=ROLE_SYSTEM, content=self._system_text())
+
             if verbose:
                 print(self._render_step(batch))
 
         raise MaxStepsExceeded(
-            f"用了 {limit} 步仍未给出最终答案。最后一步工具返回：{last_error or '（无）'}"
+            f"用了 {limit} 步仍未给出最终答案（期间裁剪 {trimmed_rounds} 次）。"
+            f"最后一步工具返回：{last_error or '（无）'}"
         )
+
+    def _system_text(self) -> str:
+        """system 提示 = 工作规则 + 草稿纸上的笔记。
+
+        把笔记常驻在提示里是刻意的：模型不必额外调一次 read_notes 就能看见它们，
+        多步骤任务里省下的就是实打实的一轮往返。
+        """
+        if self.scratchpad is None:
+            return self.system_prompt
+        notes = self.scratchpad.render()
+        return f"{self.system_prompt}\n\n{notes}" if notes else self.system_prompt
 
     def _render_step(self, batch: list[Step]) -> str:
         return "\n".join(f"[step] {s.result.render()[:200]}" for s in batch if s.result)
@@ -209,6 +301,7 @@ def _maybe_dump_trace(
     steps: list[Step],
     question: str,
     answer: str,
+    pad: Scratchpad | None = None,
 ) -> None:
     """轨迹落盘。默认关闭（trace_dir 为空），开了就必须是原子写。"""
     if not settings.trace_dir:
@@ -224,6 +317,7 @@ def _maybe_dump_trace(
     payload = {
         "question": question,
         "answer": answer,
+        "notes": pad.to_dict() if pad is not None else {},
         "steps": [{"kind": s.kind, "text": s.text} for s in steps],
         "llm_calls": [
             {"input": [m.to_dict() for m in msgs], "tools": tools, "reply": reply.to_dict()}
@@ -245,13 +339,27 @@ def build_agent(
     settings: AgentSettings | None = None,
     tools: Sequence[Tool] | None = None,
     system_prompt: str | None = None,
+    scratchpad: Scratchpad | None = None,
 ) -> ReActAgent:
-    """装配一个 Agent。默认工具集是「检索 + 计算 + 时间」。"""
+    """装配一个 Agent。默认工具集是「检索 + 计算 + 时间」。
+
+    给 ``scratchpad`` 传一个对象（或 ``True`` 表示「帮我建一张」）时，
+    会额外注册草稿纸工具 —— **两个 note 工具共享同一张纸**，
+    这一点由这里保证，而不是由工具自己 new（那样会得到两张互不相通的纸）。
+    """
+    if scratchpad is True:  # type: ignore[comparison-overlap]
+        scratchpad = Scratchpad()
+    if registry is None:
+        # 注意这里必须是 ``is not None``：Scratchpad 实现了 __len__，
+        # 空草稿纸在布尔判断里是**假值** —— 写成 ``if scratchpad:`` 会让刚建好的
+        # 空纸被当成"没传"，草稿纸工具一个都注册不上（这个坑真踩过）。
+        registry = ToolRegistry(default_tools(scratchpad) if scratchpad is not None else (list(tools) if tools else None))
     return ReActAgent(
         llm or FakeLLM(),
-        registry if registry is not None else ToolRegistry(default_tools()),
+        registry,
         settings=settings,
         system_prompt=system_prompt,
+        scratchpad=scratchpad,
     )
 
 

@@ -42,6 +42,9 @@ __all__ = [
     "calculator",
     "make_http_search_tool",
     "BUILTIN_CORPUS",
+    "NowTool",
+    "WriteNoteTool",
+    "ReadNotesTool",
     "default_tools",
 ]
 
@@ -510,6 +513,77 @@ class NowTool(Tool):
         return now_utc()
 
 
-def default_tools() -> Sequence[Tool]:
-    """默认注册给 Agent 的工具集。"""
-    return [RagSearchTool(), CalculatorTool(), NowTool()]
+# --------------------------------------------------------------------------
+# 内置工具 4/5：草稿纸（Milestone 05 —— Plan → Act → Observe 的落点）
+# --------------------------------------------------------------------------
+class WriteNoteTool(Tool):
+    """把中间结论写进草稿纸。
+
+    为什么要有它：多步骤任务里，第 1 步查到的事实如果不显式存下来，
+    就只能靠「留在对话历史里」传递 —— 而对话历史是要被 token 预算裁剪的。
+    写成工具而不是塞进 prompt，是为了让**模型自己决定记什么**。
+    """
+
+    name: ClassVar[str] = "write_note"
+    description: ClassVar[str] = (
+        "把一条中间结论记到草稿纸上，供后面的步骤使用。"
+        "多步骤任务里每查完一个方面就记一条，最后汇总时再读出来。"
+        "同一个 key 再次写入会覆盖旧内容。"
+    )
+    parameters: ClassVar[dict[str, Any]] = {
+        "type": "object",
+        "properties": {
+            "key": {"type": "string", "description": "笔记的名字，简短且能说明内容，如 p04_persistence"},
+            "value": {"type": "string", "description": "要记下的内容（事实本身，不要写'我查到了'这种话）"},
+        },
+        "required": ["key", "value"],
+    }
+
+    def __init__(self, pad: "Scratchpad | None" = None) -> None:
+        from .memory import Scratchpad  # 局部导入避免循环依赖
+
+        self.pad: Scratchpad = pad if pad is not None else Scratchpad()
+
+    def schema(self) -> dict[str, Any]:
+        return function_schema(self.name, self.description, self.parameters)
+
+    def run(self, **kwargs: Any) -> str:
+        return self.pad.write(str(kwargs.get("key", "")), str(kwargs.get("value", "")))
+
+
+class ReadNotesTool(Tool):
+    """把草稿纸上的笔记读回来。key 留空表示读全部。"""
+
+    name: ClassVar[str] = "read_notes"
+    description: ClassVar[str] = "读回草稿纸上的笔记。不传 key 则返回全部笔记，传了则只返回那一条。"
+    parameters: ClassVar[dict[str, Any]] = {
+        "type": "object",
+        "properties": {
+            "key": {"type": "string", "description": "要读的笔记名；留空则返回全部笔记"},
+        },
+        "required": [],
+    }
+
+    def __init__(self, pad: "Scratchpad | None" = None) -> None:
+        from .memory import Scratchpad
+
+        self.pad: Scratchpad = pad if pad is not None else Scratchpad()
+
+    def schema(self) -> dict[str, Any]:
+        return function_schema(self.name, self.description, self.parameters)
+
+    def run(self, **kwargs: Any) -> str:
+        return self.pad.read(str(kwargs.get("key", "") or ""))
+
+
+def default_tools(pad: "Scratchpad | None" = None) -> Sequence[Tool]:
+    """默认注册给 Agent 的工具集。
+
+    ``pad`` 非空时会额外挂上草稿纸工具（Milestone 05）。之所以用参数注入而不是
+    内部 new 一个：**同一张纸必须同时被 write/read 两个工具和 Agent 共享**，
+    在两处各 new 一个就等于给了模型两张互不相通的纸 —— 这是个很容易写错的坑。
+    """
+    tools: list[Tool] = [RagSearchTool(), CalculatorTool(), NowTool()]
+    if pad is not None:
+        tools += [WriteNoteTool(pad), ReadNotesTool(pad)]
+    return tools

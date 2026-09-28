@@ -55,6 +55,26 @@ class AgentSettings:
     max_tool_failures: int = 3
     """连续多少次的 `ToolResult.error` 之后主动放弃。"""
 
+    max_repeats: int = 2
+    """同一个「工具名 + 参数」最多被调用几次（第 ``max_repeats + 1`` 次就拦下）。
+
+    这条闸门补的是前两条补不上的洞：**空转不一定报错**。
+    模型反复用完全一样的参数调同一个工具，每次拿回一模一样的结果，
+    ``max_tool_failures`` 一次都没涨，于是只能等 ``max_steps`` 烧完。
+    多步骤任务里这种情况特别常见（查不到指望 boundary 再查一遍）。
+    """
+
+    # ---- 工作记忆（Milestone 05）----
+    context_budget: int = 6000
+    """发给模型的消息 token 预算，超出就裁剪早期的工具结果。
+
+    用 token 而不是「留最近 N 条」计量：中文一条工具结果可能顶英文十条，
+    按条数截断在中文场景会失控。
+    """
+
+    keep_recent_steps: int = 2
+    """裁剪时至少保留最近几步的原文（这几步是模型马上要引用的）。"""
+
     trace_dir: str = ""
     """轨迹落盘目录，空字符串表示不落盘。"""
 

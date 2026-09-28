@@ -53,8 +53,8 @@
 | Project 04 src | ✅ v0.8 落地：19 个模块 + `web/` 原生前端，197 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估 + 可观测性 + LLMReranker 真实精排与阈值校准 + 前端 Chat UI / 会话历史 / 多轮追问均已跑通，17 章每章 2+ 张真实运行截图（assets 共 44 张） |
 | Project 02 exercises | ✅ LEARNING.md 自测清单（10 章）+ 29 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 29/29（**这是参考答案成绩，不代表用户已掌握**） |
 | Project 03 exercises | ✅ LEARNING.md 自测清单（9 章）+ 32 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 32/32（同上，不代用户勾选） |
-| Project 05 milestones | ✅ 4/10 已成文（tool → tool-schema → function-calling → agent） |
-| Project 05 src + tests | ✅ v0.5 落地：8 个模块（`src/agent/`）+ `ReActAgent` 循环，103 项 pytest 全绿，离线剧本 + DeepSeek 真实双链路，「检索即工具」已跑通，CLI 入口可用，12 张真实运行截图 |
+| Project 05 milestones | ✅ 5/10 已成文（tool → tool-schema → function-calling → agent → agent-loop） |
+| Project 05 src + tests | ✅ v0.6 落地：9 个模块（`src/agent/`）+ `ReActAgent` 循环，146 项 pytest 全绿，离线剧本 + DeepSeek 真实双链路，「检索即工具」已跑通；Milestone 05 补上工作记忆（trim_history 按 token 预算 + 协议配对裁剪）、Scratchpad 草稿纸、第三道闸门 max_repeats，多步骤任务离线/真实双路跑通（真实 7 轮累计发送 5131 token），CLI 支持 `--notes`，15 张真实运行截图 |
 | publishing/tutorials | ✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5） |
 | publishing/articles | 📝 2 篇 |
@@ -68,7 +68,7 @@
 | 02 | Engineering AI Assistant | ⬜ | ✅ v0.2 CLI + API 双形态 |
 | 03 | AI Application | ⬜ | ✅ v0.2 文档+代码+测试 |
 | 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.8 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估+可观测性+真实精排与阈值校准+前端 Chat UI / 会话历史 / 多轮追问 |
-| 05 | Research Agent / MCP | ⬜ | ✅ v0.5 文档+代码+测试+真实 LLM 双链路+CLI 入口+M01-04（Tool/Schema/Function Calling/Agent）+12 张真实截图 |
+| 05 | Research Agent / MCP | ⬜ | ✅ v0.6 文档+代码+测试+真实 LLM 双链路+CLI 入口+M01-05（Tool/Schema/Function Calling/Agent/Agent Loop）+15 张真实截图 |
 | 06 | Mini Transformer / LLM | ⬜ | ⬜ |
 | 07 | Open Source LLM | ⬜ | ⬜ |
 | 08 | LoRA / QLoRA Fine-Tuning | ⬜ | ⬜ |

@@ -9,8 +9,8 @@
    接受的。所以 ``ToolRegistry.call`` 永远返回 ``ToolResult(error=...)``，
    把错误当成"工具说的话"回灌给模型（见 agent.py 的循环）。
    只有"注册层/参数层"的结构性错误才抛 ``InvalidToolCallError``。
-3. 循环层面的失败（步数超限、连续工具失败）抛 ``AgentLoopError``，
-   它是 ``AgentError`` 的子类，让 CLI 可以统一打印友好提示。
+3. 循环层面的失败（步数超限、连续工具失败、反复重复同一调用）抛
+   ``AgentLoopError``，它是 ``AgentError`` 的子类，让 CLI 可以统一打印友好提示。
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ __all__ = [
     "InvalidToolCallError",
     "MaxStepsExceeded",
     "TooManyToolFailures",
+    "RepeatedToolCall",
 ]
 
 
@@ -76,3 +77,13 @@ class MaxStepsExceeded(AgentLoopError):
 
 class TooManyToolFailures(AgentLoopError):
     """连续工具失败次数超过阈值，主动放弃，避免无限空转。"""
+
+
+class RepeatedToolCall(AgentLoopError):
+    """同一个「工具名 + 参数」被调用太多次。
+
+    多步骤任务里最常见的空转形态：**不是报错，而是原地打转**——
+    模型反复用完全相同的参数调同一个工具，每次拿回一模一样的结果，
+    ``consecutive_failures`` 一次都没涨，所以失败闸门根本拦不住它。
+    它只能靠「重复签名计数」识别。
+    """

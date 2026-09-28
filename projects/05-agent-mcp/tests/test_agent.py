@@ -140,8 +140,21 @@ def test_parallel_tool_calls_both_execute() -> None:
 # 失败路径
 # --------------------------------------------------------------------------
 def test_max_steps_exceeded() -> None:
+    """步数超限。
+
+    注意这个用例在 Milestone 05 之后改过：**每一步的参数必须不一样**。
+    以前写的是同一个 rag_search({"query": "q"}) 反复调来耗光步数，
+    加入重复调用闸门后，同样的剧本会在第 3 步先抛 RepeatedToolCall ——
+    新闸门不是 bug，是它拦住了原本要靠「烧满 max_steps」才停的空转。
+    """
+    counter = {"n": 0}
+
     def always_search(messages, tools):
-        return LLMMessage(role="assistant", tool_calls=[ToolCall(id="c", name="rag_search", arguments={"query": "q"})])
+        counter["n"] += 1
+        return LLMMessage(
+            role="assistant",
+            tool_calls=[ToolCall(id=f"c{counter['n']}", name="rag_search", arguments={"query": f"q{counter['n']}"})],
+        )
 
     with pytest.raises(MaxStepsExceeded, match="用了 3 步仍未给出最终答案"):
         ReActAgent(FakeLLM(responder=always_search), _reg(), settings=AgentSettings(max_steps=3)).run("问题")

@@ -148,7 +148,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：能自主规划和调用工具的 Agent System
 
-**状态**：🔄 进行中（4/10 Milestone）
+**状态**：🔄 进行中（5/10 Milestone）
 
 **10 个 Milestone**：
 ```
@@ -156,8 +156,8 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 02 — Tool Schema          ✅ JSON Schema / 签名推导 / 参数纠偏
 03 — Function Calling     ✅ tool 消息三字段 / 协议顺序 / 真实链路三坑
 04 — Agent                ✅ ReAct 循环 / 两道闸门 / 轨迹落盘 / CLI 入口
-05 — Agent Loop           ⬜
-06 — Multi-Step Task
+05 — Agent Loop           ✅ 工作记忆裁剪 / 草稿纸 / 第三道闸门 / 多步骤任务
+06 — Multi-Step Task      ⬜
 07 — MCP
 08 — MCP Server
 09 — MCP Client
