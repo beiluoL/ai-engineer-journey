@@ -63,6 +63,7 @@ from .llm import (
     ROLE_USER,
 )
 from .memory import Scratchpad, estimate_messages_tokens, trim_history
+from .plan import Plan
 from .registry import ToolRegistry
 from .settings import AGENT_SYSTEM_PROMPT, AgentSettings
 from .tools import Tool, ToolCall, ToolResult, default_tools
@@ -99,6 +100,13 @@ class AgentResult:
     笔记告诉你「留下了什么结论」—— 后者才是多步骤任务真正想要的东西。
     """
 
+    plan: dict[str, Any] | None = None
+    """任务结束时计划的状态（Milestone 06）。
+
+    存的是快照而不是 Plan 对象：结果要能被 JSON 序列化落盘，
+    而且要防止调用方在拿到结果后继续改计划、把「当时的进度」改没了。
+    """
+
     @property
     def used_scratchpad(self) -> bool:
         return bool(self.notes)
@@ -130,6 +138,10 @@ class AgentResult:
             lines.append("草稿纸：")
             for key, value in self.notes.items():
                 lines.append(f"  · {key}：{value[:120]}{'…' if len(value) > 120 else ''}")
+        if self.plan and self.plan.get("tasks"):
+            lines.append("任务计划：")
+            for t in self.plan["tasks"]:
+                lines.append(f"  · [{t['status']}] {t['id']} {t['title']}")
         lines.append(f"答案：{self.answer}")
         return "\n".join(lines)
 
@@ -138,6 +150,7 @@ class AgentResult:
             "question": self.question,
             "answer": self.answer,
             "notes": dict(self.notes),
+            "plan": self.plan,
             "steps": [
                 {
                     "index": s.index,
@@ -163,12 +176,14 @@ class ReActAgent:
         settings: AgentSettings | None = None,
         system_prompt: str | None = None,
         scratchpad: Scratchpad | None = None,
+        plan: Plan | None = None,
     ) -> None:
         self.llm = llm
         self.registry = registry
         self.settings = settings or AgentSettings()
         self.system_prompt = system_prompt or AGENT_SYSTEM_PROMPT
         self.scratchpad = scratchpad
+        self.plan = plan
         self._recorder = RecordingLLM(llm)
 
     # ------------------------------------------------------------------ 运行
@@ -212,6 +227,7 @@ class ReActAgent:
                     steps=tuple(steps),
                     question=question,
                     notes=pad.to_dict() if pad is not None else {},
+                    plan=self.plan.to_dict() if self.plan is not None and self.plan.tasks else None,
                 )
 
             # ② 逐个执行
@@ -281,15 +297,22 @@ class ReActAgent:
         )
 
     def _system_text(self) -> str:
-        """system 提示 = 工作规则 + 草稿纸上的笔记。
+        """system 提示 = 工作规则 + 草稿纸笔记 + 当前计划。
 
-        把笔记常驻在提示里是刻意的：模型不必额外调一次 read_notes 就能看见它们，
-        多步骤任务里省下的就是实打实的一轮往返。
+        把这两样常驻在提示里是刻意的：模型不必额外调一次 read_notes / plan_view
+        就能看见它们，多步骤任务里省下的就是实打实的一轮往返。
+
+        计划**每一轮都会重新渲染**（run 里会刷新 messages[0]），所以模型看到的
+        永远是最新进度，而不是开局那一份 —— 否则它会照着过时的计划重复做事。
         """
-        if self.scratchpad is None:
-            return self.system_prompt
-        notes = self.scratchpad.render()
-        return f"{self.system_prompt}\n\n{notes}" if notes else self.system_prompt
+        blocks = [self.system_prompt]
+        if self.scratchpad is not None:
+            notes = self.scratchpad.render()
+            if notes:
+                blocks.append(notes)
+        if self.plan is not None and self.plan.tasks:
+            blocks.append("当前任务计划：\n" + self.plan.render())
+        return "\n\n".join(blocks)
 
     def _render_step(self, batch: list[Step]) -> str:
         return "\n".join(f"[step] {s.result.render()[:200]}" for s in batch if s.result)
@@ -340,26 +363,36 @@ def build_agent(
     tools: Sequence[Tool] | None = None,
     system_prompt: str | None = None,
     scratchpad: Scratchpad | None = None,
+    plan: Plan | None = None,
 ) -> ReActAgent:
     """装配一个 Agent。默认工具集是「检索 + 计算 + 时间」。
 
     给 ``scratchpad`` 传一个对象（或 ``True`` 表示「帮我建一张」）时，
-    会额外注册草稿纸工具 —— **两个 note 工具共享同一张纸**，
-    这一点由这里保证，而不是由工具自己 new（那样会得到两张互不相通的纸）。
+    会额外注册草稿纸工具；``plan`` 同理，传了就挂上计划工具。
+
+    **共享**这件事由这里保证，而不是让工具自己 new —— 各 new 一个就等于
+    给了模型两张互不相通的纸、两份互不认识的计划。
     """
     if scratchpad is True:  # type: ignore[comparison-overlap]
         scratchpad = Scratchpad()
+    if plan is True:  # type: ignore[comparison-overlap]
+        plan = Plan()
     if registry is None:
         # 注意这里必须是 ``is not None``：Scratchpad 实现了 __len__，
         # 空草稿纸在布尔判断里是**假值** —— 写成 ``if scratchpad:`` 会让刚建好的
         # 空纸被当成"没传"，草稿纸工具一个都注册不上（这个坑真踩过）。
-        registry = ToolRegistry(default_tools(scratchpad) if scratchpad is not None else (list(tools) if tools else None))
+        # Plan 也一样：空计划同样是假值。
+        if scratchpad is not None or plan is not None:
+            registry = ToolRegistry(default_tools(scratchpad, plan))
+        else:
+            registry = ToolRegistry(list(tools) if tools else None)
     return ReActAgent(
         llm or FakeLLM(),
         registry,
         settings=settings,
         system_prompt=system_prompt,
         scratchpad=scratchpad,
+        plan=plan,
     )
 
 

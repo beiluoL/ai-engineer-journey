@@ -576,14 +576,142 @@ class ReadNotesTool(Tool):
         return self.pad.read(str(kwargs.get("key", "") or ""))
 
 
-def default_tools(pad: "Scratchpad | None" = None) -> Sequence[Tool]:
+class PlanSetTool(Tool):
+    """建立/重设任务计划。
+
+    为什么是「整份重设」而不是「逐个 add」：模型想改计划时，
+    让它重新发一份完整计划比让它发一串增量 patch 更不容易出错 ——
+    增量操作一旦中间某步失败，就留下半新半旧的计划。
+    """
+
+    name: ClassVar[str] = "plan_set"
+    description: ClassVar[str] = (
+        "把任务拆成若干子任务并建立计划。tasks 是一个 JSON 数组，"
+        "每项形如 {\"id\":\"t1\",\"title\":\"查 P01 的持久化方式\",\"depends_on\":[]}。"
+        "depends_on 填它要等待的子任务 id；没有依赖就留空数组，表示可以立刻做。"
+        "调用前先想清楚哪些步骤互不依赖 —— 它们会被并行派出去。"
+    )
+    parameters: ClassVar[dict[str, Any]] = {
+        "type": "object",
+        "properties": {
+            "goal": {"type": "string", "description": "这次任务最终要达成的目标，一句话"},
+            "tasks": {"type": "string", "description": "子任务 JSON 数组字符串"},
+        },
+        "required": ["tasks"],
+    }
+
+    def __init__(self, plan: "Plan | None" = None) -> None:
+        from .plan import Plan  # 局部导入避免循环依赖
+
+        self.plan: Plan = plan if plan is not None else Plan()
+
+    def schema(self) -> dict[str, Any]:
+        return function_schema(self.name, self.description, self.parameters)
+
+    def run(self, **kwargs: Any) -> str:
+        self.plan.goal = str(kwargs.get("goal", "")) or self.plan.goal
+        try:
+            self.plan.parse_tasks(str(kwargs.get("tasks", "")))
+            layers = self.plan.batches()
+        except Exception as exc:  # 成环要说清楚，否则模型会一直重试同一个计划
+            return f"[计划建立失败] {exc}"
+        summary = "、".join("[" + ",".join(t.id for t in layer) + "]" for layer in layers)
+        return (
+            f"计划已建立，共 {self.plan.total} 个子任务，分 {len(layers)} 批执行：{summary}。"
+            f"同一批内的子任务互不依赖，可以并行做。"
+        )
+
+
+class PlanUpdateTool(Tool):
+    """推进某个子任务的状态。"""
+
+    name: ClassVar[str] = "plan_update"
+    description: ClassVar[str] = (
+        "更新一个子任务的状态。status 取 done / failed / running 之一；"
+        "result 写这一子任务的结论（一两句话，不要贴完整原文）。"
+        "上游标成 failed 会导致它的下游全部自动跳过。"
+    )
+    parameters: ClassVar[dict[str, Any]] = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "description": "要更新的子任务 id"},
+            "status": {"type": "string", "description": "done / failed / running"},
+            "result": {"type": "string", "description": "该子任务的结论或失败原因"},
+        },
+        "required": ["id", "status"],
+    }
+
+    def __init__(self, plan: "Plan | None" = None) -> None:
+        from .plan import Plan
+
+        self.plan: Plan = plan if plan is not None else Plan()
+
+    def schema(self) -> dict[str, Any]:
+        return function_schema(self.name, self.description, self.parameters)
+
+    def run(self, **kwargs: Any) -> str:
+        task_id = str(kwargs.get("id", ""))
+        status = str(kwargs.get("status", ""))
+        result = kwargs.get("result")
+        try:
+            task = self.plan.update(task_id, status, None if result is None else str(result))
+        except Exception as exc:
+            return f"[更新失败] {exc}"
+        extra = ""
+        if task.status == "failed":
+            skipped = self.plan.skip_downstream(task_id)
+            if skipped:
+                extra = f"；下游已自动跳过：{', '.join(skipped)}"
+        return f"{task_id} → {task.status}{extra}\n{self.plan.render()}"
+
+
+class PlanViewTool(Tool):
+    """查看当前计划与进度。"""
+
+    name: ClassVar[str] = "plan_view"
+    description: ClassVar[str] = "查看当前任务计划：每个子任务的状态、依赖关系与已记录的结论。"
+
+    def __init__(self, plan: "Plan | None" = None) -> None:
+        from .plan import Plan
+
+        self.plan: Plan = plan if plan is not None else Plan()
+
+    def schema(self) -> dict[str, Any]:
+        # 没有参数也要写完整的 object 壳：只写 {} 会被 function_schema 拦下
+        # （M02 那条校验：parameters.type 必须是 object）。
+        return function_schema(
+            self.name, self.description, {"type": "object", "properties": {}, "required": []}
+        )
+
+    def run(self, **kwargs: Any) -> str:
+        if not self.plan.tasks:
+            return "当前没有计划。先用 plan_set 拆任务。"
+        return self.plan.render()
+
+
+def plan_tools(plan: "Plan | None" = None) -> list[Tool]:
+    """一组共享**同一个** Plan 对象的计划工具。
+
+    三个工具必须共用一份计划，各建各的就互不认识了 ——
+    和 Milestone 05 里草稿纸工具的道理完全一样。
+    """
+    from .plan import Plan
+
+    shared = plan if plan is not None else Plan()
+    return [PlanSetTool(shared), PlanUpdateTool(shared), PlanViewTool(shared)]
+
+
+def default_tools(pad: "Scratchpad | None" = None, plan: "Plan | None" = None) -> Sequence[Tool]:
     """默认注册给 Agent 的工具集。
 
-    ``pad`` 非空时会额外挂上草稿纸工具（Milestone 05）。之所以用参数注入而不是
-    内部 new 一个：**同一张纸必须同时被 write/read 两个工具和 Agent 共享**，
+    ``pad`` 非空时会额外挂上草稿纸工具（Milestone 05），``plan`` 非空时挂上
+    计划工具（Milestone 06）。之所以用参数注入而不是内部 new 一个：
+    **同一张纸 / 同一份计划必须同时被多个工具和 Agent 共享**，
     在两处各 new 一个就等于给了模型两张互不相通的纸 —— 这是个很容易写错的坑。
     """
     tools: list[Tool] = [RagSearchTool(), CalculatorTool(), NowTool()]
     if pad is not None:
         tools += [WriteNoteTool(pad), ReadNotesTool(pad)]
+    if plan is not None:
+        tools += plan_tools(plan)
     return tools

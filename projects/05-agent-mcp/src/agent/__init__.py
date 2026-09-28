@@ -30,13 +30,18 @@ from .errors import (
 )
 from .llm import DeepSeekLLM, FakeLLM, LLM, LLMMessage, RecordingLLM, ScriptedLLM
 from .memory import Scratchpad, estimate_messages_tokens, estimate_tokens, trim_history
+from .plan import CircularDependencyError, Plan, SubTask
 from .registry import ToolRegistry
 from .settings import AGENT_SYSTEM_PROMPT, AgentSettings
+from .workflow import Workflow, WorkflowResult, build_workflow
 from .tools import (
     BUILTIN_CORPUS,
     CalculatorTool,
     FunctionTool,
     NowTool,
+    PlanSetTool,
+    PlanUpdateTool,
+    PlanViewTool,
     RagSearchTool,
     ReadNotesTool,
     WriteNoteTool,
@@ -72,7 +77,17 @@ __all__ = [
     "RecordingLLM",
     "ScriptedLLM",
     "ToolRegistry",
+    "Workflow",
+    "WorkflowResult",
+    "build_workflow",
     "Scratchpad",
+    "Plan",
+    "SubTask",
+    "CircularDependencyError",
+    "plan_tools",
+    "PlanSetTool",
+    "PlanUpdateTool",
+    "PlanViewTool",
     "WriteNoteTool",
     "ReadNotesTool",
     "estimate_tokens",
