@@ -1,0 +1,42 @@
+=== exercises/01-prompt-and-messages/answers.py ===
+[PASS] A1 渲染了 3 个变量，声明顺序为 ('role', 'task', 'limit')
+[PASS] A2 缺参异常为 ValueError，并点名模板与变量
+[PASS] A3 未知变量被 ValueError 拦截
+[PASS] A4 内置模板渲染长度为 system=46、interview=64
+[PASS] A5 攻击文本被完整保留为数据，边界标签出现 1 次
+[PASS] B1 真实角色顺序为 system/user/assistant/user，system 数量=1
+[PASS] B2 两次外部修改后内部内容仍为 '原始内容'
+[PASS] B3 临时消息加入后返回 3 条，持久历史仍为 1 条
+[PASS] B4 同一校验器识别了 2 类错误：不能为空, role 非法
+[PASS] B5 合法工具链含 2 条消息，删掉 call id 后被拒绝
+--> 通过
+
+=== exercises/02-structured-and-streaming/answers.py ===
+[PASS] A1 三种输入均解析为 {'name': '小明', 'age': 18}，无 JSON 输入明确失败
+[PASS] A2 Schema 有 4 个字段，解析对象 years=3
+[PASS] A3 错误点名 years，异常链根因为 ValidationError
+[PASS] A4 第 2 次调用成功，第二次请求已带校验反馈
+[PASS] B1 收到 5 个增量，拼接结果长度=5
+[PASS] B2 6 个增量回灌为一条长度 6 的 assistant 消息
+[PASS] B3 SSE 返回 2 个 JSON 事件，并以 [DONE] 结束
+[PASS] C1 extract=0.0/512，creative=1.0/2048，原配置未变
+[PASS] C2 payload 含 8 个顶层字段，Authorization 已脱敏为 '***'
+[PASS] C3 校验器拒绝 3 个非法参数：temperature, top_p, max_tokens
+--> 通过
+
+=== exercises/03-memory-tokens-tools/answers.py ===
+[PASS] A1 会话数=2，reset 后 A 有 0 条、B 有 1 条
+[PASS] A2 裁剪 22 条，token 估值从 1091 降到 123
+[PASS] A3 两条路径估值同为 49，clear 后仍保留 1 条 system 消息
+[PASS] B1 四组真实估值为 [0, 4, 4, 4]
+[PASS] B2 content=2、完整消息=13；历史预算=400
+[PASS] B3 250000 tokens：输入 ¥0.2500、输出 ¥0.5000、默认合计 ¥0.7500
+[PASS] C1 add 有 2 个 number 参数；临时工具 required=['name']
+[PASS] C2 成功结果=5/20，3 类失败均返回 error
+[PASS] C3 工具循环请求 2 次，回灌 id=sum-7
+[PASS] C4 达到上限 3 后抛 ToolLoopError，实际调用次数=3
+[PASS] D1 注入 FakeClient 后调用 2 次，第二次请求带 4 条消息
+[PASS] D2 HTTP 状态为 health=200、chat=200、empty=422、reset=200
+--> 通过
+
+总结：32/32 题通过

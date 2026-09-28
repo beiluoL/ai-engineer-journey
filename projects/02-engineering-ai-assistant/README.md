@@ -137,4 +137,13 @@ projects/02-engineering-ai-assistant/
 - Project 01 的所有 Python 基础
 - 真实 LLM API 调用骨架
 
+## 学习进度（与内容生产分开）
+
+> **文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。** 这份 README 记录的是「仓库里有什么」，
+> 「我到底学会了没」看 **[LEARNING.md](LEARNING.md)** —— 那里每章有自测题、动手验证与自评，
+> 所有状态默认 ⬜，是否打勾只能由你本人决定。
+
+- [LEARNING.md](LEARNING.md) —— 10 章自测清单（问答 + 判分要点 + 自评）
+- [exercises/](exercises/README.md) —— 29 道实操题 + 参考答案 + 离线判卷工具
+
 **前置项目**：[Project 01 — Python AI CLI Assistant](../01-python-ai-cli/)

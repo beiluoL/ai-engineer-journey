@@ -28,6 +28,16 @@
 - List / Dict 嵌套、JSON 序列化、AI messages 数据结构
 - 能读懂并运行真实 LLM API 调用骨架
 
+### Project 02 / 03 —— 自测清单已就位，尚无章节被标记为已学习
+
+> 判定规则（写在这里防止自欺）：**参考答案跑通只证明答案没错，不证明我会了。**
+> AI 不替任何一章打勾。做完题 → 能讲清「为什么」→ 才由你本人把 ⬜ 改成 ✅。
+
+| Chapter | 自测清单 | 状态 |
+|---|---|---|
+| P02 M00–M09（10 章） | [LEARNING.md](projects/02-engineering-ai-assistant/LEARNING.md) + 29 题 | ⬜ 未开始 |
+| P03 M01–M09（9 章） | [LEARNING.md](projects/03-ai-application/LEARNING.md) + 32 题 | ⬜ 未开始 |
+
 ## 内容生产（Track 2 — 以「仓库里有什么」为准）
 
 | 部分 | 状态 |
@@ -41,6 +51,8 @@
 | Project 03 src + tests | ✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图 |
 | Project 04 milestones | ✅ 17/17 全部成文（ingestion → … → fastapi-web-api → real-rag-evaluation → observability → real-reranker-and-calibration → chat-ui-and-session-history） |
 | Project 04 src | ✅ v0.8 落地：19 个模块 + `web/` 原生前端，197 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估 + 可观测性 + LLMReranker 真实精排与阈值校准 + 前端 Chat UI / 会话历史 / 多轮追问均已跑通，17 章每章 2+ 张真实运行截图（assets 共 44 张） |
+| Project 02 exercises | ✅ LEARNING.md 自测清单（10 章）+ 29 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 29/29（**这是参考答案成绩，不代表用户已掌握**） |
+| Project 03 exercises | ✅ LEARNING.md 自测清单（9 章）+ 32 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 32/32（同上，不代用户勾选） |
 | Project 05 milestones | ✅ 4/10 已成文（tool → tool-schema → function-calling → agent） |
 | Project 05 src + tests | ✅ v0.5 落地：8 个模块（`src/agent/`）+ `ReActAgent` 循环，103 项 pytest 全绿，离线剧本 + DeepSeek 真实双链路，「检索即工具」已跑通，CLI 入口可用，12 张真实运行截图 |
 | publishing/tutorials | ✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/） |

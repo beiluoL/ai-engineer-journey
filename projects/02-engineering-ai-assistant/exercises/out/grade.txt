@@ -1,0 +1,39 @@
+=== exercises/01-oop-dataclass-typehints/answers.py ===
+[PASS] A1 非法 role 抛 ValueError、token 估算 = len//2、repr 不含正文、与字符串比较返回 False
+[PASS] A2 property 给的是副本（外部改不动内部），且与真实 Conversation 的 token 估算一致
+[PASS] A3 Conversation 组合 Turn 而非继承，且 add 是绑定方法（可直接传走）
+[PASS] B1 空输入返回 None 而非空串，get_type_hints 读到的返回注解是 Optional[str]
+[PASS] B2 同一个 total_tokens 同时吃下 Turn 和 AnotherTurn（无共同基类），求和正确
+[PASS] B3 FakeClient（未继承 ChatLike）通过 isinstance，只有 aclose() 的对象被挡下
+[PASS] C1 改字段抛 FrozenInstanceError、repr 无密钥、只差密钥的两实例相等且可 hash
+[PASS] C2 replace() 返回全新对象、原配置一字未动、密钥被沿用
+[PASS] C3 反射确认 Settings 是 frozen、api_key 的 repr=False，且三类非法配置都抛 LLMConfigError
+--> exercises/01-oop-dataclass-typehints/answers.py: 9/9 题通过
+
+=== exercises/02-async-http-and-config/answers.py ===
+[PASS] A1 async def 调用先得到协程对象，asyncio.run 执行后拿到字符串结果
+[PASS] A2 5 条 prompts 触发 5 次 chat，返回顺序与输入顺序完全一致
+[PASS] A3 真实墙钟：串行 0.454s vs 并发 0.152s，比值 2.98x > 1
+[PASS] B1 FakeClient 被并发调用了 4 次，调用记录与返回顺序都正确
+[PASS] B2 wait_for 在 0.05s 抛 asyncio.TimeoutError，且超时前请求已发出；给足超时则正常返回
+[PASS] B3 前两次限流第三次成功（共 3 次调用）；持续限流抛 LLMRateLimitError 且属 LLMError 子类
+[PASS] C1 三档优先级逐一验证成立（真实环境变量 > .env > 代码默认值），且跑完清掉了临时环境变量
+[PASS] C2 4 个并发 replace 互不干扰，原 Settings 仍是 INFO
+[PASS] C3 timeout 非数字与 base_url 非法都抛 LLMConfigError，且错误信息带上当前值
+--> exercises/02-async-http-and-config/answers.py: 9/9 题通过
+
+=== exercises/03-service-and-ops/answers.py ===
+[PASS] A1 从真实格式串反推的正则把一行日志拆成时间/级别/logger/消息，且能识别非法行
+[PASS] A2 Authorization / X-Api-Key（含大小写变体）变成 ***，原字典未改，真实客户端头也不泄露 Key
+[PASS] A3 结构化日志行能被 json.loads 回来，extra 字段被合并进去，无 extra 的行不产生空字段
+[PASS] B1 自己写的用例用 pytest 跑出 passed；故意写反的用例确实 fail（测试真的在拦错误）
+[PASS] B2 写了 from e 时 __cause__ 指向原始 KeyError 且 traceback 标出 direct cause；不写则退化成 __context__
+[PASS] B3 空白问题抛 ValueError；持续限流抛 LLMRateLimitError 且属 LLMError 子类
+[PASS] C1 pyproject 里的入口点 ai-assistant 真的指向 src 中存在的 main()，靠反射验证而非读文档
+[PASS] C2 __all__ 里 11 个名字全部可导出，且 importlib.metadata 读到安装版本 0.1.0
+[PASS] D1 TestClient 下 /health 返回 ok，/chat 返回 FakeClient 的固定回答（全程无端口、无网络）
+[PASS] D2 空消息与超长消息都被 Pydantic 拦下：422 且错误定位在 body.message
+[PASS] D3 底层抛 LLMRateLimitError 时 /chat 返回 502，detail 里带着原因
+--> exercises/03-service-and-ops/answers.py: 11/11 题通过
+
+总结：29/29 通过
