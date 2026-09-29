@@ -1,0 +1,297 @@
+[
+  {
+    "instruction": "请解释 Java 中 HashMap 的底层原理（以 JDK 8 为例）",
+    "input": "",
+    "output": "JDK 8 的 HashMap 底层是「数组 + 链表 + 红黑树」。数组的每个槽位称为桶（bucket），通过 key 的 hashCode 经过扰动函数再与数组长度取模定位到桶。当发生哈希冲突时，元素以链表形式挂在桶上；当链表长度达到 8 且数组容量 ≥ 64 时会树化为红黑树，将查找复杂度从 O(n) 降为 O(log n)；当红黑树节点数 ≤ 6 时退化为链表。"
+  },
+  {
+    "instruction": "HashMap 在什么情况下会扩容？扩容机制是怎样的？",
+    "input": "",
+    "output": "当元素数量 size 超过 容量 × 负载因子（默认 0.75）时会触发扩容。扩容会新建一个容量为原来 2 倍的数组，并对所有元素重新计算桶位置（rehash）。JDK 8 利用「高位运算」优化：元素要么留在原索引，要么迁移到 原索引 + 旧容量 的位置，避免了逐位重新取模，效率更高。"
+  },
+  {
+    "instruction": "ConcurrentHashMap 在 JDK 8 中如何保证线程安全？",
+    "input": "",
+    "output": "JDK 8 的 ConcurrentHashMap 放弃了 JDK 7 的分段锁（Segment），改为使用「CAS + synchronized 锁单个桶的头节点」来实现更细粒度的并发控制。读操作基本无锁（依赖 volatile 保证可见性），写操作只对发生冲突的那个桶加锁，因此并发度更高。它同样采用数组 + 链表 + 红黑树结构，且不允许 key 或 value 为 null。"
+  },
+  {
+    "instruction": "volatile 关键字能保证原子性吗？",
+    "input": "",
+    "output": "不能。volatile 只保证两点：一是可见性（一个线程修改变量后，其他线程能立即看到最新值），二是指令有序性（禁止编译器和 CPU 对其相关指令重排序，建立 happens-before 关系）。它不能保证复合操作（如 i++）的原子性，自增这类「读-改-写」操作仍需 synchronized 或 AtomicInteger 等原子类。"
+  },
+  {
+    "instruction": "volatile 和 synchronized 的区别是什么？",
+    "input": "",
+    "output": "volatile 是轻量级同步机制，仅保证可见性和有序性，不保证原子性，不会引起线程阻塞；synchronized 是重量级锁，能保证原子性、可见性和有序性，但会导致线程阻塞与上下文切换。一般volatile 用于状态标志位（如 boolean running），而 synchronized 用于需要原子性的复合操作。"
+  },
+  {
+    "instruction": "synchronized 在 JDK 6 之后做了哪些锁优化？",
+    "input": "",
+    "output": "JDK 6 引入了锁升级机制：无锁 → 偏向锁 → 轻量级锁 → 重量级锁。偏向锁假设一段同步代码一直被同一线程访问，直接在对象头记录线程 ID 避免 CAS；轻量级锁通过 CAS 自旋尝试获取，适用于线程交替执行、竞争不激烈；竞争激烈时膨胀为重量级锁，依赖操作系统 Monitor 实现，线程会进入阻塞队列。"
+  },
+  {
+    "instruction": "什么是 CAS？它有什么优缺点？",
+    "input": "",
+    "output": "CAS（Compare And Swap）是一种无锁原子操作，包含三个操作数：内存位置 V、预期原值 A、新值 B。只有当 V 的当前值等于 A 时，才将 V 更新为 B，否则不做操作，整个过程是原子的。优点是避免加锁带来的阻塞与上下文切换；缺点是存在 ABA 问题、只能保证一个共享变量的原子操作，且高竞争下自旋会空耗 CPU。"
+  },
+  {
+    "instruction": "什么是 ABA 问题？如何解决？",
+    "input": "",
+    "output": "ABA 问题指某个变量原值为 A，被改成 B 后又改回 A，此时 CAS 会误以为它从未被修改过。解决方法是引入版本号（或时间戳）：Java 中的 AtomicStampedReference 用 stamp 标记每次修改，比较时不仅要比较值还要比较版本号，从而识别中间发生过变化的情况。"
+  },
+  {
+    "instruction": "请解释 AQS（AbstractQueuedSynchronizer）的作用",
+    "input": "",
+    "output": "AQS 是 Java 并发包中构建锁和同步器的底层框架，核心是维护一个 volatile 的 int 状态 state 和一个 FIFO 等待队列（CLH 队列）。它定义了独占模式（如 ReentrantLock）和共享模式（如 Semaphore、CountDownLatch）的获取与释放模板方法，子类只需实现 tryAcquire/tryRelease 等钩子即可。ReentrantLock、Semaphore、CountDownLatch 都基于 AQS 实现。"
+  },
+  {
+    "instruction": "ReentrantLock 的公平锁和非公平锁有什么区别？",
+    "input": "",
+    "output": "公平锁严格按照 FIFO 顺序获取锁，线程必须排在队列尾部等待，不会插队，能避免线程饥饿但吞吐量较低。非公平锁允许新来的线程先「插队」尝试获取锁，减少了线程挂起与唤醒的开销，吞吐量更高，但可能导致某些线程长时间等待（饥饿）。ReentrantLock 默认构造是非公平锁。"
+  },
+  {
+    "instruction": "线程池的七大核心参数是什么？",
+    "input": "",
+    "output": "ThreadPoolExecutor 的核心参数有七个：corePoolSize（核心线程数）、maximumPoolSize（最大线程数）、keepAliveTime（空闲线程存活时间）、unit（时间单位）、workQueue（任务阻塞队列）、threadFactory（线程工厂）、handler（拒绝策略）。任务提交时优先用核心线程，核心满了进队列，队列满了再创建非核心线程，都满了则触发拒绝策略。"
+  },
+  {
+    "instruction": "ThreadPoolExecutor 有哪些拒绝策略？",
+    "input": "",
+    "output": "JDK 内置四种：AbortPolicy（默认，直接抛出 RejectedExecutionException）、CallerRunsPolicy（由提交任务的线程自己执行该任务）、DiscardPolicy（静默丢弃新任务）、DiscardOldestPolicy（丢弃队列中最老的任务并重试提交）。实际项目中也可实现 RejectedExecutionHandler 自定义策略，比如记录日志或持久化到队列稍后重试。"
+  },
+  {
+    "instruction": "为什么 ThreadPoolExecutor 用一个 AtomicInteger 的 ctl 同时保存线程池状态和线程数量？",
+    "input": "",
+    "output": "ctl 是一个 32 位 AtomicInteger：高 3 位存运行状态（RUNNING/SHUTDOWN/STOP/TIDYING/TERMINATED），低 29 位存工作线程数。这样设计是为了让「状态」和「线程数」在一次原子 CAS 操作中同时可见，避免出现先读到状态、再读到不一致线程数的竞态问题，保证了二者在并发修改下的原子性与一致性。"
+  },
+  {
+    "instruction": "什么是死锁？产生死锁的四个必要条件是什么？",
+    "input": "",
+    "output": "死锁指两个或多个线程互相等待对方持有的锁而永久阻塞。四个必要条件是：互斥（资源不可共享）、占有且等待（持有一资源同时等待另一资源）、不可抢占（已获资源不能被强行剥夺）、循环等待（形成闭环等待链）。破坏其中任意一个条件即可避免死锁，实践中常用「按固定顺序获取锁」或「使用 tryLock 带超时」来打破循环等待。"
+  },
+  {
+    "instruction": "Java 内存模型（JMM）解决了什么问题？",
+    "input": "",
+    "output": "JMM 定义了多线程下变量（尤其是共享变量）的访问规则，屏蔽了不同 CPU/编译器在指令重排序、缓存一致性上的差异。它规定所有变量存于主内存，线程有自己工作内存，并通过一组规则（happens-before）保证特定操作的可见性顺序，从而让开发者不必关心底层硬件细节就能写出正确的并发程序。"
+  },
+  {
+    "instruction": "请列举并解释 happens-before 原则中的几条关键规则",
+    "input": "",
+    "output": "关键规则包括：① 程序顺序规则——单线程内前面的操作 happens-before 后面的操作；② volatile 规则——对 volatile 变量的写 happens-before 后续对该变量的读；③ 锁规则——unlock happens-before 后续对同一锁的 lock；④ 传递性——若 A happens-before B 且 B happens-before C，则 A happens-before C；⑤ 线程启动/终止规则。这些规则是判断并发可见性的依据。"
+  },
+  {
+    "instruction": "JVM 常见的垃圾回收算法有哪些？",
+    "input": "",
+    "output": "主要有四种：① 标记-清除（Mark-Sweep），先标记存活对象再清除垃圾，会产生内存碎片；② 复制（Copying），将存活对象复制到另一块空间，无碎片但浪费一半内存，常用于新生代；③ 标记-整理（Mark-Compact），标记后让存活对象向一端移动，消除碎片；④ 分代收集，按对象存活时间分新生代（复制算法）和老年代（标记-整理/清除）分别回收。"
+  },
+  {
+    "instruction": "为什么 JVM 要采用分代垃圾回收？",
+    "input": "",
+    "output": "基于「弱分代假说」——绝大多数对象朝生夕死。将堆分为新生代和老年代后，可以针对各自特点采用不同算法：新生代对象存活率低，用高效的复制算法（如 Minor GC）；老年代对象存活久，用标记-整理避免碎片。这样既减少了每次回收的扫描范围，也提升了整体吞吐，是性价比最高的回收策略。"
+  },
+  {
+    "instruction": "G1 垃圾收集器为什么使用 Region 划分？",
+    "input": "",
+    "output": "G1（Garbage-First）将整个堆划分为多个大小相等的 Region，每个 Region 可扮演 Eden、Survivor 或 Old 角色。G1 通过跟踪各 Region 的垃圾价值（回收空间/耗时），优先回收价值最高的 Region，从而在可控的停顿时间内最大化回收效率。Region 化让 G1 摆脱了传统分代的物理连续限制，能更灵活地平衡吞吐与停顿（可设 MaxGCPauseMillis）。"
+  },
+  {
+    "instruction": "Java 中的强引用、软引用、弱引用、虚引用分别有什么区别？",
+    "input": "",
+    "output": "强引用（Strong）最常见，只要可达就不会被回收；软引用（Soft）在内存不足时才会被回收，适合做缓存；弱引用（Weak）只要发生 GC 就会被回收，常用于 WeakHashMap 防止内存泄漏；虚引用（Phantom）最弱，无法通过它获取对象，仅用于跟踪对象被回收的状态（配合 ReferenceQueue）。引用强度依次递减。"
+  },
+  {
+    "instruction": "请描述 JVM 的类加载过程",
+    "input": "",
+    "output": "类加载分五个阶段：加载（Loading，通过类加载器把字节码读入内存生成 Class 对象）、链接（验证字节码合法性、准备阶段为静态变量分配内存并赋零值、解析符号引用）、初始化（执行类构造器 <clinit>，赋静态变量真实值、执行静态块）。之后是使用和卸载。初始化前必须保证父类已初始化。"
+  },
+  {
+    "instruction": "什么是双亲委派模型？它有什么好处？",
+    "input": "",
+    "output": "双亲委派指类加载器收到加载请求时，先委托父加载器去加载，父加载器无法完成时才由自己加载。好处：① 避免重复加载，保证一个类在 JVM 中唯一；② 保护核心类库安全，防止用户自定义类冒充 java.lang 等核心包。破坏双亲委派的例子有 SPI（JDBC）、Tomcat 的 WebAppClassLoader 等。"
+  },
+  {
+    "instruction": "Java 泛型为什么会有类型擦除？",
+    "input": "",
+    "output": "Java 的泛型是在编译期实现的，编译器在编译时检查类型安全，随后将泛型类型信息「擦除」为原始类型（如 List<String> 变为 List），运行时不存在泛型参数。这是为了向后兼容（泛型出现前已大量使用原始类型）而做的妥协。代价是运行时无法获得泛型实参（如 instanceof List<String> 不合法），需用反射的 TypeToken 技巧绕过。"
+  },
+  {
+    "instruction": "为什么 String 在 Java 中是不可变的（immutable）？",
+    "input": "",
+    "output": "String 内部使用 final char[]（JDK 9 后为 byte[]）存储，且类被声明为 final、不暴露修改方法。不可变带来好处：① 字符串常量池可安全复用，节省内存；② 作为 HashMap 的 key 时哈希稳定；③ 线程安全，可被多线程共享；④ 保证安全（如网络地址、文件路径不被篡改）。需要频繁修改时应使用 StringBuilder/StringBuffer。"
+  },
+  {
+    "instruction": "String 常量池是什么？new String(\"abc\") 会创建几个对象？",
+    "input": "",
+    "output": "字符串常量池是 JVM 为复用字符串在方法区（元空间）维护的缓存。执行 new String(\"abc\") 时：若常量池中尚无 \"abc\"，先在池中创建一个 \"abc\" 字面量对象，再在堆中通过 new 创建一个 String 对象（引用指向堆对象，堆内 value 指向池中的字符数组），所以最多创建 2 个对象；若池中已有，则只创建堆中那 1 个 new 对象。"
+  },
+  {
+    "instruction": "Integer 的缓存机制是怎么回事？",
+    "input": "",
+    "output": "Integer 对 -128 到 127 之间的数值做了缓存（IntegerCache），调用 Integer.valueOf(int) 或自动装箱时会复用同一对象。因此 Integer a = 127; Integer b = 127; 用 == 比较为 true；而 128 超出缓存范围会新建对象，== 比较为 false。推荐使用 equals 比较包装类型，避免踩坑。"
+  },
+  {
+    "instruction": "== 和 equals 的区别是什么？",
+    "input": "",
+    "output": "对于基本类型，== 比较值；对于引用类型，== 比较的是对象的内存地址（是否同一对象）。equals 是 Object 的方法，默认实现等价于 ==，但类可重写它来定义「逻辑相等」，例如 String 重写后比较字符内容。比较两个对象的值是否相等应使用 equals，并同时重写 hashCode。"
+  },
+  {
+    "instruction": "为什么重写 equals 时必须重写 hashCode？",
+    "input": "",
+    "output": "因为 HashMap、HashSet 等哈希集合先通过 hashCode 定位桶，再用 equals 判断是否相等。若两个对象 equals 为 true 但 hashCode 不同，会被放到不同桶里，导致集合中「逻辑相等」的对象被当作两个存储，破坏集合的去重与查找语义。约定：equals 相等的对象必须有相等 hashCode；反之不要求。"
+  },
+  {
+    "instruction": "ArrayList 和 LinkedList 的区别及适用场景？",
+    "input": "",
+    "output": "ArrayList 基于动态数组，支持随机访问（O(1)），尾部增删快，但中间插入删除需移动元素（O(n)）；LinkedList 基于双向链表，插入删除只需改指针（O(1)），但随机访问需遍历（O(n)）。读多写少、频繁随机访问用 ArrayList；频繁在两端或中间增删用 LinkedList。实际中 ArrayList 因缓存友好几乎总是更优。"
+  },
+  {
+    "instruction": "什么是 fail-fast 机制？",
+    "input": "",
+    "output": "fail-fast 是集合在遍历时若检测到结构被并发修改（modCount 变化），会立即抛出 ConcurrentModificationException 的机制。例如用增强 for 遍历 ArrayList 时在循环里调用 remove。它是「快速暴露错误」的设计，而非保证线程安全。多线程场景应使用 CopyOnWriteArrayList 或加锁。"
+  },
+  {
+    "instruction": "CopyOnWriteArrayList 是如何实现线程安全的？",
+    "input": "",
+    "output": "CopyOnWriteArrayList 的核心思想是「写时复制」：每次修改（add/set/remove）都会复制底层数组的一份新副本，在新副本上操作，完成后用 volatile 引用指向新数组。读操作不加锁，直接读当前数组，因此读性能极高。代价是写开销大（复制整个数组）且数据有短暂不一致，适合读多写极少（如事件监听器列表）的场景。"
+  },
+  {
+    "instruction": "ThreadLocal 的原理是什么？为什么会内存泄漏？",
+    "input": "",
+    "output": "ThreadLocal 为每个线程提供独立变量副本，底层是 Thread 对象中的 ThreadLocalMap，key 为 ThreadLocal 本身（弱引用），value 是变量副本（强引用）。若 ThreadLocal 被置为 null，key 会被 GC 回收变成 null，但 value 仍被强引用无法回收，从而形成泄漏。解决：使用完务必调用 remove() 清理，尤其在线程池环境中。"
+  },
+  {
+    "instruction": "单例模式如何保证线程安全？双重检查锁为什么要加 volatile？",
+    "input": "",
+    "output": "饿汉式在类加载时创建天然线程安全但可能浪费资源；懒汉式需加 synchronized。双重检查锁（DCL）先判空再进入同步块再次判空，兼顾性能与安全。volatile 的作用是禁止指令重排序：new 对象并非原子，可能被重排为「分配内存→赋值引用→初始化」，若未初始化就被其他线程拿到，会返回半个对象；volatile 保证初始化完成前引用不对外暴露。"
+  },
+  {
+    "instruction": "请解释 synchronized 和 ReentrantLock 的区别",
+    "input": "",
+    "output": "synchronized 是 JVM 内置关键字，自动加锁释放（异常也会释放），不可用中断、无超时；ReentrantLock 是 API 层面的锁，需手动 lock/unlock（务必在 finally 释放），支持可中断（lockInterruptibly）、超时获取（tryLock）、公平/非公平选择以及多个 Condition 条件队列。高并发、需要灵活控制时选 ReentrantLock，否则用更简单的 synchronized。"
+  },
+  {
+    "instruction": "JDK 8 中 HashMap 树化与退化的阈值分别是多少？",
+    "input": "",
+    "output": "当链表长度达到 8 且数组容量 ≥ 64 时，链表会转换为红黑树（树化）；当红黑树节点数减少到 6 时，退化为链表。选择 8 和 6 并留有差值是为了避免节点数在临界值附近频繁来回转换（抖动）。同时泊松分布下桶中链表长度达到 8 的概率极低（约千万分之六），说明正常情况下几乎不会发生树化。"
+  },
+  {
+    "instruction": "Java 8 的 Stream API 有什么特点？parallelStream 要注意什么？",
+    "input": "",
+    "output": "Stream 提供声明式、函数式的数据处理（filter/map/reduce），支持链式调用且可惰性求值。parallelStream 内部使用 ForkJoinPool.commonPool() 并行执行，适合 CPU 密集、数据量大的场景；但若任务中有阻塞、IO 或共享可变状态，会导致线程池饥饿或线程安全问题。此外自定义线程池可避免影响公共池。"
+  },
+  {
+    "instruction": "Lambda 表达式本质是什么？和匿名内部类有什么区别？",
+    "input": "",
+    "output": "Lambda 本质是「函数式接口（只有一个抽象方法的接口）的实例」，编译后并不一定生成匿名类，而是通过 invokedynamic 指令在运行时动态生成实现，性能更好。与匿名内部类相比：Lambda 不持有外部类的 this 引用（this 指向外层实例）、没有额外 .class 文件、仅能访问 final 或等效 final 的局部变量。"
+  },
+  {
+    "instruction": "Java 的异常体系是怎样的？受检异常和非受检异常有何区别？",
+    "input": "",
+    "output": "所有异常都继承自 Throwable，分为 Error（如 OutOfMemoryError，严重系统错误，不应捕获）和 Exception。Exception 又分受检异常（Checked，如 IOException，编译期强制 try-catch 或 throws）和运行时异常（RuntimeException，非受检，如NullPointerException，编译不强制处理）。设计 API 时，可恢复的用受检异常，程序错误用运行时异常。"
+  },
+  {
+    "instruction": "final、finally、finalize 的区别？",
+    "input": "",
+    "output": "final 是修饰符：修饰类不可继承、方法不可重写、变量不可重新赋值。finally 是异常处理的一部分，无论是否抛异常都会执行，常用于释放资源（推荐用 try-with-resources 替代）。finalize 是 Object 的方法，对象被 GC 前调用，因执行时机不确定且影响性能，已废弃，Java 9 起建议使用 Cleaner 替代。"
+  },
+  {
+    "instruction": "接口（interface）和抽象类（abstract class）的区别？",
+    "input": "",
+    "output": "抽象类用 extends 单继承，可含普通方法、构造器、成员变量，表示「is-a」关系；接口用 implements 多实现，Java 8 后可有 default/static 方法，但无状态字段（Java 9 后有 private 方法），表示「can-do」能力。需要共享代码或状态时用抽象类，需要解耦、定义契约或支持多重能力时用接口。"
+  },
+  {
+    "instruction": "方法重载（overload）和重写（override）的区别？",
+    "input": "",
+    "output": "重载发生在同一类，方法名相同、参数列表（类型/个数/顺序）不同，与返回值和访问修饰符无关，编译期绑定（静态分派）。重写发生在父子类，子类以相同签名（方法名+参数）覆盖父类方法，返回值协变、访问修饰符不能更严格，运行期根据实际对象类型绑定（动态分派/多态）。"
+  },
+  {
+    "instruction": "常见的 OOM（OutOfMemoryError）类型有哪些？",
+    "input": "",
+    "output": "常见类型：① Java heap space——堆内存不足，多由内存泄漏或大对象引起；② GC overhead limit exceeded——98% 时间在做 GC 却回收不到 2% 空间；③ Metaspace——类元数据（方法区）耗尽，常见于动态生成大量类；④ Unable to create new native thread——线程数超过系统限制；⑤ Direct buffer memory——NIO 堆外内存溢出。排查常配合 -XX:+HeapDumpOnOutOfMemoryError 生成快照。"
+  },
+  {
+    "instruction": "JVM 的内存结构是怎样的？",
+    "input": "",
+    "output": "运行时数据区包括：① 堆（所有线程共享，存放对象实例，GC 主战场）；② 方法区/元空间（存类信息、常量、静态变量，JDK 8 后元空间在本地内存）；③ 虚拟机栈（每线程私有，存栈帧、局部变量、操作数栈）；④ 本地方法栈（Native 方法）；⑤ 程序计数器（记录当前字节码指令地址，唯一不会 OOM 的区域）。"
+  },
+  {
+    "instruction": "创建一个 Java 对象的过程是怎样的？",
+    "input": "",
+    "output": "大致步骤：① 类加载检查，确认类已加载；② 为对象分配内存（指针碰撞或空闲列表）；③ 将内存空间初始化为零值（保证字段有默认零值）；④ 设置对象头（类元数据指针、哈希码、GC 分代年龄、锁状态）；⑤ 执行 <init> 构造方法，按代码给字段赋初值、执行构造块。完成后栈中的引用指向该对象。"
+  },
+  {
+    "instruction": "什么是偏向锁？它为什么在 JDK 15 被废弃？",
+    "input": "",
+    "output": "偏向锁假设同步代码长期被同一线程访问，首次获取时把线程 ID 记入对象头，之后该线程进入无需 CAS。但它需要周期性「撤销偏向」并向所有线程发安全点（STW）广播，在高并发下维护成本反而超过收益。随着现代 CPU 上 CAS 已很快，JDK 15 起默认禁用并标记为废弃，JDK 18 后彻底移除。"
+  },
+  {
+    "instruction": "原子类（如 AtomicInteger）为什么能保证原子性？",
+    "input": "",
+    "output": "原子类底层依赖 Unsafe 提供的 CAS 循环（自旋）：以 AtomicInteger 的 incrementAndGet 为例，它不断读取当前值、计算新值，用 compareAndSet 尝试写入，失败则重试，直到成功。整个过程无锁但保证了读-改-写的原子性。高并发下若竞争激烈会大量自旋空转，此时可用 LongAdder（分段累加）降低冲突。"
+  },
+  {
+    "instruction": "CompletableFuture 相比 Future 有什么优势？",
+    "input": "",
+    "output": "Future 只能阻塞 get() 获取结果，无法链式编排。CompletableFuture 支持非阻塞回调（thenApply/thenAccept）、组合多个异步任务（thenCombine/allOf/anyOf）、异常恢复（exceptionally/handle），以及指定线程池，极大简化了异步编排，是 Java 异步编程的核心工具。"
+  },
+  {
+    "instruction": "Java 中有哪些阻塞队列？各自特点？",
+    "input": "",
+    "output": "常见实现：ArrayBlockingQueue（有界、数组、可选公平）、LinkedBlockingQueue（默认无界、链表）、SynchronousQueue（不存储元素，直接传递，用于 CachedThreadPool）、PriorityBlockingQueue（无界优先队列）、DelayQueue（延迟队列）。它们都实现 BlockingQueue，是线程池 workQueue 和生产者-消费者模型的基础。"
+  },
+  {
+    "instruction": "什么是反射？它有什么优缺点？",
+    "input": "",
+    "output": "反射是在运行时动态获取类信息并操作对象（创建实例、调用方法、访问字段）的机制，核心类为 Class、Field、Method、Constructor。优点：极大提高框架灵活性（Spring、MyBatis、Jackson 都依赖它）；缺点：破坏封装、绕过泛型与访问检查、性能低于直接调用（有 JVM 优化缓解）。应仅在框架/通用工具层使用，业务代码少用。"
+  },
+  {
+    "instruction": "Spring 中 Bean 的生命周期是怎样的？",
+    "input": "",
+    "output": "简化流程：实例化（构造器）→ 填充属性（依赖注入）→ 若实现 Aware 接口则回调（如 BeanNameAware）→ BeanPostProcessor 前置处理 → 若实现 InitializingBean 调 afterPropertiesSet / 或自定义 init-method → BeanPostProcessor 后置处理 → 就绪可用 → 容器关闭时调用 DisposableBean.destroy / 自定义 destroy-method。理解生命周期有助于在正确时机织入逻辑（如 AOP、资源初始化）。"
+  },
+  {
+    "instruction": "Spring 的 IoC 和 DI 是什么？",
+    "input": "",
+    "output": "IoC（控制反转）是把对象的创建与依赖管理交给容器，而非由代码自己 new，降低耦合。DI（依赖注入）是实现 IoC 的方式：容器在运行时把依赖对象注入到需要的组件中，常见形式有构造器注入、Setter 注入、字段注入（@Autowired）。构造器注入能保证依赖不可变且便于测试，是 Spring 官方推荐方式。"
+  },
+  {
+    "instruction": "Spring Bean 默认是单例还是多例？单例是否线程安全？",
+    "input": "",
+    "output": "Spring 默认作用域是 singleton（单例），即容器中只存在一个共享实例。但单例不等于线程安全：若 Bean 含有可变成员变量且在多线程下被修改，就可能产生并发问题。无状态 Bean（只做方法调用、不保存状态，如 Service/DAO）天然线程安全；有状态 Bean 应避免共享可变字段，或改用 prototype 作用域。"
+  },
+  {
+    "instruction": "什么是 AOP？它解决了什么问题？",
+    "input": "",
+    "output": "AOP（面向切面编程）通过横向抽取把日志、事务、权限等「横切关注点」与业务逻辑解耦。Spring AOP 基于动态代理（JDK 动态代理用于接口，CGLIB 用于类），在方法执行前后织入增强（Advice）。它解决了代码重复与分散的问题，让业务方法只关注核心逻辑，典型应用有 @Transactional 事务管理、统一日志、权限校验。"
+  },
+  {
+    "instruction": "MySQL 中 InnoDB 的索引为什么用 B+ 树而不是 B 树或哈希？",
+    "input": "",
+    "output": "B+ 树所有数据都存放在叶子节点，且叶子节点用链表相连，非常利于范围查询和全表扫描（顺序 IO）；非叶子节点只存索引键，单页能容纳更多键，树更矮、磁盘 IO 更少。哈希索引虽等值查询 O(1) 但不支持范围与排序。B 树每个节点都存数据导致非叶节点键少、树更高且范围查询需中序遍历，因此 InnoDB 选 B+ 树作为聚簇索引结构。"
+  },
+  {
+    "instruction": "HTTP 中 GET 和 POST 的区别是什么？",
+    "input": "",
+    "output": "语义上 GET 用于获取资源、幂等且可被缓存，参数在 URL 中、有长度限制、不安全；POST 用于提交数据、非幂等、参数在请求体、无长度限制。但这只是约定而非强制（GET 也能带 body）。从幂等性看，GET/PUT/DELETE 应幂等，POST/PATCH 不保证。RESTful 设计中用 GET 查、POST 增、PUT 改、DELETE 删。"
+  },
+  {
+    "instruction": "什么是索引下推（Index Condition Pushdown）？",
+    "input": "",
+    "output": "索引下推是 MySQL 5.6 引入的优化：在联合索引遍历过程中，存储引擎层就利用索引中剩余的列条件进行过滤，减少回表次数。例如联合索引 (name, age)，查询 where name like '张%' and age=20，旧版会先按 name 找齐再回表判断 age；开启 ICP 后直接在索引层用 age 过滤，显著减少回表 IO，提升查询性能。"
+  },
+  {
+    "instruction": "什么是事务的 ACID？Spring 中 @Transactional 的隔离级别有哪些？",
+    "input": "",
+    "output": "ACID 指原子性（Atomicity，要么全做要么全不做）、一致性（Consistency，数据始终满足约束）、隔离性（Isolation，并发事务互不干扰）、持久性（Durability，提交后永久生效）。Spring @Transactional 支持 Isolation.DEFAULT（用库默认）、READ_UNCOMMITTED、READ_COMMITTED、REPEATABLE_READ、SERIALIZABLE，默认随数据库（MySQL 通常是 REPEATABLE_READ）。"
+  },
+  {
+    "instruction": "什么是缓存穿透、缓存击穿、缓存雪崩？如何解决？",
+    "input": "",
+    "output": "缓存穿透：查询不存在的数据，缓存与库都没有，请求直击数据库。解决：布隆过滤器、缓存空值。缓存击穿：某热点 key 过期瞬间大量请求同时打到库。解决：互斥锁（只让一个线程重建）或逻辑过期（异步刷新）。缓存雪崩：大量 key 同时过期或 Redis 宕机，请求全部压向数据库。解决：错开过期时间、多级缓存、Redis 高可用集群。"
+  },
+  {
+    "instruction": "Redis 为什么这么快？",
+    "input": "",
+    "output": "主要原因：① 纯内存操作，不依赖磁盘 IO；② 单线程模型避免了锁竞争与上下文切换（6.0 后引入多线程 IO 但核心仍单线程）；③ 基于高效的数据结构（SDS、跳表、哈希表）；④ IO 多路复用（epoll）处理海量连接；⑤ 合理设计的协议（RESP）解析快。单线程也简化了实现，使性能瓶颈不在 CPU 而在内存与网络带宽。"
+  }
+]

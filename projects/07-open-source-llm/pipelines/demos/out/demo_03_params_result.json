@@ -1,0 +1,31 @@
+{
+  "question": "用一句话解释 Java 里的 happens-before 原则。",
+  "configs": [
+    {
+      "temperature": 0.0,
+      "completion_tokens": 68,
+      "latency_s": 1.0631,
+      "content": "happens-before 原则规定：如果操作 A happens-before 操作 B，那么 A 的执行结果（包括内存写入）对 B 一定可见，且 A 在时间上先于 B 发生——这是 Java 内存模型用来判断多线程间数据是否存在竞争、以及保证可见性的核心规则。"
+    },
+    {
+      "temperature": 0.0,
+      "completion_tokens": 72,
+      "latency_s": 1.0526,
+      "content": "happens-before 原则规定：如果操作 A happens-before 操作 B，那么 A 的执行结果（包括对共享变量的修改）对 B 一定可见，且 A 在时间上先于 B 发生——这是 Java 内存模型用来判定多线程环境下数据是否存在竞争、以及保证可见性和有序性的核心规则。"
+    },
+    {
+      "temperature": 0.7,
+      "completion_tokens": 53,
+      "latency_s": 0.9174,
+      "content": "happens-before 原则是 Java 内存模型用来定义多线程间操作可见性的规则：如果操作 A happens-before 操作 B，那么 A 的结果对 B 可见，且 A 在时间上先于 B 执行。"
+    },
+    {
+      "temperature": 1.5,
+      "completion_tokens": 45,
+      "latency_s": 0.8707,
+      "content": "一个操作的结果要对另一个操作可见，就必须满足 happens-before 关系——它是 JMM 用来判定“多线程下要不要保证可见性和有序性、以及数据是否可能产生竞争”的偏序规则。"
+    }
+  ],
+  "two_runs_at_zero_identical": false,
+  "unique_outputs": 4
+}

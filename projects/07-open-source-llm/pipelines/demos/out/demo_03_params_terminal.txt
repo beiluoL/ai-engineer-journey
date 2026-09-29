@@ -1,0 +1,41 @@
+== demo_03_params：生成参数对照实验 ---------------------------------------------
+
+固定提问：用一句话解释 Java 里的 happens-before 原则。
+固定其余参数：top_p=1.0, max_tokens=120；唯一自变量 = temperature
+
+[1] temperature=0.0
+    回答：happens-before 原则规定：如果操作 A happens-before 操作 B，那么 A 的执行结果（包括内存写入）对 B 一...
+    tokens=68  latency=1.063s
+
+[2] temperature=0.0
+    回答：happens-before 原则规定：如果操作 A happens-before 操作 B，那么 A 的执行结果（包括对共享变量的修改）对...
+    tokens=72  latency=1.053s
+
+[3] temperature=0.7
+    回答：happens-before 原则是 Java 内存模型用来定义多线程间操作可见性的规则：如果操作 A happens-before 操作 ...
+    tokens=53  latency=0.917s
+
+[4] temperature=1.5
+    回答：一个操作的结果要对另一个操作可见，就必须满足 happens-before 关系——它是 JMM 用来判定“多线程下要不要保证可见性和有序性...
+    tokens=45  latency=0.871s
+
+== 汇总对照表 ---------------------------------------------------------------
+  #  temperature  completion_tokens  latency(s)
+  -  -----------  -----------------  ----------
+  1  0.0          68                 1.063     
+  2  0.0          72                 1.053     
+  3  0.7          53                 0.917     
+  4  1.5          45                 0.871     
+
+== 确定性校验（temperature=0 跑两次） --------------------------------------------
+   两次输出完全一致？ -> False
+   两次 token 数：68 vs 72
+   说明：temperature=0 走贪婪解码，每步都选概率最大的 token，
+         所以同一份输入在没有服务端抖动时应当复现同一结果。
+         注意这只保证『近似确定性』——batch/算子层面的浮点误差仍可能带来极偶发差异。
+
+== 发散性观察 ---------------------------------------------------------------
+   共 4 次调用，去重后得到 4 种不同回答
+   temperature 取值序列：[0.0, 0.0, 0.7, 1.5]
+   趋势：temperature 越高，低概率 token 越可能被采到，输出越发散、也越容易跑题。
+

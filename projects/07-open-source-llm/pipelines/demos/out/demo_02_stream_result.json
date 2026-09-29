@@ -1,0 +1,14 @@
+{
+  "model": "deepseek-flash",
+  "chunks": 397,
+  "ttft_s": 0.9106,
+  "total_s": 2.3152,
+  "ttft_ratio": 0.3933,
+  "generation_tps": 284.77,
+  "usage": {
+    "prompt_tokens": 27,
+    "completion_tokens": 400,
+    "total_tokens": 427
+  },
+  "content": "# Java 线程池 corePoolSize 与 maximumPoolSize 的区别\n\n## 一、核心概念\n\n| 参数 | 含义 |\n|------|------|\n| **corePoolSize** | 核心线程数，线程池**长期保持**的线程数量 |\n| **maximumPoolSize** | 最大线程数，线程池**允许创建的最大线程数量** |\n\n关系：`corePoolSize <= maximumPoolSize`\n\n---\n\n## 二、线程池的任务处理流程\n\n当提交一个新任务时，`ThreadPoolExecutor` 按以下顺序处理：\n\n```\n提交任务\n   │\n   ▼\n核心线程数是否已满？ ──否──► 创建核心线程执行\n   │是\n   ▼\n任务队列是否已满？ ──否──► 放入队列等待\n   │是\n   ▼\n线程数 < maximumPoolSize？ ──是──► 创建非核心线程执行\n   │否\n   ▼\n执行拒绝策略（RejectedExecutionHandler）\n```\n\n**关键点**：只有当**队列满了**，才会去创建超过 `corePoolSize` 的线程，直到 `maximumPoolSize`。\n\n---\n\n## 三、举例说明\n\n### 示例代码\n\n```java\nThreadPoolExecutor executor = new ThreadPoolExecutor(\n    2,                          // corePoolSize = 2\n    5,                          // maximumPoolSize = 5\n    60L, TimeUnit.SECONDS,      // 空闲线程存活时间\n    new ArrayBlockingQueue<>(3) // 队列容量 = 3\n);\n```\n\n**参数含义**：\n- 核心线程：2 个\n- 最大线程：5 个\n- 队列容量：3\n\n### 任务提交过程分析\n\n| 提交第 N 个任务 | 处理方式 | 当前线程数 | 队列中任务数 |\n|:---:|:---"
+}

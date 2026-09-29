@@ -202,20 +202,29 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：本地跑通的开源 LLM 应用
 
-**状态**：⬜ 未开始
+**状态**：🔄 进行中（v0.1）
+
+> 本机 M1 磁盘仅剩 ~15GB，而 Qwen2.5-7B 的 bf16 权重就要 **14.18 GiB**，
+> 所以本项目拆成两条互不干扰的线：
+> - **`pipelines/`（已真实跑通）** —— 调用、生成参数、资源测算。
+>   不需要本地有卡，走 DeepSeek OpenAI 兼容接口由本机直连驱动，已产出 6 张真实终端截图。
+> - **`notebooks/`（待 Colab GPU）** —— 模型加载、量化这类必须摸到真实权重 / 需要 GPU 的部分。
 
 **9 个 Milestone**：
 ```
-01 — Hugging Face
-02 — Tokenizer
-03 — Model Loading
-04 — Model Inference
-05 — Generation Parameters
-06 — Local Model Serving
-07 — Model Memory / VRAM
-08 — Quantization
-09 — Open Source LLM Application
+01 — Hugging Face              🔶 已用真实抓取的 HF config.json 做参数账本；Hub 生态部分待 Colab
+02 — Tokenizer                 🔶 已对照「本地估算 vs 服务端 usage」（40 vs 34）；BPE 细节待跑
+03 — Model Loading             ⬜ 需要 GPU/权重（Colab 路线）
+04 — Model Inference           ✅ 真实调用 + usage 守恒校验（pipelines M01）
+05 — Generation Parameters     ✅ temperature 0/0.7/1.5 四组对照实测（pipelines M03）
+06 — Local Model Serving       🔶 已实测 SSE 流式 / TTFT / 吞吐；真正起服务待 Colab
+07 — Model Memory / VRAM       ✅ 手算参数量对账 + 权重 & KV Cache 显存账本（pipelines M04、M05）
+08 — Quantization              ⬜ 需要权重（Colab=bitsandbytes 4bit / Mac=GGUF+llama.cpp）
+09 — Open Source LLM Application  ✅ Java 面试助手（检索 + 生成）端到端跑通（pipelines M06）
 ```
+
+> ⚠️ 一个实测反例已记入 `pipelines/README.md`：temperature=0 连续两次调用**结果不一致**
+> （68 vs 72 tokens）——「贪婪解码 ⇒ 严格确定性」是近似成立而非保证。
 
 ---
 

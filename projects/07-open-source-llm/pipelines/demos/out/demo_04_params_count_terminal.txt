@@ -1,0 +1,102 @@
+== demo_04_params_count：手算参数量，与标称对照 ------------------------------------
+
+数据来源：pipelines/data/open_models_weights.json
+抓取状态：all_ok @ 2026-09-29T21:46:31+0800
+模型数量：3
+
+== 方法：标准 decoder-only 参数公式 ---------------------------------------------
+   embed      = vocab × hidden        （token 嵌入表）
+   lm_head    = 同上，tie 权重时为 0   （输出投影头）
+   attn/layer = h×q_dim + 2×(h×kv_dim) + q_dim×h   （q/k/v/o，注意 K/V 按 kv_heads 算 → GQA）
+   mlp/layer  = 3 × hidden × inter    （gate + up + down，SwiGLU 结构）
+   每层再 + 2 个 LayerNorm = 2×hidden；最后还有一个 final norm = hidden
+
+== Qwen/Qwen2.5-0.5B-Instruct  （标称 0.5B） -------------------------------
+  字段                   值                    
+  -------------------  ---------------------
+  hidden_size          896                  
+  layers               24                   
+  attention heads      14                   
+  kv heads (GQA)       2                    
+  head_dim             64（由 hidden/heads 推导）
+  intermediate_size    4864                 
+  vocab_size           151936               
+  tie_word_embeddings  True                 
+
+   参数构成明细：
+  部分       参数量          占总量   
+  -------  -----------  ------
+  embed    136,134,656  27.6% 
+  lm_head  0            0.0%  
+  每层 attn  1,835,008    -     
+  每层 mlp   13,074,432   -     
+  每层合计     14,911,232   -     
+  × 层数     24 层         -     
+  总计       494,005,120  100.0%
+
+   >>> 手算总量 = 494,005,120 参数 ≈ 0.494B
+   >>> 标称规模 = 0.5B
+
+== Qwen/Qwen2.5-1.5B-Instruct  （标称 1.5B） -------------------------------
+  字段                   值                     
+  -------------------  ----------------------
+  hidden_size          1536                  
+  layers               28                    
+  attention heads      12                    
+  kv heads (GQA)       2                     
+  head_dim             128（由 hidden/heads 推导）
+  intermediate_size    8960                  
+  vocab_size           151936                
+  tie_word_embeddings  True                  
+
+   参数构成明细：
+  部分       参数量            占总量   
+  -------  -------------  ------
+  embed    233,373,696    15.1% 
+  lm_head  0              0.0%  
+  每层 attn  5,505,024      -     
+  每层 mlp   41,287,680     -     
+  每层合计     46,795,776     -     
+  × 层数     28 层           -     
+  总计       1,543,656,960  100.0%
+
+   >>> 手算总量 = 1,543,656,960 参数 ≈ 1.544B
+   >>> 标称规模 = 1.5B
+
+== Qwen/Qwen2.5-7B-Instruct  （标称 7B） -----------------------------------
+  字段                   值                     
+  -------------------  ----------------------
+  hidden_size          3584                  
+  layers               28                    
+  attention heads      28                    
+  kv heads (GQA)       4                     
+  head_dim             128（由 hidden/heads 推导）
+  intermediate_size    18944                 
+  vocab_size           152064                
+  tie_word_embeddings  False                 
+
+   参数构成明细：
+  部分       参数量            占总量   
+  -------  -------------  ------
+  embed    544,997,376    7.2%  
+  lm_head  544,997,376    7.2%  
+  每层 attn  29,360,128     -     
+  每层 mlp   203,685,888    -     
+  每层合计     233,053,184    -     
+  × 层数     28 层           -     
+  总计       7,615,487,488  100.0%
+
+   >>> 手算总量 = 7,615,487,488 参数 ≈ 7.615B
+   >>> 标称规模 = 7B
+
+== 汇总：手算 vs 标称 ---------------------------------------------------------
+  模型                     标称    手算      embed        每层MLP        每层合计       
+  ---------------------  ----  ------  -----------  -----------  -----------
+  Qwen2.5-0.5B-Instruct  0.5B  0.494B  136,134,656  13,074,432   14,911,232 
+  Qwen2.5-1.5B-Instruct  1.5B  1.544B  233,373,696  41,287,680   46,795,776 
+  Qwen2.5-7B-Instruct    7B    7.615B  544,997,376  203,685,888  233,053,184
+
+   结论：三个模型手算值与标称（0.5B / 1.5B / 7B）都能对上，
+        说明这套公式抓住了 Transformer 参数的主体；
+        微小差异来自 bias 项、特殊 norm 等本 demo 有意省略的细节。
+

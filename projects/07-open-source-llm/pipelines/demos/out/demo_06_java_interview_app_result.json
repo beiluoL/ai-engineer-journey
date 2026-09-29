@@ -1,0 +1,72 @@
+{
+  "corpus_size": 59,
+  "recall_at_1": 0.875,
+  "recall_at_3": 1.0,
+  "retrieval_ms": 11.59,
+  "detail": [
+    {
+      "query": "聊聊 ConcurrentHashMap 是怎么做到并发安全的",
+      "top1": "ConcurrentHashMap 在 JD",
+      "score": "0.64",
+      "recall1": true,
+      "recall3": true
+    },
+    {
+      "query": "volatile 能保证复合操作的原子性么",
+      "top1": "volatile 关键字能保证原子性吗？",
+      "score": "0.84",
+      "recall1": true,
+      "recall3": true
+    },
+    {
+      "query": "说说线程池刚初始化的时候要配哪些参数",
+      "top1": "线程池的七大核心参数是什么？",
+      "score": "0.18",
+      "recall1": true,
+      "recall3": true
+    },
+    {
+      "query": "任务太多被线程池拒绝了怎么办",
+      "top1": "线程池的七大核心参数是什么？",
+      "score": "0.31",
+      "recall1": false,
+      "recall3": true
+    },
+    {
+      "query": "一个 class 从字节码到能被 new 出来经历了什么",
+      "top1": "请描述 JVM 的类加载过程",
+      "score": "0.26",
+      "recall1": true,
+      "recall3": true
+    },
+    {
+      "query": "JDK8 的 HashMap 底层数据结构长什么样",
+      "top1": "请解释 Java 中 HashMap 的底层",
+      "score": "0.62",
+      "recall1": true,
+      "recall3": true
+    },
+    {
+      "query": "synchronized 和 ReentrantLock 该怎么选",
+      "top1": "请解释 synchronized 和 Ree",
+      "score": "0.86",
+      "recall1": true,
+      "recall3": true
+    },
+    {
+      "query": "为什么 Redis 的读写延迟能那么低",
+      "top1": "Redis 为什么这么快？",
+      "score": "0.38",
+      "recall1": true,
+      "recall3": true
+    }
+  ],
+  "final_query": "请解释 ThreadLocal 为什么容易引发内存泄漏，以及正确的处理姿势。",
+  "usage": {
+    "prompt_tokens": 288,
+    "completion_tokens": 95,
+    "total_tokens": 383
+  },
+  "latency_s": 0.9543,
+  "answer": "ThreadLocal 的 ThreadLocalMap 中，key 是 ThreadLocal 的弱引用，value 是强引用。当 ThreadLocal 外部引用置 null 后，key 会被 GC 回收变成 null，但 value 仍被 Entry 强引用，无法回收，导致泄漏。线程池中线程长期存活，泄漏会累积。\n\n正确姿势：使用完务必在 finally 中调用 remove() 清理，尤其在线程池场景。"
+}

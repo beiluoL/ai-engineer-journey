@@ -1,0 +1,61 @@
+{
+  "fetched_at": "2026-09-29T21:46:31+0800",
+  "fetch_status": "all_ok",
+  "source_note": "本次运行通过 HTTPS 实时抓取 Hugging Face 镜像站 hf-mirror.com 的 /resolve/main/config.json 原始文件（镜像返回 302 跳转至缓存副本，已用 curl -L 跟随）。三个模型全部抓取成功，config 字段为原始文件原样保留，未做任何推算或补写。需注意两点：一、官方 config.json 中不含 head_dim 字段（Qwen2 默认按 hidden_size / num_attention_heads 隐式计算），故此处遵循「缺失即缺失」原则省略，由上层代码容错推导；二、Qwen2.5-7B-Instruct 的 max_position_embeddings 实为 32768（其 131072 长上下文由 sliding_window 与 YaRN 相关配置体现），与部分文档描述的 131072 不同，以原始 config.json 为准。数据可信度：高（原始架构定义文件），但镜像站内容依赖其同步时效，若需最权威结果请以 huggingface.co 官方仓库为准。",
+  "models": [
+    {
+      "repo": "Qwen/Qwen2.5-0.5B-Instruct",
+      "nominal": "0.5B",
+      "fetch": "ok",
+      "source": "https://hf-mirror.com/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json",
+      "config": {
+        "model_type": "qwen2",
+        "hidden_size": 896,
+        "num_hidden_layers": 24,
+        "num_attention_heads": 14,
+        "num_key_value_heads": 2,
+        "intermediate_size": 4864,
+        "vocab_size": 151936,
+        "tie_word_embeddings": true,
+        "torch_dtype": "bfloat16",
+        "max_position_embeddings": 32768
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-1.5B-Instruct",
+      "nominal": "1.5B",
+      "fetch": "ok",
+      "source": "https://hf-mirror.com/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/config.json",
+      "config": {
+        "model_type": "qwen2",
+        "hidden_size": 1536,
+        "num_hidden_layers": 28,
+        "num_attention_heads": 12,
+        "num_key_value_heads": 2,
+        "intermediate_size": 8960,
+        "vocab_size": 151936,
+        "tie_word_embeddings": true,
+        "torch_dtype": "bfloat16",
+        "max_position_embeddings": 32768
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-7B-Instruct",
+      "nominal": "7B",
+      "fetch": "ok",
+      "source": "https://hf-mirror.com/Qwen/Qwen2.5-7B-Instruct/resolve/main/config.json",
+      "config": {
+        "model_type": "qwen2",
+        "hidden_size": 3584,
+        "num_hidden_layers": 28,
+        "num_attention_heads": 28,
+        "num_key_value_heads": 4,
+        "intermediate_size": 18944,
+        "vocab_size": 152064,
+        "tie_word_embeddings": false,
+        "torch_dtype": "bfloat16",
+        "max_position_embeddings": 32768
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+== demo_06：Java 面试助手（检索 + 生成） ------------------------------------------
+
+本地知识库：java_interview.json  共 59 条
+检索方式：字符二元组相似度（无 embedding、不联网，纯本地算术）
+
+== Part A：检索质量评测（8 条转述 query） ------------------------------------------
+  query(截断)           Top1命中条目(截断)            分数    R@1  R@3
+  ------------------  ----------------------  ----  ---  ---
+  聊聊 ConcurrentHashM  ConcurrentHashMap 在 JD  0.64  Y    Y  
+  volatile 能保证复合操作的原  volatile 关键字能保证原子性吗？    0.84  Y    Y  
+  说说线程池刚初始化的时候要配哪些参数  线程池的七大核心参数是什么？          0.18  Y    Y  
+  任务太多被线程池拒绝了怎么办      线程池的七大核心参数是什么？          0.31  N    Y  
+  一个 class 从字节码到能被 n  请描述 JVM 的类加载过程          0.26  Y    Y  
+  JDK8 的 HashMap 底层数  请解释 Java 中 HashMap 的底层  0.62  Y    Y  
+  synchronized 和 Ree  请解释 synchronized 和 Ree  0.86  Y    Y  
+  为什么 Redis 的读写延迟能那么  Redis 为什么这么快？           0.38  Y    Y  
+
+   recall@1 = 7/8 = 87.50%
+   recall@3 = 8/8 = 100.00%
+   全库 59 条检索总耗时 = 11.6 ms
+   注：这是刻意用最朴素的词面相似度，结果代表『零成本基线』，
+       换成 embedding 检索（P04 已实践）通常还能再上一截。
+
+== Part B：端到端问答（检索到的上下文 + 生成） ------------------------------------------
+   提问：请解释 ThreadLocal 为什么容易引发内存泄漏，以及正确的处理姿势。
+   检索到的参考条目：
+     - [0.46] ThreadLocal 的原理是什么？为什么会内存泄漏？
+     - [0.23] 常见的 OOM（OutOfMemoryError）类型有哪些？
+
+   model=deepseek-flash  finish_reason=stop
+   tokens(prompt/completion) = 288/95
+   latency = 0.954 s
+
+== 生成的回答 ---------------------------------------------------------------
+   ThreadLocal 的 ThreadLocalMap 中，key 是 ThreadLocal 的弱引用，value 是强引用。当 ThreadLocal 外部引用置 null 后，key 会被 GC 回收变成 null，但 value 仍被 Entry 强引用，无法回收，导致泄漏。线程池中线程长期存活，泄漏会累积。
+
+正确姿势：使用完务必在 finally 中调用 remove() 清理，尤其在线程池场景。
+

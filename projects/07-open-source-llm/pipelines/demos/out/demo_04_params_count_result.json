@@ -1,0 +1,72 @@
+{
+  "fetch_status": "all_ok",
+  "fetched_at": "2026-09-29T21:46:31+0800",
+  "models": [
+    {
+      "repo": "Qwen/Qwen2.5-0.5B-Instruct",
+      "nominal": "0.5B",
+      "embed": 136134656,
+      "lm_head": 0,
+      "per_layer": 14911232,
+      "attn_per_layer": 1835008,
+      "mlp_per_layer": 13074432,
+      "total": 494005120,
+      "total_b": 0.49400512,
+      "arch": {
+        "hidden": 896,
+        "layers": 24,
+        "heads": 14,
+        "kv_heads": 2,
+        "head_dim": 64,
+        "inter": 4864,
+        "vocab": 151936,
+        "tied": true,
+        "max_pos": 32768
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-1.5B-Instruct",
+      "nominal": "1.5B",
+      "embed": 233373696,
+      "lm_head": 0,
+      "per_layer": 46795776,
+      "attn_per_layer": 5505024,
+      "mlp_per_layer": 41287680,
+      "total": 1543656960,
+      "total_b": 1.54365696,
+      "arch": {
+        "hidden": 1536,
+        "layers": 28,
+        "heads": 12,
+        "kv_heads": 2,
+        "head_dim": 128,
+        "inter": 8960,
+        "vocab": 151936,
+        "tied": true,
+        "max_pos": 32768
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-7B-Instruct",
+      "nominal": "7B",
+      "embed": 544997376,
+      "lm_head": 544997376,
+      "per_layer": 233053184,
+      "attn_per_layer": 29360128,
+      "mlp_per_layer": 203685888,
+      "total": 7615487488,
+      "total_b": 7.615487488,
+      "arch": {
+        "hidden": 3584,
+        "layers": 28,
+        "heads": 28,
+        "kv_heads": 4,
+        "head_dim": 128,
+        "inter": 18944,
+        "vocab": 152064,
+        "tied": false,
+        "max_pos": 32768
+      }
+    }
+  ]
+}

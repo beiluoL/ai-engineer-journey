@@ -1,0 +1,40 @@
+== demo_01_chat：最小可用调用 -------------------------------------------------
+
+1) 鉴权方式：Authorization 头带 Bearer token
+   key（脱敏）= sk-***(len=35)
+   endpoint   = https://api.deepseek.com/v1/chat/completions
+
+2) 请求体里的 messages —— 三种 role 的分工：
+   system    = 人设/全局约束（每轮都带，也要计费）
+   user      = 本轮提问
+   assistant = 历史回答（多轮对话时由我们把上一轮结果塞回去）
+   - system    | 你是资深 Java 面试官。回答简洁准确，控制在 80 字以内。
+   - user      | 用一句话解释 Java 里 volatile 关键字的作用。
+
+3) 本地粗估 prompt token ≈ 40
+   （口径：中文约 1 字 1 token，英文约 4 字符 1 token —— 这是估算，不是分词器结果）
+
+== 等价 curl（教学对照） -------------------------------------------------------
+   curl https://api.deepseek.com/v1/chat/completions \
+     -H 'Content-Type: application/json' \
+     -H 'Authorization: Bearer $DEEPSEEK_API_KEY' \
+     -d '{"model":"deepseek-chat","messages":[...],"stream":false}'
+
+== 真实调用结果 --------------------------------------------------------------
+   model         = deepseek-flash
+   finish_reason = stop
+   latency       = 0.741 s
+
+   usage 明细：
+  字段                 值 
+  -----------------  --
+  prompt_tokens      34
+  completion_tokens  31
+  total_tokens       65
+
+   守恒校验 total == prompt + completion ? -> True
+   本地估算 vs 真实 prompt token 误差 = 6 （估算 40 / 真实 34）
+
+== 回答内容 ----------------------------------------------------------------
+   volatile 保证变量的可见性和有序性：一个线程修改后其他线程立即可见，并禁止指令重排序，但不保证原子性。
+

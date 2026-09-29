@@ -70,7 +70,7 @@
 | 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.8 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估+可观测性+真实精排与阈值校准+前端 Chat UI / 会话历史 / 多轮追问 |
 | 05 | Research Agent / MCP | ⬜ | ✅ v1.0 文档+代码+测试(244)+真实 LLM 双链路+MCP 跨进程工具+Workflow 多 Worker 编排+M01-10 全成+28 张真实截图 |
 | 06 | Mini Transformer / LLM | ⬜ | ✅ v1.0 文档+代码+测试(150：51 分词器+99 模型，含梯度校验)+从零 autograd+真实训练 loss 6.21→4.75+M01-10 全成+11 张手写 SVG+10 张真实终端截图 |
-| 07 | Open Source LLM | ⬜ | ⬜ |
+| 07 | Open Source LLM | ⬜ | 🔄 v0.1 `pipelines/` 调用管线 6 模块真实跑通：真实调 DeepSeek API（TTFT 占比 39.33%、净生成 284.77 tok/s）+ 手算参数量对账（0.494/1.544/7.615B 对上标称）+ 显存账本（7B bf16 14.18 / int4 3.55 GiB，KV 57,344 B/token）+ RAG-lite 检索评测（recall@1 87.5%、recall@3 100%、全库 11.59ms）+ 6 张真实终端截图；模型加载/量化线待 Colab GPU |
 | 08 | LoRA / QLoRA Fine-Tuning | ⬜ | ⬜ |
 | 09 | LLM Evaluation / Inference | ⬜ | ⬜ |
 | 10 | Tiny LLM Capstone | ⬜ | ⬜ |
