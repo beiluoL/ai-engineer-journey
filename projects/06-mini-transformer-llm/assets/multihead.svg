@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" width="680" height="320" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="320" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#1f2328">M05 多头注意力：一份大权重，切 h 份并行</text>
+  <text x="20" y="48" font-size="11.5" fill="#57606a">X → 线性投影 → 切头 → 每头各算一次缩放点积注意力 → 拼回 → 输出投影 Wo。</text>
+
+  <!-- X -->
+  <rect x="20" y="140" width="90" height="55" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="65" y="164" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">X</text>
+  <text x="65" y="182" font-size="10.5" text-anchor="middle" fill="#57606a">(seq, d_model)</text>
+
+  <!-- linear Wq -->
+  <rect x="150" y="140" width="110" height="55" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="205" y="162" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">@ Wq/Wk/Wv</text>
+  <text x="205" y="180" font-size="10.5" text-anchor="middle" fill="#57606a">Parameter (d,d)</text>
+
+  <!-- split heads -->
+  <rect x="300" y="140" width="120" height="55" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="360" y="162" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">split heads</text>
+  <text x="360" y="180" font-size="10.5" text-anchor="middle" fill="#57606a">(h, seq, d_k)</text>
+
+  <!-- 4 heads -->
+  <rect x="450" y="60" width="120" height="38" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="510" y="83" font-size="11.5" text-anchor="middle" fill="#1f2328">head 0 · SDPA</text>
+  <rect x="450" y="108" width="120" height="38" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="510" y="131" font-size="11.5" text-anchor="middle" fill="#1f2328">head 1 · SDPA</text>
+  <rect x="450" y="156" width="120" height="38" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="510" y="179" font-size="11.5" text-anchor="middle" fill="#1f2328">head 2 · SDPA</text>
+  <rect x="450" y="204" width="120" height="38" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="510" y="227" font-size="11.5" text-anchor="middle" fill="#1f2328">head 3 · SDPA</text>
+
+  <!-- merge -->
+  <rect x="600" y="140" width="70" height="55" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="635" y="162" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">merge</text>
+  <text x="635" y="180" font-size="10.5" text-anchor="middle" fill="#57606a">(seq,d)</text>
+
+  <!-- Wo -->
+  <rect x="560" y="245" width="110" height="50" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="615" y="267" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">@ Wo</text>
+  <text x="615" y="284" font-size="10.5" text-anchor="middle" fill="#57606a">Parameter (d,d)</text>
+
+  <!-- out -->
+  <rect x="430" y="270" width="110" height="45" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="485" y="292" font-size="13" font-weight="600" text-anchor="middle" fill="#1f2328">out</text>
+  <text x="485" y="308" font-size="10.5" text-anchor="middle" fill="#57606a">(seq, d_model)</text>
+
+  <g stroke="#57606a" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <line x1="110" y1="167" x2="146" y2="167"/>
+    <line x1="260" y1="167" x2="296" y2="167"/>
+    <line x1="420" y1="167" x2="446" y2="79"/>
+    <line x1="420" y1="167" x2="446" y2="127"/>
+    <line x1="420" y1="167" x2="446" y2="175"/>
+    <line x1="420" y1="167" x2="446" y2="223"/>
+    <line x1="570" y1="167" x2="596" y2="167"/>
+    <line x1="670" y1="167" x2="670" y2="240"/>
+    <line x1="560" y1="270" x2="540" y2="270"/>
+  </g>
+  <text x="20" y="312" font-size="10.5" fill="#57606a">demo 实测：d_model=16, n_heads=4, d_k=4，4 个权重 W；切头后 Q (4,7,4)；Wq.grad 有梯度、有限。</text>
+</svg>

@@ -69,7 +69,7 @@
 | 03 | AI Application | ⬜ | ✅ v0.2 文档+代码+测试 |
 | 04 | AI Knowledge Base / RAG | ⬜ | ✅ v0.8 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估+可观测性+真实精排与阈值校准+前端 Chat UI / 会话历史 / 多轮追问 |
 | 05 | Research Agent / MCP | ⬜ | ✅ v1.0 文档+代码+测试(244)+真实 LLM 双链路+MCP 跨进程工具+Workflow 多 Worker 编排+M01-10 全成+28 张真实截图 |
-| 06 | Mini Transformer / LLM | ⬜ | ✅ v0.1 Tokenizer（字符级+BPE 双实现，51 pytest 全绿）+ 3 张手写 SVG + 2 张真实终端截图；M03+ 未开始 |
+| 06 | Mini Transformer / LLM | ⬜ | ✅ v1.0 文档+代码+测试(150：51 分词器+99 模型，含梯度校验)+从零 autograd+真实训练 loss 6.21→4.75+M01-10 全成+11 张手写 SVG+10 张真实终端截图 |
 | 07 | Open Source LLM | ⬜ | ⬜ |
 | 08 | LoRA / QLoRA Fine-Tuning | ⬜ | ⬜ |
 | 09 | LLM Evaluation / Inference | ⬜ | ⬜ |

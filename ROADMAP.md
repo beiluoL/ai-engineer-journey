@@ -170,24 +170,26 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **目标**：从 AI 应用层进入模型内部，从零构建 Mini Transformer Decoder。
 
-**核心技术**：PyTorch / Tensor / Autograd / Self-Attention / Multi-Head Attention / Transformer Decoder
+**核心技术**：纯 numpy（刻意不引入 torch）/ 从零 Autograd / Self-Attention / Multi-Head Attention / Transformer Decoder
 
 **最终交付**：从零构建的 Mini Transformer Decoder
 
-**状态**：🔄 进行中（v0.1：已完成「项目架构梳理」+「Tokenizer 字符级/BPE 双实现」，51 pytest 全绿，3 张手写 SVG + 2 张真实终端截图；M03+ 未开始）
+**状态**：✅ 已完成（10/10 Milestone，v1.0 收官）
 
-> 备注：本项目的 Milestone 实际执行顺序已调整为「架构优先」——先做 `01-project-architecture`（五层契约 / 目录约定）→ `02-tokenizer`（P05 里 token 只是账单单位，这里进入模型内部），与上方原始 12 项「Tensor 优先」列表不同。README 的勾选表以实际落地的 10 项为准。
+> 备注：本项目刻意**不引入 PyTorch**（README 有说明），核心实现用纯 numpy 手写，包括从零的自动微分（autograd）。Milestone 实际执行顺序为「架构优先」：M01 架构 → M02 Tokenizer → M03-M10 模型全链路（Embedding / Attention / Multi-Head / Block / Decoder / DataLoader / Training / Inference）。
 
-**Milestone（实际执行顺序）**：
+**10 个 Milestone（实际落地）**：
 ```
 01 — Project Architecture  ✅ 五层契约 / 目录约定 / 手写架构图
 02 — Tokenizer            ✅ 字符级 + BPE 双实现 / 往返一致性 / 词表增长曲线
-03 — Embedding            待做（用 Tokenizer 产出的 id 查 (V, d_model) 嵌入矩阵 + 位置编码）
-04 — Attention            待做
-05 — Transformer          待做
-06 — Training Loop        待做
-07 — Inference            待做
-08 — …                    …
+03 — Embedding            ✅ 查表 Embedding + 正弦位置编码 + combine
+04 — Attention            ✅ softmax(QKᵀ/√d)V 手写 + 因果掩码
+05 — Multi-Head Attention ✅ 分头 / 拼接 / 输出线性映射
+06 — Transformer Block    ✅ Pre-LN + 残差 + FFN
+07 — Decoder Stacking     ✅ 因果掩码 + N 层堆叠 + 输出投影
+08 — Dataset / DataLoader ✅ 滑窗采样 / batch / pad / mask
+09 — Training Loop        ✅ 从零 autograd 反传 + 交叉熵 + 优化器（loss 6.21→4.75）
+10 — Inference / Sampling ✅ greedy / temperature / top-k 生成
 ```
 
 ---
