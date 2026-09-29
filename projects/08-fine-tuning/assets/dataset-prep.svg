@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#1f2328">M02 数据流水线：Alpaca 三元组 → 带 mask 的 (X, Y, M) 批次</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">59 条 Java 面试问答，渲染 → BPE 编码 → 切 x/y → 答案区标 1 → 右侧补齐。</text>
+
+  <!-- 1 原始数据 -->
+  <rect x="20" y="72" width="112" height="70" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.6"/>
+  <text x="76" y="93" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">java_interview</text>
+  <text x="76" y="109" font-size="10.5" text-anchor="middle" fill="#57606a">59 条 / 12,089 字符</text>
+  <text x="76" y="124" font-size="10" text-anchor="middle" fill="#57606a">instruction 27.2 字</text>
+  <text x="76" y="137" font-size="10" text-anchor="middle" fill="#57606a">output 177.7 字</text>
+
+  <!-- 2 渲染 -->
+  <rect x="150" y="72" width="118" height="70" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="209" y="93" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">模板渲染</text>
+  <text x="209" y="109" font-size="10.5" text-anchor="middle" fill="#57606a">### 指令: / ### 回答:</text>
+  <text x="209" y="124" font-size="10" text-anchor="middle" fill="#57606a">input 为空 → 省略段</text>
+  <text x="209" y="137" font-size="10" text-anchor="middle" fill="#57606a">prompt 34.9 / ans 148.3</text>
+
+  <!-- 3 BPE -->
+  <rect x="286" y="72" width="112" height="70" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="342" y="93" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">BPE 编码</text>
+  <text x="342" y="109" font-size="10.5" text-anchor="middle" fill="#57606a">词表 1024</text>
+  <text x="342" y="124" font-size="10" text-anchor="middle" fill="#57606a">压缩率 1.12 字符/token</text>
+  <text x="342" y="137" font-size="10" text-anchor="middle" fill="#57606a">总 10,750 token</text>
+
+  <!-- 4 x/y/mask -->
+  <rect x="416" y="72" width="128" height="70" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.6"/>
+  <text x="480" y="93" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">切 x / y / mask</text>
+  <text x="480" y="109" font-size="10.5" text-anchor="middle" fill="#57606a">x = ids[:-1]，y = ids[1:]</text>
+  <text x="480" y="124" font-size="10" text-anchor="middle" fill="#57606a">mask[i]=1 iff i+1 ≥ n_prompt</text>
+  <text x="480" y="137" font-size="10" text-anchor="middle" fill="#57606a">答案区 8,752 = 81.41%</text>
+
+  <!-- 5 pad_batch -->
+  <rect x="562" y="72" width="98" height="70" rx="8" fill="#eaf6ec" stroke="#2f7d4f" stroke-width="1.6"/>
+  <text x="611" y="93" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">pad_batch</text>
+  <text x="611" y="109" font-size="10.5" text-anchor="middle" fill="#57606a">(X, Y, M)</text>
+  <text x="611" y="124" font-size="10" text-anchor="middle" fill="#57606a">右侧补 PAD_ID</text>
+  <text x="611" y="137" font-size="10" text-anchor="middle" fill="#57606a">M 补 0（不计 loss）</text>
+
+  <g stroke="#57606a" stroke-width="1.7" fill="none" marker-end="url(#arrow)">
+    <line x1="132" y1="107" x2="146" y2="107"/>
+    <line x1="268" y1="107" x2="282" y2="107"/>
+    <line x1="398" y1="107" x2="412" y2="107"/>
+    <line x1="544" y1="107" x2="558" y2="107"/>
+  </g>
+
+  <!-- 长度分布直方图 -->
+  <text x="20" y="176" font-size="12.5" font-weight="600" fill="#1f2328">样本长度分布（token）：133 / 176 / 215 / 255（最短 / 中位 / p90 / 最长），2 条超 max_len=256 被左侧截断</text>
+  <line x1="20" y1="248" x2="660" y2="248" stroke="#8c959f" stroke-width="1.2"/>
+  <g fill="#4a7fd4">
+    <rect x="24" y="240" width="14" height="8"/>
+    <rect x="44" y="216" width="14" height="32"/>
+    <rect x="64" y="190" width="14" height="58"/>
+    <rect x="84" y="216" width="14" height="32"/>
+    <rect x="104" y="224" width="14" height="24"/>
+    <rect x="124" y="232" width="14" height="16"/>
+    <rect x="144" y="240" width="14" height="8"/>
+    <rect x="164" y="228" width="14" height="20"/>
+  </g>
+  <g font-size="9.5" fill="#57606a" text-anchor="middle">
+    <text x="31" y="260">1</text>
+    <text x="51" y="260">11</text>
+    <text x="71" y="260">21</text>
+    <text x="91" y="260">11</text>
+    <text x="111" y="260">7</text>
+    <text x="131" y="260">4</text>
+    <text x="151" y="260">1</text>
+    <text x="171" y="260">3</text>
+  </g>
+  <text x="196" y="222" font-size="10" fill="#57606a">区间：[133,148] [148,164] [164,179] [179,194] [194,209] [209,224] [224,240] [240,255]</text>
+  <text x="196" y="238" font-size="10" fill="#57606a">峰值落在 164~179，中位 176 —— 所以 max_len 必须取到 256，不是拍脑袋的 64。</text>
+
+  <!-- 词表约束 -->
+  <rect x="20" y="278" width="640" height="52" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="34" y="297" font-size="11.5" font-weight="600" fill="#c0392b">⚠ 词表的真实约束：数据集有 843 个不同字符，BPE 基础词表 = 字符集本身</text>
+  <text x="34" y="313" font-size="10.5" fill="#57606a">实测 char 级 min_freq=3 时词表 592，但领域语料会有 2.84% 的字符变成 &lt;unk&gt; —— 本项目宁可词表 1024，也不把领域数据喂成 &lt;unk&gt;。</text>
+  <text x="34" y="326" font-size="10.5" fill="#57606a">另一坑：模板字符 ### 必须出现在分词器训练语料里，否则 prompt 开头是三个 &lt;unk&gt;（见 base.py 的「渲染后再喂」）。</text>
+
+  <text x="20" y="350" font-size="10.5" fill="#57606a">结论：59 条、10.75 千 token、答案占 81.4% —— 只够验证流程跑通，不足以训出真正好用的模型。</text>
+</svg>

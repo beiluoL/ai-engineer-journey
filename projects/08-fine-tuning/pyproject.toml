@@ -1,0 +1,14 @@
+[project]
+name = "lora-qlora-finetuning"
+version = "0.1.0"
+description = "Project 08 — LoRA / QLoRA Fine-Tuning：纯 numpy，复用 P06 手写的 Transformer"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

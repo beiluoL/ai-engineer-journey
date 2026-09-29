@@ -236,20 +236,25 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：自己微调的领域模型
 
-**状态**：⬜ 未开始
+**状态**：✅ 已完成（v1.0，9/9 Milestone，189 项 pytest 全绿）
 
 **9 个 Milestone**：
 ```
-01 — Fine-Tuning
-02 — Dataset Preparation
-03 — Instruction Tuning
-04 — LoRA
-05 — QLoRA
-06 — Training Configuration
-07 — Checkpoint
-08 — Merge / Load Adapter
-09 — Fine-Tuned Model Evaluation
+01 — Fine-Tuning                  ✅ 全量 vs LoRA 开销对比（可训练 10.53% / 显存 36.76%）
+02 — Dataset Preparation          ✅ Alpaca 59 条 / 答案区占比 81.41% / 词表 1024
+03 — Instruction Tuning           ✅ 只在答案区算 loss，困惑度再降 6.64%
+04 — LoRA                         ✅ 手写 W+(α/r)·B·A；B=0 等价性误差 0.000e+00；grad_check 6.585e-05
+05 — QLoRA                        ✅ NF4 分位量化 + 双量化；压缩 7.75×，相对误差 0.0914
+06 — Training Configuration       ✅ rank / lr / alpha 真实扫描，最优 r=8 alpha=16 lr=0.01
+07 — Checkpoint                   ✅ adapter 115.76 KB vs 基座 901 KB（7.8×）；续训逐点差 1.290e-04
+08 — Merge / Load Adapter         ✅ 合并前后最大绝对误差 0.000e+00
+09 — Fine-Tuned Model Evaluation  ✅ 域内困惑度 3649.9 → 421.1（↓88.46%）+ 遗忘检查
 ```
+
+> 实现说明：本机 M1 无 CUDA、磁盘余量紧张，故本项目走**纯 numpy 手写**路线——
+> 复用 Project 06 手写的 Transformer 与自动微分作为基座，在其上从零实现 LoRA / NF4 / QLoRA。
+> 好处是每一步都能用有限差分对拍验证、每个数字都是实测；代价是不接触 GPU 上的真实 7B 模型，
+> 涉及大规模的部分（如 7B 显存）在文档中明确标注为「按同一公式外推」，不伪装成实测。
 
 ---
 

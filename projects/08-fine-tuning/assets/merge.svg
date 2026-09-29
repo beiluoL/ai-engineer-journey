@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#1f2328">M08 合并 vs 只加载：同一个等式，两种部署形态</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">W' = W + (alpha/r)·A@B。合并前后最大绝对误差实测 0.000e+00 —— 数学上完全等价。</text>
+
+  <!-- 左：分离 -->
+  <rect x="20" y="66" width="300" height="150" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="34" y="86" font-size="12.5" font-weight="600" fill="#1f2328">分离状态（基座 + LoRA 分支）</text>
+
+  <rect x="34" y="98" width="60" height="34" rx="6" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="64" y="119" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">W</text>
+  <rect x="104" y="98" width="52" height="34" rx="6" fill="#eaf6ec" stroke="#2f7d4f" stroke-width="1.5"/>
+  <text x="130" y="119" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">A→B</text>
+  <circle cx="176" cy="115" r="14" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
+  <text x="176" y="120" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2328">+</text>
+  <rect x="200" y="98" width="104" height="34" rx="6" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="252" y="119" font-size="11" font-weight="600" text-anchor="middle" fill="#8a6100">W + ΔW（合成）</text>
+
+  <text x="34" y="152" font-size="10" fill="#57606a">参数量 257,792（可训练 27,136）　LoRA 层数 13</text>
+  <text x="34" y="168" font-size="10" fill="#57606a">每次前向：两条矩阵乘 → 理论额外 MACs 16.56%</text>
+  <text x="34" y="184" font-size="10" fill="#57606a">磁盘：每任务一份完整模型 901.00 KB</text>
+  <text x="34" y="200" font-size="10" fill="#57606a">切任务：重新加载整个模型</text>
+
+  <!-- 右：合并 -->
+  <rect x="360" y="66" width="300" height="150" rx="8" fill="#eaf6ec" stroke="#2f7d4f" stroke-width="1.6"/>
+  <text x="374" y="86" font-size="12.5" font-weight="600" fill="#1f2328">合并后（单一 W'）</text>
+
+  <rect x="374" y="98" width="120" height="34" rx="6" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="434" y="119" font-size="12" font-weight="600" text-anchor="middle" fill="#1f2328">W' = W + ΔW</text>
+  <text x="510" y="119" font-size="10" fill="#57606a">普通线性层</text>
+
+  <text x="374" y="152" font-size="10" fill="#57606a">参数量 230,656（A/B 消失，少 27,136）　LoRA 层数 0</text>
+  <text x="374" y="168" font-size="10" fill="#57606a">每次前向：一条矩阵乘 → 零额外开销</text>
+  <text x="374" y="184" font-size="10" fill="#57606a">磁盘：每任务一份 901.00 KB（adapter 文件 113.22 KB 可另存）</text>
+  <text x="374" y="200" font-size="10" fill="#57606a">多任务：一份基座 + N 个 adapter 共享（不合并时）</text>
+
+  <!-- 等价箭头 -->
+  <path d="M320 141 C 340 141, 340 141, 356 141" fill="none" stroke="#2f7d4f" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="330" y="130" font-size="9.5" text-anchor="middle" fill="#2f7d4f">merge</text>
+  <text x="330" y="160" font-size="9.5" text-anchor="middle" fill="#2f7d4f">unmerge</text>
+
+  <!-- 等价性证明 -->
+  <rect x="20" y="228" width="640" height="46" rx="6" fill="#ffffff" stroke="#2f7d4f" stroke-width="1.4"/>
+  <text x="34" y="246" font-size="11" font-weight="600" fill="#2f7d4f">数值证明（同一输入，逐位对比）：</text>
+  <text x="34" y="262" font-size="10" fill="#57606a">探针 (2,32) 65,536 元素 → 0.000e+00　(4,64) 262,144 元素 → 0.000e+00　(1,128) 131,072 元素 → 0.000e+00</text>
+  <text x="400" y="262" font-size="10" fill="#57606a">ΔW 平均幅度 / W 平均幅度 = 31.55%</text>
+
+  <!-- 计时 -->
+  <text x="20" y="296" font-size="12" font-weight="600" fill="#1f2328">推理耗时（交替各测 7 轮，取中位数）</text>
+  <text x="20" y="316" font-size="10" fill="#1f2328">分离 3.190 ms</text>
+  <rect x="90" y="306" width="180" height="12" rx="3" fill="#c0392b"/>
+  <rect x="90" y="299" width="180" height="26" rx="3" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+  <text x="280" y="316" font-size="9.5" fill="#c0392b">7 轮 [2.62, 4.69, 3.01, 2.99, 3.27, 3.36, 3.19]</text>
+
+  <text x="20" y="336" font-size="10" fill="#1f2328">合并 3.023 ms</text>
+  <rect x="90" y="326" width="171" height="12" rx="3" fill="#2f7d4f"/>
+  <text x="280" y="336" font-size="9.5" fill="#2f7d4f">7 轮 [2.57, 3.02, 3.09, 3.48, 2.93, 3.0, 3.05]</text>
+
+  <rect x="430" y="298" width="230" height="52" rx="6" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="444" y="316" font-size="10.5" font-weight="600" fill="#c0392b">⚠ 实测差 +5.22% &lt; 轮间噪声 ±18.4%</text>
+  <text x="444" y="331" font-size="9.5" fill="#57606a">这个规模下测不出来：前向耗时被 Python 层</text>
+  <text x="444" y="345" font-size="9.5" fill="#57606a">建图的对象开销主导，matmul 占比很小。</text>
+</svg>

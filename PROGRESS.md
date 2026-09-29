@@ -55,6 +55,8 @@
 | Project 03 exercises | ✅ LEARNING.md 自测清单（9 章）+ 32 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 32/32（同上，不代用户勾选） |
 | Project 05 milestones | ✅ 10/10 已成文（tool → tool-schema → function-calling → agent → agent-loop → multi-step → mcp → mcp-server → mcp-client → workflow） |
 | Project 05 src + tests | ✅ v1.0 落地：11 个模块 + `agent/mcp/` 子包（`src/agent/`）+ `ReActAgent` 循环，244 项 pytest 全绿，离线剧本（FakeLLM/ScriptedLLM/RecordingLLM）+ DeepSeek 真实双链路，「检索即工具」已跑通；M05 工作记忆（trim_history token 预算 + 协议配对裁剪）、Scratchpad 草稿纸、第三道闸门 max_repeats；M06 显式 Plan + 依赖拓扑 + 失败传播；M07-09 MCP 协议/Server/Client 跨进程工具桥接；M10 多 Worker 编排 + 上下文隔离；CLI 支持 `--notes`，28 张真实运行截图 |
+| Project 08 milestones | ✅ 9/9 已成文（fine-tuning → dataset-preparation → instruction-tuning → lora → qlora → training-configuration → checkpoint → merge-adapter → evaluation） |
+| Project 08 src + tests | ✅ v1.0 落地：`src/ft/` 12 个手写模块（LoRA / NF4 分位量化 + 双量化 / QLoRA / 指令数据答案区 mask / 只训 adapter 的训练器 / 断点续训 / Adapter 合并 / 评估），189 项 pytest 全绿；主线叙事「通用基座 → 冻结 → 注入 LoRA → Java 面试领域 SFT → 评估」；实测：B 零初始化等价性误差 0.000e+00、grad_check 6.585e-05、基座改动 0/28、LoRA 可训练 10.53%、NF4 压缩 7.75×、域内困惑度 3649.9→421.1；9 张真实终端截图 + 9 张手写架构图 SVG |
 | publishing/tutorials | ✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5） |
 | publishing/articles | 📝 2 篇 |
@@ -71,7 +73,7 @@
 | 05 | Research Agent / MCP | ⬜ | ✅ v1.0 文档+代码+测试(244)+真实 LLM 双链路+MCP 跨进程工具+Workflow 多 Worker 编排+M01-10 全成+28 张真实截图 |
 | 06 | Mini Transformer / LLM | ⬜ | ✅ v1.0 文档+代码+测试(150：51 分词器+99 模型，含梯度校验)+从零 autograd+真实训练 loss 6.21→4.75+M01-10 全成+11 张手写 SVG+10 张真实终端截图 |
 | 07 | Open Source LLM | ⬜ | 🔄 v0.1 `pipelines/` 调用管线 6 模块真实跑通：真实调 DeepSeek API（TTFT 占比 39.33%、净生成 284.77 tok/s）+ 手算参数量对账（0.494/1.544/7.615B 对上标称）+ 显存账本（7B bf16 14.18 / int4 3.55 GiB，KV 57,344 B/token）+ RAG-lite 检索评测（recall@1 87.5%、recall@3 100%、全库 11.59ms）+ 6 张真实终端截图；模型加载/量化线待 Colab GPU |
-| 08 | LoRA / QLoRA Fine-Tuning | ⬜ | ⬜ |
+| 08 | LoRA / QLoRA Fine-Tuning | ⬜ | ✅ v1.0 从零手写 LoRA/QLoRA（纯 numpy，复用 P06 手写 autograd）+ 测试 189 passed + 9 个真实 demo（域内困惑度 3649.9→421.1）+ 9 张真实终端截图 + 9 张手写 SVG + M01-09 全成 |
 | 09 | LLM Evaluation / Inference | ⬜ | ⬜ |
 | 10 | Tiny LLM Capstone | ⬜ | ⬜ |
 

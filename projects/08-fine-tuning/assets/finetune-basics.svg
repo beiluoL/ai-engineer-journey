@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f7d4f"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#1f2328">M01 微调的两条路：全量微调 vs LoRA（参数账 + 训练显存账）</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">同一个 P06 基座（230,656 参数）：要么全部参数进优化器，要么冻结基座、只训旁路 A/B。</text>
+
+  <!-- 基座 -->
+  <rect x="20" y="90" width="130" height="66" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.6"/>
+  <text x="85" y="113" font-size="12.5" font-weight="600" text-anchor="middle" fill="#1f2328">P06 基座</text>
+  <text x="85" y="129" font-size="10.5" text-anchor="middle" fill="#57606a">230,656 参数</text>
+  <text x="85" y="145" font-size="10" text-anchor="middle" fill="#57606a">词表1024 / d=64 / 2层</text>
+  <text x="85" y="171" font-size="9.5" text-anchor="middle" fill="#c0392b">P06 parameters() 只报 165,120</text>
+  <text x="85" y="183" font-size="9.5" text-anchor="middle" fill="#c0392b">漏了 65,536 的词嵌入</text>
+
+  <!-- 分叉箭头 -->
+  <path d="M150 118 C 185 118, 185 92, 215 92" fill="none" stroke="#c0392b" stroke-width="1.7" marker-end="url(#arrow-red)"/>
+  <path d="M150 128 C 185 128, 185 258, 215 258" fill="none" stroke="#2f7d4f" stroke-width="1.7" marker-end="url(#arrow-green)"/>
+
+  <!-- 全量微调 -->
+  <rect x="220" y="66" width="176" height="58" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="308" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#1f2328">全量微调</text>
+  <text x="308" y="102" font-size="10.5" text-anchor="middle" fill="#57606a">230,656 全部可训练（100%）</text>
+  <text x="308" y="117" font-size="10.5" text-anchor="middle" fill="#57606a">每任务存 901.00 KB</text>
+
+  <rect x="410" y="66" width="150" height="58" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="485" y="86" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1f2328">训练显存 3.52 MB</text>
+  <text x="485" y="102" font-size="10" text-anchor="middle" fill="#57606a">权重901KB + 梯度901KB</text>
+  <text x="485" y="116" font-size="10" text-anchor="middle" fill="#57606a">+ Adam m/v 1.76 MB</text>
+
+  <rect x="574" y="66" width="86" height="58" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="617" y="88" font-size="11" font-weight="600" text-anchor="middle" fill="#1f2328">60步</text>
+  <text x="617" y="104" font-size="10" text-anchor="middle" fill="#57606a">8.2909</text>
+  <text x="617" y="118" font-size="10.5" font-weight="600" text-anchor="middle" fill="#c0392b">→ 6.1109</text>
+
+  <!-- LoRA -->
+  <rect x="220" y="232" width="176" height="58" rx="8" fill="#eaf6ec" stroke="#2f7d4f" stroke-width="1.6"/>
+  <text x="308" y="252" font-size="12.5" font-weight="600" text-anchor="middle" fill="#1f2328">LoRA r=8（13 层）</text>
+  <text x="308" y="268" font-size="10.5" text-anchor="middle" fill="#57606a">只训 A/B = 27,136（10.53%）</text>
+  <text x="308" y="283" font-size="10.5" text-anchor="middle" fill="#57606a">每任务存 106.00 KB</text>
+
+  <rect x="410" y="232" width="150" height="58" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="485" y="252" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1f2328">训练显存 1.29 MB</text>
+  <text x="485" y="268" font-size="10" text-anchor="middle" fill="#57606a">权重1007KB + 梯度106KB</text>
+  <text x="485" y="282" font-size="10" text-anchor="middle" fill="#57606a">+ Adam m/v 212 KB</text>
+
+  <rect x="574" y="232" width="86" height="58" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="617" y="254" font-size="11" font-weight="600" text-anchor="middle" fill="#1f2328">60步</text>
+  <text x="617" y="270" font-size="10" text-anchor="middle" fill="#57606a">8.2909</text>
+  <text x="617" y="284" font-size="10.5" font-weight="600" text-anchor="middle" fill="#2f7d4f">→ 6.1882</text>
+
+  <!-- 冻结标注 -->
+  <rect x="220" y="196" width="176" height="30" rx="6" fill="#ffffff" stroke="#8c959f" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="308" y="215" font-size="10.5" text-anchor="middle" fill="#57606a">基座 230,656 冻结：只躺 4B/参数，不产梯度/动量</text>
+
+  <!-- 中间对比 -->
+  <rect x="410" y="196" width="150" height="30" rx="6" fill="#fff8e6" stroke="#bf8700" stroke-width="1.3"/>
+  <text x="485" y="215" font-size="10.5" font-weight="600" text-anchor="middle" fill="#8a6100">显存 36.76%（省 2.72×）</text>
+
+  <rect x="574" y="196" width="86" height="30" rx="6" fill="#fff8e6" stroke="#bf8700" stroke-width="1.3"/>
+  <text x="617" y="215" font-size="10.5" font-weight="600" text-anchor="middle" fill="#8a6100">差 0.0772</text>
+
+  <!-- 底部说明 -->
+  <line x1="20" y1="312" x2="660" y2="312" stroke="#d0d7de" stroke-width="1"/>
+  <text x="20" y="332" font-size="10.5" fill="#57606a">实测：只用 1/8.5 的可训练参数，loss 从 8.2909 追到 6.1882（全量 6.1109）—— 低秩假设成立。</text>
+  <text x="20" y="348" font-size="10.5" fill="#c0392b">但 loss 只是训练目标：全量改写整个基座的代价，要到 M09 的遗忘检查才看得出来。</text>
+</svg>

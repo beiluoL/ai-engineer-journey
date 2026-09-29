@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1f2328">M09 评估：域内必须降、通用不能涨、两条要同时看</text>
+  <text x="20" y="44" font-size="11" fill="#57606a">ppl = exp(平均 CE)，只统计 mask=1 的位置；困惑度仅在同一个分词器内部可比。柱长按对数轴绘制。</text>
+
+  <!-- 三套评估集 -->
+  <rect x="20" y="58" width="196" height="44" rx="6" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="118" y="76" font-size="11" font-weight="600" text-anchor="middle" fill="#1f2328">域内：Java 面试（答案区）</text>
+  <text x="118" y="92" font-size="10" text-anchor="middle" fill="#57606a">59 样本 / 8,752 token</text>
+
+  <rect x="228" y="58" width="196" height="44" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="326" y="76" font-size="11" font-weight="600" text-anchor="middle" fill="#1f2328">通用：预训练见过</text>
+  <text x="326" y="92" font-size="10" text-anchor="middle" fill="#57606a">4 样本 / 845 token</text>
+
+  <rect x="436" y="58" width="224" height="44" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="548" y="76" font-size="11" font-weight="600" text-anchor="middle" fill="#1f2328">通用：预训练没见过</text>
+  <text x="548" y="92" font-size="10" text-anchor="middle" fill="#57606a">1 样本 / 174 token　（真正的泛化判据）</text>
+
+  <!-- 图例 -->
+  <rect x="20" y="112" width="12" height="10" fill="#8c959f"/>
+  <text x="38" y="121" font-size="10" fill="#57606a">基座（未微调）</text>
+  <rect x="140" y="112" width="12" height="10" fill="#4a7fd4"/>
+  <text x="158" y="121" font-size="10" fill="#57606a">LoRA r=8</text>
+  <rect x="240" y="112" width="12" height="10" fill="#c0392b"/>
+  <text x="258" y="121" font-size="10" fill="#57606a">全量微调</text>
+  <text x="360" y="121" font-size="10" fill="#57606a">（三组均为 150 步，只算答案区 loss）</text>
+
+  <!-- 域内 -->
+  <text x="20" y="146" font-size="11" font-weight="600" fill="#1f2328">域内困惑度</text>
+  <rect x="110" y="136" width="195" height="12" rx="3" fill="#8c959f"/>
+  <text x="315" y="146" font-size="10" fill="#57606a">3,649.9（基线）</text>
+  <rect x="110" y="152" width="78" height="12" rx="3" fill="#4a7fd4"/>
+  <text x="198" y="162" font-size="10" fill="#1f2328">421.1　↓88.46%　✅</text>
+  <rect x="110" y="168" width="40" height="12" rx="3" fill="#c0392b"/>
+  <text x="160" y="178" font-size="10" fill="#1f2328">208.1　↓94.30%　✅（容量更大）</text>
+
+  <!-- 通用见过 -->
+  <text x="20" y="200" font-size="11" font-weight="600" fill="#1f2328">通用（见过）</text>
+  <rect x="110" y="190" width="21" height="12" rx="3" fill="#8c959f"/>
+  <text x="141" y="200" font-size="10" fill="#57606a">148.2（基线）</text>
+  <rect x="110" y="206" width="88" height="12" rx="3" fill="#4a7fd4"/>
+  <text x="208" y="216" font-size="10" fill="#c0392b">505.0　↑+240.71%　❌ 涨得更多</text>
+  <rect x="110" y="222" width="64" height="12" rx="3" fill="#c0392b"/>
+  <text x="184" y="232" font-size="10" fill="#c0392b">324.4　↑+118.83%　❌ 涨得更少</text>
+
+  <!-- 通用未见 -->
+  <text x="20" y="252" font-size="11" font-weight="600" fill="#1f2328">通用（没见过）</text>
+  <rect x="110" y="242" width="109" height="12" rx="3" fill="#8c959f"/>
+  <text x="229" y="252" font-size="10" fill="#57606a">742.6（基线）</text>
+  <rect x="110" y="258" width="96" height="12" rx="3" fill="#4a7fd4"/>
+  <text x="216" y="268" font-size="10" fill="#2f7d4f">586.1　−21.08%　✅ 变好</text>
+  <rect x="110" y="274" width="91" height="12" rx="3" fill="#c0392b"/>
+  <text x="211" y="284" font-size="10" fill="#2f7d4f">535.6　−27.88%　✅ 变好</text>
+
+  <!-- 反直觉 -->
+  <rect x="20" y="298" width="640" height="56" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="34" y="316" font-size="11" font-weight="700" fill="#c0392b">⚠ 推翻常识：教科书说「LoRA 比全量微调更抗遗忘」，本次实测相反</text>
+  <text x="34" y="331" font-size="10" fill="#57606a">通用（见过）语料上 LoRA 涨 +240.71%，全量只涨 +118.83%。原因：① 基座本身欠训练（预训练仅 120 步）；</text>
+  <text x="34" y="346" font-size="10" fill="#57606a">② LoRA 的等效 ΔW 幅度并不小 —— 实测 mean|ΔW|/mean|W| = 104.1%。结论：该说法的前提是「基座泛化良好」。</text>
+</svg>

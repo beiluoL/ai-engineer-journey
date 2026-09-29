@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#1f2328">M06 超参扫描：rank / 学习率 / alpha 的真实曲线（每配置 45 步，seed=0）</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">纵轴 = 域内困惑度（越低越好），基线（未微调）3,649.91。最好组合 r=8 / alpha=16 / lr=0.01 → 405.7。</text>
+
+  <!-- ============ Panel A: rank ============ -->
+  <text x="30" y="72" font-size="12.5" font-weight="600" fill="#1f2328">1. rank 扫描（alpha=16, lr=0.003）</text>
+  <line x1="40" y1="110" x2="40" y2="225" stroke="#8c959f" stroke-width="1.2"/>
+  <line x1="40" y1="225" x2="230" y2="225" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="26" y="114" font-size="9" text-anchor="end" fill="#57606a">520</text>
+  <text x="26" y="228" font-size="9" text-anchor="end" fill="#57606a">400</text>
+  <polyline points="40,120.2 85,192.6 130,154.4 175,197.0 220,185.8" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <g fill="#c0392b">
+    <circle cx="40" cy="120.2" r="3.5"/>
+    <circle cx="85" cy="192.6" r="3.5"/>
+    <circle cx="130" cy="154.4" r="3.5"/>
+    <circle cx="175" cy="197.0" r="4.8" fill="#2f7d4f"/>
+    <circle cx="220" cy="185.8" r="3.5"/>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#57606a">
+    <text x="40" y="238">r=1</text>
+    <text x="85" y="238">r=2</text>
+    <text x="130" y="238">r=4</text>
+    <text x="175" y="238">r=8</text>
+    <text x="220" y="238">r=16</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#1f2328">
+    <text x="40" y="114">509.3</text>
+    <text x="85" y="186">433.8</text>
+    <text x="130" y="148">473.7</text>
+    <text x="175" y="190" font-weight="700" fill="#2f7d4f">429.2</text>
+    <text x="220" y="179">440.9</text>
+  </g>
+  <text x="40" y="256" font-size="9" fill="#57606a">非单调：r=2(433.8) 反而好过 r=4(473.7) —— 45 步噪声</text>
+  <text x="40" y="268" font-size="9" fill="#57606a">参数量 3,392 → 54,272（占基座 1.47% → 23.53%）</text>
+
+  <!-- ============ Panel B: lr ============ -->
+  <text x="250" y="72" font-size="12.5" font-weight="600" fill="#1f2328">2. 学习率扫描（r=8, alpha=16）</text>
+  <line x1="270" y1="110" x2="270" y2="225" stroke="#8c959f" stroke-width="1.2"/>
+  <line x1="270" y1="225" x2="440" y2="225" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="256" y="114" font-size="9" text-anchor="end" fill="#57606a">1350</text>
+  <text x="256" y="228" font-size="9" text-anchor="end" fill="#57606a">380</text>
+  <polyline points="270,195.4 320,219.2 370,222.0 420,113.7" fill="none" stroke="#4a7fd4" stroke-width="2"/>
+  <g fill="#4a7fd4">
+    <circle cx="270" cy="195.4" r="3.5"/>
+    <circle cx="320" cy="219.2" r="3.5"/>
+    <circle cx="370" cy="222.0" r="4.8" fill="#2f7d4f"/>
+    <circle cx="420" cy="113.7" r="3.5"/>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#57606a">
+    <text x="270" y="238">1e-3</text>
+    <text x="320" y="238">3e-3</text>
+    <text x="370" y="238">1e-2</text>
+    <text x="420" y="238">3e-2</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#1f2328">
+    <text x="270" y="189">629.4</text>
+    <text x="320" y="213">429.2</text>
+    <text x="378" y="216" font-weight="700" fill="#2f7d4f">405.7</text>
+    <text x="420" y="107" fill="#c0392b">1,318.6</text>
+  </g>
+  <text x="250" y="256" font-size="9" fill="#57606a">1e-3 ~ 1e-2 都收敛；3e-2 直接崩到 1,318.6</text>
+  <text x="250" y="268" font-size="9" fill="#57606a">LoRA 的 lr 比全量微调常用值大一个数量级</text>
+
+  <!-- ============ Panel C: alpha ============ -->
+  <text x="470" y="72" font-size="12.5" font-weight="600" fill="#1f2328">3. alpha 扫描（r=8, lr=0.003）</text>
+  <line x1="490" y1="110" x2="490" y2="225" stroke="#8c959f" stroke-width="1.2"/>
+  <line x1="490" y1="225" x2="660" y2="225" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="476" y="114" font-size="9" text-anchor="end" fill="#57606a">560</text>
+  <text x="476" y="228" font-size="9" text-anchor="end" fill="#57606a">420</text>
+  <polyline points="490,122.3 525,213.2 570,217.4 615,210.3 655,195.1" fill="none" stroke="#bf8700" stroke-width="2"/>
+  <g fill="#bf8700">
+    <circle cx="490" cy="122.3" r="3.5"/>
+    <circle cx="525" cy="213.2" r="3.5"/>
+    <circle cx="570" cy="217.4" r="4.8" fill="#2f7d4f"/>
+    <circle cx="615" cy="210.3" r="3.5"/>
+    <circle cx="655" cy="195.1" r="3.5"/>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#57606a">
+    <text x="490" y="238">a/r=0.5</text>
+    <text x="525" y="238">1</text>
+    <text x="570" y="238">2</text>
+    <text x="615" y="238">4</text>
+    <text x="655" y="238">8</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#1f2328">
+    <text x="490" y="116">545.0</text>
+    <text x="525" y="207">434.4</text>
+    <text x="570" y="211" font-weight="700" fill="#2f7d4f">429.2</text>
+    <text x="615" y="204">437.9</text>
+    <text x="655" y="189">456.4</text>
+  </g>
+  <text x="470" y="256" font-size="9" fill="#57606a">真正起作用的是 alpha/r，最优 = 2（alpha=16）</text>
+  <text x="470" y="268" font-size="9" fill="#57606a">与 lr 乘性耦合，两个一起调只会互相掩盖</text>
+
+  <!-- 底部结论 -->
+  <line x1="20" y1="288" x2="660" y2="288" stroke="#d0d7de" stroke-width="1"/>
+  <rect x="20" y="298" width="640" height="52" rx="8" fill="#eaf6ec" stroke="#2f7d4f" stroke-width="1.4"/>
+  <text x="36" y="317" font-size="11.5" font-weight="600" fill="#1f2328">扫描出的最好组合：r=8, alpha=16, lr=0.01（域内困惑度 405.7）</text>
+  <text x="36" y="333" font-size="10.5" fill="#57606a">rank 决定上限，lr 决定能不能走到上限，alpha 与 lr 高度耦合。</text>
+  <text x="36" y="345" font-size="10.5" fill="#57606a">实践建议：先固定 alpha = 2r、lr = 1e-3 起手，只扫 r 和 lr 两个维度即可。</text>
+</svg>
