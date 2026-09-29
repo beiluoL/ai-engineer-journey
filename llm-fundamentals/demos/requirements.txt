@@ -1,0 +1,4 @@
+# llm-fundamentals/demos 依赖极简：只用 numpy 做计算，matplotlib 只用于生成配图。
+# 01-07 号 demo 只需要 numpy；make_figures.py 额外需要 matplotlib。
+numpy>=1.24
+matplotlib>=3.7

@@ -1,0 +1,20 @@
+设定: seq_len=128, d_model=512, heads=8, d_head=64, layers=12
+
+策略                       矩阵乘 FLOPs       实测耗时(s)      相对加速
+无 KV Cache          13,709,803,520        0.0748      1.0x
+有 KV Cache             142,671,872        0.0282      2.7x
+
+  FLOPs 节省 99.0% —— 因为 K/V 每步只算 1 次而不是 t 次
+  注：实测耗时被 Python 循环的固定开销摊薄了；在 GPU 上（访存才是瓶颈）差距更接近 FLOPs 之比
+  理论: 无 cache = sum_{t=1..n} 3*(t*d^2) = O(n^2 * d^2)；有 cache = 3*n*d^2 = O(n * d^2)
+
+代价：KV Cache 要占显存（这也是长上下文的瓶颈）
+batch   seq_len   KV Cache 大小(fp16)       备注
+1       2048            0.05 GB        
+8       2048            0.38 GB        
+8       8192            1.50 GB        
+32      32768          24.00 GB        单卡 A100 80G 也要掂量
+
+  公式: kv_bytes = 2(K和V) x layers x (heads x d_head) x seq_len x batch x 2(bytes)
+  本例每 token: 24.0 KB
+  -> 这就是 GQA / MQA / PagedAttention(vLLM) 要解决的核心问题

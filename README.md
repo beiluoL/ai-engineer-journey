@@ -62,6 +62,9 @@ ai-engineer-journey/
 ├── mistakes/              # 错题本：真实踩过的坑（日期 + 原因 + 修复）
 │   └── README.md
 │
+├── llm-fundamentals/      # 基础理论层：大模型原理教材（11 章 + 可运行 demo + 真实配图）
+│                          #   定位见下方「基础知识层」一节；projects/ 仍是唯一事实源
+│
 ├── projects/              # 核心内容（唯一事实源）
 │   ├── 01-python-ai-cli/
 │   │   ├── README.md          # 项目主页（必须对齐规范模板）
@@ -85,6 +88,14 @@ ai-engineer-journey/
 > 所有知识只维护在 `projects/*/milestones/` 中。其他目录只做引用、关联或派生输出。
 
 禁止出现平行知识体系：`curriculum/`、`labs/`、`knowledge/`、`assessments/`、`progress/`。
+
+## 基础知识层
+
+[`llm-fundamentals/`](llm-fundamentals/README.md) 是**基础理论层**：把 Transformer、注意力、预训练/微调、涌现、推理优化、对齐等原理系统整理成 11 章笔记，每章配 Mermaid 图、公式推导、术语表与**真实运行出来的配图**（终端截图 + 公式计算绘图，均可复现）。
+
+- 与实践层的关系：`llm-fundamentals/` 讲**为什么这么设计**，`projects/*/milestones/` 讲**怎么跑起来**。两者互相引用，不重复正文。
+- 目录内自带 `demos/`（numpy 实现，无需 GPU）与 `demos/make_figures.py`（重建全部配图）。
+- 第 11 章把 10 个开源项目对应到具体章节，并给出"跑通的标志"。
 
 ## 技术术语规范
 

@@ -1,0 +1,26 @@
+语料: low lower lowest lowering new newer newest newing
+初始词表(字符级): ['</w>', 'e', 'g', 'i', 'l', 'n', 'o', 'r', 's', 't', 'w']
+初始 token 总数: 50
+
+合并过程 —— 每轮选出现次数最高的相邻对：
+轮次    合并对             出现次数      合并后 token 总数
+1     w+e             5         45
+2     l+o             4         41
+3     n+e             4         37
+4     lo+we           3         34
+5     w+</w>          2         32
+6     lowe+r          2         30
+7     s+t             2         28
+8     st+</w>         2         26
+9     i+n             2         24
+10    in+g            2         22
+11    ing+</w>        2         20
+12    ne+we           2         18
+
+合并 12 次后 token 总数: 18  (越合并越少 = 常见词被压成整块)
+学到的合并规则: w+e | l+o | n+e | lo+we | w+</w> | lowe+r ...
+新词 "lowest" 被切成: ['lowe', 'st</w>']
+
+字符数 vs 近似 token 数（GPT 系规则：英文 ~4 字符/token，中文 ~1.5 字/token）
+  英文: 25 字符 -> ~6 tokens
+  中文: 13 字符 -> ~9 tokens
