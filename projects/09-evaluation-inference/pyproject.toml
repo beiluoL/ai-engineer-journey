@@ -1,0 +1,14 @@
+[project]
+name = "evaluation-inference-platform"
+version = "1.0.0"
+description = "Project 09 — LLM Evaluation / Inference Platform：纯 numpy + 标准库，复用 P06/P08"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M11 服务架构：http.server + OpenAI 兼容 API + SSE 流式</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">port=0 → 内核分配 50712；纯标准库，无 FastAPI / uvicorn / vLLM</text>
+
+  <!-- client -->
+  <rect x="20" y="64" width="140" height="66" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="90" y="84" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2328">客户端 urllib</text>
+  <text x="90" y="100" font-size="9.5" text-anchor="middle" fill="#c0392b">ProxyHandler({}) 必须</text>
+  <text x="90" y="114" font-size="9.5" text-anchor="middle" fill="#57606a">否则 HTTP_PROXY 劫持</text>
+  <text x="90" y="126" font-size="9.5" text-anchor="middle" fill="#57606a">localhost</text>
+
+  <!-- server -->
+  <rect x="186" y="64" width="240" height="66" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="306" y="84" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2328">ThreadingHTTPServer</text>
+  <text x="306" y="100" font-size="9.5" text-anchor="middle" fill="#57606a">HTTP/1.1 + Content-Length</text>
+  <text x="306" y="114" font-size="9.5" text-anchor="middle" fill="#57606a">daemon_threads = True</text>
+  <text x="306" y="126" font-size="9.5" text-anchor="middle" fill="#57606a">每请求一个线程</text>
+
+  <!-- engine -->
+  <rect x="452" y="64" width="208" height="66" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="556" y="84" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2328">CausalLMWithKVCache</text>
+  <text x="556" y="100" font-size="9.5" text-anchor="middle" fill="#57606a">M07 引擎，generate_ids</text>
+  <text x="556" y="114" font-size="9.5" text-anchor="middle" fill="#c0392b">玩具模型（d_model=64）</text>
+  <text x="556" y="126" font-size="9.5" text-anchor="middle" fill="#57606a">不是 7B</text>
+
+  <g stroke="#57606a" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <line x1="160" y1="97" x2="182" y2="97"/>
+    <line x1="426" y1="97" x2="448" y2="97"/>
+  </g>
+
+  <!-- endpoints -->
+  <rect x="186" y="146" width="474" height="76" rx="8" fill="#ffffff" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="198" y="164" font-size="11" font-weight="600" fill="#1f2328">端点</text>
+  <text x="200" y="181" font-size="9.5" fill="#1f2328">GET  /health　　　　　　{"status":"ok"}　→ HTTP 200</text>
+  <text x="200" y="196" font-size="9.5" fill="#1f2328">GET  /metrics　　　　　 请求 6 / 错误 0 / token 27 / 均值 2.199 ms / p95 3.311 ms</text>
+  <text x="200" y="211" font-size="9.5" fill="#1f2328">POST /v1/chat/completions　stream=false → JSON（object=chat.completion）</text>
+  <text x="200" y="226" font-size="9.5" fill="#4a7fd4">　　　　　　　　　　　　　 stream=true  → SSE（6 token + 1 finish + 1 usage + [DONE] = 9）</text>
+
+  <!-- SSE timeline -->
+  <rect x="20" y="146" width="150" height="76" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="32" y="164" font-size="11" font-weight="600" fill="#1f2328">SSE 三件套</text>
+  <text x="34" y="180" font-size="9" fill="#1f2328">Content-Type: text/event-stream</text>
+  <text x="34" y="193" font-size="9" fill="#1f2328">Cache-Control: no-cache</text>
+  <text x="34" y="206" font-size="9" fill="#1f2328">Connection: close</text>
+  <text x="34" y="219" font-size="9" fill="#c0392b">每次 write 后必须 flush()</text>
+
+  <!-- metrics self-check -->
+  <rect x="20" y="236" width="313" height="72" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="32" y="254" font-size="11" font-weight="700" fill="#1f2328">数字自洽自检（实测）</text>
+  <text x="34" y="270" font-size="9.5" fill="#1f2328">请求 6 = 1 non-stream + 1 SSE + 4 并发</text>
+  <text x="34" y="284" font-size="9.5" fill="#1f2328">token 27 = 5 + 6 + 4×4</text>
+  <text x="34" y="298" font-size="9.5" fill="#1f2328">2046.08 tok/s = 27 ÷ 13.196 ms → 均值 2.199 ms ✓</text>
+
+  <!-- concurrency -->
+  <rect x="347" y="236" width="313" height="72" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="359" y="254" font-size="11" font-weight="700" fill="#c0392b">⚠ 4 并发其实是串行的</text>
+  <text x="361" y="270" font-size="9.5" fill="#1f2328">4/4 成功，墙钟 11.46 ms ＞ 4 × 2.199 = 8.80 ms</text>
+  <text x="361" y="284" font-size="9.5" fill="#1f2328">GIL + 无批处理 → 多线程不并行</text>
+  <text x="361" y="298" font-size="9.5" fill="#57606a">M09 continuous batching 未接入 HTTP 层（下一步）</text>
+
+  <rect x="20" y="320" width="640" height="34" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="335" font-size="10" fill="#1f2328">边界：无鉴权 / 无 限流 / 无请求超时 / 无 KV 准入控制 —— 刻意不做，避免把 demo 误读成生产方案。</text>
+  <text x="32" y="348" font-size="10" fill="#57606a">2046.08 token/s 是玩具模型的纯生成速率，不可当生产指标（真实 7B 单请求约 30~60 tok/s，业界经验值非实测）。</text>
+</svg>

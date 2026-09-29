@@ -266,22 +266,29 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：高性能推理服务平台
 
-**状态**：⬜ 未开始
+**状态**：✅ 已完成（v1.0，11/11 Milestone，229 项 pytest 全绿）
 
 **11 个 Milestone**：
 ```
-01 — Evaluation
-02 — Benchmark
-03 — Evaluation Dataset
-04 — Automatic Evaluation
-05 — Model Comparison
-06 — Quantization
-07 — Inference Engine
-08 — vLLM
-09 — Batching
-10 — KV Cache
-11 — Model Serving
+01 — Evaluation             ✅ 困惑度之外：Token Acc 6.05% / ECE 0.0927 / 覆盖率 99.31%
+02 — Benchmark              ✅ 任务集 + 排行（94.38 > 75.56 > 21.87）
+03 — Evaluation Dataset     ✅ held-out 12 条、与训练集 instruction 交集 0（防泄漏）
+04 — Automatic Evaluation   ✅ 零 LLM 规则评分（94.09 > 86.03 > 55.02 > 0.00）
+05 — Model Comparison       ✅ 多种子配对 bootstrap，相对基座 10/0/0 稳定
+06 — Quantization           ✅ INT8/INT4/NF4 三方；端到端 NF4 反而最优（−4.088%）
+07 — Inference Engine       ✅ 手写自回归引擎，KV Cache 6.155→2.794 ms（2.20×）
+08 — vLLM / PagedAttention  ✅ 分块 KV：浪费率 76.4%→16.0%，省 71.9%
+09 — Batching               ✅ Continuous vs Static：吞吐 1.52×、p95 −43.5%
+10 — KV Cache               ✅ 显存账本 57,344 B/token；batch16@32K 达权重 197.46%
+11 — Model Serving          ✅ 标准库 HTTP 服务 + SSE 流式 + 并发 4/4 + metrics
 ```
+
+> 实现说明：与 Project 08 同源——本机 M1 无 CUDA、磁盘余量紧张，故走**纯 numpy + Python 标准库手写**
+> （HTTP 服务直接用 `http.server` + `urllib`，不引 fastapi/vllm 等第三方包）。
+> 基座与微调产物复用 P06（手写 Transformer + autograd）与 P08（LoRA / NF4 / 冻结基座），
+> 保证评估对象与 P08 微调出的模型是同一个，比较才有意义。
+> 边界已在文档中诚实标注：PagedAttention / Batching 为块级账本与离散事件仿真（非真实 GPU 分配）；
+> 7B 显存数字为按架构公式计算（与 P07 独立计算交叉验证），非本机实测。
 
 ---
 

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M10 KV 显存账本：随 batch × seq 线性增长，高并发下反超权重</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">架构 layers=28 / kv_heads=4 / head_dim=128 / BF16 → 57,344 B/token；权重 14.18 GiB</text>
+
+  <!-- formula -->
+  <rect x="20" y="60" width="640" height="40" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="34" y="78" font-size="11.5" font-weight="700" fill="#1f2328">KV bytes = 2 × layers × kv_heads × head_dim × dtype_bytes × seq_len × batch_size</text>
+  <text x="34" y="93" font-size="10" fill="#c0392b">⚠ 必须是 kv_heads（GQA=4），不是 n_heads(=28) —— 用错会高估 7 倍（401,408 vs 57,344）</text>
+
+  <!-- bar chart -->
+  <text x="20" y="122" font-size="11" font-weight="600" fill="#1f2328">KV / 权重占比（对数刻度示意，公式外推）</text>
+
+  <text x="26" y="146" font-size="9" fill="#57606a">b1 s512</text>
+  <rect x="86" y="138" width="4" height="12" fill="#4a7fd4"/>
+  <text x="94" y="146" font-size="8.5" fill="#57606a">0.19%</text>
+
+  <text x="26" y="162" font-size="9" fill="#57606a">b1 s2048</text>
+  <rect x="86" y="154" width="16" height="12" fill="#4a7fd4"/>
+  <text x="106" y="162" font-size="8.5" fill="#57606a">0.77%</text>
+
+  <text x="26" y="178" font-size="9" fill="#57606a">b1 s8192</text>
+  <rect x="86" y="170" width="62" height="12" fill="#4a7fd4"/>
+  <text x="152" y="178" font-size="8.5" fill="#57606a">3.09%</text>
+
+  <text x="26" y="194" font-size="9" fill="#57606a">b1 s32768</text>
+  <rect x="86" y="186" width="248" height="12" fill="#4a7fd4"/>
+  <text x="338" y="194" font-size="8.5" fill="#57606a">12.34%（1.750 GiB）</text>
+
+  <text x="26" y="210" font-size="9" fill="#57606a">b4 s8192</text>
+  <rect x="86" y="202" width="248" height="12" fill="#4a7fd4"/>
+  <text x="338" y="210" font-size="8.5" fill="#57606a">12.34%（1.750 GiB）</text>
+
+  <text x="26" y="226" font-size="9" fill="#57606a">b4 s32768</text>
+  <rect x="86" y="218" width="400" height="12" fill="#bf8700"/>
+  <text x="490" y="226" font-size="8.5" fill="#57606a">49.37%（7.000 GiB）</text>
+
+  <text x="26" y="242" font-size="9" fill="#57606a">b16 s32768</text>
+  <rect x="86" y="234" width="480" height="12" fill="#c0392b"/>
+  <text x="570" y="242" font-size="8.5" fill="#c0392b">197.46%</text>
+
+  <line x1="86" y1="250" x2="570" y2="250" stroke="#8c959f" stroke-width="1"/>
+  <text x="86" y="262" font-size="9" fill="#57606a">← 权重 14.18 GiB 基线（100%）→</text>
+  <line x1="330" y1="132" x2="330" y2="252" stroke="#4a9d5f" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <text x="336" y="264" font-size="9" fill="#4a9d5f">权重线：越过此线 KV 成为显存主体</text>
+
+  <!-- crossover -->
+  <rect x="20" y="276" width="313" height="70" rx="8" fill="#ffffff" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="294" font-size="11" font-weight="700" fill="#1f2328">反超点（KV 超过权重的 seq 长度）</text>
+  <text x="34" y="311" font-size="10" fill="#1f2328">batch 1　→ seq 265,515（单人对话碰不到）</text>
+  <text x="34" y="326" font-size="10" fill="#1f2328">batch 16 → seq 16,595</text>
+  <text x="34" y="341" font-size="10" fill="#c0392b">batch 64 → seq 4,149（4K 上下文即反超）</text>
+
+  <rect x="347" y="276" width="313" height="70" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="359" y="294" font-size="11" font-weight="700" fill="#1f2328">不变量自检：总缓存 token 阈值恒定</text>
+  <text x="361" y="311" font-size="10" fill="#1f2328">265,515 / 265,516 / 265,520 / 265,536</text>
+  <text x="361" y="326" font-size="10" fill="#1f2328">= weight_bytes / bytes_per_token = 265,514</text>
+  <text x="361" y="341" font-size="10" fill="#57606a">与 batch 无关；差异仅来自 +1 取整 × batch</text>
+
+  <text x="20" y="356" font-size="9.5" fill="#c0392b">⚠ 全部为按架构公式外推（非本机实测），与 Project 07 独立算出的 14.18 GiB / 57,344 B 交叉验证一致；与 M08 的 2,048 B/token 差 28 倍，不可混用。</text>
+</svg>

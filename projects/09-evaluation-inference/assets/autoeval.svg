@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M04 自动评分打分卡：五维加权，零 LLM</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">关键词 40% + 忠实度 20% + 格式 15% + 长度 15% + 去重复 10%</text>
+
+  <!-- answer in -->
+  <rect x="20" y="62" width="120" height="44" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="80" y="80" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">候选答案</text>
+  <text x="80" y="97" font-size="10" text-anchor="middle" fill="#57606a">+ reference</text>
+
+  <!-- five dims -->
+  <rect x="162" y="56" width="112" height="56" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="218" y="76" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">关键词 ×0.40</text>
+  <text x="218" y="92" font-size="9.5" text-anchor="middle" fill="#57606a">keywords 命中率</text>
+  <text x="218" y="106" font-size="9.5" text-anchor="middle" fill="#57606a">内容覆盖（权重最高）</text>
+
+  <rect x="288" y="56" width="112" height="56" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="344" y="76" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">忠实度 ×0.20</text>
+  <text x="344" y="92" font-size="9.5" text-anchor="middle" fill="#57606a">|A∩R| / |A|</text>
+  <text x="344" y="106" font-size="9.5" text-anchor="middle" fill="#57606a">只抓「胡说」</text>
+
+  <rect x="414" y="56" width="112" height="56" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="470" y="76" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">格式 ×0.15</text>
+  <text x="470" y="92" font-size="9.5" text-anchor="middle" fill="#57606a">加分制，0.35 起</text>
+  <text x="470" y="106" font-size="9.5" text-anchor="middle" fill="#57606a">句号/列表/冒号</text>
+
+  <rect x="540" y="56" width="120" height="56" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="600" y="76" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">长度 ×0.15</text>
+  <text x="600" y="92" font-size="9.5" text-anchor="middle" fill="#57606a">ratio = n / |ref|</text>
+  <text x="600" y="106" font-size="9.5" text-anchor="middle" fill="#57606a">[0.6,1.6] 满分</text>
+
+  <rect x="162" y="122" width="112" height="42" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="218" y="140" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">去重复 ×0.10</text>
+  <text x="218" y="156" font-size="9.5" text-anchor="middle" fill="#57606a">3-gram 唯一率</text>
+
+  <g stroke="#57606a" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <line x1="140" y1="84" x2="158" y2="80"/>
+    <line x1="140" y1="84" x2="284" y2="80"/>
+    <line x1="140" y1="84" x2="410" y2="80"/>
+    <line x1="140" y1="84" x2="536" y2="80"/>
+    <line x1="140" y1="84" x2="158" y2="140"/>
+  </g>
+
+  <!-- repeat demo box -->
+  <rect x="288" y="112" width="372" height="56" rx="8" fill="#ffffff" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="298" y="130" font-size="10.5" font-weight="700" fill="#c0392b">重复回答 = (ref[:20] + "。") × 6 → 长度 0.988、忠实度 0.921 都被"刷到"</text>
+  <text x="298" y="146" font-size="10" fill="#1f2328">124 个 3-gram 中仅约 21 个不同 → 去重复 0.168；关键词 0.267（权重最大，丢 29.3 分）</text>
+  <text x="298" y="161" font-size="10" fill="#57606a">0.40×0.267 + 0.15×0.630 + 0.15×0.988 + 0.20×0.921 + 0.10×0.168 = 55.05</text>
+
+  <!-- ranking table -->
+  <rect x="20" y="184" width="640" height="106" rx="8" fill="#ffffff" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="202" font-size="11" font-weight="600" fill="#1f2328">实测排行（5 题）</text>
+  <text x="34" y="220" font-size="10" fill="#57606a">候选　　总分　　关键词　格式　　长度　　忠实度　去重复</text>
+  <text x="34" y="238" font-size="10.5" font-weight="600" fill="#1f2328">参考答案　94.09　1.000　0.690　1.000　1.000　0.874</text>
+  <text x="34" y="254" font-size="10.5" fill="#1f2328">首句摘要　86.03　0.900　0.660　0.711　1.000　0.946</text>
+  <text x="34" y="270" font-size="10.5" fill="#c0392b">重复回答　55.02　0.267　0.630　0.988　0.921　0.168</text>
+  <text x="34" y="286" font-size="10.5" fill="#1f2328">空回答　　0.00　 0.000　0.000　0.000　0.000　0.000　← 五项各自短路归零</text>
+
+  <!-- notes -->
+  <rect x="20" y="300" width="640" height="26" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="317" font-size="10.5" fill="#1f2328">踩坑：长度项与忠实度项都能被复读刷到 → 无单项能防住刷分，防得住的是加权组合。</text>
+
+  <rect x="20" y="332" width="640" height="22" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="347" font-size="10.5" fill="#1f2328">边界：词面重叠 ≠ 事实正确 —— 适合横向比较候选，不适合判定对错。</text>
+</svg>

@@ -1,0 +1,6 @@
+# 量化权重与 adapter 缓存（由 demo 生成、可重建，不入库）
+models/
+
+# pytest 缓存
+.pytest_cache/
+__pycache__/

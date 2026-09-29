@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M03 评估集构建：去重 → 分层切分 → 泄漏检查</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">顺序即正确性：去重必须在切分之前，否则会制造「查不出来的泄漏」。</text>
+
+  <!-- step 1 -->
+  <rect x="20" y="66" width="118" height="58" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="79" y="86" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">① 原始 59 条</text>
+  <text x="79" y="102" font-size="10" text-anchor="middle" fill="#57606a">load_java_records()</text>
+  <text x="79" y="117" font-size="10" text-anchor="middle" fill="#57606a">P08 语料</text>
+
+  <!-- step 2 -->
+  <rect x="152" y="66" width="150" height="58" rx="8" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="227" y="86" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">② 归一化去重 → 59</text>
+  <text x="227" y="102" font-size="10" text-anchor="middle" fill="#57606a">NFKC + casefold</text>
+  <text x="227" y="117" font-size="10" text-anchor="middle" fill="#57606a">去标点空白 → 删 0 条</text>
+
+  <!-- step 3 -->
+  <rect x="316" y="66" width="164" height="58" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="398" y="86" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">③ 分层切分（seed=0）</text>
+  <text x="398" y="102" font-size="10" text-anchor="middle" fill="#57606a">层键 = 主题 / 长度</text>
+  <text x="398" y="117" font-size="10" text-anchor="middle" fill="#57606a">round-robin 轮流取</text>
+
+  <!-- step 4 -->
+  <rect x="494" y="66" width="166" height="58" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="577" y="86" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">④ 泄漏检查 → 通过</text>
+  <text x="577" y="102" font-size="10" text-anchor="middle" fill="#57606a">train ∩ heldout = 0</text>
+  <text x="577" y="117" font-size="10" text-anchor="middle" fill="#57606a">非空即 raise（无灰度）</text>
+
+  <g stroke="#57606a" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <line x1="138" y1="95" x2="148" y2="95"/>
+    <line x1="302" y1="95" x2="312" y2="95"/>
+    <line x1="480" y1="95" x2="490" y2="95"/>
+  </g>
+
+  <!-- split outputs -->
+  <rect x="316" y="150" width="164" height="54" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="398" y="170" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">训练集 47</text>
+  <text x="398" y="186" font-size="10" text-anchor="middle" fill="#57606a">才允许进 build_sft_examples</text>
+  <text x="398" y="199" font-size="10" text-anchor="middle" fill="#57606a">（先切后训，顺序不能反）</text>
+
+  <rect x="494" y="150" width="166" height="54" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="577" y="170" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2328">held-out 12</text>
+  <text x="577" y="186" font-size="10" text-anchor="middle" fill="#57606a">12 个「主题/长度」层</text>
+  <text x="577" y="199" font-size="10" text-anchor="middle" fill="#57606a">覆盖 6 个主题</text>
+
+  <g stroke="#57606a" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <line x1="380" y1="124" x2="380" y2="146"/>
+    <line x1="590" y1="124" x2="590" y2="146"/>
+  </g>
+
+  <!-- strata table -->
+  <rect x="20" y="150" width="280" height="118" rx="8" fill="#ffffff" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="168" font-size="11" font-weight="600" fill="#1f2328">held-out 分层（实测每层 1 条）</text>
+  <text x="34" y="186" font-size="9.5" fill="#1f2328">JVM/短 1　　Java 基础/中 1　　Spring/中 1</text>
+  <text x="34" y="200" font-size="9.5" fill="#1f2328">JVM/长 1　　Java 基础/长 1　　并发/中 1</text>
+  <text x="34" y="214" font-size="9.5" fill="#1f2328">并发/短 1　　数据与网络/中 1　　集合/短 1</text>
+  <text x="34" y="228" font-size="9.5" fill="#1f2328">并发/长 1　　数据与网络/长 1　　集合/长 1</text>
+  <line x1="32" y1="238" x2="288" y2="238" stroke="#8c959f" stroke-width="1"/>
+  <text x="34" y="252" font-size="9.5" fill="#57606a">round-robin：层比样本多时先保证覆盖率</text>
+  <text x="34" y="263" font-size="9.5" fill="#57606a">代价：分层维度置信区间极宽 → M05 bootstrap 补</text>
+
+  <!-- wrong order -->
+  <path d="M112 214 C 60 250, 150 262, 96 262" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow-red)"/>
+  <text x="20" y="292" font-size="10.5" font-weight="600" fill="#c0392b">反例：先切分再去重 → 同一 instruction 可能一条进 train、一条进 held-out</text>
+  <text x="20" y="306" font-size="10.5" fill="#57606a">　各自集合内唯一（都不被删）、交集检查也通过 → 泄漏存在却查不出来。</text>
+
+  <rect x="20" y="318" width="640" height="30" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="337" font-size="10.5" fill="#1f2328">顺序铁律：去重 → 剔除已训 instruction → 分层切分 → 泄漏检查（失败即 raise，无 soft path）。</text>
+</svg>

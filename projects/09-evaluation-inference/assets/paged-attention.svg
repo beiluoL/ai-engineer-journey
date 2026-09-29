@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M08 PagedAttention：block table 映射与按需块分配</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">浪费率 76.4% → 16.0%（省 71.9%）；逻辑引用 9 / 物理块 8，共享 1</text>
+
+  <!-- contiguous -->
+  <rect x="20" y="62" width="300" height="112" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="12" font-weight="700" fill="#1f2328">连续预分配：按 max_len=128 预留</text>
+  <rect x="34" y="90" width="262" height="14" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+  <rect x="34" y="90" width="18" height="14" fill="#4a9d5f"/>
+  <text x="300" y="101" font-size="8.5" fill="#57606a">A 9/128</text>
+  <rect x="34" y="108" width="262" height="14" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+  <rect x="34" y="108" width="35" height="14" fill="#4a9d5f"/>
+  <text x="300" y="119" font-size="8.5" fill="#57606a">B 17/128</text>
+  <rect x="34" y="126" width="262" height="14" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+  <rect x="34" y="126" width="67" height="14" fill="#4a9d5f"/>
+  <text x="300" y="137" font-size="8.5" fill="#57606a">C 33/128</text>
+  <rect x="34" y="144" width="262" height="14" fill="#ffffff" stroke="#c0392b" stroke-width="1"/>
+  <rect x="34" y="144" width="127" height="14" fill="#4a9d5f"/>
+  <text x="300" y="155" font-size="8.5" fill="#57606a">D 62/128</text>
+  <text x="34" y="170" font-size="10.5" fill="#1f2328">512 slot，用 121 → 浪费 391 token</text>
+
+  <!-- paged -->
+  <rect x="340" y="62" width="320" height="112" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="352" y="80" font-size="12" font-weight="700" fill="#1f2328">分页按需：只按块粒度（block_size=8）分配</text>
+  <text x="354" y="98" font-size="9.5" fill="#57606a">A [0,1]　B [2,3,4]　C [5,6,7,8,9]　D [10..17]</text>
+  <rect x="354" y="106" width="40" height="14" fill="#4a9d5f" stroke="#4a9d5f" stroke-width="1"/>
+  <rect x="398" y="106" width="40" height="14" fill="#ffffff" stroke="#4a9d5f" stroke-width="1"/>
+  <rect x="442" y="106" width="40" height="14" fill="#4a9d5f" stroke="#4a9d5f" stroke-width="1"/>
+  <rect x="486" y="106" width="40" height="14" fill="#ffffff" stroke="#4a9d5f" stroke-width="1"/>
+  <text x="530" y="117" font-size="8.5" fill="#57606a">块内碎片 &lt; 1 块/序列</text>
+  <text x="354" y="138" font-size="9.5" fill="#1f2328">18 块 = 144 slot，用 121 → 浪费 23 token（16.0%）</text>
+  <text x="354" y="154" font-size="9.5" fill="#1f2328">1024.0 KiB → 288.0 KiB，节省 71.9%</text>
+  <text x="354" y="169" font-size="9.5" fill="#c0392b">省下的 736 KiB 中 690 来自"取消 max_len 预留"</text>
+
+  <!-- block table -->
+  <rect x="20" y="186" width="640" height="106" rx="8" fill="#ffffff" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="204" font-size="11" font-weight="700" fill="#1f2328">Block table 演化（实测，池 32 块）</text>
+  <text x="34" y="222" font-size="9.5" fill="#1f2328">加入 A:9 → A[0,1]　　加入 B:17 → B[2,3,4]　　加入 C:33 → C[5,6,7,8,9]　　加入 D:62 → D[10..17]</text>
+  <text x="34" y="238" font-size="9.5" fill="#1f2328">释放 B → 回收 [2,3,4]（空闲 14→17）</text>
+  <text x="34" y="254" font-size="9.5" fill="#4a7fd4">E 共享 A 前缀块 [0] → E[0]，再 append 7 → E[0,2]（块 2 来自刚回收的 B）</text>
+  <text x="34" y="270" font-size="9.5" fill="#1f2328">抢占 D（protected={A,E}）→ 回收 [10..17] 共 8 块（空闲 16→24）</text>
+  <text x="34" y="286" font-size="9.5" fill="#57606a">最终：A[0,1] C[5..9] E[0,2] → 逻辑引用 9 / 物理块 8（块 0 被 A 与 E 共享）</text>
+
+  <!-- invariants -->
+  <rect x="20" y="300" width="313" height="52" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="318" font-size="11" font-weight="700" fill="#1f2328">池守恒与不变量（实测）</text>
+  <text x="34" y="334" font-size="10" fill="#1f2328">已用 8 + 空闲 24 = 32　不变量 True</text>
+  <text x="34" y="347" font-size="10" fill="#1f2328">共享引用 1　（used∩free=∅、used∪free=全）</text>
+
+  <rect x="347" y="300" width="313" height="52" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="359" y="318" font-size="11" font-weight="700" fill="#1f2328">两条硬约束</text>
+  <text x="361" y="334" font-size="10" fill="#1f2328">share_prefix 强制 block 对齐（否则写坏共享块）</text>
+  <text x="361" y="347" font-size="10" fill="#1f2328">release 按 refcount 归零才回收（否则悬空引用）</text>
+</svg>

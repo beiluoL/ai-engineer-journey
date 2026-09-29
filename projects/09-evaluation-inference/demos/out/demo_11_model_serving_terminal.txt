@@ -1,0 +1,23 @@
+
+==============================================================================
+  M11 · Model Serving：http.server + OpenAI API + SSE
+==============================================================================
+  服务地址（port=0 实际分配）                  http://127.0.0.1:50712
+  GET /health                        HTTP 200, status=ok
+  Non-stream                         HTTP 200, object=chat.completion
+  Non-stream completion tokens       5
+  SSE                                HTTP 200
+  SSE token chunks                   6
+  SSE usage chunks                   1   stream_options.include_usage=true
+  SSE 总 data 事件                      9   含 finish、usage、[DONE]
+  4 个并发请求                            4/4 成功，墙钟 11.46 ms
+
+── GET /metrics（真实请求计数与延迟） ───────────────────────────────────────────────────
+  HTTP                               200
+  请求数                                6
+  错误数                                0
+  生成 token 数                         27
+  平均延迟                               2.199 ms
+  p95 延迟                             3.311 ms
+  Token 吞吐                           2046.08 token/s
+  客户端显式使用 ProxyHandler({})，已验证本机 HTTP_PROXY 不会劫持 localhost。
