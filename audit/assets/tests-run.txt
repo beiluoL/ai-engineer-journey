@@ -1,0 +1,19 @@
+项目                                  测试数  结果
+─────────────────────────────────────────────────────────────
+01-python-ai-cli                      6  OK (unittest)
+02-engineering-ai-assistant          33  passed
+03-ai-application                    61  passed
+04-rag                              197  passed
+05-agent-mcp                        244  passed
+06-mini-transformer-llm             150  passed
+08-fine-tuning                      189  passed
+09-evaluation-inference             229  passed
+10-tiny-llm-capstone                 71  passed
+─────────────────────────────────────────────────────────────
+合计                                 1180
+
+07-open-source-llm          0  —— 无测试（milestones 亦为空）
+
+CI 门禁现状（.github/workflows/ci.yml）：
+  已纳入：01-python-ai-cli（unittest）、02-engineering-ai-assistant（pytest）
+  未纳入：03 / 04 / 05 / 06 / 08 / 09 / 10 共 7 个项目

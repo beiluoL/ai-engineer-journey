@@ -1,0 +1,84 @@
+============================================================================
+  仓库健康体检 · ai-engineer-journey
+============================================================================
+
+── 规模概览 ────────────────────────────────────────────────────────────────────
+  跟踪文件 1052 个
+  Markdown 197 篇 / 85,830 行
+  Python   340 个 / 49,999 行
+  配图     287 PNG + 46 SVG
+
+── 项目骨架完整性 ─────────────────────────────────────────────────────────────────
+  项目                                 MD  MI  SRC  TST  DEP  ENV
+  01-python-ai-cli                    Y  10    Y    1    -    Y
+  [INFO ] 01-python-ai-cli: 纯标准库实现，无需依赖声明
+  02-engineering-ai-assistant         Y  10    Y    5    Y    Y
+  03-ai-application                   Y   9    Y    9    Y    Y
+  04-rag                              Y  17    Y   17    Y    -
+  [WARN ] 04-rag: 代码读环境变量却无 .env.example（克隆后不知道要配什么）
+  05-agent-mcp                        Y  10    Y   12    Y    -
+  [WARN ] 05-agent-mcp: 代码读环境变量却无 .env.example（克隆后不知道要配什么）
+  06-mini-transformer-llm             Y  10    Y    4    Y    -
+  07-open-source-llm                  Y   0    Y    0    -    -
+  [ERROR] 07-open-source-llm: milestones/ 为空 —— 项目没有正文
+  [WARN ] 07-open-source-llm: 未发现单元测试
+  [WARN ] 07-open-source-llm: import 了第三方包 ['huggingface_hub', 'torch', 'transformers'] 却无依赖声明文件
+  08-fine-tuning                      Y   9    Y   10    Y    -
+  09-evaluation-inference             Y  11    Y   13    Y    -
+  10-tiny-llm-capstone                Y  11    Y   11    Y    -
+
+── 证据链：demo 输出是否入库 ─────────────────────────────────────────────────────────
+  [WARN ] 04-rag: 本地有 24 个 demo 输出，但一个都没入库（证据链断了）
+
+── 配图：孤儿图 + 零配图文档 ──────────────────────────────────────────────────────────
+  配图 333 张，被引用 325 张
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/diagram8-decision.svg
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/diagram8-http-flow.svg
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/diagram8-options.svg
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/diagram8-process.svg
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/site-django.png
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/site-fastapi.png
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/site-pandas.png
+  [INFO ] 孤儿图（无文档引用）: publishing/tutorials/assets/site-pytorch2.png
+  零配图文档 16 篇（已排除索引页 / 题库 / 语料 / 自测清单）
+  另有 35 篇草稿库文档零配图（📝 草稿，未纳入要求）
+  [WARN ] 项目主页零配图: projects/04-rag/README.md
+  [WARN ] 项目主页零配图: projects/05-agent-mcp/README.md
+  [WARN ] 项目主页零配图: projects/06-mini-transformer-llm/README.md
+  [WARN ] 项目主页零配图: projects/07-open-source-llm/README.md
+  [WARN ] 项目主页零配图: projects/08-fine-tuning/README.md
+  [WARN ] 项目主页零配图: projects/09-evaluation-inference/README.md
+  [WARN ] 项目主页零配图: projects/10-tiny-llm-capstone/README.md
+  其余零配图文档 9 篇：
+        · llm-fundamentals/08-alignment-rlhf.md
+        · llm-fundamentals/09-math-foundations.md
+        · llm-fundamentals/10-glossary.md
+        · llm-fundamentals/11-open-source-projects.md
+        · llm-fundamentals/README.md
+        · mistakes/2026-09-15-package-init-export-miss.md
+        · projects/07-open-source-llm/notebooks/README.md
+        · publishing/articles/00-python-foundation/01-python-variables.md
+        · publishing/articles/00-python-foundation/02-python-list-dict-messages.md
+
+── 文档漂移：PROGRESS 声明的图数 vs 实际 ───────────────────────────────────────────────
+  P01: 22 张 ✓
+  [WARN ] P02: PROGRESS 写 23 张，实际 25 张
+  [WARN ] P03: PROGRESS 写 18 张，实际 20 张
+  P04: 44 张 ✓
+
+── 知识层交叉引用 ─────────────────────────────────────────────────────────────────
+  llm-fundamentals → projects/ 链接 0 条
+  projects/ → llm-fundamentals/ 链接 0 条
+  [WARN ] 两个知识层之间没有任何真实相对链接（README 声称『互相引用』需修正）
+
+── 安全：密钥与敏感文件 ──────────────────────────────────────────────────────────────
+  未发现硬编码密钥 ✓
+  未发现 .env / .key 类文件入库 ✓
+
+── 链接与坏图（check_links） ──────────────────────────────────────────────────────
+  有效相对链接: 859
+  OK: 没有死链，没有坏图
+
+============================================================================
+  结论：ERROR 1 · WARN 15 · INFO 11
+============================================================================

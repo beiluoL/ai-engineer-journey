@@ -92,5 +92,9 @@
 
 ```bash
 python3 scripts/check_links.py --strict   # 死链 + 坏图体检（CI 也在跑）
+python3 scripts/audit.py                  # 全仓库体检：骨架 / 证据链 / 配图 / 漂移 / 密钥
+python3 scripts/audit.py --tests          # 额外实跑全部项目测试（1180 项）
 cd projects/01-python-ai-cli/src && python3 -m unittest discover -s tests
 ```
+
+体检档案与历次结论见 [`audit/`](audit/README.md)（最近一期：[2026-09-30 全仓库体检](audit/2026-09-30-health-check.md)）。

@@ -65,7 +65,8 @@ ai-engineer-journey/
 ├── llm-fundamentals/      # 基础理论层：大模型原理教材（11 章 + 可运行 demo + 真实配图）
 │                          #   定位见下方「基础知识层」一节；projects/ 仍是唯一事实源
 │
-├── projects/              # 核心内容（唯一事实源）
+├── audit/                 # 仓库体检档案：每期一次真实运行的全面体检 + 建议清单
+│├── projects/              # 核心内容（唯一事实源）
 │   ├── 01-python-ai-cli/
 │   │   ├── README.md          # 项目主页（必须对齐规范模板）
 │   │   ├── milestones/       # 学习里程碑（Project First 模板）
@@ -82,6 +83,15 @@ ai-engineer-journey/
     ├── tutorials/         # 独立成篇的图文教程（md + html + assets/）
     └── finetune-series/   # 微调系列草稿库（未校对，择优转正为 tutorials）
 ```
+
+### 维护工具（`scripts/`）
+
+| 脚本 | 作用 |
+|------|------|
+| `check_links.py --strict` | 死链 + 坏图体检（CI 也在跑） |
+| `audit.py` | 全仓库体检：骨架完整性 / 证据链 / 配图 / 文档漂移 / 密钥；`--tests` 可实跑全部测试 |
+| `render_terminal.py` | 把真实 stdout 渲染成终端风格 PNG（截图有据可依） |
+| `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版
 
 ## 单一事实源
 
