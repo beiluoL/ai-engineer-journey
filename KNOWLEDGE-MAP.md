@@ -180,6 +180,27 @@ Data → Tokenizer → Embedding → Transformer → Training → Evaluation →
 
 ---
 
+## 基础知识层 — llm-fundamentals → 能力
+
+| 知识 | 对应章节 | 获得能力 |
+|------|---------|----------|
+| 语言模型建模 | [01-basics-language-model](llm-fundamentals/01-basics-language-model.md) | 看懂 token→logits→交叉熵 全链路 |
+| Self-Attention / 多头 / GQA | [02-attention](llm-fundamentals/02-attention.md) | 理解注意力为什么这么算 |
+| Transformer Block / 归一化 / FFN | [03-transformer](llm-fundamentals/03-transformer.md) | 读得懂模型结构图与参数量 |
+| 预训练目标 / 数据 / 并行 | [04-pretraining](llm-fundamentals/04-pretraining.md) | 能估算训练算力与成本 |
+| SFT / LoRA / QLoRA | [05-finetuning](llm-fundamentals/05-finetuning.md) | 知道微调在改什么 |
+| 缩放定律 / 涌现 | [06-scaling-and-emergence](llm-fundamentals/06-scaling-and-emergence.md) | 判断「该加参数还是加数据」 |
+| 解码 / KV Cache / 量化 | [07-decoding-and-inference](llm-fundamentals/07-decoding-and-inference.md) | 理解推理慢在哪、贵在哪 |
+| RLHF / DPO / 对齐 | [08-alignment-rlhf](llm-fundamentals/08-alignment-rlhf.md) | 理解模型为何「听话」 |
+| 关键公式推导 | [09-math-foundations](llm-fundamentals/09-math-foundations.md) | 能自己推 √d_k、softmax 梯度 |
+| 中英术语对照 | [10-glossary](llm-fundamentals/10-glossary.md) | 读论文不卡名词 |
+| 从零实现类开源项目 | [11-open-source-projects](llm-fundamentals/11-open-source-projects.md) | 找到对应章节的练手项目 |
+
+**整体能力**：从「会调 API」进阶到「讲得清原理、算得出账」——为 P06 / P08 / P10 的手写实现提供理论底座。
+**说明**：图片全部可复现（真实运行截图 + 公式现场计算图），demo 为纯 numpy，无需 GPU。
+
+---
+
 ## 为什么 Knowledge Map 不复制正文
 
 > **Milestone 是单一事实源。** Knowledge Map 只负责展示关联，不重复写同样的内容。

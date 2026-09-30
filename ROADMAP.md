@@ -324,3 +324,31 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 > Capstone 的交付物不是模型，而是一条**可缓存、可分段重跑、报告可机读**的流水线。
 > 边界已诚实标注：这个 230K 参数 + 6,384 训练 token 的模型**会拼词、不会答题**（生成层关键词覆盖 0.000），
 > 这正是「三层评估」存在的理由——把真相量化出来，而不是让 loss 曲线替它遮羞。
+
+---
+
+## 附 — 基础知识层：llm-fundamentals
+
+**目标**：把大模型基础理论系统整理成一份由浅入深的学习笔记，讲清「**为什么这么设计**」。
+
+**与 10 个项目的关系**：不属于 Project 序号体系，是与之平行的**理论层**。
+`projects/*/milestones/` 回答「怎么跑起来」，`llm-fundamentals/` 回答「原理是什么、为什么」。两者互相引用，不重复正文。
+
+**状态**：✅ 已完成（11 章 + 8 个可运行 demo + 13 张可复现配图）
+
+**11 章**：
+```text
+01 — 语言模型基础      ✅ token → embedding → logits → 概率 → 交叉熵 / PPL 全链路
+02 — 注意力机制        ✅ QKV / √d_k 缩放推导 / 两类掩码 / 多头 / MHA-GQA-MQA
+03 — Transformer 架构  ✅ Pre-LN / RMSNorm / SwiGLU FFN / 位置编码 / 张量形状表
+04 — 预训练            ✅ 数据流水线 / CLM-MLM-FIM / 并行策略 / BF16 / 算力与成本账
+05 — 微调              ✅ SFT（loss mask / chat template 坑）/ LoRA / QLoRA / 灾难性遗忘
+06 — 涌现与缩放定律    ✅ Kaplan / Chinchilla / 涌现是否伪影 / 过度训练的经济学
+07 — 解码与推理        ✅ Prefill-Decode / 采样策略 / KV Cache / 量化 / 引擎选型
+08 — 对齐              ✅ RLHF 三阶段 / Bradley-Terry / PPO 目标 / DPO 推导 / reward hacking
+09 — 数学基础          ✅ 符号表 + 10 个关键推导（√d_k 方差、p−y 梯度、RoPE 正交性）
+10 — 术语表            ✅ 8 组 150+ 条中英对照，含「最容易混的六组」
+11 — 开源项目          ✅ 10 个项目对应到具体章节 + 跑通标志
+```
+
+**入口**：[`llm-fundamentals/README.md`](llm-fundamentals/README.md)
