@@ -8,6 +8,7 @@
 
 - 项目缺 README / 缺依赖声明 / 缺 .env.example（克隆后跑不起来）
 - demo 的 stdout 存在本地但没入库（文档里的数字失去可复现的证据链）
+  覆盖两套约定：projects/*/demos/out/ 与 python-practice/*/assets/run*.txt
 - 图片躺在 assets/ 里但没有任何文档引用（孤儿图，白占体积）
 - 文档**一个图都没有**（违反「所有文档必须配图」的约定）
 - PROGRESS 里写的「assets 共 NN 张」与实际文件数不一致（文档漂移）
@@ -245,6 +246,37 @@ def check_evidence(files: list[str]) -> None:
             say("W", f"{name}: 本地有 {local} 个 demo 输出，但一个都没入库（证据链断了）")
         elif local > tracked:
             say("I", f"{name}: demo 输出 本地 {local} / 入库 {tracked}")
+
+    # 练手层（python-practice/）用的是「<项目>/assets/run*.txt」这一约定 ——
+    # 它既是终端截图的原素材，也是「文档里的数字确实来自一次真实运行」的证据。
+    # 和 projects/ 的 demos/out/ 指向同一件事，只是路径约定不同，所以单列一段。
+    practice = sorted(
+        {
+            f.split("/")[1]
+            for f in files
+            if f.startswith("python-practice/") and f.count("/") > 1
+        }
+    )
+    if practice:
+        broken, checked = [], 0
+        for name in practice:
+            assets = ROOT / "python-practice" / name / "assets"
+            if not assets.is_dir():
+                continue
+            checked += 1
+            if not any(assets.glob("run*.txt")):  # 没有本地运行输出，无从谈起
+                continue
+            tracked = sum(
+                1
+                for f in files
+                if f.startswith(f"python-practice/{name}/assets/") and f.endswith(".txt")
+            )
+            if not tracked:
+                broken.append(name)
+        if broken:
+            say("W", f"练手层证据链断了（运行输出未入库）: {', '.join(broken)}")
+        elif checked:
+            print(f"  练手层 {checked} 个项目：运行输出已随项目入库 ✓")
 
 
 def check_images(files: list[str]) -> None:

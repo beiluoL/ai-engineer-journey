@@ -1,0 +1,67 @@
+# 01 命令行待办清单 —— 从零跑一遍（增删改查 + 落盘）
+
+$ python3 todo.py list
+（还没有待办。用 `add "要做的事"` 添加第一条）
+
+$ python3 todo.py add 读完 Python 官方教程第 4 章（函数）
+已添加 #1: 读完 Python 官方教程第 4 章（函数）
+
+$ python3 todo.py add 给 todo.py 补上单元测试
+已添加 #2: 给 todo.py 补上单元测试
+
+$ python3 todo.py add 把这段代码用 type hints 重写
+已添加 #3: 把这段代码用 type hints 重写
+
+$ python3 todo.py list
+ID  状态   内容
+#1  [ ]  读完 Python 官方教程第 4 章（函数）   (2026-09-30 14:21)
+#2  [ ]  给 todo.py 补上单元测试   (2026-09-30 14:21)
+#3  [ ]  把这段代码用 type hints 重写   (2026-09-30 14:21)
+
+共 3 项，3 项未完成
+
+$ python3 todo.py done 1
+已完成 #1: 读完 Python 官方教程第 4 章（函数）
+
+$ python3 todo.py list
+ID  状态   内容
+#1  [x]  读完 Python 官方教程第 4 章（函数）   (2026-09-30 14:21)
+#2  [ ]  给 todo.py 补上单元测试   (2026-09-30 14:21)
+#3  [ ]  把这段代码用 type hints 重写   (2026-09-30 14:21)
+
+共 3 项，2 项未完成
+
+$ python3 todo.py rm 3
+已删除 #3: 把这段代码用 type hints 重写
+
+$ python3 todo.py list
+ID  状态   内容
+#1  [x]  读完 Python 官方教程第 4 章（函数）   (2026-09-30 14:21)
+#2  [ ]  给 todo.py 补上单元测试   (2026-09-30 14:21)
+
+共 2 项，1 项未完成
+
+# 数据长这样：todos.json 是纯文本，随时能 cat / 手改 / 进 Git
+$ cat todos.json
+{
+  "next_id": 4,
+  "items": [
+    {
+      "id": 1,
+      "text": "读完 Python 官方教程第 4 章（函数）",
+      "done": true,
+      "created": "2026-09-30 14:21"
+    },
+    {
+      "id": 2,
+      "text": "给 todo.py 补上单元测试",
+      "done": false,
+      "created": "2026-09-30 14:21"
+    }
+  ]
+}
+
+# 出错时不该甩 traceback，而是一句人话 —— 这就是产品感
+$ python3 todo.py done 99
+错误：没有 id=99 的待办（先跑 `list` 看现有编号）
+

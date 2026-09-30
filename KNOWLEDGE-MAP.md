@@ -201,6 +201,23 @@ Data → Tokenizer → Embedding → Transformer → Training → Evaluation →
 
 ---
 
+## 练手层 → 能力
+
+[`python-practice/`](python-practice/README.md) 的 6 个练习，每一个对应一组**具体到能写出来**的能力：
+
+| 练习 | 难度 | 获得能力 |
+|------|------|----------|
+| [01 命令行待办清单](python-practice/01-todo-cli/README.md) | ●○○ | 会用 argparse 做子命令、用 dataclass 建模、把对象序列化成 JSON 落盘、把用户错误映射成退出码 |
+| [02 Excel 报表自动化](python-practice/02-excel-automation/README.md) | ●●○ | 会用 pandas 合并/清洗/分组/透视，用 openpyxl 做格式，用 matplotlib 出中文图表 |
+| [03 网站内容爬虫](python-practice/03-web-crawler/README.md) | ●●○ | 会写带超时/重试/退避的 HTTP 采集，用 CSS 选择器解析 HTML，做 URL 白名单与去重 |
+| [04 FastAPI 博客 API](python-practice/04-fastapi-blog/README.md) | ●●○ | 会写 REST 接口、用类型注解声明校验、正确使用 201/204/404/422、用 pytest 测接口 |
+| [05 AI 命令助手](python-practice/05-ai-command-assistant.md) | ●●● | 会调用 LLM API、维护多轮消息上下文、实现 SSE 流式输出 |
+| [06 RAG 知识库问答](python-practice/06-rag-qa.md) | ●●● | 理解并能实现「切块 → 向量化 → 检索 → 重排 → 生成 → 评测」全链路 |
+
+**与理论层 / 实践层的衔接**：练手层解决「**手会不会**」，理论层解决「**想不想得通**」，实践层解决「**能不能交付**」。前四个练习做完即可无痛进入 `projects/` 的正式项目；05 / 06 直接落在 `projects/01`、`projects/04` 上。
+
+---
+
 ## 为什么 Knowledge Map 不复制正文
 
 > **Milestone 是单一事实源。** Knowledge Map 只负责展示关联，不重复写同样的内容。

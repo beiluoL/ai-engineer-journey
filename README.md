@@ -65,8 +65,12 @@ ai-engineer-journey/
 ├── llm-fundamentals/      # 基础理论层：大模型原理教材（11 章 + 可运行 demo + 真实配图）
 │                          #   定位见下方「基础知识层」一节；projects/ 仍是唯一事实源
 │
+├── python-practice/       # 练手层：6 个入门动手练习（01–04 可跑，05/06 指路 projects/）
+│                          #   定位见下方「练手项目层」一节
+│
 ├── audit/                 # 仓库体检档案：每期一次真实运行的全面体检 + 建议清单
-│├── projects/              # 核心内容（唯一事实源）
+│
+├── projects/              # 核心内容（唯一事实源）
 │   ├── 01-python-ai-cli/
 │   │   ├── README.md          # 项目主页（必须对齐规范模板）
 │   │   ├── milestones/       # 学习里程碑（Project First 模板）
@@ -106,6 +110,24 @@ ai-engineer-journey/
 - 与实践层的关系：`llm-fundamentals/` 讲**为什么这么设计**，`projects/*/milestones/` 讲**怎么跑起来**。两者互相引用，不重复正文。
 - 目录内自带 `demos/`（numpy 实现，无需 GPU）与 `demos/make_figures.py`（重建全部配图）。
 - 第 11 章把 10 个开源项目对应到具体章节，并给出"跑通的标志"。
+
+## 练手项目层
+
+[`python-practice/`](python-practice/README.md) 是**动手练手层**：6 个按难度递进的小练习，目标是「一个周末能跑通一个」，用它们把 Python 本身的语法、文件、网络、Web 框架各走一遍。
+
+| # | 练习 | 难度 | 代码位置 |
+|---|------|------|----------|
+| 01 | 命令行待办清单 | ●○○ 入门 | 🏠 本目录可跑（纯标准库） |
+| 02 | Excel 报表自动化 | ●●○ 进阶 | 🏠 本目录可跑（pandas） |
+| 03 | 网站内容爬虫 | ●●○ 进阶 | 🏠 本目录可跑（requests + bs4） |
+| 04 | FastAPI 博客 API | ●●○ 进阶 | 🏠 本目录可跑（FastAPI + pytest） |
+| 05 | AI 命令助手 | ●●● 挑战 | → [`projects/01`](projects/01-python-ai-cli/README.md) |
+| 06 | RAG 知识库问答 | ●●● 挑战 | → [`projects/04`](projects/04-rag/README.md) |
+
+- 与另外两层的关系：`python-practice/` 要的是**会写**，`projects/` 要的是**做出来**，`llm-fundamentals/` 要的是**想明白**。
+- 05 / 06 的完整实现已由 `projects/01`、`projects/04` 承担，本层**不重复实现**，只给指路牌与冷启动路线。
+- 01–04 每个都遵循同一套可复现约定：固定随机种子、`demo.sh` / `demo.py` 一键跑、原始 stdout 入库、截图由 `scripts/render_terminal.py` 从真实输出渲染（**不是手截的**）。
+- 先读 [`python-practice/00-how-to-practice.md`](python-practice/00-how-to-practice.md)——讲「怎么练才不是抄代码」，比任何一个练习本身都重要。
 
 ## 技术术语规范
 

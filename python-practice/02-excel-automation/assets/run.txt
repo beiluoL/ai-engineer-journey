@@ -1,0 +1,73 @@
+# 02 Excel 报表自动化 —— 三个门店的 CSV 进，一份多 sheet 报表出
+
+$ python3 make_sample_data.py
+生成 1710 行原始记录（含脏数据前的正常部分）
+  日期格式混用（含 `/`）：430 行
+  数量为空：8 行
+  注入重复：5 行（源数据本身还会产生少量天然重复，见 report.py 的去重统计）
+  写出 python-practice/02-excel-automation/data/sales-beijing.csv  （572 行）
+  写出 python-practice/02-excel-automation/data/sales-shanghai.csv  （572 行）
+  写出 python-practice/02-excel-automation/data/sales-shenzhen.csv  （571 行）
+
+合计 1715 行 → data/ 下 3 个 CSV
+
+# 下面是报表流水线：合并 → 清洗 → 统计 → 写 Excel → 画图
+
+$ python3 report.py
+matplotlib 中文字体：PingFang SC
+
+① 读取三个门店的 CSV
+  读取 sales-beijing.csv        572 行
+  读取 sales-shanghai.csv       572 行
+  读取 sales-shenzhen.csv       571 行
+
+② 合并与清洗
+  合并后 1715 行
+  丢弃  重复行 8 / 日期非法 0 / 数量为空 8
+  清洗后 1699 行（保留率 99.1%）
+
+③ 门店汇总（按销售额降序）
+       订单数       销售额    销量     客单价
+门店                                
+上海浦东店  644  114960.0  2026  178.51
+北京朝阳店  570  111703.0  1862  195.97
+深圳南山店  485   91118.0  1537  187.87
+
+④ 品类汇总
+           销售额    销量    占比
+品类                        
+数码配件  166015.0  1796  52.2
+家居日用  122178.0  1900  38.4
+办公用品   29588.0  1729   9.3
+
+⑤ 月份 × 品类 透视表
+品类          办公用品      家居日用      数码配件       All
+月份                                            
+2026-01   4441.0   17383.0   20218.0   42042.0
+2026-02   4153.0   14908.0   23559.0   42620.0
+2026-03   3963.0   24961.0   27551.0   56475.0
+2026-04   4850.0   21136.0   32226.0   58212.0
+2026-05   6624.0   23158.0   24214.0   53996.0
+2026-06   5557.0   20632.0   38247.0   64436.0
+All      29588.0  122178.0  166015.0  317781.0
+
+⑥ SKU 销售额排行（样本共 9 个 SKU）
+                        销售额   销量
+SKU           品类                
+65W 氮化镓充电器    数码配件  90403.0  553
+无线鼠标          数码配件  56078.0  579
+香薰蜡烛          家居日用  53237.0  670
+收纳箱 60L       家居日用  39936.0  639
+抽纸 24包        家居日用  29005.0  591
+Type-C 数据线 1m 数码配件  19534.0  664
+A4 复印纸 500张   办公用品  14727.0  572
+中性笔 12支装      办公用品  10107.0  628
+文件夹 A4        办公用品   4754.0  529
+
+⑦ 写 Excel + 画图
+  写出 python-practice/02-excel-automation/assets/sales-report.xlsx  （6 个 sheet）
+  写出 python-practice/02-excel-automation/assets/chart-monthly-revenue.png
+  写出 python-practice/02-excel-automation/assets/chart-category-share.png
+
+完成：一个原本要手工做两小时的周报，现在一条命令。
+

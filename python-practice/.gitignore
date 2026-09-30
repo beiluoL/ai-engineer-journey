@@ -1,0 +1,12 @@
+# 运行期产物（demo.sh 用完即删；手跑时会留下，不入库）
+01-todo-cli/todos.json
+
+# 03 爬虫：本地 fixture 站点是自动生成的（make_fixture_site.py 可随时重建）
+03-web-crawler/.site/
+
+# 04 FastAPI：SQLite 落盘文件
+04-fastapi-blog/blog.db
+
+__pycache__/
+.pytest_cache/
+.venv/

@@ -1,0 +1,22 @@
+# 三个最常撞上的报错 —— 真实运行，输出逐字未改
+
+$ python3 -c 'print("共 " + 3 + " 条")'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    print("共 " + 3 + " 条")
+          ~~~~~~^~~
+TypeError: can only concatenate str (not "int") to str
+
+$ python3 -c 'd = {"a": 1}; print(d["b"])'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    d = {"a": 1}; print(d["b"])
+                        ~^^^^^
+KeyError: 'b'
+
+$ python3 -c 'scores = [90, 82]; print(scores[5])'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    scores = [90, 82]; print(scores[5])
+                             ~~~~~~^^^
+IndexError: list index out of range

@@ -352,3 +352,27 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 ```
 
 **入口**：[`llm-fundamentals/README.md`](llm-fundamentals/README.md)
+
+---
+
+## 附 — 练手层：python-practice
+
+**目标**：在正式项目之前先有一批**小而完整**的动手练习，把 Python 本身的语法、文件、网络、Web 框架各走一遍。标准是「一个周末能跑通一个」。
+
+**与 10 个项目的关系**：不属于 Project 序号体系，是**练手层**——`python-practice/` 要的是**会写**，`projects/` 要的是**做出来**，`llm-fundamentals/` 要的是**想明白**。05 / 06 两项的完整实现由 `projects/01`、`projects/04` 承担，本层只做指路，不重复实现。
+
+**状态**：✅ 01–04 代码可跑 + 真实截图；05 / 06 指路页成文
+
+**6 个练习**：
+```text
+01 — 命令行待办清单    ✅ ●○○ 入门  1 个周末  纯标准库：argparse / json / dataclass / 退出码
+02 — Excel 报表自动化  ✅ ●●○ 进阶  2–3 天    pandas 合并→清洗→聚合→透视→多 sheet→绘图
+03 — 网站内容爬虫      ✅ ●●○ 进阶  2–3 天    requests + BeautifulSoup + 重试/退避 + 白名单 + CSV
+04 — FastAPI 博客 API  ✅ ●●○ 进阶  1 周      路由 / pydantic 校验 / 状态码 / 依赖注入 / pytest
+05 — AI 命令助手       →  ●●● 挑战  1–2 周    见 projects/01（问答 → 多轮 → 流式）
+06 — RAG 知识库问答    →  ●●● 挑战  2–3 周    见 projects/04（切块 → 向量化 → 检索 → 生成 → 评测）
+```
+
+**统一约定**：固定随机种子、`demo.sh` / `demo.py` 一键复现、原始 stdout 入库、截图由 `scripts/render_terminal.py` 从真实输出渲染、03 用本地 `http.server` 造 fixture 站点（不打外网）。
+
+**入口**：[`python-practice/README.md`](python-practice/README.md) ｜ 先读 [`00-how-to-practice.md`](python-practice/00-how-to-practice.md)

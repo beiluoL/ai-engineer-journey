@@ -1,0 +1,28 @@
+# python-practice 依赖清单
+#
+# 01-todo-cli 不需要任何第三方库（纯标准库），这是刻意的。
+# 下面按项目分组；一次装完即可，总共不到 100MB。
+#
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# 版本用 == 锚定（仓库规范）：学习仓库最怕「上个月还能跑，这个月装不上」。
+
+# --- 02-excel-automation：CSV/Excel 读写 + 画图 -----------------------------
+pandas==3.0.6
+openpyxl==3.1.5          # pandas 读写 .xlsx 的引擎，也是我们做单元格格式化的工具
+matplotlib==3.11.2       # 生成 PNG 报表图
+
+# --- 03-web-crawler：HTTP 请求 + HTML 解析 ----------------------------------
+requests==2.34.2
+beautifulsoup4==4.15.0
+
+# --- 04-fastapi-blog：Web 框架 + 测试 ---------------------------------------
+fastapi==0.142.1
+uvicorn==0.54.0          # ASGI 服务器，跑 FastAPI 用
+httpx==0.28.1            # fastapi.testclient 依赖它发请求
+pytest==9.1.1
+jinja2==3.1.6            # pandas 的 .style / openpyxl 部分功能会用到
+
+# 说明：Python 版本 3.10+ 即可（代码里用了 `X | None` 语法和
+# `from __future__ import annotations`）。本仓库验证环境为 3.13.12。

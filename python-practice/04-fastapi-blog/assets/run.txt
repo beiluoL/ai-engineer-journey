@@ -1,0 +1,128 @@
+# 04 FastAPI 博客 API —— 起真服务，用 curl 打真请求
+
+$ python3 -m uvicorn app:app --port 8130    (后台启动)
+服务已就绪 → http://127.0.0.1:8130   （交互式文档：http://127.0.0.1:8130/docs）
+
+$ curl -s http://127.0.0.1:8130/health
+HTTP 200
+{
+  "status": "ok",
+  "posts": 0
+}
+
+$ curl -si -X POST http://127.0.0.1:8130/posts -H 'Content-Type: application/json' -d '{"title":"为什么要把重复的周报自动化","content":"每周一手工合并 CSV，两小时。","author":"阿罗","tags":["自动化","pandas"]}'
+HTTP/1.1 201 Created
+date: Wed, 30 Sep 2026 06:30:42 GMT
+server: uvicorn
+content-length: 229
+content-type: application/json
+location: /posts/1
+
+
+$ curl -s -X POST http://127.0.0.1:8130/posts -H 'Content-Type: application/json' -d '{"title":"爬虫与礼貌","content":"先看 robots.txt，别把别人的服务器当靶子。","author":"阿罗","tags":["爬虫"]}'
+HTTP 201
+{
+  "id": 2,
+  "title": "爬虫与礼貌",
+  "content": "先看 robots.txt，别把别人的服务器当靶子。",
+  "author": "阿罗",
+  "tags": ["爬虫"],
+  "created_at": "2026-09-30 14:30:42",
+  "updated_at": "2026-09-30 14:30:42"
+}
+
+$ curl -s http://127.0.0.1:8130/posts/1
+HTTP 200
+{
+  "id": 1,
+  "title": "为什么要把重复的周报自动化",
+  "content": "每周一手工合并 CSV，两小时。",
+  "author": "阿罗",
+  "tags": ["自动化", "pandas"],
+  "created_at": "2026-09-30 14:30:42",
+  "updated_at": "2026-09-30 14:30:42"
+}
+
+$ curl -s -X PUT http://127.0.0.1:8130/posts/1 -H 'Content-Type: application/json' -d '{"title":"把周报自动化之后，我每周多出两小时"}'
+HTTP 200
+{
+  "id": 1,
+  "title": "把周报自动化之后，我每周多出两小时",
+  "content": "每周一手工合并 CSV，两小时。",
+  "author": "阿罗",
+  "tags": ["自动化", "pandas"],
+  "created_at": "2026-09-30 14:30:42",
+  "updated_at": "2026-09-30 14:30:42"
+}
+
+$ curl -sG --data-urlencode 'q=爬虫' http://127.0.0.1:8130/posts
+HTTP 200
+[
+  {
+    "id": 2,
+    "title": "爬虫与礼貌",
+    "content": "先看 robots.txt，别把别人的服务器当靶子。",
+    "author": "阿罗",
+    "tags": ["爬虫"],
+    "created_at": "2026-09-30 14:30:42",
+    "updated_at": "2026-09-30 14:30:42"
+  }
+]
+
+─────────────── ✂ 截图切分线 ───────────────
+# 边界情况：校验失败、删除、查不到 —— 这些才是一个接口真正的「设计」
+
+$ curl -s -X POST http://127.0.0.1:8130/posts -H 'Content-Type: application/json' -d '{"title":"","content":"正文"}'
+HTTP 422
+{
+  "detail": [
+    {
+      "type": "string_too_short",
+      "loc": ["body", "title"],
+      "msg": "String should have at least 1 character",
+      "input": "",
+      "ctx": {
+        "min_length": 1
+      }
+    }
+  ]
+}
+
+$ curl -si -X DELETE http://127.0.0.1:8130/posts/2
+HTTP/1.1 204 No Content
+date: Wed, 30 Sep 2026 06:30:42 GMT
+server: uvicorn
+
+
+# 删掉之后再查，必须是 404 —— 而不是静默返回空对象
+
+$ curl -s http://127.0.0.1:8130/posts/2
+HTTP 404
+{
+  "detail": "没有 id=2 的文章"
+}
+
+$ curl -s -X PUT http://127.0.0.1:8130/posts/999 -H 'Content-Type: application/json' -d '{"title":"x"}'
+HTTP 404
+{
+  "detail": "没有 id=999 的文章"
+}
+
+# 剩下这一条：列表接口（一行一条）
+
+$ curl -s http://127.0.0.1:8130/posts | python3 jsonpp.py --lines
+HTTP 200
+{"id": 1, "title": "把周报自动化之后，我每周多出两小时", "content": "每周一手工合并 CSV，两小时。", "author": "阿罗", "tags": ["自动化", "pandas"], "created_at": "2026-09-30 14:30:42", "updated_at": "2026-09-30 14:30:42"}
+
+$ curl -s http://127.0.0.1:8130/openapi.json | python3 list_endpoints.py
+  标题   : 山间书局博客 API v1.0.0
+  端点数 : 7 个（全部由装饰器自动注册，没写一行文档）
+
+  GET    /                     服务简介
+  GET    /health               健康检查
+  POST   /posts                新建文章
+  GET    /posts                文章列表（支持搜索）
+  GET    /posts/{post_id}      查看文章
+  PUT    /posts/{post_id}      更新文章（局部）
+  DELETE /posts/{post_id}      删除文章
+
