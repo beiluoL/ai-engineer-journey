@@ -61,8 +61,8 @@
 | Project 09 src + tests | ✅ v1.0 落地：`src/ie/` 13 个手写模块（评估指标含 ECE 校准 / 防泄漏评估集 / 零 LLM 规则评分 / 多种子配对比较 / INT8·INT4·NF4 量化 / 手写自回归引擎 / PagedAttention 分块 KV / Continuous Batching 仿真 / KV 显存账本 / 标准库 HTTP 服务含 SSE），229 项 pytest 全绿；实测：KV Cache 6.155→2.794 ms（2.20×）、PagedAttention 浪费率 76.4%→16.0%、Continuous Batching 吞吐 1.52×、4 并发 4/4（p95 3.311 ms）；关键反直觉结论「权重 MSE 最小 ≠ 端到端最优」；11 张真实终端截图 + 11 张手写架构图 SVG |
 | Project 10 milestones | ✅ 11/11 已成文（architecture → tokenizer → dataset → embedding → transformer-block → training → evaluation → inference → optimization → serving → complete-system） |
 | Project 10 src + tests | ✅ v1.0 落地：`src/tiny/` 12 个手写模块（唯一配置入口 `TinyConfig` + BPE 分词含归因报告 / 防泄漏数据集 + 滑动窗口打包 / 手写 Transformer Decoder / 训练闭环含早停回滚与断点续训 / 三层评估 + 配对显著性 / 采样四旋钮 + 真·流式 + KV Cache / 量化 ΔPPL + 显存账本 / OpenAI 兼容服务 + 冒烟 + 压测 / 八段流水线），71 项 pytest 全绿；**三层复用 P06/P08/P09**（手写 autograd + 确定性补丁 + 评估/量化/服务）；实测：BPE 压缩 1.445 字/token、UNK 0.33%、val roundtrip 失败 14/14 全归因 OOV；因果自检过去误差 0.000e+00 / 未来 1.191e+01、确定性 0.000e+00；train 7.1547→3.6882 / val 6.2283→5.7551（第 800 步）→5.8234，**早停回滚**；跨进程重训/续训误差 0.000e+00；PPL 315.79 / token_acc 0.1736 / ECE 0.0662；KV Cache 等价 3.442e-15、TTFT 0.20 ms vs 总耗时 4.73 ms；INT8 3.85×/ΔPPL +0.08%、INT4 7.42×/+2.66%、NF4 7.75×/+4.01%；全链路有缓存 0.928 s；11 张真实终端截图 + 11 张手写架构图 SVG |
-| llm-fundamentals（基础理论层） | ✅ 11 章正文（约 3300 行）+ 8 个纯 numpy 可运行 demo（全部跑通）+ 13 张可复现配图（7 张真实终端截图 + 6 张公式计算图）+ 各章内嵌 Mermaid/ASCII 图；正文每个数字都由 demo 现场算出（LoRA r=8 占 0.39% 参数、KV Cache 省 99.0% 矩阵乘等）；check_links 全绿 |
-| python-practice（练手层） | ✅ 6 个练手项目成文：01 待办清单 / 02 Excel 报表 / 03 爬虫 / 04 FastAPI 博客均为**可运行代码 + 一键 demo + 真实终端截图**（9 张配图 = 7 张终端截图 + 2 张 matplotlib 报表图）；05 AI 命令助手 / 06 RAG 问答为指路页（→ projects/01、projects/04，**不重复实现**）；另含 00 练手方法论与 requirements.txt（版本已锚定）。4 个 demo 全部真实跑通，04 的 12 项 pytest 全绿 |
+| llm-fundamentals（基础理论层） | ✅ 12 章正文 + 8 个纯 numpy 可运行 demo（全部跑通）+ 14 张可复现配图（7 张真实终端截图 + 6 张公式计算图 + 1 张资源体检截图）+ 各章内嵌 Mermaid/ASCII 图；正文每个数字都由 demo 现场算出（LoRA r=8 占 0.39% 参数、KV Cache 省 99.0% 矩阵乘等）；第 11/12 章推荐的所有仓库由 `scripts/check_repos.py` 当场核验（星标 / 归档 / 迁移 / 最近提交）；check_links 全绿 |
+| python-practice（练手层） | ✅ 6 个练手项目成文：01 待办清单 / 02 Excel 报表 / 03 爬虫 / 04 FastAPI 博客均为**可运行代码 + 一键 demo + 真实终端截图**（11 张配图 = 8 张练习终端截图 + 1 张 Traceback 讲解图 + 2 张 matplotlib 报表图）；05 AI 命令助手 / 06 RAG 问答为指路页（→ projects/01、projects/04，**不重复实现**）；**07 延伸阅读**为书单与读法（Python 补系统性 + 读生产代码四阶梯 + Java 对照表 + 脚本实测的避坑清单）；另含 00 练手方法论与 requirements.txt（版本已锚定）。4 个 demo 全部真实跑通，04 的 12 项 pytest 全绿 |
 | publishing/tutorials | ✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5） |
 | publishing/articles | 📝 2 篇 |
@@ -95,6 +95,7 @@
 python3 scripts/check_links.py --strict   # 死链 + 坏图体检（CI 也在跑）
 python3 scripts/audit.py                  # 全仓库体检：骨架 / 证据链 / 配图 / 漂移 / 密钥
 python3 scripts/audit.py --tests          # 额外实跑全部项目测试（1180 项）
+python3 scripts/check_repos.py            # 学习资源体检：推荐的 GitHub 仓库是否归档 / 搬家 / 停滞
 cd projects/01-python-ai-cli/src && python3 -m unittest discover -s tests
 ```
 

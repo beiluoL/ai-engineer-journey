@@ -1,0 +1,39 @@
+扫描 1 篇文档，抽到 30 个 GitHub 仓库
+
+状态             星标  最近提交       仓库                                          备注
+------------------------------------------------------------------------------------------------------------
+ARCHIVED    6,490  2025-09-03 Netflix/dispatch                            
+STALE      31,878  2020-08-05 donnemartin/interactive-coding-challenges   已 2247 天无提交
+STALE       4,029  2022-12-28 grantjenks/free-python-games                已 1372 天无提交
+OK        324,170  2026-09-29 vinta/awesome-python                        
+OK        285,311  2026-09-28 practical-tutorials/project-based-learning  
+OK        186,990  2026-07-29 jackfrued/Python-100-Days                   
+OK        102,717  2026-09-29 fastapi/fastapi                             
+OK         75,217  2026-09-28 hiyouga/LlamaFactory                        
+OK         74,979  2026-09-30 apache/superset                             
+OK         74,801  2026-09-08 pallets/flask                               
+OK         57,454  2026-06-23 Textualize/rich                             
+OK         44,886  2026-09-30 getsentry/sentry                            
+OK         43,167  2026-09-30 deepspeedai/DeepSpeed                       
+OK         38,693  2026-07-27 gto76/python-cheatsheet                     
+OK         34,308  2026-09-27 python-poetry/poetry                        
+OK         29,836  2026-07-27 realpython/python-guide                     
+OK         28,926  2026-09-30 celery/celery                               
+OK         28,910  2026-09-29 pydantic/pydantic                           
+OK         23,956  2026-09-29 PrefectHQ/prefect                           
+OK         18,327  2026-04-06 trekhleb/learn-python                       
+OK         16,225  2026-09-30 dagster-io/dagster                          
+OK         15,525  2026-02-23 encode/httpx                                
+OK         14,533  2026-08-26 rougier/numpy-100                           
+OK         13,348  2025-12-22 dabeaz-course/python-mastery                
+OK         12,192  2026-09-29 sqlalchemy/sqlalchemy                       
+OK         11,495  2026-09-24 simonw/datasette                            
+OK         11,014  2026-09-29 kedro-org/kedro                             
+OK          5,967  2026-09-29 huangsam/ultimate-python                    
+OK          4,148  2025-06-04 fluentpython/example-code-2e                
+OK          2,498  2026-09-15 swaroopch/byte-of-python                    
+------------------------------------------------------------------------------------------------------------
+汇总：ARCHIVED 1  STALE 2  OK 27
+
+需要处理：
+  [ARCHIVED] Netflix/dispatch  ← python-practice/07-延伸阅读.md  

@@ -109,12 +109,26 @@ cd ../04-fastapi-blog  && bash demo.sh     # → 起服务 + 打一轮 HTTP；�
 
 每个项目的 README 里都有「怎么跑起来」和「验收标准」两节。**先按验收标准做完，再看进阶挑战。**
 
+## 延伸阅读
+
+**[07 延伸阅读：从「会写 Python」到「读得懂生产代码」](07-延伸阅读.md)**
+
+练完前四个项目、想知道「接下来读什么、怎么读」时看这篇。它不教语法，只解决两件事：
+
+1. **补系统性**——从 10 个候选里挑 1–2 个（首选 `dabeaz-course/python-mastery`），走出「用 Python 语法的 Java」；
+2. **读生产代码**——四阶梯：`httpx` → `pydantic`/`kedro` → `flask`/`fastapi` → `superset`/`sentry`/`prefect`。
+
+里面还有一栏**与 Java 经验的对照表**（SQLAlchemy↔JPA、Celery↔Quartz、pydantic↔Bean Validation），
+以及一份避坑清单——哪些仓库已归档、已停滞、已搬家，全部由脚本当场验证，不是转述。
+
+想继续往大模型 / 微调 / Agent 方向走，见 [`llm-fundamentals/12`](../llm-fundamentals/12-tutorials-and-agent.md)。
+
 ## 本仓库的三层结构
 
 ```mermaid
 graph TD
-    T["llm-fundamentals/<br/>理论层 —— 为什么这么设计<br/>11 章：Transformer / 注意力 / 预训练 / 对齐"]
-    P["python-practice/<br/>练手层 —— 一晚上一个<br/>01–06：六个动手练习"]
+    T["llm-fundamentals/<br/>理论层 —— 为什么这么设计<br/>12 章：原理 / 开源项目 / 教程与 Agent"]
+    P["python-practice/<br/>练手层 —— 一晚上一个<br/>01–06：六个动手练习 ＋ 07 延伸阅读"]
     J["projects/<br/>实践层 —— 唯一事实源<br/>10 个带里程碑 / 测试 / 部署的正式项目"]
 
     T -.讲清原理.-> J
@@ -157,5 +171,6 @@ python-practice/
 ├── 03-web-crawler/              # 进阶：requests + BeautifulSoup
 ├── 04-fastapi-blog/             # 进阶：FastAPI + SQLite + pytest
 ├── 05-ai-command-assistant.md   # 挑战：指路 → projects/01
-└── 06-rag-qa.md                 # 挑战：指路 → projects/04
+├── 06-rag-qa.md                 # 挑战：指路 → projects/04
+└── 07-延伸阅读.md               # 书单与读法：Python 学习路线 + 企业级源码四阶梯
 ```

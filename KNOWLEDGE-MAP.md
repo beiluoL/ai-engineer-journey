@@ -195,6 +195,7 @@ Data → Tokenizer → Embedding → Transformer → Training → Evaluation →
 | 关键公式推导 | [09-math-foundations](llm-fundamentals/09-math-foundations.md) | 能自己推 √d_k、softmax 梯度 |
 | 中英术语对照 | [10-glossary](llm-fundamentals/10-glossary.md) | 读论文不卡名词 |
 | 从零实现类开源项目 | [11-open-source-projects](llm-fundamentals/11-open-source-projects.md) | 找到对应章节的练手项目 |
+| 教程 / 微调 / Agent 选型 | [12-tutorials-and-agent](llm-fundamentals/12-tutorials-and-agent.md) | 知道该学哪个、该用哪个，并能自己验证资源是否还活着 |
 
 **整体能力**：从「会调 API」进阶到「讲得清原理、算得出账」——为 P06 / P08 / P10 的手写实现提供理论底座。
 **说明**：图片全部可复现（真实运行截图 + 公式现场计算图），demo 为纯 numpy，无需 GPU。
@@ -213,6 +214,9 @@ Data → Tokenizer → Embedding → Transformer → Training → Evaluation →
 | [04 FastAPI 博客 API](python-practice/04-fastapi-blog/README.md) | ●●○ | 会写 REST 接口、用类型注解声明校验、正确使用 201/204/404/422、用 pytest 测接口 |
 | [05 AI 命令助手](python-practice/05-ai-command-assistant.md) | ●●● | 会调用 LLM API、维护多轮消息上下文、实现 SSE 流式输出 |
 | [06 RAG 知识库问答](python-practice/06-rag-qa.md) | ●●● | 理解并能实现「切块 → 向量化 → 检索 → 重排 → 生成 → 评测」全链路 |
+
+**延伸阅读（不属于练习）**：[07 延伸阅读](python-practice/07-延伸阅读.md) —— 从「会写 Python」到「读得懂生产代码」。
+补系统性（`dabeaz-course/python-mastery` 等，挑 1–2 个）+ 读生产代码四阶梯，并附 Java 经验对照表与脚本实测的仓库腐烂清单。
 
 **与理论层 / 实践层的衔接**：练手层解决「**手会不会**」，理论层解决「**想不想得通**」，实践层解决「**能不能交付**」。前四个练习做完即可无痛进入 `projects/` 的正式项目；05 / 06 直接落在 `projects/01`、`projects/04` 上。
 

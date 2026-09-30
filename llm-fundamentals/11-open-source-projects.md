@@ -106,7 +106,7 @@
 
 ## 7. hiyouga/LLaMA-Factory
 
-- **仓库**：<https://github.com/hiyouga/LLaMA-Factory>
+- **仓库**：<https://github.com/hiyouga/LlamaFactory>（原 `hiyouga/LLaMA-Factory`，仓库已改名）
 - **简介**：国产开源微调平台，支持 100+ 模型、SFT / DPO / PPO / 预训练全流程，**带 WebUI 和中文文档**，命令行与配置文件两种方式都能跑。
 - **对应章节**：[05 微调](05-finetuning.md)、[08 对齐](08-alignment-rlhf.md)
 - **上手建议**：用 WebUI 走一遍"选模型 → 上传数据集 → 选 LoRA → 训练 → 推理"的全流程，**把本目录第 05 章的每个超参在界面上找到对应项**。这是最低成本的一次真实微调体验。
@@ -185,7 +185,7 @@ flowchart TD
 | <https://github.com/huggingface/lighteval> | 评测框架 | HF 生态的评测工具，与 Transformers 集成 |
 | <https://github.com/Dao-AILab/flash-attention> | 底层算子 | FlashAttention 官方实现（[第 02 章 2.7](02-attention.md)） |
 | <https://github.com/huggingface/accelerate> | 训练工具 | 一行命令切换单卡/多卡/FSDP（[第 04 章 4.4](04-pretraining.md)） |
-| <https://github.com/microsoft/DeepSpeed> | 训练框架 | ZeRO 系列实现（[第 04 章 4.4](04-pretraining.md)） |
+| <https://github.com/deepspeedai/DeepSpeed> | 训练框架 | ZeRO 系列实现（[第 04 章 4.4](04-pretraining.md)） |
 | <https://jalammar.github.io/illustrated-transformer/> | 图解博客 | The Illustrated Transformer，理解注意力最经典的图文教程 |
 
 ---

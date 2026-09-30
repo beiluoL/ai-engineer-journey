@@ -14,6 +14,7 @@
 | 打算自己微调 / 训练小模型 | [第 04 章](04-pretraining.md) → [第 05 章](05-finetuning.md) → [第 06 章](06-scaling-and-emergence.md) |
 | 面试前速查、术语对不上号 | [第 10 章 术语表](10-glossary.md) |
 | 想动手复现 | [第 11 章 开源项目推荐](11-open-source-projects.md) |
+| 想知道该学哪个课、该用哪个框架 | [第 12 章 教程、微调与 Agent 开发](12-tutorials-and-agent.md) |
 
 目录里所有脚本都可以直接跑，**不需要 GPU、不需要深度学习框架**（只依赖 numpy；生成配图额外需要 matplotlib，见 [`demos/requirements.txt`](demos/requirements.txt)）：
 
@@ -85,6 +86,7 @@ flowchart TD
 | [09 数学基础](09-math-foundations.md) | 关键公式怎么推？符号都是什么意思 | 计算图 + 公式推导 |
 | [10 术语表中英对照](10-glossary.md) | 名词太多，快速对齐 | 分组大表 |
 | [11 开源项目推荐](11-open-source-projects.md) | 想动手，从哪个仓库开始 | 项目表 + 路径图 |
+| [12 教程、微调与 Agent 开发](12-tutorials-and-agent.md) | 教程课程、微调与 Agent 框架怎么选 | `check_repos.py` 真实核验截图 + 决策图 |
 
 ---
 

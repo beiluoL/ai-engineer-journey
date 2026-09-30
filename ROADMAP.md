@@ -334,9 +334,9 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 **与 10 个项目的关系**：不属于 Project 序号体系，是与之平行的**理论层**。
 `projects/*/milestones/` 回答「怎么跑起来」，`llm-fundamentals/` 回答「原理是什么、为什么」。两者互相引用，不重复正文。
 
-**状态**：✅ 已完成（11 章 + 8 个可运行 demo + 13 张可复现配图）
+**状态**：✅ 已完成（12 章 + 8 个可运行 demo + 13 张可复现配图 + 1 张资源体检截图）
 
-**11 章**：
+**12 章**：
 ```text
 01 — 语言模型基础      ✅ token → embedding → logits → 概率 → 交叉熵 / PPL 全链路
 02 — 注意力机制        ✅ QKV / √d_k 缩放推导 / 两类掩码 / 多头 / MHA-GQA-MQA
@@ -349,6 +349,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 09 — 数学基础          ✅ 符号表 + 10 个关键推导（√d_k 方差、p−y 梯度、RoPE 正交性）
 10 — 术语表            ✅ 8 组 150+ 条中英对照，含「最容易混的六组」
 11 — 开源项目          ✅ 10 个项目对应到具体章节 + 跑通标志
+12 — 教程与 Agent      ✅ 教程/课程 + 微调选型 + Agent 框架（含 2026 洗牌实测与迁移表）
 ```
 
 **入口**：[`llm-fundamentals/README.md`](llm-fundamentals/README.md)
@@ -361,7 +362,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **与 10 个项目的关系**：不属于 Project 序号体系，是**练手层**——`python-practice/` 要的是**会写**，`projects/` 要的是**做出来**，`llm-fundamentals/` 要的是**想明白**。05 / 06 两项的完整实现由 `projects/01`、`projects/04` 承担，本层只做指路，不重复实现。
 
-**状态**：✅ 01–04 代码可跑 + 真实截图；05 / 06 指路页成文
+**状态**：✅ 01–04 代码可跑 + 真实截图；05 / 06 指路页成文；07 延伸阅读成文（含 `check_repos.py` 真实核验截图）
 
 **6 个练习**：
 ```text
@@ -374,5 +375,7 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 ```
 
 **统一约定**：固定随机种子、`demo.sh` / `demo.py` 一键复现、原始 stdout 入库、截图由 `scripts/render_terminal.py` 从真实输出渲染、03 用本地 `http.server` 造 fixture 站点（不打外网）。
+
+**延伸阅读（不占练习配额）**：[`07-延伸阅读.md`](python-practice/07-延伸阅读.md) —— Python 学习书单与读法。上半是「补系统性」（10 个候选挑 1–2 个），下半是「读生产代码」四阶梯（`httpx` → `pydantic`/`kedro` → `flask`/`fastapi` → `superset`/`sentry`/`prefect`），含与 Java 经验的对照表和一份脚本实测的避坑清单（已归档 / 已停滞 / 已搬家）。
 
 **入口**：[`python-practice/README.md`](python-practice/README.md) ｜ 先读 [`00-how-to-practice.md`](python-practice/00-how-to-practice.md)
