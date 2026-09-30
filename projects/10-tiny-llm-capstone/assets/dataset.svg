@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 372" width="680" height="372" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="372" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M03 数据集：切分必须发生在训词表之前</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">实测：295 行 → 清洗 295 行 → train 251 / val 44，交集 0 行；切出 206 / 37 个滑窗样本</text>
+
+  <!-- flow -->
+  <rect x="20" y="62" width="116" height="52" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="30" y="80" font-size="10.5" font-weight="700" fill="#1f2328">① 清洗</text>
+  <text x="30" y="95" font-size="9" fill="#57606a">去空行 / 短于 8 字</text>
+  <text x="30" y="107" font-size="9" fill="#57606a">/ 去重（295→295）</text>
+  <line x1="138" y1="88" x2="152" y2="88" stroke="#57606a" stroke-width="1.4" marker-end="url(#a3)"/>
+
+  <rect x="154" y="62" width="116" height="52" rx="6" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.4"/>
+  <text x="164" y="80" font-size="10.5" font-weight="700" fill="#1f2328">② 切分</text>
+  <text x="164" y="95" font-size="9" fill="#57606a">Random(seed) 按行切</text>
+  <text x="164" y="107" font-size="9" fill="#4a7fd4">→ 251 / 44</text>
+  <line x1="272" y1="88" x2="286" y2="88" stroke="#57606a" stroke-width="1.4" marker-end="url(#a3)"/>
+
+  <rect x="288" y="62" width="116" height="52" rx="6" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.4"/>
+  <text x="298" y="80" font-size="10.5" font-weight="700" fill="#1f2328">③ 建词表</text>
+  <text x="298" y="95" font-size="9" fill="#c0392b">只用 train 251 行</text>
+  <text x="298" y="107" font-size="9" fill="#57606a">vocab=1280</text>
+  <line x1="406" y1="88" x2="420" y2="88" stroke="#57606a" stroke-width="1.4" marker-end="url(#a3)"/>
+
+  <rect x="422" y="62" width="116" height="52" rx="6" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.4"/>
+  <text x="432" y="80" font-size="10.5" font-weight="700" fill="#1f2328">④ 编码</text>
+  <text x="432" y="95" font-size="9" fill="#57606a">6384 / 1191 token</text>
+  <text x="432" y="107" font-size="9" fill="#57606a">均值 25.4 token/行</text>
+  <line x1="540" y1="88" x2="554" y2="88" stroke="#57606a" stroke-width="1.4" marker-end="url(#a3)"/>
+
+  <rect x="556" y="62" width="104" height="52" rx="6" fill="#ffffff" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="566" y="80" font-size="10.5" font-weight="700" fill="#1f2328">⑤ 滑窗</text>
+  <text x="566" y="95" font-size="9" fill="#57606a">206 / 37 样本</text>
+  <text x="566" y="107" font-size="9" fill="#57606a">win 64 / stride 32</text>
+
+  <!-- leakage -->
+  <rect x="20" y="126" width="313" height="86" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="32" y="144" font-size="11.5" font-weight="700" fill="#1f2328">泄漏的两条路径（本项目都堵住了）</text>
+  <text x="34" y="162" font-size="10" fill="#1f2328">① 重复行同时出现在 train 和 val</text>
+  <text x="42" y="176" font-size="9.5" fill="#57606a">→ leakage_check：实测交集 0 行</text>
+  <text x="34" y="192" font-size="10" fill="#c0392b">② 用全量语料训词表 ⇒ val 的字进了词表</text>
+  <text x="42" y="205" font-size="9.5" fill="#c0392b">→ 流程强制「先切分、后建词表」</text>
+
+  <rect x="347" y="126" width="313" height="86" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="359" y="144" font-size="11.5" font-weight="700" fill="#1f2328">滑窗打包的三条不变量（都有断言）</text>
+  <text x="361" y="162" font-size="10" fill="#1f2328">① y = x 右移一位　　实测 True</text>
+  <text x="361" y="178" font-size="10" fill="#1f2328">② 样本之间插入 &lt;eos&gt;　　否则学到跨句假因果</text>
+  <text x="361" y="194" font-size="10" fill="#1f2328">③ padding 位置 mask=0　　实测本批 mask 1 占 85.8%</text>
+
+  <!-- padding -->
+  <rect x="20" y="222" width="640" height="66" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="240" font-size="11.5" font-weight="700" fill="#1f2328">padding 为什么必须配 mask：不 mask 就等于让模型去预测 &lt;pad&gt;</text>
+  <text x="34" y="258" font-size="10" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">x   = 809 855 861 1258 341 … 5 0 0 0 0 0 0   ← 0 = PAD_ID，补齐到本批最长</text>
+  <text x="34" y="274" font-size="10" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">mask=   1   1   1    1   1 … 1 0 0 0 0 0 0   ← 0 的位置 loss 不计入</text>
+
+  <!-- epochs -->
+  <rect x="20" y="298" width="640" height="62" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="316" font-size="11.5" font-weight="700" fill="#1f2328">这个语料有多小：batch=8 ⇒ 每轮 26 个 batch</text>
+  <text x="34" y="334" font-size="10" fill="#1f2328">1200 步 ÷ 26 = <tspan font-weight="700">46.2 个 epoch</tspan> —— 同一个语料被反复看 46 遍，这就是 M06 必须早停的原因</text>
+  <text x="34" y="351" font-size="10" fill="#c0392b">样本覆盖率 206 / 206：没有样本被漏掉，但也意味着「训练集已经背下来了」</text>
+</svg>

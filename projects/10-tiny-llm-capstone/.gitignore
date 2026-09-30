@@ -1,0 +1,5 @@
+# 训练产物与分词器缓存（体积大、可由 pipeline 重建，不入库）
+models/
+.venv/
+.pytest_cache/
+__pycache__/

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="680" height="400" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="680" height="400" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M06 Training：过拟合是被量出来的，不是猜的</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">train loss 7.1547 → 3.6882（一路下降，看着很成功）；val loss 6.2283 → 5.7551 → 5.8234（先降后升）</text>
+
+  <!-- curve: train vs val -->
+  <rect x="20" y="62" width="420" height="196" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">train / val 曲线（每 100 步一次验证）</text>
+  <line x1="52" y1="228" x2="428" y2="228" stroke="#8c959f" stroke-width="1"/>
+  <line x1="52" y1="96" x2="52" y2="228" stroke="#8c959f" stroke-width="1"/>
+  <text x="34" y="212" font-size="8" fill="#57606a">3.7</text>
+  <text x="34" y="110" font-size="8" fill="#57606a">7.2</text>
+  <polyline points="60,104 92,116 124,127 156,139 188,137 220,150 252,148 284,160 316,161 348,163 380,168 412,168"
+            fill="none" stroke="#4a7fd4" stroke-width="2"/>
+  <polyline points="60,126 92,148 124,161 156,159 188,169 220,167 252,171 284,172 316,172 348,174 380,174 412,175"
+            fill="none" stroke="#c0392b" stroke-width="2"/>
+  <circle cx="284" cy="172" r="4" fill="#4a9d5f"/>
+  <text x="292" y="186" font-size="9" fill="#4a9d5f" font-weight="700">第 800 步：val 最优 5.7551</text>
+  <line x1="284" y1="90" x2="284" y2="228" stroke="#4a9d5f" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="60" y="240" font-size="8.5" fill="#57606a">100</text>
+  <text x="252" y="240" font-size="8.5" fill="#57606a">800</text>
+  <text x="392" y="240" font-size="8.5" fill="#57606a">1200</text>
+  <rect x="300" y="96" width="126" height="30" rx="4" fill="#ffffff" stroke="#8c959f"/>
+  <text x="308" y="110" font-size="9" fill="#4a7fd4">■ train（单调下降到 3.6882）</text>
+  <text x="308" y="122" font-size="9" fill="#c0392b">■ val（第 800 步后回升）</text>
+
+  <!-- why -->
+  <rect x="452" y="62" width="208" height="196" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="464" y="80" font-size="11.5" font-weight="700" fill="#1f2328">过拟合的机制</text>
+  <text x="466" y="100" font-size="9.5" fill="#1f2328">语料 206 个样本，训 1200 步</text>
+  <text x="466" y="116" font-size="9.5" fill="#1f2328">= 同一份数据看 <tspan font-weight="700">46.2 遍</tspan></text>
+  <text x="466" y="136" font-size="9.5" fill="#1f2328">前 10% 均值 → 后 10% 均值</text>
+  <text x="466" y="150" font-size="9.5" fill="#57606a">6.4260 → 3.6980（train 降了 2.73）</text>
+  <text x="466" y="172" font-size="9.5" fill="#1f2328">val 只从 6.2283 降到 5.7551</text>
+  <text x="466" y="186" font-size="9.5" fill="#c0392b">然后回升到 5.8234</text>
+  <text x="466" y="208" font-size="9.5" fill="#1f2328">早停触发：连续 4 次评估无改善</text>
+  <text x="466" y="224" font-size="9.5" fill="#4a9d5f">回滚到第 800 步（最优验证困惑度 315.79）</text>
+  <text x="466" y="244" font-size="9" fill="#57606a">不监控 val ⇒ 会把「最后一步」当「最好的一步」交出去</text>
+
+  <!-- lr / clip -->
+  <rect x="20" y="268" width="208" height="118" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="286" font-size="11" font-weight="700" fill="#1f2328">学习率：预热 + 余弦衰减</text>
+  <text x="34" y="304" font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">step 0　　lr 0.000050</text>
+  <text x="34" y="318" font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">step 1　　lr 0.000100</text>
+  <text x="34" y="332" font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">step 20　 lr 0.001000 ← 预热结束</text>
+  <text x="34" y="346" font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">step 600　lr 0.000538</text>
+  <text x="34" y="360" font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">step 1199 lr 0.000050</text>
+  <text x="34" y="378" font-size="9" fill="#57606a">预热 20 步：开局梯度大，直接上 1e-3 会震荡</text>
+
+  <rect x="236" y="268" width="208" height="118" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="248" y="286" font-size="11" font-weight="700" fill="#1f2328">梯度裁剪：范数超 1.0 就缩放</text>
+  <text x="250" y="304" font-size="9.5" fill="#1f2328">全局范数 均值 / 中位 / 最大</text>
+  <text x="250" y="318" font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">2.5506 / 2.6670 / 6.2911</text>
+  <text x="250" y="338" font-size="9.5" fill="#1f2328">被裁剪的步数 1050 / 1200</text>
+  <text x="250" y="354" font-size="9.5" fill="#1f2328">loss 出现过 nan？ False</text>
+  <text x="250" y="374" font-size="9" fill="#57606a">87.5% 的步都被裁 —— 小模型上阈值偏紧，但没伤到收敛</text>
+
+  <rect x="452" y="268" width="208" height="118" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="464" y="286" font-size="11" font-weight="700" fill="#1f2328">检查点：三件事一起存</text>
+  <text x="466" y="304" font-size="9.5" fill="#1f2328">存盘 → 把权重改坏 → 读回</text>
+  <text x="466" y="320" font-size="9.5" fill="#4a9d5f">恢复 28 / 28 张量，最大误差 0.000e+00</text>
+  <text x="466" y="338" font-size="9.5" fill="#1f2328">续训 30 步 vs 不中断：0.000e+00</text>
+  <text x="466" y="356" font-size="9.5" fill="#1f2328">跨进程重训：0.000e+00</text>
+  <text x="466" y="376" font-size="9" fill="#57606a">权重 + 优化器动量 + 步数，缺一样续训就偏</text>
+</svg>

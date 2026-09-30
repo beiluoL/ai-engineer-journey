@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 392" width="680" height="392" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="680" height="392" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M09 Optimization：收益与代价必须一起量</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">只报压缩比的优化方案不可信 —— 压缩比只说明省了多少空间，ΔPPL 才说明代价</text>
+
+  <!-- size table -->
+  <rect x="20" y="62" width="313" height="140" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">部署体积账（230,400 参数）</text>
+  <g font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">
+    <text x="34" y="100">精度            字节/参数      总字节      MiB</text>
+    <text x="34" y="116">fp64（训练）            8   1,843,200    1.76</text>
+    <text x="34" y="131">fp32（推理）            4     921,600    0.88</text>
+    <text x="34" y="146">fp16 / bf16          2     460,800    0.44</text>
+    <text x="34" y="161">INT8                 1     230,400    0.22</text>
+    <text x="34" y="176">INT4               0.5     115,200    0.11</text>
+  </g>
+  <text x="34" y="194" font-size="9.5" fill="#57606a">fp64 → INT4 = 16×；训练要 fp64/fp32，推理只要 fp16，边缘才上 INT8/INT4</text>
+
+  <!-- quantization -->
+  <rect x="347" y="62" width="313" height="140" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="359" y="80" font-size="11.5" font-weight="700" fill="#1f2328">量化：在真实验证集上量代价</text>
+  <g font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">
+    <text x="361" y="100">精度    压缩比     量化前 PPL  量化后 PPL   ΔPPL</text>
+    <text x="361" y="116">INT8    3.85×        315.79      316.06  +0.08%</text>
+    <text x="361" y="131">INT4    7.42×        315.79      324.20  +2.66%</text>
+    <text x="361" y="146">NF4     7.75×        315.79      328.45  +4.01%</text>
+  </g>
+  <text x="361" y="166" font-size="9.5" fill="#c0392b">反直觉：INT4 的代价（+2.66%）远大于 INT8（+0.08%）</text>
+  <text x="361" y="182" font-size="9.5" fill="#57606a">小模型每层权重少、冗余低，4 bit 的粗粒度误差占比反而更高 ——</text>
+  <text x="361" y="194" font-size="9.5" fill="#57606a">这与 7B 上「INT4 基本无损」的常识相反</text>
+
+  <!-- granularity -->
+  <rect x="20" y="212" width="313" height="112" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="32" y="230" font-size="11.5" font-weight="700" fill="#1f2328">粒度：per-channel 是「免费」的精度</text>
+  <text x="34" y="248" font-size="10" fill="#1f2328">取样 token_emb.weight (1280, 64)</text>
+  <text x="34" y="264" font-size="10" fill="#1f2328">权重幅度离散度 std/mean|w| = 0.872</text>
+  <g font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">
+    <text x="34" y="284">精度    per-tensor MSE  per-channel MSE  降低</text>
+    <text x="34" y="299">INT8       1.277e-06        6.621e-07   48.1%</text>
+    <text x="34" y="314">INT4       4.065e-04        2.139e-04   47.4%</text>
+  </g>
+
+  <rect x="347" y="212" width="313" height="112" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="359" y="230" font-size="11.5" font-weight="700" fill="#1f2328">KV Cache 显存账本</text>
+  <text x="361" y="248" font-size="10" fill="#1f2328">每 token（fp32/fp16）1024 B / 512 B</text>
+  <text x="361" y="264" font-size="10" fill="#57606a">= 2(K,V) × 2 层 × 4 头 × 16 维 × dtype</text>
+  <text x="361" y="284" font-size="10" fill="#1f2328">seq_len 64　batch 1 ⇒ 占权重 3.56%</text>
+  <text x="361" y="300" font-size="10" fill="#1f2328">seq_len 4096 batch 1 ⇒ 227.6%（超过权重）</text>
+  <text x="361" y="316" font-size="10" fill="#c0392b">反解：1801 个 token 的 KV 就等于整个模型</text>
+
+  <!-- conclusion -->
+  <rect x="20" y="336" width="640" height="48" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="32" y="354" font-size="11" font-weight="700" fill="#1f2328">这个 230K 参数模型小到 KV Cache 几乎不花钱，但公式在 7B 上是致命的</text>
+  <text x="34" y="373" font-size="10" fill="#57606a">把账算成公式而不是「我记得好像是这样」，才能在小模型上验证、在大模型上预判</text>
+</svg>

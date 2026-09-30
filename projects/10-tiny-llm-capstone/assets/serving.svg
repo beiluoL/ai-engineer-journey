@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 372" width="680" height="372" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="a10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="372" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M10 Serving：四项冒烟 + 一轮压测才算「服务可用」</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">刻意不自己写 HTTP 服务器，复用 P09 已压测过的实现 —— 协议细节的坑它已经踩完了</text>
+
+  <!-- endpoints -->
+  <rect x="20" y="62" width="640" height="76" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">OpenAI 兼容的三个端点（前端 / SDK 可无改造接入）</text>
+  <rect x="34" y="90" width="196" height="38" rx="5" fill="#ffffff" stroke="#4a7fd4"/>
+  <text x="44" y="106" font-size="10" fill="#1f2328" font-family="'SF Mono',Menlo,monospace">POST /v1/chat/completions</text>
+  <text x="44" y="120" font-size="9" fill="#57606a">非流式 / stream=true 走 SSE</text>
+  <rect x="242" y="90" width="196" height="38" rx="5" fill="#ffffff" stroke="#4a9d5f"/>
+  <text x="252" y="106" font-size="10" fill="#1f2328" font-family="'SF Mono',Menlo,monospace">GET  /health</text>
+  <text x="252" y="120" font-size="9" fill="#57606a">{"status": "ok"} → 200</text>
+  <rect x="450" y="90" width="196" height="38" rx="5" fill="#ffffff" stroke="#c9a227"/>
+  <text x="460" y="106" font-size="10" fill="#1f2328" font-family="'SF Mono',Menlo,monospace">GET  /metrics</text>
+  <text x="460" y="120" font-size="9" fill="#57606a">requests / tokens / latency</text>
+
+  <line x1="340" y1="142" x2="340" y2="156" stroke="#57606a" stroke-width="1.4" marker-end="url(#a10)"/>
+
+  <!-- smoke -->
+  <rect x="20" y="158" width="420" height="126" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="32" y="176" font-size="11.5" font-weight="700" fill="#1f2328">四项冒烟：四项全过才算可用（passed = True）</text>
+  <g font-size="10" fill="#1f2328">
+    <text x="34" y="198">① health</text><text x="200" y="198">200</text><text x="240" y="198" fill="#57606a">服务活着</text>
+    <text x="34" y="218">② 非流式</text><text x="200" y="218">200</text><text x="240" y="218" fill="#57606a">usage 21/16/37 token，计费口径</text>
+    <text x="34" y="238">③ 流式 SSE</text><text x="200" y="238">200</text><text x="240" y="238" fill="#57606a">16 个 delta + 1 个 usage + [DONE]</text>
+    <text x="34" y="258">④ 非法参数 max_tokens=0</text><text x="200" y="258">400</text>
+    <text x="240" y="258" fill="#57606a">错误被正确拒绝</text>
+  </g>
+  <text x="34" y="276" font-size="9.5" fill="#c0392b">④ 才是最容易漏的：错误被吞成 500，前端就分不清「我传错了」和「服务挂了」</text>
+
+  <!-- load test -->
+  <rect x="452" y="158" width="208" height="126" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="464" y="176" font-size="11.5" font-weight="700" fill="#1f2328">并发压测（6 请求）</text>
+  <g font-size="9.5" fill="#1f2328">
+    <text x="466" y="196">并发 1：墙钟 65 ms</text>
+    <text x="466" y="210" fill="#57606a">　91.60 req/s　2931 tok/s</text>
+    <text x="466" y="234">并发 4：墙钟 46 ms</text>
+    <text x="466" y="248" fill="#4a9d5f">　130.60 req/s　4179 tok/s</text>
+    <text x="466" y="264" fill="#1f2328">　相对串行加速 1.38×</text>
+    <text x="466" y="278" fill="#57606a">6 / 6 全部成功</text>
+  </g>
+
+  <!-- metrics -->
+  <rect x="20" y="298" width="640" height="62" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="316" font-size="11" font-weight="700" fill="#1f2328">跑完流量后的指标：累计 20 请求 / 496 token / 错误 2（含被正确拒绝的 400）</text>
+  <text x="34" y="336" font-size="10" fill="#1f2328">平均延迟 8.14 ms　P50 5.41 ms　<tspan fill="#c0392b" font-weight="700">P95 22.88 ms</tspan></text>
+  <text x="34" y="353" font-size="9.5" fill="#57606a">为什么看 P95 而不是平均值：平均值会被大量快请求稀释，尾延迟才是用户真正感受到的</text>
+</svg>

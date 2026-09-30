@@ -1,0 +1,123 @@
+
+==============================================================================
+  M11 · Complete AI Engineer System：一条命令跑完 Tokenizer → Serving
+==============================================================================
+
+── 1. 流水线的八个阶段 ───────────────────────────────────────────────────────────────
+  阶段                                   config → tokenizer → dataset → model → train → evaluate → optimize → serve
+  命令                                   python -m tiny.pipeline  （等价于本次这段调用）
+  选项                                   --force 忽略缓存 / --steps N 覆盖步数 / --only 分阶段 / --no-serve
+
+── 2. 真实运行（过程输出原样记录） ─────────────────────────────────────────────────────────
+[1/8] 配置
+      name                tiny-llm
+      tokenizer           bpe  vocab_size=1280  min_pair_freq=1
+      model               d_model=64  n_heads=4  d_ff=128  n_layers=2  max_len=64
+      data                val_ratio=0.15  pack=True  stride=32  dedup=True  include_general=True
+      optim               adam  lr=0.001  warmup=20  min_lr_ratio=0.05  grad_clip=1.0
+      train               batch=8  steps=1200  eval_every=100  patience=4
+      gen                 max_new_tokens=24  temperature=0.8  top_k=0  top_p=0.95
+      serve               127.0.0.1:0  max_tokens=32  concurrency=4
+[2/8] 分词器  vocab=1280  缓存命中=True
+[3/8] 数据集  train=206  val=37  泄漏=0
+[4/8] 模型    230,400 参数  1.76 MiB(fp64)  张量=28
+[5/8] 训练    复用检查点 tiny_lm_best.npz（step=800）
+[6/8] 评估    val_ppl=315.79  token_acc=0.1736  ECE=0.0709
+[7/8] 优化    INT8: 压缩3.85×/ppl+0.08%  INT4: 压缩7.42×/ppl+2.66%  NF4: 压缩7.75×/ppl+4.01%
+[8/8] 服务    http://127.0.0.1:51620  冒烟通过=True  并发 4 请求 33ms  吞吐 121.97 req/s
+
+── 3. 各阶段耗时 ──────────────────────────────────────────────────────────────────
+  阶段         耗时       说明      
+  ---------  -------  --------
+  config     0.000 s          
+  tokenizer        -  复用缓存，未计时
+  dataset    0.006 s          
+  model      0.004 s          
+  train            -  复用缓存，未计时
+  evaluate   0.115 s          
+  optimize   0.225 s          
+  serve      0.579 s          
+  合计                                   0.928 s
+  缓存命中                                 {"tokenizer": true, "model": true}
+
+── 4. 产物清单（models/ 里都是可追溯的证据） ────────────────────────────────────────────────
+  文件                 体积       
+  -----------------  ---------
+  config.json           1.1 KB
+  report.json          19.5 KB
+  tiny_lm.json          2.3 KB
+  tiny_lm.npz        5421.6 KB
+  tiny_lm_best.json     2.3 KB
+  tiny_lm_best.npz   5421.6 KB
+  tokenizer.json       37.2 KB
+  config.json 的意义                      报告里的每个数字都能对上是哪份配置跑出来的
+  report.json 的意义                      四份报告（训练/评估/优化/服务）一次落盘，便于对比实验
+
+── 5. 这一次跑的数据与模型账 ────────────────────────────────────────────────────────────
+  分词器                                  bpe  vocab=1280  chars/token=1.445  unk=0.0033
+  语料                                   295 行 → 清洗后 295 行（去重 0 / 过短 0）
+  切分                                   train 251 行 / val 44 行（val_ratio=0.15）
+  泄漏检查                                 overlap=0  clean=True
+  样本                                   train 206 / val 37（pack=True, stride=32）
+  模型                                   230,400 参数  28 张量  1.76 MiB(fp64)
+  训练                                   复用检查点 tiny_lm_best.npz（best_step=800）
+
+── 6. 四份报告的关键字段 ──────────────────────────────────────────────────────────────
+  评估 · 语言层                             val_loss=5.7551  ppl=315.79  token_acc=0.1736
+  评估 · 校准层                             ECE=0.0709
+  评估 · 生成层                             总分 17.85  覆盖 0.000  不重复分 0.165
+  优化 · INT8                            压缩 3.85×  ΔPPL +0.08%
+  优化 · INT4                            压缩 7.42×  ΔPPL +2.66%
+  优化 · NF4                             压缩 7.75×  ΔPPL +4.01%
+  优化 · KV Cache                        1.18×（logits 误差 3.4e-15）
+  服务 · 冒烟                              通过=True  http://127.0.0.1:51620
+  服务 · 压测                              4/4 成功  吞吐 121.97 req/s
+
+── 7. 工程属性 1：第二次跑必须复用缓存（否则不可迭代） ──────────────────────────────────────────────
+  第二次 cached                           {"tokenizer": true, "model": true}
+  第二次训练阶段耗时                            0.000 s   复用检查点，不重训
+  与第一次是否同一份权重                          是（都从 models/tiny_lm_best.npz 读回）
+  为什么重要                                不缓存的话每改一行评估代码就要重训一次，实验迭代直接瘫痪
+
+── 8. 工程属性 2：只跑某几段（排查问题时不用从头训） ───────────────────────────────────────────────
+  only=[config, tokenizer, dataset] 后 model 是否为空 True
+  跑到的阶段                                config, dataset
+  为什么重要                                改评估逻辑只重跑 evaluate，改服务只重跑 serve，秒级验证
+
+── 9. 工程属性 3：报告可机读（所以能进 CI、能对比实验） ────────────────────────────────────────────
+  顶层字段                                 cached, config, evaluate, optimize, serve, timings, train
+  config.model.d_model                 64
+  config.optim.lr                      0.001
+  train 关键字段                           from, meta, restored, reused_checkpoint
+  evaluate.perplexity                  315.79
+  evaluate.ece                         0.0709
+  serve.load.requests_per_sec          121.97
+  用途                                   两次实验各留一份 report.json，直接 diff 就知道哪个超参带来了变化
+
+── 10. 11 章关键数字汇总（Capstone 的交付物） ─────────────────────────────────────────────
+  章节             核心指标                关键数字                  
+  -------------  ------------------  ----------------------
+  M01 架构         唯一配置入口 + 8 段链路      8 个阶段                 
+  M02 分词器        bpe vocab=1280      1.44 字/token，unk 0.33%
+  M03 数据集        train 206 / val 37  泄漏 0 条                
+  M04 Embedding  (1280, 64)          81,920 参数             
+  M05 Block      2 层 × 4 头           因果性自检误差 0             
+  M06 训练         loss 5.7551         早停回滚到第 800 步          
+  M07 评估         PPL 315.79          ECE 0.0709            
+  M08 推理         KV Cache 1.18×      logits 误差 3.4e-15     
+  M09 优化         INT8 压缩 3.85×       ΔPPL +0.08%           
+  M10 服务         冒烟通过=True           122.0 req/s           
+  M11 全链路        8 段一次跑完             0.93 s                
+
+── 11. 收尾：磁盘上留下的必须是一份完整报告 ────────────────────────────────────────────────────
+  重新跑完整链路                              有缓存，约 1 秒
+  serve 阶段是否在                          True
+  evaluate.perplexity                  315.79
+  为什么较真                                第 8 节演示了分段跑会覆盖报告；不收尾就会把残缺报告留给下一个读它的人
+
+── 关键数字 ──────────────────────────────────────────────────────────────────────
+  流水线阶段数                               8
+  一次跑完耗时                               0.93 s
+  缓存命中                                 {"tokenizer": true, "model": true}
+  最重的一段                                serve
+  一句话结论                                Capstone 交付的不是模型，而是一条**可缓存的、可分段重跑的、报告可机读的**流水线

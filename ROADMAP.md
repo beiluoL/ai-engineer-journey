@@ -300,19 +300,27 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 
 **最终交付**：从零实现的小型 LLM 完整工程
 
-**状态**：⬜ 未开始
+**状态**：✅ 已完成（v1.0，11/11 Milestone，71 项 pytest 全绿）
 
 **11 个 Milestone**：
 ```
-01 — Project Architecture
-02 — Tokenizer
-03 — Dataset
-04 — Embedding
-05 — Transformer Block
-06 — Training
-07 — Evaluation
-08 — Inference
-09 — Optimization
-10 — Serving
-11 — Complete AI Engineer System
+01 — Project Architecture  ✅ 唯一配置入口 TinyConfig + validate() / 八段流水线
+02 — Tokenizer            ✅ 手写 BPE vocab=1280；压缩 1.445 字/token；roundtrip 失败全归因 OOV
+03 — Dataset              ✅ 泄漏检查 overlap=0；滑动窗口打包 206 train / 37 val
+04 — Embedding            ✅ 查表=one-hot@W 误差 0.000e+00；正弦 PE 0 参数；词表占 35.6%
+05 — Transformer Block    ✅ 因果自检过去 0.000e+00 / 未来 1.191e+01；掩码反例 argmax 同为 676
+06 — Training             ✅ train 7.1547→3.6882 / val 5.7551（第 800 步）→5.8234；早停回滚
+07 — Evaluation           ✅ 三层评估；PPL 315.79 / ECE 0.0662 / 关键词覆盖 0.000；配对 37/0/0、24/13/0
+08 — Inference            ✅ 采样四旋钮；KV Cache 等价 3.442e-15；真流式 TTFT 0.20 ms / 总 4.73 ms
+09 — Optimization         ✅ INT8 3.85×/ΔPPL +0.08%、INT4 7.42×/+2.66%、NF4 7.75×/+4.01%；KV 512 B/token
+10 — Serving              ✅ OpenAI 兼容 + SSE；冒烟四项全过；并发 4 吞吐 130.60 req/s
+11 — Complete System      ✅ 八段一条命令跑完；可缓存 0.928 s / 可分段 / report.json 可机读
 ```
+
+> 实现说明：与 P06/P08/P09 同源——**纯 numpy + Python 标准库手写**，不引入 torch / transformers / fastapi / vllm，
+> 通过 `src/tiny/paths.py` **三层复用**前面项目的已验真能力：P06（手写 Tensor/autograd + `TransformerLM` + BPE）
+> + P08（`enable_deterministic_autograd()` 确定性补丁）+ P09（评估指标 / 量化 / KV 账本 / HTTP 服务）。
+>
+> Capstone 的交付物不是模型，而是一条**可缓存、可分段重跑、报告可机读**的流水线。
+> 边界已诚实标注：这个 230K 参数 + 6,384 训练 token 的模型**会拼词、不会答题**（生成层关键词覆盖 0.000），
+> 这正是「三层评估」存在的理由——把真相量化出来，而不是让 loss 曲线替它遮羞。

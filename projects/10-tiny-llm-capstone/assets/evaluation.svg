@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 388" width="680" height="388" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="680" height="388" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M07 Evaluation：三层评估 + 两组配对对照</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">困惑度只说明模型更「确定」，不说明它更「对」。所以三层缺一层结论就不成立</text>
+
+  <!-- three layers -->
+  <rect x="20" y="62" width="208" height="112" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11" font-weight="700" fill="#1f2328">① 语言层：能不能预测</text>
+  <text x="34" y="100" font-size="9.5" fill="#1f2328">验证集交叉熵 5.7551</text>
+  <text x="34" y="116" font-size="9.5" fill="#1f2328">困惑度 PPL 315.79</text>
+  <text x="34" y="132" font-size="9.5" fill="#1f2328">token 准确率 0.1736</text>
+  <text x="34" y="152" font-size="9.5" fill="#57606a">随机猜测 = 1280，相对下降 75.3%</text>
+  <text x="34" y="167" font-size="9" fill="#c0392b">逐样本 CE 4.87 ~ 6.74 —— 平均掩盖方差</text>
+
+  <rect x="236" y="62" width="208" height="112" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="248" y="80" font-size="11" font-weight="700" fill="#1f2328">② 校准层：确定得有没有道理</text>
+  <text x="250" y="100" font-size="9.5" fill="#1f2328">ECE 0.0662（5 箱）</text>
+  <text x="250" y="118" font-size="9.5" fill="#1f2328">置信度 0.945 的箱子里</text>
+  <text x="250" y="132" font-size="9.5" fill="#c0392b">实际只有 0.781 是对的</text>
+  <text x="250" y="150" font-size="9.5" fill="#1f2328">5 个箱里 4 个过度自信</text>
+  <text x="250" y="167" font-size="9" fill="#57606a">很自信地说错话 ⇒ 上线就是灾难</text>
+
+  <rect x="452" y="62" width="208" height="112" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="464" y="80" font-size="11" font-weight="700" fill="#1f2328">③ 生成层：说出来能不能用</text>
+  <text x="466" y="100" font-size="9.5" fill="#1f2328">held-out「问/答」7 对</text>
+  <text x="466" y="118" font-size="9.5" fill="#1f2328">贪心总分 16.84</text>
+  <text x="466" y="134" font-size="9.5" fill="#4a9d5f">采样总分 31.81</text>
+  <text x="466" y="152" font-size="9.5" fill="#c0392b">关键词覆盖 0.000</text>
+  <text x="466" y="167" font-size="9" fill="#57606a">采样后像中文，但答不了题 —— 这就是真相</text>
+
+  <!-- diversity -->
+  <rect x="20" y="186" width="313" height="92" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="204" font-size="11" font-weight="700" fill="#1f2328">多样性：人眼看不出复读，数字看得见</text>
+  <g font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">
+    <text x="34" y="224">策略                        distinct-1  3-gram 重复率</text>
+    <text x="34" y="240">贪心 T=0                        0.049        0.934</text>
+    <text x="34" y="254">T=0.8                           0.741        0.048</text>
+    <text x="34" y="268">T=0.8 + top_p 0.9 + rep 1.15    0.795        0.048</text>
+  </g>
+
+  <!-- paired A -->
+  <rect x="347" y="186" width="313" height="92" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="359" y="204" font-size="11" font-weight="700" fill="#1f2328">配对实验 A：未训练 vs 已训练</text>
+  <text x="361" y="222" font-size="9.5" fill="#1f2328">逐条对拍 37 个样本（不是比两个平均数）</text>
+  <text x="361" y="238" font-size="9.5" fill="#1f2328">平均交叉熵 7.1523 → 5.7551，改善 +1.3972</text>
+  <text x="361" y="254" font-size="9.5" fill="#4a9d5f">胜 / 负 / 平 = 37 / 0 / 0，符号一致性 1.000</text>
+  <text x="361" y="270" font-size="9.5" fill="#1f2328">方向翻转 False ⇒ 提升是稳定真实的</text>
+
+  <!-- paired B -->
+  <rect x="20" y="288" width="640" height="92" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="32" y="306" font-size="11" font-weight="700" fill="#1f2328">配对实验 B：早停回滚 vs 不回滚（同初值、同 batch 顺序，唯一的差别就是回滚）</text>
+  <text x="34" y="326" font-size="10" fill="#1f2328">回滚停在 第 800 步（验证最优）　　PPL 315.79；不回滚停在 第 1200 步（训练终点）　　PPL 338.13</text>
+  <text x="34" y="344" font-size="10" fill="#4a9d5f">PPL 低 6.61%；逐条对拍平均改善 +0.0684，胜 / 负 / 平 = 24 / 13 / 0</text>
+  <text x="34" y="364" font-size="9.5" fill="#57606a">这一节把 M06 的「早停」从「看起来有道理的做法」变成了「有数字支撑的决策」：24 胜 13 负，且没有一条因为噪声翻转</text>
+</svg>

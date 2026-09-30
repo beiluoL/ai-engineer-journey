@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 380" width="680" height="380" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="380" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M02 分词器：BPE 的「合并」与往返的「归因」</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">实测词表 1280 = 4 个特殊 token + 854 个基础字符 + 422 条合并规则；压缩率 1.445 字/token（省 30.79%）</text>
+
+  <!-- BPE merge steps -->
+  <rect x="20" y="62" width="640" height="104" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">1. 训练：反复合并频次最高的相邻符号对（实测前 8 条）</text>
+  <g font-size="9.5">
+    <rect x="34" y="90" width="150" height="30" rx="5" fill="#ffffff" stroke="#8c959f"/>
+    <text x="42" y="104" fill="#57606a">原始语料：一字一 token</text>
+    <text x="42" y="115" fill="#1f2328">10945 字符 = 10945 token</text>
+    <text x="192" y="108" font-size="11" fill="#57606a" dominant-baseline="middle">合并 422 次 →</text>
+    <rect x="286" y="90" width="170" height="30" rx="5" fill="#ffffff" stroke="#4a9d5f"/>
+    <text x="294" y="104" fill="#57606a">学出的高频 token</text>
+    <text x="294" y="115" fill="#1f2328">什么 / 模型 / 什么是 / token</text>
+    <rect x="470" y="90" width="176" height="30" rx="5" fill="#ffffff" stroke="#4a9d5f"/>
+    <text x="478" y="104" fill="#57606a">实测压缩率</text>
+    <text x="478" y="115" fill="#1f2328">7575 token，1.445 字/token</text>
+  </g>
+  <text x="34" y="140" font-size="10" fill="#1f2328">早停条件：``min_pair_freq`` —— 低于该频次的相邻对不再合并，避免为只出现 1 次的噪声建 token</text>
+  <text x="34" y="155" font-size="10" fill="#1f2328">训练集 vs 验证集：词表只用**训练集**（251 行）构建，否则验证集的信息会漏进词表（最隐形的泄漏）</text>
+
+  <!-- round trip -->
+  <rect x="20" y="176" width="313" height="104" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="32" y="194" font-size="11.5" font-weight="700" fill="#1f2328">2. 正确性：decode(encode(s)) == s</text>
+  <text x="34" y="212" font-size="10" fill="#1f2328">这是分词器的底线 —— 不成立则后面全在学噪声</text>
+  <text x="34" y="228" font-size="10" fill="#1f2328">实测（全语料 295 行）：</text>
+  <text x="42" y="244" font-size="10" fill="#1f2328">· 训练集 251 / 251 = 100.00%</text>
+  <text x="42" y="259" font-size="10" fill="#1f2328">· 验证集 30 / 44 = 68.18%</text>
+  <text x="34" y="274" font-size="9.5" fill="#57606a">验证集低是**正常**的：词表没见过验证集里的字</text>
+
+  <rect x="347" y="176" width="313" height="104" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="359" y="194" font-size="11.5" font-weight="700" fill="#1f2328">3. 归因：失败分两类，不能混为一谈</text>
+  <text x="361" y="212" font-size="10" fill="#1f2328">① unk_caused —— 词表覆盖问题　实测 14 条</text>
+  <text x="369" y="226" font-size="9.5" fill="#57606a">验证集里没见过的字符 → &lt;unk&gt; → 解码丢失</text>
+  <text x="369" y="239" font-size="9.5" fill="#57606a">反例：漏掉一个「共」字，正是语料里未进词表的 23 个字符之一</text>
+  <text x="361" y="256" font-size="10" fill="#c0392b">② other_caused —— 实现 bug，实测 0 条</text>
+  <text x="369" y="270" font-size="9.5" fill="#c0392b">非 0 就说明代码写错了，而不是词表不够大</text>
+
+  <!-- why it matters -->
+  <rect x="20" y="290" width="640" height="74" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="308" font-size="11.5" font-weight="700" fill="#1f2328">词表一旦变化 ⇒ 所有权重全部错位（所以分词器必须缓存、必须和权重同生共死）</text>
+  <text x="34" y="326" font-size="10" fill="#1f2328">本项目实测的后果：测试代码把一个 char 分词器（vocab 858）写进了 models/tokenizer.json，</text>
+  <text x="34" y="341" font-size="10" fill="#1f2328">下一次 demo 加载 1280 词表的权重直接炸：``cannot reshape array of size 81920 into shape (858, 64)``</text>
+  <text x="34" y="357" font-size="10" fill="#4a9d5f">修复：默认路径改成「调用时解析」+ 测试目录整体重定向 + 一道「不许动真实 models/」的守卫</text>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 396" width="680" height="396" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="a8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="396" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M08 Inference：四个采样旋钮 + KV Cache 等价性 + 真·流式</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">加速的前提是「算出来的还是同一个东西」，所以必须对拍 logits；流式的价值全在「第一个 token 什么时候到」</text>
+
+  <!-- sampling knobs -->
+  <rect x="20" y="62" width="313" height="150" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">单变量对照：每行只改一个旋钮</text>
+  <g font-size="9" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">
+    <text x="34" y="98">策略                     distinct-1  重复率</text>
+    <text x="34" y="114">贪心（T=0）                    0.110   0.887</text>
+    <text x="34" y="129">T=0.3                          0.215   0.714</text>
+    <text x="34" y="144">T=1.2                          0.925   0.000</text>
+    <text x="34" y="159">T=0.8 + top_k=5                0.500   0.364</text>
+    <text x="34" y="174">T=0.8 + top_p=0.9              0.941   0.000</text>
+    <text x="34" y="189">T=0.8 + rep=1.5                0.931   0.000</text>
+  </g>
+  <text x="34" y="206" font-size="9" fill="#c0392b">欠训练模型上低温会直接退化成复读（重复率 0.887）</text>
+
+  <rect x="347" y="62" width="313" height="150" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="359" y="80" font-size="11.5" font-weight="700" fill="#1f2328">top_k / top_p 剪掉了什么（16 个候选）</text>
+  <text x="361" y="100" font-size="10" fill="#1f2328">top_k=5 保留 5 个 —— 严格等于 k，与分布无关</text>
+  <text x="361" y="120" font-size="10" fill="#1f2328">top_p=0.9 保留 7 个 —— 按分布自适应</text>
+  <text x="361" y="140" font-size="10" fill="#57606a">保留集合累计概率 1.0000 ≥ 0.9</text>
+  <text x="361" y="160" font-size="10" fill="#4a9d5f">两者都保住了 top-1</text>
+  <text x="361" y="182" font-size="10" fill="#1f2328">temperature ≤ 0 ⇒ 走 argmax，完全跳过随机采样</text>
+  <text x="361" y="198" font-size="10" fill="#1f2328">repetition_penalty：正 logit 缩小、负 logit 放大</text>
+
+  <!-- kv cache -->
+  <rect x="20" y="224" width="313" height="102" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="32" y="242" font-size="11.5" font-weight="700" fill="#1f2328">KV Cache 等价性（不是「差不多」，是逐位）</text>
+  <text x="34" y="262" font-size="10" fill="#1f2328">最后一步 logits 最大绝对误差 <tspan font-weight="700">3.442e-15</tspan></text>
+  <text x="34" y="280" font-size="10" fill="#1f2328">关缓存 / 开缓存 输出一致 True</text>
+  <text x="34" y="298" font-size="10" fill="#1f2328">无缓存 4.77 ms → 有缓存 3.55 ms，加速 <tspan font-weight="700">1.34×</tspan></text>
+  <text x="34" y="316" font-size="9" fill="#57606a">只快 1.34× 的原因：prefill 仍要算整段 prompt，24 步里省下的有限</text>
+
+  <rect x="347" y="224" width="313" height="102" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="359" y="242" font-size="11.5" font-weight="700" fill="#1f2328">真·流式：TTFT 与总耗时是两个指标</text>
+  <text x="361" y="262" font-size="10" fill="#1f2328">TTFT 0.20 ms　总耗时 4.73 ms　每 token 0.20 ms</text>
+  <text x="361" y="280" font-size="10" fill="#1f2328">chunk 1 = ' '，chunk 2 = '整数'，chunk 3 = ' ' …</text>
+  <text x="361" y="298" font-size="10" fill="#c0392b">⚠ 若先算完整段再逐条 yield，TTFT 就等于总耗时 —— 那是假流式</text>
+  <text x="361" y="316" font-size="9" fill="#57606a">所以 stream() 必须直接消费解码生成器，不能先 list() 掉</text>
+
+  <!-- reproducibility -->
+  <rect x="20" y="336" width="640" height="48" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="354" font-size="11" font-weight="700" fill="#1f2328">可回放：同 seed 两次逐字相同 True；seed=7 与 seed=8 不同 False（不同才说明 seed 真的生效）</text>
+  <text x="34" y="373" font-size="10" fill="#57606a">推理层的三件事：策略可控、结果可回放、延迟可测量 —— 缺任何一条都不能上线</text>
+</svg>

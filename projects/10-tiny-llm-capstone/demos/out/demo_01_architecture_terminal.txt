@@ -1,0 +1,58 @@
+
+==============================================================================
+  M01 · Project Architecture：一个配置、十层链路、三个只读依赖
+==============================================================================
+
+── 1. 唯一配置入口（models/config.json 会留档） ─────────────────────────────────────────
+  name                tiny-llm
+  tokenizer           bpe  vocab_size=1280  min_pair_freq=1
+  model               d_model=64  n_heads=4  d_ff=128  n_layers=2  max_len=64
+  data                val_ratio=0.15  pack=True  stride=32  dedup=True  include_general=True
+  optim               adam  lr=0.001  warmup=20  min_lr_ratio=0.05  grad_clip=1.0
+  train               batch=8  steps=1200  eval_every=100  patience=4
+  gen                 max_new_tokens=24  temperature=0.8  top_k=0  top_p=0.95
+  serve               127.0.0.1:0  max_tokens=32  concurrency=4
+
+── 2. 分层与复用关系（P10 刻意不重写的部分） ──────────────────────────────────────────────────
+  P06 复用                               model / tokenizer   Transformer + 从零 autograd + BPE
+  P08 复用                               ft.paths   确定性 autograd 补丁（Tensor._prev 有序化）
+  P09 复用                               ie.metrics / quantize / kvbook / engine / serve   评估·量化·推理·服务
+  P10 自研                               config / tok / data / model / train / evaluate   工程化与编排
+  P10 自研                               infer / optimize / serve / pipeline   采样·优化·服务·端到端
+  P06 目录存在                             True   06-mini-transformer-llm
+  P08 目录存在                             True   08-fine-tuning
+  P09 目录存在                             True   09-evaluation-inference
+  P10 目录存在                             True   10-tiny-llm-capstone
+
+── 3. 依赖自检（缺一个就报错，而不是等到 import 才崩） ───────────────────────────────────────────
+  已挂载 P06 src                          True
+  已挂载 P08 src                          True
+  已挂载 P09 src                          True
+
+── 4. 数据 → 词表 → 模型：规模是怎么定下来的 ─────────────────────────────────────────────────
+  语料行数（清洗后）                            295   丢弃 短行 0 / 重复 0
+  字符数 / 不同字符                           10651 / 876
+  train / val 行数                       251 / 44
+  词表大小选择依据                             4 特殊 token + 876 基础字符 + 合并 → 1280
+
+── 5. 参数账本（第一个能发现配置写错的探针） ────────────────────────────────────────────────────
+  总参数                                  230,400
+  张量数                                  28
+  fp64 体积                              1.76 MiB
+  组件                  参数量     占比   
+  ------------------  ------  -----
+  token_embedding     81,920  35.6%
+  output_projection   81,920  35.6%
+  transformer_blocks  66,432  28.8%
+  final_layernorm        128   0.1%
+  Embedding + 输出投影占比                   71.1%   Tiny LLM 的参数大头在这里
+  模型缓存命中                               False   复用同一份权重，跨章节数字才对得上
+
+── 6. 配置校验：故意写错会被挡住 ──────────────────────────────────────────────────────────
+  非法配置被拦截                              True   - model.d_model(64) 必须能被 n_heads(3) 整除，否则无法把向量均分到各头
+
+── 关键数字 ──────────────────────────────────────────────────────────────────────
+  语料                                   295 行 / 10651 字符 / 876 不同字符
+  模型                                   230,400 参数，28 个张量
+  权重张量遍历顺序稳定                           True
+  随机源                                  np.random.seed(0) + Random(seed) + default_rng(seed)

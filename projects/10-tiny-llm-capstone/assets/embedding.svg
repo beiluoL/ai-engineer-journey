@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 356" width="680" height="356" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <rect x="0" y="0" width="680" height="356" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M04 Embedding：查表 + 正弦位置编码，以及参数都花在哪了</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">实测：Embedding 与输出投影合计 71.1% 的参数 —— 小模型调参先看词表，别急着调 d_model</text>
+
+  <!-- lookup table -->
+  <rect x="20" y="62" width="313" height="124" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">Token Embedding = 一张 (V, d_model) 查找表</text>
+  <text x="34" y="98" font-size="10" fill="#1f2328">形状 (1280, 64)，参数量 81,920</text>
+  <text x="34" y="116" font-size="10" fill="#1f2328">['什么是',' ','LoRA','？'] → [861, 5, 970, 857]</text>
+  <text x="34" y="134" font-size="10" fill="#1f2328">查表结果形状（4, 64）；同一 id 两次查表一致 True</text>
+  <rect x="34" y="144" width="284" height="32" rx="5" fill="#ffffff" stroke="#4a9d5f"/>
+  <text x="42" y="158" font-size="10" fill="#1f2328">one-hot @ W 与查表 最大绝对误差 0.000e+00</text>
+  <text x="42" y="170" font-size="9.5" fill="#57606a">乘法次数：矩阵版 81,920 → 查表版 0</text>
+
+  <!-- positional -->
+  <rect x="347" y="62" width="313" height="124" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="359" y="80" font-size="11.5" font-weight="700" fill="#1f2328">正弦位置编码：不训练也能表达顺序</text>
+  <text x="361" y="98" font-size="10" fill="#1f2328">pe 形状 (64, 64)，可训练参数 <tspan font-weight="700">0</tspan></text>
+  <text x="361" y="116" font-size="10" fill="#1f2328">每个位置的向量范数 5.6569，标准差 0.000000</text>
+  <text x="361" y="134" font-size="10" fill="#1f2328">位置 0 与 1 / 8 / 32 的余弦相似度：</text>
+  <text x="369" y="149" font-size="10" fill="#57606a">0.9662 → 0.7004 → 0.6111（越远越不像）</text>
+  <text x="361" y="168" font-size="10" fill="#1f2328">高频维相邻变化 0.8415 / 低频维 0.0000</text>
+
+  <!-- parameter share -->
+  <rect x="20" y="198" width="640" height="92" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="32" y="216" font-size="11.5" font-weight="700" fill="#1f2328">参数账本：230,400 参数里，大头是词表相关的两项</text>
+  <g font-size="10">
+    <rect x="34" y="226" width="230" height="16" rx="3" fill="#4a7fd4" opacity="0.75"/>
+    <text x="40" y="239" font-size="9.5" fill="#ffffff">token_embedding　81,920　35.6%</text>
+    <rect x="270" y="226" width="230" height="16" rx="3" fill="#4a9d5f" opacity="0.75"/>
+    <text x="276" y="239" font-size="9.5" fill="#ffffff">output_projection　81,920　35.6%</text>
+    <rect x="506" y="226" width="44" height="16" rx="3" fill="#c9a227" opacity="0.8"/>
+    <text x="512" y="239" font-size="8.5" fill="#ffffff">blocks</text>
+    <rect x="556" y="226" width="104" height="16" rx="3" fill="#8c959f" opacity="0.7"/>
+    <text x="562" y="239" font-size="8.5" fill="#ffffff">transformer_blocks 66,432　28.8%</text>
+  </g>
+  <text x="34" y="262" font-size="10" fill="#1f2328">Embedding 参数 = V × d_model = 1280 × 64 = 81,920；词表减半可省 40,960，但 OOV 会上升（M02 实测 23 个字符已在词表外）</text>
+  <text x="34" y="279" font-size="10" fill="#4a9d5f">结论：Tiny LLM 上「先动词表」比「先动 d_model」更有效；大模型上这个比例会翻转（FFN 吃掉大头）</text>
+
+  <rect x="20" y="300" width="640" height="46" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="32" y="318" font-size="11" font-weight="700" fill="#1f2328">位置编码不进优化器（实测：遍历到的 28 个张量里不含 pos_enc）</text>
+  <text x="34" y="336" font-size="10" fill="#1f2328">相加前 token 向量范数 1.1910 → 相加后 5.6030：位置信号直接改变向量的量级，这不是装饰，是信息注入</text>
+</svg>

@@ -59,6 +59,8 @@
 | Project 08 src + tests | ✅ v1.0 落地：`src/ft/` 12 个手写模块（LoRA / NF4 分位量化 + 双量化 / QLoRA / 指令数据答案区 mask / 只训 adapter 的训练器 / 断点续训 / Adapter 合并 / 评估），189 项 pytest 全绿；主线叙事「通用基座 → 冻结 → 注入 LoRA → Java 面试领域 SFT → 评估」；实测：B 零初始化等价性误差 0.000e+00、grad_check 6.585e-05、基座改动 0/28、LoRA 可训练 10.53%、NF4 压缩 7.75×、域内困惑度 3649.9→421.1；9 张真实终端截图 + 9 张手写架构图 SVG |
 | Project 09 milestones | ✅ 11/11 已成文（evaluation → benchmark → evaluation-dataset → automatic-evaluation → model-comparison → quantization → inference-engine → paged-attention → batching → kv-cache → model-serving） |
 | Project 09 src + tests | ✅ v1.0 落地：`src/ie/` 13 个手写模块（评估指标含 ECE 校准 / 防泄漏评估集 / 零 LLM 规则评分 / 多种子配对比较 / INT8·INT4·NF4 量化 / 手写自回归引擎 / PagedAttention 分块 KV / Continuous Batching 仿真 / KV 显存账本 / 标准库 HTTP 服务含 SSE），229 项 pytest 全绿；实测：KV Cache 6.155→2.794 ms（2.20×）、PagedAttention 浪费率 76.4%→16.0%、Continuous Batching 吞吐 1.52×、4 并发 4/4（p95 3.311 ms）；关键反直觉结论「权重 MSE 最小 ≠ 端到端最优」；11 张真实终端截图 + 11 张手写架构图 SVG |
+| Project 10 milestones | ✅ 11/11 已成文（architecture → tokenizer → dataset → embedding → transformer-block → training → evaluation → inference → optimization → serving → complete-system） |
+| Project 10 src + tests | ✅ v1.0 落地：`src/tiny/` 12 个手写模块（唯一配置入口 `TinyConfig` + BPE 分词含归因报告 / 防泄漏数据集 + 滑动窗口打包 / 手写 Transformer Decoder / 训练闭环含早停回滚与断点续训 / 三层评估 + 配对显著性 / 采样四旋钮 + 真·流式 + KV Cache / 量化 ΔPPL + 显存账本 / OpenAI 兼容服务 + 冒烟 + 压测 / 八段流水线），71 项 pytest 全绿；**三层复用 P06/P08/P09**（手写 autograd + 确定性补丁 + 评估/量化/服务）；实测：BPE 压缩 1.445 字/token、UNK 0.33%、val roundtrip 失败 14/14 全归因 OOV；因果自检过去误差 0.000e+00 / 未来 1.191e+01、确定性 0.000e+00；train 7.1547→3.6882 / val 6.2283→5.7551（第 800 步）→5.8234，**早停回滚**；跨进程重训/续训误差 0.000e+00；PPL 315.79 / token_acc 0.1736 / ECE 0.0662；KV Cache 等价 3.442e-15、TTFT 0.20 ms vs 总耗时 4.73 ms；INT8 3.85×/ΔPPL +0.08%、INT4 7.42×/+2.66%、NF4 7.75×/+4.01%；全链路有缓存 0.928 s；11 张真实终端截图 + 11 张手写架构图 SVG |
 | publishing/tutorials | ✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/） |
 | publishing/finetune-series | 📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5） |
 | publishing/articles | 📝 2 篇 |
@@ -77,7 +79,7 @@
 | 07 | Open Source LLM | ⬜ | 🔄 v0.1 `pipelines/` 调用管线 6 模块真实跑通：真实调 DeepSeek API（TTFT 占比 39.33%、净生成 284.77 tok/s）+ 手算参数量对账（0.494/1.544/7.615B 对上标称）+ 显存账本（7B bf16 14.18 / int4 3.55 GiB，KV 57,344 B/token）+ RAG-lite 检索评测（recall@1 87.5%、recall@3 100%、全库 11.59ms）+ 6 张真实终端截图；模型加载/量化线待 Colab GPU |
 | 08 | LoRA / QLoRA Fine-Tuning | ⬜ | ✅ v1.0 从零手写 LoRA/QLoRA（纯 numpy，复用 P06 手写 autograd）+ 测试 189 passed + 9 个真实 demo（域内困惑度 3649.9→421.1）+ 9 张真实终端截图 + 9 张手写 SVG + M01-09 全成 |
 | 09 | LLM Evaluation / Inference | ⬜ | ✅ v1.0 从零手写评估体系 + 量化 + 推理引擎（纯 numpy + 标准库 http.server）+ 测试 229 passed + 11 个真实 demo（KV Cache 2.20×、PagedAttention 浪费率 76.4%→16.0%、Continuous Batching 1.52×）+ 11 张真实终端截图 + 11 张手写 SVG + M01-11 全成 |
-| 10 | Tiny LLM Capstone | ⬜ | ⬜ |
+| 10 | Tiny LLM Capstone | ⬜ | ✅ v1.0 从零串起 LLM 全链路（BPE 分词 → 数据集 → Transformer Decoder → 训练闭环 → 三层评估 → 推理 → 量化 → 服务 → 八段流水线）+ 71 项 pytest 全绿 + 11 个真实 demo（PPL 315.79、早停回滚到第 800 步、KV Cache 等价 3.442e-15、INT8 3.85×/ΔPPL +0.08%、全链路 0.928 s）+ 11 张真实终端截图 + 11 张手写 SVG + M01-11 全成 |
 
 ## Next
 

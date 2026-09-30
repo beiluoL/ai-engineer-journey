@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360" font-family="'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+  <defs>
+    <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="360" fill="#ffffff"/>
+  <text x="20" y="27" font-size="16" font-weight="700" fill="#1f2328">M05 Transformer Block：Pre-LN + 残差，以及因果性必须被证明</text>
+  <text x="20" y="47" font-size="11.5" fill="#57606a">掩码写错了模型照样能训、loss 照样降 —— 它只是在偷偷看答案。所以这里做成硬性自检</text>
+
+  <!-- block structure -->
+  <rect x="20" y="62" width="290" height="176" rx="8" fill="#eef4ff" stroke="#4a7fd4" stroke-width="1.5"/>
+  <text x="32" y="80" font-size="11.5" font-weight="700" fill="#1f2328">Pre-LN Block（实测 2 层 × 4 头）</text>
+  <g font-size="9.5">
+    <rect x="34" y="88" width="120" height="18" rx="4" fill="#ffffff" stroke="#4a7fd4"/><text x="42" y="101" fill="#1f2328">x → ln1 → MHA</text>
+    <text x="162" y="101" fill="#57606a">← LN 放在子层**之前**</text>
+    <rect x="34" y="110" width="220" height="18" rx="4" fill="#eaf6ec" stroke="#4a9d5f"/><text x="42" y="123" fill="#1f2328">+ 残差（直连通路，梯度不走 LN）</text>
+    <rect x="34" y="132" width="120" height="18" rx="4" fill="#ffffff" stroke="#4a7fd4"/><text x="42" y="145" fill="#1f2328">→ ln2 → FFN</text>
+    <text x="162" y="145" fill="#57606a">64 → 128 → 64（升维再降回）</text>
+    <rect x="34" y="154" width="220" height="18" rx="4" fill="#eaf6ec" stroke="#4a9d5f"/><text x="42" y="167" fill="#1f2328">+ 残差 → 下一层</text>
+    <rect x="34" y="176" width="246" height="18" rx="4" fill="#fdf6e3" stroke="#c9a227"/><text x="42" y="189" fill="#1f2328">最后 ln_f → 输出投影 (64 → 1280)</text>
+  </g>
+  <text x="34" y="212" font-size="10" fill="#1f2328">head_dim = d_model / n_heads = 64 / 4 = 16</text>
+  <text x="34" y="228" font-size="10" fill="#57606a">分头 reshape (2,4,8,16) → 拼回误差 0.000e+00</text>
+
+  <!-- param -->
+  <rect x="330" y="62" width="330" height="80" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.2"/>
+  <text x="342" y="80" font-size="11.5" font-weight="700" fill="#1f2328">单 Block 参数账（33,216）</text>
+  <g font-size="9.5" fill="#1f2328">
+    <text x="344" y="100">ffn　　　　16,576　49.9%</text>
+    <text x="344" y="116">attention　16,384　49.3%</text>
+    <text x="344" y="132">layernorm　　 256　 0.8%　← 归一化几乎不要钱</text>
+  </g>
+
+  <!-- depth -->
+  <rect x="330" y="150" width="330" height="88" rx="8" fill="#eaf6ec" stroke="#4a9d5f" stroke-width="1.5"/>
+  <text x="342" y="168" font-size="11.5" font-weight="700" fill="#1f2328">深度换来的参数与耗时（4×32 前向）</text>
+  <g font-size="9.5" font-family="'SF Mono',Menlo,monospace" fill="#1f2328">
+    <text x="344" y="188">1 层　197,184 参数　　0.88 ms</text>
+    <text x="344" y="204">2 层　230,400 参数　　1.39 ms　← 当前配置</text>
+    <text x="344" y="220">4 层　296,832 参数　　2.23 ms</text>
+  </g>
+  <text x="342" y="233" font-size="9" fill="#57606a">每加一层 +33,216 参数（≈+0.5 ms）</text>
+
+  <!-- causal proof -->
+  <rect x="20" y="248" width="313" height="98" rx="8" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="32" y="266" font-size="11.5" font-weight="700" fill="#1f2328">因果性自检：改未来 → 过去必须逐位不变</text>
+  <text x="34" y="284" font-size="10" fill="#1f2328">logits 形状 (2, 16, 1280)；形状正确 / 数值有限 True</text>
+  <text x="34" y="302" font-size="10" fill="#4a9d5f">过去位置最大绝对误差　0.000e+00　← 必须为 0</text>
+  <text x="34" y="320" font-size="10" fill="#c0392b">未来位置最大绝对误差　1.191e+01　← 必须 &gt; 0</text>
+  <text x="34" y="338" font-size="10" fill="#1f2328">同输入两次前向 0.000e+00（确定性）　三项自检全过 True</text>
+
+  <rect x="347" y="248" width="313" height="98" rx="8" fill="#fbe9e7" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="359" y="266" font-size="11.5" font-weight="700" fill="#1f2328">反例：把掩码去掉会发生什么</text>
+  <text x="361" y="284" font-size="10" fill="#1f2328">同一批 id，带因果掩码 vs 全 0 掩码（谁都能看谁）</text>
+  <text x="361" y="302" font-size="10" fill="#c0392b">最后一位 logits 最大差　0.6892</text>
+  <text x="361" y="320" font-size="10" fill="#1f2328">argmax 676 / 676 —— <tspan fill="#c0392b">数字变化不代表结论变化</tspan></text>
+  <text x="361" y="338" font-size="9.5" fill="#57606a">所以只比 argmax 是不够的，必须比 logits 的数值</text>
+</svg>
