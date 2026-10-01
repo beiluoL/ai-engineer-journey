@@ -52,23 +52,102 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#一今天要做出什么" class="lvl2">一、今天要做出什么</a><a href="#二技术选型" class="lvl2">二、技术选型</a><a href="#三工程骨架与依赖" class="lvl2">三、工程骨架与依赖</a><a href="#四离线导入链从文件到-milvus" class="lvl2">四、离线导入链：从文件到 Milvus</a><a href="#41-配置两个模型" class="lvl3">4.1 配置两个模型</a><a href="#42-切片参数起点不是结论" class="lvl3">4.2 切片参数：起点，不是结论</a><a href="#43-导入服务" class="lvl3">4.3 导入服务</a><a href="#五在线问答链检索-组装-生成" class="lvl2">五、在线问答链：检索 + 组装 + 生成</a><a href="#51-milvus-向量库" class="lvl3">5.1 Milvus 向量库</a><a href="#52-问答服务" class="lvl3">5.2 问答服务</a><a href="#53-效果" class="lvl3">5.3 效果</a><a href="#六生产上要补的四件事今天不做但要知道" class="lvl2">六、生产上要补的四件事（今天不做，但要知道）</a><a href="#七完整调用链面试怎么讲" class="lvl2">七、完整调用链（面试怎么讲）</a><a href="#八今天完成标准" class="lvl2">八、今天完成标准</a><a href="#下一步-day6" class="lvl2">下一步 Day6</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="大模型微调实战-day5spring-boot-langchain4j-milvus-搭-rag-pipeline">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline</h1>
 <blockquote><p>写给有 Java / Spring Boot 基础、已经把 LoRA 模型接进 Ollama 的开发者。 今天回到你最熟悉的领域，把前四天的成果装进一个真正的 Spring Boot 工程。 文中架构图与流程图为本教程自制示意框图；代码块为可执行片段，真实输出请在本地环境验证。</p></blockquote>
-<h2 id="一今天要做出什么">一、今天要做出什么</h2>
+<h2 id="一今天要做出什么">一、今天要做出什么</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#二技术选型"><span class="sn-label">下一节 →</span><span class="sn-name">二、技术选型</span></a></nav>
 <p>Day1～Day3 你有了微调好的 <code>Qwen + Java Interview LoRA</code>，Day4 理解了 RAG + LoRA 的分工。今天用 Spring Boot + LangChain4j + Milvus 把它们装进一个工程，做出 <strong>Java AI Interview Agent V3</strong>：用户上传 <code>Java面试笔记.md</code>、<code>项目文档.pdf</code>，然后直接用 Java 面试题提问，模型基于这些资料作答。</p>
 <figure class="figure"><img alt="Day5 架构：两条链分开，向量库是唯一交汇点" src="../../../../tutorials/assets/diagram7-arch.png" loading="lazy"/><figcaption>Day5 架构：两条链分开，向量库是唯一交汇点</figcaption></figure>
 <p>今天最重要的一个认知是：<strong>这是两条链，不是一条</strong>。</p>
 <table><thead><tr><th></th><th>离线导入链</th><th>在线问答链</th></tr></thead><tbody><tr><td>触发时机</td><td>上传文档时，一次一条</td><td>用户提问，每次请求</td></tr><tr><td>性能要求</td><td>可以慢、可以定时跑</td><td>每次都要快（秒级）</td></tr><tr><td>失败处理</td><td>记日志跳过，不影响服务</td><td>明确报错，绝不返回空答案</td></tr><tr><td>汇合点</td><td><strong>Milvus 向量库</strong></td><td><strong>Milvus 向量库</strong></td></tr></tbody></table>
 <p>把这两条链混在一个 Service 里写，是 RAG 工程最常见的腐烂起点——改切片参数会碰坏问答，压测问答会拖垮导入。</p>
 <figure class="figure"><img alt="两条链路对照：每一步的产物与参数" src="../../../../tutorials/assets/diagram7-pipeline.png" loading="lazy"/><figcaption>两条链路对照：每一步的产物与参数</figcaption></figure>
-<h2 id="二技术选型">二、技术选型</h2>
+<h2 id="二技术选型">二、技术选型</h2><nav class="sec-nav"><a class="sn prev" href="#一今天要做出什么"><span class="sn-label">← 上一节</span><span class="sn-name">一、今天要做出什么</span></a><a class="sn next" href="#三工程骨架与依赖"><span class="sn-label">下一节 →</span><span class="sn-name">三、工程骨架与依赖</span></a></nav>
 <table><thead><tr><th>层</th><th>选型</th><th>说明</th></tr></thead><tbody><tr><td>后端</td><td>Spring Boot 3</td><td>你的主场</td></tr><tr><td>AI 框架</td><td>LangChain4j</td><td>Java 生态最成熟的 LLM 编排层</td></tr><tr><td>向量数据库</td><td>Milvus</td><td>之前已装 <code>milvus-lite</code>，端口 19530</td></tr><tr><td>Embedding</td><td><code>nomic-embed-text</code>（Ollama）</td><td>768 维，本地跑不花钱</td></tr><tr><td>大模型</td><td><code>java-interviewer</code>（Qwen + Java LoRA）</td><td>Day3 的产物，Ollama 暴露</td></tr></tbody></table>
 <p>选型里最重要的一条纪律：<strong>导入链和问答链必须用同一个 Embedding 模型</strong>。两个不同的模型产出的向量不在同一个空间里，余弦相似度是随机数，检索结果全是噪声——而且这种错误不报异常，只会让答案慢慢变得「玄学」。</p>
-<h2 id="三工程骨架与依赖">三、工程骨架与依赖</h2>
+<h2 id="三工程骨架与依赖">三、工程骨架与依赖</h2><nav class="sec-nav"><a class="sn prev" href="#二技术选型"><span class="sn-label">← 上一节</span><span class="sn-name">二、技术选型</span></a><a class="sn next" href="#四离线导入链从文件到-milvus"><span class="sn-label">下一节 →</span><span class="sn-name">四、离线导入链：从文件到 Milvus</span></a></nav>
 <pre><code>java-ai-interview-agent
 ├── controller/   # ChatController、UploadController
 ├── service/      # InterviewService（问答编排）
@@ -97,7 +176,7 @@ li{margin:.3em 0;}
 # java-interviewer    qwen3.5:9b 的 LoRA 版
 # nomic-embed-text    embedding 用
 ollama serve          # 默认 http://localhost:11434</code></pre>
-<h2 id="四离线导入链从文件到-milvus">四、离线导入链：从文件到 Milvus</h2>
+<h2 id="四离线导入链从文件到-milvus">四、离线导入链：从文件到 Milvus</h2><nav class="sec-nav"><a class="sn prev" href="#三工程骨架与依赖"><span class="sn-label">← 上一节</span><span class="sn-name">三、工程骨架与依赖</span></a><a class="sn next" href="#五在线问答链检索-组装-生成"><span class="sn-label">下一节 →</span><span class="sn-name">五、在线问答链：检索 + 组装 + 生成</span></a></nav>
 <h3 id="41-配置两个模型">4.1 配置两个模型</h3>
 <p><code>application.yml</code>：</p>
 <pre><code>langchain4j:
@@ -152,7 +231,7 @@ public class UploadController {
     }
 }</code></pre>
 <p>这一步做完，<code>Java面试笔记.md</code> 就变成了 Milvus 里的一片向量：每个 chunk 一条记录，<strong>向量 + 原文一起存</strong>——检索时返回的是原文片段和出处，不是一串浮点数。</p>
-<h2 id="五在线问答链检索-组装-生成">五、在线问答链：检索 + 组装 + 生成</h2>
+<h2 id="五在线问答链检索-组装-生成">五、在线问答链：检索 + 组装 + 生成</h2><nav class="sec-nav"><a class="sn prev" href="#四离线导入链从文件到-milvus"><span class="sn-label">← 上一节</span><span class="sn-name">四、离线导入链：从文件到 Milvus</span></a><a class="sn next" href="#六生产上要补的四件事今天不做但要知道"><span class="sn-label">下一节 →</span><span class="sn-name">六、生产上要补的四件事（今天不做，但要知道）</span></a></nav>
 <h3 id="51-milvus-向量库">5.1 Milvus 向量库</h3>
 <pre><code>@Bean
 EmbeddingStore&lt;TextSegment&gt; milvusStore() {
@@ -226,20 +305,63 @@ public class ChatController {
    第二，……
    第三，……</code></pre>
 <p>注意答案里出现了<strong>资料里才有的细节</strong>（transferIndex 认领机制）——这就是 RAG 的价值：LoRA 给口吻和格式，资料给事实和细节。</p>
-<h2 id="六生产上要补的四件事今天不做但要知道">六、生产上要补的四件事（今天不做，但要知道）</h2>
+<h2 id="六生产上要补的四件事今天不做但要知道">六、生产上要补的四件事（今天不做，但要知道）</h2><nav class="sec-nav"><a class="sn prev" href="#五在线问答链检索-组装-生成"><span class="sn-label">← 上一节</span><span class="sn-name">五、在线问答链：检索 + 组装 + 生成</span></a><a class="sn next" href="#七完整调用链面试怎么讲"><span class="sn-label">下一节 →</span><span class="sn-name">七、完整调用链（面试怎么讲）</span></a></nav>
 <table><thead><tr><th>事项</th><th>为什么</th><th>今天先不做的原因</th></tr></thead><tbody><tr><td><code>min_score</code> 相似度阈值</td><td>检索不到相关资料时应直接拒答，而不是硬答</td><td>阈值要按真实 embedding 的分数分布校准，中文模型的余弦分数普遍偏高，0.2 这种通用值往往形同虚设</td></tr><tr><td>引用溯源</td><td>每段答案标注出自哪个文件的哪个 chunk</td><td>LangChain4j 的 <code>EmbeddingMatch</code> 自带 score 与 metadata，加一层包装即可</td></tr><tr><td>异步导入队列</td><td>大文件导入会阻塞 Tomcat 工作线程</td><td>演示阶段文档小，直接同步</td></tr><tr><td>流式输出</td><td>逐 token 返回，体验差距巨大</td><td>SSE 是 Day6 Agent 化的前置，到时候一起做</td></tr></tbody></table>
-<h2 id="七完整调用链面试怎么讲">七、完整调用链（面试怎么讲）</h2>
+<h2 id="七完整调用链面试怎么讲">七、完整调用链（面试怎么讲）</h2><nav class="sec-nav"><a class="sn prev" href="#六生产上要补的四件事今天不做但要知道"><span class="sn-label">← 上一节</span><span class="sn-name">六、生产上要补的四件事（今天不做，但要知道）</span></a><a class="sn next" href="#八今天完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">八、今天完成标准</span></a></nav>
 <p>面试官问「讲讲你们 RAG 的链路」时，可以这么答：</p>
 <blockquote><p>用户提问后，Spring Boot 通过 LangChain4j 把问题向量化，到 Milvus 里检索 Top-K 相关片段；把检索结果和问题组装成带参考资料边界的 Prompt，发给经过 LoRA 微调的 Qwen 模型；模型结合自身能力和外部知识生成答案。文档导入是独立的离线链路：解析、切片（500/100）、向量化、入库，和问答链只共享 Milvus 这个交汇点。</p></blockquote>
 <pre><code>User → Spring Boot → LangChain4j Retriever → Milvus
      → Prompt Builder → Qwen + LoRA → Answer</code></pre>
 <p>追问「为什么不全微调进模型？」：微调改的是行为不是知识——知识会过期、更新要重训、还会伤害通用能力。RAG 让知识外置、随传随改，LoRA 只负责口吻和格式，两者各司其职（Day4 的核心结论，在这里落地）。</p>
-<h2 id="八今天完成标准">八、今天完成标准</h2>
+<h2 id="八今天完成标准">八、今天完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#七完整调用链面试怎么讲"><span class="sn-label">← 上一节</span><span class="sn-name">七、完整调用链（面试怎么讲）</span></a><a class="sn next" href="#下一步-day6"><span class="sn-label">下一节 →</span><span class="sn-name">下一步 Day6</span></a></nav>
 <ul class="lvl"><li>✅ Spring Boot 3 工程跑起来，LangChain4j 接上 Ollama</li><li>✅ <code>/upload</code> 能把 md/pdf 切片向量化写进 Milvus</li><li>✅ <code>/chat</code> 能检索 Top-K 并组装参考资料回答</li><li>✅ 说清两条链的边界与交汇点</li><li>✅ 面试版调用链讲解过关</li></ul>
-<h2 id="下一步-day6">下一步 Day6</h2>
+<h2 id="下一步-day6">下一步 Day6</h2><nav class="sec-nav"><a class="sn prev" href="#八今天完成标准"><span class="sn-label">← 上一节</span><span class="sn-name">八、今天完成标准</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>把「RAG 问答」升级成 <strong>Java AI Interview Agent</strong>：加入 Tools——查知识库、分析简历、自动出题、自动评分、保存错题。架构变成：</p>
 <pre><code>User → Agent → Decision → Tool Calling → RAG / LLM → Answer</code></pre>
 <p>这一步会把 Day4 的 Tool Calling + MCP + Agent 全部串起来，你的路线也接近一个完整 AI Engineer 项目闭环。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

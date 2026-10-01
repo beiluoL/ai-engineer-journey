@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么必须自己扫一遍" class="lvl2">1. Why：为什么必须自己扫一遍</a><a href="#2-design单变量扫描" class="lvl2">2. Design：单变量扫描</a><a href="#3-realrun-evidence来自-demosoutdemo06hparamsterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_06_hparams_terminal.txt）</a><a href="#31-rank-扫描固定-alpha16-lr0003" class="lvl3">3.1 rank 扫描（固定 alpha=16, lr=0.003）</a><a href="#32-学习率扫描固定-r8-alpha16" class="lvl3">3.2 学习率扫描（固定 r=8, alpha=16）</a><a href="#33-alpha-扫描固定-r8-lr0003" class="lvl3">3.3 alpha 扫描（固定 r=8, lr=0.003）</a><a href="#34-扫描结论" class="lvl3">3.4 扫描结论</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-rank-不是越大越好而且不单调实测" class="lvl3">4.1 rank 不是越大越好，而且不单调（实测）</a><a href="#42-末段-loss-和域内困惑度会选出不同的最优-lr实测" class="lvl3">4.2 末段 loss 和域内困惑度会选出不同的最优 lr（实测）</a><a href="#43-lora-的学习率要比全量微调大一个数量级实测支持" class="lvl3">4.3 LoRA 的学习率要比全量微调大一个数量级（实测支持）</a><a href="#44-alpha-和-lr-高度耦合调一个就够了实测" class="lvl3">4.4 alpha 和 lr 高度耦合，调一个就够了（实测）</a><a href="#45-扫描结论的适用范围诚实标注" class="lvl3">4.5 扫描结论的适用范围（诚实标注）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-06-training-configurationr-lr-alpha三个旋钮各管什么">Milestone 06 — Training Configuration：r / lr / alpha，三个旋钮各管什么</h1>
 <p>M04 把 LoRA 搭起来了，M05 把基座压到了 4 bit。但超参一直是&quot;抄来的&quot;：r=8、alpha=16、lr=3e-3 从哪来？网上流传的经验值很多，本层<strong>全部实测</strong> —— 同一基座、同一数据、同一 seed，只改一个变量，看末段 loss 与域内困惑度怎么动。</p>
@@ -64,15 +143,15 @@ alpha ：缩放系数。真正起作用的是 alpha/r，常用做法 alpha = 2r�
 lr    ：通常要比全量微调大一个数量级（adapter 从零初始化，基座已收敛）。</code></pre>
 <p><strong>纯 numpy 手写</strong>：没有 <code>TrainingArguments</code>，每次扫描就是重新 <code>inject_lora</code> + <code>LoRATrainer.run(45)</code> + <code>evaluate</code>，所以扫描的全部成本是&quot;真跑&quot;，不是查表。</p>
 <hr/>
-<h2 id="1-why为什么必须自己扫一遍">1. Why：为什么必须自己扫一遍</h2>
+<h2 id="1-why为什么必须自己扫一遍">1. Why：为什么必须自己扫一遍</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design单变量扫描"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：单变量扫描</span></a></nav>
 <p>三个理由：</p>
 <ul class="lvl"><li><strong>经验值有适用范围。</strong> &quot;r=8、alpha=16&quot; 是在 7B 级模型、几十万条数据上试出来的。本项目是 230K 参数、59 条样本 —— 量级差五个数量级，经验值最多当起点。</li><li><strong>三个旋钮不是独立的。</strong> <code>alpha/r</code> 与 <code>lr</code> 是<strong>乘性关系</strong>（M04 已实测偏移与 alpha 成正比）。两个一起调只会互相掩盖，得先搞清楚谁管什么。</li><li><strong>&quot;最优&quot;本身可能是噪声。</strong> 45 步的扫描里，困惑度差几个百分点完全可能是 batch 顺序造成的。扫一遍才知道哪些差异是真的。</li></ul>
-<h2 id="2-design单变量扫描">2. Design：单变量扫描</h2>
+<h2 id="2-design单变量扫描">2. Design：单变量扫描</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么必须自己扫一遍"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么必须自己扫一遍</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo06hparamsterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_06_hparams_terminal.txt）</span></a></nav>
 <p>扫描设置：<strong>每个配置 45 步，batch=4，Adam，seed=0</strong>；基线（未微调）域内困惑度 <strong>3,649.91</strong>；对照变量之外的固定值是 <code>r=8, alpha=16, lr=0.003</code>。</p>
 <p>每组输出：adapter 参数量、占基座比例、末 10 步 loss 均值、<strong>域内困惑度</strong>（在 59 条样本的答案区上评估）、耗时。</p>
 <p><strong>为什么同时看&quot;末 10 步 loss&quot;和&quot;域内困惑度&quot;</strong>：前者是训练过程中最后 10 个 batch 的 loss（样本少、噪声大），后者是全集评估。后面会看到两者<strong>给出不同的最优 lr</strong> —— 这正是要看两个指标的原因。</p>
 <figure class="figure"><img alt="M06 rank / lr / alpha 三条扫描曲线" src="../../../../../../projects/08-fine-tuning/assets/hparams.svg" loading="lazy"/><figcaption>M06 rank / lr / alpha 三条扫描曲线</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo06hparamsterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_06_hparams_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo06hparamsterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_06_hparams_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design单变量扫描"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：单变量扫描</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <h3 id="31-rank-扫描固定-alpha16-lr0003">3.1 rank 扫描（固定 alpha=16, lr=0.003）</h3>
 <table><thead><tr><th>r</th><th>adapter 参数</th><th>占基座</th><th>末10步 loss</th><th>域内困惑度</th><th>耗时</th></tr></thead><tbody><tr><td>1</td><td>3,392</td><td>1.47%</td><td>6.2546</td><td>509.3</td><td>2.7s</td></tr><tr><td>2</td><td>6,784</td><td>2.94%</td><td>6.1725</td><td>433.8</td><td>2.8s</td></tr><tr><td>4</td><td>13,568</td><td>5.88%</td><td>6.1916</td><td>473.7</td><td>2.6s</td></tr><tr><td><strong>8</strong></td><td>27,136</td><td>11.76%</td><td><strong>6.1032</strong></td><td><strong>429.2</strong></td><td>2.4s</td></tr><tr><td>16</td><td>54,272</td><td>23.53%</td><td>6.1275</td><td>440.9</td><td>2.5s</td></tr></tbody></table>
 <p>困惑度最低的 rank = <strong>8</strong>（在本次扫描范围内）。</p>
@@ -85,7 +164,7 @@ lr    ：通常要比全量微调大一个数量级（adapter 从零初始化，
 <h3 id="34-扫描结论">3.4 扫描结论</h3>
 <pre><code>扫描出的最好组合               r=8, alpha=16, lr=0.01</code></pre>
 <figure class="figure"><img alt="M06 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-06-hparams.png" loading="lazy"/><figcaption>M06 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo06hparamsterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_06_hparams_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-rank-不是越大越好而且不单调实测">4.1 rank 不是越大越好，而且<strong>不单调</strong>（实测）</h3>
 <p>509.3 → 433.8 → <strong>473.7</strong> → 429.2 → 440.9。r=2（433.8）比 r=4（473.7）更好，r=16（440.9）比 r=8（429.2）更差。</p>
 <ul class="lvl"><li><strong>不单调</strong>说明 45 步尺度下噪声不小：r 从 2 涨到 4 参数翻倍，困惑度却变差 9.2%，这不太可能是真实的容量效应。</li><li><strong>但&quot;很快饱和&quot;是真的</strong>：r=1（3,392 参数，占基座 1.47%）已经把困惑度从 3,649.9 压到 509.3，降了 86%。<strong>数据量才是瓶颈，不是容量</strong>。</li></ul>
@@ -104,12 +183,55 @@ lr    ：通常要比全量微调大一个数量级（adapter 从零初始化，
 <p><code>demo_06_hparams.py</code> 的 docstring 已经写明：</p>
 <blockquote><p>⚠ 扫描结论的适用范围：59 条样本、45 步。它能告诉你&quot;趋势与量级&quot;，不能直接外推到真实任务 —— 但至少不是拍脑袋。</p></blockquote>
 <p>405.7、429.2、433.8 这些数字之间的<strong>差值</strong>在这个尺度下部分是噪声；能站得住的是<strong>量级结论</strong>（r 很快饱和、lr 要大一个数量级、alpha/r≈2 最好）。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>最好组合：<strong>r=8 / alpha=16 / lr=0.01</strong>，域内困惑度 <strong>405.7</strong>（基线 3,649.91）。</li><li><strong>rank</strong>：1/2/4/8/16 → 509.3/433.8/473.7/429.2/440.9。r=1 就能降 86%，收益很快饱和，<strong>非单调</strong>（45 步噪声）。</li><li><strong>lr</strong>：0.001/0.003/0.01/0.03 → 629.4/429.2/405.7/1,318.6。可用区间 1e-3~1e-2（比全量微调大一个数量级），3e-2 崩。</li><li><strong>alpha</strong>：最优 <code>alpha/r = 2</code>（429.2），最差 <code>alpha/r = 0.5</code>（545.0）。与 lr 乘性耦合，<strong>调一个就够了</strong>。</li><li><strong>末段 loss 与域内困惑度会选出不同的最优</strong> —— 评估口径必须写清楚，且优先信样本量大的那个。</li><li>一句话：<strong>rank 决定上限，lr 决定能不能走到上限，alpha 和 lr 高度耦合。</strong></li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer</code>：每次扫描都重新构造（lr / 参数列表在 <code>__init__</code> 里定死，Adam 按 <code>id(p)</code> 建 state）；<code>curve_summary</code></td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>inject_lora(r=..., alpha=..., rng=0)</code>：<code>rng</code> 固定保证每次注入的 A 初值一致，扫描才可比</td></tr><tr><td><code>src/ft/eval.py</code></td><td><code>evaluate()</code> / <code>perplexity()</code>：扫描的评判指标（域内困惑度）由它给出</td></tr><tr><td><code>src/ft/base.py</code></td><td><code>ensure_base_model()</code>：每个配置都从缓存重新加载一份干净基座，避免被上一组污染</td></tr><tr><td><code>demos/demo_06_hparams.py</code></td><td>4 节：rank 扫描 / lr 扫描 / alpha 扫描 / 关键数字与读法</td></tr><tr><td><code>demos/out/demo_06_hparams_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/hparams.svg</code></td><td>本章三条扫描曲线图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.5 → <strong>v0.6</strong>，M06 超参扫描落地。实测：最好组合 <strong>r=8 / alpha=16 / lr=0.01</strong>（域内困惑度 405.7）；rank 1/2/4/8/16 → 509.3/433.8/473.7/429.2/440.9（非单调）；lr 0.001/0.003/0.01/0.03 → 629.4/429.2/405.7/1,318.6；alpha/r 0.5→8 → 545.0/434.4/429.2/437.9/456.4。并发现&quot;末 10 步 loss 与域内困惑度选出不同最优 lr&quot;这一口径分歧。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

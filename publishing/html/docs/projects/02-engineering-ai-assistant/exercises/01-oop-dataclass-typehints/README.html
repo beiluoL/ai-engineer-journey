@@ -52,29 +52,151 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#a-类与-oopmilestone-00" class="lvl2">A. 类与 OOP（Milestone 00）</a><a href="#b-类型注解milestone-03" class="lvl2">B. 类型注解（Milestone 03）</a><a href="#c-dataclass-与不可变配置milestone-04-m05-片段" class="lvl2">C. dataclass 与不可变配置（Milestone 04 + M05 片段）</a><a href="#验收标准" class="lvl2">验收标准</a><a href="#参考答案与判卷" class="lvl2">参考答案与判卷</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="exercises-01oopdataclasstypehints-m00-m03-m04-m05-配套练习">Exercises 01-oop-dataclass-typehints — M00 / M03 / M04 / M05 配套练习</h1>
 <blockquote><p>对应：<code>milestones/00-classes-and-oop.md</code>（⬜ 未学习）、<code>milestones/03-type-hints.md</code>（⬜ 未学习）、<code>milestones/04-dataclass.md</code>（⬜ 未学习）、<code>milestones/05-config-and-environment.md</code> 中「配置对象用 frozen dataclass」那一小节（⬜ 未学习） 规则：<strong>亲手敲，不复制粘贴</strong>。每题先自己写、跑通，再对照 milestone 里的示例。 勾选权在你手里：本文件所有复选框一律 ⬜，跑通的是「参考答案」，不是「你学会了」。</p></blockquote>
-<h2 id="a-类与-oopmilestone-00">A. 类与 OOP（Milestone 00）</h2>
+<h2 id="a-类与-oopmilestone-00">A. 类与 OOP（Milestone 00）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#b-类型注解milestone-03"><span class="sn-label">下一节 →</span><span class="sn-name">B. 类型注解（Milestone 03）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>A1</strong> 手写（<strong>不要用 dataclass</strong>）一个类 <code>Turn(role, content)</code>：<ul class="lvl"><li><code>role</code> 只允许 <code>&quot;system&quot; / &quot;user&quot; / &quot;assistant&quot;</code>，非法值要抛 <code>ValueError</code>；</li><li>加一个 <code>@property is_user</code>；加一个实例方法 <code>token_estimate()</code>（中文保守估算法：字符数 // 2）；</li><li>加 <code>__repr__</code> 打印 <code>{内容字符数}</code> 而不是把正文全打出来（长正文会撑爆日志）；</li><li>加 <code>__eq__</code>，且「和别的类型比较」不要炸（返回 <code>NotImplemented</code>）。 验证：非法 role 会抛、估算值等于 <code>len(content) // 2</code>、<code>turn == &quot;字符串&quot;</code> 得到 <code>False</code> 而不是异常。</li></ul></li></ul>
 <ul class="lvl"><li>[ ] <strong>A2</strong> 写一个封装对话历史的类 <code>Conversation</code>：内部状态放 <code>_turns</code>，用 <code>@property turns</code> <strong>返回副本</strong>，再实现 <code>__len__</code> 与 <code>token_estimate()</code>。 验证：<code>c.turns.append(...)</code> 改不到内部状态；和仓库里真实的 <code>assistant/conversation.py</code> 的 <code>token_estimate()</code> 对同一组文本算出的数字一致。</li></ul>
 <ul class="lvl"><li>[ ] <strong>A3</strong> 说明并验证「组合优先于继承」：让 <code>Conversation</code> 持有 <code>Turn</code> 对象，而不继承 <code>Turn</code>；并验证 <code>Conversation.add</code> 是<strong>绑定方法</strong>（有 <code>__self__</code>），可以直接 <code>c.add</code> 传走而不用 <code>c.add(turn)</code>。</li></ul>
-<h2 id="b-类型注解milestone-03">B. 类型注解（Milestone 03）</h2>
+<h2 id="b-类型注解milestone-03">B. 类型注解（Milestone 03）</h2><nav class="sec-nav"><a class="sn prev" href="#a-类与-oopmilestone-00"><span class="sn-label">← 上一节</span><span class="sn-name">A. 类与 OOP（Milestone 00）</span></a><a class="sn next" href="#c-dataclass-与不可变配置milestone-04-m05-片段"><span class="sn-label">下一节 →</span><span class="sn-name">C. dataclass 与不可变配置（Milestone 04 + M05 片段）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>B1</strong> 写 <code>Optional[...]</code> 版的取消息函数： <code>def first_content(messages: Optional[list[dict[str, str]]] = None) -&gt; Optional[str]</code> 输入为空 / <code>None</code> 时返回 <code>None（不是空字符串）</code>，有内容时返回第一条的 <code>content</code>。 验证：<code>typing.get_type_hints()</code> 能看到返回注解是 <code>Optional[str]</code>；空输入返回 <code>None</code>。</li></ul>
 <ul class="lvl"><li>[ ] <strong>B2</strong> 用<strong>有界 TypeVar</strong> 写泛型求和： ``<code>python T = TypeVar(&quot;T&quot;, bound=&lt;某个只声明 token_estimate() 的协议&gt;) def total_tokens(items: Sequence[T]) -&gt; int: ... </code>`<code> 验证：能同时吃下 A1 的 </code>Turn` 和另一个自己写的同类（不需要继承同一个基类），和是对的。</li></ul>
 <ul class="lvl"><li>[ ] <strong>B3</strong> 用 <code>runtime_checkable</code> 的 <code>Protocol</code> 做结构化类型： ``<code>python @runtime_checkable class ChatLike(Protocol): def chat(self, messages: list[dict[str, str]]) -&gt; str: ... </code>`<code> 验证：</code>assistant/client.py<code> 里的 </code>FakeClient<code>（它没有继承 </code>ChatLike<code>）能通过 </code>isinstance<code> 检查，而一个只有 </code>aclose()` 的对象不能。</li></ul>
-<h2 id="c-dataclass-与不可变配置milestone-04-m05-片段">C. dataclass 与不可变配置（Milestone 04 + M05 片段）</h2>
+<h2 id="c-dataclass-与不可变配置milestone-04-m05-片段">C. dataclass 与不可变配置（Milestone 04 + M05 片段）</h2><nav class="sec-nav"><a class="sn prev" href="#b-类型注解milestone-03"><span class="sn-label">← 上一节</span><span class="sn-name">B. 类型注解（Milestone 03）</span></a><a class="sn next" href="#验收标准"><span class="sn-label">下一节 →</span><span class="sn-name">验收标准</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>C1</strong> 写 <code>@dataclass(frozen=True)</code> 的 <code>ModelConfig(model, temperature, api_key)</code>：<ul class="lvl"><li><code>api_key</code> 用 <code>field(repr=False)</code>（repr 绝不打印密钥），并 <code>compare=False</code>（比较配置时不比密钥）；</li><li>用 <code>__post_init__</code> 校验：<code>model</code> 非空、<code>0.0 &lt;= temperature &lt;= 2.0</code>，否则抛 <code>ValueError</code>； 验证：改任意字段抛 <code>FrozenInstanceError</code>；<code>repr</code> 里搜不到密钥；两个只差密钥的实例 <code>==</code> 为 <code>True</code>；实例可 <code>hash()</code>。</li></ul></li></ul>
 <ul class="lvl"><li>[ ] <strong>C2</strong> 用 <code>dataclasses.replace()</code> 改配置：把 <code>temperature</code> 从 0.7 改成 0.1、换 <code>model</code>，密钥保持不变。 验证：原对象一个字段都没变、新旧对象不是同一个、<code>replace</code> 后的 <code>api_key</code> 与原对象相同。</li></ul>
 <ul class="lvl"><li>[ ] <strong>C3</strong> 对照仓库里真实的 <code>Settings</code>（<code>src/assistant/settings.py</code>）做反射验证： 用 <code>dataclasses.fields()</code> 数出它有几个字段、<code>api_key</code> 的 <code>repr</code> 是不是 <code>False</code>、它是不是 frozen（<code>Settings.__dataclass_params__.frozen</code>），再用 <code>Settings(api_key=...).validate()</code> 验证「空密钥 / base_url 不合法 / timeout &lt;= 0」三种情况确实抛 <code>LLMConfigError</code>。</li></ul>
-<h2 id="验收标准">验收标准</h2>
+<h2 id="验收标准">验收标准</h2><nav class="sec-nav"><a class="sn prev" href="#c-dataclass-与不可变配置milestone-04-m05-片段"><span class="sn-label">← 上一节</span><span class="sn-name">C. dataclass 与不可变配置（Milestone 04 + M05 片段）</span></a><a class="sn next" href="#参考答案与判卷"><span class="sn-label">下一节 →</span><span class="sn-name">参考答案与判卷</span></a></nav>
 <p>A1-A3 + B1-B3 + C1-C3 全部<strong>自己写得出来并跑通</strong> = 这一组对应的 M00 / M03 / M04 / M05 配置小节进入「能写代码」档。 看参考答案不算通过 —— 对照差异时请只打开卡住的那一两个函数。</p>
-<h2 id="参考答案与判卷">参考答案与判卷</h2>
+<h2 id="参考答案与判卷">参考答案与判卷</h2><nav class="sec-nav"><a class="sn prev" href="#验收标准"><span class="sn-label">← 上一节</span><span class="sn-name">验收标准</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>参考答案：<code>answers.py</code>（每题一个函数 <code>a1()</code> / <code>b2()</code> / ...，纯离线，无任何网络调用）</li><li>怎么跑： ``<code>bash .venv/bin/python exercises/01-oop-dataclass-typehints/answers.py </code>``</li><li>怎么判卷（全仓库一起判）： ``<code>bash .venv/bin/python exercises/grade.py </code>`` 判卷脚本会拦下任何「answers.py 里出现联网符号」的情况。</li></ul>
 <blockquote><p><strong>重要</strong>：<code>answers.py</code> 跑通只代表「参考答案跑通」。是否学会由你自己勾选，参考：<a href="../README.html"><code>../README.md</code></a></p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

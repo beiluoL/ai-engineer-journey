@@ -52,15 +52,94 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why困惑度只说明确定不说明对" class="lvl2">1. Why：困惑度只说明&amp;quot;确定&amp;quot;，不说明&amp;quot;对&amp;quot;</a><a href="#2-design三层各自回答一个问题" class="lvl2">2. Design：三层各自回答一个问题</a><a href="#3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_07_evaluation_terminal.txt）</a><a href="#31-语言层平均之下藏着方差" class="lvl3">3.1 语言层：平均之下藏着方差</a><a href="#32-校准层模型比它自己以为的更容易错" class="lvl3">3.2 校准层：模型比它自己以为的更容易错</a><a href="#33-生成层这是最诚实的一节" class="lvl3">3.3 生成层：这是最诚实的一节</a><a href="#34-多样性人眼看不出复读数字看得见" class="lvl3">3.4 多样性：人眼看不出复读，数字看得见</a><a href="#35-配对实验-a未训练-vs-已训练" class="lvl3">3.5 配对实验 A：未训练 vs 已训练</a><a href="#36-配对实验-b早停回滚到底值多少分本章最硬的一组数字" class="lvl3">3.6 配对实验 B：早停回滚到底值多少分（本章最硬的一组数字）</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-07-evaluation把训完了和训好了分开">Milestone 07 — Evaluation：把「训完了」和「训好了」分开</h1>
 <p>M06 交出了一份权重，并且证明了它是&quot;验证最优&quot;的那一份。但<strong>&quot;比随机初始化好&quot;和&quot;能用&quot;之间隔着一条鸿沟</strong>。这一章就是去量那条鸿沟有多宽。</p>
 <p>要做到这一点，需要<strong>三层评估</strong>（缺一层结论就不成立）+ <strong>两组配对实验</strong>（因为平均值上的提升，可能只是被个别样本带偏的假象）。本章的结论是诚实的：困惑度 PPL 315.79 看着还行，但关键词覆盖率是 <strong>0.000</strong>。</p>
 <hr/>
-<h2 id="1-why困惑度只说明确定不说明对">1. Why：困惑度只说明&quot;确定&quot;，不说明&quot;对&quot;</h2>
+<h2 id="1-why困惑度只说明确定不说明对">1. Why：困惑度只说明&quot;确定&quot;，不说明&quot;对&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design三层各自回答一个问题"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：三层各自回答一个问题</span></a></nav>
 <p>一个 1280 词表上的均匀分布，PPL 就是 1280。我们的模型 PPL 是 315.79，相对下降 75.3%——<strong>这确实说明它学到了东西</strong>。但困惑度有一个致命性质：</p>
 <blockquote><p><strong>它只衡量模型给正确答案分配了多少概率，不衡量那个概率对不对得上&quot;语义正确&quot;。</strong></p></blockquote>
 <p>模型可以给&quot;token token token&quot;这种无意义序列很高的概率，只要语料里这种模式出现过。所以单看 PPL 甚至能骗过你自己：</p>
@@ -68,14 +147,14 @@ li{margin:.3em 0;}
 <p>要补上另外两个维度：</p>
 <ul class="lvl"><li><strong>校准层（ECE）</strong>：模型说&quot;我有 94% 把握&quot;的时候，实际有多少次是对的？——<strong>&quot;很自信地说错话&quot;比&quot;不知道&quot;更危险</strong>，因为用户会相信那个数字。</li><li><strong>生成层</strong>：拿验证集里的&quot;问&quot;去问它（答案它训练时没见过），看它答得怎样。这是<strong>唯一贴近真实使用场景</strong>的一层。</li></ul>
 <p>再加<strong>配对实验</strong>，因为两个模型的平均分差 1.4 分，也可能是&quot;37 个样本里 3 个大胜 + 34 个小负&quot;——平均值掩盖了方向。</p>
-<h2 id="2-design三层各自回答一个问题">2. Design：三层各自回答一个问题</h2>
+<h2 id="2-design三层各自回答一个问题">2. Design：三层各自回答一个问题</h2><nav class="sec-nav"><a class="sn prev" href="#1-why困惑度只说明确定不说明对"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：困惑度只说明&amp;quot;确定&amp;quot;，不说明&amp;quot;对&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_evaluation_terminal.txt）</span></a></nav>
 <pre><code>① 语言层  evaluate_loss()      → CE / PPL / token_accuracy   「能不能预测」
 ② 校准层  ie.metrics.calibration() → ECE + 5 个可靠性分箱     「确定得有没有道理」
 ③ 生成层  generation_report()  → 关键词覆盖 / 忠实 / 不重复    「说出来能不能用」</code></pre>
 <p>配对实验用的是 P09 的 <code>ie.compare.paired_compare</code>，它不是比两个平均数，而是<strong>逐条样本对拍</strong>，然后数 <code>胜 / 负 / 平</code> 和<strong>符号一致性</strong>（有多少比例样本方向一致）。</p>
 <p><strong>为什么必须逐条对拍</strong>：假设模型 A 平均 CE 比 B 低 0.1，但这个优势全来自一条特别长的样本，其余 36 条 B 都略好——那&quot;平均改善&quot;就是个假象。<code>symbol consistency = 1.000</code> 才是&quot;每条都一样好&quot;的证据。</p>
 <figure class="figure"><img alt="M07 Evaluation：三层评估 + 两组配对对照" src="../../../../../../projects/10-tiny-llm-capstone/assets/evaluation.svg" loading="lazy"/><figcaption>M07 Evaluation：三层评估 + 两组配对对照</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_evaluation_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_evaluation_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design三层各自回答一个问题"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：三层各自回答一个问题</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M07 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-07-evaluation.png" loading="lazy"/><figcaption>M07 真实运行</figcaption></figure>
 <h3 id="31-语言层平均之下藏着方差">3.1 语言层：平均之下藏着方差</h3>
 <pre><code>验证集平均交叉熵        5.7551
@@ -163,14 +242,57 @@ T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
 <p>这一节把 M06 里&quot;早停&quot;这个做法，从&quot;<strong>看起来有道理</strong>&quot;变成了&quot;<strong>有数字支撑的决策</strong>&quot;：</p>
 <ul class="lvl"><li>PPL 315.79 vs 338.13，<strong>低 6.61%</strong>；</li><li><strong>但更有说服力的是 24 胜 13 负 0 平</strong>——它不是被一两个超长样本带出来的。37 个样本里 24 个变好、13 个变差、<strong>没有一个打平</strong>。</li></ul>
 <p>注意 13 负这一列：<strong>回滚不是&quot;全面碾压&quot;</strong>。有 13 条样本上，多训 400 步的模型反而更准。但因为赢的更多（24 &gt; 13），整体是正的，且平均改善 +0.0684。<strong>这就是&quot;逐条对拍&quot;能给出的、平均值给不出的信息</strong>：我们知道回滚是&quot;多数情况更好&quot;，而不是&quot;所有情况都更好&quot;——后者才是需要警惕的（常常意味着样本太少）。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_evaluation_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>PPL 和&quot;能答题&quot;之间没有必然联系。</strong> 相对随机下降 75.3%（看着很成功）与关键词覆盖 0.000（完全答不了题）<strong>同时成立</strong>。任何&quot;只看 loss 曲线&quot;的评估，都会得出错误结论。</li><li><strong>平均 PPL 会掩盖逐样本的方差。</strong> 6 条样本的 PPL 从 129.95 到 848.80，相差 6.5 倍。<strong>报平均值时必须同时报分布</strong>，否则&quot;315.79&quot;这个数字会误导读者以为模型是&quot;均匀地弱&quot;。</li><li><strong>&quot;置信度 0.94&quot;实际只有 78% 正确。</strong> 校准层抓的是这类问题：<code>[0.8,1.0)</code> 箱里平均置信度 0.945、实际准确率 0.781。<strong>过度自信的 UI 比&quot;低置信度&quot;更危险</strong>，因为用户会信那个数字。</li><li><strong>大部分 token 其实落在&quot;低置信&quot;箱（72.8%）。</strong> 所以整体 ECE（0.0662）看着还行，但<strong>分箱后才看得出问题集中在 <code>[0.6,0.8)</code>（高估 41 个百分点）</strong>。只看一个 ECE 数字是盲的。</li><li><strong>贪心&quot;复读&quot;和采样&quot;乱说&quot;是两个不同的失败，别混为一谈。</strong> 贪心：distinct-1 = 0.049、重复率 0.934（<strong>循环</strong>）；采样：distinct-1 = 0.795、重复率 0.048（<strong>发散</strong>）。<strong>两种都错，但错法不同</strong>，需要用两个指标分开看。</li><li><strong>配对实验要报告&quot;负&quot;的那一列。</strong> 回滚 vs 不回滚是 24 胜 <strong>13 负</strong>，不是 37 胜。只报胜场、不报负场的配对实验，是在隐藏信息。<strong>13 负正好说明这个实验样本量够、结论真实</strong>——如果 37 胜 0 负反而要怀疑是不是设置有问题（比如两个模型差别被放大了）。</li><li><strong><code>gap</code> 是绝对值，看不出偏的方向。</strong> P09 的 <code>calibration</code> 返回的 <code>gap</code> 是 <code>|avg_confidence - accuracy|</code>，永远 ≥ 0。要判断&quot;过度自信还是过度保守&quot;，必须自己算<strong>有符号差</strong> <code>avg_confidence - accuracy</code>。demo 里就是这么做的——否则你会漏掉&quot;低置信箱其实偏保守（-0.024）&quot;这个细节。</li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>语言层</strong>：验证 CE <strong>5.7551</strong>、PPL <strong>315.79</strong>、token 准确率 <strong>0.1736</strong>，相对随机（1280）下降 <strong>75.3%</strong>。逐样本 CE 从 4.8671 到 6.7438（PPL 129.95 ~ 848.80）。</li><li><strong>校准层</strong>：ECE <strong>0.0662</strong>，<strong>5 个箱中 4 个过度自信</strong>；最严重的是 <code>[0.8,1.0)</code> 箱——平均置信度 <strong>0.945</strong> 对应实际准确率 <strong>0.781</strong>；同时 <strong>72.8% 的 token 落在低置信箱</strong>。</li><li><strong>生成层</strong>：贪心总分 <strong>16.84</strong>（distinct-1 0.049 / 重复率 0.934，复读）、采样总分 <strong>31.81</strong>（<strong>关键词覆盖 0.000</strong> / 忠实 0.018 / 不重复 0.945）。<strong>模型会拼词、不会答题。</strong></li><li><strong>配对 A</strong>（未训练 vs 已训练）：平均 CE 7.1523 → 5.7551，改善 <strong>+1.3972</strong>，<strong>37 胜 0 负 0 平</strong>，符号一致性 <strong>1.000</strong>，无方向翻转。</li><li><strong>配对 B</strong>（早停回滚 vs 不回滚）：PPL 338.13 → <strong>315.79（低 6.61%）</strong>，逐条对拍平均改善 <strong>+0.0684</strong>，<strong>24 胜 13 负 0 平</strong> ⇒ 回滚是<strong>稳定的</strong>改善，不是个别样本的假象。</li><li>一句话结论：<strong>PPL 只是入场券；校准度、生成质量、配对显著性才是判决书。</strong></li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/evaluate.py</code></td><td><code>evaluate_model</code>（三层入口）/ <code>per_example_losses</code> / <code>compare_models</code>（走 P09 配对）/ <code>qa_pairs_from_lines</code> / <code>diversity_report</code> / <code>generation_report</code></td></tr><tr><td><code>src/tiny/train.py</code></td><td><code>evaluate_loss</code>（CE / PPL / token_accuracy）</td></tr><tr><td>P09 <code>src/ie/metrics.py</code></td><td><code>calibration</code>（ECE + 可靠性分箱，<code>gap</code> 为绝对值）</td></tr><tr><td>P09 <code>src/ie/compare.py</code></td><td><code>paired_compare</code>（逐条对拍：胜/负/平 + 符号一致性）</td></tr><tr><td>P08 <code>src/ft/autoeval.py</code></td><td><code>generation_report</code> 的评分口径（关键词覆盖 40% / 格式 15% / 长度 15% / 忠实 20% / 不重复 10%）</td></tr><tr><td><code>demos/demo_07_evaluation.py</code></td><td>7 节：三层总览 / 语言 / 校准 / 生成 / 多样性 / 配对 A / 配对 B</td></tr><tr><td><code>demos/out/demo_07_evaluation_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/evaluation.svg</code></td><td>三层评估 + 多样性 + 两组配对对照</td></tr><tr><td><code>assets/term-07-evaluation.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，三层评估 + 配对显著性落地。实测：语言层 PPL <strong>315.79</strong> / token 准确率 <strong>0.1736</strong>（相对随机 1280 下降 75.3%），逐样本 PPL 129.95 ~ 848.80；校准层 ECE <strong>0.0662</strong>，<strong>4/5 箱过度自信</strong>（<code>[0.8,1.0)</code> 说 0.945 只有 0.781 对，72.8% token 落在低置信箱）；生成层贪心 <strong>16.84</strong>（重复率 0.934）/ 采样 <strong>31.81</strong>（<strong>关键词覆盖 0.000</strong>）；配对 A <strong>37 胜 0 负 0 平</strong>、一致性 <strong>1.000</strong>（改善 +1.3972）；配对 B PPL <strong>低 6.61%</strong>、<strong>24 胜 13 负 0 平</strong>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

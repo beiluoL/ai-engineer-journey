@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#121-三张地图学调造" class="lvl2">12.1 三张地图：学、调、造</a><a href="#122-教程与课程先把路走对" class="lvl2">12.2 教程与课程：先把路走对</a><a href="#1221-中文优先" class="lvl3">12.2.1 中文优先</a><a href="#1222-英文经典" class="lvl3">12.2.2 英文经典</a><a href="#1223-三条不要踩的坑" class="lvl3">12.2.3 三条不要踩的坑</a><a href="#123-微调把通用模型变成你的模型" class="lvl2">12.3 微调：把通用模型变成你的模型</a><a href="#124-agent-开发把模型变成产品" class="lvl2">12.4 Agent 开发：把模型变成产品</a><a href="#1241-写在最前2026-年的两次洗牌" class="lvl3">12.4.1 写在最前：2026 年的两次洗牌</a><a href="#1242-代码优先的框架" class="lvl3">12.4.2 代码优先的框架</a><a href="#1243-平台不写代码也能搭" class="lvl3">12.4.3 平台：不写代码也能搭</a><a href="#1244-能力组件agent-的手脚" class="lvl3">12.4.4 能力组件：Agent 的「手脚」</a><a href="#1245-评估可观测性与向量库" class="lvl3">12.4.5 评估、可观测性与向量库</a><a href="#1246-怎么选我建议的顺序" class="lvl3">12.4.6 怎么选（我建议的顺序）</a><a href="#125-一张总表从想做的事倒推资源" class="lvl2">12.5 一张总表：从「想做的事」倒推资源</a><a href="#126-避坑清单脚本实测非转述" class="lvl2">12.6 避坑清单（脚本实测，非转述）</a><a href="#127-这份清单怎么维护" class="lvl2">12.7 这份清单怎么维护</a><a href="#128-自查问题" class="lvl2">12.8 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="12-教程微调与-agent-开发从看懂到做出来">12 · 教程、微调与 Agent 开发：从「看懂」到「做出来」</h1>
 <blockquote><p><strong><a href="11-open-source-projects.html">第 11 章</a> 与本章的分工</strong>： 第 11 章推的是「<strong>能动手复现的开源项目</strong>」——从零实现 Transformer、微调库、推理引擎； 本章推的是「<strong>教程与课程</strong>」（先把路走对）和「<strong>Agent 开发框架</strong>」（把模型变成产品）。 两边只在微调部分有少量交接，都有明确指向，<strong>不重复正文</strong>。</p><p>文中的星标数与最近提交日期，全部由 <a href="../../../../scripts/check_repos.py"><code>scripts/check_repos.py</code></a> 现场抓取——<strong>基础内容于 2026-09-30</strong>，<a href="#1245-评估可观测性与向量库">12.4.5</a> 增补于 <strong>2026-10-01</strong> （见 <a href="#127-这份清单怎么维护">12.7</a> 的真实运行截图）。 快照会过期，所以更要紧的是 <a href="#127-这份清单怎么维护">12.7</a> 那套<strong>自己复跑</strong>的方法。</p></blockquote>
 <hr/>
-<h2 id="121-三张地图学调造">12.1 三张地图：学、调、造</h2>
+<h2 id="121-三张地图学调造">12.1 三张地图：学、调、造</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#122-教程与课程先把路走对"><span class="sn-label">下一节 →</span><span class="sn-name">12.2 教程与课程：先把路走对</span></a></nav>
 <p>这一章的内容对应三种截然不同的目标。<strong>先认清自己在哪一条线上，再往下看</strong>—— 否则你会把「学原理的教程」当成「做产品的框架」用，浪费掉几周。</p>
 <div class="mermaid-svg"><svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="学、调、造三张地图">
   <defs>
@@ -92,7 +171,7 @@ li{margin:.3em 0;}
 <p>一句话区分：</p>
 <table><thead><tr><th>线</th><th>你在回答的问题</th><th>典型产出</th><th>本仓库对应</th></tr></thead><tbody><tr><td><strong>学</strong></td><td>「这件事为什么成立」</td><td>笔记、能跑通的最小实现</td><td>本目录第 01–10 章 + <a href="11-open-source-projects.html">第 11 章</a></td></tr><tr><td><strong>调</strong></td><td>「怎么让模型听我的」</td><td>一个 LoRA 权重、一份训练日志</td><td><a href="05-finetuning.html">第 05 章</a> · <a href="08-alignment-rlhf.html">第 08 章</a></td></tr><tr><td><strong>造</strong></td><td>「怎么让别人用上」</td><td>一个能调用的 API / 一个能演示的应用</td><td><a href="../projects/03-ai-application/README.html"><code>projects/03</code></a> · <a href="../projects/05-agent-mcp/README.html"><code>projects/05</code></a></td></tr></tbody></table>
 <hr/>
-<h2 id="122-教程与课程先把路走对">12.2 教程与课程：先把路走对</h2>
+<h2 id="122-教程与课程先把路走对">12.2 教程与课程：先把路走对</h2><nav class="sec-nav"><a class="sn prev" href="#121-三张地图学调造"><span class="sn-label">← 上一节</span><span class="sn-name">12.1 三张地图：学、调、造</span></a><a class="sn next" href="#123-微调把通用模型变成你的模型"><span class="sn-label">下一节 →</span><span class="sn-name">12.3 微调：把通用模型变成你的模型</span></a></nav>
 <h3 id="1221-中文优先">12.2.1 中文优先</h3>
 <p>你在中文语境下学，分词、数据集、对话模板都会更顺，<strong>遇到问题也更容易搜到答案</strong>。</p>
 <table><thead><tr><th>仓库</th><th>星标</th><th>最近提交</th><th>覆盖什么</th><th>适合谁</th></tr></thead><tbody><tr><td><strong><a href="https://github.com/datawhalechina/happy-llm" target="_blank" rel="noopener"><code>datawhalechina/happy-llm</code></a></strong></td><td>34.1k</td><td>2026-08-08</td><td>NLP 基础 → Transformer → 预训练模型 → <strong>动手搭 LLaMA2</strong> → 训练实践 → RAG / Agent</td><td><strong>中文首选</strong>。有 PDF + 在线阅读，第七章正好接本章 12.4</td></tr><tr><td><a href="https://github.com/datawhalechina/self-llm" target="_blank" rel="noopener"><code>datawhalechina/self-llm</code></a></td><td>32.4k</td><td>2026-09-12</td><td>面向国内开源模型（Qwen / GLM / InternLM 等）的<strong>部署与微调实操指南</strong></td><td>手上只有一张消费级显卡、想真调一次时看它</td></tr><tr><td><a href="https://github.com/liguodongiot/llm-action" target="_blank" rel="noopener"><code>liguodongiot/llm-action</code></a></td><td>25.1k</td><td>2026-07-19</td><td>大模型<strong>训练 / 推理 / 微调 / 压缩 / 应用</strong>的工程实战合集</td><td>偏工程视角，和你的后端背景最贴</td></tr><tr><td><a href="https://github.com/datawhalechina/llm-cookbook" target="_blank" rel="noopener"><code>datawhalechina/llm-cookbook</code></a></td><td>24.8k</td><td>2025-06-12</td><td>吴恩达系列课程的中文版（Prompt / RAG / Agent 三部分）</td><td>想快速过一遍「LLM 应用能做什么」</td></tr><tr><td><a href="https://github.com/wdndev/llm_interview_note" target="_blank" rel="noopener"><code>wdndev/llm_interview_note</code></a></td><td>15.2k</td><td>2026-06-14</td><td>大模型岗位面试题库与知识点整理</td><td>准备面试时当题纲，配合本目录 <a href="10-glossary.html">第 10 章术语表</a></td></tr><tr><td><a href="https://github.com/datawhalechina/llm-universe" target="_blank" rel="noopener"><code>datawhalechina/llm-universe</code></a></td><td>14.1k</td><td>2026-08-27</td><td>动手学大模型应用开发：RAG、Agent、评估</td><td>与你 <a href="../projects/04-rag/README.html"><code>projects/04</code></a> 的路线高度重合，可作外部对照</td></tr><tr><td><a href="https://github.com/datawhalechina/hugging-llm" target="_blank" rel="noopener"><code>datawhalechina/hugging-llm</code></a></td><td>3.1k</td><td>2026-06-16</td><td>面向 HuggingFace 生态的入门笔记</td><td>早期项目，内容较浅，<strong>按需查</strong></td></tr></tbody></table>
@@ -101,12 +180,12 @@ li{margin:.3em 0;}
 <h3 id="1223-三条不要踩的坑">12.2.3 三条不要踩的坑</h3>
 <ul class="lvl"><li><strong>不要全都做。</strong> 上面每一条都够你学一个月，全做等于全不做。 中文线挑 <code>happy-llm</code> <strong>一个</strong>，英文线挑 <code>openai-cookbook</code>（学应用）或 <code>nanochat</code>（学全流程）<strong>一个</strong>，就够了。</li><li><strong>教程的终点是「自己写一遍」。</strong> 和 <a href="../python-practice/00-how-to-practice.html"><code>python-practice/00-how-to-practice.md</code></a> 说的一样： 关掉教程重写，才算学过。</li><li><strong>注意教程和框架的时效差。</strong> 教程可以慢两年，框架不行——本章 12.4 里就有活例子。</li></ul>
 <hr/>
-<h2 id="123-微调把通用模型变成你的模型">12.3 微调：把通用模型变成你的模型</h2>
+<h2 id="123-微调把通用模型变成你的模型">12.3 微调：把通用模型变成你的模型</h2><nav class="sec-nav"><a class="sn prev" href="#122-教程与课程先把路走对"><span class="sn-label">← 上一节</span><span class="sn-name">12.2 教程与课程：先把路走对</span></a><a class="sn next" href="#124-agent-开发把模型变成产品"><span class="sn-label">下一节 →</span><span class="sn-name">12.4 Agent 开发：把模型变成产品</span></a></nav>
 <blockquote><p><a href="05-finetuning.html">第 05 章</a> 讲<strong>原理</strong>（LoRA 为什么省显存、loss mask 怎么打），<a href="11-open-source-projects.html#7-hiyougallama-factory">第 11 章第 7 节</a> 推了 <strong>LLaMA-Factory 与 trl</strong>。 这里补的是「<strong>你到底该用哪个</strong>」，以及第 11 章没覆盖的工程侧选项。</p></blockquote>
 <table><thead><tr><th>仓库</th><th>星标</th><th>最近提交</th><th>定位</th><th>什么时候用它</th></tr></thead><tbody><tr><td><strong><a href="https://github.com/unslothai/unsloth" target="_blank" rel="noopener"><code>unslothai/unsloth</code></a></strong></td><td>77.1k</td><td>2026-09-30</td><td><strong>极致省显存</strong>的 LoRA / QLoRA 引擎</td><td><strong>单卡首选</strong>。24 GB 显存能跑 7B；官方给免费 Colab，适合你的第一次微调</td></tr><tr><td><a href="https://github.com/hiyouga/LlamaFactory" target="_blank" rel="noopener"><code>hiyouga/LlamaFactory</code></a></td><td>75.2k</td><td>2026-09-28</td><td>一站式微调平台，100+ 模型、SFT/DPO/PPO/KTO 全支持</td><td><strong>零代码 WebUI</strong>，中文文档完善。想先跑通流程用它</td></tr><tr><td><a href="https://github.com/deepspeedai/DeepSpeed" target="_blank" rel="noopener"><code>deepspeedai/DeepSpeed</code></a></td><td>43.2k</td><td>2026-09-30</td><td>微软的分布式训练框架（ZeRO 系列）</td><td><strong>多卡 / 大模型</strong>才需要。单卡跑 LoRA 用不上它</td></tr><tr><td><a href="https://github.com/volcengine/verl" target="_blank" rel="noopener"><code>volcengine/verl</code></a></td><td>23.7k</td><td>2026-09-30</td><td>RL 训练框架，RLHF / GRPO 流水线</td><td>要做<a href="08-alignment-rlhf.html">第 08 章</a>那种对齐训练时。<strong>注意仓库已迁至 <code>verl-project/verl</code></strong>，见 <a href="#126-避坑清单脚本实测非转述">12.6</a></td></tr><tr><td><a href="https://github.com/huggingface/peft" target="_blank" rel="noopener"><code>huggingface/peft</code></a></td><td>21.7k</td><td>2026-09-29</td><td>LoRA / QLoRA / DoRA 官方实现</td><td><strong>想理解 LoRA 而不是只想用</strong>：几行代码挂上去，<code>print_trainable_parameters()</code> 亲手验证 0.39%</td></tr><tr><td><a href="https://github.com/huggingface/trl" target="_blank" rel="noopener"><code>huggingface/trl</code></a></td><td>19.4k</td><td>2026-09-30</td><td>SFT / DPO / PPO / GRPO 训练库</td><td>从 <code>DPOTrainer</code> 入手，不需要奖励模型就能跑通</td></tr><tr><td><a href="https://github.com/modelscope/ms-swift" target="_blank" rel="noopener"><code>modelscope/ms-swift</code></a></td><td>15.8k</td><td>2026-09-28</td><td>魔搭的微调框架，<strong>国产模型支持最全</strong></td><td>你要调 Qwen / GLM / InternLM 系列时，它比 LLaMA-Factory 更贴</td></tr><tr><td><a href="https://github.com/axolotl-ai-cloud/axolotl" target="_blank" rel="noopener"><code>axolotl-ai-cloud/axolotl</code></a></td><td>12.5k</td><td>2026-09-30</td><td>配置驱动的微调工具，<strong>YAML 即实验</strong></td><td>需要跑大量消融实验、想用配置文件管理版本时</td></tr></tbody></table>
 <p><strong>一句选型话</strong>：单卡先试 <code>unsloth</code>；想不写代码就先 <code>LlamaFactory</code>；只想搞懂原理就 <code>peft</code>。</p>
 <hr/>
-<h2 id="124-agent-开发把模型变成产品">12.4 Agent 开发：把模型变成产品</h2>
+<h2 id="124-agent-开发把模型变成产品">12.4 Agent 开发：把模型变成产品</h2><nav class="sec-nav"><a class="sn prev" href="#123-微调把通用模型变成你的模型"><span class="sn-label">← 上一节</span><span class="sn-name">12.3 微调：把通用模型变成你的模型</span></a><a class="sn next" href="#125-一张总表从想做的事倒推资源"><span class="sn-label">下一节 →</span><span class="sn-name">12.5 一张总表：从「想做的事」倒推资源</span></a></nav>
 <p>这是本章最重要的部分，也是<strong>最容易踩坑</strong>的部分——因为它的生态正在快速洗牌。</p>
 <h3 id="1241-写在最前2026-年的两次洗牌">12.4.1 写在最前：2026 年的两次洗牌</h3>
 <table><thead><tr><th>事件</th><th>事实</th><th>对你的影响</th></tr></thead><tbody><tr><td><strong>AutoGen 进入维护模式</strong></td><td>脚本实测：<code>microsoft/autogen</code> 最近提交 <strong>2026-04-06</strong>，首页带维护模式徽章；它最近一次提交的标题是 <em>&quot;Update maintenance mode banner in readme&quot;</em>。功能已合并进 <a href="https://github.com/microsoft/agent-framework" target="_blank" rel="noopener"><code>microsoft/agent-framework</code></a></td><td><strong>新项目不要从 AutoGen 起步</strong>。它仍是多智能体领域最经典的教材（读设计思想很有价值），但别把它当生产线</td></tr><tr><td><strong>多个知名仓库换了组织</strong></td><td><code>geekan/MetaGPT</code> → <a href="https://github.com/FoundationAgents/MetaGPT" target="_blank" rel="noopener"><code>FoundationAgents/MetaGPT</code></a>；<code>All-Hands-AI/OpenHands</code> → <a href="https://github.com/OpenHands/OpenHands" target="_blank" rel="noopener"><code>OpenHands/OpenHands</code></a>；<code>anthropics/anthropic-cookbook</code> → <a href="https://github.com/anthropics/claude-cookbooks" target="_blank" rel="noopener"><code>anthropics/claude-cookbooks</code></a></td><td>引用旧地址会 302，但<strong>你抄来的示例可能已经落后一个版本</strong>。引用前先确认真实地址</td></tr></tbody></table>
@@ -160,16 +239,16 @@ li{margin:.3em 0;}
 <ul class="lvl"><li>先把 <code>smolagents</code> 的源码读一遍——<strong>一千行能读完</strong>，读完你就知道框架到底替你做了什么；</li><li>然后用 <code>LangGraph</code> 把 <a href="../projects/03-ai-application/README.html"><code>projects/03</code></a> 里那个应用重写一遍，加上检查点与人工确认；</li><li>全程用 <code>litellm</code> 做模型层，这样换模型不用改业务代码。</li></ul>
 <p><strong>框架会一直换，这三件事（工具调用、状态管理、可观测性）不会换。</strong></p>
 <hr/>
-<h2 id="125-一张总表从想做的事倒推资源">12.5 一张总表：从「想做的事」倒推资源</h2>
+<h2 id="125-一张总表从想做的事倒推资源">12.5 一张总表：从「想做的事」倒推资源</h2><nav class="sec-nav"><a class="sn prev" href="#124-agent-开发把模型变成产品"><span class="sn-label">← 上一节</span><span class="sn-name">12.4 Agent 开发：把模型变成产品</span></a><a class="sn next" href="#126-避坑清单脚本实测非转述"><span class="sn-label">下一节 →</span><span class="sn-name">12.6 避坑清单（脚本实测，非转述）</span></a></nav>
 <table><thead><tr><th>我想做的事</th><th>教程</th><th>框架 / 工具</th><th>本仓库对接点</th></tr></thead><tbody><tr><td>搞懂 Transformer 为什么这么设计</td><td><a href="#122-教程与课程先把路走对">本章 12.2</a> + 第 01–03 章</td><td>—</td><td><a href="README.html"><code>llm-fundamentals/</code></a> 全书</td></tr><tr><td>从零复现一个小模型</td><td><code>nanochat</code></td><td>—</td><td><a href="11-open-source-projects.html">第 11 章</a> · <a href="../projects/06-mini-transformer-llm/README.html"><code>projects/06</code></a></td></tr><tr><td>让模型学会我的领域知识</td><td><code>self-llm</code> · <code>happy-llm</code> 第六/七章</td><td><code>unsloth</code> / <code>LlamaFactory</code></td><td><a href="05-finetuning.html">第 05 章</a> · <a href="../projects/08-fine-tuning/README.html"><code>projects/08</code></a></td></tr><tr><td>让模型输出「我更想要」的风格</td><td><code>dive-into-llms</code> 对齐实验</td><td><code>trl</code> / <code>verl</code></td><td><a href="08-alignment-rlhf.html">第 08 章</a></td></tr><tr><td>做一个能用的 AI 应用</td><td><code>generative-ai-for-beginners</code></td><td><code>LangGraph</code> + <code>litellm</code></td><td><a href="../projects/03-ai-application/README.html"><code>projects/03</code></a></td></tr><tr><td>让 Agent 调用我的工具</td><td><code>claude-cookbooks</code></td><td><code>modelcontextprotocol/python-sdk</code></td><td><a href="../projects/05-agent-mcp/README.html"><code>projects/05</code></a></td></tr><tr><td>做一个 RAG 问答</td><td><code>llm-universe</code> · <code>llm-cookbook</code></td><td><code>haystack</code> / <code>Dify</code></td><td><a href="../projects/04-rag/README.html"><code>projects/04</code></a> · <a href="../python-practice/06-rag-qa.html"><code>python-practice/06</code></a></td></tr><tr><td>不写代码先出个 Demo</td><td><code>llm-course</code></td><td><code>Dify</code></td><td>—</td></tr><tr><td>知道我的 RAG / Agent 到底准不准</td><td><code>llm-cookbook</code> 评估章节</td><td><code>Comet-ml/opik</code></td><td><a href="../projects/04-rag/README.html"><code>projects/04</code></a></td></tr></tbody></table>
 <hr/>
-<h2 id="126-避坑清单脚本实测非转述">12.6 避坑清单（脚本实测，非转述）</h2>
+<h2 id="126-避坑清单脚本实测非转述">12.6 避坑清单（脚本实测，非转述）</h2><nav class="sec-nav"><a class="sn prev" href="#125-一张总表从想做的事倒推资源"><span class="sn-label">← 上一节</span><span class="sn-name">12.5 一张总表：从「想做的事」倒推资源</span></a><a class="sn next" href="#127-这份清单怎么维护"><span class="sn-label">下一节 →</span><span class="sn-name">12.7 这份清单怎么维护</span></a></nav>
 <table><thead><tr><th>状态</th><th>仓库</th><th>实测结果</th><th>怎么办</th></tr></thead><tbody><tr><td><strong>已归档</strong></td><td><a href="https://github.com/karpathy/LLM101n" target="_blank" rel="noopener"><code>karpathy/LLM101n</code></a></td><td>37.5k 星，<strong>2024-08-01 已归档</strong>，只读</td><td>内容有参考价值，但<strong>不会有新内容</strong>。学全流程改用 <code>nanochat</code></td></tr><tr><td><strong>维护模式</strong></td><td><a href="https://github.com/microsoft/autogen" target="_blank" rel="noopener"><code>microsoft/autogen</code></a></td><td>61.2k 星，最近提交 2026-04-06，首页带维护模式徽章</td><td>新项目改用 <a href="https://github.com/microsoft/agent-framework" target="_blank" rel="noopener"><code>microsoft/agent-framework</code></a></td></tr><tr><td><strong>维护模式</strong></td><td><a href="https://github.com/Arize-ai/phoenix" target="_blank" rel="noopener"><code>Arize-ai/phoenix</code></a></td><td>11.7k 星，最近提交 2026-10-01，首页带维护模式徽章</td><td>评估 / 可观测性需求改用 <a href="https://github.com/Comet-ml/opik" target="_blank" rel="noopener"><code>Comet-ml/opik</code></a></td></tr><tr><td><strong>已搬家</strong></td><td><code>geekan/MetaGPT</code> · <code>All-Hands-AI/OpenHands</code> · <code>anthropics/anthropic-cookbook</code> · <code>volcengine/verl</code> · <code>hiyouga/LLaMA-Factory</code> · <code>microsoft/DeepSpeed</code></td><td>均 302 到新地址（见下表）</td><td>引用与 clone 都用新地址</td></tr><tr><td><strong>长期未更新</strong></td><td><a href="https://github.com/karpathy/nn-zero-to-hero" target="_blank" rel="noopener"><code>karpathy/nn-zero-to-hero</code></a></td><td>24.6k 星，最近提交 2024-02-20（已 953 天）</td><td><strong>这不一定是缺点</strong>：它是「讲清楚」型的完成品，不是「跟着版本走」的工具。按内容判断，别只看日期</td></tr></tbody></table>
 <p><strong>已搬家的新地址对照：</strong></p>
 <table><thead><tr><th>旧地址</th><th>实际地址</th></tr></thead><tbody><tr><td><code>geekan/MetaGPT</code></td><td><a href="https://github.com/FoundationAgents/MetaGPT" target="_blank" rel="noopener"><code>FoundationAgents/MetaGPT</code></a></td></tr><tr><td><code>All-Hands-AI/OpenHands</code></td><td><a href="https://github.com/OpenHands/OpenHands" target="_blank" rel="noopener"><code>OpenHands/OpenHands</code></a></td></tr><tr><td><code>anthropics/anthropic-cookbook</code></td><td><a href="https://github.com/anthropics/claude-cookbooks" target="_blank" rel="noopener"><code>anthropics/claude-cookbooks</code></a></td></tr><tr><td><code>volcengine/verl</code></td><td><a href="https://github.com/verl-project/verl" target="_blank" rel="noopener"><code>verl-project/verl</code></a></td></tr><tr><td><code>hiyouga/LLaMA-Factory</code></td><td><a href="https://github.com/hiyouga/LlamaFactory" target="_blank" rel="noopener"><code>hiyouga/LlamaFactory</code></a></td></tr><tr><td><code>microsoft/DeepSpeed</code></td><td><a href="https://github.com/deepspeedai/DeepSpeed" target="_blank" rel="noopener"><code>deepspeedai/DeepSpeed</code></a></td></tr><tr><td><code>ggerganov/llama.cpp</code></td><td><a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noopener"><code>ggml-org/llama.cpp</code></a></td></tr></tbody></table>
 <p><strong>最后一条，也是最要紧的一条：星标数不等于可用性。</strong> 本章星标最高的是 <code>Dify</code>（157.6k）和 <code>browser-use</code>（116.8k），但它们是<strong>平台与特定能力</strong>，不是通用编排框架； 而生产环境用得最多的 <code>LangGraph</code> 只有 42.5k 星。<strong>按「你缺什么」选，不要按排行榜选。</strong></p>
 <hr/>
-<h2 id="127-这份清单怎么维护">12.7 这份清单怎么维护</h2>
+<h2 id="127-这份清单怎么维护">12.7 这份清单怎么维护</h2><nav class="sec-nav"><a class="sn prev" href="#126-避坑清单脚本实测非转述"><span class="sn-label">← 上一节</span><span class="sn-name">12.6 避坑清单（脚本实测，非转述）</span></a><a class="sn next" href="#128-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">12.8 自查问题</span></a></nav>
 <p>推荐清单是<strong>最容易腐烂</strong>的东西：库会归档、会搬家、会悄无声息地进维护模式， 而你写下的那行链接永远不会自己变。</p>
 <p>本仓库为此加了 <a href="../../../../scripts/check_repos.py"><code>scripts/check_repos.py</code></a>： 它从文档里抽出所有 GitHub 链接，逐个探测「能否访问 / 星标 / 是否归档 / 是否搬家 / 最近提交 / 是否声明维护模式」。 <strong>不需要 API token</strong>（匿名 GitHub API 每小时只有 60 次，扫不完一个仓库）， 它改抓公开页面与 <code>commits.atom</code>，你可以随时复跑：</p>
 <pre><code>python3 scripts/check_repos.py llm-fundamentals/12-tutorials-and-agent.md
@@ -179,10 +258,53 @@ python3 scripts/check_repos.py --delay 1.5           # 被限流时放慢（见�
 <figure class="figure"><img alt="check_repos.py 真实运行输出" src="../../../../llm-fundamentals/assets/term-check-repos.png" loading="lazy"/><figcaption>check_repos.py 真实运行输出</figcaption></figure>
 <blockquote><p>上一张截图里 <code>stanfordnlp/dspy</code> 与 <code>pydantic/pydantic-ai</code> 两行曾显示为 <code>-</code>：那是抓 <code>commits.atom</code> 时正好撞上 GitHub 对当前出口 IP 的限流，重试 3 次仍未取到。 <strong>脚本不会把这种情况悄悄留空当成功</strong>——它会在「备注」列显式写出失败原因（如 <code>NET</code>），而不是伪造一个日期。 间隔足够时间、放慢节奏（<code>--delay 1.3</code>）重跑后，这两行已恢复正常（见上方截图：<code>dspy</code> 为 <strong>2026-09-27</strong>、<code>pydantic-ai</code> 为 <strong>2026-09-30</strong>，与 <a href="#1242-代码优先的框架">12.4.2</a> 表中一致）。</p><p>教训：连续扫几十个仓库后，本机访问 <code>github.com</code> 会出现<strong>整站 502</strong> 而 <code>api.github.com</code> 仍正常——这是限流，不是仓库或脚本坏了。 遇到应放慢（<code>--delay</code>）并稍后再跑，<strong>绝不能把那一轮结果当成死链写进文档</strong>。</p></blockquote>
 <hr/>
-<h2 id="128-自查问题">12.8 自查问题</h2>
+<h2 id="128-自查问题">12.8 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#127-这份清单怎么维护"><span class="sn-label">← 上一节</span><span class="sn-name">12.7 这份清单怎么维护</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>「学 / 调 / 造」三条线里，你现在在哪条？你手上的项目属于哪条？</li><li>为什么本章不建议从 AutoGen 起步做新项目？判据是什么（不要答&quot;网上这么说&quot;）？</li><li>单卡想微调一个 7B 模型，三个候选（<code>unsloth</code> / <code>LlamaFactory</code> / <code>DeepSpeed</code>）里先排除哪个，为什么？</li><li><code>smolagents</code> 和 <code>LangGraph</code> 的抽象层次差在哪？什么时候该上重的那个？</li><li>如果你要给别人推荐一个库，<strong>你会用什么方法确认它还没死</strong>？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="11-open-source-projects.html">← 上一章：开源项目推荐</a> · <a href="README.html">返回总览</a> · <a href="../python-practice/07-延伸阅读.html">Python 侧延伸阅读</a> · <a href="../README.html">返回仓库首页</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

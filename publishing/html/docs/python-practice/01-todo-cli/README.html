@@ -52,25 +52,104 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#你要做的东西" class="lvl2">你要做的东西</a><a href="#先看结果" class="lvl2">先看结果</a><a href="#你要学到的-python" class="lvl2">你要学到的 Python</a><a href="#怎么跑起来" class="lvl2">怎么跑起来</a><a href="#代码结构" class="lvl2">代码结构</a><a href="#关键代码拆解" class="lvl2">关键代码拆解</a><a href="#常见坑" class="lvl2">常见坑</a><a href="#验收标准做完自检" class="lvl2">验收标准（做完自检）</a><a href="#进阶挑战做完再往上加别跳" class="lvl2">进阶挑战（做完再往上加，别跳）</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="01-命令行待办清单">01 命令行待办清单</h1>
 <blockquote><p><strong>难度</strong> ●○○ 入门 ｜ <strong>预计</strong> 1 个周末 ｜ <strong>依赖</strong> 无（纯标准库） 上级目录：<a href="../README.html">练手项目总览</a></p></blockquote>
-<h2 id="你要做的东西">你要做的东西</h2>
+<h2 id="你要做的东西">你要做的东西</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#先看结果"><span class="sn-label">下一节 →</span><span class="sn-name">先看结果</span></a></nav>
 <p>一个在终端里跑的待办清单：<strong>增 / 删 / 改（标记完成）/ 查</strong>，数据存本地 JSON 文件，关掉终端再打开还在。</p>
 <p>听起来简单，但它一次性覆盖了 Python 入门阶段最容易「看会了但写不出」的四件事：</p>
 <ul class="lvl"><li><strong>数据结构</strong> —— 列表（<code>list</code>）+ 字典（<code>dict</code>）+ 自定义对象（<code>dataclass</code>）怎么组合</li><li><strong>文件读写</strong> —— 把内存里的对象序列化成 JSON 存盘，再读回来</li><li><strong>命令行入口</strong> —— <code>argparse</code> 做子命令，而不是靠 <code>sys.argv[0]</code> 硬猜</li><li><strong>错误处理</strong> —— 用户输错 id 时给一句人话，而不是甩一堆 traceback</li></ul>
 <blockquote><p>为什么第一个项目刻意<strong>不用任何第三方库</strong>：框架会替你处理掉上面大部分细节（FastAPI 帮你解析参数、pandas 帮你读文件）。先用标准库把它们亲手做一遍，之后再用框架，你才知道框架到底帮你做了什么——这是本仓库 <code>projects/</code> 里 10 个大项目反复强调的态度。</p></blockquote>
-<h2 id="先看结果">先看结果</h2>
+<h2 id="先看结果">先看结果</h2><nav class="sec-nav"><a class="sn prev" href="#你要做的东西"><span class="sn-label">← 上一节</span><span class="sn-name">你要做的东西</span></a><a class="sn next" href="#你要学到的-python"><span class="sn-label">下一节 →</span><span class="sn-name">你要学到的 Python</span></a></nav>
 <p>下面这张图是 <code>demo.sh</code> <strong>真实跑出来的</strong>（不是画的，也不是手截的）：</p>
 <figure class="figure"><img alt="01-todo-cli 真实运行截图" src="../../../../../python-practice/01-todo-cli/assets/term-01-todo-cli.png" loading="lazy"/><figcaption>01-todo-cli 真实运行截图</figcaption></figure>
 <p>一屏里发生了三件事：</p>
 <ul class="lvl"><li><strong>增删改查全流程</strong>：<code>add</code> 三条 → <code>list</code> → <code>done 1</code> 打勾 → <code>rm 3</code> 删除。注意每次操作后列表的「共 N 项，M 项未完成」都在正确变化。</li><li><strong>数据落地</strong>：<code>cat todos.json</code> 打出真实文件内容——你能看到 <code>next_id</code> 和 <code>items</code> 的结构，这就是「内存对象 → 磁盘文本」的往返结果。</li><li><strong>报错也是输出的一部分</strong>：最后一行 <code>todo.py done 99</code> 故意输了个不存在的编号，程序<strong>没有崩</strong>，而是打印 <code>错误：没有 id=99 的待办（先跑 list 看现有编号）</code>。退出码是 <code>1</code>，可以被 shell 脚本判断。</li></ul>
-<h2 id="你要学到的-python">你要学到的 Python</h2>
+<h2 id="你要学到的-python">你要学到的 Python</h2><nav class="sec-nav"><a class="sn prev" href="#先看结果"><span class="sn-label">← 上一节</span><span class="sn-name">先看结果</span></a><a class="sn next" href="#怎么跑起来"><span class="sn-label">下一节 →</span><span class="sn-name">怎么跑起来</span></a></nav>
 <table><thead><tr><th>知识点</th><th>在本项目里落在哪</th></tr></thead><tbody><tr><td><code>dataclass</code></td><td><code>Item</code> 类，自动生成 <code>__init__</code> / <code>__repr__</code> / <code>__eq__</code></td></tr><tr><td><code>list</code> / <code>dict</code> 组合</td><td><code>Store.items</code> 是 <code>list[Item]</code>，落盘时转成 <code>list[dict]</code></td></tr><tr><td><code>pathlib.Path</code></td><td>所有文件路径操作，比 <code>os.path</code> 的字符串拼接可读得多</td></tr><tr><td>文件读写 + <code>encoding</code></td><td><code>path.read_text(encoding=&quot;utf-8&quot;)</code>，中文不乱码的关键</td></tr><tr><td><code>json</code> 序列化</td><td><code>json.dumps(...)</code> / <code>json.loads(...)</code>，以及 <code>ensure_ascii=False</code></td></tr><tr><td><code>argparse</code> 子命令</td><td><code>add</code> / <code>list</code> / <code>done</code> / <code>rm</code> 四个子命令 + <code>--file</code> 全局参数</td></tr><tr><td>自定义异常</td><td><code>TodoError</code>，区分「用户输错」与「程序 bug」</td></tr><tr><td>退出码</td><td><code>main()</code> 返回 <code>int</code>，<code>raise SystemExit(main())</code></td></tr><tr><td><code>from __future__ import annotations</code></td><td>让老版本 Python 也能写 <code>list[Item]</code> 这种注解</td></tr></tbody></table>
-<h2 id="怎么跑起来">怎么跑起来</h2>
+<h2 id="怎么跑起来">怎么跑起来</h2><nav class="sec-nav"><a class="sn prev" href="#你要学到的-python"><span class="sn-label">← 上一节</span><span class="sn-name">你要学到的 Python</span></a><a class="sn next" href="#代码结构"><span class="sn-label">下一节 →</span><span class="sn-name">代码结构</span></a></nav>
 <pre><code>cd python-practice/01-todo-cli
 
 python3 todo.py list                              # 看当前列表（首次是空的）
@@ -81,7 +160,7 @@ python3 todo.py --file /tmp/x.json list           # 换个数据文件（方便�
 <p>想复现上面那张截图，跑演示脚本即可（它会在结束时清理自己产生的 <code>todos.json</code>）：</p>
 <pre><code>bash demo.sh                 # 看输出
 bash demo.sh &gt; assets/run.txt   # 存原始输出（截图就是从它渲染的）</code></pre>
-<h2 id="代码结构">代码结构</h2>
+<h2 id="代码结构">代码结构</h2><nav class="sec-nav"><a class="sn prev" href="#怎么跑起来"><span class="sn-label">← 上一节</span><span class="sn-name">怎么跑起来</span></a><a class="sn next" href="#关键代码拆解"><span class="sn-label">下一节 →</span><span class="sn-name">关键代码拆解</span></a></nav>
 <pre><code>01-todo-cli/
 ├── todo.py         # 全部实现（~200 行，含注释）
 ├── demo.sh         # 可复现演示：跑一遍完整流程并打印
@@ -93,7 +172,7 @@ bash demo.sh &gt; assets/run.txt   # 存原始输出（截图就是从它渲染�
 <pre><code>argparse 解析参数  →  Store（业务 + 落盘）  →  Item（一条数据）
      ↑ 只管打印人话        ↑ 只管读写文件          ↑ 只是个容器</code></pre>
 <p>分层的意义：<strong><code>Store</code> 不打印任何东西、<code>main()</code> 不碰任何文件</strong>。所以你可以直接给 <code>Store</code> 写单元测试，不需要模拟终端输入输出——这正是「进阶挑战」里的第 1 题。</p>
-<h2 id="关键代码拆解">关键代码拆解</h2>
+<h2 id="关键代码拆解">关键代码拆解</h2><nav class="sec-nav"><a class="sn prev" href="#代码结构"><span class="sn-label">← 上一节</span><span class="sn-name">代码结构</span></a><a class="sn next" href="#常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">常见坑</span></a></nav>
 <p><strong>① 为什么用 <code>TodoError</code> 而不是直接 <code>raise Exception</code></strong></p>
 <pre><code>class TodoError(Exception):
     &quot;&quot;&quot;用户级错误：打印一句话即可，不需要 traceback。&quot;&quot;&quot;</code></pre>
@@ -117,13 +196,56 @@ try:
 except json.JSONDecodeError as exc:
     raise TodoError(f&quot;{self.path} 不是合法 JSON（{exc.msg} @ 第 {exc.lineno} 行）...&quot;) from exc</code></pre>
 <p>「没数据」和「数据坏了」是两回事。前者静默放过，后者必须让用户知道——而且要把 <code>lineno</code> 带上，不然用户根本不知道该改哪。</p>
-<h2 id="常见坑">常见坑</h2>
+<h2 id="常见坑">常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#关键代码拆解"><span class="sn-label">← 上一节</span><span class="sn-name">关键代码拆解</span></a><a class="sn next" href="#验收标准做完自检"><span class="sn-label">下一节 →</span><span class="sn-name">验收标准（做完自检）</span></a></nav>
 <table><thead><tr><th>坑</th><th>现象</th><th>怎么破</th></tr></thead><tbody><tr><td>忘了 <code>encoding=&quot;utf-8&quot;</code></td><td>在 Windows 上中文变乱码 / 报 <code>UnicodeDecodeError</code></td><td>所有 <code>read_text</code> / <code>write_text</code> 都显式写编码</td></tr><tr><td>每次操作都重开文件且没 <code>save()</code></td><td>程序退出后数据全没了</td><td>每处修改状态的末尾都调 <code>self.save()</code></td></tr><tr><td>用 <code>os.path.join</code> 拼字符串路径</td><td>可读性差、Windows 分隔符问题</td><td>用 <code>pathlib.Path</code>，<code>Path(&quot;a&quot;) / &quot;b.json&quot;</code></td></tr><tr><td>删除列表元素时遍历 <code>for i in range(len(...))</code></td><td>索引越界 / 漏删</td><td>用 <code>list.remove(obj)</code> 或倒序删</td></tr><tr><td><code>done</code> 一个已完成的项</td><td>状态没变化，用户以为没生效</td><td>显式报 <code>早就完成了</code>，而不是静默成功</td></tr></tbody></table>
-<h2 id="验收标准做完自检">验收标准（做完自检）</h2>
+<h2 id="验收标准做完自检">验收标准（做完自检）</h2><nav class="sec-nav"><a class="sn prev" href="#常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">常见坑</span></a><a class="sn next" href="#进阶挑战做完再往上加别跳"><span class="sn-label">下一节 →</span><span class="sn-name">进阶挑战（做完再往上加，别跳）</span></a></nav>
 <ul class="lvl"><li>[ ] <code>add</code> 后立刻 <code>list</code> 能看到新条目，编号递增且不会复用已删除的编号</li><li>[ ] 关掉终端重新打开，<code>list</code> 数据仍在（说明真的落盘了）</li><li>[ ] <code>done 99</code> / <code>rm 99</code> 输入不存在的编号时，打印人话错误且退出码为 1（<code>echo $?</code> 验证）</li><li>[ ] <code>todos.json</code> 里中文是可读的原文，不是 <code>\uXXXX</code></li><li>[ ] 手动把 <code>todos.json</code> 改坏（删掉一个花括号），程序报「不是合法 JSON」而不是崩溃</li></ul>
-<h2 id="进阶挑战做完再往上加别跳">进阶挑战（做完再往上加，别跳）</h2>
+<h2 id="进阶挑战做完再往上加别跳">进阶挑战（做完再往上加，别跳）</h2><nav class="sec-nav"><a class="sn prev" href="#验收标准做完自检"><span class="sn-label">← 上一节</span><span class="sn-name">验收标准（做完自检）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li><strong>补单元测试</strong> —— 给 <code>Store</code> 写 <code>unittest</code>：新增后 <code>len(items)</code> 变化、<code>find</code> 找不到时抛 <code>TodoError</code>、落盘再读回内容一致。测试要能 <code>python3 -m unittest</code> 直接跑。</li><li><strong>加 <code>--json</code> 输出模式</strong> —— <code>list --json</code> 输出机器可读的 JSON，方便被别的脚本消费。体会「同一个数据，两种渲染」。</li><li><strong>加截止日期与排序</strong> —— <code>add &quot;写周报&quot; --due 2026-10-07</code>，<code>list</code> 按截止日期排序，过期的标红。</li><li><strong>加 <code>edit</code> 子命令</strong> —— 修改某条待办的文字。</li><li><strong>中文对齐</strong> —— 现在列表里中文和英文混排时列是对不齐的（中文字符在等宽字体里占两格）。想办法修好它（提示：<code>unicodedata.east_asian_width</code>）。</li></ul>
 <blockquote><p>做完挑战 1 之后，你就具备了给后面几个项目写测试的基础——<code>04-fastapi-blog</code> 会直接用 <code>pytest</code>。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-目标与评测集" class="lvl2">1. 目标与评测集</a><a href="#11-dataevalcasesjson" class="lvl3">1.1 data/eval_cases.json</a><a href="#12-demosdemo15realevalpy" class="lvl3">1.2 demos/demo_15_real_eval.py</a><a href="#2-三段式指标的真实数值" class="lvl2">2. 三段式指标的真实数值</a><a href="#21-口径对照topk3-vs-topk5" class="lvl3">2.1 口径对照：top_k=3 vs top_k=5</a><a href="#22-生成质量为什么-keywordpass-这么低" class="lvl3">2.2 生成质量：为什么 keyword_pass 这么低</a><a href="#23-忠实度审计抽查-20-条" class="lvl3">2.3 忠实度审计：抽查 20 条</a><a href="#24-可复现性同一问题连问-5-次" class="lvl3">2.4 可复现性：同一问题连问 5 次</a><a href="#3-代码关键点" class="lvl2">3. 代码关键点</a><a href="#31-evaluate-的拒答口径必须共用-pipeline-的判据" class="lvl3">3.1 evaluate() 的拒答口径必须共用 pipeline 的判据</a><a href="#32-忠实度审计用-systemprompt-当参考资料" class="lvl3">3.2 忠实度审计用 system_prompt 当参考资料</a><a href="#4-坑清单" class="lvl2">4. 坑清单</a><a href="#坑-1只看-keywordpass-会误判系统好坏" class="lvl3">坑 1：只看 keyword_pass 会误判系统好坏</a><a href="#坑-2temperature0-也不保证可复现" class="lvl3">坑 2：temperature=0 也不保证可复现</a><a href="#坑-3topk-提升不一定改善答案质量" class="lvl3">坑 3：top_k 提升不一定改善答案质量</a><a href="#坑-4评测集和评估函数必须三固定" class="lvl3">坑 4：评测集和评估函数必须三固定</a><a href="#5-自检清单" class="lvl2">5. 自检清单</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-14真实-rag-评估30-条-evalcasehit-rate-mrr-忠实度">Milestone 14：真实 RAG 评估（30 条 EvalCase：Hit Rate / MRR / 忠实度）</h1>
 <p>到 13 章为止，RAG Web API 已经能跑。但一个没人评测过的 RAG 系统跟闭着眼炼丹没有本质区别。这一章用手写 30 条 EvalCase，在<strong>真实 embedding + 真实 DeepSeek</strong> 上跑一遍，看看哪一段链路最拉胯。</p>
-<h2 id="1-目标与评测集">1. 目标与评测集</h2>
+<h2 id="1-目标与评测集">1. 目标与评测集</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-三段式指标的真实数值"><span class="sn-label">下一节 →</span><span class="sn-name">2. 三段式指标的真实数值</span></a></nav>
 <p>评估要解决的不是「分数高不高」，而是：</p>
 <ul class="lvl"><li>检索段：正确文档有没有被召回（Hit Rate@k / MRR）</li><li>上下文段：正确文档有没有被装进最终 prompt（ctx hit rate）</li><li>生成段：答案是否忠实于资料，是否该拒答的没有硬答（keyword / refusal / 忠实度）</li></ul>
 <p>三段指标解耦之后，优化才有方向：</p>
@@ -73,7 +152,7 @@ li{margin:.3em 0;}
 <p>demo 分五节：</p>
 <ul class="lvl"><li><strong>口径对照</strong>：同一评测集，top_k=3 vs top_k=5。</li><li><strong>最终报告</strong>：固定 top_k=5 出完整 EvalReport。</li><li><strong>忠实度审计</strong>：抽查非拒答案例，用 <code>check_answer_faithfulness()</code> 逐句核对。</li><li><strong>可复现性</strong>：同一个问题连问 5 次，验证 temperature=0 是否逐字稳定。</li><li><strong>口径纪律</strong>：评测集、评估函数、指标口径三固定。</li></ul>
 <p>报告会落盘到 <code>reports/eval_report.json</code>，保证前后对比是同一份口径。</p>
-<h2 id="2-三段式指标的真实数值">2. 三段式指标的真实数值</h2>
+<h2 id="2-三段式指标的真实数值">2. 三段式指标的真实数值</h2><nav class="sec-nav"><a class="sn prev" href="#1-目标与评测集"><span class="sn-label">← 上一节</span><span class="sn-name">1. 目标与评测集</span></a><a class="sn next" href="#3-代码关键点"><span class="sn-label">下一节 →</span><span class="sn-name">3. 代码关键点</span></a></nav>
 <p>运行环境：</p>
 <ul class="lvl"><li>embedding：DashScope text-embedding-v3，21 chunks</li><li>LLM：DeepSeek Chat，temperature=0</li><li>评测集：30 条（可回答 23 / 应拒答 7）</li></ul>
 <h3 id="21-口径对照topk3-vs-topk5">2.1 口径对照：top_k=3 vs top_k=5</h3>
@@ -98,7 +177,7 @@ li{margin:.3em 0;}
 <p>上图中「连问 5 次，得到 4 种不同答案」，长度分别是 388 / 378 / 466 / 389。</p>
 <p>即使 <code>temperature=0</code>，云端推理节点也会分流，<strong>不保证逐字可复现</strong>。这带来的工程结论是：</p>
 <ul class="lvl"><li><strong>keyword_pass 不适合当 CI 回归门槛</strong>：今天 0.30，明天可能 0.35，不一定代表系统变好。</li><li><strong>检索类指标（hit / ctx / mrr）才适合当回归门槛</strong>：它们只跟 embedding + 索引有关，同一批文档跑出来的结果完全一致。</li></ul>
-<h2 id="3-代码关键点">3. 代码关键点</h2>
+<h2 id="3-代码关键点">3. 代码关键点</h2><nav class="sec-nav"><a class="sn prev" href="#2-三段式指标的真实数值"><span class="sn-label">← 上一节</span><span class="sn-name">2. 三段式指标的真实数值</span></a><a class="sn next" href="#4-坑清单"><span class="sn-label">下一节 →</span><span class="sn-name">4. 坑清单</span></a></nav>
 <h3 id="31-evaluate-的拒答口径必须共用-pipeline-的判据">3.1 <code>evaluate()</code> 的拒答口径必须共用 pipeline 的判据</h3>
 <p>13 章把 <code>RAGAnswer.refused</code> 从精确字符串匹配改成了关键词命中（<code>REFUSAL_MARKERS</code>）。<code>evaluate()</code> 也<strong>必须</strong>复用 <code>answer.refused</code>，否则同一套拒答答案会出现两套结果。</p>
 <pre><code>if case.should_refuse:
@@ -112,7 +191,7 @@ li{margin:.3em 0;}
 <pre><code>def check_answer_faithfulness(answer, **kw):
     return check_faithfulness(answer.answer, answer.system_prompt, **kw)</code></pre>
 <p>这样审的就是「模型实际看到的那一段资料」，而不是索引里的全部 chunk，口径更干净。</p>
-<h2 id="4-坑清单">4. 坑清单</h2>
+<h2 id="4-坑清单">4. 坑清单</h2><nav class="sec-nav"><a class="sn prev" href="#3-代码关键点"><span class="sn-label">← 上一节</span><span class="sn-name">3. 代码关键点</span></a><a class="sn next" href="#5-自检清单"><span class="sn-label">下一节 →</span><span class="sn-name">5. 自检清单</span></a></nav>
 <h3 id="坑-1只看-keywordpass-会误判系统好坏">坑 1：只看 keyword_pass 会误判系统好坏</h3>
 <p>keyword_pass 低 = 检索错了吗？<strong>不一定</strong>。这里检索类指标 0.667，模型只是在换说法。把 keyword_pass 当最终指标，会白白去调 prompt。</p>
 <p><strong>修法</strong>：把 keyword_pass 当「信号」；下结论先看 hit / ctx / mrr，再用忠实度做定性复核。</p>
@@ -125,11 +204,54 @@ li{margin:.3em 0;}
 <ul class="lvl"><li>只是召回范围变宽了，排序能力没提升。</li><li>想提升 hit@3，该换 embedding 模型或加 rerank，而不是继续加大 top_k。</li></ul>
 <h3 id="坑-4评测集和评估函数必须三固定">坑 4：评测集和评估函数必须三固定</h3>
 <p>前后对比只允许「同评测集、同评估函数、同指标口径」。一旦悄悄改评测集，分数再高也没意义。</p>
-<h2 id="5-自检清单">5. 自检清单</h2>
+<h2 id="5-自检清单">5. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#4-坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">4. 坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能解释 Hit Rate@3 / Hit Rate@5 / MRR 分别衡量什么</li><li>[ ] 能说明为什么 keyword_pass 低不代表系统差</li><li>[ ] 能解释为什么 temperature=0 的 API 调用仍可能返回不同答案</li><li>[ ] 能指出 top_k=3 到 top_k=5 的实验说明了什么</li><li>[ ] 知道忠实度审计和关键词命中率的适用场景区别</li><li>[ ] 能写一条 EvalCase，并知道拒答案例的 expected_source 该怎么填</li></ul>
 <hr/>
 <p>上一章：<a href="13-fastapi-web-api.html">13-fastapi-web-api.md</a> —— FastAPI Web API（SSE 流式）</p>
 <p>回到项目主页：<a href="../README.html">../README.md</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

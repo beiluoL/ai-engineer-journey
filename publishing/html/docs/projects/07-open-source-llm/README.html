@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#运行方式colab-云端零本地资源" class="lvl2">运行方式（Colab 云端，零本地资源）</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-07-open-source-llm">Project 07 — Open Source LLM</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>接触真实开源模型生态，在云端（Colab GPU）亲手跑通 Hugging Face 开源模型，理解加载 / 推理 / 量化 / 服务。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>生产环境不可能每次都调商业 API。需要掌握如何加载、运行、对比开源模型，理解它们的限制和优势。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>生产环境不能全靠商业 API</li><li>不知道怎么加载开源模型</li><li>不理解模型内存占用和推理速度</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>Model
     ↓
 Tokenizer
@@ -75,9 +154,9 @@ Memory
 Inference
     ↓
 Application</code></pre>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li>Hugging Face Transformers</li><li>Tokenizer 深入理解</li><li>Model Loading（device / dtype）</li><li>Model Inference（生成参数 / 采样）</li><li>本地模型 Serving</li><li>量化基础</li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#运行方式colab-云端零本地资源"><span class="sn-label">下一节 →</span><span class="sn-name">运行方式（Colab 云端，零本地资源）</span></a></nav>
 <pre><code>Mini Transformer
     ↓ 接入开源生态
 Open Source LLM v0.1（加载 + 推理）
@@ -85,7 +164,7 @@ Open Source LLM v0.1（加载 + 推理）
 Open Source LLM v0.2
     ↓ 量化 + 应用
 Open Source LLM v1.0</code></pre>
-<h2 id="运行方式colab-云端零本地资源">运行方式（Colab 云端，零本地资源）</h2>
+<h2 id="运行方式colab-云端零本地资源">运行方式（Colab 云端，零本地资源）</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <blockquote><p>路线决策（2026-09-29）：原计划在本机 M1 装 torch + 下模型，但本机磁盘仅剩 ~15GB 且用户要求「不要使用本地」。 改为 <strong>Colab 云端真跑</strong>：模型与算力都在 Colab 免费 T4 GPU 上，本机零磁盘/内存占用。 详见 <a href="notebooks/README.html"><code>notebooks/README.md</code></a> 与 <a href="../../../../../projects/07-open-source-llm/notebooks/p07_colab.ipynb"><code>notebooks/p07_colab.ipynb</code></a>。</p><p><strong>微调路线（Java 面试专家）</strong>：在 Colab 免费 GPU 上用 LLaMA-Factory 对 Qwen2.5-1.5B 做 QLoRA SFT，产出 LoRA Adapter 并合并成完整模型。详见 <a href="../../../../../projects/07-open-source-llm/notebooks/p07_finetune_java_interview.ipynb"><code>notebooks/p07_finetune_java_interview.ipynb</code></a> 与 <a href="../../../../../projects/07-open-source-llm/scripts"><code>scripts/</code></a>。</p><p><strong>调用管线 <code>pipelines/</code>（当前主线，已真实跑通）</strong>：本机跑不动 7B 权重（bf16 需 14.18 GiB）， 但「调用」不需要本地有卡。<code>pipelines/</code> 走 DeepSeek OpenAI 兼容接口、由本机直接驱动， 6 个模块全部真实运行完毕，产出 6 张真实终端截图。详见 <a href="pipelines/README.html"><code>pipelines/README.md</code></a>。</p></blockquote>
 <pre><code>本机（只写代码）          Colab（跑模型）
    notebooks/        →   打开 p07_colab.ipynb
@@ -100,16 +179,16 @@ Open Source LLM v1.0</code></pre>
    demos/out/*_terminal.txt（真实输出）
          ↓
    assets/term-*.png（真实截图）→ pipelines/README.md</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#运行方式colab-云端零本地资源"><span class="sn-label">← 上一节</span><span class="sn-name">运行方式（Colab 云端，零本地资源）</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Hugging Face</td><td>HF Ecosystem / Hub / Pipeline</td><td>⬜ Colab 待跑</td></tr><tr><td>02</td><td>Tokenizer</td><td>BPE / Token 编码 / decode / chat template</td><td>⬜ Colab 待跑</td></tr><tr><td>03</td><td>Model Loading</td><td>device / dtype / from_pretrained / 参数量</td><td>⬜ Colab 待跑</td></tr><tr><td>04</td><td>Model Inference</td><td>generate / KV cache / 贪心</td><td>⬜ Colab 待跑</td></tr><tr><td>05</td><td>Generation Parameters</td><td>temperature / top_p / top_k</td><td>⬜ Colab 待跑</td></tr><tr><td>06</td><td>Local Model Serving</td><td>pipeline / 延迟 / 吞吐</td><td>⬜ Colab 待跑</td></tr><tr><td>07</td><td>Model Memory / VRAM</td><td>权重 / KV cache / 实测显存</td><td>⬜ Colab 待跑</td></tr><tr><td>08</td><td>Quantization</td><td>4-bit（Colab=bitsandbytes；Mac 本地=GGUF+llama.cpp）</td><td>⬜ Colab 待跑</td></tr><tr><td>09</td><td>Open Source LLM Application</td><td>迷你聊天应用 / 历史记忆</td><td>⬜ Colab 待跑</td></tr></tbody></table>
 <blockquote><p>M08 量化路线：云端 CUDA 用 <code>load_in_4bit</code>（bitsandbytes）真跑；Mac 本地无 CUDA，对应走 GGUF + llama.cpp。</p><p><strong>微调 Track（独立分支，当前主线）</strong>：<code>notebooks/p07_finetune_java_interview.ipynb</code> 覆盖「数据集 → SFT → LoRA → QLoRA → GPU 训练 → 评估 → 合并」全流程，目标产出 Java 面试专家模型。Colab 侧脚本见 <code>scripts/</code>，训练数据见 <code>data/java_interview.json</code>（<strong>59 条</strong>真实 Java 面试问答）。</p></blockquote>
 <blockquote><p><strong>已真实跑通的部分见 <code>pipelines/</code></strong>（可与上表对照）：M05 生成参数、M07 显存/参数量、M09 应用 已有本地真实证据；M03 模型加载、M08 量化因需要 GPU/本地权重，仍依赖 <code>notebooks/</code> 那条线。</p></blockquote>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <p>🔄 进行中。三条线的落地情况：</p>
 <table><thead><tr><th>线</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td><code>pipelines/</code> 调用管线</td><td>✅ <strong>已真实跑通</strong></td><td>6 个模块真实运行，6 张终端截图 + 12 份产物</td></tr><tr><td><code>notebooks/p07_colab.ipynb</code> 推理</td><td>⬜ 待跑</td><td>需用户在 Colab 分配 GPU 并回收输出</td></tr><tr><td><code>p07_finetune_java_interview.ipynb</code> 微调</td><td>⬜ 待跑</td><td>需用户在 Colab 跑 QLoRA SFT</td></tr></tbody></table>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p>v0.1 —— <code>pipelines/</code> 调用管线 6 个模块全部真实跑通（含手算参数量对账、显存账本、RAG-lite 检索评测）， 产出 6 张真实终端截图。</p>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code>projects/07-open-source-llm/
 ├── README.md                     # 本文件
 ├── data/
@@ -133,11 +212,54 @@ Open Source LLM v1.0</code></pre>
 ├── demos/out/                   # 回收的 Colab 真实输出（colab_Mxx.txt / 微调前后对比）
 ├── assets/                      # Colab 路线截图
 └── milestones/                  # 01-09 文档（待 Colab 跑通后撰写）</code></pre>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-06 的所有能力</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>完成 Project 06，然后进入开源模型生态。</p>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

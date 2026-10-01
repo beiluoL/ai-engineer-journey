@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why三个必须被证明的不变量" class="lvl2">1. Why：三个必须被证明的不变量</a><a href="#2-designpreln-的顺序是有代价的" class="lvl2">2. Design：Pre-LN 的顺序是有代价的</a><a href="#3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_05_transformer_block_terminal.txt）</a><a href="#31-结构树" class="lvl3">3.1 结构树</a><a href="#32-单-block-的参数账注意力与-ffn-几乎平分" class="lvl3">3.2 单 Block 的参数账：注意力与 FFN 几乎平分</a><a href="#33-多头拆分拆了还能拼回去" class="lvl3">3.3 多头拆分：拆了还能拼回去</a><a href="#34-因果性自检改未来-过去必须逐位不变" class="lvl3">3.4 因果性自检：改未来 → 过去必须逐位不变</a><a href="#35-反例把掩码去掉会发生什么" class="lvl3">3.5 反例：把掩码去掉会发生什么</a><a href="#36-层数对照深度换来的参数与耗时" class="lvl3">3.6 层数对照：深度换来的参数与耗时</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-05-transformer-blockpreln-残差-ffn以及因果性必须被证明">Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</h1>
 <p>M04 把 id 变成了 <code>(B, T, 64)</code> 的向量。这一章把这堆向量送进<strong>真正干活的那一层</strong>：<code>ln → 注意力 → 残差 → ln → FFN → 残差</code>。</p>
 <p>本章的核心不是&quot;把结构画出来&quot;，而是<strong>证明一个几乎无法用肉眼发现的错误不存在</strong>：因果掩码。它写错了，模型照样能训、loss 照样会降、验证集指标照样好看——只是它在偷偷看答案。所以这里把它做成一条硬性自检。</p>
 <hr/>
-<h2 id="1-why三个必须被证明的不变量">1. Why：三个必须被证明的不变量</h2>
+<h2 id="1-why三个必须被证明的不变量">1. Why：三个必须被证明的不变量</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-designpreln-的顺序是有代价的"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：Pre-LN 的顺序是有代价的</span></a></nav>
 <p>一个 Decoder Block 里有三处&quot;写错了也不会崩&quot;的地方：</p>
 <ul class="lvl"><li><strong>因果性。</strong> 位置 <code>t</code> 的输出只能依赖 <code>≤ t</code> 的输入。判据很干净：<strong>把第 <code>t</code> 个位置之后的 token 全改掉，第 <code>t</code> 个及之前的 logits 必须逐位不变</strong>。误差是精确的 0，不是&quot;很小&quot;。</li><li><strong>确定性。</strong> 同一输入跑两次必须逐位相同。这是 P08 那个确定性补丁生效的前提——<code>Tensor._prev</code> 如果是 <code>set</code>，反向传播的加法顺序随对象地址变，跨进程就不可复现。</li><li><strong>多头拆分的可逆性。</strong> 把 <code>d_model</code> 切成 <code>h</code> 份再拼回来，必须还原。这一步错了不会报错，只会让每个头学到&quot;残缺的、交错的信息&quot;。</li></ul>
 <p>三条都不靠&quot;我读代码看对了&quot;，靠<strong>对着数字验</strong>。</p>
-<h2 id="2-designpreln-的顺序是有代价的">2. Design：Pre-LN 的顺序是有代价的</h2>
+<h2 id="2-designpreln-的顺序是有代价的">2. Design：Pre-LN 的顺序是有代价的</h2><nav class="sec-nav"><a class="sn prev" href="#1-why三个必须被证明的不变量"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：三个必须被证明的不变量</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_05_transformer_block_terminal.txt）</span></a></nav>
 <pre><code>x (B, T, d_model)
   ├─ h = x
   ├─ h = ln1(h)                    # LN 在子层**之前**
@@ -78,7 +157,7 @@ li{margin:.3em 0;}
 <pre><code>(B, T, d_model)  →  reshape  →  (B, T, h, d/h)  →  transpose  →  (B, h, T, d/h)</code></pre>
 <p><code>head_dim = d_model / n_heads = 64 / 4 = 16</code>。<strong>拆的是&quot;通道维&quot;，不是&quot;批次维&quot;</strong> —— 所以 reshape 之后必须 transpose，让 <code>h</code> 和 <code>T</code> 换个位置，之后才能对 <code>T</code> 做 softmax。</p>
 <figure class="figure"><img alt="M05 Transformer Block：Pre-LN 结构 + 参数账 + 因果性自检" src="../../../../../../projects/10-tiny-llm-capstone/assets/transformer-block.svg" loading="lazy"/><figcaption>M05 Transformer Block：Pre-LN 结构 + 参数账 + 因果性自检</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_transformer_block_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_transformer_block_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-designpreln-的顺序是有代价的"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：Pre-LN 的顺序是有代价的</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M05 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-05-transformer-block.png" loading="lazy"/><figcaption>M05 真实运行</figcaption></figure>
 <h3 id="31-结构树">3.1 结构树</h3>
 <pre><code>Embedding + 位置编码    (1280, 64) + (64, 64)
@@ -128,14 +207,57 @@ layernorm     256   0.8%
        4  296,832      2.23 ms
 当前配置    n_layers=2</code></pre>
 <p>每加一层恒增 <strong>33,216</strong> 参数（即单 Block 参数量），耗时增加约 0.5 ms。<strong>参数是线性长的，耗时也是线性长的</strong>——在纯 numpy 的 CPU 实现上，没有 GPU 那种&quot;深度几乎免费、宽度很贵&quot;的特性。这也是后面 M09 量化能拿到 3.85× 加速的原因：算力瓶颈就在这些矩阵乘上，而它们可以被压到低精度。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_05_transformer_block_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>&quot;参数都在 FFN&quot;不是规律，是 <code>d_ff/d_model = 4</code> 的后果。</strong> 令 <code>2·d·d_ff = 4·d²</code> 得 <code>d_ff = 2d</code>。当前 <code>d_ff = 2d</code>，所以 FFN 与注意力参数几乎相等（49.9% vs 49.3%）。换成 GPT 的 <code>d_ff = 4d</code>，FFN 立刻翻倍。<strong>记住这个比例，比记住&quot;FFN 大&quot;有用。</strong></li><li><strong>因果性自检必须双向验证。</strong> 只验&quot;过去不变&quot;是不够的——一个注意力恒输出 0 的实现也能过。必须同时要求&quot;未来<strong>必须变</strong>&quot;（实测 1.191e+01），两条一起才锁死。</li><li><strong>argmax 相等 ≠ 模型没被污染。</strong> 去掉掩码后，最后一位 logits 最大差 0.6892，但 argmax 依然是 676。<strong>这就是为什么自检要比数值。</strong> 任何&quot;只看最终预测对不对&quot;的测试，在掩码这类结构错误面前都是盲的。</li><li><strong>多头拆分错在 transpose 上，不会报错。</strong> <code>(B,T,h,d/h)</code> 直接 reshape 回 <code>(B,T,d_model)</code> 在形状上完全合法，但语义已经变了（相当于把不同头的通道交错混在一起）。只有&quot;拆完再拼、误差是否为 0&quot;这一个检查能抓住它——这就是 3.3 那一行存在的意义。</li><li><strong>Pre-LN 需要 <code>ln_f</code> 收尾，Post-LN 不需要。</strong> 因为残差通路不经过 LN，输出量级会随层数累积。这不是&quot;多加一层更保险&quot;，是结构选择的必然配套。</li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>结构：<strong>2 层 × (4 头 × d_model 64)，d_ff = 128</strong>，单 Block <strong>33,216</strong> 参数（注意力 16,384 / FFN 16,576 / LN 256），全部 Block 合计 66,432。</li><li><strong>注意力与 FFN 参数几乎相等（49.3% vs 49.9%）</strong>，因为 <code>d_ff = 2 × d_model</code>。这是配置的后果，不是普遍规律。</li><li>多头拆分还原误差 <strong>0.000e+00</strong>；<code>head_dim = 16</code>。</li><li>因果性：<strong>过去位置误差 0.000e+00（必须为 0），未来位置误差 1.191e+01（必须 &gt; 0）</strong>；同输入两次前向 <strong>0.000e+00</strong>；三项自检全部通过。</li><li>反例证明：去掉掩码后最后一位 logits 最大差 <strong>0.6892</strong>，但 argmax 仍为 <strong>676</strong> ⇒ <strong>只比 argmax 会漏掉这类错误，必须比数值</strong>。</li><li>层的代价是线性的：每层 +33,216 参数、+0.5 ms（4×32 前向）。当前 230,400 参数、1.39 ms。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/model.py</code></td><td><code>forward_sanity</code>（三条不变量：形状 / 因果 / 确定）/ <code>build_model</code> / <code>walk_parameters</code> / <code>parameter_report</code></td></tr><tr><td>P06 <code>model/decoder.py</code></td><td><code>DecoderStack</code> / <code>Block</code>（Pre-LN + 残差）/ <code>ln_f</code></td></tr><tr><td>P06 <code>model/attention.py</code></td><td><code>MultiHeadAttention</code>（拆头 reshape + 因果掩码在此生效）</td></tr><tr><td>P08 <code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>（把 <code>_prev</code> 从 set 改成有序 list）</td></tr><tr><td><code>demos/demo_05_transformer_block.py</code></td><td>6 节：结构树 / 参数账 / 多头拆分 / 因果自检 / 掩码反例 / 层数对照</td></tr><tr><td><code>demos/out/demo_05_transformer_block_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/transformer-block.svg</code></td><td>Pre-LN 结构 + 参数账 + 因果自检 + 反例</td></tr><tr><td><code>assets/term-05-transformer-block.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.4 → <strong>v0.5</strong>，Transformer Block 结构落地并被逐项验真。实测：2 层 × 4 头 × d_model 64、d_ff=128；单 Block <strong>33,216</strong> 参数（attention 16,384 / FFN 16,576 / LN 256），<strong>注意力与 FFN 平手（49.3% vs 49.9%）</strong>，因为 <code>d_ff = 2·d_model</code>；多头拆分还原误差 <strong>0.000e+00</strong>；因果性过去位置 <strong>0.000e+00</strong> / 未来位置 <strong>1.191e+01</strong> / 确定性 <strong>0.000e+00</strong>，三项自检全过；掩码反例：最后一位 logits 最大差 <strong>0.6892</strong> 但 argmax 同为 <strong>676</strong>（⇒ 必须比数值）；深度 1/2/4 层 → 197,184 / 230,400 / 296,832 参数与 0.88 / 1.39 / 2.23 ms。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

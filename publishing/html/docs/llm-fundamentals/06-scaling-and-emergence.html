@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#61-缩放定律scaling-law可预测的那一半" class="lvl2">6.1 缩放定律（Scaling Law）：可预测的那一半</a><a href="#611-kaplan-定律2020" class="lvl3">6.1.1 Kaplan 定律（2020）</a><a href="#612-chinchilla-定律2022算力怎么分最划算" class="lvl3">6.1.2 Chinchilla 定律（2022）：算力怎么分最划算</a><a href="#613-为什么现代模型都在过度训练" class="lvl3">6.1.3 为什么现代模型都在&amp;quot;过度训练&amp;quot;</a><a href="#62-涌现能力不可预测的那一半" class="lvl2">6.2 涌现能力：不可预测的那一半</a><a href="#621-现象" class="lvl3">6.2.1 现象</a><a href="#622-争议涌现是真相还是度量伪影" class="lvl3">6.2.2 争议：涌现是真相还是度量伪影</a><a href="#63-其他与规模相关的现象" class="lvl2">6.3 其他与规模相关的现象</a><a href="#64-对小团队和个人的实战启示" class="lvl2">6.4 对小团队和个人的实战启示</a><a href="#65-常被误解的点" class="lvl2">6.5 常被误解的点</a><a href="#66-动手" class="lvl2">6.6 动手</a><a href="#67-自查问题" class="lvl2">6.7 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="06-涌现能力与缩放定律规模到底买到了什么">06 · 涌现能力与缩放定律：规模到底买到了什么</h1>
 <blockquote><p><strong>一句话结论</strong>：损失随规模<strong>平滑</strong>下降（幂律，可预测），但<strong>具体任务的表现</strong>往往在某个规模点突然变好——这就是&quot;涌现&quot;。 对工程的意义：小模型&quot;差一点&quot;往往不是差一点，而是<strong>差一个台阶</strong>；选型时卡在临界点下方比预算不足更亏。</p></blockquote>
 <hr/>
-<h2 id="61-缩放定律scaling-law可预测的那一半">6.1 缩放定律（Scaling Law）：可预测的那一半</h2>
+<h2 id="61-缩放定律scaling-law可预测的那一半">6.1 缩放定律（Scaling Law）：可预测的那一半</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#62-涌现能力不可预测的那一半"><span class="sn-label">下一节 →</span><span class="sn-name">6.2 涌现能力：不可预测的那一半</span></a></nav>
 <h3 id="611-kaplan-定律2020">6.1.1 Kaplan 定律（2020）</h3>
 <p>OpenAI 发现：把模型变大、数据变多、算力变大，<strong>交叉熵损失呈幂律下降</strong>——在双对数坐标下近似是一条直线：</p>
 <p>$$ L(N) = \left(\frac{N_c}{N}\right)^{\alpha_N} \qquad\text{或更完整的形式}\qquad L(N, D) = \left(\frac{N_c}{N}\right)^{\alpha_N} + \left(\frac{D_c}{D}\right)^{\alpha_D} + L_\infty $$</p>
@@ -86,7 +165,7 @@ li{margin:.3em 0;}
 <p><strong>结论</strong>：模型上线后要服务几亿次请求时，把 8B 模型从 Chinchilla 最优的 160B token 训到 15T token，虽然训练成本变高，但推理时用的小模型便宜得多——<strong>这才是 LLaMA-3 8B 训练 15T token 的经济学原因</strong>。</p>
 <blockquote><p>记忆要点：<strong>Chinchilla 是算力最优，不是总拥有成本最优（TCO 最优）。</strong></p></blockquote>
 <hr/>
-<h2 id="62-涌现能力不可预测的那一半">6.2 涌现能力：不可预测的那一半</h2>
+<h2 id="62-涌现能力不可预测的那一半">6.2 涌现能力：不可预测的那一半</h2><nav class="sec-nav"><a class="sn prev" href="#61-缩放定律scaling-law可预测的那一半"><span class="sn-label">← 上一节</span><span class="sn-name">6.1 缩放定律（Scaling Law）：可预测的那一半</span></a><a class="sn next" href="#63-其他与规模相关的现象"><span class="sn-label">下一节 →</span><span class="sn-name">6.3 其他与规模相关的现象</span></a></nav>
 <h3 id="621-现象">6.2.1 现象</h3>
 <p>在损失平滑下降的同时，某些<strong>具体能力</strong>呈现&quot;阶梯式&quot;出现：小模型几乎完全不会，模型大到某个规模后突然会了。</p>
 <pre><code>准确率
@@ -104,25 +183,68 @@ li{margin:.3em 0;}
 <p>$$ \text{底层能力} \xrightarrow{\text{连续提升}} \begin{cases} \text{用 exact match 度量} &amp; \to \text{看起来是阶跃（涌现）} \\ \text{用 token 准确率度量} &amp; \to \text{平滑上升} \end{cases} $$</p>
 <p><strong>工程结论</strong>：不要迷信&quot;某个规模以下一定不会&quot;。<strong>别用不连续指标判断&quot;能不能用&quot;</strong>，要用贴近业务的实际评估（部分正确是否有价值）。</p>
 <hr/>
-<h2 id="63-其他与规模相关的现象">6.3 其他与规模相关的现象</h2>
+<h2 id="63-其他与规模相关的现象">6.3 其他与规模相关的现象</h2><nav class="sec-nav"><a class="sn prev" href="#62-涌现能力不可预测的那一半"><span class="sn-label">← 上一节</span><span class="sn-name">6.2 涌现能力：不可预测的那一半</span></a><a class="sn next" href="#64-对小团队和个人的实战启示"><span class="sn-label">下一节 →</span><span class="sn-name">6.4 对小团队和个人的实战启示</span></a></nav>
 <table><thead><tr><th>现象</th><th>定义</th><th>工程含义</th></tr></thead><tbody><tr><td><strong>In-Context Learning</strong></td><td>不更新权重，仅靠提示里的示例学习</td><td>这是&quot;提示工程有效&quot;的根本原因</td></tr><tr><td><strong>思维链 CoT</strong></td><td>生成中间推理步骤再给答案</td><td>只在足够大的模型上有效；小模型加 CoT 可能更差</td></tr><tr><td><strong>Grokking</strong></td><td>在小数据集上训练很久后，测试准确率突然从记忆跳到泛化</td><td>说明&quot;训练够久&quot;有时能跨过质变点</td></tr><tr><td><strong>U 形缩放 / Inverse Scaling</strong></td><td>某些任务上模型越大反而越差（如模仿偏见、重复无理输入）</td><td>规模不是万能的，对齐阶段必须处理</td></tr><tr><td><strong>双重下降</strong></td><td>测试误差随规模先降后升再降</td><td>提醒不要用单一小规模实验下结论</td></tr><tr><td><strong>数据质量 &gt; 数量</strong></td><td>同样算力下，精选数据可抵数倍原始数据（phi 系列的核心主张）</td><td>小团队的机会窗口</td></tr></tbody></table>
 <hr/>
-<h2 id="64-对小团队和个人的实战启示">6.4 对小团队和个人的实战启示</h2>
+<h2 id="64-对小团队和个人的实战启示">6.4 对小团队和个人的实战启示</h2><nav class="sec-nav"><a class="sn prev" href="#63-其他与规模相关的现象"><span class="sn-label">← 上一节</span><span class="sn-name">6.3 其他与规模相关的现象</span></a><a class="sn next" href="#65-常被误解的点"><span class="sn-label">下一节 →</span><span class="sn-name">6.5 常被误解的点</span></a></nav>
 <table><thead><tr><th>场景</th><th>建议</th></tr></thead><tbody><tr><td>想省钱</td><td>选&quot;刚好跨过临界点&quot;的规模，而不是最大或最小。7B–14B 是当前性价比区</td></tr><tr><td>想提升效果</td><td>先做数据（清洗 + 精选 + 领域数据），再做规模</td></tr><tr><td>推理成本敏感</td><td>选已 well-trained 的小模型（如 8B 训 15T token 类），而非 Chinchilla 最优的小模型</td></tr><tr><td>能力不达标</td><td>先确认&quot;是知识缺失（用 RAG）还是能力不足（换更大基座）&quot;，不要硬靠微调补</td></tr><tr><td>做长上下文</td><td>位置编码与数据配比都要专门处理，不是把 context_len 改大就行</td></tr></tbody></table>
 <hr/>
-<h2 id="65-常被误解的点">6.5 常被误解的点</h2>
+<h2 id="65-常被误解的点">6.5 常被误解的点</h2><nav class="sec-nav"><a class="sn prev" href="#64-对小团队和个人的实战启示"><span class="sn-label">← 上一节</span><span class="sn-name">6.4 对小团队和个人的实战启示</span></a><a class="sn next" href="#66-动手"><span class="sn-label">下一节 →</span><span class="sn-name">6.6 动手</span></a></nav>
 <table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;规模大了自然什么都会&quot;</td><td>部分能力反而随规模倒退（inverse scaling）；且能力要靠提示/训练目标激活</td></tr><tr><td>&quot;涌现是玄学&quot;</td><td>底层能力提升是连续的，只是<strong>度量方式</strong>造成了阶跃外观</td></tr><tr><td>&quot;Chinchilla 最优 = 实践最优&quot;</td><td>它只优化训练效率；考虑推理成本后，<strong>过度训练</strong>常更划算</td></tr><tr><td>&quot;参数量翻倍损失减半&quot;</td><td>幂指数约 0.076，收益远小于此；是<strong>指数放大</strong>后才显得明显</td></tr><tr><td>&quot;小模型加 CoT 也能变强&quot;</td><td>反例常见：小模型加&quot;一步步思考&quot;可能比直接回答更差</td></tr><tr><td>&quot;把 context 设长就能长文推理&quot;</td><td>长上下文是<strong>能力</strong>，需要数据（长文档）与位置编码共同支持</td></tr></tbody></table>
 <hr/>
-<h2 id="66-动手">6.6 动手</h2>
+<h2 id="66-动手">6.6 动手</h2><nav class="sec-nav"><a class="sn prev" href="#65-常被误解的点"><span class="sn-label">← 上一节</span><span class="sn-name">6.5 常被误解的点</span></a><a class="sn next" href="#67-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">6.7 自查问题</span></a></nav>
 <pre><code>python3 demos/07_scaling_law.py      # 表格与结论全部现场算出
 python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
 <p><strong>建议改的三处</strong>：</p>
 <ul class="lvl"><li>把 <code>flops_str(budget)</code> 里的 <code>1e23</code> 改成 <code>1e21</code>、<code>1e25</code>，观察&quot;最优参数量&quot;如何随算力平方根增长。</li><li>把 <code>alpha</code> 从 0.076 改成 0.05 / 0.15，看曲线斜率如何变化 → 直观理解幂指数的作用。</li><li>用 <code>C = 6ND</code> 手算：训练一个 7B 模型 15T token 需要多少 FLOPs？再对比 Chinchilla 最优的 140B token。</li></ul>
 <hr/>
-<h2 id="67-自查问题">6.7 自查问题</h2>
+<h2 id="67-自查问题">6.7 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#66-动手"><span class="sn-label">← 上一节</span><span class="sn-name">6.6 动手</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>写出缩放定律的幂律形式，并说明幂指数&quot;只有 0.076&quot;意味着什么。</li><li>Chinchilla 的核心结论是什么？为什么 GPT-3 被称为&quot;欠训练&quot;？</li><li>为什么 LLaMA-3 8B 要训 15T token？请从总拥有成本角度解释。</li><li>&quot;涌现能力&quot;的争议双方各持什么论据？工程上应该怎么应对？</li><li>In-Context Learning 为什么&quot;不用改权重&quot;？它对提示工程意味着什么？</li><li>举一个 inverse scaling 的例子，并说明为什么对齐阶段要处理它。</li></ul>
 <hr/>
 <p class="nav-footer"><a href="05-finetuning.html">← 上一章：微调</a> · <a href="README.html">返回总览</a> · <a href="07-decoding-and-inference.html">下一章：解码与推理 →</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

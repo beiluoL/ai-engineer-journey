@@ -52,23 +52,102 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#运行效果" class="lvl2">运行效果</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-01-python-ai-cli-assistant">Project 01 — Python AI CLI Assistant</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>通过持续升级一个 AI CLI Assistant，学习 Python 基础，并最终接入真实 LLM API。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>AI 项目全是 Python 写的。不理解 Python，就看不懂、写不出、改不动 AI 代码。 但 Python 内容太多——标准库、Web 框架、数据处理……有经验的开发者不需要从零学完整 Python 教程，而是直接从 AI 项目切入，<strong>项目缺什么能力就学什么</strong>。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>没有 Python 基础，看不懂 AI 项目代码</li><li>不理解 AI 项目特有的数据结构（messages / JSON / List / Dict）</li><li>不知道怎么从 0 开始构建一个 Python AI 项目</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <p>完成后你会得到：</p>
 <ul class="lvl"><li>一个命令行交互的 AI Assistant</li><li>多轮对话 + 消息历史</li><li>可配置 API Key</li><li>真实调用 LLM API</li><li>完整 Python 基础（变量 → HTTP → LLM）</li></ul>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li>Python 3.x</li><li>标准库 <code>urllib</code>（HTTP；v0.1 刻意零依赖，后续里程碑引入 requests/httpx 时会对比&quot;框架解决了什么&quot;）</li><li><code>json</code>（标准库）</li><li><code>os</code>（环境变量）</li><li>主流 LLM API（OpenAI / 兼容接口）</li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <pre><code>v0.1  Variables — 程序能保存和打印数据
   ↓
 v0.2  List / Dict / JSON — AI 项目最常见的数据结构
@@ -88,9 +167,9 @@ v0.8  venv / pip / Environment — 项目可独立管理依赖
 v0.9  HTTP / API — 程序能和外部通信
   ↓
 v1.0  Real LLM API — 项目接入真实 AI</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>状态</th><th>核心能力</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-variables.html">Variables</a></td><td>✅</td><td>变量 / 5 种基础类型 / type() / input() / print() / f-string</td></tr><tr><td>02</td><td><a href="milestones/02-list-dict-json.html">List / Dict / JSON</a></td><td>✅</td><td>List / Dict 嵌套 / JSON 序列化 / AI messages 数据结构</td></tr><tr><td>03</td><td><a href="milestones/03-condition-loop.html">Condition / Loop</a></td><td>⬜</td><td>if / for / while / break / continue</td></tr><tr><td>04</td><td><a href="milestones/04-function.html">Function</a></td><td>⬜</td><td>def / 参数 / 返回值 / 作用域</td></tr><tr><td>05</td><td><a href="milestones/05-module-package.html">Module / Package</a></td><td>⬜</td><td>import / 包结构 / __init__.py</td></tr><tr><td>06</td><td><a href="milestones/06-exception.html">Exception</a></td><td>⬜</td><td>try / except / raise / 自定义异常</td></tr><tr><td>07</td><td><a href="milestones/07-file-json.html">File / JSON Persistence</a></td><td>⬜</td><td>文件读写 / JSON 文件 / 持久化消息</td></tr><tr><td>08</td><td><a href="milestones/08-venv-pip.html">venv / pip / Environment</a></td><td>⬜</td><td>venv / pip / requirements.txt</td></tr><tr><td>09</td><td><a href="milestones/09-http-api.html">HTTP / API</a></td><td>⬜</td><td>urllib / HTTP 基础 / REST API</td></tr><tr><td>10</td><td><a href="milestones/10-real-llm-api.html">Real LLM API</a></td><td>⬜</td><td>真实 LLM 调用 / 串起所有知识</td></tr></tbody></table>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <pre><code>Completed:
 ✅ 01 — Variables（完整 Project First 模板）
 ✅ 02 — List / Dict / JSON（有实质内容）
@@ -103,9 +182,9 @@ Next:
 ⬜ 04 — Function
 ...
 ⬜ 10 — Real LLM API（串起所有知识）</code></pre>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#运行效果"><span class="sn-label">下一节 →</span><span class="sn-name">运行效果</span></a></nav>
 <p><strong>v0.2</strong> — 有真实 LLM API 调用骨架，10 个 Milestone 完成 2 个。</p>
-<h2 id="运行效果">运行效果</h2>
+<h2 id="运行效果">运行效果</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p>以下是本仓库当前代码的<strong>真实运行输出</strong>（不是效果图）。</p>
 <p>接入真实 LLM API 后，一行命令就能问答：</p>
 <figure class="figure"><img alt="真实调用 LLM API" src="../../../../../projects/01-python-ai-cli/assets/term-real-llm-call.png" loading="lazy"/><figcaption>真实调用 LLM API</figcaption></figure>
@@ -113,7 +192,7 @@ Next:
 <figure class="figure"><img alt="单元测试 6/6 通过" src="../../../../../projects/01-python-ai-cli/assets/term-unittest.png" loading="lazy"/><figcaption>单元测试 6/6 通过</figcaption></figure>
 <p>没配 Key 时不会崩溃，而是给出修复指引（异常层在起作用）：</p>
 <figure class="figure"><img alt="缺 Key 时的友好报错" src="../../../../../projects/01-python-ai-cli/assets/term-config-error.png" loading="lazy"/><figcaption>缺 Key 时的友好报错</figcaption></figure>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#运行效果"><span class="sn-label">← 上一节</span><span class="sn-name">运行效果</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code>src/
 ├── main.py               # 入口，已实现真实 API 调用骨架
 ├── .env.example          # API Key 模板
@@ -134,12 +213,55 @@ exercises/                 # 配套练习（做完打 ✅，每题亲手敲）
 <pre><code>cd src/
 cp .env.example .env   # 填入真实 API Key
 python3 main.py</code></pre>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <p><strong>当前已掌握：</strong></p>
 <ul class="lvl"><li>Python 变量、5 种基础类型、type()、input()、print()、f-string</li><li>List / Dict 嵌套、JSON 序列化、AI messages 数据结构</li><li>真实 LLM API 调用骨架</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>完成 Milestone 03-10，让项目从 v0.2 升级到 v1.0 真正可用的 AI CLI。</p>
 <p>然后进入 <a href="../../../../../projects/02-engineering-ai-assistant">Project 02 — Engineering AI Assistant</a>。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

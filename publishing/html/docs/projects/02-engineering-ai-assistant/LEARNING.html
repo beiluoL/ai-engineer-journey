@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#怎么用" class="lvl2">怎么用</a><a href="#总览表" class="lvl2">总览表</a><a href="#m00-类与-oop" class="lvl2">M00 类与 OOP</a><a href="#m01-async-await" class="lvl2">M01 async / await</a><a href="#m02-异步-http-客户端" class="lvl2">M02 异步 HTTP 客户端</a><a href="#m03-类型注解" class="lvl2">M03 类型注解</a><a href="#m04-dataclass" class="lvl2">M04 dataclass</a><a href="#m05-配置与环境" class="lvl2">M05 配置与环境</a><a href="#m06-日志" class="lvl2">M06 日志</a><a href="#m07-测试与调试" class="lvl2">M07 测试与调试</a><a href="#m08-打包" class="lvl2">M08 打包</a><a href="#m09-fastapi" class="lvl2">M09 FastAPI</a><a href="#自测完成度自查" class="lvl2">自测完成度自查</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="learning-project-02-engineering-ai-assistant">LEARNING — Project 02 Engineering AI Assistant</h1>
 <blockquote><p>这份文件只记录<strong>「我是否真的掌握」</strong>，仓库里写了什么请去看 <code>README.md</code> / <code>PROGRESS.md</code>。</p><p>铁律：<strong>文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。</strong></p><p>生成这份清单的人（AI）<strong>不会替你打任何勾</strong>。下面每一个框起点都是 ⬜， 只有你本人做完题、能讲清楚「为什么」之后，<strong>由你</strong>把它填成 ✅。</p></blockquote>
-<h2 id="怎么用">怎么用</h2>
+<h2 id="怎么用">怎么用</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#总览表"><span class="sn-label">下一节 →</span><span class="sn-name">总览表</span></a></nav>
 <p>三条线同时过才算掌握一章：</p>
 <ul class="lvl"><li><strong>自测题</strong> —— 每章 3–5 道问答题，考的是「为什么」，不是「用没用过」。答题要点折在 <code>&lt;details&gt;</code> 里，答完再展开对照</li><li><strong>动手验证</strong> —— 去 <code>exercises/</code> 里真的写代码，跑 <code>exercises/grade.py</code>；先自己写，卡住了再看 <code>answers.py</code> 里<strong>卡住的那一个函数</strong></li><li><strong>自评</strong> —— 诚实地填自己在哪一档</li></ul>
-<h2 id="总览表">总览表</h2>
+<h2 id="总览表">总览表</h2><nav class="sec-nav"><a class="sn prev" href="#怎么用"><span class="sn-label">← 上一节</span><span class="sn-name">怎么用</span></a><a class="sn next" href="#m00-类与-oop"><span class="sn-label">下一节 →</span><span class="sn-name">M00 类与 OOP</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>自测题</th><th>动手验证</th><th>我掌握了</th></tr></thead><tbody><tr><td>00</td><td><a href="milestones/00-classes-and-oop.html">类与 OOP</a></td><td>⬜</td><td>⬜ <code>01-oop</code> A1–A3</td><td>⬜</td></tr><tr><td>01</td><td><a href="milestones/01-async-await.html">async / await</a></td><td>⬜</td><td>⬜ <code>02-async</code> A1–A3</td><td>⬜</td></tr><tr><td>02</td><td><a href="milestones/02-async-http-client.html">异步 HTTP 客户端</a></td><td>⬜</td><td>⬜ <code>02-async</code> B1–B3</td><td>⬜</td></tr><tr><td>03</td><td><a href="milestones/03-type-hints.html">类型注解</a></td><td>⬜</td><td>⬜ <code>01-oop</code> B1–B3</td><td>⬜</td></tr><tr><td>04</td><td><a href="milestones/04-dataclass.html">dataclass</a></td><td>⬜</td><td>⬜ <code>01-oop</code> C1–C3</td><td>⬜</td></tr><tr><td>05</td><td><a href="milestones/05-config-and-environment.html">配置与环境</a></td><td>⬜</td><td>⬜ <code>02-async</code> C1–C3</td><td>⬜</td></tr><tr><td>06</td><td><a href="milestones/06-logging.html">日志</a></td><td>⬜</td><td>⬜ <code>03-ops</code> A1–A3</td><td>⬜</td></tr><tr><td>07</td><td><a href="milestones/07-testing-and-debugging.html">测试与调试</a></td><td>⬜</td><td>⬜ <code>03-ops</code> B1–B3</td><td>⬜</td></tr><tr><td>08</td><td><a href="milestones/08-packaging.html">打包</a></td><td>⬜</td><td>⬜ <code>03-ops</code> C1–C2</td><td>⬜</td></tr><tr><td>09</td><td><a href="milestones/09-fastapi.html">FastAPI</a></td><td>⬜</td><td>⬜ <code>03-ops</code> D1–D3</td><td>⬜</td></tr></tbody></table>
 <hr/>
-<h2 id="m00-类与-oop">M00 类与 OOP</h2>
+<h2 id="m00-类与-oop">M00 类与 OOP</h2><nav class="sec-nav"><a class="sn prev" href="#总览表"><span class="sn-label">← 上一节</span><span class="sn-name">总览表</span></a><a class="sn next" href="#m01-async-await"><span class="sn-label">下一节 →</span><span class="sn-name">M01 async / await</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/01-oop-dataclass-typehints</code> A1–A3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 <code>__init__</code> 和 <code>__post_init__</code> 分别在什么时机被调用？如果在一个 <code>@dataclass(frozen=True)</code> 的类里手写 <code>__setattr__</code> 强行赋值，会发生什么？</li><li>⬜ Q2 为什么 <code>Conversation.turns</code> 要 <code>return list(self._turns)</code> 返回副本？直接返回内部 list 会在什么场景下出 bug？<strong>返回元组的算对吗？</strong></li><li>⬜ Q3 <code>@property</code> 和「直接把属性写成 <code>public</code>」相比，多换来了什么？<strong>代价</strong>是什么？</li><li>⬜ Q4 <code>c.add</code> 不括号就能传走，这背后是什么机制？为什么 <code>Turn.add</code> 和 <code>Conversation().add</code> 的行为不同？</li><li>⬜ Q5 「组合优先于继承」在本项目里具体体现在哪一处？举一个「用继承会坏掉」的反例。</li></ul>
@@ -73,7 +152,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m01-async-await">M01 async / await</h2>
+<h2 id="m01-async-await">M01 async / await</h2><nav class="sec-nav"><a class="sn prev" href="#m00-类与-oop"><span class="sn-label">← 上一节</span><span class="sn-name">M00 类与 OOP</span></a><a class="sn next" href="#m02-异步-http-客户端"><span class="sn-label">下一节 →</span><span class="sn-name">M02 异步 HTTP 客户端</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/02-async-http-and-config</code> A1–A3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 调用 <code>async def f()</code> 之后得到的那个对象叫什么？为什么它「既不执行也不报错」？</li><li>⬜ Q2 为什么「并发真的省时间」这件事必须用<strong>墙钟时间</strong>证明，而不是靠日志顺序？如果替身的 <code>sleep</code> 被写成 <code>time.sleep()</code> 会怎样？</li><li>⬜ Q3 <code>asyncio.gather</code> 默认遇异常会怎么处理？和 <code>return_exceptions=True</code> 的差别适合什么场景？</li><li>⬜ Q4 「在 async 函数里调用阻塞式 IO」为什么比「在同步函数里调用」危害更大？</li></ul>
@@ -82,7 +161,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m02-异步-http-客户端">M02 异步 HTTP 客户端</h2>
+<h2 id="m02-异步-http-客户端">M02 异步 HTTP 客户端</h2><nav class="sec-nav"><a class="sn prev" href="#m01-async-await"><span class="sn-label">← 上一节</span><span class="sn-name">M01 async / await</span></a><a class="sn next" href="#m03-类型注解"><span class="sn-label">下一节 →</span><span class="sn-name">M03 类型注解</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/02-async-http-and-config</code> B1–B3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么要把 client 抽象成 <code>BaseLLMClient</code>，上层只依赖抽象？如果哪天要接第二个厂商，<strong>哪一层不需要改</strong>？</li><li>⬜ Q2 <code>FakeClient(fail_times=2)</code> 这种「测试替身」的作用是<strong>模拟失败</strong>还是<strong>模拟成功</strong>？它凭什么能让上层代码不需要分叉？</li><li>⬜ Q3 重试策略里「哪些错误值得重试、哪些绝不能重试」怎么分？为什么 401 不该重试而 429 应该？</li><li>⬜ Q4 为什么 <code>aclose()</code> 必须被显式调用？只靠 GC 会漏掉什么资源？</li></ul>
@@ -91,7 +170,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m03-类型注解">M03 类型注解</h2>
+<h2 id="m03-类型注解">M03 类型注解</h2><nav class="sec-nav"><a class="sn prev" href="#m02-异步-http-客户端"><span class="sn-label">← 上一节</span><span class="sn-name">M02 异步 HTTP 客户端</span></a><a class="sn next" href="#m04-dataclass"><span class="sn-label">下一节 →</span><span class="sn-name">M04 dataclass</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/01-oop-dataclass-typehints</code> B1–B3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 Python 的类型注解运行时<strong>为什么不报错</strong>？那它到底有什么用（至少说出两个真实用途）？</li><li>⬜ Q2 <code>Optional[str]</code> 和「返回 <code>str</code>，没值时返回 <code>&quot;&quot;</code>」相比，语义上差在哪？</li><li>⬜ Q3 <code>TypedDict</code> / <code>dict[str, str]</code> / <code>Message = dict</code> 三种写法分别在什么场合合适？本项目里 <code>memory.py</code> 选了哪种，为什么？</li><li>⬜ Q4 <code>runtime_checkable</code> 的 <code>Protocol</code> 做 <code>isinstance</code> 检查时，<strong>检查的是方法名还是签名</strong>？</li></ul>
@@ -100,7 +179,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m04-dataclass">M04 dataclass</h2>
+<h2 id="m04-dataclass">M04 dataclass</h2><nav class="sec-nav"><a class="sn prev" href="#m03-类型注解"><span class="sn-label">← 上一节</span><span class="sn-name">M03 类型注解</span></a><a class="sn next" href="#m05-配置与环境"><span class="sn-label">下一节 →</span><span class="sn-name">M05 配置与环境</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/01-oop-dataclass-typehints</code> C1–C3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么配置对象要 <code>@dataclass(frozen=True)</code>？如果不 frozen，什么场景下会踩坑？</li><li>⬜ Q2 <code>dataclasses.replace()</code> 会修改原对象吗？它和「深拷贝再改」的语义差别是什么？</li><li>⬜ Q3 为什么 <code>api_key</code> 要写 <code>field(repr=False)</code>？不写会发生什么事故？能用 Python 复述这行代码的意图吗？</li><li>⬜ Q4 frozen + <code>eq=True</code> 的对象可以直接放进 set / dict 吗？为什么 Python 要连带处理 <code>__hash__</code>？</li></ul>
@@ -109,7 +188,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m05-配置与环境">M05 配置与环境</h2>
+<h2 id="m05-配置与环境">M05 配置与环境</h2><nav class="sec-nav"><a class="sn prev" href="#m04-dataclass"><span class="sn-label">← 上一节</span><span class="sn-name">M04 dataclass</span></a><a class="sn next" href="#m06-日志"><span class="sn-label">下一节 →</span><span class="sn-name">M06 日志</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/02-async-http-and-config</code> C1–C3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 三档优先级「真实环境变量 &gt; .env 文件 &gt; 代码默认值」在 <code>load_dotenv</code> 里是靠哪个 API 实现的？写成 <code>os.environ[k] = v</code> 会错在哪？</li><li>⬜ Q2 为什么<strong>不在模块顶层执行 <code>from_env()</code></strong>？它具体会让哪个环节崩掉？</li><li>⬜ Q3 校验失败该在什么时候抛异常？为什么本项目选「构造 Settings 时就抛」而不是「第一次发请求时才抛」？</li><li>⬜ Q4 并发场景下 frozen 配置安全的真正理由是什么？换成 mutable 会具体坏在哪？</li></ul>
@@ -118,7 +197,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m06-日志">M06 日志</h2>
+<h2 id="m06-日志">M06 日志</h2><nav class="sec-nav"><a class="sn prev" href="#m05-配置与环境"><span class="sn-label">← 上一节</span><span class="sn-name">M05 配置与环境</span></a><a class="sn next" href="#m07-测试与调试"><span class="sn-label">下一节 →</span><span class="sn-name">M07 测试与调试</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-service-and-ops</code> A1–A3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么必须做脱敏，而且是在<strong>写日志之前</strong>做？「先把完整 headers 打出来、之后再清理日志」为什么不可行？</li><li>⬜ Q2 <code>redact_headers</code> 为什么要<strong>返回新字典</strong>而不是就地修改？</li><li>⬜ Q3 结构化日志（JSON）相对纯文本的优势在哪？什么场景下纯文本反而更好？</li><li>⬜ Q4 为什么要在 logger 上挂 <code>extra</code> 而不是把字段拼进 message 字符串？</li></ul>
@@ -127,7 +206,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m07-测试与调试">M07 测试与调试</h2>
+<h2 id="m07-测试与调试">M07 测试与调试</h2><nav class="sec-nav"><a class="sn prev" href="#m06-日志"><span class="sn-label">← 上一节</span><span class="sn-name">M06 日志</span></a><a class="sn next" href="#m08-打包"><span class="sn-label">下一节 →</span><span class="sn-name">M08 打包</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-service-and-ops</code> B1–B3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 <code>raise X from e</code> 和不写 <code>from</code> 的区别？分别会在 <code>__cause__</code> / <code>__context__</code> 上留下什么？</li><li>⬜ Q2 为什么<strong>失败路径也要写断言</strong>？只测成功路径的测试套件掩盖了哪类 bug？</li><li>⬜ Q3 什么叫「测试真的在拦错误」？你怎么证明你的用例不是空转的？</li><li>⬜ Q4 测试为什么必须能离线跑（用 <code>FakeClient</code> 而不是真实模型）？说出至少两条理由。</li></ul>
@@ -136,7 +215,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m08-打包">M08 打包</h2>
+<h2 id="m08-打包">M08 打包</h2><nav class="sec-nav"><a class="sn prev" href="#m07-测试与调试"><span class="sn-label">← 上一节</span><span class="sn-name">M07 测试与调试</span></a><a class="sn next" href="#m09-fastapi"><span class="sn-label">下一节 →</span><span class="sn-name">M09 FastAPI</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-service-and-ops</code> C1–C2</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 <code>pyproject.toml</code> 里 <code>[project]</code> 与 <code>[build-system]</code> 各自负责什么？把依赖写错到 <code>build-system.requires</code> 会怎样？</li><li>⬜ Q2 <code>pip install -e .</code> 和普通安装的区别是什么？为什么开发期要用 editable？</li><li>⬜ Q3 <code>__all__</code> 的作用边界在哪？它<strong>不能</strong>阻止什么？</li><li>⬜ Q4 console script 入口点（如 <code>ai-assistant = ...:main</code>）是怎么变成一条命令的？</li></ul>
@@ -145,7 +224,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m09-fastapi">M09 FastAPI</h2>
+<h2 id="m09-fastapi">M09 FastAPI</h2><nav class="sec-nav"><a class="sn prev" href="#m08-打包"><span class="sn-label">← 上一节</span><span class="sn-name">M08 打包</span></a><a class="sn next" href="#自测完成度自查"><span class="sn-label">下一节 →</span><span class="sn-name">自测完成度自查</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-service-and-ops</code> D1–D3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 依赖注入（Depends）解决的核心问题是什么？如果直接在路由里 <code>Service(...)</code> 会失去什么？</li><li>⬜ Q2 <code>TestClient</code> 能跑路由而<strong>不开端口</strong>，它内部用的是什么机制？</li><li>⬜ Q3 为什么底层抛业务异常时，接口层要把它映射成 HTTP 语义（如 429 / 502）？直接返回 500 有什么坏处？</li><li>⬜ Q4 入参校验放在哪一层最好？为什么把「空字符串」也当成非法输入而不是交给模型处理？</li></ul>
@@ -154,10 +233,53 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="自测完成度自查">自测完成度自查</h2>
+<h2 id="自测完成度自查">自测完成度自查</h2><nav class="sec-nav"><a class="sn prev" href="#m09-fastapi"><span class="sn-label">← 上一节</span><span class="sn-name">M09 FastAPI</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>全部 ⬜ 是起点。诚实填，这里只对你自己负责 —— 自欺欺人等于没学。</p></blockquote>
 <table><thead><tr><th>环节</th><th>状态</th></tr></thead><tbody><tr><td>10 章 milestone 读过</td><td>⬜</td></tr><tr><td>29 道题亲手敲过（未对照答案独立完成）</td><td>⬜</td></tr><tr><td><code>exercises/grade.py</code> 跑看过自己版本的输出</td><td>⬜</td></tr><tr><td>自测题能不看书答出要点</td><td>⬜</td></tr><tr><td>能给第二个人讲清楚「为什么这么设计」</td><td>⬜</td></tr></tbody></table>
 <p><strong>只有最后三项都能打 ✅ 时，这个 Project 才算「已学习」。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

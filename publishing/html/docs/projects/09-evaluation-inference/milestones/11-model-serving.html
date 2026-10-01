@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么是-openai-兼容-api以及为什么手写" class="lvl2">1. Why：为什么是 OpenAI 兼容 API，以及为什么手写</a><a href="#2-design四个端点一个对象" class="lvl2">2. Design：四个端点，一个对象</a><a href="#3-realrun-evidence来自-demosoutdemo11modelservingterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_11_model_serving_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-macos-的-httpproxy-会拦-localhost-必须显式禁用代理" class="lvl3">4.1 ⭐ macOS 的 HTTP_PROXY 会拦 localhost —— 必须显式禁用代理</a><a href="#42-4-并发墙钟-1146-ms-4-单请求均值-它们其实是串行的" class="lvl3">4.2 4 并发墙钟 11.46 ms &amp;gt; 4 × 单请求均值 —— 它们其实是串行的</a><a href="#43-sse-不-flush-就不是流式" class="lvl3">4.3 SSE 不 flush() 就不是流式</a><a href="#44-metricsrecord-必须覆盖异常路径" class="lvl3">4.4 metrics.record 必须覆盖异常路径</a><a href="#45-后端挂的是玩具模型2046-tokens-不能当生产指标" class="lvl3">4.5 ⚠ 后端挂的是玩具模型，2046 token/s 不能当生产指标</a><a href="#46-边界这个服务缺什么" class="lvl3">4.6 边界：这个服务缺什么</a><a href="#47-logmessage-被覆盖成空函数-demo-可复现性的小细节" class="lvl3">4.7 log_message 被覆盖成空函数 —— demo 可复现性的小细节</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-11-model-servinghttpserver-openai-api-sse">Milestone 11 — Model Serving：http.server + OpenAI API + SSE</h1>
 <p>前十层都在&quot;离线&quot;地评估和压榨模型。最后一层把它们<strong>服务出去</strong>：起一个 HTTP 服务，接受 OpenAI 兼容的请求，非流式返回 JSON、流式返回 SSE，并暴露 <code>/health</code> 与 <code>/metrics</code>。</p>
@@ -62,12 +141,12 @@ li{margin:.3em 0;}
 <pre><code>评估（M01-05） → 压模型（M06） → 压延迟（M07-10） → 服务化（M11）</code></pre>
 <p><strong>纯 Python 标准库</strong>：<code>http.server</code> + <code>urllib.request</code> + <code>threading</code> + <code>json</code> + <code>uuid</code>。<strong>没有 FastAPI、没有 uvicorn、没有 vLLM、没有 openai SDK</strong> —— 连客户端都是自己用 <code>urllib</code> 写的。</p>
 <hr/>
-<h2 id="1-why为什么是-openai-兼容-api以及为什么手写">1. Why：为什么是 OpenAI 兼容 API，以及为什么手写</h2>
+<h2 id="1-why为什么是-openai-兼容-api以及为什么手写">1. Why：为什么是 OpenAI 兼容 API，以及为什么手写</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design四个端点一个对象"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：四个端点，一个对象</span></a></nav>
 <p><strong>为什么 OpenAI 兼容</strong>：它已经是事实标准。任何支持它的客户端（<code>openai</code> SDK、LangChain、各类前端）都能零改动接进来。自己发明一套协议等于把自己隔离在生态之外。</p>
 <p><strong>为什么手写 HTTP 而不是 FastAPI</strong>：</p>
 <ul class="lvl"><li><strong>暴露真实复杂度</strong>。FastAPI + uvicorn 帮你处理了并发模型、keep-alive、流式响应的 chunk 编码 —— 你就永远不知道 SSE 到底要发哪些 header。</li><li><strong><code>stream_options.include_usage</code> 这类细节只有自己写才会碰到</strong>。OpenAI 的流式协议里，usage 是在最后一个 chunk 之后、<code>[DONE]</code> 之前单独发的，且 <code>choices</code> 为空数组。</li><li><strong>零依赖</strong>：整个 P09 只有 numpy，这一章连 HTTP 都不借外力。</li></ul>
 <p>代价也要写清楚：<strong>这个服务没有鉴权、没有限流、没有请求超时、没有真正的批处理调度</strong>（见 4.6）。它是一个&quot;把原理跑通&quot;的服务，不是生产服务。</p>
-<h2 id="2-design四个端点一个对象">2. Design：四个端点，一个对象</h2>
+<h2 id="2-design四个端点一个对象">2. Design：四个端点，一个对象</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么是-openai-兼容-api以及为什么手写"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么是 OpenAI 兼容 API，以及为什么手写</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo11modelservingterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_11_model_serving_terminal.txt）</span></a></nav>
 <pre><code>class ServingMetrics:
     requests / errors / generated_tokens / latencies_ms      # 全部在 threading.Lock 下更新
     snapshot() -&gt; 请求数 / 错误数 / token 数 / 均值 / p50 / p95 / token 吞吐
@@ -80,7 +159,7 @@ make_handler(engine, tokenizer, metrics) -&gt; BaseHTTPRequestHandler
 <ul class="lvl"><li><strong><code>ThreadingHTTPServer</code> + <code>daemon_threads</code></strong>（<code>src/ie/serve.py:187</code>）：每个请求一个线程，进程退出时不卡在等待上。</li><li><strong><code>protocol_version = &quot;HTTP/1.1&quot;</code> + 显式 <code>Content-Length</code></strong>：HTTP/1.1 默认 keep-alive，但<strong>必须给出准确的 <code>Content-Length</code></strong>，否则客户端不知道响应体何时结束，会一直等。<code>_json</code> 里用 <code>len(body)</code> 计算。</li><li><strong>SSE 的三件套 header</strong>：<code>Content-Type: text/event-stream</code>、<code>Cache-Control: no-cache</code>、<code>Connection: close</code>，并在每次 <code>write</code> 后 <code>flush()</code> —— <strong>不 flush 的话数据会留在缓冲区，客户端看不到&quot;流式&quot;</strong>。</li><li><strong><code>metrics.record</code> 在异常路径也要调用</strong>（<code>src/ie/serve.py:130</code>）：<code>except</code> 分支里同样 <code>record(..., error=True)</code>，否则错误请求不计入错误率 —— <strong>一个永远显示 <code>errors: 0</code> 的监控等于没有监控</strong>。</li></ul>
 <p><strong>消息 → prompt 的转换</strong>（<code>src/ie/serve.py:45</code>）：把 <code>messages</code> 渲染成 <code>role: content</code> 逐行拼接，末尾加 <code>assistant:</code>。这是最朴素的 chat template —— 真实模型有各自的 template，用错了质量会明显下降。</p>
 <figure class="figure"><img alt="M11 服务架构：HTTP 端点 + OpenAI 兼容协议 + SSE 流式 + metrics" src="../../../../../../projects/09-evaluation-inference/assets/model-serving.svg" loading="lazy"/><figcaption>M11 服务架构：HTTP 端点 + OpenAI 兼容协议 + SSE 流式 + metrics</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo11modelservingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_11_model_serving_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo11modelservingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_11_model_serving_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design四个端点一个对象"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：四个端点，一个对象</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。<code>port=0</code> 让内核分配空闲端口。</p>
 <pre><code>  服务地址（port=0 实际分配）                  http://127.0.0.1:50712
   GET /health                        HTTP 200, status=ok
@@ -105,7 +184,7 @@ make_handler(engine, tokenizer, metrics) -&gt; BaseHTTPRequestHandler
 <p>五个读数：</p>
 <ul class="lvl"><li><strong><code>port=0</code> 实际分配到 50712</strong>。这是让内核挑空闲端口的标准做法 —— demo 不用硬编码端口，也就不会和机器上已经跑着的服务打架。</li><li><strong>SSE 的 <code>stream_options.include_usage=true</code> 生效</strong>：6 个 token chunk 之后单独发了 1 个 usage chunk（<code>choices: []</code>），最后发 <code>data: [DONE]</code>。</li><li><strong>4 个并发请求 4/4 成功，零错误</strong>（<code>错误数 0</code>）。</li><li><strong>p95 3.311 ms vs 均值 2.199 ms</strong> —— 长尾约为均值的 1.5 倍，符合&quot;请求长度不同 + 线程调度&quot;的预期。</li><li><strong>2046.08 token/s</strong> —— 见 4.5，这个数<strong>不能当生产指标</strong>。</li></ul>
 <figure class="figure"><img alt="M11 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-11-model-serving.png" loading="lazy"/><figcaption>M11 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo11modelservingterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_11_model_serving_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-macos-的-httpproxy-会拦-localhost-必须显式禁用代理">4.1 ⭐ macOS 的 <code>HTTP_PROXY</code> 会拦 localhost —— 必须显式禁用代理</h3>
 <p>这是本章唯一一个<strong>会让 demo 直接跑不起来</strong>的真实踩坑。</p>
 <p><code>urllib.request</code> 默认会读环境变量 <code>http_proxy</code> / <code>HTTP_PROXY</code> / <code>no_proxy</code>。在 macOS 上（尤其装了代理软件、<code>brew</code> 配过代理、或公司网络环境下），<code>HTTP_PROXY</code> <strong>通常是全局设置的</strong> —— 于是 <code>urlopen(&quot;http://127.0.0.1:50712/health&quot;)</code> 会被<strong>送进代理</strong>，代理当然找不到你本机刚起的临时端口，直接失败。</p>
@@ -152,12 +231,55 @@ make_handler(engine, tokenizer, metrics) -&gt; BaseHTTPRequestHandler
     return</code></pre>
 <p><code>BaseHTTPRequestHandler</code> 默认会把每个请求打到 stderr。demo 要把输出落进 <code>demos/out/*.txt</code> 做对比，<strong>stderr 的日志会污染输出</strong>。</p>
 <p>这类&quot;为了让输出可复现而静音&quot;的处理，在整个 P09 反复出现（M02 的全序排序、M03 的 seed、M07 的中位数）—— <strong>可复现性是一系列小决定的总和，不是某一个大决定。</strong></p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>服务 = <strong>4 个端点 + 1 个 <code>ServingMetrics</code></strong>：<code>/health</code>、<code>/metrics</code>、<code>POST /v1/chat/completions</code>（<code>stream=false</code> → JSON / <code>stream=true</code> → SSE）。</li><li>实测（<code>port=0</code> → <strong>50712</strong>）：<code>/health</code> 200、<code>non-stream</code> 200（<code>object=chat.completion</code>，5 token）、SSE 200（<strong>6 token chunk + 1 usage chunk</strong>，<strong>总 data 事件 9</strong>）、<strong>4 并发 4/4 成功（墙钟 11.46 ms）</strong>。</li><li><strong><code>/metrics</code> 数字自洽</strong>：请求 <strong>6</strong> = 1+1+4；生成 token <strong>27</strong> = 5+6+16；均值 <strong>2.199 ms</strong>、p95 <strong>3.311 ms</strong>、<strong>2046.08 token/s</strong>（<code>27 / 13.196 ms</code> 反解一致）；错误 <strong>0</strong>。</li><li>⭐ <strong>macOS 的 <code>HTTP_PROXY</code> 会拦 localhost</strong> —— 必须用 <code>build_opener(ProxyHandler({}))</code> 显式禁用代理，否则连不上自己的服务。这是真实踩坑。</li><li><strong>SSE 必须 <code>flush()</code> + <code>Connection: close</code> + <code>Cache-Control: no-cache</code></strong>，否则退化成一次性返回。</li><li><strong><code>metrics.record</code> 要覆盖异常路径</strong>（<code>error=True</code>），否则错误率恒为 0、延迟统计有幸存者偏差。</li><li>⚠ <strong>4 并发实测是串行的</strong>（11.46 ms &gt; 4×2.199 ms）—— GIL + 无批处理；<strong>M09 的 continuous batching 未接入 HTTP 层</strong>，这是明确的下一步。</li><li>⚠ <strong>后端是玩具模型不是 7B</strong>：2046.08 token/s 只用于证明 <code>/metrics</code> 计算自洽，<strong>不能当生产指标</strong>。</li><li><strong>边界</strong>：无鉴权 / 无 限流 / 无超时 / 无 KV 准入控制 —— 刻意不做，避免把 demo 误读成生产方案。</li><li>手写实现的意义：因为 HTTP handler 是自己写的，我才能<strong>精确控制 SSE 的每个字节</strong>（<code>data: {json}\n\n</code>）并验证 <code>include_usage</code> 的 chunk 顺序 —— 用 FastAPI 的 <code>StreamingResponse</code> 你只会得到一个&quot;能跑&quot;的黑盒。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/serve.py</code></td><td><code>ServingMetrics</code>（<code>threading.Lock</code> 下的请求/错误/token/延迟记录，<code>snapshot()</code> 算均值/p50/p95/token 吞吐）/ <code>_prompt_from_messages</code>（<code>role: content</code> 拼接 + <code>assistant:</code>）/ <code>make_handler</code>（<code>do_GET</code> / <code>do_POST</code> / <code>_stream</code>）/ <code>create_server</code> / <code>start_server</code>（后台线程 <code>serve_forever</code>）/ <code>stop_server</code> / <strong><code>no_proxy_opener</code>（<code>ProxyHandler({})</code>，本章最关键的踩坑修复）</strong></td></tr><tr><td><code>src/ie/serve.py:59</code></td><td><code>protocol_version = &quot;HTTP/1.1&quot;</code> —— 配合显式 <code>Content-Length</code> 支持 keep-alive</td></tr><tr><td><code>src/ie/serve.py:130</code></td><td>异常路径同样 <code>metrics.record(..., error=True)</code></td></tr><tr><td><code>src/ie/serve.py:201</code></td><td><code>no_proxy_opener()</code>：<code>build_opener(ProxyHandler({}))</code></td></tr><tr><td><code>src/ie/engine.py</code></td><td><code>CausalLMWithKVCache.generate_ids</code>：服务端的生成后端（M07 的引擎，带 KV Cache）</td></tr><tr><td><code>demos/demo_11_model_serving.py</code></td><td>5 节：启动 / health / non-stream / SSE / 4 并发 + metrics</td></tr><tr><td><code>demos/out/demo_11_model_serving_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/model-serving.svg</code></td><td>本章服务架构与 SSE 流式图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.10 → <strong>v1.0</strong>，M11 模型服务化落地，Project 09 主线完成。实测（<code>port=0</code> → <strong>50712</strong>）：<code>/health</code> HTTP 200 <code>status=ok</code>；non-stream HTTP 200 <code>object=chat.completion</code>（5 token）；SSE HTTP 200、<strong>6 个 token chunk + 1 个 usage chunk</strong>、<strong>总 data 事件 9</strong>（含 finish、usage、<code>[DONE]</code>）；<strong>4 并发 4/4 成功，墙钟 11.46 ms</strong>；<code>/metrics</code> 请求 <strong>6</strong> / 错误 <strong>0</strong> / 生成 token <strong>27</strong> / 平均延迟 <strong>2.199 ms</strong> / p95 <strong>3.311 ms</strong> / <strong>2046.08 token/s</strong>（27 ÷ 13.196 ms 反解自洽）。并诚实记录「⭐ <strong>macOS 的 <code>HTTP_PROXY</code> 会拦 localhost，必须 <code>ProxyHandler({})</code> 显式禁用代理</strong>」「⚠ 4 并发实际串行（11.46 ms &gt; 4×2.199 ms），GIL + 未接入 M09 批处理，是明确下一步」「⚠ 后端是玩具模型不是 7B，2046.08 token/s 仅证明 <code>/metrics</code> 计算自洽，不可当生产指标」「无鉴权 / 限流 / 超时 / KV 准入控制」。纯 Python 标准库（<code>http.server</code> + <code>urllib</code> + <code>threading</code>），无 FastAPI / uvicorn / vLLM / openai SDK。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

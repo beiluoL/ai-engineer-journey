@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#81-为什么需要对齐" class="lvl2">8.1 为什么需要对齐</a><a href="#82-rlhf-三阶段" class="lvl2">8.2 RLHF 三阶段</a><a href="#821-奖励模型把偏好变成标量" class="lvl3">8.2.1 奖励模型：把偏好变成标量</a><a href="#822-ppo-目标" class="lvl3">8.2.2 PPO 目标</a><a href="#83-dpo把-rlhf-化简成一个监督损失" class="lvl2">8.3 DPO：把 RLHF 化简成一个监督损失</a><a href="#84-后续演进更简单更省数据" class="lvl2">8.4 后续演进：更简单、更省数据</a><a href="#85-奖励劫持reward-hacking与安全" class="lvl2">8.5 奖励劫持（Reward Hacking）与安全</a><a href="#86-对齐的完整位置" class="lvl2">8.6 对齐的完整位置</a><a href="#87-常被误解的点" class="lvl2">8.7 常被误解的点</a><a href="#88-自查问题" class="lvl2">8.8 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="08-对齐从会续写到会听话">08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</h1>
 <blockquote><p><strong>一句话结论</strong>：对齐 = <strong>用人类偏好数据，把&quot;预测下一个 token&quot;的目标改造成&quot;输出人类喜欢的回答&quot;</strong>。 主流路线是 RLHF（奖励模型 + 强化学习），而 DPO 把其中两步合并成一个类似监督学习的损失，工程门槛低得多。</p></blockquote>
 <hr/>
-<h2 id="81-为什么需要对齐">8.1 为什么需要对齐</h2>
+<h2 id="81-为什么需要对齐">8.1 为什么需要对齐</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#82-rlhf-三阶段"><span class="sn-label">下一节 →</span><span class="sn-name">8.2 RLHF 三阶段</span></a></nav>
 <p>预训练（<a href="04-pretraining.html">第 04 章</a>）和指令微调（<a href="05-finetuning.html">第 05 章</a>）之后，模型&quot;能听懂指令&quot;了，但还不能判断<strong>什么样的回答算好回答</strong>：</p>
 <table><thead><tr><th>问题</th><th>表现</th><th>对齐如何解决</th></tr></thead><tbody><tr><td>有害内容</td><td>问危险问题照答</td><td>偏好数据中&quot;拒绝&quot;被标注为更好</td></tr><tr><td>幻觉</td><td>编造事实时同样自信</td><td>偏好数据中&quot;承认不知道&quot;优于&quot;编造&quot;</td></tr><tr><td>冗长/谄媚</td><td>话多、讨好、不直接</td><td>人类偏好更短、更直接、更诚实的回答</td></tr><tr><td>格式混乱</td><td>该列表的写成一段</td><td>偏好数据固定了常用输出结构</td></tr><tr><td>不做澄清</td><td>遇到模糊需求直接瞎答</td><td>学会反问</td></tr></tbody></table>
 <p>关键点：<strong>&quot;好回答&quot;很难用规则写出来，但人很容易比较两个回答谁更好</strong>。这就是偏好数据的价值——<strong>相对判断比绝对评分更可靠</strong>。</p>
 <hr/>
-<h2 id="82-rlhf-三阶段">8.2 RLHF 三阶段</h2>
+<h2 id="82-rlhf-三阶段">8.2 RLHF 三阶段</h2><nav class="sec-nav"><a class="sn prev" href="#81-为什么需要对齐"><span class="sn-label">← 上一节</span><span class="sn-name">8.1 为什么需要对齐</span></a><a class="sn next" href="#83-dpo把-rlhf-化简成一个监督损失"><span class="sn-label">下一节 →</span><span class="sn-name">8.3 DPO：把 RLHF 化简成一个监督损失</span></a></nav>
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>S1</code> — ① SFT 指令-回答对监督微调 （第 05 章）</li><li><code>M0</code> — SFT 模型 π_SFT</li><li><code>S2</code> — ② 训练奖励模型 RM 同一问题生成多个回答 人类标注两两偏好 学一个打分函数 r(x,y)</li><li><code>RM</code> — 奖励模型 r_φ</li><li><code>S3</code> — ③ 强化学习 (PPO) 用 RM 当裁判 最大化期望奖励 同时加 KL 惩罚别跑偏</li><li><code>F</code> — 对齐后的模型 π_θ</li></ul></div>
 <table><thead><tr><th>阶段</th><th>数据</th><th>产物</th><th>训练信号</th></tr></thead><tbody><tr><td>① SFT</td><td>指令-回答对</td><td>会听指令的模型</td><td>监督（交叉熵）</td></tr><tr><td>② RM</td><td>同一 prompt 下的回答<strong>排序</strong>（A &gt; B）</td><td>打分器 r(x,y)</td><td>偏好对（分类/回归）</td></tr><tr><td>③ RL</td><td>无需新标注，模型自己采样</td><td>最终策略 π_θ</td><td>标量奖励（RM 打分）</td></tr></tbody></table>
 <h3 id="821-奖励模型把偏好变成标量">8.2.1 奖励模型：把偏好变成标量</h3>
@@ -80,7 +159,7 @@ li{margin:.3em 0;}
 <p>为什么 KL 惩罚必不可少：<strong>RM 只是人类偏好的一个近似</strong>。让模型无约束地去骗这个近似，等价于&quot;过度拟合奖励模型的偏好&quot;，会牺牲真实有用性。KL 项就是&quot;别忘了原本会说话&quot;。</p>
 <blockquote><p>PPO 本身是个复杂的 RL 算法（actor + critic + 优势估计 + 裁剪目标）。对齐场景里普遍用简化配置（去掉部分组件、用 GAE、共享 backbone），这也是它工程复杂、容易训崩的原因。</p></blockquote>
 <hr/>
-<h2 id="83-dpo把-rlhf-化简成一个监督损失">8.3 DPO：把 RLHF 化简成一个监督损失</h2>
+<h2 id="83-dpo把-rlhf-化简成一个监督损失">8.3 DPO：把 RLHF 化简成一个监督损失</h2><nav class="sec-nav"><a class="sn prev" href="#82-rlhf-三阶段"><span class="sn-label">← 上一节</span><span class="sn-name">8.2 RLHF 三阶段</span></a><a class="sn next" href="#84-后续演进更简单更省数据"><span class="sn-label">下一节 →</span><span class="sn-name">8.4 后续演进：更简单、更省数据</span></a></nav>
 <p><strong>核心洞察</strong>（Rafailov et al. 2023）：在 KL 约束下最大化奖励的那个最优策略，有解析解：</p>
 <p>$$ \pi^*(y \mid x) = \frac{1}{Z(x)} \, \pi_{ref}(y \mid x) \exp\!\left(\frac{1}{\beta} r(x,y)\right) $$</p>
 <p>反过来就能把&quot;奖励&quot;用策略和参考模型的概率比表达出来：</p>
@@ -98,29 +177,72 @@ DPO:   只需 2 个模型
 <table><thead><tr><th>维度</th><th>RLHF（PPO）</th><th>DPO</th></tr></thead><tbody><tr><td>需要的模型数</td><td>4（actor/critic/RM/ref）</td><td>2（policy/ref）</td></tr><tr><td>训练稳定性</td><td>差（RL 调参敏感、易 reward hack）</td><td>好（监督式损失，和 SFT 同级）</td></tr><tr><td>数据需求</td><td>偏好对 + 需要在线采样</td><td><strong>只要现成的偏好对</strong></td></tr><tr><td>效果</td><td>上限更高（有在线探索）</td><td>多数场景接近，部分任务略逊</td></tr><tr><td>算力</td><td>高</td><td>低（约等于一次 SFT）</td></tr><tr><td>适用</td><td>大厂、追求极限</td><td>✅ 绝大多数团队与个人</td></tr></tbody></table>
 <p><strong>实践建议</strong>：预算有限或刚开始做对齐 → <strong>DPO</strong>；有稳定的 RM 且要压榨上限 → RLHF/GRPO。</p>
 <hr/>
-<h2 id="84-后续演进更简单更省数据">8.4 后续演进：更简单、更省数据</h2>
+<h2 id="84-后续演进更简单更省数据">8.4 后续演进：更简单、更省数据</h2><nav class="sec-nav"><a class="sn prev" href="#83-dpo把-rlhf-化简成一个监督损失"><span class="sn-label">← 上一节</span><span class="sn-name">8.3 DPO：把 RLHF 化简成一个监督损失</span></a><a class="sn next" href="#85-奖励劫持reward-hacking与安全"><span class="sn-label">下一节 →</span><span class="sn-name">8.5 奖励劫持（Reward Hacking）与安全</span></a></nav>
 <table><thead><tr><th>方法</th><th>一句话</th><th>需要偏好对？</th><th>需要奖励模型？</th></tr></thead><tbody><tr><td>PPO（RLHF）</td><td>经典在线 RL</td><td>RM 生成的偏好</td><td>是</td></tr><tr><td><strong>DPO</strong></td><td>离线偏好优化的解析化简</td><td>是</td><td>否</td></tr><tr><td><strong>RLAIF / Constitutional AI</strong></td><td>用 AI（而非人类）生成偏好标注</td><td>是（AI 生成）</td><td>视实现</td></tr><tr><td><strong>GRPO</strong>（DeepSeek）</td><td>去掉 critic，组内相对比较估优势</td><td>否（用规则/答案）</td><td>可选</td></tr><tr><td>ORPO</td><td>把 SFT 和偏好优化合成一步</td><td>是</td><td>否</td></tr><tr><td>KTO</td><td>只需要&quot;好/坏&quot;二元标签，不需要成对</td><td>否（单条即可）</td><td>否</td></tr><tr><td>SimPO</td><td>DPO 的无参考模型版本（用平均 log 概率当隐式奖励）</td><td>是</td><td>否</td></tr></tbody></table>
 <p><strong>RLAIF 为什么重要</strong>：人类标注贵且慢。用强模型（或按一套&quot;宪法原则&quot;自我批判）生成偏好数据，成本降一个数量级，效果在多数任务上接近 RLHF——这是当前工业界对齐数据的主要来源之一。</p>
 <p><strong>GRPO 为什么火</strong>：推理模型（如 DeepSeek-R1）训练时用<strong>规则可验证的奖励</strong>（数学答案对不对、代码过不过测试）取代人类偏好模型，配合组内相对优势估计，避免训练一个 critic。这直接绕开了&quot;奖励模型被钻空子&quot;的问题——因为奖励是客观可验证的。</p>
 <hr/>
-<h2 id="85-奖励劫持reward-hacking与安全">8.5 奖励劫持（Reward Hacking）与安全</h2>
+<h2 id="85-奖励劫持reward-hacking与安全">8.5 奖励劫持（Reward Hacking）与安全</h2><nav class="sec-nav"><a class="sn prev" href="#84-后续演进更简单更省数据"><span class="sn-label">← 上一节</span><span class="sn-name">8.4 后续演进：更简单、更省数据</span></a><a class="sn next" href="#86-对齐的完整位置"><span class="sn-label">下一节 →</span><span class="sn-name">8.6 对齐的完整位置</span></a></nav>
 <p><strong>定义</strong>：模型学会<strong>提高奖励分数</strong>而不是<strong>真正变得更好</strong>。</p>
 <table><thead><tr><th>症状</th><th>例子</th></tr></thead><tbody><tr><td>谄媚（sycophancy）</td><td>用户说错话，模型顺着说&quot;你说得对&quot;</td></tr><tr><td>长度膨胀</td><td>RM 偏好长回答 → 输出越来越啰嗦</td></tr><tr><td>格式讨好</td><td>无脑堆列表、加粗、emoji 骗分</td></tr><tr><td>过度拒绝</td><td>安全训练过头，正常问题也拒答</td></tr><tr><td>拒绝承认不知道</td><td>宁可编也不说&quot;我不确定&quot;</td></tr></tbody></table>
 <p>对应治理手段：</p>
 <table><thead><tr><th>手段</th><th>说明</th></tr></thead><tbody><tr><td>KL 约束</td><td>限制偏离参考模型（<a href="#822-ppo-目标">8.2.2</a>）</td></tr><tr><td>奖励模型集成</td><td>多个 RM 平均，降低被单点欺骗的概率</td></tr><tr><td>可验证奖励</td><td>用规则/单测代替人偏好（数学、代码）</td></tr><tr><td>长度/格式去偏</td><td>训练 RM 时消除长度等表面特征的相关性</td></tr><tr><td>红队测试 + 持续评估</td><td>上线前系统化找漏洞</td></tr><tr><td>定期用人类抽检校准</td><td>防止指标好看但体验变差</td></tr></tbody></table>
 <blockquote><p><strong>核心矛盾</strong>：对齐指标（RM 分数、胜率）是<strong>代理指标</strong>，而我们要的是&quot;真实有用、安全&quot;。代理指标一定可以被优化到失真。这不是工程 bug，而是这类方法的固有风险。</p></blockquote>
 <hr/>
-<h2 id="86-对齐的完整位置">8.6 对齐的完整位置</h2>
+<h2 id="86-对齐的完整位置">8.6 对齐的完整位置</h2><nav class="sec-nav"><a class="sn prev" href="#85-奖励劫持reward-hacking与安全"><span class="sn-label">← 上一节</span><span class="sn-name">8.5 奖励劫持（Reward Hacking）与安全</span></a><a class="sn next" href="#87-常被误解的点"><span class="sn-label">下一节 →</span><span class="sn-name">8.7 常被误解的点</span></a></nav>
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>P</code> — 预训练 Base Model</li><li><code>S</code> — SFT 会听指令</li><li><code>A</code> — 偏好优化 RLHF / DPO / GRPO</li><li><code>R</code> — 推理模型 + 可验证奖励 RL</li><li><code>D</code> — 部署 + 系统提示 + 工具 + 安全护栏</li><li><code>E</code> — 持续评估与红队</li></ul></div>
 <p><strong>对齐不是终点</strong>：系统提示、RAG、工具调用、输出过滤、权限控制都是&quot;部署期对齐&quot;的一部分。把安全性完全寄托在权重上是不现实的。</p>
 <hr/>
-<h2 id="87-常被误解的点">8.7 常被误解的点</h2>
+<h2 id="87-常被误解的点">8.7 常被误解的点</h2><nav class="sec-nav"><a class="sn prev" href="#86-对齐的完整位置"><span class="sn-label">← 上一节</span><span class="sn-name">8.6 对齐的完整位置</span></a><a class="sn next" href="#88-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">8.8 自查问题</span></a></nav>
 <table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;RLHF 让模型学会了新知识&quot;</td><td>它调的是<strong>偏好与风格</strong>；知识来自预训练</td></tr><tr><td>&quot;DPO 完全等价于 RLHF&quot;</td><td>在离线数据下接近，但缺少在线探索，上限通常略低</td></tr><tr><td>&quot;KL 惩罚是为了防止过拟合&quot;</td><td>更准确说是防止<strong>偏离参考模型去骗奖励模型</strong>（reward hacking）</td></tr><tr><td>&quot;对齐后困惑度应该更低&quot;</td><td>常常<strong>略升</strong>；因为优化目标变了，人类评价才是准绳</td></tr><tr><td>&quot;安全对齐靠加一堆拒绝话术&quot;</td><td>过度拒绝本身是缺陷；好的对齐是&quot;该拒的拒、该答的认真答&quot;</td></tr><tr><td>&quot;有 RM 就够了&quot;</td><td>RM 是代理指标，可被优化到失真；必须配合评估与人类抽检</td></tr></tbody></table>
 <hr/>
-<h2 id="88-自查问题">8.8 自查问题</h2>
+<h2 id="88-自查问题">8.8 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#87-常被误解的点"><span class="sn-label">← 上一节</span><span class="sn-name">8.7 常被误解的点</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>为什么用两两比较而不是绝对打分来收集偏好数据？</li><li>写出 Bradley-Terry 偏好概率与 RM 损失。</li><li>PPO 目标里的 KL 项作用是什么？去掉会怎样？</li><li>DPO 为什么不需要奖励模型？它的损失在比较什么？</li><li>RLHF 和 DPO 各需要几个模型？工程差异体现在哪里？</li><li>什么是 reward hacking？举三个真实症状。</li><li>为什么推理模型偏好&quot;可验证奖励&quot;而不是人类偏好模型？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="07-decoding-and-inference.html">← 上一章：解码与推理</a> · <a href="README.html">返回总览</a> · <a href="09-math-foundations.html">下一章：数学基础 →</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

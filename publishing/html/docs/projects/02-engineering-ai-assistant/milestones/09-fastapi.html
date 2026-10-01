@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-最小应用" class="lvl3">3.1 最小应用</a><a href="#32-pydantic-模型-spring-的-dto" class="lvl3">3.2 Pydantic 模型 = Spring 的 DTO</a><a href="#33-依赖注入depends" class="lvl3">3.3 依赖注入：Depends</a><a href="#34-生命周期lifespan" class="lvl3">3.4 生命周期：lifespan</a><a href="#35-sse-流式输出" class="lvl3">3.5 SSE 流式输出</a><a href="#36-async-def-vs-def" class="lvl3">3.6 async def vs def</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1async-路由里做同步阻塞" class="lvl3">坑 1：async 路由里做同步阻塞</a><a href="#坑-2每次请求新建-http-client" class="lvl3">坑 2：每次请求新建 HTTP client</a><a href="#坑-3忘了-await" class="lvl3">坑 3：忘了 await</a><a href="#坑-4sse-被中间件缓冲" class="lvl3">坑 4：SSE 被中间件缓冲</a><a href="#坑-5422-看不懂" class="lvl3">坑 5：422 看不懂</a><a href="#坑-6cors" class="lvl3">坑 6：CORS</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-09fastapiweb-服务">Project 02 — Chapter 09：FastAPI【Web 服务】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/api.py</code> 前置：Chapter 01（async）、Chapter 08（packaging）</p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>现在的助手只能自己在命令行里用：</p>
 <pre><code>ai-assistant &quot;问题&quot;</code></pre>
 <p>但真实场景需要的是<strong>给别人用</strong>：</p>
@@ -71,7 +150,7 @@ li{margin:.3em 0;}
 <p>关键约束：</p>
 <blockquote><p><strong>不重写业务逻辑。</strong> CLI 和 API 复用同一个 <code>AssistantService</code>。</p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>FastAPI 在 Python 生态里的位置，约等于 Spring Boot 在 Java 生态里的位置：</p>
 <pre><code>Spring Boot = Spring MVC + 自动配置 + 内嵌 Tomcat
 FastAPI     = Starlette(ASGI) + Pydantic 校验 + 自动生成 OpenAPI 文档</code></pre>
@@ -81,7 +160,7 @@ FastAPI     = Starlette(ASGI) + Pydantic 校验 + 自动生成 OpenAPI 文档</c
 3. 类型驱动 —— 用 Python 类型注解声明请求/响应，自动校验 + 自动补全</code></pre>
 <p>第三点对 AI 应用特别友好：请求体、响应体、SSE 事件格式都能用类型约束住。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-最小应用">3.1 最小应用</h3>
 <pre><code># src/assistant/api.py
 from fastapi import FastAPI
@@ -198,7 +277,7 @@ async def chat(req: ChatRequest):
     requests.get(...)    # ❌ 同步 HTTP，同样卡死
     await client.chat()  # ✅ 异步 HTTP，OK</code></pre>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <pre><code>src/assistant/
 ├── service.py     # AssistantService：业务逻辑（CLI 和 API 共用）
 ├── cli.py         # 命令行入口
@@ -213,12 +292,12 @@ async def chat(req: ChatRequest):
 3. 包装响应</code></pre>
 <p>这样 CLI 和 API 永远不会逻辑不一致——它们本来就是同一份代码。</p>
 <hr/>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Spring Boot</th><th>FastAPI</th><th>说明</th></tr></thead><tbody><tr><td><code>@RestController</code></td><td><code>APIRouter()</code> / 装饰器</td><td>同</td></tr><tr><td><code>@PostMapping(&quot;/x&quot;)</code></td><td><code>@app.post(&quot;/x&quot;)</code></td><td>同</td></tr><tr><td><code>@RequestBody</code> DTO</td><td>Pydantic <code>BaseModel</code></td><td>FastAPI 自动校验</td></tr><tr><td><code>@Valid</code></td><td>类型注解 + <code>Field()</code></td><td>声明式校验</td></tr><tr><td><code>@Autowired</code></td><td><code>Depends(...)</code></td><td>依赖注入</td></tr><tr><td><code>@PostConstruct</code></td><td><code>lifespan</code> 里 yield 之前</td><td>启动初始化</td></tr><tr><td><code>@PreDestroy</code></td><td><code>lifespan</code> 里 yield 之后</td><td>关闭清理</td></tr><tr><td><code>@ExceptionHandler</code></td><td><code>@app.exception_handler(...)</code></td><td>同</td></tr><tr><td>Filter / Interceptor</td><td>Middleware</td><td>同</td></tr><tr><td><code>ResponseEntity</code></td><td>直接返回 dict / Pydantic 对象</td><td>FastAPI 自动序列化</td></tr><tr><td><code>springdoc-openapi</code></td><td>内置 <code>/docs</code></td><td>FastAPI 零配置</td></tr><tr><td>Tomcat（线程池）</td><td>uvicorn（事件循环）</td><td><strong>架构不同</strong>：线程 vs 协程</td></tr></tbody></table>
 <p>最需要转过来的思维：</p>
 <blockquote><p><strong>Spring 用「线程池」扛并发（一个请求一个线程），FastAPI 用「事件循环」。</strong> 所以 Spring 里 <code>Thread.sleep</code> 只卡当前请求，FastAPI 里 <code>time.sleep</code> 卡所有人。</p></blockquote>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1async-路由里做同步阻塞">坑 1：async 路由里做同步阻塞</h3>
 <p>见 3.6。症状：服务在压测时 QPS 掉到个位数，CPU 却很闲。</p>
 <p>排查：所有 <code>async def</code> 里搜 <code>requests.</code> / <code>time.sleep</code> / 同步文件 IO。</p>
@@ -252,15 +331,15 @@ app.add_middleware(
     allow_headers=[&quot;*&quot;],
 )</code></pre>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：实现 <code>POST /chat</code> 和 <code>GET /health</code>，用 <code>/docs</code> 页面手工调通。</p>
 <p><strong>挑战 2</strong>：实现 SSE 流式端点，用 <code>curl -N</code> 验证内容是一段段出来的，而不是一次返回。</p>
 <p><strong>挑战 3（进阶）</strong>：用 <code>TestClient</code> 写集成测试，通过 <code>dependency_overrides</code> 注入 Fake service，<strong>不联网</strong>验证 <code>/chat</code> 返回 200 且字段正确。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li>FastAPI 为什么要 <code>async def</code>？写了 <code>async def</code> 却做同步操作会怎样？</li><li><code>Depends</code> 对应 Spring 的什么？测试时怎么替换依赖？</li><li><code>lifespan</code> 解决了什么问题？yield 前后分别做什么？</li><li>Pydantic 模型和 Java DTO 的异同？</li><li>SSE 响应体的两个硬性要求是什么？</li><li>为什么 Spring 的设计（线程池）让你更容易写出「能跑但慢」的 FastAPI 代码？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] <code>api.py</code> 里没有业务逻辑，只做校验 + 调 service + 包装响应</li><li>[ ] 实现 <code>POST /chat</code>、<code>POST /chat/stream</code>（SSE）、<code>GET /health</code></li><li>[ ] HTTP client 在 <code>lifespan</code> 中创建并复用，退出时 <code>aclose()</code></li><li>[ ] 所有 <code>async def</code> 路由内没有同步阻塞调用</li><li>[ ] 用 <code>TestClient</code> + <code>dependency_overrides</code> 写了不联网的集成测试</li><li>[ ] <code>uvicorn</code> 能启动，<code>/docs</code> 可访问</li></ul>
 <hr/>
 <p><strong>Project 02 完成。</strong> 此时的能力闭环：</p>
@@ -272,5 +351,48 @@ app.add_middleware(
 <figure class="figure"><img alt="FastAPI 三端点实测" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-fastapi.png" loading="lazy"/><figcaption>FastAPI 三端点实测</figcaption></figure>
 <figure class="figure"><img alt="真实运行：真的起 uvicorn 打四个端点——/health 200、/chat 200、/chat/stream 41 帧 SSE、/reset 200，以及空 message 被 Pydantic 挡成 422" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-fastapi-live.png" loading="lazy"/><figcaption>真实运行：真的起 uvicorn 打四个端点——/health 200、/chat 200、/chat/stream 41 帧 SSE、/reset 200，以及空 message 被 Pydantic 挡成 422</figcaption></figure>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-m05-留下的缺口" class="lvl2">1. M05 留下的缺口</a><a href="#2-plan-subtask" class="lvl2">2. Plan / SubTask</a><a href="#3-依赖决定能并行多少" class="lvl2">3. 依赖决定能并行多少</a><a href="#4-成环会被拦下" class="lvl2">4. 成环会被拦下</a><a href="#5-上游失败会跳过下游传递闭包" class="lvl2">5. 上游失败会跳过下游（传递闭包）</a><a href="#6-三个计划工具" class="lvl2">6. 三个计划工具</a><a href="#7-真实模型它自己决定拆几步" class="lvl2">7. 真实模型：它自己决定拆几步</a><a href="#8-踩到的坑" class="lvl2">8. 踩到的坑</a><a href="#9-结论" class="lvl2">9. 结论</a><a href="#10-代码位置" class="lvl2">10. 代码位置</a><a href="#11-版本" class="lvl2">11. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-06-multistep-task把计划从模型脑子里拿出来">Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</h1>
 <blockquote><p>上一章（Milestone 05）解决了「中间结论往哪放」——草稿纸。 但草稿纸记的是<strong>已经查到的东西</strong>，它回答不了一个更要紧的问题： <strong>还要做什么、先做哪个、哪些能同时做。</strong></p></blockquote>
-<h2 id="1-m05-留下的缺口">1. M05 留下的缺口</h2>
+<h2 id="1-m05-留下的缺口">1. M05 留下的缺口</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-plan-subtask"><span class="sn-label">下一节 →</span><span class="sn-name">2. Plan / SubTask</span></a></nav>
 <p>Milestone 05 的多步骤任务跑通了，但那份「计划」只存在于模型的 thought 里：</p>
 <pre><code>[1] thought：我先查 P01，再查 P04，最后对比。
 [2] 调用 rag_search(...)
@@ -66,7 +145,7 @@ li{margin:.3em 0;}
 <p>短任务没问题。步骤一多，三件事就开始出错：</p>
 <ul class="lvl"><li><strong>忘记自己列过什么</strong> —— 第 5 步时已经不记得第 1 步说要做的第三件事。</li><li><strong>重复做已经做完的</strong> —— 历史被 token 预算裁掉后，它以为还没查过。</li><li><strong>依赖没满足就硬做</strong> —— 「汇总」需要两个查询结果，但它只查了一个就开始写结论。</li></ul>
 <p>前两个 Milestone 05 已经用草稿纸和裁剪缓解了。第三个是这一章要解决的： <strong>把计划变成显式的、可检查的数据结构</strong>。</p>
-<h2 id="2-plan-subtask">2. Plan / SubTask</h2>
+<h2 id="2-plan-subtask">2. Plan / SubTask</h2><nav class="sec-nav"><a class="sn prev" href="#1-m05-留下的缺口"><span class="sn-label">← 上一节</span><span class="sn-name">1. M05 留下的缺口</span></a><a class="sn next" href="#3-依赖决定能并行多少"><span class="sn-label">下一节 →</span><span class="sn-name">3. 依赖决定能并行多少</span></a></nav>
 <pre><code>@dataclass
 class SubTask:
     id: str
@@ -79,18 +158,18 @@ class SubTask:
 <table><thead><tr><th></th><th>存什么</th><th>谁在读</th></tr></thead><tbody><tr><td><code>Scratchpad</code>（M05）</td><td><strong>结论</strong> ——「P01 用 JSON 落盘」</td><td>模型读回来用</td></tr><tr><td><code>Plan</code>（M06）</td><td><strong>待办</strong> ——「还要查 P04」</td><td>循环之外的代码用来推进</td></tr></tbody></table>
 <p><code>demos/out/demo_06_multi_step.txt</code> 第 1 节的真实输出：</p>
 <figure class="figure"><img alt="计划结构" src="../../../../../../projects/05-agent-mcp/assets/term-06-plan-topology.png" loading="lazy"/><figcaption>计划结构</figcaption></figure>
-<h2 id="3-依赖决定能并行多少">3. 依赖决定能并行多少</h2>
+<h2 id="3-依赖决定能并行多少">3. 依赖决定能并行多少</h2><nav class="sec-nav"><a class="sn prev" href="#2-plan-subtask"><span class="sn-label">← 上一节</span><span class="sn-name">2. Plan / SubTask</span></a><a class="sn next" href="#4-成环会被拦下"><span class="sn-label">下一节 →</span><span class="sn-name">4. 成环会被拦下</span></a></nav>
 <p>有了显式的依赖边，<code>Plan.batches()</code> 就能做 Kahn 分层 —— <strong>这是模型给不出来的信息</strong>。 它在 thought 里写下的计划只是一串文字，没有可计算的边。</p>
 <p>菱形依赖（t1 → (t2 ∥ t3) → t4）的真实分层结果：</p>
 <pre><code>第 0 批：[t1]  （单独一步）
 第 1 批：[t2、t3]  （可并行）
 第 2 批：[t4]  （单独一步）</code></pre>
 <p>串行做要 4 轮，按批做只要 3 轮。全串行的链则退化成 3 批 —— 一条依赖边都没有额外并行度。</p>
-<h2 id="4-成环会被拦下">4. 成环会被拦下</h2>
+<h2 id="4-成环会被拦下">4. 成环会被拦下</h2><nav class="sec-nav"><a class="sn prev" href="#3-依赖决定能并行多少"><span class="sn-label">← 上一节</span><span class="sn-name">3. 依赖决定能并行多少</span></a><a class="sn next" href="#5-上游失败会跳过下游传递闭包"><span class="sn-label">下一节 →</span><span class="sn-name">5. 上游失败会跳过下游（传递闭包）</span></a></nav>
 <p>模型真会写出 A→B→A。人一眼看出不对，代码不查就会<strong>静静地卡住</strong>： 剩下的任务凑不出下一批，循环结束但任务没做完 —— 而且日志里看不出原因。</p>
 <pre><code>拦住了：依赖无法推进（成环或依赖未满足），卡住的：a, b</code></pre>
 <p>还有一类同源错误：<strong>依赖指向不存在的任务</strong>（<code>depends_on=[&quot;t9&quot;]</code> 而没有 t9）。 必须在<strong>派活之前</strong> <code>validate()</code>，否则错误信息会变成「卡住了」，根本没法排查。</p>
-<h2 id="5-上游失败会跳过下游传递闭包">5. 上游失败会跳过下游（传递闭包）</h2>
+<h2 id="5-上游失败会跳过下游传递闭包">5. 上游失败会跳过下游（传递闭包）</h2><nav class="sec-nav"><a class="sn prev" href="#4-成环会被拦下"><span class="sn-label">← 上一节</span><span class="sn-name">4. 成环会被拦下</span></a><a class="sn next" href="#6-三个计划工具"><span class="sn-label">下一节 →</span><span class="sn-name">6. 三个计划工具</span></a></nav>
 <p>这是显式依赖换来的第二个好处：<strong>失败的影响范围可以精确计算</strong>。</p>
 <p>t2 失败时，<code>skip_downstream(&quot;t2&quot;)</code> 会沿依赖边一路传下去 —— 菱形里 t4 被跳过， <strong>但 t3 不受影响</strong>（它不依赖 t2）：</p>
 <pre><code>[x] t1  确定要对比哪两个项目  → 就比 P01 和 P04
@@ -98,7 +177,7 @@ class SubTask:
 [ ] t3  查 Project 04 怎么落盘
 [-] t4  汇总两者的差异  → 上游 t2 未完成，跳过</code></pre>
 <p>不是「整个任务重来」，也不是「每步都重试一遍」—— 上游失败了，下游的输入根本不存在， 重试只会再失败一次。</p>
-<h2 id="6-三个计划工具">6. 三个计划工具</h2>
+<h2 id="6-三个计划工具">6. 三个计划工具</h2><nav class="sec-nav"><a class="sn prev" href="#5-上游失败会跳过下游传递闭包"><span class="sn-label">← 上一节</span><span class="sn-name">5. 上游失败会跳过下游（传递闭包）</span></a><a class="sn next" href="#7-真实模型它自己决定拆几步"><span class="sn-label">下一节 →</span><span class="sn-name">7. 真实模型：它自己决定拆几步</span></a></nav>
 <p>计划由<strong>模型自己维护</strong>，不是一个写死的流程：</p>
 <table><thead><tr><th>工具</th><th>作用</th></tr></thead><tbody><tr><td><code>plan_set</code></td><td>整份重设计划（tasks 是一段 JSON），返回分了几批</td></tr><tr><td><code>plan_update</code></td><td>推进某个子任务的状态；标 failed 会连带跳过下游</td></tr><tr><td><code>plan_view</code></td><td>查看当前计划与进度</td></tr></tbody></table>
 <p>两个设计选择值得记下来：</p>
@@ -109,7 +188,7 @@ class SubTask:
 <p><code>parse_tasks()</code> 会宽容地提取 ```json 代码块里的 JSON —— 模型十次有八次会这么包。</p>
 <p>计划<strong>每一轮都会重新渲染进 system 提示</strong>（<code>_system_text()</code>），所以模型看到的永远是最新进度， 不会因为照着开局那份过时的计划而重复做事。</p>
 <figure class="figure"><img alt="计划工具与失败跳过" src="../../../../../../projects/05-agent-mcp/assets/term-06-plan-tools.png" loading="lazy"/><figcaption>计划工具与失败跳过</figcaption></figure>
-<h2 id="7-真实模型它自己决定拆几步">7. 真实模型：它自己决定拆几步</h2>
+<h2 id="7-真实模型它自己决定拆几步">7. 真实模型：它自己决定拆几步</h2><nav class="sec-nav"><a class="sn prev" href="#6-三个计划工具"><span class="sn-label">← 上一节</span><span class="sn-name">6. 三个计划工具</span></a><a class="sn next" href="#8-踩到的坑"><span class="sn-label">下一节 →</span><span class="sn-name">8. 踩到的坑</span></a></nav>
 <p>用 DeepSeek 跑「对比 P01 与 P04 的状态持久化」，提示词里只说「先用 plan_set 拆成子任务」， <strong>没告诉它拆几步、哪些能并行</strong>。</p>
 <p>它自己建了 3 个子任务，并且正确识别出前两个互不依赖：</p>
 <pre><code>[1] 调用 plan_set({...})
@@ -124,7 +203,7 @@ class SubTask:
 <p>最终 20 步、12 次工具调用，三个子任务全部 done：</p>
 <figure class="figure"><img alt="计划终态与结论" src="../../../../../../projects/05-agent-mcp/assets/term-06-real-plan-result.png" loading="lazy"/><figcaption>计划终态与结论</figcaption></figure>
 <p>结论本身也对：P01 是无状态（单轮 CLI，不落盘），P04 是有状态（会话 <code>mkstemp+fsync+os.replace</code> 原子写）。</p>
-<h2 id="8-踩到的坑">8. 踩到的坑</h2>
+<h2 id="8-踩到的坑">8. 踩到的坑</h2><nav class="sec-nav"><a class="sn prev" href="#7-真实模型它自己决定拆几步"><span class="sn-label">← 上一节</span><span class="sn-name">7. 真实模型：它自己决定拆几步</span></a><a class="sn next" href="#9-结论"><span class="sn-label">下一节 →</span><span class="sn-name">9. 结论</span></a></nav>
 <p><strong>坑 1：<code>PlanViewTool.schema()</code> 传了 <code>{}</code>。</strong> 没有参数的工具也要写完整的 object 壳：</p>
 <pre><code># 错：会被 M02 那条校验拦下（parameters.type 必须是 object）
 function_schema(self.name, self.description, {})
@@ -133,12 +212,55 @@ function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quo
 <p>这个错是在<strong>跑 demo 时</strong>才炸的，单测没覆盖到 —— 因为它只在「工具真的被注册进 registry」 这条路径上才会触发。教训：<strong>schema 校验要在构造时就做，而不是等发出去。</strong></p>
 <p><strong>坑 2：离线剧本里忘了更新 t1，计划终态出现 <code>[pending] t1</code>。</strong> 这不是 bug，是<strong>真实会发生的现象</strong>：模型也会漏更状态。 所以 <code>AgentResult.plan</code> 存的是<strong>快照</strong>，事后能看出「它说要做 4 件，实际只标了 3 件」。</p>
 <p><strong>坑 3：<code>skip_downstream</code> 一开始只跳一层。</strong> A 失败 → B 跳过 → 但 C（依赖 B）还在 pending。改成 while 循环的传递闭包后才对。</p>
-<h2 id="9-结论">9. 结论</h2>
+<h2 id="9-结论">9. 结论</h2><nav class="sec-nav"><a class="sn prev" href="#8-踩到的坑"><span class="sn-label">← 上一节</span><span class="sn-name">8. 踩到的坑</span></a><a class="sn next" href="#10-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">10. 代码位置</span></a></nav>
 <ul class="lvl"><li><strong>计划是数据，不是想法。</strong> 只有变成数据，循环之外的代码才能算并行度、查环、做失败传播。</li><li><strong>依赖边是并行度的唯一来源。</strong> 模型写不出可计算的边，这就是显式 Plan 的价值。</li><li><strong>计划由模型维护，由代码保障。</strong> 它自己拆、自己推进；代码负责别让它写出成环的计划、 别让失败沿着依赖边污染下游。</li></ul>
-<h2 id="10-代码位置">10. 代码位置</h2>
+<h2 id="10-代码位置">10. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#9-结论"><span class="sn-label">← 上一节</span><span class="sn-name">9. 结论</span></a><a class="sn next" href="#11-版本"><span class="sn-label">下一节 →</span><span class="sn-name">11. 版本</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/plan.py</code></td><td><code>Plan</code> / <code>SubTask</code> / <code>batches()</code> / <code>skip_downstream()</code> / 环检测</td></tr><tr><td><code>src/agent/tools.py</code></td><td><code>PlanSetTool</code> / <code>PlanUpdateTool</code> / <code>PlanViewTool</code> / <code>plan_tools()</code></td></tr><tr><td><code>src/agent/agent.py</code></td><td><code>ReActAgent.plan</code>；计划每轮渲染进 system；<code>AgentResult.plan</code> 快照</td></tr><tr><td><code>tests/test_plan.py</code></td><td>41 项：拓扑分层、环检测、传递闭包跳过、工具共享</td></tr><tr><td><code>demos/demo_06_multi_step.py</code></td><td>6 节离线演示 + <code>--real</code> 真实链路</td></tr></tbody></table>
-<h2 id="11-版本">11. 版本</h2>
+<h2 id="11-版本">11. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#10-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">10. 代码位置</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，Multi-Step Task 落地：显式计划 + 依赖拓扑 + 计划工具， 离线真实双路跑通（真实 20 步 / 12 次工具调用 / 3 个子任务全 done）， 测试 146 → 187 passed，截图 15 → 19 张。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -520,22 +520,226 @@ li{margin:.3em 0;}
 """.strip()
 
 
-def build_page(title: str, body: str) -> str:
-    return f"""<!DOCTYPE html>
+# ---------------------------------------------------------------------------
+# 文档式阅读增强：左侧可折叠目录大纲 + 阅读进度条 + 章节链式导航 + 移动端抽屉。
+# 同一套交互（进度条、scrollspy、上下章、回到顶部）在 209 篇渲染页里复用。
+# ---------------------------------------------------------------------------
+EXTRA_CSS = """
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+"""
+
+EXTRA_JS = """
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+"""
+
+H_TAG_RE = re.compile(r'<h([23])\s+id="([^"]+)">(.*?)</h\1>', re.S)
+
+
+PAGE_TMPL = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>{escape(title)}</title>
-<style>{PAGE_CSS}</style>
+<title>__TITLE__</title>
+<style>/*__CSS__*/</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc">/*__TOC__*/</nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
-{body}
+__BODY__
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>__JS__</script>
 </body>
 </html>
 """
+
+
+def outline(body: str):
+    """从渲染后的正文里抽出 (level, id, 纯文本) 章节列表，供目录与链式导航共用。"""
+    secs = []
+    for m in H_TAG_RE.finditer(body):
+        text = re.sub(r"<[^>]+>", "", m.group(3))
+        text = re.sub(r"\s+", " ", text).strip()
+        if text:
+            secs.append((int(m.group(1)), m.group(2), escape(text)))
+    return secs
+
+
+def _sn_card(kind, label, sec):
+    if not sec:
+        cls, name = "sn empty", ("文档开头" if kind == "prev" else "文档结尾")
+        return f'<span class="{cls}"><span class="sn-label">{label}</span>' \
+               f'<span class="sn-name">{name}</span></span>'
+    _, sid, name = sec
+    return f'<a class="sn {kind}" href="#{sid}"><span class="sn-label">{label}</span>' \
+           f'<span class="sn-name">{name}</span></a>'
+
+
+def inject_section_nav(body: str, secs):
+    """把「上一节 / 下一节」卡片插到每个主章节标题后面。
+
+    两个细节：
+    * 主层级只取一个（有 h2 就用 h2，否则退化到 h3）——否则每个 h3 小标题后面
+      都挂一对卡片，一篇 40 节的小节标题能插出 40 张卡，页面直接废掉；
+    * 倒序插入：先插后面的章节，前面章节的查找才不会被插入内容串位。
+    """
+    if not secs:
+        return body
+    levels = sorted({lvl for lvl, _, _ in secs})
+    main = next((lvl for lvl in (2, 3) if lvl in levels), levels[0])
+    order = [i for i, (lvl, _, _) in enumerate(secs) if lvl == main]
+
+    for k in reversed(range(len(order))):
+        i = order[k]
+        lvl, sid, _ = secs[i]
+        tag_end = f'<h{lvl} id="{sid}">'
+        pos = body.find(tag_end)
+        if pos < 0:
+            continue
+        end = body.find(f"</h{lvl}>", pos)
+        if end < 0:
+            continue
+        end += len(f"</h{lvl}>")
+        prev = secs[order[k - 1]] if k > 0 else None
+        nxt = secs[order[k + 1]] if k + 1 < len(order) else None
+        nav = ('<nav class="sec-nav">'
+               + _sn_card("prev", "← 上一节", prev)
+               + _sn_card("next", "下一节 →", nxt)
+               + '</nav>')
+        body = body[:end] + nav + body[end:]
+    return body
+
+
+def build_page(title: str, body: str) -> str:
+    """页模板：正文 + 左侧目录大纲 + 阅读进度 + 章节链式导航 + 回到顶部。"""
+    secs = outline(body)
+    toc = []
+    for lvl, sid, name in secs:
+        toc.append(f'<a href="#{sid}" class="lvl{lvl}">{name}</a>')
+    toc_html = "".join(toc)
+    body = inject_section_nav(body, secs)
+
+    return (PAGE_TMPL.replace("/*__CSS__*/", PAGE_CSS + EXTRA_CSS)
+                     .replace("/*__TOC__*/", toc_html)
+                     .replace("__BODY__", body)
+                     .replace("__TITLE__", escape(title))
+                     .replace("__JS__", EXTRA_JS))
 
 
 def main():

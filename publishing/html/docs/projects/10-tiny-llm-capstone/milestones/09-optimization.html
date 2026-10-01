@@ -52,17 +52,96 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why优化有两个常见的半边账" class="lvl2">1. Why：优化有两个常见的&amp;quot;半边账&amp;quot;</a><a href="#2-design把两个账都算成公式" class="lvl2">2. Design：把两个账都算成公式</a><a href="#21-量化精度-粒度" class="lvl3">2.1 量化：精度 × 粒度</a><a href="#22-kv-cache-显存公式" class="lvl3">2.2 KV Cache 显存公式</a><a href="#3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_09_optimization_terminal.txt）</a><a href="#31-起点模型有多大" class="lvl3">3.1 起点：模型有多大</a><a href="#32-部署体积账同一份权重五档精度" class="lvl3">3.2 部署体积账：同一份权重，五档精度</a><a href="#33-kv-cache-账本每-token-多少字节" class="lvl3">3.3 KV Cache 账本：每 token 多少字节</a><a href="#34-量化压缩比-vs-精度代价" class="lvl3">3.4 量化：压缩比 vs 精度代价</a><a href="#35-粒度perchannel-是免费的精度" class="lvl3">3.5 粒度：per-channel 是&amp;quot;免费&amp;quot;的精度</a><a href="#36-另一半优化kv-cache-的速度收益" class="lvl3">3.6 另一半优化：KV Cache 的速度收益</a><a href="#37-一张表说清楚每种优化的收益与代价" class="lvl3">3.7 一张表说清楚：每种优化的收益与代价</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-09-optimization收益与代价必须一起量">Milestone 09 — Optimization：收益与代价必须一起量</h1>
 <p>M08 证明了&quot;能推理&quot;。但能跑不等于跑得起——这一章算两笔账：<strong>这份权重部署时要占多少空间（量化）</strong>，以及<strong>长上下文要额外花多少显存（KV Cache 账本）</strong>。</p>
 <p>本章的立场只有一句：<strong>只报压缩比的优化方案不可信。</strong> 压缩比只说明省了多少空间；<strong>ΔPPL 才说明你为此付出了多少代价</strong>。两者必须同时报出来，否则那不是优化方案，是宣传材料。</p>
 <hr/>
-<h2 id="1-why优化有两个常见的半边账">1. Why：优化有两个常见的&quot;半边账&quot;</h2>
+<h2 id="1-why优化有两个常见的半边账">1. Why：优化有两个常见的&quot;半边账&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design把两个账都算成公式"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：把两个账都算成公式</span></a></nav>
 <ul class="lvl"><li><strong>只报压缩比，不报精度损失。</strong> &quot;INT4 压缩 16 倍！&quot;——听起来很美。但如果它让 PPL 从 315.79 涨到 324.20（+2.66%），你就得分清：<strong>这个代价在你的场景里值不值 8 倍空间</strong>。</li><li><strong>只报&quot;省了显存&quot;，不报&quot;每 token 到底花多少&quot;。</strong> KV Cache 的显存占用不是常数，它随 <code>batch × seq_len</code> 线性增长。<strong>必须把它算成一个公式</strong>，才能回答&quot;多长的上下文会让 KV 超过模型本身&quot;。</li></ul>
-<h2 id="2-design把两个账都算成公式">2. Design：把两个账都算成公式</h2>
+<h2 id="2-design把两个账都算成公式">2. Design：把两个账都算成公式</h2><nav class="sec-nav"><a class="sn prev" href="#1-why优化有两个常见的半边账"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：优化有两个常见的&amp;quot;半边账&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_optimization_terminal.txt）</span></a></nav>
 <h3 id="21-量化精度-粒度">2.1 量化：精度 × 粒度</h3>
 <pre><code>量化：w → round((w - zero) / scale)，再反量化回浮点参与计算
 粒度：
@@ -78,7 +157,7 @@ li{margin:.3em 0;}
 <p>代入 <code>layers=2, kv_heads=4, head_dim=16</code>：fp32 = <strong>1024 B/token</strong>、fp16 = <strong>512 B/token</strong>。</p>
 <p><strong>这是一个纯解析公式，不依赖任何运行时</strong>。它的价值在于：<strong>在小模型上验证公式对不对，在大模型上用它做容量预判</strong>。7B 模型的 <code>bytes_per_token</code> 会是这个值的几百倍——那时&quot;长上下文吃爆显存&quot;就是一个能提前算出来的数字，而不是上线后才知道的事故。</p>
 <figure class="figure"><img alt="M09 Optimization：部署体积 + 量化代价 + KV Cache 账本" src="../../../../../../projects/10-tiny-llm-capstone/assets/optimization.svg" loading="lazy"/><figcaption>M09 Optimization：部署体积 + 量化代价 + KV Cache 账本</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_optimization_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_optimization_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design把两个账都算成公式"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：把两个账都算成公式</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M09 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-09-optimization.png" loading="lazy"/><figcaption>M09 真实运行</figcaption></figure>
 <h3 id="31-起点模型有多大">3.1 起点：模型有多大</h3>
 <pre><code>参数量        230,400
@@ -155,14 +234,57 @@ INT4 per-channel       体积 ÷8      PPL +2.66%  小模型上不划算
 NF4（block 64 双重量化）   体积 ÷7.8      PPL +4.01%  比 INT4 稳
 KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code></pre>
 <p>这张表是本章的<strong>交付物</strong>：<strong>任何一个优化决策，都必须能填进这四列</strong>。填不满&quot;代价&quot;那一列的方案，不许上线。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_optimization_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>&quot;INT4 基本无损&quot;是小模型上的假命题。</strong> 本项目实测 INT4 <strong>ΔPPL +2.66%</strong>，是 INT8（+0.08%）的 33 倍。<strong>大模型的冗余能吸收量化噪声，小模型不能。</strong> 任何从大模型抄来的&quot;经验值&quot;，都要在小模型上重新量一遍。</li><li><strong>MSE 小 ≠ 任务好。</strong> NF4 的 MSE（2.867e-4）比 INT4（3.175e-4）还低，但 ΔPPL 反而更高（+4.01% vs +2.66%）。<strong>量化方案必须用 ΔPPL 验收，不能只看权重重建误差。</strong></li><li><strong>per-channel 是&quot;免费&quot;的精度。</strong> INT8/INT4 的 MSE 都降了约 <strong>48%</strong>，代价只是多存一点 scale。成本几乎为零、收益接近一半，这种优化没有理由不做。</li><li><strong>per-channel 对 NF4 完全无效（0.0%）。</strong> 因为 NF4 的 block 量化<strong>已经内置了细粒度尺度</strong>，再叠 per-channel 是重复。<strong>这说明&quot;加粒度&quot;不是越多越好，要看方案本身有没有已经在做这件事。</strong></li><li><strong>KV Cache 的显存公式里 batch 和 seq_len 是乘起来的，彼此对称。</strong> <code>batch=4, seq=1024</code> 与 <code>batch=1, seq=4096</code> 消耗<strong>完全相同</strong>（2,097,152 B）。这一点不看形状容易忽略。</li><li><strong>1801 个 token 的 KV 就等于整个模型（fp16, batch=1）。</strong> 这个数字在 7B 上会小得多。<strong>&quot;长上下文吃爆显存&quot;不是玄学，是可反解的不等式。</strong></li><li><strong>量化（有损）和 KV Cache（无损）是两类优化，别混。</strong> 量化省空间、代价是精度；KV Cache 省延迟、代价是显存。<strong>同一个&quot;优化&quot;标签下，权衡的维度完全不同。</strong></li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>模型 <strong>230,400 参数 / 28 张量 / fp64 1.76 MiB</strong>；词嵌入 + 输出投影占 <strong>71.2%</strong>。</li><li>部署体积：fp64 1.76 → fp32 0.88 → fp16 <strong>0.44</strong> → INT8 <strong>0.22</strong> → INT4 <strong>0.11</strong> MiB，<strong>fp64→INT4 压缩 16×</strong>。</li><li>KV Cache 账本：<strong>256 × dtype_bytes</strong>，即 fp32 <strong>1024 B/token</strong>、fp16 <strong>512 B/token</strong>；<code>seq_len=64</code> 占权重 <strong>3.56%</strong>，<code>seq_len=4096</code> 占 <strong>227.6%</strong>；<strong>1801 token 的 KV = 整个模型</strong>。</li><li>量化代价（真实验证集）：<strong>INT8 3.85× / ΔPPL +0.08%</strong>、<strong>INT4 7.42× / +2.66%</strong>、<strong>NF4 7.75× / +4.01%</strong> ⇒ <strong>INT4 的代价是 INT8 的 33 倍，只换来不到 2× 的压缩</strong>。</li><li>粒度：per-channel 把 INT8/INT4 的 MSE 降 <strong>48.1% / 47.4%</strong>（近乎免费）；对 NF4 <strong>0.0%</strong>（block 量化已内置）。</li><li>KV Cache 加速 <strong>1.43×</strong>（5.09 → 3.56 ms），<strong>严格无损</strong>（误差 3.442e-15）。</li><li>一句话结论：<strong>优化必须同时报收益和代价；只报压缩比的方案不可信。</strong></li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/optimize.py</code></td><td><code>deployment_size_table</code>（五档体积）/ <code>kv_cache_report</code>（每 token 字节 + 追赶长度）/ <code>quantization_report</code>（真实验证集 ΔPPL）/ <code>granularity_report</code>（per-tensor vs per-channel MSE）/ <code>optimization_report</code>（收益代价总表）</td></tr><tr><td>P09 <code>src/ie/quantize.py</code></td><td>INT8 / INT4 / NF4 的量化与反量化实现、per-tensor / per-channel 分支</td></tr><tr><td>P09 <code>src/ie/kvbook.py</code></td><td>KV Cache 字节公式与账面</td></tr><tr><td><code>src/tiny/infer.py</code></td><td><code>cache_consistency_error</code> / <code>benchmark</code>（无损性验证）</td></tr><tr><td><code>demos/demo_09_optimization.py</code></td><td>7 节：起点体积 / 五档精度 / KV 账本 / 量化 ΔPPL / 粒度 / 速度 / 收益代价总表</td></tr><tr><td><code>demos/out/demo_09_optimization_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/optimization.svg</code></td><td>部署体积 + 量化代价 + 粒度 + KV 账本</td></tr><tr><td><code>assets/term-09-optimization.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.8 → <strong>v0.9</strong>，量化与 KV Cache 账本落地并被双向度量。实测：<strong>230,400 参数 / fp64 1.76 MiB</strong>，fp64→INT4 <strong>压缩 16×</strong>；KV 每 token fp32 <strong>1024 B</strong> / fp16 <strong>512 B</strong>，<strong>1801 token 的 KV = 整个模型</strong>；量化（真实验证集）<strong>INT8 3.85× / ΔPPL +0.08%</strong>、<strong>INT4 7.42× / +2.66%</strong>、<strong>NF4 7.75× / +4.01%</strong>；per-channel 让 INT8/INT4 的 MSE 降低 <strong>48.1% / 47.4%</strong>（NF4 为 0.0%）；KV Cache 加速 <strong>1.43×</strong>、误差 <strong>3.442e-15</strong>（严格无损）。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

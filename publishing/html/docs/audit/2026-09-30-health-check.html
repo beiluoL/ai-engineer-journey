@@ -52,26 +52,105 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#0-一句话结论" class="lvl2">0. 一句话结论</a><a href="#1-体检方法可复现" class="lvl2">1. 体检方法（可复现）</a><a href="#2-现状盘点" class="lvl2">2. 现状盘点</a><a href="#21-规模" class="lvl3">2.1 规模</a><a href="#22-项目矩阵y-表示齐备-表示缺失" class="lvl3">2.2 项目矩阵（Y 表示齐备，- 表示缺失）</a><a href="#23-测试实跑1180-项全绿" class="lvl3">2.3 测试实跑（1180 项，全绿）</a><a href="#24-安全与链接基线" class="lvl3">2.4 安全与链接基线</a><a href="#3-发现清单" class="lvl2">3. 发现清单</a><a href="#p0-阻断级1-项" class="lvl3">P0 — 阻断级（1 项）</a><a href="#p1-影响复现3-项" class="lvl3">P1 — 影响复现（3 项）</a><a href="#p2-文档漂移按-contributing-5这些视为-bug" class="lvl3">P2 — 文档漂移（按 CONTRIBUTING §5，这些「视为 bug」）</a><a href="#p3-资产与规范6-项" class="lvl3">P3 — 资产与规范（6 项）</a><a href="#4-补充建议清单可直接照着做" class="lvl2">4. 补充建议清单（可直接照着做）</a><a href="#5-不建议做的事" class="lvl2">5. 不建议做的事</a><a href="#附复现本期体检" class="lvl2">附：复现本期体检</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="全仓库体检报告-20260930">全仓库体检报告 · 2026-09-30</h1>
 <blockquote><p>体检对象：<code>ai-engineer-journey</code> @ <strong><code>2014d85</code></strong> 全部数字来自当场执行的真实命令，原始输出存档在 <a href="../../../../audit/assets/audit-run.txt"><code>assets/audit-run.txt</code></a> 与 <a href="../../../../audit/assets/tests-run.txt"><code>assets/tests-run.txt</code></a>。</p><p><strong>口径说明</strong>：本报告描述的是 <code>2014d85</code> 那一刻的状态。报告自身连同体检脚本一共新增了 9 个文件（2 篇文档 + 4 张截图 + 2 份原始输出 + 1 个脚本），因此把报告提交上去之后， 「跟踪文件 / Markdown / 配图 / 链接」这几个总数会比下表各多出对应的一点点。 这是审计报告的固有自指效应，不是数据失真 —— 需要最新数字时重跑 <code>scripts/audit.py</code> 即可。</p></blockquote>
 <hr/>
-<h2 id="0-一句话结论">0. 一句话结论</h2>
+<h2 id="0-一句话结论">0. 一句话结论</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#1-体检方法可复现"><span class="sn-label">下一节 →</span><span class="sn-name">1. 体检方法（可复现）</span></a></nav>
 <p><strong>骨架是完整的，质量底线守住了，但「新克隆者能不能跑起来」和「CI 到底守住了什么」这两件事上没有对齐。</strong></p>
 <ul class="lvl"><li>守住的部分：1180 项测试全绿、859 条相对链接零死链、零硬编码密钥、333 张配图里 325 张有引用（无占位图、无来源不明图片）。</li><li>没对齐的部分：<strong>1 个阻断级缺口（P07 无正文）</strong>、<strong>3 项会让复现失败的欠账（CI 只门禁 2/10 项目、P04/P05 无 <code>.env.example</code>、P04 证据链未入库）</strong>，外加 11 项文档漂移与规范漂移。</li></ul>
 <p>体检结论：<code>ERROR 1 · WARN 15 · INFO 11</code>。</p>
 <hr/>
-<h2 id="1-体检方法可复现">1. 体检方法（可复现）</h2>
+<h2 id="1-体检方法可复现">1. 体检方法（可复现）</h2><nav class="sec-nav"><a class="sn prev" href="#0-一句话结论"><span class="sn-label">← 上一节</span><span class="sn-name">0. 一句话结论</span></a><a class="sn next" href="#2-现状盘点"><span class="sn-label">下一节 →</span><span class="sn-name">2. 现状盘点</span></a></nav>
 <pre><code>python3 scripts/audit.py --quick          # 8 项检查：规模 / 骨架 / 证据链 / 配图 / 漂移 / 交叉引用 / 密钥
 python3 scripts/audit.py --tests          # 额外实跑全部项目测试（约 85 秒）</code></pre>
 <figure class="figure"><img alt="仓库健康体检 · 规模概览与项目骨架" src="../../../../audit/assets/audit-01-skeleton.png" loading="lazy"/><figcaption>仓库健康体检 · 规模概览与项目骨架</figcaption></figure>
 <p>上图这一屏就把问题暴露出来了：<code>07-open-source-llm</code> 的 <code>MI</code>（milestone 数）是 <strong>0</strong>，而 <code>04-rag</code> / <code>05-agent-mcp</code> 的 <code>ENV</code> 列是空的。</p>
 <blockquote><p><strong>写体检工具时踩到的一个坑，值得单独记一句</strong>：孤儿图检测最初扫描仓库里<strong>所有</strong>文本文件。 结果本报告的归档 <code>assets/audit-run.txt</code> 里原样抄了一遍 <code>[INFO] 孤儿图: .../site-pandas.png</code>， 工具就把这行当成了「该图被引用」，<strong>8 个孤儿图瞬间全部消失</strong>。 修法：引用来源只扫 <code>.md / .html / .py / .yml / .json / .ipynb</code>，不扫 <code>.txt</code>。 教训——<strong>观测工具的输出一旦进了被观测范围，就会污染观测结果</strong>；这类自指污染不会报错，只会让数字悄悄变好看。</p></blockquote>
 <hr/>
-<h2 id="2-现状盘点">2. 现状盘点</h2>
+<h2 id="2-现状盘点">2. 现状盘点</h2><nav class="sec-nav"><a class="sn prev" href="#1-体检方法可复现"><span class="sn-label">← 上一节</span><span class="sn-name">1. 体检方法（可复现）</span></a><a class="sn next" href="#3-发现清单"><span class="sn-label">下一节 →</span><span class="sn-name">3. 发现清单</span></a></nav>
 <h3 id="21-规模">2.1 规模</h3>
 <table><thead><tr><th>项</th><th>数量</th></tr></thead><tbody><tr><td>git 跟踪文件</td><td>1,052</td></tr><tr><td>Markdown</td><td>197 篇 / 85,830 行</td></tr><tr><td>Python</td><td>340 个 / 49,999 行</td></tr><tr><td>配图</td><td>287 PNG + 46 SVG</td></tr></tbody></table>
 <h3 id="22-项目矩阵y-表示齐备-表示缺失">2.2 项目矩阵（<code>Y</code> 表示齐备，<code>-</code> 表示缺失）</h3>
@@ -85,7 +164,7 @@ python3 scripts/audit.py --tests          # 额外实跑全部项目测试（约
 <figure class="figure"><img alt="文档漂移、交叉引用、密钥与死链检查" src="../../../../audit/assets/audit-03-links.png" loading="lazy"/><figcaption>文档漂移、交叉引用、密钥与死链检查</figcaption></figure>
 <p>这一屏是全仓库最让人放心的部分：<strong>零硬编码密钥、零 <code>.env</code>/<code>.key</code> 入库、859 条相对链接零死链零坏图</strong>。 <code>check_links.py --strict</code> 也挂在 CI 上，属于「已经守住、不需要额外投入」的底线。</p>
 <hr/>
-<h2 id="3-发现清单">3. 发现清单</h2>
+<h2 id="3-发现清单">3. 发现清单</h2><nav class="sec-nav"><a class="sn prev" href="#2-现状盘点"><span class="sn-label">← 上一节</span><span class="sn-name">2. 现状盘点</span></a><a class="sn next" href="#4-补充建议清单可直接照着做"><span class="sn-label">下一节 →</span><span class="sn-name">4. 补充建议清单（可直接照着做）</span></a></nav>
 <h3 id="p0-阻断级1-项">P0 — 阻断级（1 项）</h3>
 <h4 id="31-projects07opensourcellmmilestones-为空">3.1 <code>projects/07-open-source-llm/milestones/</code> 为空</h4>
 <ul class="lvl"><li><strong>现象</strong>：目录存在但 0 个 <code>.md</code>。ROADMAP 承诺 9 个 Milestone，实际一条正文都没有。</li><li><strong>不是偷懒，是被资源卡住</strong>：本机 M1 磁盘余量 ~15 GB，而 Qwen2.5-7B 的 bf16 权重就要 14.18 GiB。项目已拆成两条线，<code>pipelines/</code> 那条（调用 / 参数 / 显存账本）<strong>已真实跑通并产出 6 张终端截图</strong>，<code>notebooks/</code> 那条在等 Colab GPU。</li><li><strong>后果</strong>：这是全仓库唯一的 <code>ERROR</code>。它让 ROADMAP 里「9 个 Milestone」的进度表（✅/🔶/⬜）失去正文支撑 —— 读者点进去是空的。同时它也是唯一没有单元测试的项目，而 P07 的 <code>pipelines/llm_client/</code> 是有真实逻辑的（参数账本、KV Cache 估算、usage 守恒校验）。</li><li><strong>建议（两条路，推荐先做 B）</strong>：<ul class="lvl"><li><strong>A（等资源）</strong>：等你在 Colab 跑完 <code>p07_colab.ipynb</code> / <code>p07_finetune_java_interview.ipynb</code>，回收输出后再写 milestone。缺点：无限期挂起，且 P07 会一直是仓库里唯一没有正文的项目。</li><li><strong>B（推荐，立即可做）</strong>：把 <code>pipelines/</code> 已跑通的 6 条线<strong>直接落成 6 篇 milestone 正文</strong>（M01 调用 / M02 流式 / M03 生成参数 / M04 参数量对账 / M05 显存账本 / M06 Java 面试助手应用），把剩下 3 条（HF 生态 / BPE 细节 / 量化）在正文里明确标注为「待 GPU 资源，当前不可复现」。这样 P07 从「🔴 空目录」变成「🟡 6/9 文档就绪、3/9 明确挂起」，ROADMAP 的进度表才立得住。</li><li><strong>顺带</strong>：给 <code>pipelines/llm_client/</code> 补最小单测（参数账本与 usage 守恒都是纯算术，不需要网络即可断言），补上 <code>pyproject.toml</code>。</li></ul></li></ul>
@@ -122,14 +201,14 @@ python3 scripts/audit.py --tests          # 额外实跑全部项目测试（约
 <p>也就是说，<strong>P04–P10 这 7 个项目（占仓库 63% 的里程碑、最多的代码）根本没有自测手段</strong>，Track 1 对它们完全是空转。</p>
 <p><strong>建议</strong>：这是本报告里<strong>对你的学习收益 highest-leverage 的一项</strong>。不必一次做满 7 个，建议按「你已经学完哪个就补哪个」的顺序，每个项目先做 10 道判断题 + 5 道动手题（P02/P03 的 LEARNING.md 已有成熟模板可复制）。验收：PROGRESS 的 Track 1 表格里，7 个「⬜ 未开始」至少有 1 个能开始。</p>
 <hr/>
-<h2 id="4-补充建议清单可直接照着做">4. 补充建议清单（可直接照着做）</h2>
+<h2 id="4-补充建议清单可直接照着做">4. 补充建议清单（可直接照着做）</h2><nav class="sec-nav"><a class="sn prev" href="#3-发现清单"><span class="sn-label">← 上一节</span><span class="sn-name">3. 发现清单</span></a><a class="sn next" href="#5-不建议做的事"><span class="sn-label">下一节 →</span><span class="sn-name">5. 不建议做的事</span></a></nav>
 <p>按「先修会误导人的，再修会拦住人的，最后修锦上添花的」排序。</p>
 <table><thead><tr><th>序</th><th>事项</th><th>动作</th><th>验收标准</th><th>量级</th></tr></thead><tbody><tr><td>1</td><td>P07 无正文（P0）</td><td>把 <code>pipelines/</code> 已跑通的 6 条线落成 6 篇 milestone，其余 3 条标注「待 GPU」</td><td><code>ls projects/07-open-source-llm/milestones/*.md</code> ≥ 6</td><td>中</td></tr><tr><td>2</td><td>CI 形同虚设（P1）</td><td><code>ci.yml</code> 补 7 个项目的 pytest step</td><td>Actions 日志能见到 1180 项测试</td><td>小</td></tr><tr><td>3</td><td>文档漂移 3.5–3.9</td><td>改 2 处数字、1 处结构树描述、3 处 <code>workflows/</code> 引用、交叉引用措辞</td><td><code>python3 scripts/audit.py</code> 的 WARN 减少 5 条</td><td>小</td></tr><tr><td>4</td><td>P04/P05 无法复现（P1）</td><td>补 2 个 <code>.env.example</code> + 2 段「环境准备」</td><td>`git ls-files \</td><td>grep -c env.example` = 5</td><td>小</td></tr><tr><td>5</td><td>P04 证据链（P1）</td><td>取消 <code>demos/out/</code> 忽略、24 个输出入库</td><td>P04 输出入库数 &gt; 0</td><td>小</td></tr><tr><td>6</td><td>CONTRIBUTING 与现实冲突 3.10–3.12</td><td>补 <code>llm-fundamentals</code> 豁免条款、重写推送条款、给 P08–P10 补 tag（或删掉该规则）</td><td>规则与实际一致，无「写了不执行」的条款</td><td>小</td></tr><tr><td>7</td><td>项目主页零配图 3.13</td><td>7 个主页各配 1 张（优先复用已有 SVG/截图）</td><td>audit 的「项目主页零配图」WARN 归零</td><td>中</td></tr><tr><td>8</td><td>错题本空置 3.17</td><td>补 5 条真实踩坑记录</td><td>`ls mistakes/*.md \</td><td>wc -l` ≥ 6</td><td>中</td></tr><tr><td>9</td><td>Track 1 空转 3.18</td><td>按已学进度，给 P04–P10 补 <code>LEARNING.md</code> + 题</td><td>Track 1 至少有 3 个项目能开始</td><td><strong>大（但收益最高）</strong></td></tr><tr><td>10</td><td>资产清理 3.14 / 3.15 / 3.16</td><td>确认 4 张无用截图后再删；补 SVG 源文件说明；放宽命名规范</td><td>audit 的 INFO 项有明确处置意见</td><td>小</td></tr></tbody></table>
 <hr/>
-<h2 id="5-不建议做的事">5. 不建议做的事</h2>
+<h2 id="5-不建议做的事">5. 不建议做的事</h2><nav class="sec-nav"><a class="sn prev" href="#4-补充建议清单可直接照着做"><span class="sn-label">← 上一节</span><span class="sn-name">4. 补充建议清单（可直接照着做）</span></a><a class="sn next" href="#附复现本期体检"><span class="sn-label">下一节 →</span><span class="sn-name">附：复现本期体检</span></a></nav>
 <ul class="lvl"><li><strong>不要把 <code>llm-fundamentals/</code> 合并进 <code>projects/</code></strong>。两者定位不同（理论层 vs 实践层），合并成本高且会让 milestone 正文变成大杂烩。正确解法是补交叉引用（建议：llm-fundamentals 每章末尾加一行「对应实践项目」，同时给 P06/P08/P10 的 README 加一行「理论背景见 llm-fundamentals 第 N 章」）。</li><li><strong>不要为了统一命名规范去批量重命名配图</strong>。333 张图里任何一次改名都要同步文档引用，风险远大于收益。放宽规范即可。</li><li><strong>不要直接删那 4 张 <code>site-*.png</code></strong>。先确认没有留给后续文章，再走删除流程。</li></ul>
 <hr/>
-<h2 id="附复现本期体检">附：复现本期体检</h2>
+<h2 id="附复现本期体检">附：复现本期体检</h2><nav class="sec-nav"><a class="sn prev" href="#5-不建议做的事"><span class="sn-label">← 上一节</span><span class="sn-name">5. 不建议做的事</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <pre><code>cd ai-engineer-journey
 python3 scripts/audit.py &gt; audit/assets/audit-run.txt              # 体检（本报告 §1/§3 的证据）
 python3 scripts/audit.py --tests | tail -16 | tee audit/assets/tests-run.txt  # 全量测试（§2.3）
@@ -141,5 +220,48 @@ $P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-
 <hr/>
 <p class="nav-footer"><a href="README.html">← 返回体检档案</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

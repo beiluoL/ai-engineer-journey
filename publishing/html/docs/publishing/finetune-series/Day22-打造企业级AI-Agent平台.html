@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#单-agent" class="lvl2">单 Agent</a><a href="#workflow工作流" class="lvl2">Workflow【工作流】</a><a href="#agent" class="lvl2">Agent</a><a href="#model-context-protocol" class="lvl2">Model Context Protocol</a><a href="#1-mcp-client" class="lvl2">1. MCP Client</a><a href="#2-mcp-server" class="lvl2">2. MCP Server</a><a href="#3-resource" class="lvl2">3. Resource</a><a href="#4-tool" class="lvl2">4. Tool</a><a href="#1-最大步骤限制" class="lvl2">1. 最大步骤限制</a><a href="#2-tool权限" class="lvl2">2. Tool权限</a><a href="#3-人工审批-humanintheloop" class="lvl2">3. 人工审批 Human-in-the-loop</a><a href="#ai客服-agent" class="lvl2">AI客服 Agent</a><a href="#ai研发助手" class="lvl2">AI研发助手</a><a href="#ai内容生产" class="lvl2">AI内容生产</a><a href="#q" class="lvl2">Q：</a><a href="#q" class="lvl2">Q：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day22打造企业级-ai-agent-平台">Day22：打造企业级 AI Agent 平台</h1>
 <h1 id="multiagent多智能体workflow工作流mcp模型上下文协议">Multi-Agent【多智能体】、Workflow【工作流】、MCP【模型上下文协议】</h1>
@@ -94,7 +173,7 @@ MLOps</code></pre>
 <hr/>
 <h1 id="一为什么需要-multiagent">一、为什么需要 Multi-Agent？</h1>
 <p>先看普通 Agent。</p>
-<h2 id="单-agent">单 Agent</h2>
+<h2 id="单-agent">单 Agent</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#workflow工作流"><span class="sn-label">下一节 →</span><span class="sn-name">Workflow【工作流】</span></a></nav>
 <p>架构：</p>
 <pre><code>用户
 
@@ -355,7 +434,7 @@ Reviewer Agent
 <h1 id="六multiagent和workflow区别">六、Multi-Agent和Workflow区别</h1>
 <p>这是面试高频。</p>
 <hr/>
-<h2 id="workflow工作流">Workflow【工作流】</h2>
+<h2 id="workflow工作流">Workflow【工作流】</h2><nav class="sec-nav"><a class="sn prev" href="#单-agent"><span class="sn-label">← 上一节</span><span class="sn-name">单 Agent</span></a><a class="sn next" href="#agent"><span class="sn-label">下一节 →</span><span class="sn-name">Agent</span></a></nav>
 <p>固定流程。</p>
 <p>例如：</p>
 <pre><code>上传文件
@@ -377,7 +456,7 @@ Embedding
 入库</code></pre>
 <p>流程固定。</p>
 <hr/>
-<h2 id="agent">Agent</h2>
+<h2 id="agent">Agent</h2><nav class="sec-nav"><a class="sn prev" href="#workflow工作流"><span class="sn-label">← 上一节</span><span class="sn-name">Workflow【工作流】</span></a><a class="sn next" href="#model-context-protocol"><span class="sn-label">下一节 →</span><span class="sn-name">Model Context Protocol</span></a></nav>
 <p>动态决策。</p>
 <p>例如：</p>
 <pre><code>用户需求
@@ -453,7 +532,7 @@ RAG流程          审批流程
 <h1 id="九mcp是什么">九、MCP是什么？</h1>
 <p>重点来了。</p>
 <p>MCP：</p>
-<h2 id="model-context-protocol">Model Context Protocol</h2>
+<h2 id="model-context-protocol">Model Context Protocol</h2><nav class="sec-nav"><a class="sn prev" href="#agent"><span class="sn-label">← 上一节</span><span class="sn-name">Agent</span></a><a class="sn next" href="#1-mcp-client"><span class="sn-label">下一节 →</span><span class="sn-name">1. MCP Client</span></a></nav>
 <p>中文：</p>
 <blockquote><p>模型上下文协议</p></blockquote>
 <p>由 Anthropic 推出。</p>
@@ -516,14 +595,14 @@ Tool
 </code></pre>
 <hr/>
 <h1 id="十一mcp三个核心概念">十一、MCP三个核心概念</h1>
-<h2 id="1-mcp-client">1. MCP Client</h2>
+<h2 id="1-mcp-client">1. MCP Client</h2><nav class="sec-nav"><a class="sn prev" href="#model-context-protocol"><span class="sn-label">← 上一节</span><span class="sn-name">Model Context Protocol</span></a><a class="sn next" href="#2-mcp-server"><span class="sn-label">下一节 →</span><span class="sn-name">2. MCP Server</span></a></nav>
 <p>客户端。</p>
 <p>例如：</p>
 <p>Claude Desktop。</p>
 <p>负责：</p>
 <p>连接MCP Server。</p>
 <hr/>
-<h2 id="2-mcp-server">2. MCP Server</h2>
+<h2 id="2-mcp-server">2. MCP Server</h2><nav class="sec-nav"><a class="sn prev" href="#1-mcp-client"><span class="sn-label">← 上一节</span><span class="sn-name">1. MCP Client</span></a><a class="sn next" href="#3-resource"><span class="sn-label">下一节 →</span><span class="sn-name">3. Resource</span></a></nav>
 <p>工具提供方。</p>
 <p>例如：</p>
 <p>数据库MCP。</p>
@@ -534,12 +613,12 @@ Tool
 
 搜索文档</code></pre>
 <hr/>
-<h2 id="3-resource">3. Resource</h2>
+<h2 id="3-resource">3. Resource</h2><nav class="sec-nav"><a class="sn prev" href="#2-mcp-server"><span class="sn-label">← 上一节</span><span class="sn-name">2. MCP Server</span></a><a class="sn next" href="#4-tool"><span class="sn-label">下一节 →</span><span class="sn-name">4. Tool</span></a></nav>
 <p>资源。</p>
 <p>例如：</p>
 <p>文件。</p>
 <hr/>
-<h2 id="4-tool">4. Tool</h2>
+<h2 id="4-tool">4. Tool</h2><nav class="sec-nav"><a class="sn prev" href="#3-resource"><span class="sn-label">← 上一节</span><span class="sn-name">3. Resource</span></a><a class="sn next" href="#1-最大步骤限制"><span class="sn-label">下一节 →</span><span class="sn-name">1. 最大步骤限制</span></a></nav>
 <p>工具。</p>
 <p>例如：</p>
 <pre><code>{
@@ -670,15 +749,15 @@ steps:[
 <p>Redis。</p>
 <hr/>
 <h1 id="十六企业级-agent-必须考虑">十六、企业级 Agent 必须考虑</h1>
-<h2 id="1-最大步骤限制">1. 最大步骤限制</h2>
+<h2 id="1-最大步骤限制">1. 最大步骤限制</h2><nav class="sec-nav"><a class="sn prev" href="#4-tool"><span class="sn-label">← 上一节</span><span class="sn-name">4. Tool</span></a><a class="sn next" href="#2-tool权限"><span class="sn-label">下一节 →</span><span class="sn-name">2. Tool权限</span></a></nav>
 <p>防止无限循环。</p>
 <pre><code>max_steps:10</code></pre>
 <hr/>
-<h2 id="2-tool权限">2. Tool权限</h2>
+<h2 id="2-tool权限">2. Tool权限</h2><nav class="sec-nav"><a class="sn prev" href="#1-最大步骤限制"><span class="sn-label">← 上一节</span><span class="sn-name">1. 最大步骤限制</span></a><a class="sn next" href="#3-人工审批-humanintheloop"><span class="sn-label">下一节 →</span><span class="sn-name">3. 人工审批 Human-in-the-loop</span></a></nav>
 <p>Agent不能：</p>
 <p>随便调用。</p>
 <hr/>
-<h2 id="3-人工审批-humanintheloop">3. 人工审批 Human-in-the-loop</h2>
+<h2 id="3-人工审批-humanintheloop">3. 人工审批 Human-in-the-loop</h2><nav class="sec-nav"><a class="sn prev" href="#2-tool权限"><span class="sn-label">← 上一节</span><span class="sn-name">2. Tool权限</span></a><a class="sn next" href="#ai客服-agent"><span class="sn-label">下一节 →</span><span class="sn-name">AI客服 Agent</span></a></nav>
 <p>重要操作：</p>
 <p>需要人确认。</p>
 <p>例如：</p>
@@ -699,7 +778,7 @@ steps:[
 发送</code></pre>
 <hr/>
 <h1 id="十七真实企业案例">十七、真实企业案例</h1>
-<h2 id="ai客服-agent">AI客服 Agent</h2>
+<h2 id="ai客服-agent">AI客服 Agent</h2><nav class="sec-nav"><a class="sn prev" href="#3-人工审批-humanintheloop"><span class="sn-label">← 上一节</span><span class="sn-name">3. 人工审批 Human-in-the-loop</span></a><a class="sn next" href="#ai研发助手"><span class="sn-label">下一节 →</span><span class="sn-name">AI研发助手</span></a></nav>
 <p>Multi-Agent：</p>
 <pre><code>用户
 
@@ -718,7 +797,7 @@ steps:[
 订单Agent  售后Agent  投诉Agent
 </code></pre>
 <hr/>
-<h2 id="ai研发助手">AI研发助手</h2>
+<h2 id="ai研发助手">AI研发助手</h2><nav class="sec-nav"><a class="sn prev" href="#ai客服-agent"><span class="sn-label">← 上一节</span><span class="sn-name">AI客服 Agent</span></a><a class="sn next" href="#ai内容生产"><span class="sn-label">下一节 →</span><span class="sn-name">AI内容生产</span></a></nav>
 <pre><code>需求Agent
 
 ↓
@@ -733,7 +812,7 @@ steps:[
 
 Review Agent</code></pre>
 <hr/>
-<h2 id="ai内容生产">AI内容生产</h2>
+<h2 id="ai内容生产">AI内容生产</h2><nav class="sec-nav"><a class="sn prev" href="#ai研发助手"><span class="sn-label">← 上一节</span><span class="sn-name">AI研发助手</span></a><a class="sn next" href="#q"><span class="sn-label">下一节 →</span><span class="sn-name">Q：</span></a></nav>
 <pre><code>Topic Agent
 
 ↓
@@ -753,7 +832,7 @@ Image Agent
 Video Agent</code></pre>
 <hr/>
 <h1 id="十八面试回答">十八、面试回答</h1>
-<h2 id="q">Q：</h2>
+<h2 id="q">Q：</h2><nav class="sec-nav"><a class="sn prev" href="#ai内容生产"><span class="sn-label">← 上一节</span><span class="sn-name">AI内容生产</span></a><a class="sn next" href="#q"><span class="sn-label">下一节 →</span><span class="sn-name">Q：</span></a></nav><nav class="sec-nav"><a class="sn prev" href="#q"><span class="sn-label">← 上一节</span><span class="sn-name">Q：</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>Agent和Multi-Agent有什么区别？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>单Agent通常由一个模型负责理解任务和调用工具，适合简单任务。Multi-Agent会将复杂任务拆分成多个专业Agent，例如规划、检索、生成、审核，通过协作完成复杂流程，提高系统可维护性和任务成功率。</p></blockquote>
@@ -827,5 +906,48 @@ RAG
 vLLM</code></pre>
 <p>这一步会非常接近 2026 年企业 AI Agent 岗位实际工作。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

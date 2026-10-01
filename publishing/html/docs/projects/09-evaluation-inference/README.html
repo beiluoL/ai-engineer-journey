@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#关键实测数字" class="lvl3">关键实测数字</a><a href="#最值得记住的一条权重误差最小-端到端最优" class="lvl3">最值得记住的一条：权重误差最小 ≠ 端到端最优</a><a href="#其他反直觉发现" class="lvl3">其他反直觉发现</a><a href="#诚实标注的口径边界" class="lvl3">诚实标注的口径边界</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#运行方式" class="lvl2">运行方式</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-09-llm-evaluation-inference-platform">Project 09 — LLM Evaluation / Inference Platform</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>掌握模型评估、量化和高性能推理服务化。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>训练完模型只是第一步。上线前必须评估效果、量化压缩、做高性能推理服务——这些是 AI 工程师区别于调参侠的关键能力。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>不知道模型效果好不好（评估）</li><li>模型太大跑不动（量化）</li><li>推理太慢无法并发（高性能 Serving）</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>Model
     ↓
 Evaluation
@@ -73,9 +152,9 @@ Optimization
 Inference
     ↓
 Serving</code></pre>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li><strong>纯 numpy + Python 标准库手写</strong>：评估指标、Benchmark、量化、推理引擎、PagedAttention、Batching、HTTP 服务</li><li>不引入 torch / transformers / fastapi / vllm —— HTTP 服务直接用标准库 <code>http.server</code> + <code>urllib</code></li><li>基座与微调产物复用 Project 06（手写 Transformer + autograd）与 Project 08（LoRA / NF4 / 冻结基座）</li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <pre><code>Fine-tuned Model
     ↓ 评估
 Evaluation Platform v0.1
@@ -83,9 +162,9 @@ Evaluation Platform v0.1
 Evaluation Platform v0.2
     ↓ vLLM Serving
 Evaluation &amp; Inference Platform v1.0   ✅</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Evaluation</td><td>困惑度之外：Token Acc / ECE 校准 / 覆盖率</td><td>✅ 已落地</td></tr><tr><td>02</td><td>Benchmark</td><td>任务集 + 打分 + 汇总排行</td><td>✅ 已落地</td></tr><tr><td>03</td><td>Evaluation Dataset</td><td>held-out 切分 + <strong>泄漏检查</strong></td><td>✅ 已落地</td></tr><tr><td>04</td><td>Automatic Evaluation</td><td>零 LLM 参与的规则化自动评分</td><td>✅ 已落地</td></tr><tr><td>05</td><td>Model Comparison</td><td>多种子配对 bootstrap 比较</td><td>✅ 已落地</td></tr><tr><td>06</td><td>Quantization</td><td>INT8 / INT4 / NF4 三方对比 + 端到端代价</td><td>✅ 已落地</td></tr><tr><td>07</td><td>Inference Engine</td><td>手写自回归引擎 + KV Cache 开关</td><td>✅ 已落地</td></tr><tr><td>08</td><td>vLLM / PagedAttention</td><td>分块 KV 管理 / block table / 浪费率</td><td>✅ 已落地</td></tr><tr><td>09</td><td>Batching</td><td>Static vs Continuous Batching 仿真</td><td>✅ 已落地</td></tr><tr><td>10</td><td>KV Cache</td><td>显存账本 + 何时反超权重</td><td>✅ 已落地</td></tr><tr><td>11</td><td>Model Serving</td><td>标准库 HTTP 服务 + SSE 流式 + metrics</td><td>✅ 已落地</td></tr></tbody></table>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <p><strong>v1.0 —— 11/11 Milestone 全部落地，229 项 pytest 全绿，11 个真实 demo，11 张真实终端截图 + 11 张手写架构图。</strong></p>
 <p>主线叙事：<strong>训出来的模型好不好？怎么让它跑得快、跑得起、服务得出去？</strong> 评估体系 → 压模型（量化）→ 压延迟（引擎 / KV Cache / PagedAttention / Continuous Batching）→ 服务化。</p>
 <h3 id="关键实测数字">关键实测数字</h3>
@@ -98,9 +177,9 @@ Evaluation &amp; Inference Platform v1.0   ✅</code></pre>
 <ul class="lvl"><li><strong>小模型上 KV Cache 只有 2.20×</strong>：d_model=64、2 层，Python 对象开销吃掉大半。<strong>别拿这个数去推大模型</strong>。</li><li><strong>adapter vs merge 的 0/0/10 全平</strong>不是数据缺失，而是「合并等价性」的正面证据。</li><li><strong>macOS 的 HTTP_PROXY 会拦 localhost</strong>：必须用 <code>ProxyHandler({})</code> 显式禁用代理才连得上自己的服务。</li></ul>
 <h3 id="诚实标注的口径边界">诚实标注的口径边界</h3>
 <ul class="lvl"><li>PagedAttention / Batching 是<strong>块级账本与离散事件仿真</strong>，不是真实 GPU 分配；1.52× 是乐观上界。</li><li>M10 的 7B 数字是<strong>按架构公式计算</strong>（与 P07 独立计算交叉验证），非本机实测。</li><li>服务后端挂的是玩具模型（d_model=64），不是 7B。</li><li>adapter 只训 24 步（图快速可复现），绝对指标难看，但<strong>比较结论有效</strong>。</li></ul>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p>v1.0</p>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#运行方式"><span class="sn-label">下一节 →</span><span class="sn-name">运行方式</span></a></nav>
 <pre><code>projects/09-evaluation-inference/
 ├── README.md                  # 本文件
 ├── src/ie/                    # 13 个手写模块
@@ -122,18 +201,61 @@ Evaluation &amp; Inference Platform v1.0   ✅</code></pre>
 ├── assets/                    # 11 张真实终端截图 + 11 张手写架构图 SVG
 ├── milestones/                # 01-11 文档
 └── models/                    # P09 自有产物（adapter / 量化权重），不碰 P08 缓存</code></pre>
-<h2 id="运行方式">运行方式</h2>
+<h2 id="运行方式">运行方式</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code># 跑测试（229 passed）
 /Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python -m pytest -q
 
 # 跑任意一个 demo（输出同时打到终端和 demos/out/*.txt）
 /Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python demos/demo_08_paged_attention.py</code></pre>
 <blockquote><p>本项目刻意<strong>不建 venv</strong>：统一复用带 numpy 的托管解释器，省磁盘空间。</p></blockquote>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#运行方式"><span class="sn-label">← 上一节</span><span class="sn-name">运行方式</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-08 的所有能力</li><li>从零搭建评估体系（困惑度之外还要看准确率与校准）、构建防泄漏评估集、多种子配对比较</li><li>手写 INT8/INT4 量化并用端到端任务复测其代价</li><li>手写推理引擎、KV Cache、PagedAttention 分块管理、Continuous Batching 仿真</li><li>用标准库起 OpenAI 兼容的推理服务（SSE 流式 + 并发 + metrics）</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>Project 10 —— Tiny LLM / AI Engineer Capstone（把 P06→P09 全部能力重新串成完整工程）。</p>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/08-fine-tuning">Project 08 — LoRA / QLoRA Fine-Tuning</a> <strong>底座来源</strong>：<a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

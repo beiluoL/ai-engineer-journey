@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#a-变量与类型milestone-01" class="lvl2">A. 变量与类型（Milestone 01）</a><a href="#b-list-dict-jsonmilestone-02" class="lvl2">B. List / Dict / JSON（Milestone 02）</a><a href="#验收标准" class="lvl2">验收标准</a><a href="#参考答案" class="lvl2">参考答案</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="exercises-01basic-milestone-0102-配套练习">Exercises 01-basic — Milestone 01-02 配套练习</h1>
 <blockquote><p>对应：<code>milestones/01-variables.md</code>（🎓 已学习）+ <code>milestones/02-list-dict-json.md</code>（🎓 已学习） 规则：<strong>亲手敲，不复制粘贴</strong>。每题先自己写，跑通后再对照 milestone 里的示例。 完成一题就在题号前打 ✅。写完的代码放本目录（如 <code>01_answers.py</code>）。 本次判卷：已用 <a href="../../../../../../../projects/01-python-ai-cli/exercises/01-basic/answers.py"><code>answers.py</code></a> 跑通全部 8 题并生成真实运行截图，8/8 标记完成 🎓。</p></blockquote>
-<h2 id="a-变量与类型milestone-01">A. 变量与类型（Milestone 01）</h2>
+<h2 id="a-变量与类型milestone-01">A. 变量与类型（Milestone 01）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#b-list-dict-jsonmilestone-02"><span class="sn-label">下一节 →</span><span class="sn-name">B. List / Dict / JSON（Milestone 02）</span></a></nav>
 <ul class="lvl"><li>[x] <strong>A1</strong> 写程序：输入你的名字和学习方向，输出一句话自我介绍（用 f-string）</li><li>[x] <strong>A2</strong> 让用户输入两个数字，打印它们的和、差、积、商（想想 <code>input()</code> 返回的是什么类型）</li><li>[x] <strong>A3</strong> 打印 <code>type()</code> 验证：<code>&quot;3.14&quot;</code>、<code>3.14</code>、<code>3</code>、<code>True</code> 各是什么类型？再把 <code>&quot;3.14&quot;</code> 转成 float 做加法</li></ul>
-<h2 id="b-list-dict-jsonmilestone-02">B. List / Dict / JSON（Milestone 02）</h2>
+<h2 id="b-list-dict-jsonmilestone-02">B. List / Dict / JSON（Milestone 02）</h2><nav class="sec-nav"><a class="sn prev" href="#a-变量与类型milestone-01"><span class="sn-label">← 上一节</span><span class="sn-name">A. 变量与类型（Milestone 01）</span></a><a class="sn next" href="#验收标准"><span class="sn-label">下一节 →</span><span class="sn-name">验收标准</span></a></nav>
 <ul class="lvl"><li>[x] <strong>B1</strong> 建一个 <code>messages</code> 列表，装 3 条 AI 对话消息（每条是 <code>{&quot;role&quot;: ..., &quot;content&quot;: ...}</code> 的 dict），打印消息总数</li><li>[x] <strong>B2</strong> 在 B1 基础上追加一条 user 消息，再统计 <code>role == &quot;user&quot;</code> 的消息有几条（提示：循环或列表推导式）</li><li>[x] <strong>B3</strong> 把 B1 的 <code>messages</code> 用 <code>json.dumps</code> 存成文件，再用 <code>json.load</code> 读回来，验证内容一致</li><li>[x] <strong>B4</strong> 给定 <code>data = {&quot;name&quot;: &quot;Beiluo&quot;, &quot;skills&quot;: [&quot;Java&quot;, &quot;Python&quot;]}</code>，追加一个 skill 后打印完整 JSON（缩进 2 格）</li><li>[x] <strong>B5（挑战）</strong> 读入一个 JSON 文件，安全处理「文件不存在」和「JSON 格式错误」两种情况（打印友好提示而不是崩溃——提前偷看 Milestone 06）</li></ul>
-<h2 id="验收标准">验收标准</h2>
+<h2 id="验收标准">验收标准</h2><nav class="sec-nav"><a class="sn prev" href="#b-list-dict-jsonmilestone-02"><span class="sn-label">← 上一节</span><span class="sn-name">B. List / Dict / JSON（Milestone 02）</span></a><a class="sn next" href="#参考答案"><span class="sn-label">下一节 →</span><span class="sn-name">参考答案</span></a></nav>
 <p>A1-A3 + B1-B4 全部亲手跑通 = Milestone 01 ✅ + Milestone 02 已标记 🎓。 B5 挑战题也已在 <code>answers.py</code> 中实现并跑通。</p>
-<h2 id="参考答案">参考答案</h2>
+<h2 id="参考答案">参考答案</h2><nav class="sec-nav"><a class="sn prev" href="#验收标准"><span class="sn-label">← 上一节</span><span class="sn-name">验收标准</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>写完再看：<a href="../../../../../../../projects/01-python-ai-cli/exercises/01-basic/answers.py"><code>answers.py</code></a>（带 Java 类比注释）</p>
 <pre><code>python3 answers.py                # 用示例数据跑一遍，看输出
 python3 answers.py --interactive  # 交互模式，真的等你输入</code></pre>
@@ -72,5 +151,48 @@ python3 answers.py --interactive  # 交互模式，真的等你输入</code></pr
 <figure class="figure"><img alt="answers.py 运行输出" src="../../../../../../../projects/01-python-ai-cli/assets/term-exercise-answers.png" loading="lazy"/><figcaption>answers.py 运行输出</figcaption></figure>
 <p>规矩：<strong>先自己敲、跑通了再对照</strong>。只准看卡住的那一个函数，不要整份抄。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

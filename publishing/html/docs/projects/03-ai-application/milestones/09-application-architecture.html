@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-五层结构" class="lvl3">3.1 五层结构</a><a href="#32-无状态服务-外部化会话" class="lvl3">3.2 无状态服务 + 外部化会话</a><a href="#33-每条路径都要有失败处理" class="lvl3">3.3 每条路径都要有失败处理</a><a href="#34-可观测性三个必埋的指标" class="lvl3">3.4 可观测性：三个必埋的指标</a><a href="#35-测试策略" class="lvl3">3.5 测试策略</a><a href="#36-成本与性能的三个杠杆" class="lvl3">3.6 成本与性能的三个杠杆</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1业务逻辑写进-prompt" class="lvl3">坑 1：业务逻辑写进 Prompt</a><a href="#坑-2编排层直接用-httpx" class="lvl3">坑 2：编排层直接用 httpx</a><a href="#坑-3同步阻塞" class="lvl3">坑 3：同步阻塞</a><a href="#坑-4没有幂等与重试边界" class="lvl3">坑 4：没有幂等与重试边界</a><a href="#坑-5日志里记了用户原文" class="lvl3">坑 5：日志里记了用户原文</a><a href="#坑-6全局单例会话" class="lvl3">坑 6：全局单例会话</a><a href="#坑-7把配置散落在各层" class="lvl3">坑 7：把配置散落在各层</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a><a href="#测试策略" class="lvl2">测试策略</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-03-chapter-09ai-application-architecture应用架构">Project 03 — Chapter 09：AI Application Architecture【应用架构】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/</code> 整体</p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>前八章各自解决了一个点。这一章把它们拼起来：</p>
 <pre><code>Prompt（01）+ 消息（02）+ 结构化（03）+ 流式（04）+ 记忆（05）
 + 参数（06）+ 预算（07）+ 工具（08）
@@ -67,7 +146,7 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>给出一套能长期维护的 AI 应用分层结构，并明确每层的职责边界与失败处理。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>AI 应用有一种独特的「熵增」倾向：<strong>所有东西都会往 Prompt 里掉</strong>。</p>
 <pre><code>第 1 周：  业务逻辑在 service.py 里，干干净净
 第 4 周：  「这里让模型顺便判断一下吧」→ 逻辑进了 Prompt
@@ -76,7 +155,7 @@ li{margin:.3em 0;}
 <p>这像极了早期 JSP 里写业务逻辑——能跑，但不可维护。</p>
 <p>分层不是为了好看，是为了<strong>让变化可控</strong>：模型会换、Prompt 会改、工具会加，层与层之间的接口稳定，改动就只影响一层。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-五层结构">3.1 五层结构</h3>
 <pre><code>┌─────────────────────────────────────────┐
 │ 接入层  cli.py / api.py                  │  参数解析、鉴权、协议（HTTP/SSE）
@@ -123,7 +202,7 @@ Prompt 回归  —— 固定样例集，人工抽检（完全自动判定不现�
 2. 裁剪     —— 历史预算控制（Chapter 05/07），成本从 O(n²) 降下来
 3. 小模型   —— 简单任务路由到小模型，复杂任务才上大模型</code></pre>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <pre><code>src/assistant/
 ├── cli.py            # 接入层：命令行
 ├── api.py            # 接入层：FastAPI（/chat /chat/stream /chat/structured /chat/agent）
@@ -150,12 +229,12 @@ service.ask(text)
   ↓ memory.add_assistant(reply)；记录 usage 到日志
   ↓ 返回</code></pre>
 <hr/>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Java (Spring Boot)</th><th>Python (本项目)</th><th>说明</th></tr></thead><tbody><tr><td><code>@RestController</code></td><td>FastAPI <code>APIRouter</code></td><td>接入层</td></tr><tr><td><code>@Service</code></td><td><code>service.py</code> / <code>agent.py</code></td><td>编排层</td></tr><tr><td><code>@Component</code> / 工具类</td><td><code>prompts.py</code> / <code>tools.py</code></td><td>能力层</td></tr><tr><td><code>@Repository</code> / <code>RestClient</code></td><td><code>client.py</code></td><td><strong>外部依赖的封装，最该被隔离的一层</strong></td></tr><tr><td>接口 + 实现类（可换实现）</td><td><code>BaseLLMClient</code> ABC + <code>FakeClient</code></td><td>依赖倒置，可测可换</td></tr><tr><td><code>@ConfigurationProperties</code></td><td><code>Settings</code> frozen dataclass</td><td>配置</td></tr><tr><td>自定义异常 + <code>@ControllerAdvice</code></td><td><code>errors.py</code> + FastAPI exception handler</td><td>异常分层</td></tr><tr><td>Micrometer + Actuator</td><td>usage 日志 + <code>/metrics</code></td><td>可观测</td></tr><tr><td><code>@Valid</code></td><td>Pydantic</td><td>边界校验</td></tr></tbody></table>
 <p>一个值得记住的原则（两边都成立）：</p>
 <blockquote><p><strong>外部依赖（数据库、HTTP 客户端、LLM）必须被接口隔离。</strong> 否则单元测试只能靠 mock 框架打补丁，而依赖倒置让你直接换一个实现。</p></blockquote>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1业务逻辑写进-prompt">坑 1：业务逻辑写进 Prompt</h3>
 <p>「让模型顺便判断一下用户是不是 VIP」——这个判断进了 Prompt，就意味着：没法单测、没法灰度、改了没痕迹。</p>
 <p>正确做法：VIP 判断是传统代码的事，结果作为参数喂给 Prompt。</p>
@@ -172,25 +251,68 @@ service.ask(text)
 <h3 id="坑-7把配置散落在各层">坑 7：把配置散落在各层</h3>
 <p>「这个超时时间写在 client.py，那个写在 api.py」——统一进 <code>Settings</code>。</p>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：画出（或写出）本项目一次请求的完整调用链，标注每层负责什么。</p>
 <p><strong>挑战 2</strong>：加一个 <code>/metrics</code> 端点或用日志输出：累计请求数、失败率、累计 token 与估算费用。</p>
 <p><strong>挑战 3（进阶）</strong>：实现「小模型路由」——简单问答走便宜模型，命中关键词（如「分析」「总结」）时走强模型，并在日志里记录路由决策。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li>五层分别是什么？哪一层是「唯一知道 API 长什么样」的？</li><li>为什么业务逻辑不该写进 Prompt？</li><li>服务为什么要做成无状态？会话存哪？</li><li>AI 应用必须埋的三种可观测指标是什么？</li><li>测试策略里，为什么强调「零网络、零真实 Key」？</li><li>降低成本与延迟的三个杠杆是什么？</li><li>重试在什么场景下是危险的？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><a class="sn next" href="#测试策略"><span class="sn-label">下一节 →</span><span class="sn-name">测试策略</span></a></nav>
 <ul class="lvl"><li>[ ] <code>src/</code> 的目录符合五层结构，编排层不出现 httpx / API URL</li><li>[ ] 换模型厂商只需要改 <code>client.py</code> + <code>settings.py</code></li><li>[ ] 全部测试离线运行（FakeClient），无真实 Key</li><li>[ ] 日志里有 latency / token / 错误类型三类信息</li><li>[ ] CLI 与 API 两条入口复用同一个 service</li><li>[ ] 有真实运行验证：普通问答、流式、结构化、工具调用四条路径全通</li></ul>
 <p><strong>Project 03 完成。</strong> 此时的能力闭环：</p>
 <pre><code>Prompt 工程 + 消息结构 + 结构化输出 + 流式 + 记忆
 + 参数调优 + 成本预算 + 工具调用 + 分层架构
 = 一个真正可用的 AI 应用（而不只是「会聊天的壳」）</code></pre>
 <p>回到项目主页：<a href="../README.html">../README.md</a> 下一步：Project 04 —— 让应用拥有外部知识（RAG）。</p>
-<h2 id="测试策略">测试策略</h2>
+<h2 id="测试策略">测试策略</h2><nav class="sec-nav"><a class="sn prev" href="#9-本节完成标准"><span class="sn-label">← 上一节</span><span class="sn-name">9. 本节完成标准</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>整套 <code>src/</code> 用 <code>FakeClient</code>（不联网、不用真实 Key）做离线测试，当前 <strong>61 / 61 通过</strong>：</p>
 <figure class="figure"><img alt="pytest 61 passed" src="../../../../../../projects/03-ai-application/assets/term-pytest.png" loading="lazy"/><figcaption>pytest 61 passed</figcaption></figure>
 <figure class="figure"><img alt="真实运行：真起 uvicorn 把五层一次打通——/health /chat /chat/stream（37 帧 SSE）/chat/structured /chat/agent /reset；schema_name 写错在 API 层挡成 400、空 message 挡成 422；最后全量测试 61 passed" src="../../../../../../projects/03-ai-application/assets/term-arch-e2e.png" loading="lazy"/><figcaption>真实运行：真起 uvicorn 把五层一次打通——/health /chat /chat/stream（37 帧 SSE）/chat/structured /chat/agent /reset；schema_name 写错在 API 层挡成 400、空 message 挡成 422；最后全量测试 61 passed</figcaption></figure>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

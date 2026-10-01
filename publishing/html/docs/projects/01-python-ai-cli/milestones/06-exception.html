@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#第一类技术层错误" class="lvl3">第一类：技术层错误</a><a href="#第二类业务层错误" class="lvl3">第二类：业务层错误</a><a href="#方式-a" class="lvl3">方式 A</a><a href="#方式-b" class="lvl3">方式 B</a><a href="#try" class="lvl2">try</a><a href="#except" class="lvl2">except</a><a href="#else" class="lvl2">else</a><a href="#finally" class="lvl2">finally</a><a href="#raise" class="lvl2">raise</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#challenge-1安全整数输入" class="lvl2">Challenge 1：安全整数输入</a><a href="#challenge-2消息不能为空" class="lvl2">Challenge 2：消息不能为空</a><a href="#challenge-3模拟-llm-故障" class="lvl2">Challenge 3：模拟 LLM 故障</a><a href="#level-1" class="lvl3">Level 1</a><a href="#level-2" class="lvl3">Level 2</a><a href="#level-3" class="lvl3">Level 3</a><a href="#level-4" class="lvl3">Level 4</a><a href="#level-5" class="lvl3">Level 5</a><a href="#level-6" class="lvl3">Level 6</a><a href="#level-7" class="lvl3">Level 7</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="lesson-06-exception让-ai-cli-assistant-学会处理错误">Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误</h1>
 <blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   主线项目：Python AI CLI Assistant   本章目标：通过给已有项目制造真实错误，学习 Exception【异常】、try / except、else、finally、raise，并建立 AI 工程中的错误处理思维。</p></blockquote>
@@ -1026,15 +1105,15 @@ raise
 主动抛出异常</code></pre>
 <hr/>
 <h1 id="42-本章最重要的区别">42. 本章最重要的区别</h1>
-<h2 id="try"><code>try</code></h2>
+<h2 id="try"><code>try</code></h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#except"><span class="sn-label">下一节 →</span><span class="sn-name">except</span></a></nav>
 <blockquote><p>我准备执行一段可能出错的代码。</p></blockquote>
-<h2 id="except"><code>except</code></h2>
+<h2 id="except"><code>except</code></h2><nav class="sec-nav"><a class="sn prev" href="#try"><span class="sn-label">← 上一节</span><span class="sn-name">try</span></a><a class="sn next" href="#else"><span class="sn-label">下一节 →</span><span class="sn-name">else</span></a></nav>
 <blockquote><p>如果发生指定异常，我知道怎么处理。</p></blockquote>
-<h2 id="else"><code>else</code></h2>
+<h2 id="else"><code>else</code></h2><nav class="sec-nav"><a class="sn prev" href="#except"><span class="sn-label">← 上一节</span><span class="sn-name">except</span></a><a class="sn next" href="#finally"><span class="sn-label">下一节 →</span><span class="sn-name">finally</span></a></nav>
 <blockquote><p>如果没有发生异常，执行这里。</p></blockquote>
-<h2 id="finally"><code>finally</code></h2>
+<h2 id="finally"><code>finally</code></h2><nav class="sec-nav"><a class="sn prev" href="#else"><span class="sn-label">← 上一节</span><span class="sn-name">else</span></a><a class="sn next" href="#raise"><span class="sn-label">下一节 →</span><span class="sn-name">raise</span></a></nav>
 <blockquote><p>无论结果如何，执行这里。</p></blockquote>
-<h2 id="raise"><code>raise</code></h2>
+<h2 id="raise"><code>raise</code></h2><nav class="sec-nav"><a class="sn prev" href="#finally"><span class="sn-label">← 上一节</span><span class="sn-name">finally</span></a><a class="sn next" href="#challenge-1安全整数输入"><span class="sn-label">下一节 →</span><span class="sn-name">Challenge 1：安全整数输入</span></a></nav>
 <blockquote><p>我认为这里发生了一个异常，主动告诉 Python。</p></blockquote>
 <hr/>
 <h1 id="43-主动回忆">43. 主动回忆</h1>
@@ -1092,7 +1171,7 @@ except RuntimeError:
 <hr/>
 <h1 id="44-实战挑战">44. 实战挑战</h1>
 <p>这次不要直接复制最终代码。</p>
-<h2 id="challenge-1安全整数输入">Challenge 1：安全整数输入</h2>
+<h2 id="challenge-1安全整数输入">Challenge 1：安全整数输入</h2><nav class="sec-nav"><a class="sn prev" href="#raise"><span class="sn-label">← 上一节</span><span class="sn-name">raise</span></a><a class="sn next" href="#challenge-2消息不能为空"><span class="sn-label">下一节 →</span><span class="sn-name">Challenge 2：消息不能为空</span></a></nav>
 <p>写：</p>
 <pre><code>def read_integer(prompt):
     ...</code></pre>
@@ -1104,7 +1183,7 @@ except RuntimeError:
 → 提示错误
 → 不让程序崩溃</code></pre>
 <hr/>
-<h2 id="challenge-2消息不能为空">Challenge 2：消息不能为空</h2>
+<h2 id="challenge-2消息不能为空">Challenge 2：消息不能为空</h2><nav class="sec-nav"><a class="sn prev" href="#challenge-1安全整数输入"><span class="sn-label">← 上一节</span><span class="sn-name">Challenge 1：安全整数输入</span></a><a class="sn next" href="#challenge-3模拟-llm-故障"><span class="sn-label">下一节 →</span><span class="sn-name">Challenge 3：模拟 LLM 故障</span></a></nav>
 <p>修改：</p>
 <pre><code>add_message()</code></pre>
 <p>要求：</p>
@@ -1119,7 +1198,7 @@ except RuntimeError:
 <p>提示：</p>
 <pre><code>消息不能为空</code></pre>
 <hr/>
-<h2 id="challenge-3模拟-llm-故障">Challenge 3：模拟 LLM 故障</h2>
+<h2 id="challenge-3模拟-llm-故障">Challenge 3：模拟 LLM 故障</h2><nav class="sec-nav"><a class="sn prev" href="#challenge-2消息不能为空"><span class="sn-label">← 上一节</span><span class="sn-name">Challenge 2：消息不能为空</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>修改：</p>
 <pre><code>generate_mock_response()</code></pre>
 <p>让：</p>
@@ -1227,5 +1306,48 @@ JSON
 <h1 id="49-本章一句话总结">49. 本章一句话总结</h1>
 <blockquote><p><strong>Exception Handling【异常处理】不是为了让程序“看起来不报错”，而是让程序能够识别异常、区分异常、在合适的位置处理异常，并在发生问题后以可控的方式继续运行。对于 AI CLI Assistant 来说，这一步是从“能运行的脚本”走向“可靠应用”的重要一步。</strong></p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

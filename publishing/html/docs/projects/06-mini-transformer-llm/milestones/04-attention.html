@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-what-why为什么需要缩放点积-因果掩码" class="lvl2">1. What / Why：为什么需要缩放点积 + 因果掩码</a><a href="#2-design一张分数表-一个三角掩码" class="lvl2">2. Design：一张分数表 + 一个三角掩码</a><a href="#3-realrun-evidence来自-demosoutdemo04attentiontxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_04_attention.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-04-attentiontransformer-的心脏">Milestone 04 — Attention：Transformer 的心脏</h1>
 <p>Milestone 03 把 id 变成了 <code>(n, d_model)</code> 的向量 <code>x</code>。接下来 <code>x</code> 要进注意力机制 —— 这是整个 Transformer 最该亲手写一遍的部分。Project 05 里我只会调 API 让模型「看上下文」；这里我要自己写出「每个 token 该看哪些 token、看多少」到底是怎么算出来的。</p>
@@ -62,15 +141,15 @@ li{margin:.3em 0;}
 <pre><code>scores = QKᵀ / √d_k  →  + mask  →  softmax  →  ·V  →  out</code></pre>
 <p>它回答一个问题：<strong>序列里每个位置，应该把多少注意力分给其他位置？</strong></p>
 <hr/>
-<h2 id="1-what-why为什么需要缩放点积-因果掩码">1. What / Why：为什么需要缩放点积 + 因果掩码</h2>
+<h2 id="1-what-why为什么需要缩放点积-因果掩码">1. What / Why：为什么需要缩放点积 + 因果掩码</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design一张分数表-一个三角掩码"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：一张分数表 + 一个三角掩码</span></a></nav>
 <p>两个非写不可的细节，都是「不写对就会静默出错」的：</p>
 <ul class="lvl"><li><strong>缩放 <code>1/√d_k</code></strong>：点积 <code>QKᵀ</code> 的量级随 <code>d_k</code> 增长，不除会直接把 softmax 推到饱和区（梯度≈0）。这是训练起不起得来的开关。</li><li><strong>因果掩码</strong>：解码器做自回归，第 <code>i</code> 个 token 只能看 <code>0..i</code>，不能偷看未来。掩码把未来位置的分数设为 <code>-inf</code>，softmax 后权重变成 0。</li></ul>
-<h2 id="2-design一张分数表-一个三角掩码">2. Design：一张分数表 + 一个三角掩码</h2>
+<h2 id="2-design一张分数表-一个三角掩码">2. Design：一张分数表 + 一个三角掩码</h2><nav class="sec-nav"><a class="sn prev" href="#1-what-why为什么需要缩放点积-因果掩码"><span class="sn-label">← 上一节</span><span class="sn-name">1. What / Why：为什么需要缩放点积 + 因果掩码</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo04attentiontxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_attention.txt）</span></a></nav>
 <p><code>src/model/attention.py</code> 干净到只有两个函数：</p>
 <ul class="lvl"><li><code>causal_mask(seq_len)</code>：<code>np.triu(..., k=1)</code> 取上三角（含对角线以上），用 <code>np.where</code> 把上三角精确赋成 <code>-inf</code>、下三角赋成 <code>0</code>。<strong>不能写 <code>0 * -np.inf</code></strong>（numpy 里那是 <code>nan</code>），这点注释里点名了。</li><li><code>scaled_dot_product_attention(q, k, v, mask, scale)</code>：<code>q,k,v</code> 形状 <code>(..., seq, d_k)</code>，全程走 autograd 的 <code>matmul / add / softmax</code>，所以梯度自动通。返回 <code>(..., seq, d_k)</code>，并可 <code>return_attn=True</code> 额外拿 <code>(seq, seq)</code> 的注意力权重矩阵 —— 它的每行是一个分布、和为 1，是验证「注意力」语义的关键。</li></ul>
 <figure class="figure"><img alt="注意力数据流：QKᵀ → 缩放 → 加因果掩码 → softmax → 乘 V" src="../../../../../../projects/06-mini-transformer-llm/assets/attention.svg" loading="lazy"/><figcaption>注意力数据流：QKᵀ → 缩放 → 加因果掩码 → softmax → 乘 V</figcaption></figure>
 <p>形状约定：<code>Q,K,V</code> 未批处理 <code>(seq, d_k)</code>、批处理 <code>(B, seq, d_k)</code>，输出同形。</p>
-<h2 id="3-realrun-evidence来自-demosoutdemo04attentiontxt">3. Real-run evidence（来自 <code>demos/out/demo_04_attention.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo04attentiontxt">3. Real-run evidence（来自 <code>demos/out/demo_04_attention.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design一张分数表-一个三角掩码"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：一张分数表 + 一个三角掩码</span></a><a class="sn next" href="#4-bugs-lessons"><span class="sn-label">下一节 →</span><span class="sn-name">4. Bugs / lessons</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
 <p>因果掩码确实是「下三角 0、上三角 -inf」：</p>
 <pre><code>序列长度 T = 6，掩码形状 (6, 6)
@@ -98,14 +177,57 @@ pos 5: 0.462 0.069 0.251 0.060 0.006 0.151</code></pre>
 缩放后 scores 典型量级 |max| = 2.494
 → 缩放让 softmax 不至于过早饱和，梯度才流得动。</code></pre>
 <figure class="figure"><img alt="Attention demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-04-attention.png" loading="lazy"/><figcaption>Attention demo 真实运行输出</figcaption></figure>
-<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo04attentiontxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_attention.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <p>本 milestone 没有暴露真实运行 bug。一个<strong>值得记住的坑（来自源码注释）</strong>：因果掩码不能写 <code>0 * -np.inf</code>。numpy 里 <code>0 * -inf</code> 结果是 <code>nan</code>，一旦 <code>nan</code> 进 softmax，整行变 <code>nan</code>，损失直接炸。这里用 <code>np.where(m==1.0, -np.inf, 0.0)</code> 精确赋值避开。这是「看起来能跑、实际在产出 nan」的典型陷阱，记为一条硬规则。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-bugs-lessons"><span class="sn-label">← 上一节</span><span class="sn-name">4. Bugs / lessons</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><code>softmax(QKᵀ/√d_k)V</code> 必须亲手写 —— 缩放和掩码各管一件事：缩放保梯度，掩码保自回归。</li><li>因果掩码用 <code>-inf</code> 而非「删掉列」，因为矩阵形状要对齐、且 softmax 对 <code>-inf</code> 自然给出 0。</li><li><code>nan</code> 是注意力实现里最阴的敌人：<code>0 * -inf</code> 必须绕开。</li><li>没加掩码时每行和为 1，加了之后只是「未来那几列变 0」—— 这就是「能看到多少上下文」的具象。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/attention.py</code></td><td><code>causal_mask</code>（下三角 0 / 上三角 -inf）、<code>scaled_dot_product_attention</code>（缩放点积 + 掩码 + softmax + ·V）</td></tr><tr><td><code>demos/demo_04_attention.py</code></td><td>4 节演示：掩码 / 缩放点积 / 加掩码 / 缩放作用，输出落 <code>demos/out/demo_04_attention.txt</code></td></tr><tr><td><code>assets/attention.svg</code></td><td>本章数据流图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.2 → <strong>v0.3</strong>，单头缩放点积注意力 + 因果掩码落地，所有算子走 autograd（梯度自动通），演示真实跑通并核对掩码/缩放数值，配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#java-ai-interview-agent" class="lvl2">Java AI Interview Agent</a><a href="#用户痛点1" class="lvl2">用户痛点1</a><a href="#用户痛点2" class="lvl2">用户痛点2</a><a href="#用户痛点3" class="lvl2">用户痛点3</a><a href="#ai模拟面试" class="lvl2">AI模拟面试</a><a href="#用户" class="lvl3">用户：</a><a href="#前端" class="lvl2">前端</a><a href="#后端" class="lvl2">后端</a><a href="#ai框架" class="lvl2">AI框架</a><a href="#数据库" class="lvl2">数据库</a><a href="#redis" class="lvl2">Redis</a><a href="#向量库" class="lvl2">向量库</a><a href="#tool1question-generator" class="lvl2">Tool1：Question Generator</a><a href="#tool2knowledge-retriever" class="lvl2">Tool2：Knowledge Retriever</a><a href="#tool3answer-evaluator" class="lvl2">Tool3：Answer Evaluator</a><a href="#tool4learning-planner" class="lvl2">Tool4：Learning Planner</a><a href="#免费版" class="lvl2">免费版</a><a href="#pro版" class="lvl2">Pro版</a><a href="#企业版" class="lvl2">企业版</a><a href="#方法1" class="lvl2">方法1</a><a href="#方法2" class="lvl2">方法2</a><a href="#方法3" class="lvl2">方法3</a><a href="#方法4" class="lvl2">方法4</a><a href="#phase-0验证" class="lvl2">Phase 0：验证</a><a href="#phase-1mvp" class="lvl2">Phase 1：MVP</a><a href="#phase-2增强" class="lvl2">Phase 2：增强</a><a href="#phase-3商业化" class="lvl2">Phase 3：商业化</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day19从-ai-工程师到-ai-产品工程师">Day19：从 AI 工程师到 AI 产品工程师</h1>
 <h1 id="设计开发上线一个完整-ai-saas">设计、开发、上线一个完整 AI SaaS</h1>
@@ -125,7 +204,7 @@ AI在哪里创造价值？
 <hr/>
 <h1 id="二设计一个真实-ai-saas-项目">二、设计一个真实 AI SaaS 项目</h1>
 <p>我们继续你的项目：</p>
-<h2 id="java-ai-interview-agent">Java AI Interview Agent</h2>
+<h2 id="java-ai-interview-agent">Java AI Interview Agent</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#用户痛点1"><span class="sn-label">下一节 →</span><span class="sn-name">用户痛点1</span></a></nav>
 <p>但是从个人项目升级为：</p>
 <h1 id="ai-interview-coach-saas">AI Interview Coach SaaS</h1>
 <p>中文：</p>
@@ -144,7 +223,7 @@ AI在哪里创造价值？
 <p>不要从技术开始。</p>
 <p>先看用户。</p>
 <hr/>
-<h2 id="用户痛点1">用户痛点1</h2>
+<h2 id="用户痛点1">用户痛点1</h2><nav class="sec-nav"><a class="sn prev" href="#java-ai-interview-agent"><span class="sn-label">← 上一节</span><span class="sn-name">Java AI Interview Agent</span></a><a class="sn next" href="#用户痛点2"><span class="sn-label">下一节 →</span><span class="sn-name">用户痛点2</span></a></nav>
 <p>不知道准备什么。</p>
 <p>例如：</p>
 <p>用户：</p>
@@ -163,7 +242,7 @@ Redis
 
 AI应用开发</code></pre>
 <hr/>
-<h2 id="用户痛点2">用户痛点2</h2>
+<h2 id="用户痛点2">用户痛点2</h2><nav class="sec-nav"><a class="sn prev" href="#用户痛点1"><span class="sn-label">← 上一节</span><span class="sn-name">用户痛点1</span></a><a class="sn next" href="#用户痛点3"><span class="sn-label">下一节 →</span><span class="sn-name">用户痛点3</span></a></nav>
 <p>知道知识，但是不会表达。</p>
 <p>例如：</p>
 <p>用户懂：</p>
@@ -174,7 +253,7 @@ AI应用开发</code></pre>
 <p>训练：</p>
 <p>30秒回答。</p>
 <hr/>
-<h2 id="用户痛点3">用户痛点3</h2>
+<h2 id="用户痛点3">用户痛点3</h2><nav class="sec-nav"><a class="sn prev" href="#用户痛点2"><span class="sn-label">← 上一节</span><span class="sn-name">用户痛点2</span></a><a class="sn next" href="#ai模拟面试"><span class="sn-label">下一节 →</span><span class="sn-name">AI模拟面试</span></a></nav>
 <p>不知道自己的薄弱点。</p>
 <p>AI：</p>
 <p>记录：</p>
@@ -190,7 +269,7 @@ RAG理解30%</code></pre>
 <p>不要一开始做大。</p>
 <p>第一版：</p>
 <p>只做：</p>
-<h2 id="ai模拟面试">AI模拟面试</h2>
+<h2 id="ai模拟面试">AI模拟面试</h2><nav class="sec-nav"><a class="sn prev" href="#用户痛点3"><span class="sn-label">← 上一节</span><span class="sn-name">用户痛点3</span></a><a class="sn next" href="#前端"><span class="sn-label">下一节 →</span><span class="sn-name">前端</span></a></nav>
 <p>功能：</p>
 <h3 id="用户">用户：</h3>
 <p>选择岗位：</p>
@@ -268,7 +347,7 @@ Milvus        vLLM/API
 </code></pre>
 <hr/>
 <h1 id="七技术选型">七、技术选型</h1>
-<h2 id="前端">前端</h2>
+<h2 id="前端">前端</h2><nav class="sec-nav"><a class="sn prev" href="#ai模拟面试"><span class="sn-label">← 上一节</span><span class="sn-name">AI模拟面试</span></a><a class="sn next" href="#后端"><span class="sn-label">下一节 →</span><span class="sn-name">后端</span></a></nav>
 <p>Vue3</p>
 <p>Element Plus</p>
 <p>功能：</p>
@@ -276,7 +355,7 @@ Milvus        vLLM/API
 <ul class="lvl"><li>面试页面</li></ul>
 <ul class="lvl"><li>报告页面</li></ul>
 <hr/>
-<h2 id="后端">后端</h2>
+<h2 id="后端">后端</h2><nav class="sec-nav"><a class="sn prev" href="#前端"><span class="sn-label">← 上一节</span><span class="sn-name">前端</span></a><a class="sn next" href="#ai框架"><span class="sn-label">下一节 →</span><span class="sn-name">AI框架</span></a></nav>
 <p>Spring Boot 3</p>
 <p>负责：</p>
 <ul class="lvl"><li>用户</li></ul>
@@ -284,14 +363,14 @@ Milvus        vLLM/API
 <ul class="lvl"><li>AI调用</li></ul>
 <ul class="lvl"><li>数据保存</li></ul>
 <hr/>
-<h2 id="ai框架">AI框架</h2>
+<h2 id="ai框架">AI框架</h2><nav class="sec-nav"><a class="sn prev" href="#后端"><span class="sn-label">← 上一节</span><span class="sn-name">后端</span></a><a class="sn next" href="#数据库"><span class="sn-label">下一节 →</span><span class="sn-name">数据库</span></a></nav>
 <p>LangChain4j</p>
 <p>负责：</p>
 <ul class="lvl"><li>Prompt</li></ul>
 <ul class="lvl"><li>Memory</li></ul>
 <ul class="lvl"><li>Tool</li></ul>
 <hr/>
-<h2 id="数据库">数据库</h2>
+<h2 id="数据库">数据库</h2><nav class="sec-nav"><a class="sn prev" href="#ai框架"><span class="sn-label">← 上一节</span><span class="sn-name">AI框架</span></a><a class="sn next" href="#redis"><span class="sn-label">下一节 →</span><span class="sn-name">Redis</span></a></nav>
 <p>MySQL</p>
 <p>保存：</p>
 <p>用户：</p>
@@ -308,13 +387,13 @@ answer
 
 score</code></pre>
 <hr/>
-<h2 id="redis">Redis</h2>
+<h2 id="redis">Redis</h2><nav class="sec-nav"><a class="sn prev" href="#数据库"><span class="sn-label">← 上一节</span><span class="sn-name">数据库</span></a><a class="sn next" href="#向量库"><span class="sn-label">下一节 →</span><span class="sn-name">向量库</span></a></nav>
 <p>保存：</p>
 <ul class="lvl"><li>Session</li></ul>
 <ul class="lvl"><li>Token</li></ul>
 <ul class="lvl"><li>Cache</li></ul>
 <hr/>
-<h2 id="向量库">向量库</h2>
+<h2 id="向量库">向量库</h2><nav class="sec-nav"><a class="sn prev" href="#redis"><span class="sn-label">← 上一节</span><span class="sn-name">Redis</span></a><a class="sn next" href="#tool1question-generator"><span class="sn-label">下一节 →</span><span class="sn-name">Tool1：Question Generator</span></a></nav>
 <p>Milvus。</p>
 <p>保存：</p>
 <ul class="lvl"><li>学习资料</li></ul>
@@ -327,20 +406,20 @@ score</code></pre>
 <p>面试教练。</p>
 <hr/>
 <p>Agent能力：</p>
-<h2 id="tool1question-generator">Tool1：Question Generator</h2>
+<h2 id="tool1question-generator">Tool1：Question Generator</h2><nav class="sec-nav"><a class="sn prev" href="#向量库"><span class="sn-label">← 上一节</span><span class="sn-name">向量库</span></a><a class="sn next" href="#tool2knowledge-retriever"><span class="sn-label">下一节 →</span><span class="sn-name">Tool2：Knowledge Retriever</span></a></nav>
 <p>生成问题。</p>
 <p>输入：</p>
 <p>岗位。</p>
 <p>输出：</p>
 <p>问题。</p>
 <hr/>
-<h2 id="tool2knowledge-retriever">Tool2：Knowledge Retriever</h2>
+<h2 id="tool2knowledge-retriever">Tool2：Knowledge Retriever</h2><nav class="sec-nav"><a class="sn prev" href="#tool1question-generator"><span class="sn-label">← 上一节</span><span class="sn-name">Tool1：Question Generator</span></a><a class="sn next" href="#tool3answer-evaluator"><span class="sn-label">下一节 →</span><span class="sn-name">Tool3：Answer Evaluator</span></a></nav>
 <p>查询知识库。</p>
 <hr/>
-<h2 id="tool3answer-evaluator">Tool3：Answer Evaluator</h2>
+<h2 id="tool3answer-evaluator">Tool3：Answer Evaluator</h2><nav class="sec-nav"><a class="sn prev" href="#tool2knowledge-retriever"><span class="sn-label">← 上一节</span><span class="sn-name">Tool2：Knowledge Retriever</span></a><a class="sn next" href="#tool4learning-planner"><span class="sn-label">下一节 →</span><span class="sn-name">Tool4：Learning Planner</span></a></nav>
 <p>评分。</p>
 <hr/>
-<h2 id="tool4learning-planner">Tool4：Learning Planner</h2>
+<h2 id="tool4learning-planner">Tool4：Learning Planner</h2><nav class="sec-nav"><a class="sn prev" href="#tool3answer-evaluator"><span class="sn-label">← 上一节</span><span class="sn-name">Tool3：Answer Evaluator</span></a><a class="sn next" href="#免费版"><span class="sn-label">下一节 →</span><span class="sn-name">免费版</span></a></nav>
 <p>生成学习计划。</p>
 <hr/>
 <p>架构：</p>
@@ -433,12 +512,12 @@ AI评分
 <p>考虑：</p>
 <p>赚钱。</p>
 <hr/>
-<h2 id="免费版">免费版</h2>
+<h2 id="免费版">免费版</h2><nav class="sec-nav"><a class="sn prev" href="#tool4learning-planner"><span class="sn-label">← 上一节</span><span class="sn-name">Tool4：Learning Planner</span></a><a class="sn next" href="#pro版"><span class="sn-label">下一节 →</span><span class="sn-name">Pro版</span></a></nav>
 <p>限制：</p>
 <p>每天：</p>
 <p>5次面试。</p>
 <hr/>
-<h2 id="pro版">Pro版</h2>
+<h2 id="pro版">Pro版</h2><nav class="sec-nav"><a class="sn prev" href="#免费版"><span class="sn-label">← 上一节</span><span class="sn-name">免费版</span></a><a class="sn next" href="#企业版"><span class="sn-label">下一节 →</span><span class="sn-name">企业版</span></a></nav>
 <p>例如：</p>
 <p>月付。</p>
 <p>增加：</p>
@@ -447,7 +526,7 @@ AI评分
 <ul class="lvl"><li>个人知识库</li></ul>
 <ul class="lvl"><li>高级模型</li></ul>
 <hr/>
-<h2 id="企业版">企业版</h2>
+<h2 id="企业版">企业版</h2><nav class="sec-nav"><a class="sn prev" href="#pro版"><span class="sn-label">← 上一节</span><span class="sn-name">Pro版</span></a><a class="sn next" href="#方法1"><span class="sn-label">下一节 →</span><span class="sn-name">方法1</span></a></nav>
 <p>卖给：</p>
 <p>培训机构。</p>
 <p>提供：</p>
@@ -462,19 +541,19 @@ AI评分
 <p>成本高。</p>
 <p>优化：</p>
 <hr/>
-<h2 id="方法1">方法1</h2>
+<h2 id="方法1">方法1</h2><nav class="sec-nav"><a class="sn prev" href="#企业版"><span class="sn-label">← 上一节</span><span class="sn-name">企业版</span></a><a class="sn next" href="#方法2"><span class="sn-label">下一节 →</span><span class="sn-name">方法2</span></a></nav>
 <p>简单问题：</p>
 <p>本地Qwen。</p>
 <p>复杂：</p>
 <p>GPT。</p>
 <hr/>
-<h2 id="方法2">方法2</h2>
+<h2 id="方法2">方法2</h2><nav class="sec-nav"><a class="sn prev" href="#方法1"><span class="sn-label">← 上一节</span><span class="sn-name">方法1</span></a><a class="sn next" href="#方法3"><span class="sn-label">下一节 →</span><span class="sn-name">方法3</span></a></nav>
 <p>缓存。</p>
 <hr/>
-<h2 id="方法3">方法3</h2>
+<h2 id="方法3">方法3</h2><nav class="sec-nav"><a class="sn prev" href="#方法2"><span class="sn-label">← 上一节</span><span class="sn-name">方法2</span></a><a class="sn next" href="#方法4"><span class="sn-label">下一节 →</span><span class="sn-name">方法4</span></a></nav>
 <p>RAG减少Token。</p>
 <hr/>
-<h2 id="方法4">方法4</h2>
+<h2 id="方法4">方法4</h2><nav class="sec-nav"><a class="sn prev" href="#方法3"><span class="sn-label">← 上一节</span><span class="sn-name">方法3</span></a><a class="sn next" href="#phase-0验证"><span class="sn-label">下一节 →</span><span class="sn-name">Phase 0：验证</span></a></nav>
 <p>LoRA优化。</p>
 <hr/>
 <p>架构：</p>
@@ -521,13 +600,13 @@ LLM Gateway
 <p>Kubernetes。</p>
 <hr/>
 <h1 id="十四ai产品开发路线">十四、AI产品开发路线</h1>
-<h2 id="phase-0验证">Phase 0：验证</h2>
+<h2 id="phase-0验证">Phase 0：验证</h2><nav class="sec-nav"><a class="sn prev" href="#方法4"><span class="sn-label">← 上一节</span><span class="sn-name">方法4</span></a><a class="sn next" href="#phase-1mvp"><span class="sn-label">下一节 →</span><span class="sn-name">Phase 1：MVP</span></a></nav>
 <p>时间：</p>
 <p>1周。</p>
 <p>完成：</p>
 <p>聊天式模拟面试。</p>
 <hr/>
-<h2 id="phase-1mvp">Phase 1：MVP</h2>
+<h2 id="phase-1mvp">Phase 1：MVP</h2><nav class="sec-nav"><a class="sn prev" href="#phase-0验证"><span class="sn-label">← 上一节</span><span class="sn-name">Phase 0：验证</span></a><a class="sn next" href="#phase-2增强"><span class="sn-label">下一节 →</span><span class="sn-name">Phase 2：增强</span></a></nav>
 <p>时间：</p>
 <p>1个月。</p>
 <p>功能：</p>
@@ -536,13 +615,13 @@ LLM Gateway
 <ul class="lvl"><li>评分</li></ul>
 <ul class="lvl"><li>报告</li></ul>
 <hr/>
-<h2 id="phase-2增强">Phase 2：增强</h2>
+<h2 id="phase-2增强">Phase 2：增强</h2><nav class="sec-nav"><a class="sn prev" href="#phase-1mvp"><span class="sn-label">← 上一节</span><span class="sn-name">Phase 1：MVP</span></a><a class="sn next" href="#phase-3商业化"><span class="sn-label">下一节 →</span><span class="sn-name">Phase 3：商业化</span></a></nav>
 <p>加入：</p>
 <ul class="lvl"><li>语音面试</li></ul>
 <ul class="lvl"><li>RAG知识库</li></ul>
 <ul class="lvl"><li>Agent</li></ul>
 <hr/>
-<h2 id="phase-3商业化">Phase 3：商业化</h2>
+<h2 id="phase-3商业化">Phase 3：商业化</h2><nav class="sec-nav"><a class="sn prev" href="#phase-2增强"><span class="sn-label">← 上一节</span><span class="sn-name">Phase 2：增强</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>加入：</p>
 <ul class="lvl"><li>支付</li></ul>
 <ul class="lvl"><li>企业账户</li></ul>
@@ -614,5 +693,48 @@ MLOps                    增长迭代</code></pre>
 <p>这一步就是从：</p>
 <p><strong>AI学习者 → AI Builder【AI构建者】。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

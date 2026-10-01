@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-pytest-基础" class="lvl3">3.1 pytest 基础</a><a href="#32-fixture可复用的测试脚手架" class="lvl3">3.2 fixture：可复用的测试脚手架</a><a href="#33-fake-vs-mock" class="lvl3">3.3 Fake vs Mock</a><a href="#34-测异步代码" class="lvl3">3.4 测异步代码</a><a href="#35-测试分层金字塔" class="lvl3">3.5 测试分层（金字塔）</a><a href="#36-调试pdb-与-ide" class="lvl3">3.6 调试：pdb 与 IDE</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1测试文件不叫-testpy" class="lvl3">坑 1：测试文件不叫 test_*.py</a><a href="#坑-2测试之间互相污染" class="lvl3">坑 2：测试之间互相污染</a><a href="#坑-3真的在测试里调-api" class="lvl3">坑 3：真的在测试里调 API</a><a href="#坑-4async-测试忘了-await" class="lvl3">坑 4：async 测试忘了 await</a><a href="#坑-5asynciorun-在已有事件循环里调用会报错" class="lvl3">坑 5：asyncio.run 在已有事件循环里调用会报错</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-07testing-debugging测试与调试">Project 02 — Chapter 07：Testing / Debugging【测试与调试】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>tests/</code></p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Project 01 有 6 个 <code>unittest</code>，但只覆盖了「纯函数」：</p>
 <pre><code>def test_build_messages(self): ...
 def test_parse_answer(self): ...</code></pre>
@@ -72,7 +151,7 @@ def test_parse_answer(self): ...</code></pre>
 <p>本章目标：</p>
 <blockquote><p><strong>用依赖注入 + Fake 对象，在不联网、不花一分钱的前提下，把上面四个风险全部测掉。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>对 AI 应用来说，测试不只是「防 bug」，还有三个更现实的理由：</p>
 <pre><code>1. 省钱 —— 每次跑测试都真调 API，一个月几百块打不住
 2. 快   —— 真实调用 3-10 秒，Fake 是 0.001 秒；测试慢就没人跑
@@ -80,7 +159,7 @@ def test_parse_answer(self): ...</code></pre>
 <p>结论：<strong>AI 应用的测试必须能在完全离线的情况下验证业务逻辑。</strong></p>
 <p>这恰好是 Chapter 00 分层设计的回报——因为 <code>AssistantService</code> 只依赖 <code>BaseLLMClient</code> 抽象，我们就能塞一个假的进去。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-pytest-基础">3.1 pytest 基础</h3>
 <pre><code># tests/test_conversation.py
 from assistant.conversation import Conversation
@@ -185,7 +264,7 @@ async def test_real_api():
 <pre><code>1. 先写一个同步的最小复现（把 async 函数用 asyncio.run 包起来）
 2. 在纯逻辑部分加断点，而不是在 await 那一行</code></pre>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <pre><code>tests/
 ├── conftest.py              # 共享 fixture：settings / fake_client / service
 ├── test_conversation.py     # 对话历史累积、裁剪
@@ -201,7 +280,7 @@ pytest --cov=assistant             # 覆盖率（需 pytest-cov）</code></pre>
 <hr/>
 <figure class="figure"><img alt="真实运行：7 个用例里故意写错一个断言，看到 pytest 展开的断言细节与 FAIL，改完代码后 7 passed" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-pytest-ch07.png" loading="lazy"/><figcaption>真实运行：7 个用例里故意写错一个断言，看到 pytest 展开的断言细节与 FAIL，改完代码后 7 passed</figcaption></figure>
 <figure class="figure"><img alt="真实运行：本项目全量测试 33 passed（离线 Fake，不联网）" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-pytest-suite.png" loading="lazy"/><figcaption>真实运行：本项目全量测试 33 passed（离线 Fake，不联网）</figcaption></figure>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td>JUnit 5 <code>@Test</code></td><td><code>def test_xxx()</code></td><td>pytest 靠命名约定</td></tr><tr><td><code>@BeforeEach</code></td><td><code>@pytest.fixture</code></td><td>fixture 更灵活，可组合</td></tr><tr><td><code>assertEquals(a, b)</code></td><td><code>assert a == b</code></td><td>pytest 失败信息更详细</td></tr><tr><td><code>assertThrows</code></td><td><code>pytest.raises(...)</code></td><td>见下</td></tr><tr><td><code>@ParameterizedTest</code></td><td><code>@pytest.mark.parametrize</code></td><td>同</td></tr><tr><td>Mockito <code>mock()</code></td><td><code>unittest.mock.Mock</code> / Fake 类</td><td>Python 更常用手写 Fake</td></tr><tr><td><code>@MockBean</code></td><td>构造函数注入 Fake</td><td>没有容器，手动传</td></tr><tr><td>无</td><td><code>monkeypatch</code> fixture</td><td>临时替换环境变量/函数</td></tr></tbody></table>
 <p><code>pytest.raises</code> 用法：</p>
 <pre><code>import pytest
@@ -215,7 +294,7 @@ def test_missing_key():
     settings = Settings.from_env()
     assert settings.api_key == &quot;sk-test&quot;</code></pre>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1测试文件不叫-testpy">坑 1：测试文件不叫 <code>test_*.py</code></h3>
 <p>pytest 只收集 <code>test_*.py</code> 或 <code>*_test.py</code>。写成 <code>tests.py</code> 会被静默忽略——<strong>没有任何报错，只是「0 tests collected」</strong>。</p>
 <h3 id="坑-2测试之间互相污染">坑 2：测试之间互相污染</h3>
@@ -241,17 +320,60 @@ def conv():
 <pre><code>RuntimeError: asyncio.run() cannot be called from a running event loop</code></pre>
 <p>发生在：在 async 测试里又调了 <code>ask_sync</code>。解决：测试全程用 async 版本。</p>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：写 <code>test_retry.py</code>，用 <code>FakeClient(fail_times=2)</code> 验证「限流时重试 2 次后成功」，并断言总共调用了 3 次。</p>
 <p><strong>挑战 2</strong>：写 <code>test_history.py</code>，连续问两轮，断言第二轮发给 client 的 messages 包含第一轮的问答。</p>
 <p><strong>挑战 3（进阶）</strong>：给 FastAPI 应用写集成测试（<code>TestClient</code>），验证 <code>POST /chat</code> 返回 200 且包含预期字段——<strong>不联网</strong>。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li>Fake 和 Mock 的区别？本项目为什么优先用 Fake？</li><li>为什么 AI 应用的测试不能真调 API？</li><li><code>pytest.raises</code> 对应 Java 的什么？</li><li>怎么让「需要真实 Key」的测试在无 Key 环境下自动跳过？</li><li><code>monkeypatch</code> 解决了什么问题？</li><li>测试金字塔的三层比例大概是多少？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] <code>tests/</code> 下所有文件以 <code>test_</code> 开头</li><li>[ ] 业务逻辑测试<strong>完全离线</strong>（用 FakeClient，不需要 Key）</li><li>[ ] 覆盖：对话历史累积、重试、配置缺失报错、依赖注入替换实现</li><li>[ ] 真实 API 的测试用 <code>skipif</code> 保护，无 Key 时自动跳过</li><li>[ ] <code>pytest -v</code> 全绿，且总耗时 &lt; 2 秒</li></ul>
 <p>下一章：<a href="08-packaging.html">08-packaging.md</a> —— 让它能被别人 <code>pip install</code>。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

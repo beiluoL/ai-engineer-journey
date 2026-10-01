@@ -52,20 +52,142 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#a-结构化输出m03" class="lvl2">A. 结构化输出（M03）</a><a href="#b-流式输出m04" class="lvl2">B. 流式输出（M04）</a><a href="#c-模型参数m06" class="lvl2">C. 模型参数（M06）</a><a href="#运行参考答案" class="lvl2">运行参考答案</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="02-结构化输出流式与模型参数-m03-m04-m06-配套练习">02 结构化输出、流式与模型参数 — M03 / M04 / M06 配套练习</h1>
 <blockquote><p>先独立完成，再按题号查看 <code>answers.py</code> 中对应函数。所有状态从 ⬜ 开始；参考答案跑通不代表你已掌握。</p></blockquote>
-<h2 id="a-结构化输出m03">A. 结构化输出（M03）</h2>
+<h2 id="a-结构化输出m03">A. 结构化输出（M03）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#b-流式输出m04"><span class="sn-label">下一节 →</span><span class="sn-name">B. 流式输出（M04）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>A1</strong> 把裸 JSON、带 <code>json</code> 围栏的 JSON、前后夹解释文字的 JSON 分别交给真实 <code>assistant.schema.extract_json</code>，断言三次都得到同一个 Python 对象，并让完全无 JSON 的文本抛 <code>JSONDecodeError</code>。</li><li>[ ] <strong>A2</strong> 用真实 <code>SkillExtraction.model_json_schema()</code> 检查 <code>name/skills/years/summary</code> 四个字段与 <code>years</code> 范围约束，再用 <code>parse_structured</code> 把合法 JSON 变成强类型对象并读取真实字段值。</li><li>[ ] <strong>A3</strong> 把 <code>years=&quot;三年&quot;</code> 的 JSON 交给真实 <code>parse_structured</code>，断言抛 <code>StructuredOutputError</code>、错误文本点名 <code>years</code>，且异常链 <code>__cause__</code> 保留 Pydantic 的 <code>ValidationError</code>。</li><li>[ ] <strong>A4</strong> 用真实 <code>FakeClient</code> 编排“第一次字段错误、第二次正确”，调用真实异步 <code>structured(max_retry=1)</code>，断言恰好调用两次、第二次 messages 回灌校验错误、两次都启用 JSON Mode。</li></ul>
-<h2 id="b-流式输出m04">B. 流式输出（M04）</h2>
+<h2 id="b-流式输出m04">B. 流式输出（M04）</h2><nav class="sec-nav"><a class="sn prev" href="#a-结构化输出m03"><span class="sn-label">← 上一节</span><span class="sn-name">A. 结构化输出（M03）</span></a><a class="sn next" href="#c-模型参数m06"><span class="sn-label">下一节 →</span><span class="sn-name">C. 模型参数（M06）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>B1</strong> 用真实 <code>FakeClient.stream</code> 流出一段中英混排文本，逐块收集并断言拼接结果等于原回复、块数等于 Python 字符数，且调用记录标记了 <code>stream=True</code>。</li><li>[ ] <strong>B2</strong> 用真实 <code>ChatService.astream</code> 与 <code>FakeClient</code> 完成一次流式问答，断言每块拼接成完整答案，并检查会话末尾已经回灌完整 assistant 内容而不是半截 chunk。</li><li>[ ] <strong>B3</strong> 用 FastAPI <code>TestClient</code>、真实 <code>create_app()</code> 和依赖覆盖注入 <code>FakeClient</code>，离线 POST <code>/chat/stream</code>，断言 Content-Type 为 <code>text/event-stream</code>、每个 data JSON 可解析且最后出现 <code>data: [DONE]</code>。</li></ul>
-<h2 id="c-模型参数m06">C. 模型参数（M06）</h2>
+<h2 id="c-模型参数m06">C. 模型参数（M06）</h2><nav class="sec-nav"><a class="sn prev" href="#b-流式输出m04"><span class="sn-label">← 上一节</span><span class="sn-name">B. 流式输出（M04）</span></a><a class="sn next" href="#运行参考答案"><span class="sn-label">下一节 →</span><span class="sn-name">运行参考答案</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>C1</strong> 从同一个真实 <code>Settings(api_key=&quot;offline-test&quot;)</code> 生成 <code>extract</code> 与 <code>creative</code> Profile，断言原对象不变、新对象不是原对象，并比较两个 Profile 的真实 temperature/max_tokens。</li><li>[ ] <strong>C2</strong> 只构造不请求真实 <code>DeepSeekClient</code>，调用 <code>build_payload</code> 检查 model/messages/stream/temperature/top_p/max_tokens/response_format/tools 全部进入请求体，再检查 <code>headers()</code> 不泄露测试 Key并关闭客户端。</li><li>[ ] <strong>C3</strong> 把 temperature 越界、top_p 为 0、max_tokens 为 0 三个真实 <code>Settings</code> 逐一调用 <code>validate()</code>，断言都抛 <code>LLMConfigError</code> 且错误文本点名对应参数；合法配置应返回 <code>None</code>。</li></ul>
-<h2 id="运行参考答案">运行参考答案</h2>
+<h2 id="运行参考答案">运行参考答案</h2><nav class="sec-nav"><a class="sn prev" href="#c-模型参数m06"><span class="sn-label">← 上一节</span><span class="sn-name">C. 模型参数（M06）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <pre><code>.venv/bin/python exercises/02-structured-and-streaming/answers.py</code></pre>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

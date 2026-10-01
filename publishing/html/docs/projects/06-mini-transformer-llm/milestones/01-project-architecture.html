@@ -52,16 +52,95 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-拆分顺序为什么是-tokenizer-embedding-block-training-inference" class="lvl2">1. 拆分顺序：为什么是 Tokenizer → Embedding → Block → Training → Inference</a><a href="#2-五层的输入输出契约" class="lvl2">2. 五层的输入输出契约</a><a href="#3-技术栈故意不用-pytorch" class="lvl2">3. 技术栈：故意不用 PyTorch</a><a href="#4-这一版真实跑起来的东西" class="lvl2">4. 这一版真实跑起来的东西</a><a href="#5-这一章踩到的坑" class="lvl2">5. 这一章踩到的坑</a><a href="#6-结论" class="lvl2">6. 结论</a><a href="#7-代码位置" class="lvl2">7. 代码位置</a><a href="#8-下一步" class="lvl2">8. 下一步</a><a href="#9-版本" class="lvl2">9. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-01-项目架构把黑盒拆成五层契约">Milestone 01 — 项目架构：把「黑盒」拆成五层契约</h1>
 <p>Project 05 结束时，我有一个能跑的 Agent：它会拆任务、会调工具、会把中间结论记在草稿纸上。但它有一个绕不过去的事实 —— <strong>模型对我来说是个黑盒</strong>。我给它一段 messages，它给我一段文本；中间发生了什么，我一个字都说不出来。</p>
 <p>「会调 API」和「懂 LLM」之间的差距，就在这一层。所以 Project 06 做的事很直接：<strong>不用 PyTorch，从零把 Decoder-Only Transformer 的每一层都自己写出来</strong>，写不出来就是没懂。</p>
 <p>这一章不写模型，先把<strong>怎么拆</strong>定下来。理由很实际：Transformer 的代码里，任何一个模块都能单独写错且「看起来能跑」——Attention 的 mask 写反了照样出数字，位置编码忘了加照样收敛（只是收敛到垃圾）。唯一能提前挡住这类错误的，是<strong>把每一层的输入/输出契约先钉死</strong>。</p>
 <hr/>
-<h2 id="1-拆分顺序为什么是-tokenizer-embedding-block-training-inference">1. 拆分顺序：为什么是 Tokenizer → Embedding → Block → Training → Inference</h2>
+<h2 id="1-拆分顺序为什么是-tokenizer-embedding-block-training-inference">1. 拆分顺序：为什么是 Tokenizer → Embedding → Block → Training → Inference</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-五层的输入输出契约"><span class="sn-label">下一节 →</span><span class="sn-name">2. 五层的输入输出契约</span></a></nav>
 <p>一句话：<strong>沿着数据流动的方向拆，从最外层往里走</strong>。</p>
 <pre><code>语料(text)
    ↓  Tokenizer      —— 文本 → id
@@ -78,18 +157,18 @@ logits(n, vocab_size)
 <ul class="lvl"><li><strong>下游的形状由上游决定</strong>。Embedding 矩阵的行数 = <code>vocab_size</code>，输出头最后一维也是 <code>vocab_size</code>。Tokenizer 不定，后面每一层的维度都是猜的。</li><li><strong>越靠前越容易验证</strong>。Tokenizer 有「往返一致性」这种硬指标（<code>decode(encode(s)) == s</code>），错了一眼看得见；Attention 错了只表现为 loss 下不去，排查成本高一个数量级。</li><li><strong>唯一的反向依赖只有一条</strong>。训练循环要把梯度回写给 Embedding 和 Block 的参数 —— 这是整张图里唯一一条从后往前的箭头，提前看见它，就不会在设计数据结构时把「参数」和「激活值」混在一起。</li></ul>
 <figure class="figure"><img alt="Project 06 模块依赖图" src="../../../../../../projects/06-mini-transformer-llm/assets/architecture.svg" loading="lazy"/><figcaption>Project 06 模块依赖图</figcaption></figure>
 <hr/>
-<h2 id="2-五层的输入输出契约">2. 五层的输入输出契约</h2>
+<h2 id="2-五层的输入输出契约">2. 五层的输入输出契约</h2><nav class="sec-nav"><a class="sn prev" href="#1-拆分顺序为什么是-tokenizer-embedding-block-training-inference"><span class="sn-label">← 上一节</span><span class="sn-name">1. 拆分顺序：为什么是 Tokenizer → Embedding → Block → Training → Inference</span></a><a class="sn next" href="#3-技术栈故意不用-pytorch"><span class="sn-label">下一节 →</span><span class="sn-name">3. 技术栈：故意不用 PyTorch</span></a></nav>
 <p>契约写死在接口上：<strong>下游只认形状与类型，不认上游实现</strong>。这条是硬约束 —— 它带来的直接好处是，把 <code>CharTokenizer</code> 换成 <code>BPETokenizer</code>，Transformer 那边一行代码都不用改（因为两者都实现了同一个 <code>Tokenizer</code> 抽象）。</p>
 <table><thead><tr><th>层</th><th>Milestone</th><th>输入</th><th>输出</th><th>自己的参数</th></tr></thead><tbody><tr><td>Tokenizer</td><td>02</td><td><code>str</code></td><td><code>list[int]</code>，值域 <code>[0, V)</code></td><td>词表 <code>vocab</code> + <code>merges</code></td></tr><tr><td>Embedding</td><td>03</td><td><code>list[int]</code> → <code>(n,)</code></td><td><code>(n, d_model)</code></td><td><code>W_e (V, d_model)</code>、位置编码</td></tr><tr><td>Transformer Block</td><td>04–07</td><td><code>(n, d_model)</code></td><td><code>(n, d_model)</code></td><td><code>W_q/W_k/W_v/W_o</code>、FFN 两层</td></tr><tr><td>Training</td><td>08–09</td><td><code>ids</code>、<code>logits</code></td><td>更新后的权重 + loss 曲线</td><td>优化器状态</td></tr><tr><td>Inference</td><td>10</td><td>权重 + 前缀</td><td>下一个 token（循环采样）</td><td>无（复用训练权重）</td></tr></tbody></table>
 <p>两条贯穿全部五层的约定：</p>
 <ul class="lvl"><li><strong>id 的四个特殊值固定</strong>：<code>&lt;pad&gt;</code>=0、<code>&lt;unk&gt;</code>=1、<code>&lt;bos&gt;</code>=2、<code>&lt;eos&gt;</code>=3。训练时 pad 的位置不计入 loss，<code>&lt;bos&gt;</code> 开头、<code>&lt;eos&gt;</code> 结尾，推理时见到 <code>&lt;eos&gt;</code> 就停。</li><li><strong>落盘的东西必须能被读回来且行为一致</strong>。词表、merges、权重都是「训一次、用无数次」，读回来和训练时不一致 = 全部错位，而且日志上什么都看不出来。</li></ul>
 <hr/>
-<h2 id="3-技术栈故意不用-pytorch">3. 技术栈：故意不用 PyTorch</h2>
+<h2 id="3-技术栈故意不用-pytorch">3. 技术栈：故意不用 PyTorch</h2><nav class="sec-nav"><a class="sn prev" href="#2-五层的输入输出契约"><span class="sn-label">← 上一节</span><span class="sn-name">2. 五层的输入输出契约</span></a><a class="sn next" href="#4-这一版真实跑起来的东西"><span class="sn-label">下一节 →</span><span class="sn-name">4. 这一版真实跑起来的东西</span></a></nav>
 <p>README 里原来写的技术栈是 PyTorch。这一版改了：<strong>核心实现用纯 Python 标准库</strong>，numpy 允许但不必需。</p>
 <p>理由是「从零构建」这四个字。用 <code>nn.MultiheadAttention</code> 一行就能跑通的东西，是不可能让我理解 Attention 的 —— 我要的是那个 <code>softmax(QKᵀ/√d_k)V</code> 真的被我用手写出来，包括 mask 怎么加、维度怎么 reshape。等手写的版本能跑，再看 PyTorch 就是「哦，它也是这么做的」，而不是「它会，我不会」。</p>
 <p>代价我先认了：纯 Python 训练不了真模型，只能训玩具规模。这正好 —— 玩具规模才能把每一步的中间结果打印出来看。</p>
 <hr/>
-<h2 id="4-这一版真实跑起来的东西">4. 这一版真实跑起来的东西</h2>
+<h2 id="4-这一版真实跑起来的东西">4. 这一版真实跑起来的东西</h2><nav class="sec-nav"><a class="sn prev" href="#3-技术栈故意不用-pytorch"><span class="sn-label">← 上一节</span><span class="sn-name">3. 技术栈：故意不用 PyTorch</span></a><a class="sn next" href="#5-这一章踩到的坑"><span class="sn-label">下一节 →</span><span class="sn-name">5. 这一章踩到的坑</span></a></nav>
 <p>Milestone 01 定架构、Milestone 02 落地第一层，所以「真实运行」的当前状态是：Tokenizer 跑通 + 目录骨架就位 + 51 项测试全绿。</p>
 <pre><code>projects/06-mini-transformer-llm
 ├── README.md                  # 10 个 milestone 的勾选表
@@ -109,7 +188,7 @@ logits(n, vocab_size)
 # 同一句样本：字符级 35 token → BPE 20 token</code></pre>
 <p>Milestone 03 及之后的目录（<code>src/model/</code>、<code>src/training/</code>）现在<strong>故意不存在</strong> —— 空目录占位是最容易自欺的一种「已完成」。契约先写在这里，代码到了再建。</p>
 <hr/>
-<h2 id="5-这一章踩到的坑">5. 这一章踩到的坑</h2>
+<h2 id="5-这一章踩到的坑">5. 这一章踩到的坑</h2><nav class="sec-nav"><a class="sn prev" href="#4-这一版真实跑起来的东西"><span class="sn-label">← 上一节</span><span class="sn-name">4. 这一版真实跑起来的东西</span></a><a class="sn next" href="#6-结论"><span class="sn-label">下一节 →</span><span class="sn-name">6. 结论</span></a></nav>
 <p><strong>坑 1：汉字逐字切分，BPE 永远学不到中文合并。</strong></p>
 <p>第一版预切分规则把每个汉字切成一个独立 word（想着「中文没有空格，逐字最稳」）。结果 —— 语料里明明「模型」出现 4 次，训练出来的 201 条合并里<strong>中文合并 0 条</strong>。原因是每个汉字都是独立 word，word 内部长度恒为 1，压根没有相邻 pair 可统计。</p>
 <p>修法是照 GPT-2 的做法：<strong>一整串连续汉字当成一个 word</strong>，让 BPE 在串内自己学。改完之后中文合并 48 条，<code>模型</code>、<code>注意力</code>、<code>分词器</code>、<code>网络</code> 都出来了。这条不是「调参」，是<strong>概念性错误</strong>：以为切得越细越好，实际是把要学的东西切没了。</p>
@@ -118,18 +197,61 @@ logits(n, vocab_size)
 <p><strong>坑 3：<code>vocab_size</code> 写成常量，换语料就炸。</strong></p>
 <p><code>BPETokenizer.train(corpus, 260)</code> 在第一版语料（128 个唯一字符）上没问题；Milestone 02 把语料换成 1224 字符之后，光基础字符就有 299 个，260 直接 <code>ValueError</code>。这条暴露的是<strong>测试写法的坏味道</strong>：依赖具体数字，不依赖结构。改成从 <code>CharTokenizer.build(corpus).vocab_size</code> 动态推出来之后，换语料不用改测试。</p>
 <hr/>
-<h2 id="6-结论">6. 结论</h2>
+<h2 id="6-结论">6. 结论</h2><nav class="sec-nav"><a class="sn prev" href="#5-这一章踩到的坑"><span class="sn-label">← 上一节</span><span class="sn-name">5. 这一章踩到的坑</span></a><a class="sn next" href="#7-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">7. 代码位置</span></a></nav>
 <ul class="lvl"><li>拆 Transformer 要<strong>沿数据流的方向</strong>拆：上游不定，下游的维度全是猜的。</li><li>契约的价值在于<strong>实现可替换</strong>：换分词器不改 Transformer 一行代码，这条已经用抽象基类 + 51 项测试验证过了。</li><li>图里<strong>只有一条反向依赖</strong>（训练回写权重），它必须在设计阶段就被看见，否则参数与激活值会混在一起。</li><li>空目录不是进度。没写的层就让它不存在。</li><li>从零 = 不用 <code>nn.*</code>。慢，但每一步的中间结果都能打印出来看。</li></ul>
-<h2 id="7-代码位置">7. 代码位置</h2>
+<h2 id="7-代码位置">7. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#6-结论"><span class="sn-label">← 上一节</span><span class="sn-name">6. 结论</span></a><a class="sn next" href="#8-下一步"><span class="sn-label">下一节 →</span><span class="sn-name">8. 下一步</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tokenizer/base.py</code></td><td><code>Tokenizer</code> 抽象：五件套契约 + 特殊 token 常量 + JSON 读写工具</td></tr><tr><td><code>src/tokenizer/char_tokenizer.py</code></td><td>字符级分词器（基线）</td></tr><tr><td><code>src/tokenizer/bpe.py</code></td><td>从零实现的 BPE 训练循环</td></tr><tr><td><code>src/tokenizer/sample_corpus.py</code></td><td>离线语料（不联网下载），测试与 demo 共用同一份</td></tr><tr><td><code>tests/conftest.py</code></td><td>仓库内临时目录 fixture（规避 <code>tmp_path</code> 权限问题）</td></tr><tr><td><code>tests/test_char_tokenizer.py</code></td><td>24 项：词表构造 / 往返一致性 / 特殊 token / 落盘</td></tr><tr><td><code>tests/test_bpe.py</code></td><td>27 项：合并优先级 / 压缩率 / 优雅停止 / 落盘</td></tr><tr><td><code>demos/demo_01_tokenizer.py</code></td><td>8 节真实演示，输出落 <code>demos/out/demo_01_tokenizer.txt</code></td></tr><tr><td><code>assets/architecture.svg</code></td><td>本章的模块依赖图</td></tr></tbody></table>
 <pre><code>cd projects/06-mini-transformer-llm
 python3 -m venv .venv &amp;&amp; .venv/bin/pip install -q pytest numpy
 .venv/bin/python -m pytest -q
 .venv/bin/python demos/demo_01_tokenizer.py</code></pre>
-<h2 id="8-下一步">8. 下一步</h2>
+<h2 id="8-下一步">8. 下一步</h2><nav class="sec-nav"><a class="sn prev" href="#7-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">7. 代码位置</span></a><a class="sn next" href="#9-版本"><span class="sn-label">下一节 →</span><span class="sn-name">9. 版本</span></a></nav>
 <p>Milestone 02 落地第一层：<strong>Tokenizer</strong>。为什么 LLM 都用子词而不是字符或词、四个特殊 token 各自管什么、以及 <code>decode(encode(s)) == s</code> 为什么是一条不能让步的硬指标。</p>
-<h2 id="9-版本">9. 版本</h2>
+<h2 id="9-版本">9. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#8-下一步"><span class="sn-label">← 上一节</span><span class="sn-name">8. 下一步</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.0 → <strong>v0.1</strong>，项目骨架 + 五层契约 + Tokenizer 落地，测试 0 → <strong>51 passed</strong>，演示 1 个（真实可跑，输出落 <code>demos/out/</code>），配图 3 张（均为手写 SVG）。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

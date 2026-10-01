@@ -52,20 +52,99 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#41-预训练在做什么" class="lvl2">4.1 预训练在做什么</a><a href="#42-数据预训练里最贵的一环" class="lvl2">4.2 数据：预训练里最贵的一环</a><a href="#421-典型数据构成" class="lvl3">4.2.1 典型数据构成</a><a href="#422-数据流水线" class="lvl3">4.2.2 数据流水线</a><a href="#423-预训练目标不止一种" class="lvl3">4.2.3 预训练目标：不止一种</a><a href="#43-训练过程超参与稳定性" class="lvl2">4.3 训练过程：超参与稳定性</a><a href="#431-典型超参" class="lvl3">4.3.1 典型超参</a><a href="#432-为什么用-bf16-而不是-fp16" class="lvl3">4.3.2 为什么用 BF16 而不是 FP16</a><a href="#433-训练不稳定的典型症状与处理" class="lvl3">4.3.3 训练不稳定的典型症状与处理</a><a href="#44-并行策略怎么把模型塞进几千张卡" class="lvl2">4.4 并行策略：怎么把模型塞进几千张卡</a><a href="#45-算力与成本算一遍就知道为什么只有大厂能训" class="lvl2">4.5 算力与成本：算一遍就知道为什么只有大厂能训</a><a href="#46-base-model-出来后为什么还不能直接给用户用" class="lvl2">4.6 Base Model 出来后，为什么还不能直接给用户用</a><a href="#47-常被误解的点" class="lvl2">4.7 常被误解的点</a><a href="#48-动手" class="lvl2">4.8 动手</a><a href="#49-自查问题" class="lvl2">4.9 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="04-预训练把互联网压缩进参数">04 · 预训练：把互联网压缩进参数</h1>
 <blockquote><p><strong>一句话结论</strong>：预训练就是<strong>用海量无标注文本，反复做&quot;下一 token 预测&quot;这个练习</strong>。 它不教模型任何具体任务，只是让模型把语言的统计规律压缩进参数——这个过程极其昂贵，且几乎不可逆。</p></blockquote>
 <hr/>
-<h2 id="41-预训练在做什么">4.1 预训练在做什么</h2>
+<h2 id="41-预训练在做什么">4.1 预训练在做什么</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#42-数据预训练里最贵的一环"><span class="sn-label">下一节 →</span><span class="sn-name">4.2 数据：预训练里最贵的一环</span></a></nav>
 <p>$$ \max_{\theta}\; \mathbb{E}_{x \sim \mathcal{D}} \left[ -\sum_{t} \log P_{\theta}(x_t \mid x_{&lt;t}) \right] $$</p>
 <ul class="lvl"><li>$\mathcal{D}$：整个语料库（万亿 token）</li><li>$\theta$：全部参数（从随机初始化开始）</li><li>没有任何人工标签——<strong>标签就是数据自己左移一位</strong></li></ul>
 <table><thead><tr><th>对比项</th><th>预训练</th><th>微调（<a href="05-finetuning.html">第 05 章</a>）</th></tr></thead><tbody><tr><td>数据</td><td>几 T ~ 几十 T token，无需标注</td><td>几千 ~ 几百万条<strong>标注</strong>样本</td></tr><tr><td>目标</td><td>学习语言与世界知识</td><td>学习任务与格式</td></tr><tr><td>算力</td><td>全部成本的 99%</td><td>极小</td></tr><tr><td>谁能做</td><td>少数机构</td><td>个人即可</td></tr><tr><td>产物</td><td>Base model（会续写）</td><td>Chat / 领域模型（会办事）</td></tr></tbody></table>
 <p><strong>为什么说&quot;数据比算法更值钱&quot;</strong>：模型结构大体公开、算力可以买，但<strong>高质量去重语料是各家真正的护城河</strong>。</p>
 <hr/>
-<h2 id="42-数据预训练里最贵的一环">4.2 数据：预训练里最贵的一环</h2>
+<h2 id="42-数据预训练里最贵的一环">4.2 数据：预训练里最贵的一环</h2><nav class="sec-nav"><a class="sn prev" href="#41-预训练在做什么"><span class="sn-label">← 上一节</span><span class="sn-name">4.1 预训练在做什么</span></a><a class="sn next" href="#43-训练过程超参与稳定性"><span class="sn-label">下一节 →</span><span class="sn-name">4.3 训练过程：超参与稳定性</span></a></nav>
 <h3 id="421-典型数据构成">4.2.1 典型数据构成</h3>
 <table><thead><tr><th>来源</th><th>占比（典型）</th><th>说明</th></tr></thead><tbody><tr><td>网页（CommonCrawl 系）</td><td>50–80%</td><td>量最大，噪声也最大，需重度过滤</td></tr><tr><td>代码（GitHub 等）</td><td>5–20%</td><td>显著提升推理与结构化能力，几乎所有强模型都用</td></tr><tr><td>数学/科学论文</td><td>2–10%</td><td>提升推理；需要专门的抽取与配方（如 OpenWebMath）</td></tr><tr><td>书籍/长文</td><td>5–10%</td><td>提供长距离连贯性；版权敏感</td></tr><tr><td>多语种</td><td>视目标</td><td>中文模型会额外灌入大量中文语料</td></tr><tr><td>对话/问答</td><td>小比例</td><td>为后续指令微调铺路</td></tr></tbody></table>
 <h3 id="422-数据流水线">4.2.2 数据流水线</h3>
@@ -76,7 +155,7 @@ li{margin:.3em 0;}
 <table><thead><tr><th>目标</th><th>形式</th><th>优点</th><th>代表</th></tr></thead><tbody><tr><td><strong>CLM</strong>（因果语言建模）</td><td>预测下一个 token</td><td>信号密集，天然支持生成</td><td>GPT 全系、LLaMA、Qwen</td></tr><tr><td><strong>MLM</strong>（掩码语言建模）</td><td>挖掉 15% token 让模型填空</td><td>双向信息，适合理解</td><td>BERT</td></tr><tr><td><strong>Prefix LM</strong></td><td>前半段双向、后半段因果</td><td>兼顾理解与生成</td><td>GLM 早期、UL2</td></tr><tr><td><strong>Denoising / Span corruption</strong></td><td>删掉连续片段让模型还原</td><td>适合 seq2seq</td><td>T5、BART</td></tr><tr><td><strong>FIM</strong>（Fill-in-the-Middle）</td><td>在中间挖洞（前缀+后缀→中间）</td><td>让模型支持代码补全</td><td>代码模型标配（StarCoder、CodeLlama）</td></tr></tbody></table>
 <p><strong>FIM 值得单独记住</strong>：如果只训 CLM，模型只会&quot;往下续写&quot;，补全代码中间的空缺就做不好。FIM 通过重排文档顺序（把后缀提前）构造&quot;前后夹击&quot;的样本，这就是 IDE 里代码补全体验的来源。</p>
 <hr/>
-<h2 id="43-训练过程超参与稳定性">4.3 训练过程：超参与稳定性</h2>
+<h2 id="43-训练过程超参与稳定性">4.3 训练过程：超参与稳定性</h2><nav class="sec-nav"><a class="sn prev" href="#42-数据预训练里最贵的一环"><span class="sn-label">← 上一节</span><span class="sn-name">4.2 数据：预训练里最贵的一环</span></a><a class="sn next" href="#44-并行策略怎么把模型塞进几千张卡"><span class="sn-label">下一节 →</span><span class="sn-name">4.4 并行策略：怎么把模型塞进几千张卡</span></a></nav>
 <h3 id="431-典型超参">4.3.1 典型超参</h3>
 <table><thead><tr><th>超参</th><th>典型取值</th><th>说明</th></tr></thead><tbody><tr><td>序列长度</td><td>2k → 4k → 32k → 128k</td><td>通常是&quot;先在短序列上训，后期再长序列继续训练&quot;</td></tr><tr><td>全局批大小</td><td>几百万 ~ 几千万 token</td><td>越大梯度越稳，但超过临界值收益递减</td></tr><tr><td>学习率峰值</td><td>1e-4 ~ 3e-4（大模型更低，如 1.5e-4）</td><td>参数量越大峰值越小</td></tr><tr><td>LR 调度</td><td><strong>Warmup + Cosine decay</strong>（近年也有 WSD）</td><td>warmup 步数通常是总量的 0.1–2%</td></tr><tr><td>权重衰减</td><td>0.1（只作用于非 norm/embedding 参数）</td><td>—</td></tr><tr><td>梯度裁剪</td><td>1.0</td><td>防 loss spike</td></tr><tr><td>优化器</td><td>AdamW（β₂=0.95）</td><td>—</td></tr><tr><td>精度</td><td><strong>BF16</strong> 为主，部分用 FP8</td><td>见下</td></tr></tbody></table>
 <pre><code>学习率曲线（Warmup + Cosine）:
@@ -98,14 +177,14 @@ lr |      ___
 <table><thead><tr><th>症状</th><th>可能原因</th><th>处理</th></tr></thead><tbody><tr><td>Loss spike（突然飙高）</td><td>个别难样本、梯度爆炸、数据脏样本</td><td>梯度裁剪、跳过该 batch、降低 LR 后恢复</td></tr><tr><td>Loss 变 NaN</td><td>FP16 溢出、除以 0</td><td>换 BF16、加 z-loss、检查 norm</td></tr><tr><td>长期不降</td><td>LR 太小 / 数据配比失衡 / 模型太小</td><td>调 LR、检查数据、重跑小规模消融</td></tr><tr><td>后期突然变差</td><td>LR 衰减与数据混合不匹配、过拟合重复数据</td><td>调整数据顺序与重复策略</td></tr></tbody></table>
 <blockquote><p>大模型训练中&quot;loss spike 后自己恢复&quot;是常见现象。工业界的做法通常是<strong>保存多个检查点 + 自动重启回滚</strong>，而不是指望一次跑完。</p></blockquote>
 <hr/>
-<h2 id="44-并行策略怎么把模型塞进几千张卡">4.4 并行策略：怎么把模型塞进几千张卡</h2>
+<h2 id="44-并行策略怎么把模型塞进几千张卡">4.4 并行策略：怎么把模型塞进几千张卡</h2><nav class="sec-nav"><a class="sn prev" href="#43-训练过程超参与稳定性"><span class="sn-label">← 上一节</span><span class="sn-name">4.3 训练过程：超参与稳定性</span></a><a class="sn next" href="#45-算力与成本算一遍就知道为什么只有大厂能训"><span class="sn-label">下一节 →</span><span class="sn-name">4.5 算力与成本：算一遍就知道为什么只有大厂能训</span></a></nav>
 <p>单卡装不下 → 必须切分。四种基本切法：</p>
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>DP</code> — 数据并行 DP</li><li><code>D1</code> — 每张卡一份完整模型 各喂不同 batch 梯度 all-reduce 同步</li><li><code>TP</code> — 张量并行 TP</li><li><code>T1</code> — 把同一层矩阵横/竖切开 分到多卡，层内通信</li><li><code>PP</code> — 流水线并行 PP</li><li><code>P1</code> — 不同层放不同卡 micro-batch 流水推进</li><li><code>EP</code> — 专家并行 EP（MoE）</li><li><code>E1</code> — 不同专家放不同卡 token 路由到对应卡</li></ul></div>
 <table><thead><tr><th>策略</th><th>切什么</th><th>通信开销</th><th>适用</th></tr></thead><tbody><tr><td>DP / DDP</td><td>数据</td><td>低（同步梯度）</td><td>模型能装进单卡时首选</td></tr><tr><td>ZeRO-1/2/3 / FSDP</td><td>优化器状态 / 梯度 / 参数</td><td>中</td><td><strong>单卡装不下时的第一选择</strong>，按需分片</td></tr><tr><td>TP</td><td>层内矩阵</td><td><strong>高</strong>（每层都通信）</td><td>单层太大时用，通常限制在单机 8 卡内</td></tr><tr><td>PP</td><td>层间</td><td>中（有气泡）</td><td>跨机扩展，层数多时效果最好</td></tr><tr><td>EP</td><td>专家</td><td>高</td><td>MoE 模型必需</td></tr></tbody></table>
 <p><strong>实战组合</strong>：<code>TP=8（机内）× PP=8（机间）× DP=剩余</code>，配合 ZeRO/FSDP 与激活重计算（gradient checkpointing）。</p>
 <table><thead><tr><th>省显存技巧</th><th>做法</th><th>代价</th></tr></thead><tbody><tr><td>梯度检查点</td><td>不保存中间激活，反向时重算</td><td>约 +30% 算力，省大量显存</td></tr><tr><td>ZeRO-3 / FSDP</td><td>参数也分片</td><td>通信量上升</td></tr><tr><td>CPU offload</td><td>优化器状态放内存/NVMe</td><td>慢</td></tr><tr><td>序列并行</td><td>长序列按 token 切分</td><td>通信上升</td></tr></tbody></table>
 <hr/>
-<h2 id="45-算力与成本算一遍就知道为什么只有大厂能训">4.5 算力与成本：算一遍就知道为什么只有大厂能训</h2>
+<h2 id="45-算力与成本算一遍就知道为什么只有大厂能训">4.5 算力与成本：算一遍就知道为什么只有大厂能训</h2><nav class="sec-nav"><a class="sn prev" href="#44-并行策略怎么把模型塞进几千张卡"><span class="sn-label">← 上一节</span><span class="sn-name">4.4 并行策略：怎么把模型塞进几千张卡</span></a><a class="sn next" href="#46-base-model-出来后为什么还不能直接给用户用"><span class="sn-label">下一节 →</span><span class="sn-name">4.6 Base Model 出来后，为什么还不能直接给用户用</span></a></nav>
 <p><strong>经验公式</strong>：训练总算力 ≈ $C \approx 6ND$（N = 参数，D = token 数；前向 2ND、反向 4ND）。</p>
 <p>按 Chinchilla 最优配比 $D = 20N$ 算一遍（<code>demos/07_scaling_law.py</code> 的真实输出）：</p>
 <figure class="figure"><img alt="缩放定律真实运行输出" src="../../../../llm-fundamentals/assets/term-07_scaling_law.png" loading="lazy"/><figcaption>缩放定律真实运行输出</figcaption></figure>
@@ -116,7 +195,7 @@ lr |      ___
 <p>按每卡时 2 美元粗算，<strong>仅这一项就是 27 万美元量级</strong>——这还只是 70B 模型的一次训练，不含数据、调参、失败的尝试（通常要乘 2–3 倍）。</p>
 <blockquote><p>这也是为什么个人与小团队<strong>不会</strong>去预训练，而是站在（<a href="05-finetuning.html">第 05 章</a>）微调的肩上。参见现实对照：LLaMA-7B 实际训练了 1T tokens（远超 20×7B=140B），因为<strong>推理成本</strong>也要计入总账——小模型多训一点，长期推理更便宜。详见 <a href="06-scaling-and-emergence.html">第 06 章</a>。</p></blockquote>
 <hr/>
-<h2 id="46-base-model-出来后为什么还不能直接给用户用">4.6 Base Model 出来后，为什么还不能直接给用户用</h2>
+<h2 id="46-base-model-出来后为什么还不能直接给用户用">4.6 Base Model 出来后，为什么还不能直接给用户用</h2><nav class="sec-nav"><a class="sn prev" href="#45-算力与成本算一遍就知道为什么只有大厂能训"><span class="sn-label">← 上一节</span><span class="sn-name">4.5 算力与成本：算一遍就知道为什么只有大厂能训</span></a><a class="sn next" href="#47-常被误解的点"><span class="sn-label">下一节 →</span><span class="sn-name">4.7 常被误解的点</span></a></nav>
 <p>预训练完的模型叫 <strong>base model</strong>，它的行为是这样的：</p>
 <table><thead><tr><th>输入</th><th>Base model 的典型输出</th></tr></thead><tbody><tr><td><code>中国的首都是</code></td><td><code>北京，也是中国的政治中心…</code> ✅ 续写没问题</td></tr><tr><td><code>请把下面这句话翻译成英文：你好</code></td><td><code>好的，我已经翻译完了。</code> ❌ 它只是在&quot;续写一个像样的回复&quot;</td></tr><tr><td><code>如何制作炸弹？</code></td><td>可能真的开始写步骤 ❌ 完全没有安全边界</td></tr></tbody></table>
 <p><strong>原因</strong>：预训练目标只要求&quot;像人写的文本&quot;，不要求&quot;有用的回答&quot;。base model 见过大量&quot;提问-回答&quot;的语料，但那是<strong>模仿数据的分布</strong>，不是<strong>执行指令</strong>。</p>
@@ -127,10 +206,10 @@ Instruct Model  ：我记得指令的格式，回答基本可用，但好坏参�
 Chat Model      ：会拒绝、会承认不知道、语气符合人类偏好</code></pre>
 <p>这就是 <a href="05-finetuning.html">第 05 章</a>和 <a href="08-alignment-rlhf.html">第 08 章</a>要解决的问题。</p>
 <hr/>
-<h2 id="47-常被误解的点">4.7 常被误解的点</h2>
+<h2 id="47-常被误解的点">4.7 常被误解的点</h2><nav class="sec-nav"><a class="sn prev" href="#46-base-model-出来后为什么还不能直接给用户用"><span class="sn-label">← 上一节</span><span class="sn-name">4.6 Base Model 出来后，为什么还不能直接给用户用</span></a><a class="sn next" href="#48-动手"><span class="sn-label">下一节 →</span><span class="sn-name">4.8 动手</span></a></nav>
 <table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;预训练就是让模型背下所有训练数据&quot;</td><td>目标是压缩出<strong>泛化</strong>规律；但重复数据、罕见字符串确实会被记住（隐私风险来源）</td></tr><tr><td>&quot;数据越多越好&quot;</td><td>无过滤的更多数据可能更差。<strong>质量与去重比数量更关键</strong></td></tr><tr><td>&quot;一个 epoch 是标准做法&quot;</td><td>语料不够时普遍训多个 epoch，重复策略本身是研究课题</td></tr><tr><td>&quot;BF16 比 FP16 精度高&quot;</td><td>恰好相反：BF16 尾数位更少、精度更低，但<strong>范围更大</strong>，所以训练更稳</td></tr><tr><td>&quot;并行策略随便选&quot;</td><td>选错会浪费大量通信带宽；TP 不宜跨机，PP 层数少时气泡严重</td></tr><tr><td>&quot;评测分数高就是好&quot;</td><td>训练数据污染 benchmark 会让分数虚高，必须做去污染</td></tr></tbody></table>
 <hr/>
-<h2 id="48-动手">4.8 动手</h2>
+<h2 id="48-动手">4.8 动手</h2><nav class="sec-nav"><a class="sn prev" href="#47-常被误解的点"><span class="sn-label">← 上一节</span><span class="sn-name">4.7 常被误解的点</span></a><a class="sn next" href="#49-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">4.9 自查问题</span></a></nav>
 <p>虽然个人很难真正预训练，但可以用<strong>小规模实验</strong>体会全部流程：</p>
 <pre><code># 1) 看算力/数据配比怎么算：改参数量，观察最优 token 数与算力
 python3 demos/07_scaling_law.py
@@ -139,10 +218,53 @@ python3 demos/07_scaling_law.py
 python3 demos/make_figures.py</code></pre>
 <p>想真跑一次预训练，最小可行路径见 <a href="11-open-source-projects.html">第 11 章</a> —— 用 <code>nanoGPT</code> 在单卡上训一个莎士比亚风格的字符级 GPT（几十分钟、几百 MB 显存），你会亲眼看到 loss 从 4.2 降到 1.5。</p>
 <hr/>
-<h2 id="49-自查问题">4.9 自查问题</h2>
+<h2 id="49-自查问题">4.9 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#48-动手"><span class="sn-label">← 上一节</span><span class="sn-name">4.8 动手</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>预训练为什么不需要人工标注？损失函数长什么样？</li><li>数据流水线里哪一步最容易被忽略但影响最大？为什么？</li><li>CLM 和 MLM 的区别？为什么现代 LLM 用 CLM？</li><li>FIM 目标解决什么问题？</li><li>训练为什么用 BF16 而不是 FP16？（从指数位/尾数位说）</li><li>DP / TP / PP / ZeRO 分别切什么？各自的通信代价？</li><li>用 <code>C ≈ 6ND</code> 估算：一个 13B 模型训 1T token 需要多少 FLOPs？</li><li>Base model 为什么不能直接当产品用？举三个反例。</li></ul>
 <hr/>
 <p class="nav-footer"><a href="03-transformer.html">← 上一章：Transformer 架构</a> · <a href="README.html">返回总览</a> · <a href="05-finetuning.html">下一章：微调 →</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么静态批处理会浪费一半算力" class="lvl2">1. Why：为什么静态批处理会浪费一半算力</a><a href="#2-design两个离散事件仿真-一个统一口径" class="lvl2">2. Design：两个离散事件仿真 + 一个统一口径</a><a href="#3-realrun-evidence来自-demosoutdemo09batchingterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_09_batching_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-这是离散事件仿真不是真实-gpu-批处理-而且-152-是乐观上界" class="lvl3">4.1 ⚠ 这是离散事件仿真，不是真实 GPU 批处理 —— 而且 1.52× 是乐观上界</a><a href="#42-p95-只降-435比均值的-518-少-这是机制决定的不是噪声" class="lvl3">4.2 p95 只降 43.5%，比均值的 51.8% 少 —— 这是机制决定的，不是噪声</a><a href="#43-总工作量恒定是这套仿真最有用的自检" class="lvl3">4.3 &amp;quot;总工作量恒定&amp;quot;是这套仿真最有用的自检</a><a href="#44-到达节奏必须用-stepms-缩放否则仿真没有意义" class="lvl3">4.4 到达节奏必须用 step_ms 缩放，否则仿真没有意义</a><a href="#45-capacityslots-的定义必须两策略一致否则空闲率不可比" class="lvl3">4.5 capacity_slots 的定义必须两策略一致，否则空闲率不可比</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-09-batchingstatic-vs-continuous">Milestone 09 — Batching：Static vs Continuous</h1>
 <p>M07 让单次生成快了 2.20×，M08 让单次生成的显存省了 71.9%。但<strong>服务</strong>面对的不是一次请求，而是一股<strong>持续到达的请求流</strong>。</p>
@@ -63,12 +142,12 @@ li{margin:.3em 0;}
 <p><strong>Continuous Batching</strong>（也叫 iteration-level scheduling）的解法：<strong>每一步都重新组批</strong>。谁生成完了就立刻出队，空出的槽位马上补一个等待中的请求进来。</p>
 <p><strong>纯 numpy + 离散事件仿真</strong>：<code>src/ie/batching.py</code> 不碰 GPU，只用事件推进时间。但<strong>每个 decode step 的耗时来自本机真实引擎的 101 次实测</strong>（M07 那个引擎）。</p>
 <hr/>
-<h2 id="1-why为什么静态批处理会浪费一半算力">1. Why：为什么静态批处理会浪费一半算力</h2>
+<h2 id="1-why为什么静态批处理会浪费一半算力">1. Why：为什么静态批处理会浪费一半算力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design两个离散事件仿真-一个统一口径"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：两个离散事件仿真 + 一个统一口径</span></a></nav>
 <p>核心矛盾是：<strong>同一个批里的请求，生成长度差异很大。</strong></p>
 <p>静态批处理的批耗时 = <code>max(批内 token 数)</code>，而实际工作量 = <code>sum(批内 token 数)</code>。两者的差就是浪费。而且这个浪费是<strong>乘法级</strong>的：批越大、长度方差越大，浪费越猛。</p>
 <p>Continuous Batching 在每个 decode step 后重新组批，槽位一空就补人。它消除的是两类等待：</p>
 <ul class="lvl"><li><strong>队尾等待</strong>（head-of-line blocking）：短请求被长请求堵在批里；</li><li><strong>槽位空转</strong>：短请求完成后，它的槽位在批结束前一直是空的。</li></ul>
-<h2 id="2-design两个离散事件仿真-一个统一口径">2. Design：两个离散事件仿真 + 一个统一口径</h2>
+<h2 id="2-design两个离散事件仿真-一个统一口径">2. Design：两个离散事件仿真 + 一个统一口径</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么静态批处理会浪费一半算力"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么静态批处理会浪费一半算力</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo09batchingterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_batching_terminal.txt）</span></a></nav>
 <pre><code>@dataclass(frozen=True)
 class Request:
     request_id: str
@@ -79,7 +158,7 @@ class Request:
 <ul class="lvl"><li><strong><code>simulate_static</code></strong>：按到达排序后每 <code>batch_size</code> 个一组；<code>start = max(上一批结束, 批内最晚到达)</code>；批耗时 = 批内最大 token 数；<code>capacity_slots += batch_steps * batch_size</code>。</li><li><strong><code>simulate_continuous</code></strong>：维护 <code>active</code> 列表；每步让所有活跃请求前进 1 token，<code>remaining == 0</code> 的出队；只要 <code>len(active) &lt; batch_size</code> 就从 <code>pending</code> 补人；<code>capacity_slots += batch_size</code>（每步都按满槽计）。</li></ul>
 <p><strong>时间单位用真实的 <code>step_ms</code></strong>：<code>arrival_ms</code> 由&quot;到达序号 × step_ms&quot;构造，所以到达节奏与解码速度挂钩 —— 这是让仿真有意义的前提（如果到达间隔与 step 无关，仿真就退化成纯数学题）。</p>
 <figure class="figure"><img alt="M09 Static vs Continuous Batching 时序对比" src="../../../../../../projects/09-evaluation-inference/assets/batching.svg" loading="lazy"/><figcaption>M09 Static vs Continuous Batching 时序对比</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo09batchingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_batching_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo09batchingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_batching_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design两个离散事件仿真-一个统一口径"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：两个离散事件仿真 + 一个统一口径</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p><strong><code>step_ms</code> 来自本机真实引擎</strong>：M07 的 <code>CausalLMWithKVCache.decode_step</code>，<strong>101 次实测取中位数 = 0.1342 ms</strong>。</p>
 <p>12 个请求，<code>batch_size=4</code>，token 数 <code>[3,14,6,20,5,11,2,17,8,4,13,7]</code>，到达序号 <code>[0,0,0,0,2,4,7,10,12,15,18,21]</code>（× step_ms）。</p>
 <pre><code>  真实单 token 解码中位耗时                   0.1342 ms   101 次实测
@@ -102,7 +181,7 @@ class Request:
 <p>四个读数：</p>
 <ul class="lvl"><li><strong>吞吐 1788.27 → 2709.50 req/s（1.52×）</strong>。等价于总时长从 50 个 decode step 压到 33 个。</li><li><strong>平均延迟 2.78 → 1.34 ms（−51.8%）</strong>：队列等待几乎被消除。</li><li><strong>p95 4.36 → 2.46 ms（−43.5%）</strong>：<strong>长尾改善幅度小于均值</strong>（见 4.2）。</li><li><strong>计算空闲率 45.0% → 16.7%（降 28.3 个百分点）</strong>：接近一半的算力从&quot;空转&quot;变成了&quot;干活&quot;。</li><li>两者<strong>完成数都是 12</strong>，没有请求被丢弃 —— 提升来自调度效率，不是靠丢请求。</li></ul>
 <figure class="figure"><img alt="M09 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-09-batching.png" loading="lazy"/><figcaption>M09 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo09batchingterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_batching_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-这是离散事件仿真不是真实-gpu-批处理-而且-152-是乐观上界">4.1 ⚠ 这是离散事件仿真，不是真实 GPU 批处理 —— 而且 1.52× 是乐观上界</h3>
 <p>必须诚实标注三层：</p>
 <ul class="lvl"><li><strong>批处理本身没有并行</strong>：仿真假设&quot;一个 decode step 可以同时推进 <code>batch_size</code> 个请求，且耗时仍是 <code>step_ms</code>&quot;。<strong>这个假设在 GPU 上近似成立</strong>（解码是内存带宽瓶颈，批内合并读权重几乎免费），<strong>在 CPU 上不成立</strong>（CPU 上 batch=4 的耗时大约是 batch=1 的 2~4 倍）。</li><li><strong><code>step_ms</code> 是真实的</strong>（101 次实测 0.1342 ms），但它是<strong>单请求</strong>的耗时。仿真把它当作&quot;批内共享的一步&quot;的耗时。</li><li>真实 GPU 上，batch 增大时单步耗时会<strong>亚线性增长</strong>（不是完全免费）。所以<strong>1.52× 是&quot;批内完全免费&quot;假设下的上界</strong>，真实收益会低于它。</li></ul>
@@ -129,12 +208,55 @@ requests = [Request(f&quot;r{i:02d}&quot;, arrival * step_ms, tokens) for ...]</
 <ul class="lvl"><li>Static：<code>capacity_slots += batch_steps * batch_size</code>（批内所有位置，按批耗时计）</li><li>Continuous：<code>capacity_slots += batch_size</code>（每步都按满槽计，空着的也算）</li></ul>
 <p><strong>两者都把&quot;空着的槽位&quot;算进分母</strong> —— 这正是&quot;空闲率&quot;要衡量的东西。如果 Continuous 只算&quot;实际活跃的请求数&quot;，它的 <code>capacity</code> 就会等于 <code>busy</code>，空闲率恒为 0，<strong>指标就失去了意义</strong>。</p>
 <p>这类&quot;分母口径&quot;的坑在 M02（忠实度）、M04（去重复）已经出现过两次，本章是第三次：<strong>看到一个比值指标，先确认分母在两组之间定义一致。</strong></p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>Static Batching 的浪费来自&quot;批耗时 = 批内最长请求&quot;与&quot;实际工作量 = 批内 token 之和&quot;的差；Continuous Batching <strong>每步重新组批</strong>，槽位一空就补人。</li><li>实测仿真（12 请求 / batch 4 / <code>step_ms = 0.1342 ms</code> 来自 <strong>101 次真实引擎计时</strong>）：<strong>吞吐 1788.27 → 2709.50 req/s（1.52×）</strong>、平均延迟 <strong>2.78 → 1.34 ms（−51.8%）</strong>、p95 <strong>4.36 → 2.46 ms（−43.5%）</strong>、计算空闲率 <strong>45.0% → 16.7%（降 28.3 个百分点）</strong>，两者完成数都是 12。</li><li><strong>核心拆解</strong>：总工作量恒为 <strong>110 token-step</strong>；Static 占用 <strong>200</strong> 槽位（空闲 90），Continuous 占用 <strong>132</strong> 槽位（空闲 22）—— 省下的 68 个槽位就是吞吐的来源。</li><li>⚠ <strong>诚实标注：调度结果是离散事件仿真，不是真实 GPU 批处理</strong>；只有 <code>step_ms</code> 是实测；<strong>1.52× 是&quot;批内合并免费&quot;假设下的乐观上界</strong>（CPU 上不成立，GPU 上也会亚线性退化）。</li><li><strong>p95 改善（43.5%）小于均值（51.8%）是机制决定的</strong>：Continuous 消除的是等待，主要救短请求；长请求的延迟下限是自己的 token 数（最长请求理论下限 2.684 ms，实测 p95 已降到 2.46 ms）。</li><li><strong>&quot;总工作量恒定 110&quot; 是策略无关的不变量</strong> —— 用它证明两个仿真的比较是公平的（与 M08 池守恒、M06 基线对齐同一类思路）。</li><li>到达间隔必须乘 <code>step_ms</code> 缩放，否则请求在第 1 步前全部到达，仿真退化。</li><li><code>capacity_slots</code> 在两策略下<strong>都把空槽算进分母</strong>，否则空闲率失真 —— 第三次遇到&quot;比值指标的分母口径&quot;问题。</li><li>手写实现的意义：因为两个仿真共享同一个 <code>_report</code>，我才能断言&quot;两者 busy 都是 110，唯一变量是 capacity&quot; —— 用现成的排队论库你只会拿到一个平均等待时间，拿不到这个隔离。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/batching.py</code></td><td><code>Request</code>（request_id / arrival_ms / tokens）/ <code>_report</code>（统一口径：吞吐 / 均值 / p95 / max / 空闲率 / busy / capacity）/ <code>simulate_static</code>（批耗时 = 批内最长）/ <code>simulate_continuous</code>（每步重排，槽位即补）/ <code>compare_batching</code>（四项增益）</td></tr><tr><td><code>src/ie/batching.py:54</code></td><td><code>capacity_slots += batch_steps * batch_size</code> —— Static 把整批空转槽位计入分母</td></tr><tr><td><code>src/ie/batching.py:77</code></td><td><code>capacity_slots += batch_size</code> —— Continuous 每步按满槽计（空槽同样计入分母）</td></tr><tr><td><code>src/ie/engine.py</code></td><td><code>CausalLMWithKVCache.decode_step</code>：提供 <code>step_ms</code>（M07 引擎，101 次实测中位数）</td></tr><tr><td><code>demos/demo_09_batching.py</code></td><td>3 节：真实 step 计时 / 12 请求构造 / 两策略调度结果</td></tr><tr><td><code>demos/out/demo_09_batching_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/batching.svg</code></td><td>本章 Static vs Continuous 时序对比图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.8 → <strong>v0.9</strong>，M09 Static vs Continuous Batching 落地。实测仿真（12 请求 / batch 4，<code>step_ms = 0.1342 ms</code> 来自 <strong>101 次真实引擎计时</strong>）：<strong>吞吐 1788.27 → 2709.50 req/s（1.52×）</strong>、平均延迟 <strong>2.78 → 1.34 ms（−51.8%）</strong>、p95 <strong>4.36 → 2.46 ms（−43.5%）</strong>、计算空闲率 <strong>45.0% → 16.7%（降 28.3 个百分点）</strong>、完成数均 12；核心拆解为「总工作量恒为 110 token-step，Static 占 200 槽 / Continuous 占 132 槽」。并诚实记录「⚠ 调度结果是离散事件仿真而非真实 GPU 批处理，只有 <code>step_ms</code> 是实测，<strong>1.52× 是乐观上界</strong>」「p95 改善小于均值是机制决定（长请求延迟下限 = 自身 token 数，最长请求下限 2.684 ms）」「busy 恒定 110 是策略无关不变量，用于证明比较公平」「到达间隔须乘 step_ms 缩放否则仿真退化」「<code>capacity_slots</code> 两策略都把空槽计入分母」。纯 numpy + 标准库，无 vLLM。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

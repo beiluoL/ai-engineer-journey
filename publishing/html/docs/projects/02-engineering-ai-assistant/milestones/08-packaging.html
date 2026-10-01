@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-pyprojecttoml-是什么" class="lvl3">3.1 pyproject.toml 是什么</a><a href="#32-src-layout源码布局" class="lvl3">3.2 src layout【源码布局】</a><a href="#33-最小可用的-pyprojecttoml" class="lvl3">3.3 最小可用的 pyproject.toml</a><a href="#34-projectscripts-的魔法" class="lvl3">3.4 [project.scripts] 的魔法</a><a href="#35-editable-install可编辑安装" class="lvl3">3.5 editable install【可编辑安装】</a><a href="#36-依赖版本怎么写" class="lvl3">3.6 依赖版本怎么写</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1忘了-toolsetuptoolspackagesfind-where-src" class="lvl3">坑 1：忘了 [tool.setuptools.packages.find] where = [&amp;quot;src&amp;quot;]</a><a href="#坑-2每个目录都要-initpy" class="lvl3">坑 2：每个目录都要 __init__.py</a><a href="#坑-3忘了装-e改代码不生效" class="lvl3">坑 3：忘了装 -e，改代码不生效</a><a href="#坑-4命令找不到aiassistant-command-not-found" class="lvl3">坑 4：命令找不到（ai-assistant: command not found）</a><a href="#坑-5把-tests-也打包进去" class="lvl3">坑 5：把 tests/ 也打包进去</a><a href="#坑-6env-被打进包" class="lvl3">坑 6：.env 被打进包</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-08packaging打包与发布">Project 02 — Chapter 08：Packaging【打包与发布】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>pyproject.toml</code></p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>到目前为止，运行项目的方式是：</p>
 <pre><code>cd projects/02-engineering-ai-assistant/src
 python3 main.py &quot;问题&quot;</code></pre>
@@ -70,7 +149,7 @@ python3 main.py &quot;问题&quot;</code></pre>
 <p>本章目标：</p>
 <blockquote><p><strong>用 <code>pyproject.toml</code> 把项目变成「可安装的包」，装完后在任意目录都能用 <code>ai-assistant</code> 命令。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>打包解决的是<strong>交付</strong>问题：</p>
 <pre><code>给自己     —— 装一次，之后在任何目录都能用，不用 cd
 给同事     —— pip install -e . 之后依赖自动装齐
@@ -79,7 +158,7 @@ python3 main.py &quot;问题&quot;</code></pre>
 <p>而且从这一章开始，你的项目才真正符合「Python 工程」的定义：</p>
 <blockquote><p><strong>能被安装、能被依赖、有明确的入口点、依赖被显式声明。</strong></p></blockquote>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-pyprojecttoml-是什么">3.1 <code>pyproject.toml</code> 是什么</h3>
 <p>它是 Python 官方（PEP 621）指定的<strong>项目元数据文件</strong>，取代了老的 <code>setup.py</code>。</p>
 <p>类比：</p>
@@ -160,7 +239,7 @@ httpx                ❌ 完全不约束，某天上游 breaking change 你就�
 <p>规则：</p>
 <blockquote><p><strong>给的约束能有多松就多松，但不能没有。</strong></p></blockquote>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <p>完整安装与使用流程：</p>
 <pre><code>cd projects/02-engineering-ai-assistant
 python3 -m venv .venv
@@ -179,12 +258,12 @@ pytest -v                              # 测试</code></pre>
 <hr/>
 <figure class="figure"><img alt="真实运行：解析 pyproject.toml 的每个字段、用 importlib.metadata 读回元数据与控制台入口点、真的打出一个 wheel，并验证 python -m assistant.cli 可用" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-packaging.png" loading="lazy"/><figcaption>真实运行：解析 pyproject.toml 的每个字段、用 importlib.metadata 读回元数据与控制台入口点、真的打出一个 wheel，并验证 python -m assistant.cli 可用</figcaption></figure>
 <p>![真实运行：真的打出一个 wheel（18.7 KB）并列出里面的文件，以及 [project.scripts] 生成的 ai-assistant 控制台入口点](../assets/term-packaging-wheel.png)</p>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>概念</th><th>Java / Maven</th><th>Python</th></tr></thead><tbody><tr><td>项目描述文件</td><td><code>pom.xml</code></td><td><code>pyproject.toml</code></td></tr><tr><td>坐标</td><td><code>groupId:artifactId:version</code></td><td><code>name</code> + <code>version</code>（无 group，全局唯一）</td></tr><tr><td>依赖声明</td><td><code>&lt;dependency&gt;</code></td><td><code>dependencies = [...]</code></td></tr><tr><td>依赖作用域</td><td><code>&lt;scope&gt;test&lt;/scope&gt;</code></td><td><code>optional-dependencies.dev</code></td></tr><tr><td>构建</td><td><code>mvn package</code></td><td><code>python -m build</code></td></tr><tr><td>产物</td><td><code>.jar</code></td><td><code>.whl</code> / <code>.tar.gz</code></td></tr><tr><td>安装到仓库</td><td><code>mvn install</code></td><td><code>pip install .</code></td></tr><tr><td>本地开发模式</td><td>IDE 自动</td><td><code>pip install -e .</code></td></tr><tr><td>可执行入口</td><td><code>Main-Class</code></td><td><code>[project.scripts]</code></td></tr><tr><td>版本锁定</td><td><code>pom</code> 里写死</td><td><code>requirements.txt</code> / <code>uv.lock</code> / <code>poetry.lock</code></td></tr></tbody></table>
 <p>最大的文化差异：</p>
 <blockquote><p><strong>Java 的依赖版本默认是锁死的，Python 默认给下限。</strong> 所以 Python 项目要发布上线时，通常会额外用 <code>pip freeze &gt; requirements.txt</code> 或 <code>uv</code> 生成锁文件。</p></blockquote>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1忘了-toolsetuptoolspackagesfind-where-src">坑 1：忘了 <code>[tool.setuptools.packages.find] where = [&quot;src&quot;]</code></h3>
 <p>用 src layout 却没配这一句，结果是<strong>装上一个空包</strong>，<code>import assistant</code> 报 <code>ModuleNotFoundError</code>，但 <code>pip install</code> 显示成功。</p>
 <p>排查：<code>pip show -f engineering-ai-assistant</code> 看装进去的文件列表。</p>
@@ -211,17 +290,60 @@ where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不
 <h3 id="坑-6env-被打进包">坑 6：<code>.env</code> 被打进包</h3>
 <p><code>.env</code> 不在 <code>packages.find</code> 的范围内，不会被打包。但<strong>如果你用了 <code>MANIFEST.in</code> 手动包含文件</strong>，务必排除 <code>.env</code>。</p>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：给项目加 <code>pyproject.toml</code>，用 <code>pip install -e &quot;.[dev,api]&quot;</code> 安装，验证在<strong>任意目录</strong>敲 <code>ai-assistant --help</code> 都能用。</p>
 <p><strong>挑战 2</strong>：加一个 <code>--version</code> 参数，从 <code>importlib.metadata.version(&quot;engineering-ai-assistant&quot;)</code> 读取版本号输出。</p>
 <p><strong>挑战 3（进阶）</strong>：用 <code>python -m build</code> 打出 wheel，然后在一个全新的 venv 里 <code>pip install dist/*.whl</code> 验证干净安装可用。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li><code>pyproject.toml</code> 取代了什么老文件？</li><li>为什么要 src layout？不用会有什么隐蔽的坑？</li><li><code>[project.scripts]</code> 做了什么？</li><li><code>pip install -e .</code> 和 <code>pip install .</code> 的区别？</li><li>依赖版本为什么「能松就松，但不能没有」？</li><li>为什么把 FastAPI 放进可选依赖？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 有 <code>pyproject.toml</code>，<code>pip install -e &quot;.[dev,api]&quot;</code> 成功</li><li>[ ] 装完后在任意目录可执行 <code>ai-assistant</code></li><li>[ ] 用 src layout，且 <code>[tool.setuptools.packages.find] where = [&quot;src&quot;]</code> 已配</li><li>[ ] 依赖分组：核心 / dev / api 三档</li><li>[ ] <code>.gitignore</code> 含 <code>.venv/</code>、<code>dist/</code>、<code>*.egg-info/</code></li></ul>
 <p>下一章：<a href="09-fastapi.html">09-fastapi.md</a> —— 把 CLI 变成 HTTP 服务。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

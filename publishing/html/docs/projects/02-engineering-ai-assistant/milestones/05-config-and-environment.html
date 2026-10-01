@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-配置的三层来源优先级从低到高" class="lvl3">3.1 配置的三层来源（优先级从低到高）</a><a href="#32-env-文件" class="lvl3">3.2 .env 文件</a><a href="#33-读取pythondotenv-vs-标准库" class="lvl3">3.3 读取：python-dotenv vs 标准库</a><a href="#34-配置对象frozen-dataclass" class="lvl3">3.4 配置对象：frozen dataclass</a><a href="#35-依赖注入而非全局单例" class="lvl3">3.5 依赖注入而非全局单例</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1把-env-提交进-git" class="lvl3">坑 1：把 .env 提交进 git</a><a href="#坑-2忘记类型转换" class="lvl3">坑 2：忘记类型转换</a><a href="#坑-3loaddotenv-覆盖线上配置" class="lvl3">坑 3：load_dotenv() 覆盖线上配置</a><a href="#坑-4在模块顶层就读配置" class="lvl3">坑 4：在模块顶层就读配置</a><a href="#坑-5把-key-打进日志" class="lvl3">坑 5：把 Key 打进日志</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-05config-environment配置与环境">Project 02 — Chapter 05：Config / Environment【配置与环境】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/settings.py</code></p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Project 01 的配置是这么读的（散落在 <code>config.py</code> 里）：</p>
 <pre><code>api_key = os.getenv(&quot;DEEPSEEK_API_KEY&quot;)
 model = os.getenv(&quot;DEEPSEEK_MODEL&quot;, &quot;deepseek-chat&quot;)
@@ -71,7 +150,7 @@ timeout = int(os.getenv(&quot;DEEPSEEK_TIMEOUT&quot;, &quot;30&quot;))</code></p
 <p>本章目标：</p>
 <blockquote><p><strong>把所有配置收敛到一个不可变的 <code>Settings</code> 对象，集中声明、带类型、可校验、可注入。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>配置管理的业界共识是 <a href="https://12factor.net/config" target="_blank" rel="noopener">The Twelve-Factor App</a> 的第三条：</p>
 <blockquote><p><strong>配置存储在环境中。</strong></p></blockquote>
 <p>理由很实在：</p>
@@ -80,7 +159,7 @@ timeout = int(os.getenv(&quot;DEEPSEEK_TIMEOUT&quot;, &quot;30&quot;))</code></p
 3. 容器化部署时，环境变量是唯一通用的注入方式</code></pre>
 <p>Python 项目里最常见的做法是 <code>.env</code> 文件 + 环境变量 + 一个集中式配置对象。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-配置的三层来源优先级从低到高">3.1 配置的三层来源（优先级从低到高）</h3>
 <pre><code>代码里的默认值        ← 最低：保证「什么都不配也能跑」
     ↓ 被覆盖
@@ -165,7 +244,7 @@ def test_client():
     client = build_client(settings)</code></pre>
 <p><strong>这就是依赖注入的全部</strong>：不自己造，让别人传进来。测试时传假的。</p>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <pre><code>src/assistant/settings.py    # Settings（frozen dataclass）+ from_env()
 .env.example                 # 进 git，键清单
 .env                         # 不进 git，真实值
@@ -177,12 +256,12 @@ settings = Settings.from_env()          # 启动时读一次
 client = DeepSeekClient(settings)       # 注入进去
 service = AssistantService(client)      # 再往上注入</code></pre>
 <hr/>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Java / Spring</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>application.yml</code></td><td><code>.env</code> / <code>settings.py</code></td><td>Spring 的 yml 支持嵌套，<code>.env</code> 只有扁平 KV</td></tr><tr><td><code>@ConfigurationProperties</code></td><td><code>dataclass Settings</code></td><td>都是「把配置绑成对象」</td></tr><tr><td><code>@Value(&quot;${x}&quot;)</code></td><td><code>os.getenv(&quot;X&quot;)</code></td><td>同</td></tr><tr><td><code>System.getenv()</code></td><td><code>os.environ</code></td><td>同</td></tr><tr><td>Spring Profile</td><td>环境变量切换</td><td>Python 没有内置 profile 概念</td></tr><tr><td><code>final</code> 字段</td><td><code>@dataclass(frozen=True)</code></td><td>不可变</td></tr><tr><td><code>application-dev.yml</code></td><td><code>.env.local</code> 等约定</td><td>靠自己约定</td></tr></tbody></table>
 <p>最大的思维差异：</p>
 <blockquote><p><strong>Spring 有 IoC 容器帮你注入，Python 没有 —— 你得自己把对象一层层传下去。</strong> 到 Chapter 09 讲 FastAPI 的 <code>Depends</code> 时，会看到 Python 版本的「轻量 IoC」。</p></blockquote>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1把-env-提交进-git">坑 1：把 <code>.env</code> 提交进 git</h3>
 <pre><code>git add .env     # ❌ 密钥泄露</code></pre>
 <p><code>.gitignore</code> 里必须有：</p>
@@ -209,20 +288,63 @@ settings = Settings.from_env()   # import 时就读，Key 没配就崩</code></p
 class Settings:
     api_key: str = field(repr=False)   # repr 时显示为 &lt;hidden&gt; 或省略</code></pre>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：手写 <code>load_dotenv()</code>（20 行，见 3.3），并写测试验证「环境变量已存在时不被 <code>.env</code> 覆盖」。</p>
 <p><strong>挑战 2</strong>：给 <code>Settings</code> 加一个 <code>validate()</code>，校验 <code>base_url</code> 必须以 <code>http</code> 开头、<code>timeout &gt; 0</code>，不满足就抛 <code>LLMConfigError</code>。</p>
 <p><strong>挑战 3（进阶）</strong>：支持 <code>.env.local</code> 优先于 <code>.env</code>（常见的多环境约定），并保持「真实环境变量最优先」。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li>配置的三层优先级是什么？为什么真实环境变量要在最上层？</li><li>为什么 <code>.env</code> 不能进 git，而 <code>.env.example</code> 必须进？</li><li><code>load_dotenv</code> 用 <code>setdefault</code> 而不是直接赋值，是为了什么？</li><li><code>frozen=True</code> 解决了什么问题？</li><li>为什么不建议在模块顶层就执行 <code>Settings.from_env()</code>？</li><li>怎么避免 <code>repr(settings)</code> 把 API Key 打进日志？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] <code>.gitignore</code> 含 <code>.env</code>，仓库里有 <code>.env.example</code></li><li>[ ] 实现 <code>Settings</code>（frozen dataclass）+ <code>from_env()</code></li><li>[ ] 所有配置项集中在一处，代码中不再散落 <code>os.getenv</code></li><li>[ ] 敏感字段用 <code>field(repr=False)</code> 隐藏</li><li>[ ] 测试里能造一个假 <code>Settings</code> 注入进 client，不需要真实 Key</li></ul>
 <p>实际效果——没配 Key 时得到的是友好提示而不是 traceback：</p>
 <figure class="figure"><img alt="未配置 Key 时的友好报错" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-config-error.png" loading="lazy"/><figcaption>未配置 Key 时的友好报错</figcaption></figure>
 <figure class="figure"><img alt="真实运行：缺 Key 报的是「照着做」的错而不是 KeyError；repr(settings) 里看不到 api_key（repr=False 防泄露但字段照常可读）；环境变量可覆盖 model / timeout / json_logs；非法 base_url 与 timeout 被 validate() 拦下" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-config-env.png" loading="lazy"/><figcaption>真实运行：缺 Key 报的是「照着做」的错而不是 KeyError；repr(settings) 里看不到 api_key（repr=False 防泄露但字段照常可读）；环境变量可覆盖 model / timeout / json_logs；非法 base_url 与 timeout 被 validate() 拦下</figcaption></figure>
 <p>下一章：<a href="06-logging.html">06-logging.md</a> —— 让程序会「说话」。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

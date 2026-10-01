@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么均值更小不等于更好" class="lvl2">1. Why：为什么&amp;quot;均值更小&amp;quot;不等于&amp;quot;更好&amp;quot;</a><a href="#2-design三层结构" class="lvl2">2. Design：三层结构</a><a href="#3-realrun-evidence来自-demosoutdemo05modelcomparisonterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_05_model_comparison_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-0010-全平是等价性的正面证据不是数据不够" class="lvl3">4.1 0/0/10 全平是等价性的正面证据，不是&amp;quot;数据不够&amp;quot;</a><a href="#42-配对设计能测出比标准差小-240-倍的差异" class="lvl3">4.2 配对设计能测出比标准差小 240 倍的差异</a><a href="#43-用-atol-判平不要用" class="lvl3">4.3 用 atol 判平，不要用 ==</a><a href="#44-stablefalse-有一种情况是太好了" class="lvl3">4.4 stable=False 有一种情况是&amp;quot;太好了&amp;quot;</a><a href="#45-诚实标注adapter-只训了-24-步" class="lvl3">4.5 诚实标注：adapter 只训了 24 步</a><a href="#46-p06-的-adam-动量从不累积-本章训练的-24-步其实是-signsgd" class="lvl3">4.6 ⚠ P06 的 Adam 动量从不累积 —— 本章训练的 24 步其实是 SignSGD</a><a href="#47-m05-的-int8-mse6344e08和-m06-的7673e08不是同一个东西" class="lvl3">4.7 M05 的 INT8 MSE（6.344e-08）和 M06 的（7.673e-08）不是同一个东西</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-05-model-comparison多种子配对比较">Milestone 05 — Model Comparison：多种子配对比较</h1>
 <p>前四层把&quot;怎么评&quot;做完了（指标 → benchmark → 评估集 → 评分器）。现在回答 AI 工程里最高频也最容易做错的问题：<strong>A 模型和 B 模型，哪个更好？</strong></p>
@@ -63,14 +142,14 @@ li{margin:.3em 0;}
 <ul class="lvl"><li>用 <strong>bootstrap 重采样</strong>把单点估计变成分布（10 个 seed）；</li><li>用<strong>配对设计</strong>（同一 seed 用同一组重采样下标）抵消共同噪声；</li><li>用<strong>胜/负/平</strong>计数而不是&quot;均值谁小&quot;来下结论 —— 因为均值差可能只是噪声。</li></ul>
 <p><strong>纯 numpy 手写</strong>：bootstrap、配对比较、稳定性判定全在 <code>src/ie/compare.py</code>，不引入 scipy。</p>
 <hr/>
-<h2 id="1-why为什么均值更小不等于更好">1. Why：为什么&quot;均值更小&quot;不等于&quot;更好&quot;</h2>
+<h2 id="1-why为什么均值更小不等于更好">1. Why：为什么&quot;均值更小&quot;不等于&quot;更好&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design三层结构"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：三层结构</span></a></nav>
 <p>三个真实的陷阱：</p>
 <p><strong>陷阱一：样本量太小。</strong> 8 条样本上，换一组样本可能结论就翻。bootstrap 回答的是&quot;如果换一批同分布的样本，结论还成立吗&quot;。</p>
 <p><strong>陷阱二：两组比较各自独立采样，噪声会淹没信号。</strong> 这是本章最关键的一点。实测：</p>
 <ul class="lvl"><li>adapter 的 bootstrap 标准差 <strong>±0.046898</strong></li><li>INT8 与 adapter 的均值差只有 <strong>0.000195</strong></li></ul>
 <p>差值只有标准差的 <strong>0.42%</strong>。如果两组各自独立重采样，这个差异 100% 会被噪声淹掉。但<strong>配对设计</strong>下它稳定出现 10/0/0 —— 因为两组用的是<strong>同一组下标</strong>，抽样带来的偏差是<strong>共模</strong>的，在相减时抵消了。</p>
 <p><strong>陷阱三：用 <code>mean_a &lt; mean_b</code> 下结论，会掩盖&quot;有时赢有时输&quot;。</strong> <code>paired_compare</code> 输出 <code>noise_flip</code> 标志：只要既有胜又有负，就说明结论在噪声内翻转 —— 这时候&quot;均值更小&quot;是假信号。</p>
-<h2 id="2-design三层结构">2. Design：三层结构</h2>
+<h2 id="2-design三层结构">2. Design：三层结构</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么均值更小不等于更好"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么&amp;quot;均值更小&amp;quot;不等于&amp;quot;更好&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo05modelcomparisonterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_05_model_comparison_terminal.txt）</span></a></nav>
 <pre><code>summarize(values)                       # 均值 / 样本标准差(std ddof=1) / min / max
 paired_compare(baseline, challenger)    # 逐 seed 相减 → sign → 胜/负/平 + stable + noise_flip
 evaluate_models(models, seeds, evaluator, baseline=..., lower_is_better=True)</code></pre>
@@ -78,7 +157,7 @@ evaluate_models(models, seeds, evaluator, baseline=..., lower_is_better=True)</c
 <ul class="lvl"><li><strong><code>lower_is_better</code> 统一符号</strong>（<code>src/ie/compare.py:37</code>）：<code>improvement = -raw_delta if lower_is_better else raw_delta</code>。<strong><code>improvement &gt; 0</code> 永远表示 challenger 更好</strong>，调用方不用记方向。本项目比较的是交叉熵（越低越好）。</li><li><strong><code>atol</code> 判平，不是 <code>==</code></strong>（<code>src/ie/compare.py:38</code>）：<code>np.where(improvement &gt; atol, 1, np.where(improvement &lt; -atol, -1, 0))</code>。浮点运算必然有 ~1e-16 的噪声，用严格等于会假报&quot;负&quot;。M05 里 adapter vs merge 特意用 <code>atol=1e-10</code>。</li><li><strong><code>stable</code> 的定义</strong>（<code>src/ie/compare.py:41</code>）：<code>无平局</code> 且 <code>符号全一致</code>。<strong>有平局就判不稳定</strong> —— 这是刻意的保守。</li><li><strong><code>evaluator: (model, seed) -&gt; float</code></strong>：把&quot;怎么算一个数&quot;注入进来。M05 注入的是&quot;按 seed 重采样 8 条样本的 mean_ce&quot;。</li></ul>
 <p class="nav-footer"><strong>为什么比较的是 CE 而不是 PPL</strong>（<code>demos/demo_05_model_comparison.py:27</code>）：<code>_example_losses</code> 返回每条样本的 <code>mean_ce</code>，bootstrap 后<strong>对 CE 取平均</strong>。如果对 PPL 取平均，由 Jensen 不等式 <code>E[exp(X)] &gt; exp(E[X])</code>，会把均值系统性高估 —— <strong>PPL 不可直接平均</strong>，这是它作为比较指标的固有缺陷。</p>
 <figure class="figure"><img alt="M05 多模型配对比较：每条样本 CE → 10 seed 配对 bootstrap → 胜/负/平" src="../../../../../../projects/09-evaluation-inference/assets/model-comparison.svg" loading="lazy"/><figcaption>M05 多模型配对比较：每条样本 CE → 10 seed 配对 bootstrap → 胜/负/平</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo05modelcomparisonterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_model_comparison_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo05modelcomparisonterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_model_comparison_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design三层结构"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：三层结构</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>held-out <strong>8 条</strong>（与 adapter 训练集 instruction 交集为 0），<strong>10 个 seed</strong>，同一 seed 使用同一组 bootstrap 下标。adapter 本次新训练（24 步，<code>lr=3e-3</code>，<code>r=4</code>，<code>alpha=8</code>）。</p>
 <pre><code>  held-out                           8   与 adapter 训练集 instruction 交集为 0
   重复 seed                            10   同一 seed 使用同一组 bootstrap 下标
@@ -101,7 +180,7 @@ evaluate_models(models, seeds, evaluator, baseline=..., lower_is_better=True)</c
 <p>五个读数：</p>
 <ul class="lvl"><li><strong>adapter / merge / INT8 三者相对基座都是 10 胜 0 负 0 平，判定&quot;稳定&quot;。</strong> 差距是 <code>8.663687 − 6.534930 = 2.128757</code>，相当于 adapter 标准差（0.0469）的 <strong>45 倍</strong> —— 这是&quot;不需要统计检验也能信&quot;的量级。</li><li><strong>基座的 std 是 0.246029，是 adapter 的 5.2 倍。</strong> 未微调的基座在 8 条样本上的表现<strong>更不稳定</strong>（逐条 CE 差异更大），微调不仅降低了均值，也降低了方差。这一行容易被忽略，但它本身就是&quot;微调有效&quot;的独立证据。</li><li><strong>INT8 与 adapter 只差 0.000195</strong>（<code>6.535125 − 6.534930</code>），只有 std 的 <strong>0.42%</strong>，却在配对设计下稳定 10/0/0。<strong>这就是配对设计的价值</strong>：共模噪声抵消后，能分辨远小于标准差的系统性差异。</li><li><strong><code>adapter vs 合并后 = 0/0/10</code> 全平</strong> —— 这是<strong>正面的等价性证据</strong>，不是数据缺失（见 4.1）。</li><li><strong>&quot;发生噪声内翻转的比较：无&quot;</strong> —— 三个对比里都没有&quot;有胜有负&quot;的情况，说明排序在所有重采样下一致。</li></ul>
 <figure class="figure"><img alt="M05 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-05-model-comparison.png" loading="lazy"/><figcaption>M05 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo05modelcomparisonterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_05_model_comparison_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-0010-全平是等价性的正面证据不是数据不够">4.1 <code>0/0/10</code> 全平是等价性的正面证据，不是&quot;数据不够&quot;</h3>
 <p>这是本章最容易被误读的一行，必须说清楚。</p>
 <p><code>merge_lora</code> 做的事是把 LoRA 的增量折进基座权重：<code>W&#x27; = W + (alpha/r) · A · B</code>。而 <code>LoRALinear</code> 在前向时是<strong>即时合成</strong> <code>.data = W + (alpha/r)·A·B</code>。两者<strong>数学上完全等价</strong> —— 合并只是把运行时的加法提前做掉。</p>
@@ -145,12 +224,55 @@ update = lr · m̂ / (√v̂ + eps)  ≈  lr · c(t) · sign(g)</code></pre>
 <p>本章打印的 <code>INT8 权重 MSE = 6.34410385e-08</code> 来自 <code>quantize_model(merged, bits=8, granularity=&quot;per_channel&quot;)</code>，是对<strong>所有 ndim≥2 的参数</strong>做加权平均（含词嵌入和所有线性层）。</p>
 <p>M06 打印的 <code>7.67262816e-08</code> 只针对<strong>单个矩阵 <code>decoder.proj</code></strong>（65,536 个参数）。</p>
 <p>两者分母不同、覆盖范围不同，<strong>不可直接比较</strong>。引用时必须带上范围说明 —— 这也是为什么 M06 的表格标题专门写了&quot;对比权重 decoder.proj (64, 1024)&quot;。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>小样本上不能用单点估计下结论</strong>：8 条 held-out → 10 seed bootstrap → 均值 ± 样本标准差。</li><li><strong>配对设计是本章的核心</strong>：同一 seed 同一组下标，共模噪声相减抵消。实测分辨出 <strong>0.000195</strong> 的差异（仅 std 的 0.42%，约 1/240）。</li><li>实测：加载 adapter <strong>6.534930 ± 0.046898</strong>、合并后 <strong>6.534930 ± 0.046898</strong>、INT8 <strong>6.535125 ± 0.046844</strong>、基座 <strong>8.663687 ± 0.246029</strong>；三者相对基座 <strong>10/0/0，稳定</strong>，<code>noise_flip</code> 为无。</li><li><strong><code>adapter vs merge = 0/0/10</code> 是等价性的正面证据</strong>（<code>merge_lora</code> 数学等价 + <code>atol=1e-10</code> 内严格相等），不是数据缺失；表格里的 <code>10/0/0</code> 是相对基座的另一口径，别混读。</li><li><strong>基座的 std 是 adapter 的 5.2 倍</strong>（0.246029 vs 0.046898）—— 微调同时降低了均值和方差，这是&quot;有效&quot;的独立证据。</li><li><strong>用 <code>atol</code> 判平不用 <code>==</code></strong>，阈值卡在噪声量级（~1e-16）与信号量级（1.95e-4）之间；<code>stable</code> 在存在平局时保守返回 <code>False</code>。</li><li><strong>比较用 CE 不用 PPL</strong>：<code>E[exp(X)] &gt; exp(E[X])</code>，PPL 直接平均会因 Jensen 不等式系统性高估。</li><li>诚实标注：<strong>adapter 只训 24 步</strong>（loss 8.4440 → 6.4789），绝对指标难看但<strong>相对排序可信</strong>；M05 的 INT8 MSE 覆盖全部 2D 参数，与 M06 单矩阵口径不同。</li><li>⚠ <strong>P06 的 <code>Adam</code> 动量从不累积</strong>（state 只读不写回），本章 24 步训练实际是「带衰减的 SignSGD」（<code>c</code> 从 1.0 衰减到 0.53）。不改 P06，如实标注；结论的相对排序不受影响。</li><li>手写实现的意义：因为 bootstrap 的下标是自己用 <code>default_rng(seed)</code> 生成的，我才能<strong>让所有模型共享同一组下标</strong> —— 这是配对设计能生效的前提，也是任何现成 <code>bootstrapped</code> 库不会替你做的事。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/compare.py</code></td><td><code>summarize</code>（均值/std(ddof=1)/min/max）/ <code>paired_compare</code>（逐 seed 相减、<code>atol</code> 判平、<code>lower_is_better</code> 统一符号、<code>stable</code> / <code>noise_flip</code> / <code>sign_consistency</code>）/ <code>evaluate_models</code>（多模型 × 多 seed，共用 evaluator 与 seed 序列）</td></tr><tr><td><code>src/ie/compare.py:38</code></td><td><code>atol</code> 判平而非 <code>==</code> —— 防止浮点噪声假报胜负</td></tr><tr><td><code>src/ie/quantize.py</code></td><td><code>quantize_model(bits=8, granularity=&quot;per_channel&quot;)</code>：生成本章的 INT8 对照组（遍历 <code>ft.inject.named_parameters</code>，见 4.6）</td></tr><tr><td><code>src/ie/metrics.py</code></td><td><code>evaluate()[&quot;mean_ce&quot;]</code>：每条样本的交叉熵，bootstrap 的数据源</td></tr><tr><td><code>demos/_common.py</code></td><td><code>adapter_bundle</code>：<strong>先切 held-out 再训 adapter</strong>，<code>steps=24</code></td></tr><tr><td><code>demos/demo_05_model_comparison.py</code></td><td>5 节：配置 / 四模型逐条 CE / 10 seed bootstrap 排行 / adapter vs merge 配对 / 结论</td></tr><tr><td><code>demos/out/demo_05_model_comparison_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/model-comparison.svg</code></td><td>本章多模型配对比较图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.4 → <strong>v0.5</strong>，M05 多种子配对比较落地。实测（held-out 8 条、10 seed、同下标配对）：加载 adapter <strong>6.534930±0.046898</strong>、合并后 <strong>6.534930±0.046898</strong>、INT8 <strong>6.535125±0.046844</strong>、基座 <strong>8.663687±0.246029</strong>；三者相对基座 <strong>10/0/0 稳定</strong>、<code>noise_flip</code> 无；<strong>adapter vs 合并后 0/0/10 全平</strong>（<code>atol=1e-10</code>，等价性的正面证据）；adapter 训练 loss <strong>8.4440 → 6.4789</strong>（24 步）；INT8 全模型权重 MSE <strong>6.34410385e-08</strong>。并诚实记录「配对设计分辨出 0.000195 = std 的 0.42% 的差异」「<code>stable</code> 遇平局保守返回 False」「adapter 只训 24 步，绝对指标难看但相对排序可信」「<strong>P06 的 Adam 动量从不累积，本章训练实为带衰减 SignSGD（c: 1.0 → 0.53），不改 P06</strong>」「本章 INT8 MSE 覆盖全部 2D 参数，与 M06 单矩阵 7.673e-08 口径不同」。纯 numpy、无 scipy。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,16 +52,95 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#目录" class="lvl2">目录</a><a href="#全流程总览" class="lvl2">全流程总览</a><a href="#第一步怎么选大模型" class="lvl2">第一步：怎么选大模型</a><a href="#qwen3-全系列202609-核实" class="lvl3">Qwen3 全系列（2026-09 核实）</a><a href="#显存怎么算" class="lvl3">显存怎么算</a><a href="#第二步模型在哪下载" class="lvl2">第二步：模型在哪下载</a><a href="#第三步选什么服务器" class="lvl2">第三步：选什么服务器</a><a href="#第四步要花多少钱" class="lvl2">第四步：要花多少钱</a><a href="#第五步ubuntu-初始化" class="lvl2">第五步：Ubuntu 初始化</a><a href="#第六步docker-nvidia-环境" class="lvl2">第六步：Docker + NVIDIA 环境</a><a href="#第七步vllm-部署-qwen" class="lvl2">第七步：vLLM 部署 Qwen</a><a href="#第八步spring-boot-调用" class="lvl2">第八步：Spring Boot 调用</a><a href="#81-协议统一这是整个教程最重要的一张图" class="lvl3">8.1 协议统一：这是整个教程最重要的一张图</a><a href="#82-配置层供应商无关" class="lvl3">8.2 配置层：供应商无关</a><a href="#83-客户端用-jdk-内置-httpclient不引-sdk" class="lvl3">8.3 客户端：用 JDK 内置 HttpClient，不引 SDK</a><a href="#84-接口层非流式-sse-流式" class="lvl3">8.4 接口层：非流式 + SSE 流式</a><a href="#85-真实运行本机实测" class="lvl3">8.5 真实运行（本机实测）</a><a href="#企业级上线加固" class="lvl2">企业级上线加固</a><a href="#进阶微调后的模型怎么上线" class="lvl2">进阶：微调后的模型怎么上线</a><a href="#常见问题" class="lvl2">常见问题</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="企业级大模型部署从-0-到-1租-gpu-服务器-ubuntu-docker-qwen-vllm-spring-boot">企业级大模型部署从 0 到 1：租 GPU 服务器 → Ubuntu → Docker → Qwen → vLLM → Spring Boot</h1>
 <blockquote><p>写给有 Java / 后端基础、想把大模型真正部署到自己服务器上的开发者。 本文用「选型 → 下载 → 租机 → 系统初始化 → 容器环境 → 推理服务 → 业务接入」的顺序，一次走通企业级全流程。</p><p><strong>配图真实性说明</strong>：① 网站截图均为浏览器实拍（标注时间）；② 终端卡片中绿色「真实运行」= 本机实机执行结果，琥珀「预期输出参考」= 服务器端标准输出格式（需要在真实服务器上执行，此处诚实标注而非伪造截图）；③ 价格数据为 2026-09-22 AutoDL 官网实拍。</p></blockquote>
-<h2 id="目录">目录</h2>
+<h2 id="目录">目录</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#全流程总览"><span class="sn-label">下一节 →</span><span class="sn-name">全流程总览</span></a></nav>
 <ul class="lvl"><li>全流程总览</li><li>第一步：怎么选大模型</li><li>第二步：模型在哪下载</li><li>第三步：选什么服务器</li><li>第四步：要花多少钱</li><li>第五步：Ubuntu 初始化</li><li>第六步：Docker + NVIDIA 环境</li><li>第七步：vLLM 部署 Qwen</li><li>第八步：Spring Boot 调用</li><li>企业级上线加固</li><li>进阶：微调后的模型怎么上线</li><li>常见问题</li></ul>
 <hr/>
-<h2 id="全流程总览">全流程总览</h2>
+<h2 id="全流程总览">全流程总览</h2><nav class="sec-nav"><a class="sn prev" href="#目录"><span class="sn-label">← 上一节</span><span class="sn-name">目录</span></a><a class="sn next" href="#第一步怎么选大模型"><span class="sn-label">下一节 →</span><span class="sn-name">第一步：怎么选大模型</span></a></nav>
 <figure class="figure"><img alt="全流程总览" src="../../../../tutorials/assets/diagram4-flow.png" loading="lazy"/><figcaption>全流程总览</figcaption></figure>
 <p>每一步都有明确的<strong>验证点</strong>：验证通过再进入下一步，出问题时能快速定位是哪一层坏了。</p>
 <p>最终你要搭出来的架构：</p>
@@ -69,7 +148,7 @@ li{margin:.3em 0;}
 <p>一句话理解分工：</p>
 <ul class="lvl"><li><strong>vLLM</strong>：把模型权重变成一个高并发的 HTTP 服务（OpenAI 兼容协议）；</li><li><strong>Spring Boot</strong>：企业业务的门面——鉴权、限流、审计、编排，然后才去调 vLLM；</li><li><strong>GPU</strong>：只属于 vLLM，不让业务直接碰。</li></ul>
 <hr/>
-<h2 id="第一步怎么选大模型">第一步：怎么选大模型</h2>
+<h2 id="第一步怎么选大模型">第一步：怎么选大模型</h2><nav class="sec-nav"><a class="sn prev" href="#全流程总览"><span class="sn-label">← 上一节</span><span class="sn-name">全流程总览</span></a><a class="sn next" href="#第二步模型在哪下载"><span class="sn-label">下一节 →</span><span class="sn-name">第二步：模型在哪下载</span></a></nav>
 <p>选型只看三个问题：<strong>你的场景是什么？你能装多大的模型？你有多少预算？</strong></p>
 <figure class="figure"><img alt="选型决策树" src="../../../../tutorials/assets/diagram4-selection.png" loading="lazy"/><figcaption>选型决策树</figcaption></figure>
 <h3 id="qwen3-全系列202609-核实">Qwen3 全系列（2026-09 核实）</h3>
@@ -82,7 +161,7 @@ li{margin:.3em 0;}
 <p>这是选型的核心公式，动手前必须会算：</p>
 <figure class="figure"><img alt="显存计算" src="../../../../tutorials/assets/diagram4-vram.png" loading="lazy"/><figcaption>显存计算</figcaption></figure>
 <hr/>
-<h2 id="第二步模型在哪下载">第二步：模型在哪下载</h2>
+<h2 id="第二步模型在哪下载">第二步：模型在哪下载</h2><nav class="sec-nav"><a class="sn prev" href="#第一步怎么选大模型"><span class="sn-label">← 上一节</span><span class="sn-name">第一步：怎么选大模型</span></a><a class="sn next" href="#第三步选什么服务器"><span class="sn-label">下一节 →</span><span class="sn-name">第三步：选什么服务器</span></a></nav>
 <p>国内三大渠道对比（速度为本机实测）：</p>
 <figure class="figure"><img alt="下载渠道对比" src="../../../../tutorials/assets/diagram4-download.png" loading="lazy"/><figcaption>下载渠道对比</figcaption></figure>
 <p><strong>国内首选 ModelScope（魔搭）</strong>：Qwen 官方组织直接发布、无需账号、无需科学上网。本机实测下载 Qwen3-0.6B：</p>
@@ -93,7 +172,7 @@ li{margin:.3em 0;}
 modelscope download --model Qwen/Qwen3-8B --local_dir /data/models/Qwen3-8B</code></pre>
 <blockquote><p>小模型（Qwen3-0.6B）在 ModelScope 的模型页：</p><p>!<a href="../../../../tutorials/assets/site-modelscope-qwen3-06b.png">ModelScope Qwen3-0.6B</a></p></blockquote>
 <hr/>
-<h2 id="第三步选什么服务器">第三步：选什么服务器</h2>
+<h2 id="第三步选什么服务器">第三步：选什么服务器</h2><nav class="sec-nav"><a class="sn prev" href="#第二步模型在哪下载"><span class="sn-label">← 上一节</span><span class="sn-name">第二步：模型在哪下载</span></a><a class="sn next" href="#第四步要花多少钱"><span class="sn-label">下一节 →</span><span class="sn-name">第四步：要花多少钱</span></a></nav>
 <p>两条路线，按目的选：</p>
 <figure class="figure"><img alt="服务器选型" src="../../../../tutorials/assets/diagram4-server.png" loading="lazy"/><figcaption>服务器选型</figcaption></figure>
 <p>AutoDL 官网价格实拍（2026-09-22，时租价一目了然）：</p>
@@ -103,11 +182,11 @@ modelscope download --model Qwen/Qwen3-8B --local_dir /data/models/Qwen3-8B</cod
 <table><thead><tr><th></th><th>AutoDL</th><th>阿里云/腾讯云 GPU 虚机</th></tr></thead><tbody><tr><td>形态</td><td><strong>容器</strong>实例</td><td>完整 Ubuntu 虚拟机</td></tr><tr><td>NVIDIA 驱动</td><td>平台预装，开机即用</td><td>自己装（或用预装镜像）</td></tr><tr><td>ufw/内核</td><td>不可改（容器限制）</td><td>完整 root，企业安全规范全套可做</td></tr><tr><td>数据盘</td><td><code>/root/autodl-tmp</code>（实例释放前先备份）</td><td>云盘，可做快照</td></tr><tr><td>计费</td><td>按需/包月，关机不收 GPU 费</td><td>按量/包月/抢占式</td></tr></tbody></table>
 <blockquote><p><strong>本教程主线按标准 Ubuntu 虚机写</strong>（企业生产形态）；用 AutoDL 练手时，跳过驱动安装，其余步骤完全一致。</p></blockquote>
 <hr/>
-<h2 id="第四步要花多少钱">第四步：要花多少钱</h2>
+<h2 id="第四步要花多少钱">第四步：要花多少钱</h2><nav class="sec-nav"><a class="sn prev" href="#第三步选什么服务器"><span class="sn-label">← 上一节</span><span class="sn-name">第三步：选什么服务器</span></a><a class="sn next" href="#第五步ubuntu-初始化"><span class="sn-label">下一节 →</span><span class="sn-name">第五步：Ubuntu 初始化</span></a></nav>
 <figure class="figure"><img alt="成本估算" src="../../../../tutorials/assets/diagram4-cost.png" loading="lazy"/><figcaption>成本估算</figcaption></figure>
 <p>以「学习练手」为例：AutoDL 4090 按需 ¥1.88/时，每天玩 3 小时，一个月 <strong>不到 200 元</strong>——比一次火锅便宜。生产常驻则是包月逻辑，8B 模型业务 ¥2,000~3,000/月起。</p>
 <hr/>
-<h2 id="第五步ubuntu-初始化">第五步：Ubuntu 初始化</h2>
+<h2 id="第五步ubuntu-初始化">第五步：Ubuntu 初始化</h2><nav class="sec-nav"><a class="sn prev" href="#第四步要花多少钱"><span class="sn-label">← 上一节</span><span class="sn-name">第四步：要花多少钱</span></a><a class="sn next" href="#第六步docker-nvidia-环境"><span class="sn-label">下一节 →</span><span class="sn-name">第六步：Docker + NVIDIA 环境</span></a></nav>
 <p>租到服务器后，你会拿到一个 <strong>IP + 端口 + 密码</strong>（AutoDL 是 <code>ssh root@connect.xxx -p 端口</code>；云厂商一般是固定 IP + 密钥对）。首次登录：</p>
 <figure class="figure"><img alt="SSH 登录" src="../../../../tutorials/assets/term4-ssh.png" loading="lazy"/><figcaption>SSH 登录</figcaption></figure>
 <p>标准 Ubuntu 虚机做四件事（AutoDL 容器可跳过 ufw/新建用户）：</p>
@@ -125,7 +204,7 @@ adduser deploy &amp;&amp; usermod -aG sudo deploy
 ufw allow OpenSSH &amp;&amp; ufw --force enable</code></pre>
 <p><strong>验证点</strong>：<code>nvidia-smi</code> 能看到 GPU 型号和驱动版本（AutoDL 开箱即有；自装驱动的虚机用 <code>apt install nvidia-driver-550</code> 或厂商预装镜像）。</p>
 <hr/>
-<h2 id="第六步docker-nvidia-环境">第六步：Docker + NVIDIA 环境</h2>
+<h2 id="第六步docker-nvidia-环境">第六步：Docker + NVIDIA 环境</h2><nav class="sec-nav"><a class="sn prev" href="#第五步ubuntu-初始化"><span class="sn-label">← 上一节</span><span class="sn-name">第五步：Ubuntu 初始化</span></a><a class="sn next" href="#第七步vllm-部署-qwen"><span class="sn-label">下一节 →</span><span class="sn-name">第七步：vLLM 部署 Qwen</span></a></nav>
 <p>为什么用 Docker 部署 vLLM 而不是 pip 裸装？<strong>版本地狱</strong>：CUDA、PyTorch、vLLM 三者版本强耦合，容器镜像里官方已经配好，一条命令拉起来，升级/回滚就是换个 tag。</p>
 <pre><code># 1. 安装 Docker
 curl -fsSL https://get.docker.com | sh
@@ -148,7 +227,7 @@ docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi</code>
 <figure class="figure"><img alt="Docker + NVIDIA 环境" src="../../../../tutorials/assets/term4-docker.png" loading="lazy"/><figcaption>Docker + NVIDIA 环境</figcaption></figure>
 <p><strong>验证点</strong>：第 4 步的容器里打印出 GPU 表格 = 宿主机 → 容器的 GPU 通路打通。</p>
 <hr/>
-<h2 id="第七步vllm-部署-qwen">第七步：vLLM 部署 Qwen</h2>
+<h2 id="第七步vllm-部署-qwen">第七步：vLLM 部署 Qwen</h2><nav class="sec-nav"><a class="sn prev" href="#第六步docker-nvidia-环境"><span class="sn-label">← 上一节</span><span class="sn-name">第六步：Docker + NVIDIA 环境</span></a><a class="sn next" href="#第八步spring-boot-调用"><span class="sn-label">下一节 →</span><span class="sn-name">第八步：Spring Boot 调用</span></a></nav>
 <p>vLLM 是当前生产环境事实标准的推理引擎（官方文档实拍，v0.30.0，92.4k stars）：</p>
 <figure class="figure"><img alt="vLLM 官方文档" src="../../../../tutorials/assets/site-vllm-docs.png" loading="lazy"/><figcaption>vLLM 官方文档</figcaption></figure>
 <p>一条命令上线（镜像 tag 固定到版本号，禁止用 latest——这是企业级习惯）：</p>
@@ -174,7 +253,7 @@ docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi</code>
   -d &#x27;{&quot;model&quot;: &quot;Qwen3-8B&quot;, &quot;messages&quot;: [{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;一句话介绍你自己&quot;}]}&#x27;</code></pre>
 <p class="nav-footer"><strong>验证点</strong>：返回 <code>&quot;choices&quot;:[{&quot;message&quot;:{...}}]</code> 结构 = 推理服务上线成功。</p>
 <hr/>
-<h2 id="第八步spring-boot-调用">第八步：Spring Boot 调用</h2>
+<h2 id="第八步spring-boot-调用">第八步：Spring Boot 调用</h2><nav class="sec-nav"><a class="sn prev" href="#第七步vllm-部署-qwen"><span class="sn-label">← 上一节</span><span class="sn-name">第七步：vLLM 部署 Qwen</span></a><a class="sn next" href="#企业级上线加固"><span class="sn-label">下一节 →</span><span class="sn-name">企业级上线加固</span></a></nav>
 <h3 id="81-协议统一这是整个教程最重要的一张图">8.1 协议统一：这是整个教程最重要的一张图</h3>
 <p>vLLM 的 <code>/v1/chat/completions</code> 与 DeepSeek、通义、OpenAI 的协议<strong>完全一致</strong>。所以业务代码里只需要一个「OpenAI 兼容客户端」，换供应商 = 改一行配置：</p>
 <figure class="figure"><img alt="Spring Boot 集成链路" src="../../../../tutorials/assets/diagram4-spring.png" loading="lazy"/><figcaption>Spring Boot 集成链路</figcaption></figure>
@@ -257,11 +336,11 @@ public class ChatController {
 <figure class="figure"><img alt="SSE 流式真实输出" src="../../../../tutorials/assets/term4-stream.png" loading="lazy"/><figcaption>SSE 流式真实输出</figcaption></figure>
 <blockquote><p><strong>切到自部署 vLLM</strong>：<code>export LLM_BASE_URL=http://&lt;你的服务器IP&gt;:8000/v1</code>、<code>export LLM_MODEL=Qwen3-8B</code>，重启 Spring Boot，代码零改动。</p></blockquote>
 <hr/>
-<h2 id="企业级上线加固">企业级上线加固</h2>
+<h2 id="企业级上线加固">企业级上线加固</h2><nav class="sec-nav"><a class="sn prev" href="#第八步spring-boot-调用"><span class="sn-label">← 上一节</span><span class="sn-name">第八步：Spring Boot 调用</span></a><a class="sn next" href="#进阶微调后的模型怎么上线"><span class="sn-label">下一节 →</span><span class="sn-name">进阶：微调后的模型怎么上线</span></a></nav>
 <p>Demo 和生产之间差的就是这一节：</p>
 <table><thead><tr><th>维度</th><th>做法</th></tr></thead><tbody><tr><td>网络隔离</td><td>vLLM 的 8000 端口<strong>只对内网开放</strong>（安全组限制来源 IP），公网只暴露 Spring Boot</td></tr><tr><td>鉴权限流</td><td>网关层 API Key 校验 + 每用户 QPS / Token 限额（Redis 计数）</td></tr><tr><td>日志审计</td><td>请求、回答、耗时、Token 用量全量落库，敏感词过滤前置</td></tr><tr><td>健康检查</td><td>vLLM 提供 <code>/health</code>，接 Docker healthcheck + K8s 探活</td></tr><tr><td>监控告警</td><td>GPU 利用率 / 显存 / 并发数 → Prometheus + Grafana</td></tr><tr><td>压测验收</td><td><code>vllm bench serve</code> 实测并发吞吐与首字延迟，达标再放量</td></tr><tr><td>版本回滚</td><td>模型目录带版本号（<code>/data/models/Qwen3-8B-baseline</code>），镜像 tag 固定</td></tr><tr><td>数据备份</td><td>模型盘定期快照；AutoDL 实例释放前务必先备份 <code>/root/autodl-tmp</code></td></tr></tbody></table>
 <hr/>
-<h2 id="进阶微调后的模型怎么上线">进阶：微调后的模型怎么上线</h2>
+<h2 id="进阶微调后的模型怎么上线">进阶：微调后的模型怎么上线</h2><nav class="sec-nav"><a class="sn prev" href="#企业级上线加固"><span class="sn-label">← 上一节</span><span class="sn-name">企业级上线加固</span></a><a class="sn next" href="#常见问题"><span class="sn-label">下一节 →</span><span class="sn-name">常见问题</span></a></nav>
 <p>部署和微调是同一条流水线的两段：</p>
 <pre><code>LLaMA-Factory 训练出 LoRA Adapter（见教程 03）
         ↓  merge-and-unload 合并回主干权重
@@ -272,17 +351,60 @@ vLLM 换个 --model 路径重启
 业务无感知——API 协议一模一样，只是回答变聪明了</code></pre>
 <p>微调实战详见本系列教程 03《第一次微调实战 Day1》。<strong>Day1 的环境（Colab T4 + LLaMA-Factory）和企业部署共用同一套知识：模型目录结构、显存账、推理协议。</strong></p>
 <hr/>
-<h2 id="常见问题">常见问题</h2>
+<h2 id="常见问题">常见问题</h2><nav class="sec-nav"><a class="sn prev" href="#进阶微调后的模型怎么上线"><span class="sn-label">← 上一节</span><span class="sn-name">进阶：微调后的模型怎么上线</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <p><strong>Q：4090 能跑 14B/32B 吗？</strong> 14B FP16 要 28GB+，4090 装不下；用 AWQ INT4 量化（约 9~10GB）可以。32B 同理 AWQ 后约 18~20GB，勉强能上但并发极低——32B 建议直接租 A800。</p>
 <p><strong>Q：vLLM 启动就 OOM？</strong> 三连招：<code>--max-model-len</code> 降到 4096 → <code>--gpu-memory-utilization</code> 降到 0.85 → 换量化版模型。还不行就是卡太小，换卡。</p>
 <p><strong>Q：AutoDL 实例快到期，模型怎么办？</strong> 模型就是一堆文件。<code>scp</code> / rsync 到新实例，或者先打tar传对象存储。<strong>实例释放 = 数据盘清零</strong>，重要模型必须留异地副本。</p>
 <p><strong>Q：Spring Boot 报 401 / 连不上 vLLM？</strong> 按顺序查：① 服务器安全组/防火墙是否只对内网开了 8000；② <code>base-url</code> 是否带 <code>/v1</code>；③ <code>model</code> 名是否和 <code>--served-model-name</code> 一致；④ 密钥环境变量是否真的注入（<code>echo ${LLM_API_KEY:+已设置}</code>）。</p>
 <p><strong>Q：并发上不去？</strong> 先 <code>vllm bench serve</code> 拿基线数据，再检查：是否限制了 <code>--max-model-len</code> 太小、KV cache 是否被长对话占满、是否单卡硬扛了超出其算力的模型。并发是 vLLM Continuous Batching 的强项，但输入输出长度分布对吞吐影响巨大。</p>
 <hr/>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#常见问题"><span class="sn-label">← 上一节</span><span class="sn-name">常见问题</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>完成本文部署后，回到教程 03 做微调，再把合并后的模型替换上线——这就是企业里「模型迭代 → 灰度上线」的最小闭环。</li><li>下一篇预告：《Day2：LLaMA-Factory 训练 Qwen → 查看 Loss → 保存 LoRA → 微调前后对比》。</li></ul>
 <hr/>
 <p><em>本文为 AI Engineer Journey 图文教程系列第 04 篇 · 价格与版本数据核实于 2026-09-22 · 代码与终端输出除标注「预期输出参考」外均为实机运行结果</em></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

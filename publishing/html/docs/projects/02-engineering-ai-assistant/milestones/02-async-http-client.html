@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目问题" class="lvl2">1. 项目问题</a><a href="#httpstatuserror" class="lvl3">HTTPStatusError</a><a href="#connecterror" class="lvl3">ConnectError</a><a href="#timeoutexception" class="lvl3">TimeoutException</a><a href="#串行" class="lvl3">串行</a><a href="#并发等待" class="lvl3">并发等待</a><a href="#task-1" class="lvl2">Task 1</a><a href="#task-2" class="lvl2">Task 2</a><a href="#task-3" class="lvl2">Task 3</a><a href="#task-4" class="lvl2">Task 4</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#q8" class="lvl3">Q8</a><a href="#q9" class="lvl3">Q9</a><a href="#问你在-python-项目中如何封装-llm-api" class="lvl3">问：你在 Python 项目中如何封装 LLM API？</a><a href="#问为什么复用-asyncclient" class="lvl3">问：为什么复用 AsyncClient？</a><a href="#问llm-api-为什么需要-timeout" class="lvl3">问：LLM API 为什么需要 Timeout？</a><a href="#坑-1忘记-await" class="lvl3">坑 1：忘记 await</a><a href="#坑-2忘记关闭-client" class="lvl3">坑 2：忘记关闭 Client</a><a href="#坑-3把所有异常都捕获" class="lvl3">坑 3：把所有异常都捕获</a><a href="#坑-4无限重试" class="lvl3">坑 4：无限重试</a><a href="#坑-5把-http-层和业务层混在一起" class="lvl3">坑 5：把 HTTP 层和业务层混在一起</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-02async-http-client异步-http-客户端">Project 02 — Chapter 02：Async HTTP Client【异步 HTTP 客户端】</h1>
 <blockquote><p><strong>本章 ↔ <code>src/</code> 对照</strong>（校对时补：本章概念在真实代码里的落点） - <code>src/assistant/client.py: DeepSeekClient</code> — 用 <code>httpx.AsyncClient</code> 当<strong>长连接池</strong>（<code>__init__</code> 创建、<code>aclose()</code> 释放），不是每次请求新建一个 - 同文件 <code>_request()</code> — 对 <code>429</code> / 超时做<strong>指数退避重试</strong>；分层 timeout（连接 / 读取分开设） - 同文件 <code>FakeClient</code> — 与 <code>DeepSeekClient</code> 同接口（<code>BaseLLMClient</code> 子类）的离线替身，测试用它不联网不花钱 - <code>src/assistant/errors.py</code> — HTTP 状态码被翻译成业务异常（<code>LLMRateLimitError</code> / <code>LLMAuthError</code> / <code>LLMResponseError</code>），上层不裸接 httpx 异常</p></blockquote>
-<h2 id="1-项目问题">1. 项目问题</h2>
+<h2 id="1-项目问题">1. 项目问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#task-1"><span class="sn-label">下一节 →</span><span class="sn-name">Task 1</span></a></nav>
 <p>上一章我们已经知道：</p>
 <pre><code>async / await
 ↓
@@ -649,7 +728,7 @@ Concurrent Requests</code></pre>
 <p>上一章解决的是“程序如何异步地等待 I/O”；这一章解决的是“如何把这种异步能力真正用于 HTTP 通信”。<code>AsyncClient</code> 成为应用与 LLM API 之间的网络层，再向下涉及连接池、超时和异常处理；向上则暴露一个更简单的 <code>chat()</code> 接口给 AI 业务层。这样后续 RAG、Agent、MCP 等项目都可以复用这个客户端能力。</p>
 <hr/>
 <h1 id="24-实战任务">24. 实战任务</h1>
-<h2 id="task-1">Task 1</h2>
+<h2 id="task-1">Task 1</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目问题</span></a><a class="sn next" href="#task-2"><span class="sn-label">下一节 →</span><span class="sn-name">Task 2</span></a></nav>
 <p>创建：</p>
 <pre><code>LLMClient</code></pre>
 <p>要求：</p>
@@ -661,7 +740,7 @@ Concurrent Requests</code></pre>
 [ ] response.json()
 [ ] close()</code></pre>
 <hr/>
-<h2 id="task-2">Task 2</h2>
+<h2 id="task-2">Task 2</h2><nav class="sec-nav"><a class="sn prev" href="#task-1"><span class="sn-label">← 上一节</span><span class="sn-name">Task 1</span></a><a class="sn next" href="#task-3"><span class="sn-label">下一节 →</span><span class="sn-name">Task 3</span></a></nav>
 <p>将原来的：</p>
 <pre><code>generate_response(messages)</code></pre>
 <p>改成：</p>
@@ -674,7 +753,7 @@ assistant
 LLMClient</code></pre>
 <p>三层关系。</p>
 <hr/>
-<h2 id="task-3">Task 3</h2>
+<h2 id="task-3">Task 3</h2><nav class="sec-nav"><a class="sn prev" href="#task-2"><span class="sn-label">← 上一节</span><span class="sn-name">Task 2</span></a><a class="sn next" href="#task-4"><span class="sn-label">下一节 →</span><span class="sn-name">Task 4</span></a></nav>
 <p>实现三个并发请求：</p>
 <pre><code>Q1：什么是 JVM？
 Q2：什么是 RAG？
@@ -682,7 +761,7 @@ Q3：什么是 Transformer？</code></pre>
 <p>使用：</p>
 <pre><code>asyncio.gather()</code></pre>
 <hr/>
-<h2 id="task-4">Task 4</h2>
+<h2 id="task-4">Task 4</h2><nav class="sec-nav"><a class="sn prev" href="#task-3"><span class="sn-label">← 上一节</span><span class="sn-name">Task 3</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>观察：</p>
 <pre><code>串行执行时间
 vs
@@ -829,5 +908,48 @@ Reusable Async LLM Client</code></pre>
 <figure class="figure"><img alt="流式输出实测" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-stream.png" loading="lazy"/><figcaption>流式输出实测</figcaption></figure>
 <figure class="figure"><img alt="真实运行：本机起服务用 httpx.AsyncClient 实测——串行 0.948s vs 并发 0.315s（3.01x）、AsyncClient 的 is_closed 生命周期、TimeoutException 与 ConnectError 两类错误分开接" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-async-http.png" loading="lazy"/><figcaption>真实运行：本机起服务用 httpx.AsyncClient 实测——串行 0.948s vs 并发 0.315s（3.01x）、AsyncClient 的 is_closed 生命周期、TimeoutException 与 ConnectError 两类错误分开接</figcaption></figure>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

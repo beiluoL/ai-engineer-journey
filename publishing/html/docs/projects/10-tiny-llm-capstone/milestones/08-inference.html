@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why推理层最容易自欺的三个地方" class="lvl2">1. Why：推理层最容易自欺的三个地方</a><a href="#2-design解码循环只有一个实现" class="lvl2">2. Design：解码循环只有一个实现</a><a href="#3-realrun-evidence来自-demosoutdemo08inferenceterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_08_inference_terminal.txt）</a><a href="#31-推理配置" class="lvl3">3.1 推理配置</a><a href="#32-单变量对照每行只改一个旋钮" class="lvl3">3.2 单变量对照：每行只改一个旋钮</a><a href="#33-topk-topp-到底剪掉了什么" class="lvl3">3.3 top_k / top_p 到底剪掉了什么</a><a href="#34-kv-cache-与全量重算必须等价" class="lvl3">3.4 KV Cache 与全量重算必须等价</a><a href="#35-同-seed-逐位复现" class="lvl3">3.5 同 seed 逐位复现</a><a href="#36-kv-cache-的真实加速比" class="lvl3">3.6 KV Cache 的真实加速比</a><a href="#37-首字延迟ttft与总耗时" class="lvl3">3.7 首字延迟（TTFT）与总耗时</a><a href="#38-流式输出逐个-token-交付" class="lvl3">3.8 流式输出：逐个 token 交付</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-08-inference采样策略-kv-cache-等价性-真流式">Milestone 08 — Inference：采样策略 / KV Cache 等价性 / 真·流式</h1>
 <p>M07 判决了这个模型&quot;会拼词、不会答题&quot;。到了推理层，问题变成另一个：<strong>在给定这份权重的前提下，怎么把它的输出变得可控、可回放、可测量</strong>。</p>
 <p>这一章要证明三件事，每件都对应一个容易造假的地方：</p>
 <ul class="lvl"><li><strong>策略可控</strong>：四个旋钮（temperature / top_k / top_p / repetition_penalty）各自到底改了什么；</li><li><strong>结果可回放</strong>：同一 seed 必须逐字相同，否则线上出了问题无法复现；</li><li><strong>KV Cache 的加速是&quot;真&quot;加速</strong>：缓存的输出必须和全量重算<strong>逐位等价</strong>，否则&quot;快&quot;是用&quot;错&quot;换来的。</li></ul>
 <hr/>
-<h2 id="1-why推理层最容易自欺的三个地方">1. Why：推理层最容易自欺的三个地方</h2>
+<h2 id="1-why推理层最容易自欺的三个地方">1. Why：推理层最容易自欺的三个地方</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design解码循环只有一个实现"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：解码循环只有一个实现</span></a></nav>
 <ul class="lvl"><li><strong>&quot;KV Cache 加速了&quot;——但你怎么知道算的还是同一个东西？</strong> 缓存写错了（比如忘了更新第 <code>t</code> 步的 key/value），模型照样能出 token，只是它在用一个&quot;残缺的历史&quot;预测。<strong>加速比没意义，除非先证明等价性。</strong></li><li><strong>&quot;流式输出&quot;——但 TTFT 等于总耗时。</strong> 如果实现是&quot;先把整段算完、再逐 token <code>yield</code>&quot;，用户看到的是&quot;卡了 4.7 ms，然后 12 个字瞬间刷出来&quot;。<strong>这不是流式，是延迟交付。</strong> 判据很干净：<strong>TTFT 必须显著小于总耗时</strong>。</li><li><strong>&quot;每次输出都不一样&quot;——那是好事还是坏事？</strong> 对采样是正常的，但<strong>必须有一把&quot;锁&quot;能复现任意一次输出</strong>（seed）。没有可回放性，线上任何一次&quot;答得奇怪&quot;都无法复查。</li></ul>
-<h2 id="2-design解码循环只有一个实现">2. Design：解码循环只有一个实现</h2>
+<h2 id="2-design解码循环只有一个实现">2. Design：解码循环只有一个实现</h2><nav class="sec-nav"><a class="sn prev" href="#1-why推理层最容易自欺的三个地方"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：推理层最容易自欺的三个地方</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo08inferenceterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_08_inference_terminal.txt）</span></a></nav>
 <p>采样的四步流水线（在 logits 上依次作用）：</p>
 <pre><code>logits (V,)
   ├─ repetition_penalty    # 已出现过的 token：正 logit 缩小、负 logit 放大
@@ -88,7 +167,7 @@ def stream(self, prompt, **kw):         # ⚠ 必须直接消费生成器
         yield decode([token_id]), decode(buf)   # 逐 chunk 交付</code></pre>
 <p><strong>不能写成 <code>for t in self.generate_ids(...)</code></strong> —— 那样 <code>generate_ids</code> 会先把 24 个 token 全算完才返回，<code>stream</code> 再遍历它，TTFT 就等于总耗时（实测 4.25 ms vs 5.60 ms，等于没有流式）。改成直接消费生成器后，TTFT 降到 <strong>0.20 ms</strong>。</p>
 <figure class="figure"><img alt="M08 Inference：采样旋钮 + KV Cache 等价性 + 真·流式" src="../../../../../../projects/10-tiny-llm-capstone/assets/inference.svg" loading="lazy"/><figcaption>M08 Inference：采样旋钮 + KV Cache 等价性 + 真·流式</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo08inferenceterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_08_inference_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo08inferenceterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_08_inference_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design解码循环只有一个实现"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：解码循环只有一个实现</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M08 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-08-inference.png" loading="lazy"/><figcaption>M08 真实运行</figcaption></figure>
 <h3 id="31-推理配置">3.1 推理配置</h3>
 <pre><code>prompt                问：什么是 LoRA？答：
@@ -160,14 +239,57 @@ chunk  6  +&#x27;是&#x27;      累计=&#x27; 整数 模型的度是&#x27;
 拼起来是否等于完整输出        整数 模型的度是权重和可_否则对</code></pre>
 <p>每个 chunk 给两个东西：<strong>新增的那个 token</strong>（<code>+&#x27;整数&#x27;</code>）和<strong>累计到现在的全文</strong>（<code>累计=&#x27; 整数&#x27;</code>）。<strong>这两种交付方式服务不同场景</strong>：前者用于&quot;打字机效果&quot;，后者用于&quot;整段重渲染&quot;。</p>
 <p>12 个 chunk 拼起来 == 完整输出（<code>True</code>）——<strong>这是流式实现正确的最后一道验证</strong>：如果逐 chunk 拼出来的东西和一次性算出来的不一样，说明生成器状态有 bug。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo08inferenceterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_08_inference_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>&quot;假流式&quot;的现象是 TTFT == 总耗时。</strong> 修之前实测 4.25 ms vs 5.60 ms（TTFT 占总耗时 76%），改成真流式后 <strong>0.20 ms vs 4.73 ms（4.2%）</strong>。<strong>判据：TTFT 必须显著小于总耗时</strong>，其它都是话术。</li><li><strong>KV Cache 的加速比只有 1.34×，因为 prefill 和 FFN 省不掉。</strong> 缓存只优化了 attention 的一部分。<strong>别拿&quot;理论加速比&quot;上报告，要报&quot;这个 prompt 长度下的实测中位数&quot;。</strong></li><li><strong>低温在欠训练模型上会退化成复读。</strong> T=0 重复率 0.887、T=0.3 是 0.714。<strong>&quot;降低温度提高质量&quot;这个直觉，在一个本来就没学会的模型上是反的。</strong></li><li><strong>top_k 会让多样性下降，top_p 不会。</strong> top_k=5 把 distinct-1 从 0.941 砍到 0.500——<strong>砍掉的正是带来多样性的长尾</strong>。而 top_p 保留 0.941。这是&quot;固定阈值 vs 自适应阈值&quot;的真实差异。</li><li><strong>KV Cache 等价性误差不是 0，是 3.442e-15。</strong> 因为浮点加法不满足结合律，两条路径的乘法顺序不同。<strong>别追求&quot;误差 = 0&quot;，要判断&quot;误差是否在机器精度量级&quot;</strong>——3.4e-15 相对 fp64 的 2.2e-16 只有约 15 倍，是正常的舍入累积。</li><li><strong>可回放需要两个断言，不是一个。</strong> <code>seed=7 == seed=7</code>（可复现）<strong>和</strong> <code>seed=7 != seed=8</code>（seed 生效）必须同时成立。只验前者，一个&quot;永远忽略 seed&quot;的实现也能通过。</li><li><strong>repetition_penalty 在 softmax 之前、temperature 在 top_k/top_p 之前。</strong> 顺序错了不会报错，只是行为和你以为的不一样（比如先 temperature 再 top_k，&quot;保留 k 个&quot;的集合会随温度变）。</li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>采样旋钮</strong>：temperature 主导（T=0/0.3/1.2 → distinct-1 0.110/0.215/0.925）；top_k=5 会<strong>降低</strong>多样性（0.941 → 0.500）；top_p=0.9 保留 0.941；rep=1.5 把重复率压到 0.000。</li><li><strong>top_k / top_p 行为</strong>：top_k 保留数<strong>严格等于 k</strong>（5）；top_p 保留 <strong>7</strong> 个（自适应），累计概率 1.0000 ≥ 0.9；两者都保住 top-1。</li><li><strong>KV Cache 等价性</strong>：最后一步 logits 最大绝对误差 <strong>3.442e-15</strong>（fp64 舍入量级）、开关缓存输出一致 <strong>True</strong>。</li><li><strong>加速比 1.34×</strong>（4.77 ms → 3.55 ms，中位数），因为 prefill 与 FFN 不在缓存范围内。</li><li><strong>真·流式</strong>：<strong>TTFT 0.20 ms / 总耗时 4.73 ms</strong>（相差 23.65 倍）；12 个 chunk 拼接 == 完整输出。</li><li><strong>可回放</strong>：同 seed 逐字相同 <strong>True</strong>，不同 seed 不同 <strong>False</strong>。</li><li>一句话结论：<strong>推理层的三件事——策略可控、结果可回放、延迟可测量——缺任何一条都不能上线。</strong></li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/infer.py</code></td><td><code>iter_ids</code>（唯一解码循环，生成器）/ <code>generate_ids</code> / <code>stream</code>（直接消费生成器）/ <code>top_k_filter</code> / <code>top_p_filter</code> / <code>cache_consistency_error</code> / <code>benchmark</code> / <code>timed_generate</code></td></tr><tr><td>P09 <code>src/ie/kvbook.py</code></td><td>KV Cache 的账面与等价性校验逻辑</td></tr><tr><td>P09 <code>src/ie/engine.py</code></td><td><code>benchmark</code>（中位数耗时口径）</td></tr><tr><td>P06 <code>model/decoder.py</code></td><td>带缓存的前向（prefill + 单步 decode）</td></tr><tr><td><code>demos/demo_08_inference.py</code></td><td>8 节：配置 / 单变量对照 / top_k-top_p / KV 等价性 / 复现 / 加速比 / TTFT / 流式</td></tr><tr><td><code>demos/out/demo_08_inference_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/inference.svg</code></td><td>采样旋钮 + top_k/top_p + KV 等价性 + 真流式</td></tr><tr><td><code>assets/term-08-inference.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.7 → <strong>v0.8</strong>，推理层落地并被逐项验真。实测：单变量对照 temperature 0/0.3/1.2 → distinct-1 <strong>0.110/0.215/0.925</strong>、重复率 <strong>0.887/0.714/0.000</strong>；top_k=5 多样性降到 <strong>0.500</strong>（保留数严格 5）、top_p=0.9 保留 <strong>7</strong> 个（累计概率 1.0000）；KV Cache 等价性误差 <strong>3.442e-15</strong>、<strong>加速 1.34×</strong>（4.77 → 3.55 ms）；真流式 <strong>TTFT 0.20 ms / 总耗时 4.73 ms</strong>（修复前 4.25 / 5.60 ms）、12 chunk 拼接一致；同 seed 逐字相同 <strong>True</strong>、异 seed 不同 <strong>False</strong>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

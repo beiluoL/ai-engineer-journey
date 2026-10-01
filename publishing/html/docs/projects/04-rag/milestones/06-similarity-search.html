@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-三种度量方式" class="lvl3">3.1 三种度量方式</a><a href="#32-为什么行业默认余弦以及那个必会的等价式" class="lvl3">3.2 为什么行业默认余弦，以及那个必会的等价式</a><a href="#33-手写实现纯-python-版与-numpy-批量版" class="lvl3">3.3 手写实现：纯 Python 版与 NumPy 批量版</a><a href="#34-相似度-相关性" class="lvl3">3.4 相似度 ≠ 相关性</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1零向量除零" class="lvl3">坑 1：零向量除零</a><a href="#坑-2float32-精度累积误差" class="lvl3">坑 2：float32 精度累积误差</a><a href="#坑-3归一化忘掉一半点积结果飘" class="lvl3">坑 3：归一化忘掉一半，点积结果飘</a><a href="#坑-4topk-排序方向搞反" class="lvl3">坑 4：Top-K 排序方向搞反</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-04-chapter-06similarity-search相似度度量">Project 04 — Chapter 06：Similarity Search【相似度度量】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/similarity.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
-<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Chapter 05 的 <code>Retriever</code> 每一步都在调用同一个黑盒：「这两个向量有多相似」。向量库排序靠它、MMR 打分靠它、判断召回质量也靠它。但「相似」到底是什么？为什么两个 768 维的浮点数列表一相乘，就能表示「两段话语义接近」？</p>
 <p>不搞清楚这个黑盒，后面全是玄学调参：分数 0.82 算高吗？换个模型分数变成 0.35，是变差了吗？为什么同样两段文本，用点积和用余弦得到的排名不一样？</p>
 <p>先破除一个误解：</p>
@@ -69,12 +148,12 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>把「相似度」从直觉变成可手算、可手写的数学：三种度量、它们的适用场景，以及为什么全行业默认余弦相似度。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-本章要解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 本章要解决什么问题</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>一句话：<strong>向量库的 top-k 排序，从头到尾只由相似度公式决定</strong>。你选哪个公式，直接决定哪些段落被召回。</p>
 <ul class="lvl"><li>召回错了段落，生成模型再强也救不回来（检索质量 = RAG 上限，Chapter 05 讲过）；</li><li>相似度公式错了，后面 rerank（Chapter 07）精排的也是一堆错料。</li></ul>
 <p>而且这个知识点是纯数学，不依赖任何框架、任何 API——学一次，换什么向量库、什么 embedding 模型都通用。Java 开发者都有线代基础（哪怕已经还给老师了），本章只需要用到「向量、点积、夹角」三个概念，不超过大学第一节课。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-动手实现设计稿"><span class="sn-label">下一节 →</span><span class="sn-name">4. 动手实现（设计稿）</span></a></nav>
 <h3 id="31-三种度量方式">3.1 三种度量方式</h3>
 <p>设两个向量 a = (a₁, a₂, …, aₙ)，b = (b₁, b₂, …, bₙ)：</p>
 <table><thead><tr><th>度量</th><th>公式</th><th>取值范围</th><th>受向量模长影响？</th><th>适用场景</th></tr></thead><tbody><tr><td>点积 Dot Product</td><td>a·b = Σ aᵢbᵢ</td><td>(−∞, +∞)</td><td><strong>受</strong>（模长越大值越大）</td><td>向量已归一化；推荐系统（有时要利用「热门度=模长大」）</td></tr><tr><td>余弦 Cosine</td><td>a·b / (\</td><td>a\</td><td>·\</td><td>b\</td><td>)</td><td>[−1, 1]</td><td><strong>不受</strong>（只看夹角）</td><td><strong>文本语义检索（行业默认）</strong></td></tr><tr><td>欧氏距离 L2</td><td>√Σ(aᵢ−bᵢ)²</td><td>[0, +∞)</td><td>受（值越小越相似，注意方向相反）</td><td>图像特征、聚类；低维向量</td></tr></tbody></table>
@@ -139,7 +218,7 @@ print(cosine_similarity(q1, q2))   # 0.68 —— 挺高！</code></pre>
           不是&quot;能不能回答&quot;——后者需要 query 和 doc 放在一起联合判断</code></pre>
 <p>向量检索的 bi-encoder（双塔结构）天生只能算前者：query 和 doc 各自独立编码，互相看不见。要判断「这段文档对<strong>这个问题</strong>有没有用」，必须让两者碰面——这就是 Chapter 07 cross-encoder 和 rerank 存在的理由。</p>
 <hr/>
-<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-踩坑清单"><span class="sn-label">下一节 →</span><span class="sn-name">5. 踩坑清单</span></a></nav>
 <blockquote><p>以下代码将在 <code>src/rag/similarity.py</code> 落地时实现，这里先当设计稿读。要点：归一化负责到底 + 排序方向不出错。</p></blockquote>
 <pre><code>&quot;&quot;&quot;src/rag/similarity.py — 相似度计算工具：归一化 + 批量 top-k&quot;&quot;&quot;
 from __future__ import annotations
@@ -183,7 +262,7 @@ def cosine_top_k(
 <p>落地时的两个纪律：</p>
 <ul class="lvl"><li><strong>归一化的责任要明确归属</strong>：本项目约定「入库前统一归一化」（在 Chapter 04 的 <code>VectorStore.upsert</code> 里做），检索侧默认信任 <code>assume_normalized=True</code>；一旦信任，就绝不混入未归一化的向量。</li><li><strong>分数只用于排序，不用于解读</strong>：余弦分数 0.7 和 0.8 之间的差距没有绝对含义，别写 <code>if score &gt; 0.75: trust it</code> 这种魔法阈值（要阈值也应该基于自己的数据集实测校准）。</li></ul>
 <hr/>
-<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2><nav class="sec-nav"><a class="sn prev" href="#4-动手实现设计稿"><span class="sn-label">← 上一节</span><span class="sn-name">4. 动手实现（设计稿）</span></a><a class="sn next" href="#6-自检清单"><span class="sn-label">下一节 →</span><span class="sn-name">6. 自检清单</span></a></nav>
 <h3 id="坑-1零向量除零">坑 1：零向量除零</h3>
 <p><strong>现象</strong>：某条数据是空文本（chunk 切出来一段空白），embedding 返回全 0 向量，余弦计算抛 <code>ZeroDivisionError</code>，或 NumPy 静默给出 <code>nan</code>，后续排序全部乱套。</p>
 <p><strong>原因</strong>：余弦公式分母含模长，零向量模长为 0；且 NumPy 的 <code>0/0</code> 只给 warning 不抛异常，<code>nan</code> 会一路污染 <code>argsort</code> 的结果。</p>
@@ -201,11 +280,54 @@ def cosine_top_k(
 <p><strong>原因</strong>：<code>argsort</code> 默认<strong>升序</strong>。对相似度（越大越好）要取尾部或取负号取头部；对距离（越小越好）直接取头部。两者方向相反，混用必翻车。</p>
 <p><strong>正确做法</strong>：给函数命名和参数带上方向语义（本项目统一用相似度：<code>cosine_top_k</code> 内部固定 <code>argsort(-sims)</code>），距离只在调用向量库 API 时出现（有些库返回 distance，注意它的注释是「越小越好」）。</p>
 <hr/>
-<h2 id="6-自检清单">6. 自检清单</h2>
+<h2 id="6-自检清单">6. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能默写三种度量的公式，并说出各自取值范围和模长敏感性</li><li>[ ] 能推导「归一化后点积 == 余弦」这 3 步等价式</li><li>[ ] 手写 <code>cosine_similarity()</code> 能一次写对（含零向量防护）</li><li>[ ] 能解释 <code>matrix @ query</code> 一行代码替代双重循环的性能来源</li><li>[ ] 能举出「相似度高但不是答案」的例子，并说清 bi-encoder 为什么判断不了「能否回答」</li><li>[ ] 知道相似度和距离的排序方向相反，不写混</li></ul>
 <hr/>
 <p>上一章：<a href="05-retrieval.html">05-retrieval.md</a> —— 检索流水线的骨架已经搭好，本章填上了最核心的度量件。</p>
 <p>下一章：<a href="07-rerank.html">07-rerank.md</a> —— 相似度判断不了「能不能回答」，那就让 query 和文档真正见一面。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

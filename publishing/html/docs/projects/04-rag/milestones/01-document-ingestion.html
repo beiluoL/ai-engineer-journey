@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-统一的产物document-dataclass" class="lvl3">3.1 统一的产物：Document dataclass</a><a href="#32-格式适配器baseparser-四个实现" class="lvl3">3.2 格式适配器：BaseParser + 四个实现</a><a href="#33-解析器注册表与入口" class="lvl3">3.3 解析器注册表与入口</a><a href="#34-docid-为什么用内容哈希" class="lvl3">3.4 doc_id 为什么用内容哈希</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1windows-产出的-txt-用-utf8-读直接炸" class="lvl3">坑 1：Windows 产出的 txt 用 utf-8 读直接炸</a><a href="#坑-2pdf-提取出-x00后续-embedding-api-直接-400" class="lvl3">坑 2：PDF 提取出 \x00，后续 embedding API 直接 400</a><a href="#坑-3用文件名当-docid同名的两个文件互相覆盖" class="lvl3">坑 3：用文件名当 doc_id，同名的两个文件互相覆盖</a><a href="#坑-4pypdf-把双栏-pdf-拆成左右交错的乱序文本" class="lvl3">坑 4：pypdf 把双栏 PDF 拆成&amp;quot;左右交错&amp;quot;的乱序文本</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-04-chapter-01document-ingestion文档摄入">Project 04 — Chapter 01：Document Ingestion【文档摄入】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/parsers.py</code>（BaseParser + 四个格式适配器）、<code>src/rag/document.py</code>（Document）</p></blockquote>
 <hr/>
-<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>很多人以为 RAG 的第一步是「检索」，其实不是。RAG 的第一步是：<strong>把世界上乱七八糟的文档变成干净文本</strong>。</p>
 <p>你的知识库输入不会只有 <code>.txt</code>。真实场景里有 PDF、Word、Markdown、网页导出的 HTML……它们长这样：</p>
 <pre><code>你以为：  拿到文档 = 拿到一段干净的字符串
@@ -70,14 +149,14 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>设计一个格式适配器体系，把 .txt / .md / .pdf / .docx 统一解析成干净文本 + 元数据。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-本章要解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 本章要解决什么问题</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>RAG 流水线的第一环决定了整个系统的上限：</p>
 <pre><code>解析质量 → 切分质量 → 向量质量 → 检索质量 → 回答质量</code></pre>
 <p>每一环都只能继承上一环的垃圾，无法自救。所以摄入阶段要守住两条底线：</p>
 <ul class="lvl"><li><strong>不丢信息</strong>：正文、标题、页码都要留下（页码后面检索溯源要用）。</li><li><strong>不多噪音</strong>：页眉、页脚、乱码、控制字符要在源头清掉，不要留给下游。</li></ul>
 <p>同时，格式会不断增加（说不定哪天要支持 epub、HTML）。如果写成一坨 <code>if ext == &quot;.pdf&quot;: ... elif ext == &quot;.docx&quot;: ...</code>，每加一种格式就要改老代码。<strong>Java 里这叫开闭原则</strong>：对扩展开放、对修改关闭。用格式适配器（parser per format）来解决。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-动手实现设计稿"><span class="sn-label">下一节 →</span><span class="sn-name">4. 动手实现（设计稿）</span></a></nav>
 <h3 id="31-统一的产物document-dataclass">3.1 统一的产物：Document dataclass</h3>
 <p>不管什么格式，解析器的输出都是同一个结构——这是整条流水线的&quot;通用货币&quot;：</p>
 <pre><code># src/rag/document.py
@@ -201,7 +280,7 @@ def ingest(path: str | Path) -&gt; Document:
 <p><strong>Java 里这类似数据库用 <code>ON DUPLICATE KEY UPDATE</code> 依赖业务唯一键，Python 里直接让 ID 从内容派生，更省心。</strong></p>
 <hr/>
 <figure class="figure"><img alt="真实运行：6 个文件解析成 Document，doc_id 是内容哈希，md 文档还带 headings 元数据" src="../../../../../../projects/04-rag/assets/term-ingest.png" loading="lazy"/><figcaption>真实运行：6 个文件解析成 Document，doc_id 是内容哈希，md 文档还带 headings 元数据</figcaption></figure>
-<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-踩坑清单"><span class="sn-label">下一节 →</span><span class="sn-name">5. 踩坑清单</span></a></nav>
 <p>以下代码将在 <code>src/rag/</code> 落地时实现，现在当设计稿读。目标文件结构：</p>
 <pre><code>src/rag/
 ├── document.py    # Document dataclass
@@ -222,7 +301,7 @@ def ingest(path: str | Path) -&gt; Document:
 <ul class="lvl"><li><strong>依赖安装</strong>：</li></ul>
 <pre><code>pip install pypdf python-docx</code></pre>
 <hr/>
-<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2><nav class="sec-nav"><a class="sn prev" href="#4-动手实现设计稿"><span class="sn-label">← 上一节</span><span class="sn-name">4. 动手实现（设计稿）</span></a><a class="sn next" href="#6-自检清单"><span class="sn-label">下一节 →</span><span class="sn-name">6. 自检清单</span></a></nav>
 <h3 id="坑-1windows-产出的-txt-用-utf8-读直接炸">坑 1：Windows 产出的 txt 用 utf-8 读直接炸</h3>
 <ul class="lvl"><li><strong>现象</strong>：<code>UnicodeDecodeError: &#x27;gbk&#x27; codec can&#x27;t decode</code>（或反过来 utf-8 报错），文件明明是正常中文文档。</li><li><strong>原因</strong>：Windows 记事本/某些老系统默认编码是 gbk，macOS/Linux 默认 utf-8。文本文件<strong>没有自我声明的编码</strong>，扩展名 .txt 不代表 utf-8。</li><li><strong>正确做法</strong>：永远显式传 <code>encoding=</code>，并做三层回退（utf-8 → gbk → latin-1）或用 <code>chardet</code> 探测。<strong>Java 里 <code>new FileReader(file)</code> 也踩同一个坑（依赖平台默认编码），所以 Java 17 引入了 <code>Files.readString(path, Charset)</code> 强制显式传参——Python 同理，<code>open()</code> 不传 encoding 是欠账。</strong></li></ul>
 <h3 id="坑-2pdf-提取出-x00后续-embedding-api-直接-400">坑 2：PDF 提取出 <code>\x00</code>，后续 embedding API 直接 400</h3>
@@ -232,11 +311,54 @@ def ingest(path: str | Path) -&gt; Document:
 <h3 id="坑-4pypdf-把双栏-pdf-拆成左右交错的乱序文本">坑 4：pypdf 把双栏 PDF 拆成&quot;左右交错&quot;的乱序文本</h3>
 <ul class="lvl"><li><strong>现象</strong>：解析出的文字内容是对的，但读起来像这样：第一行是左栏前半句，第二行是右栏前半句……检索命中后给模型看，模型的理解完全错乱。</li><li><strong>原因</strong>：<code>extract_text()</code> 按几何坐标的行序输出，双栏排版在同一行高度上有左右两段文字。</li><li><strong>正确做法</strong>：先用 <code>page.extract_text(extraction_mode=&quot;layout&quot;)</code> 尝试保布局模式；仍然乱序就换 <code>pdfplumber</code> 按 x 坐标分栏；实在不行只对纯文本型文档做 RAG，扫描件交给 OCR 流水线（超出本章范围，先知道有这条路）。</li></ul>
 <hr/>
-<h2 id="6-自检清单">6. 自检清单</h2>
+<h2 id="6-自检清单">6. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能说清 RAG 第一步为什么是摄入而不是检索（垃圾进 = 垃圾出）</li><li>[ ] 能写出 <code>BaseParser</code> ABC 并解释它对应 Java 的哪种模式（策略 / SPI）</li><li>[ ] 四种格式各说出一个解析层面的坑（md 代码围栏 / pdf 双栏 / docx 表格 / txt 编码）</li><li>[ ] <code>Document</code> 的 metadata 里存了什么，检索溯源时分别用在哪里</li><li>[ ] 能解释 doc_id 用内容哈希而不是文件名/UUID 的理由</li><li>[ ] 清洗逻辑（控制字符、编码回退）放在统一出口而不是各 parser 内</li></ul>
 <hr/>
 <p>回到项目主页：<a href="../README.html">../README.md</a></p>
 <p>下一章：<a href="02-chunking.html">02-chunking.md</a> —— 拿到了整篇干净文本，为什么还要把它切碎？</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

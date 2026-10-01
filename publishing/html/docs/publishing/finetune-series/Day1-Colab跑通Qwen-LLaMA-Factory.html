@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-注册-google-账号" class="lvl2">1. 注册 Google 账号</a><a href="#检查-gpu" class="lvl2">检查 GPU</a><a href="#如果显示" class="lvl2">如果显示：</a><a href="#什么是-llamafactory" class="lvl2">什么是 LLaMA-Factory？</a><a href="#不要训练知识" class="lvl2">不要训练知识</a><a href="#sft数据" class="lvl2">SFT数据</a><a href="#环境" class="lvl2">环境</a><a href="#工具" class="lvl2">工具</a><a href="#模型" class="lvl2">模型</a><a href="#数据" class="lvl2">数据</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="大模型微调实战-day1colab-跑通-qwen-llamafactory">大模型微调实战 Day1：Colab 跑通 Qwen + LLaMA-Factory</h1>
 <h1 id="第一次微调实战-day1">第一次微调实战 Day1</h1>
@@ -79,7 +158,7 @@ Java面试训练数据集
 <p>约3小时。</p>
 <hr/>
 <h1 id="第一部分准备-google-colab">第一部分：准备 Google Colab</h1>
-<h2 id="1-注册-google-账号">1. 注册 Google 账号</h2>
+<h2 id="1-注册-google-账号">1. 注册 Google 账号</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#检查-gpu"><span class="sn-label">下一节 →</span><span class="sn-name">检查 GPU</span></a></nav>
 <p>打开：</p>
 <p><a href="https://colab.research.google.com/" target="_blank" rel="noopener">https://colab.research.google.com/</a></p>
 <p>登录 Google 账号。</p>
@@ -109,7 +188,7 @@ GPU</code></pre>
 <pre><code>GPU</code></pre>
 <p>保存。</p>
 <hr/>
-<h2 id="检查-gpu">检查 GPU</h2>
+<h2 id="检查-gpu">检查 GPU</h2><nav class="sec-nav"><a class="sn prev" href="#1-注册-google-账号"><span class="sn-label">← 上一节</span><span class="sn-name">1. 注册 Google 账号</span></a><a class="sn next" href="#如果显示"><span class="sn-label">下一节 →</span><span class="sn-name">如果显示：</span></a></nav>
 <p>第一个代码：</p>
 <p>复制：</p>
 <pre><code>!nvidia-smi</code></pre>
@@ -130,7 +209,7 @@ Memory:
 <p>你的云电脑有 NVIDIA GPU。</p>
 <p>![[Pasted image 20260922224924.png]]</p>
 <hr/>
-<h2 id="如果显示">如果显示：</h2>
+<h2 id="如果显示">如果显示：</h2><nav class="sec-nav"><a class="sn prev" href="#检查-gpu"><span class="sn-label">← 上一节</span><span class="sn-name">检查 GPU</span></a><a class="sn next" href="#什么是-llamafactory"><span class="sn-label">下一节 →</span><span class="sn-name">什么是 LLaMA-Factory？</span></a></nav>
 <pre><code>/bin/bash: nvidia-smi command not found</code></pre>
 <p>说明：</p>
 <p>没有 GPU。</p>
@@ -177,7 +256,7 @@ NVIDIA GPU
 <pre><code>!pip install --upgrade pip</code></pre>
 <hr/>
 <h1 id="第五部分安装-llamafactory">第五部分：安装 LLaMA-Factory</h1>
-<h2 id="什么是-llamafactory">什么是 LLaMA-Factory？</h2>
+<h2 id="什么是-llamafactory">什么是 LLaMA-Factory？</h2><nav class="sec-nav"><a class="sn prev" href="#如果显示"><span class="sn-label">← 上一节</span><span class="sn-name">如果显示：</span></a><a class="sn next" href="#不要训练知识"><span class="sn-label">下一节 →</span><span class="sn-name">不要训练知识</span></a></nav>
 <p>你可以理解：</p>
 <p>以前训练模型：</p>
 <p>需要自己写：</p>
@@ -265,7 +344,7 @@ print(&quot;下载成功&quot;)</code></pre>
 <hr/>
 <h1 id="第九部分准备你的第一份训练数据">第九部分：准备你的第一份训练数据</h1>
 <p>现在开始最重要部分。</p>
-<h2 id="不要训练知识">不要训练知识</h2>
+<h2 id="不要训练知识">不要训练知识</h2><nav class="sec-nav"><a class="sn prev" href="#什么是-llamafactory"><span class="sn-label">← 上一节</span><span class="sn-name">什么是 LLaMA-Factory？</span></a><a class="sn next" href="#sft数据"><span class="sn-label">下一节 →</span><span class="sn-name">SFT数据</span></a></nav>
 <p>训练：</p>
 <blockquote><p>行为 + 输出格式</p></blockquote>
 <p>例如：</p>
@@ -292,7 +371,7 @@ print(&quot;下载成功&quot;)</code></pre>
 ]</code></pre>
 <hr/>
 <p>这就是：</p>
-<h2 id="sft数据">SFT数据</h2>
+<h2 id="sft数据">SFT数据</h2><nav class="sec-nav"><a class="sn prev" href="#不要训练知识"><span class="sn-label">← 上一节</span><span class="sn-name">不要训练知识</span></a><a class="sn next" href="#环境"><span class="sn-label">下一节 →</span><span class="sn-name">环境</span></a></nav>
 <p>SFT:</p>
 <p><strong>Supervised Fine-Tuning【监督微调】</strong></p>
 <p>意思：</p>
@@ -363,13 +442,13 @@ Qwen模型
 <hr/>
 <h1 id="day1完成标准">Day1完成标准</h1>
 <p>你今天完成：</p>
-<h2 id="环境">环境</h2>
+<h2 id="环境">环境</h2><nav class="sec-nav"><a class="sn prev" href="#sft数据"><span class="sn-label">← 上一节</span><span class="sn-name">SFT数据</span></a><a class="sn next" href="#工具"><span class="sn-label">下一节 →</span><span class="sn-name">工具</span></a></nav>
 <p>✅ Google Colab ✅ GPU ✅ Python环境</p>
-<h2 id="工具">工具</h2>
+<h2 id="工具">工具</h2><nav class="sec-nav"><a class="sn prev" href="#环境"><span class="sn-label">← 上一节</span><span class="sn-name">环境</span></a><a class="sn next" href="#模型"><span class="sn-label">下一节 →</span><span class="sn-name">模型</span></a></nav>
 <p>✅ LLaMA-Factory安装 ✅ Transformers安装</p>
-<h2 id="模型">模型</h2>
+<h2 id="模型">模型</h2><nav class="sec-nav"><a class="sn prev" href="#工具"><span class="sn-label">← 上一节</span><span class="sn-name">工具</span></a><a class="sn next" href="#数据"><span class="sn-label">下一节 →</span><span class="sn-name">数据</span></a></nav>
 <p>✅ Qwen2.5-3B下载</p>
-<h2 id="数据">数据</h2>
+<h2 id="数据">数据</h2><nav class="sec-nav"><a class="sn prev" href="#模型"><span class="sn-label">← 上一节</span><span class="sn-name">模型</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>✅ 第一份Java训练集</p>
 <hr/>
 <h1 id="明天-day2">明天 Day2</h1>
@@ -387,5 +466,48 @@ Qwen模型
 <p>不过在进入 Day2 前，我建议你今天先完成 <strong>Day1 的环境搭建</strong>。</p>
 <p>你可以按照顺序执行，每执行一步把结果截图/复制给我，我帮你判断是否正确。不要跳步骤。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

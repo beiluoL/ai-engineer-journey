@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#cpu" class="lvl2">CPU</a><a href="#gpu" class="lvl2">GPU</a><a href="#vram" class="lvl2">VRAM</a><a href="#ram" class="lvl2">RAM</a><a href="#ssd" class="lvl2">SSD</a><a href="#gbe" class="lvl2">GbE</a><a href="#llm" class="lvl2">LLM</a><a href="#qwen" class="lvl2">Qwen</a><a href="#25" class="lvl2">2.5</a><a href="#7b" class="lvl2">7B</a><a href="#fp16" class="lvl2">FP16</a><a href="#int8量化" class="lvl2">INT8量化</a><a href="#int4量化" class="lvl2">INT4量化</a><a href="#lora" class="lvl2">LoRA</a><a href="#qlora" class="lvl2">QLoRA</a><a href="#vllm" class="lvl2">vLLM</a><a href="#rag" class="lvl2">RAG</a><a href="#gpu" class="lvl2">GPU:</a><a href="#nvidia" class="lvl3">NVIDIA</a><a href="#l40s" class="lvl3">L40S</a><a href="#48gb" class="lvl3">48GB</a><a href="#4" class="lvl3">×4</a><a href="#必须懂" class="lvl2">必须懂</a><a href="#第二阶段" class="lvl2">第二阶段</a><a href="#第三阶段" class="lvl2">第三阶段</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <p>这个问题非常好。</p>
 <p>前面 Day1～Day25 偏向<strong>企业架构设计</strong>，但是对于刚进入 AI 的 Java 开发者来说，确实缺少一个基础层：</p>
@@ -137,7 +216,7 @@ Qwen模型
 └── 电源</code></pre>
 <hr/>
 <h1 id="二cpu-是什么">二、CPU 是什么？</h1>
-<h2 id="cpu">CPU</h2>
+<h2 id="cpu">CPU</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#gpu"><span class="sn-label">下一节 →</span><span class="sn-name">GPU</span></a></nav>
 <p>英文：</p>
 <p><strong>Central Processing Unit</strong></p>
 <p>中文：</p>
@@ -166,7 +245,7 @@ Qwen模型
 <p>就是服务器级CPU。</p>
 <hr/>
 <h1 id="三gpu是什么">三、GPU是什么？</h1>
-<h2 id="gpu">GPU</h2>
+<h2 id="gpu">GPU</h2><nav class="sec-nav"><a class="sn prev" href="#cpu"><span class="sn-label">← 上一节</span><span class="sn-name">CPU</span></a><a class="sn next" href="#vram"><span class="sn-label">下一节 →</span><span class="sn-name">VRAM</span></a></nav><nav class="sec-nav"><a class="sn prev" href="#rag"><span class="sn-label">← 上一节</span><span class="sn-name">RAG</span></a><a class="sn next" href="#必须懂"><span class="sn-label">下一节 →</span><span class="sn-name">必须懂</span></a></nav>
 <p>英文：</p>
 <p><strong>Graphics Processing Unit</strong></p>
 <p>中文：</p>
@@ -197,7 +276,7 @@ Qwen模型
 <p>主要靠GPU。</p>
 <hr/>
 <h1 id="四显存是什么">四、显存是什么？</h1>
-<h2 id="vram">VRAM</h2>
+<h2 id="vram">VRAM</h2><nav class="sec-nav"><a class="sn prev" href="#gpu"><span class="sn-label">← 上一节</span><span class="sn-name">GPU</span></a><a class="sn next" href="#ram"><span class="sn-label">下一节 →</span><span class="sn-name">RAM</span></a></nav>
 <p>英文：</p>
 <p><strong>Video Random Access Memory</strong></p>
 <p>中文：</p>
@@ -239,7 +318,7 @@ Qwen模型
 决定GPU型号</code></pre>
 <hr/>
 <h1 id="五内存-ram是什么">五、内存 RAM是什么？</h1>
-<h2 id="ram">RAM</h2>
+<h2 id="ram">RAM</h2><nav class="sec-nav"><a class="sn prev" href="#vram"><span class="sn-label">← 上一节</span><span class="sn-name">VRAM</span></a><a class="sn next" href="#ssd"><span class="sn-label">下一节 →</span><span class="sn-name">SSD</span></a></nav>
 <p>英文：</p>
 <p>Random Access Memory</p>
 <p>中文：</p>
@@ -263,7 +342,7 @@ Qwen模型
 <table><thead><tr><th></th><th>作用</th></tr></thead><tbody><tr><td>CPU</td><td>计算</td></tr><tr><td>GPU</td><td>AI计算</td></tr><tr><td>内存</td><td>程序运行空间</td></tr><tr><td>显存</td><td>GPU运行模型空间</td></tr><tr><td>SSD</td><td>长期存储</td></tr></tbody></table>
 <hr/>
 <h1 id="六ssd是什么">六、SSD是什么？</h1>
-<h2 id="ssd">SSD</h2>
+<h2 id="ssd">SSD</h2><nav class="sec-nav"><a class="sn prev" href="#ram"><span class="sn-label">← 上一节</span><span class="sn-name">RAM</span></a><a class="sn next" href="#gbe"><span class="sn-label">下一节 →</span><span class="sn-name">GbE</span></a></nav>
 <p>英文：</p>
 <p>Solid State Drive</p>
 <p>中文：</p>
@@ -286,7 +365,7 @@ Qwen模型
 <p>8TB SSD。</p>
 <hr/>
 <h1 id="七网络-25gbe是什么">七、网络 25GbE是什么？</h1>
-<h2 id="gbe">GbE</h2>
+<h2 id="gbe">GbE</h2><nav class="sec-nav"><a class="sn prev" href="#ssd"><span class="sn-label">← 上一节</span><span class="sn-name">SSD</span></a><a class="sn next" href="#llm"><span class="sn-label">下一节 →</span><span class="sn-name">LLM</span></a></nav>
 <p>英文：</p>
 <p>Gigabit Ethernet</p>
 <p>中文：</p>
@@ -311,7 +390,7 @@ Qwen模型
 <h1 id="第二部分ai模型相关名词">第二部分：AI模型相关名词</h1>
 <hr/>
 <h1 id="八llm是什么">八、LLM是什么？</h1>
-<h2 id="llm">LLM</h2>
+<h2 id="llm">LLM</h2><nav class="sec-nav"><a class="sn prev" href="#gbe"><span class="sn-label">← 上一节</span><span class="sn-name">GbE</span></a><a class="sn next" href="#qwen"><span class="sn-label">下一节 →</span><span class="sn-name">Qwen</span></a></nav>
 <p>英文：</p>
 <p>Large Language Model</p>
 <p>中文：</p>
@@ -355,14 +434,14 @@ Qwen模型
 <p>例如：</p>
 <p>Qwen2.5-7B。</p>
 <p>拆开：</p>
-<h2 id="qwen">Qwen</h2>
+<h2 id="qwen">Qwen</h2><nav class="sec-nav"><a class="sn prev" href="#llm"><span class="sn-label">← 上一节</span><span class="sn-name">LLM</span></a><a class="sn next" href="#25"><span class="sn-label">下一节 →</span><span class="sn-name">2.5</span></a></nav>
 <p>模型名字。</p>
 <p>通义千问。</p>
 <hr/>
-<h2 id="25">2.5</h2>
+<h2 id="25">2.5</h2><nav class="sec-nav"><a class="sn prev" href="#qwen"><span class="sn-label">← 上一节</span><span class="sn-name">Qwen</span></a><a class="sn next" href="#7b"><span class="sn-label">下一节 →</span><span class="sn-name">7B</span></a></nav>
 <p>版本。</p>
 <hr/>
-<h2 id="7b">7B</h2>
+<h2 id="7b">7B</h2><nav class="sec-nav"><a class="sn prev" href="#25"><span class="sn-label">← 上一节</span><span class="sn-name">2.5</span></a><a class="sn next" href="#fp16"><span class="sn-label">下一节 →</span><span class="sn-name">FP16</span></a></nav>
 <p>70亿参数。</p>
 <hr/>
 <p>完整：</p>
@@ -371,7 +450,7 @@ Qwen模型
 <h1 id="十一模型大小和显存关系">十一、模型大小和显存关系</h1>
 <p>这是AI工程最重要。</p>
 <p>例如：</p>
-<h2 id="fp16">FP16</h2>
+<h2 id="fp16">FP16</h2><nav class="sec-nav"><a class="sn prev" href="#7b"><span class="sn-label">← 上一节</span><span class="sn-name">7B</span></a><a class="sn next" href="#int8量化"><span class="sn-label">下一节 →</span><span class="sn-name">INT8量化</span></a></nav>
 <p>16位浮点。</p>
 <p>7B模型：</p>
 <p>大约：</p>
@@ -381,12 +460,12 @@ Qwen模型
 <p>需要：</p>
 <p>14GB显存。</p>
 <hr/>
-<h2 id="int8量化">INT8量化</h2>
+<h2 id="int8量化">INT8量化</h2><nav class="sec-nav"><a class="sn prev" href="#fp16"><span class="sn-label">← 上一节</span><span class="sn-name">FP16</span></a><a class="sn next" href="#int4量化"><span class="sn-label">下一节 →</span><span class="sn-name">INT4量化</span></a></nav>
 <p>8位。</p>
 <p>减少：</p>
 <p>一半。</p>
 <hr/>
-<h2 id="int4量化">INT4量化</h2>
+<h2 id="int4量化">INT4量化</h2><nav class="sec-nav"><a class="sn prev" href="#int8量化"><span class="sn-label">← 上一节</span><span class="sn-name">INT8量化</span></a><a class="sn next" href="#lora"><span class="sn-label">下一节 →</span><span class="sn-name">LoRA</span></a></nav>
 <p>4位。</p>
 <p>更小。</p>
 <p>7B：</p>
@@ -411,7 +490,7 @@ Qwen模型
 <p>速度。</p>
 <hr/>
 <h1 id="十三lora是什么">十三、LoRA是什么？</h1>
-<h2 id="lora">LoRA</h2>
+<h2 id="lora">LoRA</h2><nav class="sec-nav"><a class="sn prev" href="#int4量化"><span class="sn-label">← 上一节</span><span class="sn-name">INT4量化</span></a><a class="sn next" href="#qlora"><span class="sn-label">下一节 →</span><span class="sn-name">QLoRA</span></a></nav>
 <p>英文：</p>
 <p>Low-Rank Adaptation</p>
 <p>中文：</p>
@@ -447,7 +526,7 @@ LoRA小模块
 新能力</code></pre>
 <hr/>
 <h1 id="十四qlora是什么">十四、QLoRA是什么？</h1>
-<h2 id="qlora">QLoRA</h2>
+<h2 id="qlora">QLoRA</h2><nav class="sec-nav"><a class="sn prev" href="#lora"><span class="sn-label">← 上一节</span><span class="sn-name">LoRA</span></a><a class="sn next" href="#vllm"><span class="sn-label">下一节 →</span><span class="sn-name">vLLM</span></a></nav>
 <p>英文：</p>
 <p>Quantized Low-Rank Adaptation</p>
 <p>中文：</p>
@@ -481,7 +560,7 @@ LoRA小模块
 <p>推荐QLoRA。</p>
 <hr/>
 <h1 id="十五vllm是什么">十五、vLLM是什么？</h1>
-<h2 id="vllm">vLLM</h2>
+<h2 id="vllm">vLLM</h2><nav class="sec-nav"><a class="sn prev" href="#qlora"><span class="sn-label">← 上一节</span><span class="sn-name">QLoRA</span></a><a class="sn next" href="#rag"><span class="sn-label">下一节 →</span><span class="sn-name">RAG</span></a></nav>
 <p>一个大模型推理框架。</p>
 <p>作用：</p>
 <p>让模型：</p>
@@ -530,7 +609,7 @@ LoRA小模块
 <p>学习。</p>
 <hr/>
 <h1 id="十七rag是什么">十七、RAG是什么？</h1>
-<h2 id="rag">RAG</h2>
+<h2 id="rag">RAG</h2><nav class="sec-nav"><a class="sn prev" href="#vllm"><span class="sn-label">← 上一节</span><span class="sn-name">vLLM</span></a><a class="sn next" href="#gpu"><span class="sn-label">下一节 →</span><span class="sn-name">GPU:</span></a></nav>
 <p>英文：</p>
 <p>Retrieval-Augmented Generation</p>
 <p>中文：</p>
@@ -720,7 +799,7 @@ SSD:
 <hr/>
 <h1 id="二十三作为java转ai你现在最应该掌握哪些">二十三、作为Java转AI，你现在最应该掌握哪些？</h1>
 <p>优先级：</p>
-<h2 id="必须懂">必须懂</h2>
+<h2 id="必须懂">必须懂</h2><nav class="sec-nav"><a class="sn prev" href="#gpu"><span class="sn-label">← 上一节</span><span class="sn-name">GPU:</span></a><a class="sn next" href="#第二阶段"><span class="sn-label">下一节 →</span><span class="sn-name">第二阶段</span></a></nav>
 <p>⭐⭐⭐⭐⭐</p>
 <ul class="lvl"><li>GPU</li></ul>
 <ul class="lvl"><li>显存</li></ul>
@@ -733,7 +812,7 @@ SSD:
 <ul class="lvl"><li>LoRA</li></ul>
 <ul class="lvl"><li>QLoRA</li></ul>
 <hr/>
-<h2 id="第二阶段">第二阶段</h2>
+<h2 id="第二阶段">第二阶段</h2><nav class="sec-nav"><a class="sn prev" href="#必须懂"><span class="sn-label">← 上一节</span><span class="sn-name">必须懂</span></a><a class="sn next" href="#第三阶段"><span class="sn-label">下一节 →</span><span class="sn-name">第三阶段</span></a></nav>
 <p>⭐⭐⭐⭐</p>
 <ul class="lvl"><li>CUDA</li></ul>
 <ul class="lvl"><li>Docker</li></ul>
@@ -741,7 +820,7 @@ SSD:
 <ul class="lvl"><li>GPU Operator</li></ul>
 <ul class="lvl"><li>MLOps</li></ul>
 <hr/>
-<h2 id="第三阶段">第三阶段</h2>
+<h2 id="第三阶段">第三阶段</h2><nav class="sec-nav"><a class="sn prev" href="#第二阶段"><span class="sn-label">← 上一节</span><span class="sn-name">第二阶段</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>⭐⭐⭐</p>
 <ul class="lvl"><li>CUDA Kernel</li></ul>
 <ul class="lvl"><li>分布式训练</li></ul>
@@ -755,5 +834,48 @@ SSD:
 <blockquote><p>一个模型文件到底是什么？为什么下载几十GB？为什么不同格式？为什么有的能Ollama运行，有的只能vLLM运行？</p></blockquote>
 <p>这会把“模型”这部分补完整。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#真实运行离线冒烟fakeclient" class="lvl2">真实运行（离线冒烟，FakeClient）</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a><a href="#学习进度与内容生产分开" class="lvl2">学习进度（与内容生产分开）</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-03-ai-application">Project 03 — AI Application</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>从 Service 升级到真正的 AI 应用层，掌握 LLM Application【大模型应用】核心能力。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>会调 API 不等于会做应用。LLM Application 有自己的核心问题：Prompt 设计、流式输出、函数调用、结构化输出——这些是每个 AI 工程师每天都在处理的事情。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>Prompt 怎么写才能让模型稳定输出？</li><li>怎么让用户看到打字机效果（Streaming）？</li><li>怎么让模型返回 JSON 而不是自然语言？</li><li>怎么让模型调用外部程序？</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>调用 LLM
     ↓
 控制模型
@@ -75,9 +154,9 @@ li{margin:.3em 0;}
 调用外部程序能力
     ↓
 形成完整 AI Application</code></pre>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li>Prompt Engineering 方法论</li><li>Streaming / SSE（Server-Sent Events）</li><li>Function Calling / Tool Use</li><li>Structured Output（Pydantic + JSON Mode）</li><li>Multi-turn Conversation Management</li><li>Token / Context Window 管理</li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <pre><code>Engineering AI Assistant Service
     ↓ Prompt + Streaming
 AI Chat Web v0.1
@@ -85,14 +164,14 @@ AI Chat Web v0.1
 AI Chat Web v0.2
     ↓ 前端 Chat UI
 AI Chat Web v1.0</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>状态</th><th>核心能力</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-prompt.html">Prompt</a></td><td>✅</td><td>四要素 / 模板化 / Prompt 注入</td></tr><tr><td>02</td><td><a href="milestones/02-messages.html">Messages</a></td><td>✅</td><td>四种 role / 历史回灌 / 消息校验</td></tr><tr><td>03</td><td><a href="milestones/03-structured-output.html">Structured Output</a></td><td>✅</td><td>JSON Mode / Pydantic / 校验重试</td></tr><tr><td>04</td><td><a href="milestones/04-streaming.html">Streaming</a></td><td>✅</td><td>SSE / 打字机 / 截断与乱码</td></tr><tr><td>05</td><td><a href="milestones/05-conversation-memory.html">Conversation Memory</a></td><td>✅</td><td>token 预算裁剪 / 摘要 / 会话隔离</td></tr><tr><td>06</td><td><a href="milestones/06-model-parameters.html">Model Parameters</a></td><td>✅</td><td>temperature / top_p / 场景 Profile</td></tr><tr><td>07</td><td><a href="milestones/07-token-context-window.html">Token / Context Window</a></td><td>✅</td><td>估算 / usage / 成本核算</td></tr><tr><td>08</td><td><a href="milestones/08-function-calling.html">Function Calling</a></td><td>✅</td><td>工具循环 / 结果回灌 / 安全边界</td></tr><tr><td>09</td><td><a href="milestones/09-application-architecture.html">Application Architecture</a></td><td>✅</td><td>五层结构 / 可观测 / 测试策略</td></tr></tbody></table>
 <p>状态：✅ 内容已就绪 · 🔄 代码落地中 · ⬜ 未开始</p>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <p><strong>9 / 9 个 Milestone 已全部成文 + <code>src/</code> 代码落地 + 61 个离线测试全绿</strong>（文档先行 → 代码落地 → 测试覆盖 → 真实运行验证）。</p>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#真实运行离线冒烟fakeclient"><span class="sn-label">下一节 →</span><span class="sn-name">真实运行（离线冒烟，FakeClient）</span></a></nav>
 <p><strong>v0.2 文档 + 代码双全</strong>：四条核心路径（普通问答 / 流式 / 结构化 / 工具调用）已用 <code>FakeClient</code> 离线跑通，无需真实 Key 即可复现。接入真实 DeepSeek 只需在 <code>.env</code> 填入 <code>DEEPSEEK_API_KEY</code>。</p>
-<h2 id="真实运行离线冒烟fakeclient">真实运行（离线冒烟，FakeClient）</h2>
+<h2 id="真实运行离线冒烟fakeclient">真实运行（离线冒烟，FakeClient）</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p>下列截图全部由 <code>src/</code> 真实运行产出（<code>ai-app ... --fake</code> 或脚本化 <code>FakeClient</code>），不联网、不花钱，可复现：</p>
 <p><strong>① 普通问答</strong></p>
 <figure class="figure"><img alt="普通问答" src="../../../../../projects/03-ai-application/assets/term-qa.png" loading="lazy"/><figcaption>普通问答</figcaption></figure>
@@ -104,7 +183,7 @@ AI Chat Web v1.0</code></pre>
 <figure class="figure"><img alt="工具调用" src="../../../../../projects/03-ai-application/assets/term-agent.png" loading="lazy"/><figcaption>工具调用</figcaption></figure>
 <p><strong>⑤ 离线测试 61 / 61 通过</strong></p>
 <figure class="figure"><img alt="pytest 61 passed" src="../../../../../projects/03-ai-application/assets/term-pytest.png" loading="lazy"/><figcaption>pytest 61 passed</figcaption></figure>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#真实运行离线冒烟fakeclient"><span class="sn-label">← 上一节</span><span class="sn-name">真实运行（离线冒烟，FakeClient）</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code>src/assistant/          # 五层结构（见 09 章）
 ├── cli.py  api.py      # 接入层
 ├── service.py  agent.py# 编排层
@@ -112,14 +191,57 @@ AI Chat Web v1.0</code></pre>
 ├── client.py  settings.py            # 模型层（唯一知道 API 细节）
 └── memory.py  tokens.py  logging_setup.py  # 支撑层
 tests/                  # 全部离线（FakeClient），不联网、不用真实 Key</code></pre>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-02 的所有能力（Python 工程化、async、FastAPI、pytest）</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><a class="sn next" href="#学习进度与内容生产分开"><span class="sn-label">下一节 →</span><span class="sn-name">学习进度（与内容生产分开）</span></a></nav>
 <ul class="lvl"><li>✅ 已落地 <code>src/</code> 并跑通四条路径（普通问答 / 流式 / 结构化 / 工具调用）</li><li>✅ 已配真实运行截图，P03 从「文档就绪」转为「文档 + 代码 + 测试」双全</li><li>接入真实 DeepSeek：复制 <code>.env.example</code> 为 <code>.env</code> 填入 <code>DEEPSEEK_API_KEY</code>，去掉 <code>--fake</code> 即可对比真模型效果</li><li>进阶：把 <code>api.py</code>（FastAPI）部署成服务，或在前端接一个聊天 UI（呼应 Project 02 的 AI Chat Web）</li></ul>
-<h2 id="学习进度与内容生产分开">学习进度（与内容生产分开）</h2>
+<h2 id="学习进度与内容生产分开">学习进度（与内容生产分开）</h2><nav class="sec-nav"><a class="sn prev" href="#下一步"><span class="sn-label">← 上一节</span><span class="sn-name">下一步</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p><strong>文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。</strong> 这份 README 记录的是「仓库里有什么」， 「我到底学会了没」看 <strong><a href="LEARNING.html">LEARNING.md</a></strong> —— 那里每章有自测题、动手验证与自评， 所有状态默认 ⬜，是否打勾只能由你本人决定。</p></blockquote>
 <ul class="lvl"><li><a href="LEARNING.html">LEARNING.md</a> —— 9 章自测清单（问答 + 判分要点 + 自评）</li><li><a href="exercises/README.html">exercises/</a> —— 32 道实操题 + 参考答案 + 离线判卷工具</li></ul>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/02-engineering-ai-assistant">Project 02 — Engineering AI Assistant</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

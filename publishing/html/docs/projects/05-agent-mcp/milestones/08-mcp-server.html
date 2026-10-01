@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-一个必须想清楚的设计错误分两类" class="lvl2">1. 一个必须想清楚的设计：错误分两类</a><a href="#2-错误码也要选对" class="lvl2">2. 错误码也要选对</a><a href="#3-stdio-主循环的两个坑" class="lvl2">3. stdio 主循环的两个坑</a><a href="#4-真实跑起来" class="lvl2">4. 真实跑起来</a><a href="#5-踩到的坑" class="lvl2">5. 踩到的坑</a><a href="#6-结论" class="lvl2">6. 结论</a><a href="#7-代码位置" class="lvl2">7. 代码位置</a><a href="#8-版本" class="lvl2">8. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-08-mcp-server把工具提供出去">Milestone 08 — MCP Server：把工具提供出去</h1>
 <blockquote><p>Milestone 07 只管消息长什么样。这一章是<strong>真的把工具提供出去</strong>：</p><p>``<code>bash python -m agent.mcp.server      # 它就挂在 stdio 上等人来问 </code>``</p></blockquote>
-<h2 id="1-一个必须想清楚的设计错误分两类">1. 一个必须想清楚的设计：错误分两类</h2>
+<h2 id="1-一个必须想清楚的设计错误分两类">1. 一个必须想清楚的设计：错误分两类</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-错误码也要选对"><span class="sn-label">下一节 →</span><span class="sn-name">2. 错误码也要选对</span></a></nav>
 <p>MCP 把错误分成两路，<strong>混用会让客户端完全没法处理</strong>：</p>
 <table><thead><tr><th>类型</th><th>含义</th><th>例子</th></tr></thead><tbody><tr><td>JSON-RPC error</td><td>协议 / 调用层面的问题：调用方该改代码</td><td>方法不存在、参数不合法、工具名没注册</td></tr><tr><td><code>result.isError</code></td><td><strong>工具本身执行了但失败了</strong>：这是工具的一次正常结果</td><td>查不到、算式非法、超时</td></tr></tbody></table>
 <p>第二条很容易被写成第一条。区别在哪：</p>
@@ -70,12 +149,12 @@ li{margin:.3em 0;}
               &quot;isError&quot;: true}   }      ← 工具执行失败：走 result
 
 {  &quot;error&quot;: {&quot;code&quot;: -32602, &quot;message&quot;: &quot;没有名为 &#x27;nope&#x27; 的工具...&quot;} }  ← 工具名不存在：走 error</code></pre>
-<h2 id="2-错误码也要选对">2. 错误码也要选对</h2>
+<h2 id="2-错误码也要选对">2. 错误码也要选对</h2><nav class="sec-nav"><a class="sn prev" href="#1-一个必须想清楚的设计错误分两类"><span class="sn-label">← 上一节</span><span class="sn-name">1. 一个必须想清楚的设计：错误分两类</span></a><a class="sn next" href="#3-stdio-主循环的两个坑"><span class="sn-label">下一节 →</span><span class="sn-name">3. stdio 主循环的两个坑</span></a></nav>
 <p>「工具名不存在」一开始我抛的是 <code>ValueError</code>，被统一兜底成 <strong>-32603（内部错误）</strong>。 这是个会误导客户端的错误码：</p>
 <pre><code>-32603  服务端内部错误  →  客户端以为服务端崩了，于是重试
 -32602  参数不合法      →  客户端正确地知道「改我的参数」</code></pre>
 <p>所以专门加了 <code>CallError(code, message)</code>，让调用方能明确区分「你错了」和「我错了」。</p>
-<h2 id="3-stdio-主循环的两个坑">3. stdio 主循环的两个坑</h2>
+<h2 id="3-stdio-主循环的两个坑">3. stdio 主循环的两个坑</h2><nav class="sec-nav"><a class="sn prev" href="#2-错误码也要选对"><span class="sn-label">← 上一节</span><span class="sn-name">2. 错误码也要选对</span></a><a class="sn next" href="#4-真实跑起来"><span class="sn-label">下一节 →</span><span class="sn-name">4. 真实跑起来</span></a></nav>
 <pre><code>for line in inp:                 # ① 逐行读
     ...
     out.write(encode_frame(response))
@@ -83,21 +162,64 @@ li{margin:.3em 0;}
 <p><strong>① 不能一次 <code>read()</code> 全读再处理</strong> —— 客户端是「发一条、等一条」， 你等 EOF 就等于永远等不到（它的 stdin 还开着）。</p>
 <p><strong>② 不 flush 客户端会一直等</strong> —— stdio 是块缓冲的，写满 4KB 才真正发出去。 这个错的表现是「客户端卡住不动」，而不是报错，非常难查。</p>
 <p>退出时机：stdin 关闭（EOF）就该退出。客户端进程没了，服务端留着没意义。</p>
-<h2 id="4-真实跑起来">4. 真实跑起来</h2>
+<h2 id="4-真实跑起来">4. 真实跑起来</h2><nav class="sec-nav"><a class="sn prev" href="#3-stdio-主循环的两个坑"><span class="sn-label">← 上一节</span><span class="sn-name">3. stdio 主循环的两个坑</span></a><a class="sn next" href="#5-踩到的坑"><span class="sn-label">下一节 →</span><span class="sn-name">5. 踩到的坑</span></a></nav>
 <figure class="figure"><img alt="真实子进程对话" src="../../../../../../projects/05-agent-mcp/assets/term-08-real-subprocess.png" loading="lazy"/><figcaption>真实子进程对话</figcaption></figure>
 <p><code>default_server()</code> 把 Project 05 的内置工具（<code>rag_search</code> / <code>calculator</code> / <code>now</code>） 全部通过 MCP 暴露。这一步的意义：<strong>这些工具不再只能被同一个进程里的 Agent 调用了</strong>。</p>
-<h2 id="5-踩到的坑">5. 踩到的坑</h2>
+<h2 id="5-踩到的坑">5. 踩到的坑</h2><nav class="sec-nav"><a class="sn prev" href="#4-真实跑起来"><span class="sn-label">← 上一节</span><span class="sn-name">4. 真实跑起来</span></a><a class="sn next" href="#6-结论"><span class="sn-label">下一节 →</span><span class="sn-name">6. 结论</span></a></nav>
 <p><strong>坑 1：<code>Tool.schema()</code> 返回的是完整外壳。</strong> 本项目的约定是 <code>{&quot;type&quot;: &quot;function&quot;, &quot;function&quot;: {...}}</code>（Milestone 03 修 422 时定的）。 MCP 要的是<strong>内层的纯 JSON Schema</strong>，所以要剥掉外壳：</p>
 <pre><code>outer = tool.schema()
 inner = outer.get(&quot;function&quot;, outer)   # 剥壳</code></pre>
 <p>一开始直接取 <code>schema[&quot;parameters&quot;]</code> 拿到的是 <code>None</code>，注册出来的工具参数全空。 <strong>服务端不该把 LLM 的形状泄漏到协议里</strong> —— 它可能同时服务于别的客户端， 那些客户端根本不知道 &quot;function&quot; 是什么。</p>
 <p><strong>坑 2：<code>lambda **kw, _t=tool: ...</code> 是语法错误。</strong> 关键字参数必须放在 <code>**kwargs</code> <strong>之前</strong>：<code>lambda _t=tool, **kw: _t.run(**kw)</code>。</p>
-<h2 id="6-结论">6. 结论</h2>
+<h2 id="6-结论">6. 结论</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩到的坑"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩到的坑</span></a><a class="sn next" href="#7-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">7. 代码位置</span></a></nav>
 <ul class="lvl"><li><strong>协议错误与工具失败是两回事</strong>，前者让调用方改代码，后者让模型换个参数。</li><li><strong>错误码要选对</strong>，否则客户端会对着不该重试的错误发起重试。</li><li>stdio 主循环必须<strong>逐行读 + 每次 flush</strong>。</li></ul>
-<h2 id="7-代码位置">7. 代码位置</h2>
+<h2 id="7-代码位置">7. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#6-结论"><span class="sn-label">← 上一节</span><span class="sn-name">6. 结论</span></a><a class="sn next" href="#8-版本"><span class="sn-label">下一节 →</span><span class="sn-name">8. 版本</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/mcp/server.py</code></td><td><code>MCPToolSpec</code> / <code>MCPServer</code> / <code>CallError</code> / <code>run_stdio</code> / <code>default_server</code></td></tr><tr><td><code>tests/test_mcp.py</code></td><td><code>TestServerHandshake</code> / <code>TestServerTools</code> / <code>TestServerStdio</code>（15 项）</td></tr><tr><td><code>demos/demo_07_mcp.py</code></td><td>第 3–5 节</td></tr></tbody></table>
-<h2 id="8-版本">8. 版本</h2>
+<h2 id="8-版本">8. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#7-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">7. 代码位置</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.8 → <strong>v0.9</strong>，MCP Server 落地，工具跨进程可用；测试 230 passed。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

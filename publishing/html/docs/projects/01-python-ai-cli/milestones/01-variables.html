@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#str-string字符串" class="lvl2">str —— String【字符串】</a><a href="#int-integer整数" class="lvl2">int —— Integer【整数】</a><a href="#float-floating-point浮点数" class="lvl2">float —— Floating Point【浮点数】</a><a href="#bool-boolean布尔值" class="lvl2">bool —— Boolean【布尔值】</a><a href="#联系描述" class="lvl3">联系描述</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#level-1跟做" class="lvl2">Level 1：跟做</a><a href="#level-2修改" class="lvl2">Level 2：修改</a><a href="#level-3独立实现" class="lvl2">Level 3：独立实现</a><a href="#level-4需求变化" class="lvl2">Level 4：需求变化</a><a href="#level-5解释" class="lvl2">Level 5：解释</a><a href="#lessonmd" class="lvl3">lesson.md</a><a href="#demo" class="lvl3">demo/</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="lesson-01-用-python-做第一个小项目ai-engineer-学习档案生成器">Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器</h1>
 <blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   本章目标：<strong>不单独背 Python 语法，而是在完成一个真实小项目的过程中学会 Python 基础。</strong></p></blockquote>
@@ -242,20 +321,20 @@ print(type(learning_ai))</code></pre>
 <hr/>
 <h1 id="7-项目中最常见的几种类型">7. 项目中最常见的几种类型</h1>
 <p>我们只学项目当前需要的。</p>
-<h2 id="str-string字符串"><code>str</code> —— String【字符串】</h2>
+<h2 id="str-string字符串"><code>str</code> —— String【字符串】</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#int-integer整数"><span class="sn-label">下一节 →</span><span class="sn-name">int —— Integer【整数】</span></a></nav>
 <p>文本：</p>
 <pre><code>name = &quot;Beiluo&quot;
 role = &quot;Java 开发工程师&quot;</code></pre>
 <hr/>
-<h2 id="int-integer整数"><code>int</code> —— Integer【整数】</h2>
+<h2 id="int-integer整数"><code>int</code> —— Integer【整数】</h2><nav class="sec-nav"><a class="sn prev" href="#str-string字符串"><span class="sn-label">← 上一节</span><span class="sn-name">str —— String【字符串】</span></a><a class="sn next" href="#float-floating-point浮点数"><span class="sn-label">下一节 →</span><span class="sn-name">float —— Floating Point【浮点数】</span></a></nav>
 <p>整数：</p>
 <pre><code>age = 29</code></pre>
 <hr/>
-<h2 id="float-floating-point浮点数"><code>float</code> —— Floating Point【浮点数】</h2>
+<h2 id="float-floating-point浮点数"><code>float</code> —— Floating Point【浮点数】</h2><nav class="sec-nav"><a class="sn prev" href="#int-integer整数"><span class="sn-label">← 上一节</span><span class="sn-name">int —— Integer【整数】</span></a><a class="sn next" href="#bool-boolean布尔值"><span class="sn-label">下一节 →</span><span class="sn-name">bool —— Boolean【布尔值】</span></a></nav>
 <p>带小数：</p>
 <pre><code>study_hours = 3.5</code></pre>
 <hr/>
-<h2 id="bool-boolean布尔值"><code>bool</code> —— Boolean【布尔值】</h2>
+<h2 id="bool-boolean布尔值"><code>bool</code> —— Boolean【布尔值】</h2><nav class="sec-nav"><a class="sn prev" href="#float-floating-point浮点数"><span class="sn-label">← 上一节</span><span class="sn-name">float —— Floating Point【浮点数】</span></a><a class="sn next" href="#level-1跟做"><span class="sn-label">下一节 →</span><span class="sn-name">Level 1：跟做</span></a></nav>
 <p>只有两个值：</p>
 <pre><code>True
 False</code></pre>
@@ -689,25 +768,25 @@ x = &quot;hello&quot;</code></pre>
 <p>不要背定义，用“我们的学习档案项目”来解释。</p>
 <hr/>
 <h1 id="24-本章练习分级">24. 本章练习分级</h1>
-<h2 id="level-1跟做">Level 1：跟做</h2>
+<h2 id="level-1跟做">Level 1：跟做</h2><nav class="sec-nav"><a class="sn prev" href="#bool-boolean布尔值"><span class="sn-label">← 上一节</span><span class="sn-name">bool —— Boolean【布尔值】</span></a><a class="sn next" href="#level-2修改"><span class="sn-label">下一节 →</span><span class="sn-name">Level 2：修改</span></a></nav>
 <p>把本章项目完整运行一次。</p>
 <hr/>
-<h2 id="level-2修改">Level 2：修改</h2>
+<h2 id="level-2修改">Level 2：修改</h2><nav class="sec-nav"><a class="sn prev" href="#level-1跟做"><span class="sn-label">← 上一节</span><span class="sn-name">Level 1：跟做</span></a><a class="sn next" href="#level-3独立实现"><span class="sn-label">下一节 →</span><span class="sn-name">Level 3：独立实现</span></a></nav>
 <p>增加：</p>
 <pre><code>当前年龄
 预计每周学习时间</code></pre>
 <hr/>
-<h2 id="level-3独立实现">Level 3：独立实现</h2>
+<h2 id="level-3独立实现">Level 3：独立实现</h2><nav class="sec-nav"><a class="sn prev" href="#level-2修改"><span class="sn-label">← 上一节</span><span class="sn-name">Level 2：修改</span></a><a class="sn next" href="#level-4需求变化"><span class="sn-label">下一节 →</span><span class="sn-name">Level 4：需求变化</span></a></nav>
 <p>关闭课程代码后，自己重新实现：</p>
 <pre><code>AI Engineer Profile</code></pre>
 <hr/>
-<h2 id="level-4需求变化">Level 4：需求变化</h2>
+<h2 id="level-4需求变化">Level 4：需求变化</h2><nav class="sec-nav"><a class="sn prev" href="#level-3独立实现"><span class="sn-label">← 上一节</span><span class="sn-name">Level 3：独立实现</span></a><a class="sn next" href="#level-5解释"><span class="sn-label">下一节 →</span><span class="sn-name">Level 5：解释</span></a></nav>
 <p>新增：</p>
 <pre><code>目标职位
 最想学习的技术</code></pre>
 <p>不用修改整体程序结构也能完成需求。</p>
 <hr/>
-<h2 id="level-5解释">Level 5：解释</h2>
+<h2 id="level-5解释">Level 5：解释</h2><nav class="sec-nav"><a class="sn prev" href="#level-4需求变化"><span class="sn-label">← 上一节</span><span class="sn-name">Level 4：需求变化</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>能够向一个完全不会 Python 的人解释：</p>
 <blockquote><p>为什么 <code>input()</code> 得到的是字符串，而我们又要使用 <code>int()</code> 或 <code>float()</code>？</p></blockquote>
 <p>如果能够用自己的语言解释清楚，这一章才算真正掌握。</p>
@@ -870,5 +949,48 @@ system / user / assistant
 第一次真正接触 LLM API 数据结构</code></pre>
 <p>这才是 Python 正式迈向 AI 开发的第一座桥。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

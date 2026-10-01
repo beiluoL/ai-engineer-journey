@@ -52,28 +52,107 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#目录" class="lvl2">目录</a><a href="#1-为什么不能一直用-fakellmclient" class="lvl2">1. 为什么不能一直用 FakeLLMClient</a><a href="#2-设计openai-兼容协议骨架" class="lvl2">2. 设计：OpenAI 兼容协议骨架</a><a href="#3-代码deepseekllmclient" class="lvl2">3. 代码：DeepSeekLLMClient</a><a href="#4-raganswer-留档把真实-prompt-保存下来" class="lvl2">4. RAGAnswer 留档：把真实 prompt 保存下来</a><a href="#5-忠实度审计" class="lvl2">5. 忠实度审计</a><a href="#51-强词判据" class="lvl3">5.1 强词判据</a><a href="#52-实词覆盖率" class="lvl3">5.2 实词覆盖率</a><a href="#53-注入式自测" class="lvl3">5.3 注入式自测</a><a href="#6-真实运行截图" class="lvl2">6. 真实运行截图</a><a href="#61-真实-ask一次完整的在线问答链路" class="lvl3">6.1 真实 ask()：一次完整的在线问答链路</a><a href="#62-忠实度审计-注入式自测" class="lvl3">6.2 忠实度审计 + 注入式自测</a><a href="#63-拒答闸门-空资料对照" class="lvl3">6.3 拒答闸门 + 空资料对照</a><a href="#7-坑清单" class="lvl2">7. 坑清单</a><a href="#8-自检清单" class="lvl2">8. 自检清单</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-12-真实-llm-接入与忠实度审计">Milestone 12 — 真实 LLM 接入与忠实度审计</h1>
 <blockquote><p>目标：把 <code>RAGService.ask()</code> 最后的 <code>FakeLLMClient</code> 换成真实模型（DeepSeek）， 并回答一个只有真实接入才会被问到的问题：模型回答里哪些话没有依据？</p></blockquote>
 <hr/>
-<h2 id="目录">目录</h2>
+<h2 id="目录">目录</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#1-为什么不能一直用-fakellmclient"><span class="sn-label">下一节 →</span><span class="sn-name">1. 为什么不能一直用 FakeLLMClient</span></a></nav>
 <ul class="lvl"><li><a href="#1-为什么不能一直用-fakellmclient">为什么不能一直用 FakeLLMClient</a></li><li><a href="#2-设计openai-兼容协议骨架">设计：OpenAI 兼容协议骨架</a></li><li><a href="#3-代码deepseekllmclient">代码：DeepSeekLLMClient</a></li><li><a href="#4-raganswer-留档把真实-prompt-保存下来">RAGAnswer 留档：把真实 prompt 保存下来</a></li><li><a href="#5-忠实度审计">忠实度审计</a></li><li><a href="#6-真实运行截图">真实运行截图</a></li><li><a href="#7-坑清单">坑清单</a></li><li><a href="#8-自检清单">自检清单</a></li></ul>
 <hr/>
-<h2 id="1-为什么不能一直用-fakellmclient">1. 为什么不能一直用 FakeLLMClient</h2>
+<h2 id="1-为什么不能一直用-fakellmclient">1. 为什么不能一直用 FakeLLMClient</h2><nav class="sec-nav"><a class="sn prev" href="#目录"><span class="sn-label">← 上一节</span><span class="sn-name">目录</span></a><a class="sn next" href="#2-设计openai-兼容协议骨架"><span class="sn-label">下一节 →</span><span class="sn-name">2. 设计：OpenAI 兼容协议骨架</span></a></nav>
 <p>FakeLLMClient 只干一件事：从【参考资料】里挑和问题词面最相关的句子， 按编号拼成答案。它的行为是<strong>确定性的</strong>：资料里没有的词，它绝对不说。</p>
 <p>真实模型则相反：它会总结、类比、举例、补充背景知识。 这些行为有一半正是我们想要的（回答更自然、可读性更高）， 另一半则是 RAG 最怕的：<strong>幻觉</strong>——答案里混进了资料里没有的信息。</p>
 <p>所以接真实 LLM 时，不能只换 client，还要加一层<strong>事后审计</strong>：</p>
 <p>模型答完 → 忠实度审计 → 标出无出处句子 → 人工/自动处理</p>
 <hr/>
-<h2 id="2-设计openai-兼容协议骨架">2. 设计：OpenAI 兼容协议骨架</h2>
+<h2 id="2-设计openai-兼容协议骨架">2. 设计：OpenAI 兼容协议骨架</h2><nav class="sec-nav"><a class="sn prev" href="#1-为什么不能一直用-fakellmclient"><span class="sn-label">← 上一节</span><span class="sn-name">1. 为什么不能一直用 FakeLLMClient</span></a><a class="sn next" href="#3-代码deepseekllmclient"><span class="sn-label">下一节 →</span><span class="sn-name">3. 代码：DeepSeekLLMClient</span></a></nav>
 <p>国产大模型这几年已经全部收敛到 OpenAI 的 <code>/chat/completions</code> 协议， 区别只剩 base_url 和模型名。和 11 章 embedding 层一样， 我们先抽出协议骨架，再派生具体厂商：</p>
 <table><thead><tr><th>类</th><th>职责</th></tr></thead><tbody><tr><td><code>BaseLLMClient</code></td><td>抽象：只有 <code>chat(messages)</code></td></tr><tr><td><code>OpenAICompatibleLLMClient</code></td><td>协议骨架：chat + stream + timeout + temperature + usage 记录</td></tr><tr><td><code>DeepSeekLLMClient</code></td><td>只填 <code>BASE_URL</code> 和 <code>MODEL</code></td></tr></tbody></table>
 <p>为什么把 <code>stream()</code> 也放进骨架？因为 Web 端最终要用 SSE（P03 已验证）， RAG 链路只比 chat 多了一个检索阶段。骨架里直接提供流式， 将来复用 <code>RAGService</code> 时不需要再开一套 client。</p>
 <hr/>
-<h2 id="3-代码deepseekllmclient">3. 代码：DeepSeekLLMClient</h2>
+<h2 id="3-代码deepseekllmclient">3. 代码：DeepSeekLLMClient</h2><nav class="sec-nav"><a class="sn prev" href="#2-设计openai-兼容协议骨架"><span class="sn-label">← 上一节</span><span class="sn-name">2. 设计：OpenAI 兼容协议骨架</span></a><a class="sn next" href="#4-raganswer-留档把真实-prompt-保存下来"><span class="sn-label">下一节 →</span><span class="sn-name">4. RAGAnswer 留档：把真实 prompt 保存下来</span></a></nav>
 <p>核心片段（完整实现见 <code>src/rag/llm.py</code>）：</p>
 <pre><code>class OpenAICompatibleLLMClient(BaseLLMClient):
     BASE_URL = &quot;https://api.deepseek.com/chat/completions&quot;
@@ -110,7 +189,7 @@ service = RAGService(retriever, reranker, assembler, llm, settings)
 answer = service.ask(&quot;生成器为什么能省内存？&quot;)</code></pre>
 <p><code>RAGService.ask()</code> 一行代码都不需要动。</p>
 <hr/>
-<h2 id="4-raganswer-留档把真实-prompt-保存下来">4. RAGAnswer 留档：把真实 prompt 保存下来</h2>
+<h2 id="4-raganswer-留档把真实-prompt-保存下来">4. RAGAnswer 留档：把真实 prompt 保存下来</h2><nav class="sec-nav"><a class="sn prev" href="#3-代码deepseekllmclient"><span class="sn-label">← 上一节</span><span class="sn-name">3. 代码：DeepSeekLLMClient</span></a><a class="sn next" href="#5-忠实度审计"><span class="sn-label">下一节 →</span><span class="sn-name">5. 忠实度审计</span></a></nav>
 <p>RAG 出现「模型答的不是我喂给它的那段」时，最难的是复现。 所以 <code>RAGAnswer</code> 增加了一个字段 <code>system_prompt</code>：</p>
 <pre><code>@dataclass(frozen=True)
 class RAGAnswer:
@@ -120,7 +199,7 @@ class RAGAnswer:
     system_prompt: str = &quot;&quot;      # ← 12 章新增：真实发出去的系统提示</code></pre>
 <p>它让审计工具可以直接从答案对象里取回 prompt，不需要再跑一遍检索。</p>
 <hr/>
-<h2 id="5-忠实度审计">5. 忠实度审计</h2>
+<h2 id="5-忠实度审计">5. 忠实度审计</h2><nav class="sec-nav"><a class="sn prev" href="#4-raganswer-留档把真实-prompt-保存下来"><span class="sn-label">← 上一节</span><span class="sn-name">4. RAGAnswer 留档：把真实 prompt 保存下来</span></a><a class="sn next" href="#6-真实运行截图"><span class="sn-label">下一节 →</span><span class="sn-name">6. 真实运行截图</span></a></nav>
 <p>审计在 <code>src/rag/evaluation.py</code> 里实现。逐句判断「这句话有没有依据」。 两条判据同时生效：</p>
 <h3 id="51-强词判据">5.1 强词判据</h3>
 <p>句中的<strong>数字</strong>和<strong>英文标识符</strong>是最容易编造的部分。 如果这类词在资料里找不到，就记为「无出处」。</p>
@@ -137,7 +216,7 @@ report = check_faithfulness(poisoned, answer.system_prompt)
 # → 忠实度 0.83，被标红的是 POISON 这一句</code></pre>
 <p>如果审计工具自己测不过这一关，它就不配上生产。</p>
 <hr/>
-<h2 id="6-真实运行截图">6. 真实运行截图</h2>
+<h2 id="6-真实运行截图">6. 真实运行截图</h2><nav class="sec-nav"><a class="sn prev" href="#5-忠实度审计"><span class="sn-label">← 上一节</span><span class="sn-name">5. 忠实度审计</span></a><a class="sn next" href="#7-坑清单"><span class="sn-label">下一节 →</span><span class="sn-name">7. 坑清单</span></a></nav>
 <p>全部来自 <code>demos/demo_13_real_llm.py</code>，真实调用 DeepSeek <code>deepseek-chat</code>。</p>
 <h3 id="61-真实-ask一次完整的在线问答链路">6.1 真实 ask()：一次完整的在线问答链路</h3>
 <figure class="figure"><img alt="real-llm-ask" src="../../../../../../projects/04-rag/assets/real-llm-ask.png" loading="lazy"/><figcaption>real-llm-ask</figcaption></figure>
@@ -151,15 +230,58 @@ report = check_faithfulness(poisoned, answer.system_prompt)
 <p>没有资料时 <code>RAGService</code> 直接返回拒答，<strong>这次 ask 调用 LLM 0 次</strong>。 右图的空资料对照也显示 DeepSeek 这次守住了 prompt，但结论要说清楚：</p>
 <blockquote><p>这道闸门不是防模型「不乖」，而是提供<strong>确定性</strong>：不依赖模型自觉，不花这次钱。</p></blockquote>
 <hr/>
-<h2 id="7-坑清单">7. 坑清单</h2>
+<h2 id="7-坑清单">7. 坑清单</h2><nav class="sec-nav"><a class="sn prev" href="#6-真实运行截图"><span class="sn-label">← 上一节</span><span class="sn-name">6. 真实运行截图</span></a><a class="sn next" href="#8-自检清单"><span class="sn-label">下一节 →</span><span class="sn-name">8. 自检清单</span></a></nav>
 <table><thead><tr><th>#</th><th>现象</th><th>原因</th><th>正确做法</th></tr></thead><tbody><tr><td>1</td><td>上线后 LLM 调用间歇性超时</td><td>httpx 默认 timeout 只有 5s，生成类接口首 token 经常 &gt;10s</td><td>显式设 <code>timeout=60.0</code>，并纳入监控</td></tr><tr><td>2</td><td>同一问题每次答案不同，评测报告飘</td><td>默认 temperature &gt; 0，采样有随机性</td><td>RAG 设 <code>temperature=0.0</code>，保证可复现</td></tr><tr><td>3</td><td>流式结果与同步结果不一致</td><td>两次调用是两次采样，即使 temperature=0 也未必逐字相同</td><td>前端不要用等号比对，只保证语义一致</td></tr><tr><td>4</td><td>真实计费看不到</td><td>没读返回体里的 <code>usage</code></td><td>client 内记录 <code>last_usage</code>，打日志</td></tr><tr><td>5</td><td>答案里没 <code>[n]</code> 编号， citations 无法对齐</td><td>模型不遵守格式指令</td><td>留 <code>system_prompt</code> 并做忠实度审计兜底</td></tr><tr><td>6</td><td>忠实度审计只报 1.00，区分度不足</td><td>虚词 / 常用词把覆盖率刷高</td><td>过滤虚词 + 强词比例判据 + 注入式自测</td></tr><tr><td>7</td><td>重试层级混乱，一次抖动请求四次</td><td>client 内与 RAGService 都重试</td><td>RAGService 重试一次即可；client 只负责单次请求</td></tr></tbody></table>
 <hr/>
-<h2 id="8-自检清单">8. 自检清单</h2>
+<h2 id="8-自检清单">8. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#7-坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">7. 坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能解释 <code>RAGService</code> 为什么只改装配点就能换真实模型</li><li>[ ] 能说明 <code>temperature=0</code> 的作用和局限</li><li>[ ] 知道 <code>last_usage</code> 该记录在哪里、用于什么</li><li>[ ] 能写出注入式自测，验证忠实度审计不是摆设</li><li>[ ] 知道流式结果与同步结果为什么不能做字符串相等判断</li><li>[ ] 理解拒答闸门不只是防胡说，更是为了省钱和确定性</li></ul>
 <hr/>
 <p>上一章：<a href="11-real-service-integration.html">11-real-service-integration.md</a> —— 真实 embedding + Chroma 持久化</p>
 <p>下一章：待发布 —— FastAPI Web API / 真实 RAG 评估 / 接入真实 reranker</p>
 <p>回到项目主页：<a href="../README.html">../README.md</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-拼装格式带编号的来源块" class="lvl3">3.1 拼装格式：带编号的来源块</a><a href="#32-token-预算分数截断不是均匀截断" class="lvl3">3.2 token 预算：分数截断，不是均匀截断</a><a href="#33-引用位置还原citations-是回答的一部分" class="lvl3">3.3 引用位置还原：citations 是回答的一部分</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1重复-chunk-白白烧预算" class="lvl3">坑 1：重复 chunk 白白烧预算</a><a href="#坑-2中英文字符-token-比例估偏" class="lvl3">坑 2：中英文字符 token 比例估偏</a><a href="#坑-3lost-in-the-middle资料顺序影响注意力" class="lvl3">坑 3：lost in the middle——资料顺序影响注意力</a><a href="#坑-4引用编号与实际来源错位" class="lvl3">坑 4：引用编号与实际来源错位</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-04-chapter-08context-assembly上下文组装">Project 04 — Chapter 08：Context Assembly【上下文组装】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/assembly.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
-<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Chapter 07 结束时，我们手里已经有了一批 rerank 后的高分 chunk：</p>
 <pre><code>scored: list[ScoredChunk]   # 按 score 降序的 top_k 条</code></pre>
 <p>很自然的想法是：把这几段文本直接拼起来塞进 prompt，让模型回答。</p>
@@ -71,7 +150,7 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>把检索结果组装成「引用可溯源、顺序合理、预算不超」的上下文——这是检索结果进入模型前的最后一道工序。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-本章要解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 本章要解决什么问题</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>模型本身没有任何「引用」能力。你不给它带编号的资料，它就不可能输出 <code>[1]</code> 这样的标注；你给了编号，它才会学着用。</p>
 <p>所以 RAG 的防幻觉链条是三段式的：</p>
 <pre><code>检索找对资料  →  组装时编号溯源  →  system 规则约束模型只依据资料回答
@@ -80,7 +159,7 @@ li{margin:.3em 0;}
 <p>另一个原因是工程性的：上下文窗口是硬上限，而检索结果天然是「多多益善」的竞争性资源。必须有一个明确的装配规则来分配空间，而不是「能塞多少塞多少」。</p>
 <p>Java 里写后端接口前会有一层 DTO 组装 / View 渲染——把 DAO 查出来的实体转换成带来源、带格式的前端需要的结构；Python 里这一层就是 <code>ContextAssembler</code>：<strong>检索层产出的是「原材料」，组装层产出的是「成品 prompt」</strong>，两层职责必须分开。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-动手实现设计稿"><span class="sn-label">下一节 →</span><span class="sn-name">4. 动手实现（设计稿）</span></a></nav>
 <h3 id="31-拼装格式带编号的来源块">3.1 拼装格式：带编号的来源块</h3>
 <p>推荐的 context 文本格式：</p>
 <pre><code>[1] (source: docs/rag-guide.md#L12-40)
@@ -118,7 +197,7 @@ citations = [
 <p>结构设计上有个取舍：<code>[n]</code> 编号是<strong>本次请求临时分配</strong>的，同一份文档在两次提问里编号会不同。所以 <code>Citation</code> 里同时存了稳定键（<code>source</code> + <code>chunk_index</code> + <code>start_char</code>）和临时编号（<code>no</code>）——持久定位靠稳定键，回答里的 <code>[n]</code> 靠 <code>no</code> 对上。Java 里这就像 REST 响应同时带业务键和展示序号，持久化永远用业务键。</p>
 <hr/>
 <figure class="figure"><img alt="真实运行：带编号与来源锚点的 context_text、citations 列表与 token 预算占用" src="../../../../../../projects/04-rag/assets/term-assemble.png" loading="lazy"/><figcaption>真实运行：带编号与来源锚点的 context_text、citations 列表与 token 预算占用</figcaption></figure>
-<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-踩坑清单"><span class="sn-label">下一节 →</span><span class="sn-name">5. 踩坑清单</span></a></nav>
 <p>以下代码将在 <code>src/rag/assembly.py</code> 落地，这里先当设计稿读。</p>
 <pre><code>&quot;&quot;&quot;Context Assembly：把检索结果组装成可溯源、预算可控的 prompt 资料。&quot;&quot;&quot;
 
@@ -226,7 +305,7 @@ messages = [
 <p>两个设计要点：</p>
 <ul class="lvl"><li><strong><code>budget</code> 由调用方传入而不是 assembler 自算</strong>。窗口多大、给输出留多少，是配置层（Chapter 09 的 Settings）的事，组装层只负责「在给定空间内装最优的」——和 Java 里方法不读全局配置、依赖由构造器注入是同一个道理。</li><li><strong><code>AssembledContext</code> 同时携带 context_text 和 citations，且编号分配与 citations 生成在同一次遍历里完成</strong>。排序、去重、预算截断任何一个环节改变顺序时，两者天然保持一致（见坑 4）。</li></ul>
 <hr/>
-<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2><nav class="sec-nav"><a class="sn prev" href="#4-动手实现设计稿"><span class="sn-label">← 上一节</span><span class="sn-name">4. 动手实现（设计稿）</span></a><a class="sn next" href="#6-自检清单"><span class="sn-label">下一节 →</span><span class="sn-name">6. 自检清单</span></a></nav>
 <h3 id="坑-1重复-chunk-白白烧预算">坑 1：重复 chunk 白白烧预算</h3>
 <pre><code>现象：  top_k=5 里有两段几乎一样的文字，一条重要资料被挤出预算
 原因：  相邻 chunk 有 overlap（Chapter 02），同一段话被切进两个块；
@@ -253,9 +332,52 @@ messages = [
         （见设计稿：used/citations/blocks 一起 append），
         绝不允许「先拼文本、后补列表」两步走</code></pre>
 <hr/>
-<h2 id="6-自检清单">6. 自检清单</h2>
+<h2 id="6-自检清单">6. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能解释为什么检索结果不能直接拼给模型（溯源 / 预算 / 顺序三个维度）</li><li>[ ] 知道总预算公式，并理解为什么是分数截断而不是均匀截断</li><li>[ ] <code>ContextAssembler.build()</code> 产出 <code>AssembledContext</code>，编号与 citations 同遍历生成</li><li>[ ] system 规则包含「资料不足就拒答」，而不只是「依据资料回答」</li><li>[ ] 拿一组带 overlap 的检索结果测过：重复 chunk 只占一次预算</li><li>[ ] 能把模型回答中的 <code>[n]</code> 还原回 <code>source + chunk_index + start_char</code></li></ul>
 <p>上一章：<a href="07-rerank.html">07-rerank.md</a> 下一章：<a href="09-rag-pipeline.html">09-rag-pipeline.md</a> —— 零件全齐了，是时候把 01-08 串成完整流水线。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

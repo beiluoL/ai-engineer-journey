@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#mlflow" class="lvl2">MLflow</a><a href="#hugging-face-hub" class="lvl2">Hugging Face Hub</a><a href="#dvc" class="lvl2">DVC</a><a href="#airflow" class="lvl2">Airflow</a><a href="#kubeflow" class="lvl2">Kubeflow</a><a href="#github-actions" class="lvl2">GitHub Actions</a><a href="#格式" class="lvl2">格式</a><a href="#重复" class="lvl2">重复</a><a href="#长度" class="lvl2">长度</a><a href="#安全" class="lvl2">安全</a><a href="#1-accuracy准确性" class="lvl2">1. Accuracy【准确性】</a><a href="#2-faithfulness忠实性" class="lvl2">2. Faithfulness【忠实性】</a><a href="#3-relevance相关性" class="lvl2">3. Relevance【相关性】</a><a href="#4-latency延迟" class="lvl2">4. Latency【延迟】</a><a href="#5-cost成本" class="lvl2">5. Cost【成本】</a><a href="#问" class="lvl2">问：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day17-mlops-实战">Day17 MLOps 实战</h1>
 <h1 id="模型版本管理数据版本管理自动训练-pipeline持续评测">模型版本管理、数据版本管理、自动训练 Pipeline、持续评测</h1>
@@ -284,7 +363,7 @@ v2.0.0</code></pre>
 <p>GitHub管理代码。</p>
 <hr/>
 <p>常见工具：</p>
-<h2 id="mlflow">MLflow</h2>
+<h2 id="mlflow">MLflow</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#hugging-face-hub"><span class="sn-label">下一节 →</span><span class="sn-name">Hugging Face Hub</span></a></nav>
 <p>开源。</p>
 <p>功能：</p>
 <ul class="lvl"><li>实验记录</li></ul>
@@ -305,7 +384,7 @@ Model Registry
 
 部署</code></pre>
 <hr/>
-<h2 id="hugging-face-hub">Hugging Face Hub</h2>
+<h2 id="hugging-face-hub">Hugging Face Hub</h2><nav class="sec-nav"><a class="sn prev" href="#mlflow"><span class="sn-label">← 上一节</span><span class="sn-name">MLflow</span></a><a class="sn next" href="#dvc"><span class="sn-label">下一节 →</span><span class="sn-name">DVC</span></a></nav>
 <p>也可以：</p>
 <p>保存：</p>
 <ul class="lvl"><li>模型</li></ul>
@@ -383,7 +462,7 @@ v3
 }</code></pre>
 <hr/>
 <h1 id="九数据管理工具">九、数据管理工具</h1>
-<h2 id="dvc">DVC</h2>
+<h2 id="dvc">DVC</h2><nav class="sec-nav"><a class="sn prev" href="#hugging-face-hub"><span class="sn-label">← 上一节</span><span class="sn-name">Hugging Face Hub</span></a><a class="sn next" href="#airflow"><span class="sn-label">下一节 →</span><span class="sn-name">Airflow</span></a></nav>
 <p>Data Version Control【数据版本控制】</p>
 <p>类似：</p>
 <p>Git管理代码。</p>
@@ -438,13 +517,13 @@ Evaluation
 <hr/>
 <h1 id="十一pipeline工具">十一、Pipeline工具</h1>
 <p>常见：</p>
-<h2 id="airflow">Airflow</h2>
+<h2 id="airflow">Airflow</h2><nav class="sec-nav"><a class="sn prev" href="#dvc"><span class="sn-label">← 上一节</span><span class="sn-name">DVC</span></a><a class="sn next" href="#kubeflow"><span class="sn-label">下一节 →</span><span class="sn-name">Kubeflow</span></a></nav>
 <p>任务编排。</p>
 <hr/>
-<h2 id="kubeflow">Kubeflow</h2>
+<h2 id="kubeflow">Kubeflow</h2><nav class="sec-nav"><a class="sn prev" href="#airflow"><span class="sn-label">← 上一节</span><span class="sn-name">Airflow</span></a><a class="sn next" href="#github-actions"><span class="sn-label">下一节 →</span><span class="sn-name">GitHub Actions</span></a></nav>
 <p>Kubernetes机器学习平台。</p>
 <hr/>
-<h2 id="github-actions">GitHub Actions</h2>
+<h2 id="github-actions">GitHub Actions</h2><nav class="sec-nav"><a class="sn prev" href="#kubeflow"><span class="sn-label">← 上一节</span><span class="sn-name">Kubeflow</span></a><a class="sn next" href="#格式"><span class="sn-label">下一节 →</span><span class="sn-name">格式</span></a></nav>
 <p>简单自动化。</p>
 <hr/>
 <h1 id="十二你的训练pipeline设计">十二、你的训练Pipeline设计</h1>
@@ -484,7 +563,7 @@ Deploy</code></pre>
 <p>不能直接训练。</p>
 <p>检查：</p>
 <hr/>
-<h2 id="格式">格式</h2>
+<h2 id="格式">格式</h2><nav class="sec-nav"><a class="sn prev" href="#github-actions"><span class="sn-label">← 上一节</span><span class="sn-name">GitHub Actions</span></a><a class="sn next" href="#重复"><span class="sn-label">下一节 →</span><span class="sn-name">重复</span></a></nav>
 <p>例如：</p>
 <p>是否：</p>
 <pre><code>instruction
@@ -493,18 +572,18 @@ input
 
 output</code></pre>
 <hr/>
-<h2 id="重复">重复</h2>
+<h2 id="重复">重复</h2><nav class="sec-nav"><a class="sn prev" href="#格式"><span class="sn-label">← 上一节</span><span class="sn-name">格式</span></a><a class="sn next" href="#长度"><span class="sn-label">下一节 →</span><span class="sn-name">长度</span></a></nav>
 <p>检测：</p>
 <p>重复问题。</p>
 <hr/>
-<h2 id="长度">长度</h2>
+<h2 id="长度">长度</h2><nav class="sec-nav"><a class="sn prev" href="#重复"><span class="sn-label">← 上一节</span><span class="sn-name">重复</span></a><a class="sn next" href="#安全"><span class="sn-label">下一节 →</span><span class="sn-name">安全</span></a></nav>
 <p>例如：</p>
 <p>答案：</p>
 <p>只有：</p>
 <p>&quot;不知道&quot;</p>
 <p>删除。</p>
 <hr/>
-<h2 id="安全">安全</h2>
+<h2 id="安全">安全</h2><nav class="sec-nav"><a class="sn prev" href="#长度"><span class="sn-label">← 上一节</span><span class="sn-name">长度</span></a><a class="sn next" href="#1-accuracy准确性"><span class="sn-label">下一节 →</span><span class="sn-name">1. Accuracy【准确性】</span></a></nav>
 <p>检测：</p>
 <p>敏感信息。</p>
 <hr/>
@@ -542,19 +621,19 @@ Evaluation Dataset
 <p>允许发布。</p>
 <hr/>
 <h1 id="十五llm-evaluation指标">十五、LLM Evaluation指标</h1>
-<h2 id="1-accuracy准确性">1. Accuracy【准确性】</h2>
+<h2 id="1-accuracy准确性">1. Accuracy【准确性】</h2><nav class="sec-nav"><a class="sn prev" href="#安全"><span class="sn-label">← 上一节</span><span class="sn-name">安全</span></a><a class="sn next" href="#2-faithfulness忠实性"><span class="sn-label">下一节 →</span><span class="sn-name">2. Faithfulness【忠实性】</span></a></nav>
 <p>答案是否正确。</p>
 <hr/>
-<h2 id="2-faithfulness忠实性">2. Faithfulness【忠实性】</h2>
+<h2 id="2-faithfulness忠实性">2. Faithfulness【忠实性】</h2><nav class="sec-nav"><a class="sn prev" href="#1-accuracy准确性"><span class="sn-label">← 上一节</span><span class="sn-name">1. Accuracy【准确性】</span></a><a class="sn next" href="#3-relevance相关性"><span class="sn-label">下一节 →</span><span class="sn-name">3. Relevance【相关性】</span></a></nav>
 <p>是否依据知识库。</p>
 <hr/>
-<h2 id="3-relevance相关性">3. Relevance【相关性】</h2>
+<h2 id="3-relevance相关性">3. Relevance【相关性】</h2><nav class="sec-nav"><a class="sn prev" href="#2-faithfulness忠实性"><span class="sn-label">← 上一节</span><span class="sn-name">2. Faithfulness【忠实性】</span></a><a class="sn next" href="#4-latency延迟"><span class="sn-label">下一节 →</span><span class="sn-name">4. Latency【延迟】</span></a></nav>
 <p>是否回答问题。</p>
 <hr/>
-<h2 id="4-latency延迟">4. Latency【延迟】</h2>
+<h2 id="4-latency延迟">4. Latency【延迟】</h2><nav class="sec-nav"><a class="sn prev" href="#3-relevance相关性"><span class="sn-label">← 上一节</span><span class="sn-name">3. Relevance【相关性】</span></a><a class="sn next" href="#5-cost成本"><span class="sn-label">下一节 →</span><span class="sn-name">5. Cost【成本】</span></a></nav>
 <p>响应速度。</p>
 <hr/>
-<h2 id="5-cost成本">5. Cost【成本】</h2>
+<h2 id="5-cost成本">5. Cost【成本】</h2><nav class="sec-nav"><a class="sn prev" href="#4-latency延迟"><span class="sn-label">← 上一节</span><span class="sn-name">4. Latency【延迟】</span></a><a class="sn next" href="#问"><span class="sn-label">下一节 →</span><span class="sn-name">问：</span></a></nav>
 <p>Token消耗。</p>
 <hr/>
 <h1 id="十六自动部署">十六、自动部署</h1>
@@ -690,7 +769,7 @@ v1</code></pre>
 自动回滚</code></pre>
 <hr/>
 <h1 id="二十面试回答">二十、面试回答</h1>
-<h2 id="问">问：</h2>
+<h2 id="问">问：</h2><nav class="sec-nav"><a class="sn prev" href="#5-cost成本"><span class="sn-label">← 上一节</span><span class="sn-name">5. Cost【成本】</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>你们模型如何持续优化？</p></blockquote>
 <p>标准回答：</p>
 <blockquote><p>我们建立了完整的 MLOps 流程。首先通过数据版本管理维护训练数据变化，训练阶段使用 LLaMA-Factory 进行 QLoRA 微调，同时记录模型参数和实验结果。训练完成后通过 Evaluation 数据集自动评测模型效果，只有指标超过当前线上版本才进入模型注册和灰度发布。如果线上指标异常，可以快速回滚到稳定版本。</p></blockquote>
@@ -740,5 +819,48 @@ Security           Evaluation</code></pre>
 <ul class="lvl"><li>“如何保证安全？”</li></ul>
 <p>这一节会把前面 17 天全部串成一个完整项目。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

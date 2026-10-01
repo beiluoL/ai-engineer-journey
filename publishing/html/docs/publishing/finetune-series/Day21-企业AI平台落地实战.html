@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#公司规模" class="lvl2">公司规模</a><a href="#内部" class="lvl3">内部：</a><a href="#外部" class="lvl3">外部：</a><a href="#ai负载类型" class="lvl2">AI负载类型。</a><a href="#gpu节点" class="lvl2">GPU节点</a><a href="#小型ai平台" class="lvl2">小型AI平台</a><a href="#3050万元" class="lvl2">30～50万元</a><a href="#中型企业" class="lvl2">中型企业</a><a href="#200500万元" class="lvl2">200～500万元</a><a href="#大型企业" class="lvl2">大型企业</a><a href="#网络结构" class="lvl2">网络结构</a><a href="#前端网络" class="lvl2">前端网络</a><a href="#ai计算网络" class="lvl2">AI计算网络</a><a href="#存储网络" class="lvl2">存储网络</a><a href="#master节点" class="lvl2">Master节点</a><a href="#worker节点" class="lvl2">Worker节点</a><a href="#gpu-worker" class="lvl2">GPU Worker</a><a href="#文档存储" class="lvl2">文档存储</a><a href="#向量数据库" class="lvl2">向量数据库</a><a href="#搜索" class="lvl2">搜索</a><a href="#模型路由" class="lvl2">模型路由</a><a href="#限流" class="lvl2">限流</a><a href="#成本统计" class="lvl2">成本统计</a><a href="#系统监控" class="lvl2">系统监控</a><a href="#ai监控" class="lvl2">AI监控</a><a href="#日志" class="lvl2">日志</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day21企业-ai-平台落地实战">Day21：企业 AI 平台落地实战</h1>
 <h1 id="从-0-设计一个企业私有-ai-平台硬件采购-网络规划-kubernetes-gpu集群-rag-agent-运维">从 0 设计一个企业私有 AI 平台：硬件采购 → 网络规划 → Kubernetes → GPU集群 → RAG → Agent → 运维</h1>
@@ -104,7 +183,7 @@ AI产品设计</code></pre>
 <hr/>
 <h1 id="一先定义企业场景">一、先定义企业场景</h1>
 <p>假设企业：</p>
-<h2 id="公司规模">公司规模</h2>
+<h2 id="公司规模">公司规模</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#ai负载类型"><span class="sn-label">下一节 →</span><span class="sn-name">AI负载类型。</span></a></nav>
 <p>5000员工。</p>
 <p>AI使用：</p>
 <p>1000人。</p>
@@ -210,7 +289,7 @@ vLLM        API        API        Stable Diffusion
 <h1 id="三第一步硬件采购规划">三、第一步：硬件采购规划</h1>
 <p>企业不要先买GPU。</p>
 <p>先分析：</p>
-<h2 id="ai负载类型">AI负载类型。</h2>
+<h2 id="ai负载类型">AI负载类型。</h2><nav class="sec-nav"><a class="sn prev" href="#公司规模"><span class="sn-label">← 上一节</span><span class="sn-name">公司规模</span></a><a class="sn next" href="#gpu节点"><span class="sn-label">下一节 →</span><span class="sn-name">GPU节点</span></a></nav>
 <hr/>
 <h1 id="1-llm推理负载">1. LLM推理负载</h1>
 <p>用途：</p>
@@ -221,7 +300,7 @@ vLLM        API        API        Stable Diffusion
 <p>显存。</p>
 <hr/>
 <p>推荐：</p>
-<h2 id="gpu节点">GPU节点</h2>
+<h2 id="gpu节点">GPU节点</h2><nav class="sec-nav"><a class="sn prev" href="#ai负载类型"><span class="sn-label">← 上一节</span><span class="sn-name">AI负载类型。</span></a><a class="sn next" href="#小型ai平台"><span class="sn-label">下一节 →</span><span class="sn-name">小型AI平台</span></a></nav>
 <p>配置：</p>
 <pre><code>GPU:
 
@@ -295,7 +374,7 @@ RTX4090 ×4</code></pre>
 A100</code></pre>
 <hr/>
 <h1 id="四企业预算模型">四、企业预算模型</h1>
-<h2 id="小型ai平台">小型AI平台</h2>
+<h2 id="小型ai平台">小型AI平台</h2><nav class="sec-nav"><a class="sn prev" href="#gpu节点"><span class="sn-label">← 上一节</span><span class="sn-name">GPU节点</span></a><a class="sn next" href="#3050万元"><span class="sn-label">下一节 →</span><span class="sn-name">30～50万元</span></a></nav>
 <p>目标：</p>
 <p>500人。</p>
 <p>配置：</p>
@@ -319,9 +398,9 @@ A100</code></pre>
 10GbE</code></pre>
 <p>预算：</p>
 <p>约：</p>
-<h2 id="3050万元">30～50万元</h2>
+<h2 id="3050万元">30～50万元</h2><nav class="sec-nav"><a class="sn prev" href="#小型ai平台"><span class="sn-label">← 上一节</span><span class="sn-name">小型AI平台</span></a><a class="sn next" href="#中型企业"><span class="sn-label">下一节 →</span><span class="sn-name">中型企业</span></a></nav>
 <hr/>
-<h2 id="中型企业">中型企业</h2>
+<h2 id="中型企业">中型企业</h2><nav class="sec-nav"><a class="sn prev" href="#3050万元"><span class="sn-label">← 上一节</span><span class="sn-name">30～50万元</span></a><a class="sn next" href="#200500万元"><span class="sn-label">下一节 →</span><span class="sn-name">200～500万元</span></a></nav>
 <p>5000用户。</p>
 <p>配置：</p>
 <pre><code>L40S服务器
@@ -340,9 +419,9 @@ A100</code></pre>
 
 25GbE</code></pre>
 <p>预算：</p>
-<h2 id="200500万元">200～500万元</h2>
+<h2 id="200500万元">200～500万元</h2><nav class="sec-nav"><a class="sn prev" href="#中型企业"><span class="sn-label">← 上一节</span><span class="sn-name">中型企业</span></a><a class="sn next" href="#大型企业"><span class="sn-label">下一节 →</span><span class="sn-name">大型企业</span></a></nav>
 <hr/>
-<h2 id="大型企业">大型企业</h2>
+<h2 id="大型企业">大型企业</h2><nav class="sec-nav"><a class="sn prev" href="#200500万元"><span class="sn-label">← 上一节</span><span class="sn-name">200～500万元</span></a><a class="sn next" href="#网络结构"><span class="sn-label">下一节 →</span><span class="sn-name">网络结构</span></a></nav>
 <p>金融/互联网。</p>
 <p>配置：</p>
 <pre><code>A100/H100集群
@@ -365,7 +444,7 @@ AI数据中心</code></pre>
 <p>数据：</p>
 <p>TB级。</p>
 <hr/>
-<h2 id="网络结构">网络结构</h2>
+<h2 id="网络结构">网络结构</h2><nav class="sec-nav"><a class="sn prev" href="#大型企业"><span class="sn-label">← 上一节</span><span class="sn-name">大型企业</span></a><a class="sn next" href="#前端网络"><span class="sn-label">下一节 →</span><span class="sn-name">前端网络</span></a></nav>
 <pre><code>             Internet
 
 
@@ -404,17 +483,17 @@ AI数据中心</code></pre>
 </code></pre>
 <hr/>
 <h1 id="六网络设备">六、网络设备</h1>
-<h2 id="前端网络">前端网络</h2>
+<h2 id="前端网络">前端网络</h2><nav class="sec-nav"><a class="sn prev" href="#网络结构"><span class="sn-label">← 上一节</span><span class="sn-name">网络结构</span></a><a class="sn next" href="#ai计算网络"><span class="sn-label">下一节 →</span><span class="sn-name">AI计算网络</span></a></nav>
 <p>用户访问：</p>
 <p>10Gb。</p>
 <hr/>
-<h2 id="ai计算网络">AI计算网络</h2>
+<h2 id="ai计算网络">AI计算网络</h2><nav class="sec-nav"><a class="sn prev" href="#前端网络"><span class="sn-label">← 上一节</span><span class="sn-name">前端网络</span></a><a class="sn next" href="#存储网络"><span class="sn-label">下一节 →</span><span class="sn-name">存储网络</span></a></nav>
 <p>推荐：</p>
 <p>25Gb/100Gb。</p>
 <p>原因：</p>
 <p>模型通信。</p>
 <hr/>
-<h2 id="存储网络">存储网络</h2>
+<h2 id="存储网络">存储网络</h2><nav class="sec-nav"><a class="sn prev" href="#ai计算网络"><span class="sn-label">← 上一节</span><span class="sn-name">AI计算网络</span></a><a class="sn next" href="#master节点"><span class="sn-label">下一节 →</span><span class="sn-name">Master节点</span></a></nav>
 <p>推荐：</p>
 <p>25Gb。</p>
 <hr/>
@@ -479,7 +558,7 @@ Master Node     Worker Node
 </code></pre>
 <hr/>
 <h1 id="九kubernetes节点规划">九、Kubernetes节点规划</h1>
-<h2 id="master节点">Master节点</h2>
+<h2 id="master节点">Master节点</h2><nav class="sec-nav"><a class="sn prev" href="#存储网络"><span class="sn-label">← 上一节</span><span class="sn-name">存储网络</span></a><a class="sn next" href="#worker节点"><span class="sn-label">下一节 →</span><span class="sn-name">Worker节点</span></a></nav>
 <p>负责：</p>
 <p>控制。</p>
 <p>配置：</p>
@@ -492,10 +571,10 @@ RAM:
 
 32GB</code></pre>
 <hr/>
-<h2 id="worker节点">Worker节点</h2>
+<h2 id="worker节点">Worker节点</h2><nav class="sec-nav"><a class="sn prev" href="#master节点"><span class="sn-label">← 上一节</span><span class="sn-name">Master节点</span></a><a class="sn next" href="#gpu-worker"><span class="sn-label">下一节 →</span><span class="sn-name">GPU Worker</span></a></nav>
 <p>运行业务。</p>
 <hr/>
-<h2 id="gpu-worker">GPU Worker</h2>
+<h2 id="gpu-worker">GPU Worker</h2><nav class="sec-nav"><a class="sn prev" href="#worker节点"><span class="sn-label">← 上一节</span><span class="sn-name">Worker节点</span></a><a class="sn next" href="#文档存储"><span class="sn-label">下一节 →</span><span class="sn-name">文档存储</span></a></nav>
 <p>运行：</p>
 <p>vLLM。</p>
 <p>配置：</p>
@@ -622,13 +701,13 @@ Rerank
 LLM</code></pre>
 <hr/>
 <p>组件：</p>
-<h2 id="文档存储">文档存储</h2>
+<h2 id="文档存储">文档存储</h2><nav class="sec-nav"><a class="sn prev" href="#gpu-worker"><span class="sn-label">← 上一节</span><span class="sn-name">GPU Worker</span></a><a class="sn next" href="#向量数据库"><span class="sn-label">下一节 →</span><span class="sn-name">向量数据库</span></a></nav>
 <p>MinIO。</p>
 <hr/>
-<h2 id="向量数据库">向量数据库</h2>
+<h2 id="向量数据库">向量数据库</h2><nav class="sec-nav"><a class="sn prev" href="#文档存储"><span class="sn-label">← 上一节</span><span class="sn-name">文档存储</span></a><a class="sn next" href="#搜索"><span class="sn-label">下一节 →</span><span class="sn-name">搜索</span></a></nav>
 <p>Milvus。</p>
 <hr/>
-<h2 id="搜索">搜索</h2>
+<h2 id="搜索">搜索</h2><nav class="sec-nav"><a class="sn prev" href="#向量数据库"><span class="sn-label">← 上一节</span><span class="sn-name">向量数据库</span></a><a class="sn next" href="#模型路由"><span class="sn-label">下一节 →</span><span class="sn-name">模型路由</span></a></nav>
 <p>Elasticsearch。</p>
 <hr/>
 <h1 id="十三第七步agent平台">十三、第七步：Agent平台</h1>
@@ -700,19 +779,19 @@ Database</code></pre>
 <h1 id="十五第八步ai-gateway">十五、第八步：AI Gateway</h1>
 <p>企业统一入口。</p>
 <p>功能：</p>
-<h2 id="模型路由">模型路由</h2>
+<h2 id="模型路由">模型路由</h2><nav class="sec-nav"><a class="sn prev" href="#搜索"><span class="sn-label">← 上一节</span><span class="sn-name">搜索</span></a><a class="sn next" href="#限流"><span class="sn-label">下一节 →</span><span class="sn-name">限流</span></a></nav>
 <p>例如：</p>
 <p>简单：</p>
 <p>Qwen7B。</p>
 <p>复杂：</p>
 <p>DeepSeek。</p>
 <hr/>
-<h2 id="限流">限流</h2>
+<h2 id="限流">限流</h2><nav class="sec-nav"><a class="sn prev" href="#模型路由"><span class="sn-label">← 上一节</span><span class="sn-name">模型路由</span></a><a class="sn next" href="#成本统计"><span class="sn-label">下一节 →</span><span class="sn-name">成本统计</span></a></nav>
 <p>例如：</p>
 <p>用户：</p>
 <p>1000 token/min。</p>
 <hr/>
-<h2 id="成本统计">成本统计</h2>
+<h2 id="成本统计">成本统计</h2><nav class="sec-nav"><a class="sn prev" href="#限流"><span class="sn-label">← 上一节</span><span class="sn-name">限流</span></a><a class="sn next" href="#系统监控"><span class="sn-label">下一节 →</span><span class="sn-name">系统监控</span></a></nav>
 <p>记录：</p>
 <pre><code>{
 user:&quot;001&quot;,
@@ -728,21 +807,21 @@ cost:0.02
 <p>企业必须有：</p>
 <p>Observability【可观测性】。</p>
 <hr/>
-<h2 id="系统监控">系统监控</h2>
+<h2 id="系统监控">系统监控</h2><nav class="sec-nav"><a class="sn prev" href="#成本统计"><span class="sn-label">← 上一节</span><span class="sn-name">成本统计</span></a><a class="sn next" href="#ai监控"><span class="sn-label">下一节 →</span><span class="sn-name">AI监控</span></a></nav>
 <p>Prometheus。</p>
 <p>监控：</p>
 <ul class="lvl"><li>CPU</li></ul>
 <ul class="lvl"><li>内存</li></ul>
 <ul class="lvl"><li>GPU</li></ul>
 <hr/>
-<h2 id="ai监控">AI监控</h2>
+<h2 id="ai监控">AI监控</h2><nav class="sec-nav"><a class="sn prev" href="#系统监控"><span class="sn-label">← 上一节</span><span class="sn-name">系统监控</span></a><a class="sn next" href="#日志"><span class="sn-label">下一节 →</span><span class="sn-name">日志</span></a></nav>
 <p>记录：</p>
 <ul class="lvl"><li>Token</li></ul>
 <ul class="lvl"><li>延迟</li></ul>
 <ul class="lvl"><li>模型版本</li></ul>
 <ul class="lvl"><li>用户反馈</li></ul>
 <hr/>
-<h2 id="日志">日志</h2>
+<h2 id="日志">日志</h2><nav class="sec-nav"><a class="sn prev" href="#ai监控"><span class="sn-label">← 上一节</span><span class="sn-name">AI监控</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>ELK：</p>
 <pre><code>ElasticSearch
 
@@ -900,5 +979,48 @@ AI Solution Architect</code></pre>
 <p>这会直接对应：</p>
 <p><strong>2026 AI Agent 工程师岗位核心能力。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

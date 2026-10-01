@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#为什么只有007参数训练" class="lvl2">为什么只有0.07%参数训练？</a><a href="#loss-是什么" class="lvl2">Loss 是什么？</a><a href="#1-batch-调小" class="lvl2">1. batch 调小</a><a href="#2-cutofflen降低" class="lvl2">2. cutoff_len降低</a><a href="#3-开启4bit-qlora" class="lvl2">3. 开启4bit QLoRA</a><a href="#adaptermodelsafetensors" class="lvl2">adapter_model.safetensors</a><a href="#adapterconfigjson" class="lvl2">adapter_config.json</a><a href="#微调前" class="lvl2">微调前</a><a href="#微调后" class="lvl2">微调后：</a><a href="#第一次微调效果验证" class="lvl2">第一次微调效果验证</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="大模型微调实战-day203正式启动第一次-qlora-训练">大模型微调实战 Day2-03：正式启动第一次 QLoRA 训练</h1>
 <h1 id="正式启动第一次-qlora-训练">正式启动第一次 QLoRA 训练</h1>
@@ -153,7 +232,7 @@ trainable%:
 0.07%</code></pre>
 <p>这里非常重要。</p>
 <hr/>
-<h2 id="为什么只有007参数训练">为什么只有0.07%参数训练？</h2>
+<h2 id="为什么只有007参数训练">为什么只有0.07%参数训练？</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#loss-是什么"><span class="sn-label">下一节 →</span><span class="sn-name">Loss 是什么？</span></a></nav>
 <p>因为：</p>
 <p>不是训练整个模型。</p>
 <p>原模型：</p>
@@ -190,7 +269,7 @@ step 30
 
 loss: 1.45</code></pre>
 <hr/>
-<h2 id="loss-是什么">Loss 是什么？</h2>
+<h2 id="loss-是什么">Loss 是什么？</h2><nav class="sec-nav"><a class="sn prev" href="#为什么只有007参数训练"><span class="sn-label">← 上一节</span><span class="sn-name">为什么只有0.07%参数训练？</span></a><a class="sn next" href="#1-batch-调小"><span class="sn-label">下一节 →</span><span class="sn-name">1. batch 调小</span></a></nav>
 <p>Loss：</p>
 <p><strong>损失值【模型错误程度】</strong></p>
 <p>简单理解：</p>
@@ -230,19 +309,19 @@ T4 GPU
 <pre><code>CUDA out of memory</code></pre>
 <p>解决：</p>
 <p>修改：</p>
-<h2 id="1-batch-调小">1. batch 调小</h2>
+<h2 id="1-batch-调小">1. batch 调小</h2><nav class="sec-nav"><a class="sn prev" href="#loss-是什么"><span class="sn-label">← 上一节</span><span class="sn-name">Loss 是什么？</span></a><a class="sn next" href="#2-cutofflen降低"><span class="sn-label">下一节 →</span><span class="sn-name">2. cutoff_len降低</span></a></nav>
 <p>原：</p>
 <pre><code>per_device_train_batch_size:2</code></pre>
 <p>改：</p>
 <pre><code>per_device_train_batch_size:1</code></pre>
 <hr/>
-<h2 id="2-cutofflen降低">2. cutoff_len降低</h2>
+<h2 id="2-cutofflen降低">2. cutoff_len降低</h2><nav class="sec-nav"><a class="sn prev" href="#1-batch-调小"><span class="sn-label">← 上一节</span><span class="sn-name">1. batch 调小</span></a><a class="sn next" href="#3-开启4bit-qlora"><span class="sn-label">下一节 →</span><span class="sn-name">3. 开启4bit QLoRA</span></a></nav>
 <p>原：</p>
 <pre><code>cutoff_len:1024</code></pre>
 <p>改：</p>
 <pre><code>cutoff_len:512</code></pre>
 <hr/>
-<h2 id="3-开启4bit-qlora">3. 开启4bit QLoRA</h2>
+<h2 id="3-开启4bit-qlora">3. 开启4bit QLoRA</h2><nav class="sec-nav"><a class="sn prev" href="#2-cutofflen降低"><span class="sn-label">← 上一节</span><span class="sn-name">2. cutoff_len降低</span></a><a class="sn next" href="#adaptermodelsafetensors"><span class="sn-label">下一节 →</span><span class="sn-name">adapter_model.safetensors</span></a></nav>
 <p>修改：</p>
 <p>增加：</p>
 <pre><code>quantization_bit: 4</code></pre>
@@ -272,7 +351,7 @@ training_args.bin
 README.md</code></pre>
 <hr/>
 <h1 id="九这些文件是什么">九、这些文件是什么？</h1>
-<h2 id="adaptermodelsafetensors">adapter_model.safetensors</h2>
+<h2 id="adaptermodelsafetensors">adapter_model.safetensors</h2><nav class="sec-nav"><a class="sn prev" href="#3-开启4bit-qlora"><span class="sn-label">← 上一节</span><span class="sn-name">3. 开启4bit QLoRA</span></a><a class="sn next" href="#adapterconfigjson"><span class="sn-label">下一节 →</span><span class="sn-name">adapter_config.json</span></a></nav>
 <p>你的：</p>
 <blockquote><p>Java 面试能力插件</p></blockquote>
 <p>不是完整模型。</p>
@@ -287,7 +366,7 @@ adapter_model
 
 Java Interview Model</code></pre>
 <hr/>
-<h2 id="adapterconfigjson">adapter_config.json</h2>
+<h2 id="adapterconfigjson">adapter_config.json</h2><nav class="sec-nav"><a class="sn prev" href="#adaptermodelsafetensors"><span class="sn-label">← 上一节</span><span class="sn-name">adapter_model.safetensors</span></a><a class="sn next" href="#微调前"><span class="sn-label">下一节 →</span><span class="sn-name">微调前</span></a></nav>
 <p>记录：</p>
 <p>LoRA配置：</p>
 <p>例如：</p>
@@ -300,14 +379,14 @@ Java Interview Model</code></pre>
 <p>下一步：</p>
 <p>我们不能直接说成功。</p>
 <p>必须比较：</p>
-<h2 id="微调前">微调前</h2>
+<h2 id="微调前">微调前</h2><nav class="sec-nav"><a class="sn prev" href="#adapterconfigjson"><span class="sn-label">← 上一节</span><span class="sn-name">adapter_config.json</span></a><a class="sn next" href="#微调后"><span class="sn-label">下一节 →</span><span class="sn-name">微调后：</span></a></nav>
 <p>Qwen：</p>
 <p>问题：</p>
 <pre><code>如何回答HashMap线程安全吗？</code></pre>
 <p>可能：</p>
 <p>普通解释。</p>
 <hr/>
-<h2 id="微调后">微调后：</h2>
+<h2 id="微调后">微调后：</h2><nav class="sec-nav"><a class="sn prev" href="#微调前"><span class="sn-label">← 上一节</span><span class="sn-name">微调前</span></a><a class="sn next" href="#第一次微调效果验证"><span class="sn-label">下一节 →</span><span class="sn-name">第一次微调效果验证</span></a></nav>
 <p>希望：</p>
 <pre><code>面试回答：
 
@@ -328,7 +407,7 @@ HashMap线程不安全主要原因：
 <table><thead><tr><th>能力</th><th>掌握</th></tr></thead><tbody><tr><td>GPU环境</td><td>✅</td></tr><tr><td>模型加载</td><td>✅</td></tr><tr><td>SFT</td><td>✅</td></tr><tr><td>LoRA</td><td>✅</td></tr><tr><td>训练配置</td><td>✅</td></tr><tr><td>Loss理解</td><td>✅</td></tr><tr><td>Adapter生成</td><td>✅</td></tr></tbody></table>
 <hr/>
 <h1 id="下一节-day301">下一节 Day3-01</h1>
-<h2 id="第一次微调效果验证">第一次微调效果验证</h2>
+<h2 id="第一次微调效果验证">第一次微调效果验证</h2><nav class="sec-nav"><a class="sn prev" href="#微调后"><span class="sn-label">← 上一节</span><span class="sn-name">微调后：</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>内容：</p>
 <ul class="lvl"><li>加载 Base Model</li></ul>
 <ul class="lvl"><li>加载 LoRA Adapter</li></ul>
@@ -339,5 +418,48 @@ HashMap线程不安全主要原因：
 <p><strong>Day3：把你的 LoRA 模型接入 Ollama / Spring Boot / LangChain4j</strong></p>
 <p>这一步会把“模型训练”连接到你熟悉的 Java AI 工程。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,24 +52,103 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-本章目标" class="lvl2">1. 本章目标</a><a href="#2-为什么换真实服务不是改个-url那么简单" class="lvl2">2. 为什么换真实服务不是「改个 URL」那么简单</a><a href="#3-技术选型" class="lvl2">3. 技术选型</a><a href="#31-embedding百炼-textembeddingv3" class="lvl3">3.1 Embedding：百炼 text-embedding-v3</a><a href="#32-向量库chroma-持久化" class="lvl3">3.2 向量库：Chroma 持久化</a><a href="#4-代码改动概览" class="lvl2">4. 代码改动概览</a><a href="#41-embeddingpy抽出-openai-兼容协议骨架" class="lvl3">4.1 embedding.py：抽出 OpenAI 兼容协议骨架</a><a href="#42-storepychroma-真实落盘的-3-个补丁" class="lvl3">4.2 store.py：Chroma 真实落盘的 3 个补丁</a><a href="#5-运行方式" class="lvl2">5. 运行方式</a><a href="#6-真实运行截图" class="lvl2">6. 真实运行截图</a><a href="#61-探测百炼单批上限" class="lvl3">6.1 探测百炼单批上限</a><a href="#62-真实-embedding-链路" class="lvl3">6.2 真实 Embedding 链路</a><a href="#63-chroma-落盘-重启恢复-语义检索" class="lvl3">6.3 Chroma 落盘 + 重启恢复 + 语义检索</a><a href="#64-fake-vs-真实-换模型护栏" class="lvl3">6.4 Fake vs 真实 + 换模型护栏</a><a href="#7-六个只有真跑才会踩的坑" class="lvl2">7. 六个只有真跑才会踩的坑</a><a href="#坑-1厂商单批上限不同" class="lvl3">坑 1：厂商单批上限不同</a><a href="#坑-2真实-embedding-是否归一化" class="lvl3">坑 2：真实 embedding 是否归一化</a><a href="#坑-3metadata-里的-list-进不了-chroma" class="lvl3">坑 3：metadata 里的 list 进不了 Chroma</a><a href="#坑-4模型名必须随库持久化" class="lvl3">坑 4：模型名必须随库持久化</a><a href="#坑-5落盘目录别被摄入扫描到" class="lvl3">坑 5：落盘目录别被摄入扫描到</a><a href="#坑-6chroma-返回的是-distance不是-similarity" class="lvl3">坑 6：Chroma 返回的是 distance，不是 similarity</a><a href="#8-新增测试" class="lvl2">8. 新增测试</a><a href="#9-本章产出文件" class="lvl2">9. 本章产出文件</a><a href="#10-下一步" class="lvl2">10. 下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="第十一章接真实服务">第十一章：接真实服务</h1>
 <blockquote><p>目标：把前面十章的「离线替身」换成真实 API，把「内存库」换成持久化向量库。</p><p>这一章不是多写几个类，而是处理只有「真的跑起来」才会撞见的边界问题。</p></blockquote>
 <hr/>
-<h2 id="1-本章目标">1. 本章目标</h2>
+<h2 id="1-本章目标">1. 本章目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么换真实服务不是改个-url那么简单"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么换真实服务不是「改个 URL」那么简单</span></a></nav>
 <ul class="lvl"><li>接入真实 embedding：<code>DashScopeEmbeddingClient</code> 调阿里云百炼 <code>text-embedding-v3</code>（1024 维，与 bge-m3 同族）。</li><li>接入持久化向量库：<code>ChromaVectorStore</code> 落盘到 <code>chroma_db/rag_chunks</code>，验证重启后数据还在。</li><li>把这次接线遇到的 6 个真实坑，变成可复现的代码与截图。</li></ul>
 <hr/>
-<h2 id="2-为什么换真实服务不是改个-url那么简单">2. 为什么换真实服务不是「改个 URL」那么简单</h2>
+<h2 id="2-为什么换真实服务不是改个-url那么简单">2. 为什么换真实服务不是「改个 URL」那么简单</h2><nav class="sec-nav"><a class="sn prev" href="#1-本章目标"><span class="sn-label">← 上一节</span><span class="sn-name">1. 本章目标</span></a><a class="sn next" href="#3-技术选型"><span class="sn-label">下一节 →</span><span class="sn-name">3. 技术选型</span></a></nav>
 <p>前十章里：</p>
 <ul class="lvl"><li><code>FakeEmbeddingClient</code> 用字符 n-gram 哈希生成 64 维向量；</li><li><code>InMemoryVectorStore</code> 用 NumPy 暴力算余弦；</li><li>整套链路跑在离线环境里，113 项 pytest 全绿。</li></ul>
 <p>这证明了一件事：<strong>接口契约是对的</strong>。但它没有证明三件事：</p>
 <ul class="lvl"><li>真实 API 的批量上限、响应结构、错误码各家不同；</li><li>真实 embedding 才有语义能力（Fake 靠字面，容易跑偏）；</li><li>真实向量库对 metadata、持久化、模型一致性的要求远高于内存库。</li></ul>
 <p>所以这一章的任务是：<strong>在跑通的同时，把「跑不通」的那些点记录下来。</strong></p>
 <hr/>
-<h2 id="3-技术选型">3. 技术选型</h2>
+<h2 id="3-技术选型">3. 技术选型</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么换真实服务不是改个-url那么简单"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么换真实服务不是「改个 URL」那么简单</span></a><a class="sn next" href="#4-代码改动概览"><span class="sn-label">下一节 →</span><span class="sn-name">4. 代码改动概览</span></a></nav>
 <h3 id="31-embedding百炼-textembeddingv3">3.1 Embedding：百炼 text-embedding-v3</h3>
 <p>用户没有配置 <code>SILICONFLOW_API_KEY</code>，本机只有 <code>DASHSCOPE_API_KEY</code>（阿里云百炼）。</p>
 <p>百炼的 <code>text-embedding-v3</code> 关键参数：</p>
@@ -78,7 +157,7 @@ li{margin:.3em 0;}
 <h3 id="32-向量库chroma-持久化">3.2 向量库：Chroma 持久化</h3>
 <ul class="lvl"><li><code>ChromaVectorStore</code> 已在第四章写好，但前面十章一直用的是 <code>InMemoryVectorStore</code>（不依赖 <code>chromadb</code> 这个重依赖）。</li><li>本章启用持久化目录 <code>chroma_db/rag_chunks/</code>，并被 <code>.gitignore</code> 排除（向量库是派生数据）。</li></ul>
 <hr/>
-<h2 id="4-代码改动概览">4. 代码改动概览</h2>
+<h2 id="4-代码改动概览">4. 代码改动概览</h2><nav class="sec-nav"><a class="sn prev" href="#3-技术选型"><span class="sn-label">← 上一节</span><span class="sn-name">3. 技术选型</span></a><a class="sn next" href="#5-运行方式"><span class="sn-label">下一节 →</span><span class="sn-name">5. 运行方式</span></a></nav>
 <h3 id="41-embeddingpy抽出-openai-兼容协议骨架">4.1 embedding.py：抽出 OpenAI 兼容协议骨架</h3>
 <pre><code>class _OpenAIStyleEmbeddingClient(BaseEmbeddingClient):
     &quot;&quot;&quot;OpenAI /v1/embeddings 协议的公共骨架（分批 / 按 index 排序 / 429 退避）。&quot;&quot;&quot;
@@ -113,7 +192,7 @@ class DashScopeEmbeddingClient(_OpenAIStyleEmbeddingClient):
 <h3 id="42-storepychroma-真实落盘的-3-个补丁">4.2 store.py：Chroma 真实落盘的 3 个补丁</h3>
 <table><thead><tr><th>补丁</th><th>坑</th><th>修复</th></tr></thead><tbody><tr><td><code>_to_scalar</code></td><td>Chroma metadata 只接受 <code>str/int/float/bool</code>，但 <code>MdParser</code> 把 <code>headings</code> 存成 <code>list</code></td><td>list → <code>&quot;;&quot;</code> 拼接；<code>None</code> 丢弃；dict → JSON 字符串</td></tr><tr><td><code>_model</code> sidecar 文件</td><td>进程重启后 <code>model_name</code> 为空，<code>check_model</code> 护栏失效</td><td>把模型名写进 <code>chroma_db/&lt;collection&gt;/_model</code>，启动时读回</td></tr><tr><td><code>expand_paths</code> 后缀白名单</td><td>Chroma 落盘目录若放在 <code>data/</code> 下，会被当成待解析文档</td><td>只保留 <code>.md/.txt/.pdf/.docx</code> 后缀</td></tr></tbody></table>
 <hr/>
-<h2 id="5-运行方式">5. 运行方式</h2>
+<h2 id="5-运行方式">5. 运行方式</h2><nav class="sec-nav"><a class="sn prev" href="#4-代码改动概览"><span class="sn-label">← 上一节</span><span class="sn-name">4. 代码改动概览</span></a><a class="sn next" href="#6-真实运行截图"><span class="sn-label">下一节 →</span><span class="sn-name">6. 真实运行截图</span></a></nav>
 <pre><code># 1. 安装 chromadb（如果还没装）
 cd projects/04-rag
 .venv/bin/pip install &quot;chromadb&gt;=0.5&quot;
@@ -126,7 +205,7 @@ export DASHSCOPE_API_KEY=sk-xxxx
 .venv/bin/python demos/demo_12_real_service.py</code></pre>
 <blockquote><p>注意：<code>chroma_db/rag_chunks/</code> 是派生数据，不会进 git；但不要把派生目录放在 <code>data/</code> 下，否则会被摄入扫描到。</p></blockquote>
 <hr/>
-<h2 id="6-真实运行截图">6. 真实运行截图</h2>
+<h2 id="6-真实运行截图">6. 真实运行截图</h2><nav class="sec-nav"><a class="sn prev" href="#5-运行方式"><span class="sn-label">← 上一节</span><span class="sn-name">5. 运行方式</span></a><a class="sn next" href="#7-六个只有真跑才会踩的坑"><span class="sn-label">下一节 →</span><span class="sn-name">7. 六个只有真跑才会踩的坑</span></a></nav>
 <h3 id="61-探测百炼单批上限">6.1 探测百炼单批上限</h3>
 <figure class="figure"><img alt="探测百炼单批上限" src="../../../../../../projects/04-rag/assets/real-batch-limit.png" loading="lazy"/><figcaption>探测百炼单批上限</figcaption></figure>
 <p>这是<strong>真实服务</strong>的第一课：第 11 条文本会直接返回 <code>400</code> —— <code>batch size is invalid, it should not be larger than 10</code>。</p>
@@ -144,7 +223,7 @@ export DASHSCOPE_API_KEY=sk-xxxx
 <figure class="figure"><img alt="Fake vs 真实与换模型护栏" src="../../../../../../projects/04-rag/assets/real-guard.png" loading="lazy"/><figcaption>Fake vs 真实与换模型护栏</figcaption></figure>
 <ul class="lvl"><li><strong>Fake 翻车</strong>：同一查询，真实模型 top1 是 <code>python-generators.md#3</code>（score=0.7897），Fake 替身却排到了 <code>python-decorators.md#0</code>。</li><li><strong>换模型护栏</strong>：<code>store.model_name</code> 从 <code>_model</code> sidecar 文件恢复成 <code>text-embedding-v3</code>，用 <code>BAAI/bge-m3</code> 查询时直接抛错，防止两个向量空间混用。</li></ul>
 <hr/>
-<h2 id="7-六个只有真跑才会踩的坑">7. 六个只有真跑才会踩的坑</h2>
+<h2 id="7-六个只有真跑才会踩的坑">7. 六个只有真跑才会踩的坑</h2><nav class="sec-nav"><a class="sn prev" href="#6-真实运行截图"><span class="sn-label">← 上一节</span><span class="sn-name">6. 真实运行截图</span></a><a class="sn next" href="#8-新增测试"><span class="sn-label">下一节 →</span><span class="sn-name">8. 新增测试</span></a></nav>
 <h3 id="坑-1厂商单批上限不同">坑 1：厂商单批上限不同</h3>
 <p><strong>现象</strong>：<code>batch_size=32</code> 在百炼直接 400。</p>
 <p><strong>修复</strong>：</p>
@@ -181,7 +260,7 @@ export DASHSCOPE_API_KEY=sk-xxxx
 <pre><code>similarity_from_distance = lambda d: 1.0 - float(d)</code></pre>
 <p>这在第四章已经写好，本章验证它在真实数据上仍然成立。</p>
 <hr/>
-<h2 id="8-新增测试">8. 新增测试</h2>
+<h2 id="8-新增测试">8. 新增测试</h2><nav class="sec-nav"><a class="sn prev" href="#7-六个只有真跑才会踩的坑"><span class="sn-label">← 上一节</span><span class="sn-name">7. 六个只有真跑才会踩的坑</span></a><a class="sn next" href="#9-本章产出文件"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本章产出文件</span></a></nav>
 <p>本章新增了 7 项离线测试，全部不触网：</p>
 <pre><code>test_to_scalar_把不能落盘的元数据压成标量
 test_chroma_元数据里的list不再炸
@@ -192,11 +271,54 @@ test_dashscope_没有key直接报错
 test_dashscope_单批上限比siliconflow更小</code></pre>
 <p>合计：<code>120 passed in 2.09s</code>。</p>
 <hr/>
-<h2 id="9-本章产出文件">9. 本章产出文件</h2>
+<h2 id="9-本章产出文件">9. 本章产出文件</h2><nav class="sec-nav"><a class="sn prev" href="#8-新增测试"><span class="sn-label">← 上一节</span><span class="sn-name">8. 新增测试</span></a><a class="sn next" href="#10-下一步"><span class="sn-label">下一节 →</span><span class="sn-name">10. 下一步</span></a></nav>
 <ul class="lvl"><li><code>src/rag/embedding.py</code> — 抽出 <code>_OpenAIStyleEmbeddingClient</code>，新增 <code>DashScopeEmbeddingClient</code></li><li><code>src/rag/store.py</code> — 元数据降维、<code>_model</code> sidecar、从 sidecar 恢复模型名</li><li><code>src/rag/parsing.py</code> — <code>expand_paths</code> 后缀白名单过滤</li><li><code>demos/demo_12_real_service.py</code> — 真实服务全流程 demo</li><li><code>tests/test_store.py</code> — 覆盖上述 7 条新增行为的单测</li><li><code>milestones/11-real-service-integration.md</code> — 本章文档</li><li><code>assets/real-*.png</code> — 4 张真实运行截图</li></ul>
 <hr/>
-<h2 id="10-下一步">10. 下一步</h2>
+<h2 id="10-下一步">10. 下一步</h2><nav class="sec-nav"><a class="sn prev" href="#9-本章产出文件"><span class="sn-label">← 上一节</span><span class="sn-name">9. 本章产出文件</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li><strong>接入真实 LLM</strong>：把 <code>RAGService.ask()</code> 后面的 LLM 从 <code>FakeLLMClient</code> 换成 DeepSeek / Qwen。</li><li><strong>Web API</strong>：复用 Project 03 的 FastAPI + SSE 模式，给 RAG 加上 <code>POST /ask</code> 接口。</li><li><strong>真实评估</strong>：用真实 embedding + Chroma 跑 30 条 EvalCase，计算 Hit Rate@k 与 MRR。</li><li><strong>监控与可观测</strong>：记录每次检索的 latency、召回 top-k 分数分布、调用次数。</li></ul>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

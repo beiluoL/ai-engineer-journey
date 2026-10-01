@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#方案a小企业-ai服务器" class="lvl2">方案A：小企业 AI服务器</a><a href="#gpu" class="lvl3">GPU</a><a href="#815万元" class="lvl2">8～15万元</a><a href="#50100万元" class="lvl2">50～100万元</a><a href="#数百万千万" class="lvl2">数百万～千万</a><a href="#1-文档存储" class="lvl2">1. 文档存储</a><a href="#2-向量数据库" class="lvl2">2. 向量数据库</a><a href="#图片ai服务器" class="lvl2">图片AI服务器</a><a href="#方案1ai创业公司-mvp" class="lvl2">方案1：AI创业公司 MVP</a><a href="#100150万" class="lvl2">100～150万</a><a href="#500万千万级" class="lvl2">500万～千万级</a><a href="#场景1企业知识库" class="lvl2">场景1：企业知识库</a><a href="#场景2ai客服" class="lvl2">场景2：AI客服</a><a href="#场景3自动化agent" class="lvl2">场景3：自动化Agent</a><a href="#场景4图片生成" class="lvl2">场景4：图片生成</a><a href="#场景5视频生成" class="lvl2">场景5：视频生成</a><a href="#20万元-ai实验生产环境" class="lvl2">20万元 AI实验生产环境</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <p>这个问题要站在<strong>企业 CTO / AI 基础设施负责人</strong>角度考虑。</p>
 <p>和个人买一台 4090 不一样。</p>
@@ -176,7 +255,7 @@ li{margin:.3em 0;}
 <p>GPU负责：</p>
 <p>生成回答。</p>
 <hr/>
-<h2 id="方案a小企业-ai服务器">方案A：小企业 AI服务器</h2>
+<h2 id="方案a小企业-ai服务器">方案A：小企业 AI服务器</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#815万元"><span class="sn-label">下一节 →</span><span class="sn-name">8～15万元</span></a></nav>
 <p>目标：</p>
 <p>100～500人使用。</p>
 <p>配置：</p>
@@ -209,7 +288,7 @@ SSD:
 10GbE</code></pre>
 <p>预算：</p>
 <p>约：</p>
-<h2 id="815万元">8～15万元</h2>
+<h2 id="815万元">8～15万元</h2><nav class="sec-nav"><a class="sn prev" href="#方案a小企业-ai服务器"><span class="sn-label">← 上一节</span><span class="sn-name">方案A：小企业 AI服务器</span></a><a class="sn next" href="#50100万元"><span class="sn-label">下一节 →</span><span class="sn-name">50～100万元</span></a></nav>
 <p>能力：</p>
 <p>运行：</p>
 <pre><code>7B
@@ -244,7 +323,7 @@ SSD:
 
 25GbE</code></pre>
 <p>预算：</p>
-<h2 id="50100万元">50～100万元</h2>
+<h2 id="50100万元">50～100万元</h2><nav class="sec-nav"><a class="sn prev" href="#815万元"><span class="sn-label">← 上一节</span><span class="sn-name">8～15万元</span></a><a class="sn next" href="#数百万千万"><span class="sn-label">下一节 →</span><span class="sn-name">数百万～千万</span></a></nav>
 <p>能力：</p>
 <p>可以：</p>
 <ul class="lvl"><li>多模型</li></ul>
@@ -268,7 +347,7 @@ SSD:
 存储集群</code></pre>
 <p>H100/A100 属于数据中心级 GPU，通常用于企业级训练和大规模推理；例如 NVIDIA DGX 系统就是面向此类 AI 基础设施。(<a href="https://en.wikipedia.org/wiki/Nvidia_DGX?utm_source=chatgpt.com &quot;Nvidia DGX&quot;" target="_blank" rel="noopener">维基百科</a>)</p>
 <p>预算：</p>
-<h2 id="数百万千万">数百万～千万</h2>
+<h2 id="数百万千万">数百万～千万</h2><nav class="sec-nav"><a class="sn prev" href="#50100万元"><span class="sn-label">← 上一节</span><span class="sn-name">50～100万元</span></a><a class="sn next" href="#1-文档存储"><span class="sn-label">下一节 →</span><span class="sn-name">1. 文档存储</span></a></nav>
 <hr/>
 <h1 id="七第二类知识库服务器rag">七、第二类：知识库服务器（RAG）</h1>
 <p>很多企业误区：</p>
@@ -278,7 +357,7 @@ SSD:
 <p>GPU不是核心。</p>
 <p>需要：</p>
 <hr/>
-<h2 id="1-文档存储">1. 文档存储</h2>
+<h2 id="1-文档存储">1. 文档存储</h2><nav class="sec-nav"><a class="sn prev" href="#数百万千万"><span class="sn-label">← 上一节</span><span class="sn-name">数百万～千万</span></a><a class="sn next" href="#2-向量数据库"><span class="sn-label">下一节 →</span><span class="sn-name">2. 向量数据库</span></a></nav>
 <p>例如：</p>
 <pre><code>NAS
 
@@ -296,7 +375,7 @@ SSD缓存</code></pre>
 <p>预算：</p>
 <p>5～20万</p>
 <hr/>
-<h2 id="2-向量数据库">2. 向量数据库</h2>
+<h2 id="2-向量数据库">2. 向量数据库</h2><nav class="sec-nav"><a class="sn prev" href="#1-文档存储"><span class="sn-label">← 上一节</span><span class="sn-name">1. 文档存储</span></a><a class="sn next" href="#图片ai服务器"><span class="sn-label">下一节 →</span><span class="sn-name">图片AI服务器</span></a></nav>
 <p>例如：</p>
 <pre><code>Milvus
 
@@ -351,7 +430,7 @@ SSD:
 <p>要求：</p>
 <p>显存比文本模型高。</p>
 <hr/>
-<h2 id="图片ai服务器">图片AI服务器</h2>
+<h2 id="图片ai服务器">图片AI服务器</h2><nav class="sec-nav"><a class="sn prev" href="#2-向量数据库"><span class="sn-label">← 上一节</span><span class="sn-name">2. 向量数据库</span></a><a class="sn next" href="#方案1ai创业公司-mvp"><span class="sn-label">下一节 →</span><span class="sn-name">方案1：AI创业公司 MVP</span></a></nav>
 <p>配置：</p>
 <pre><code>GPU:
 
@@ -392,7 +471,7 @@ SSD:
 <p>几十万～百万。</p>
 <hr/>
 <h1 id="十一企业完整采购方案">十一、企业完整采购方案</h1>
-<h2 id="方案1ai创业公司-mvp">方案1：AI创业公司 MVP</h2>
+<h2 id="方案1ai创业公司-mvp">方案1：AI创业公司 MVP</h2><nav class="sec-nav"><a class="sn prev" href="#图片ai服务器"><span class="sn-label">← 上一节</span><span class="sn-name">图片AI服务器</span></a><a class="sn next" href="#100150万"><span class="sn-label">下一节 →</span><span class="sn-name">100～150万</span></a></nav>
 <p>目标：</p>
 <p>1000用户以内。</p>
 <p>采购：</p>
@@ -409,7 +488,7 @@ SSD:
 <p>采购：</p>
 <table><thead><tr><th>设备</th><th>预算</th></tr></thead><tbody><tr><td>GPU服务器×4</td><td>80万</td></tr><tr><td>存储</td><td>20万</td></tr><tr><td>数据库</td><td>10万</td></tr><tr><td>网络</td><td>10万</td></tr><tr><td>运维</td><td>20万</td></tr></tbody></table>
 <p>总：</p>
-<h2 id="100150万">100～150万</h2>
+<h2 id="100150万">100～150万</h2><nav class="sec-nav"><a class="sn prev" href="#方案1ai创业公司-mvp"><span class="sn-label">← 上一节</span><span class="sn-name">方案1：AI创业公司 MVP</span></a><a class="sn next" href="#500万千万级"><span class="sn-label">下一节 →</span><span class="sn-name">500万～千万级</span></a></nav>
 <hr/>
 <h1 id="方案3大型企业私有ai平台">方案3：大型企业私有AI平台</h1>
 <p>例如：</p>
@@ -433,10 +512,10 @@ MLOps
 
 安全体系</code></pre>
 <p>预算：</p>
-<h2 id="500万千万级">500万～千万级</h2>
+<h2 id="500万千万级">500万～千万级</h2><nav class="sec-nav"><a class="sn prev" href="#100150万"><span class="sn-label">← 上一节</span><span class="sn-name">100～150万</span></a><a class="sn next" href="#场景1企业知识库"><span class="sn-label">下一节 →</span><span class="sn-name">场景1：企业知识库</span></a></nav>
 <hr/>
 <h1 id="十二如果实现你的几个场景需要什么">十二、如果实现你的几个场景，需要什么？</h1>
-<h2 id="场景1企业知识库">场景1：企业知识库</h2>
+<h2 id="场景1企业知识库">场景1：企业知识库</h2><nav class="sec-nav"><a class="sn prev" href="#500万千万级"><span class="sn-label">← 上一节</span><span class="sn-name">500万～千万级</span></a><a class="sn next" href="#场景2ai客服"><span class="sn-label">下一节 →</span><span class="sn-name">场景2：AI客服</span></a></nav>
 <p>需求：</p>
 <p>员工问答。</p>
 <p>需要：</p>
@@ -456,7 +535,7 @@ RAG</code></pre>
 <p>预算：</p>
 <p>10～30万即可。</p>
 <hr/>
-<h2 id="场景2ai客服">场景2：AI客服</h2>
+<h2 id="场景2ai客服">场景2：AI客服</h2><nav class="sec-nav"><a class="sn prev" href="#场景1企业知识库"><span class="sn-label">← 上一节</span><span class="sn-name">场景1：企业知识库</span></a><a class="sn next" href="#场景3自动化agent"><span class="sn-label">下一节 →</span><span class="sn-name">场景3：自动化Agent</span></a></nav>
 <p>增加：</p>
 <pre><code>语音识别
 
@@ -474,7 +553,7 @@ CRM Tool
 <p>预算：</p>
 <p>30～100万。</p>
 <hr/>
-<h2 id="场景3自动化agent">场景3：自动化Agent</h2>
+<h2 id="场景3自动化agent">场景3：自动化Agent</h2><nav class="sec-nav"><a class="sn prev" href="#场景2ai客服"><span class="sn-label">← 上一节</span><span class="sn-name">场景2：AI客服</span></a><a class="sn next" href="#场景4图片生成"><span class="sn-label">下一节 →</span><span class="sn-name">场景4：图片生成</span></a></nav>
 <p>例如：</p>
 <pre><code>读取邮件
 
@@ -508,13 +587,13 @@ Workflow
 <p>预算：</p>
 <p>20～80万。</p>
 <hr/>
-<h2 id="场景4图片生成">场景4：图片生成</h2>
+<h2 id="场景4图片生成">场景4：图片生成</h2><nav class="sec-nav"><a class="sn prev" href="#场景3自动化agent"><span class="sn-label">← 上一节</span><span class="sn-name">场景3：自动化Agent</span></a><a class="sn next" href="#场景5视频生成"><span class="sn-label">下一节 →</span><span class="sn-name">场景5：视频生成</span></a></nav>
 <p>增加：</p>
 <p>GPU。</p>
 <p>预算：</p>
 <p>5～20万。</p>
 <hr/>
-<h2 id="场景5视频生成">场景5：视频生成</h2>
+<h2 id="场景5视频生成">场景5：视频生成</h2><nav class="sec-nav"><a class="sn prev" href="#场景4图片生成"><span class="sn-label">← 上一节</span><span class="sn-name">场景4：图片生成</span></a><a class="sn next" href="#20万元-ai实验生产环境"><span class="sn-label">下一节 →</span><span class="sn-name">20万元 AI实验生产环境</span></a></nav>
 <p>最贵。</p>
 <p>预算：</p>
 <p>50万以上。</p>
@@ -545,7 +624,7 @@ API模型</code></pre>
 <p>第一阶段：</p>
 <p>不要买百万设备。</p>
 <p>先：</p>
-<h2 id="20万元-ai实验生产环境">20万元 AI实验生产环境</h2>
+<h2 id="20万元-ai实验生产环境">20万元 AI实验生产环境</h2><nav class="sec-nav"><a class="sn prev" href="#场景5视频生成"><span class="sn-label">← 上一节</span><span class="sn-name">场景5：视频生成</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>采购：</p>
 <pre><code>1台GPU服务器
 
@@ -623,5 +702,48 @@ Level 5
 <p>《从0设计一个企业私有 AI 平台：硬件采购 → 网络规划 → Kubernetes → GPU集群 → RAG → Agent → 运维》</p>
 <p>会更接近真实 CTO / AI架构师设计。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

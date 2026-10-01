@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-数据来源" class="lvl2">1. 数据来源</a><a href="#1-去重" class="lvl2">1. 去重</a><a href="#2-去垃圾数据" class="lvl2">2. 去垃圾数据</a><a href="#3-格式统一" class="lvl2">3. 格式统一</a><a href="#4-数据质量评分" class="lvl2">4. 数据质量评分</a><a href="#qlora-7b" class="lvl2">QLoRA 7B</a><a href="#gpu" class="lvl3">GPU</a><a href="#配置" class="lvl2">配置：</a><a href="#测试集" class="lvl2">测试集</a><a href="#指标" class="lvl2">指标</a><a href="#1-accuracy" class="lvl3">1. Accuracy</a><a href="#2-format" class="lvl3">2. Format</a><a href="#3-hallucination" class="lvl3">3. Hallucination</a><a href="#4-human-evaluation" class="lvl3">4. Human Evaluation</a><a href="#旧模型" class="lvl2">旧模型</a><a href="#新模型" class="lvl2">新模型</a><a href="#微调一次-qlora-7b" class="lvl2">微调一次 QLoRA 7B</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day13-企业级-lora-微调部署实战">Day13 企业级 LoRA 微调部署实战</h1>
 <h1 id="数据-qlora训练-模型合并-vllm加载-灰度发布">数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布</h1>
@@ -246,7 +325,7 @@ Java面试专家模型</code></pre>
 <p>企业里：</p>
 <p>数据比模型重要。</p>
 <hr/>
-<h2 id="1-数据来源">1. 数据来源</h2>
+<h2 id="1-数据来源">1. 数据来源</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#1-去重"><span class="sn-label">下一节 →</span><span class="sn-name">1. 去重</span></a></nav>
 <p>你的 Java 项目：</p>
 <p>可以来自：</p>
 <pre><code>data/
@@ -294,20 +373,20 @@ Java面试专家模型</code></pre>
 <h1 id="六数据清洗">六、数据清洗</h1>
 <p>真实企业不会直接训练。</p>
 <p>需要：</p>
-<h2 id="1-去重">1. 去重</h2>
+<h2 id="1-去重">1. 去重</h2><nav class="sec-nav"><a class="sn prev" href="#1-数据来源"><span class="sn-label">← 上一节</span><span class="sn-name">1. 数据来源</span></a><a class="sn next" href="#2-去垃圾数据"><span class="sn-label">下一节 →</span><span class="sn-name">2. 去垃圾数据</span></a></nav>
 <p>例如：</p>
 <p>10000条：</p>
 <p>重复：</p>
 <p>3000条。</p>
 <p>删除。</p>
 <hr/>
-<h2 id="2-去垃圾数据">2. 去垃圾数据</h2>
+<h2 id="2-去垃圾数据">2. 去垃圾数据</h2><nav class="sec-nav"><a class="sn prev" href="#1-去重"><span class="sn-label">← 上一节</span><span class="sn-name">1. 去重</span></a><a class="sn next" href="#3-格式统一"><span class="sn-label">下一节 →</span><span class="sn-name">3. 格式统一</span></a></nav>
 <p>删除：</p>
 <pre><code>你好
 谢谢
 不知道</code></pre>
 <hr/>
-<h2 id="3-格式统一">3. 格式统一</h2>
+<h2 id="3-格式统一">3. 格式统一</h2><nav class="sec-nav"><a class="sn prev" href="#2-去垃圾数据"><span class="sn-label">← 上一节</span><span class="sn-name">2. 去垃圾数据</span></a><a class="sn next" href="#4-数据质量评分"><span class="sn-label">下一节 →</span><span class="sn-name">4. 数据质量评分</span></a></nav>
 <p>统一：</p>
 <pre><code>instruction
 
@@ -315,7 +394,7 @@ input
 
 output</code></pre>
 <hr/>
-<h2 id="4-数据质量评分">4. 数据质量评分</h2>
+<h2 id="4-数据质量评分">4. 数据质量评分</h2><nav class="sec-nav"><a class="sn prev" href="#3-格式统一"><span class="sn-label">← 上一节</span><span class="sn-name">3. 格式统一</span></a><a class="sn next" href="#qlora-7b"><span class="sn-label">下一节 →</span><span class="sn-name">QLoRA 7B</span></a></nav>
 <p>增加：</p>
 <pre><code>{
 &quot;quality_score&quot;:5
@@ -332,7 +411,7 @@ output</code></pre>
 <hr/>
 <h1 id="八第二步准备训练服务器">八、第二步：准备训练服务器</h1>
 <p>微调比推理更吃资源。</p>
-<h2 id="qlora-7b">QLoRA 7B</h2>
+<h2 id="qlora-7b">QLoRA 7B</h2><nav class="sec-nav"><a class="sn prev" href="#4-数据质量评分"><span class="sn-label">← 上一节</span><span class="sn-name">4. 数据质量评分</span></a><a class="sn next" href="#配置"><span class="sn-label">下一节 →</span><span class="sn-name">配置：</span></a></nav>
 <p>推荐：</p>
 <h3 id="gpu">GPU</h3>
 <p>最低：</p>
@@ -340,7 +419,7 @@ output</code></pre>
 <p>推荐：</p>
 <pre><code>A100 40GB</code></pre>
 <hr/>
-<h2 id="配置">配置：</h2>
+<h2 id="配置">配置：</h2><nav class="sec-nav"><a class="sn prev" href="#qlora-7b"><span class="sn-label">← 上一节</span><span class="sn-name">QLoRA 7B</span></a><a class="sn next" href="#测试集"><span class="sn-label">下一节 →</span><span class="sn-name">测试集</span></a></nav>
 <pre><code>CPU:
 16核
 
@@ -500,7 +579,7 @@ loss 0.8</code></pre>
 <p>企业不会直接上线。</p>
 <p>需要 Evaluation。</p>
 <hr/>
-<h2 id="测试集">测试集</h2>
+<h2 id="测试集">测试集</h2><nav class="sec-nav"><a class="sn prev" href="#配置"><span class="sn-label">← 上一节</span><span class="sn-name">配置：</span></a><a class="sn next" href="#指标"><span class="sn-label">下一节 →</span><span class="sn-name">指标</span></a></nav>
 <p>例如：</p>
 <pre><code>test.jsonl</code></pre>
 <p>100个问题。</p>
@@ -512,7 +591,7 @@ loss 0.8</code></pre>
 <pre><code>HashMap回答</code></pre>
 <p>比较：</p>
 <hr/>
-<h2 id="指标">指标</h2>
+<h2 id="指标">指标</h2><nav class="sec-nav"><a class="sn prev" href="#测试集"><span class="sn-label">← 上一节</span><span class="sn-name">测试集</span></a><a class="sn next" href="#旧模型"><span class="sn-label">下一节 →</span><span class="sn-name">旧模型</span></a></nav>
 <h3 id="1-accuracy">1. Accuracy</h3>
 <p>是否回答正确。</p>
 <hr/>
@@ -594,12 +673,12 @@ GPU</code></pre>
 <p>直接替换。</p>
 <p>流程：</p>
 <hr/>
-<h2 id="旧模型">旧模型</h2>
+<h2 id="旧模型">旧模型</h2><nav class="sec-nav"><a class="sn prev" href="#指标"><span class="sn-label">← 上一节</span><span class="sn-name">指标</span></a><a class="sn next" href="#新模型"><span class="sn-label">下一节 →</span><span class="sn-name">新模型</span></a></nav>
 <pre><code>qwen-v1</code></pre>
 <p>线上：</p>
 <p>100%</p>
 <hr/>
-<h2 id="新模型">新模型</h2>
+<h2 id="新模型">新模型</h2><nav class="sec-nav"><a class="sn prev" href="#旧模型"><span class="sn-label">← 上一节</span><span class="sn-name">旧模型</span></a><a class="sn next" href="#微调一次-qlora-7b"><span class="sn-label">下一节 →</span><span class="sn-name">微调一次 QLoRA 7B</span></a></nav>
 <pre><code>qwen-java-v2</code></pre>
 <p>先：</p>
 <p>10%流量。</p>
@@ -676,7 +755,7 @@ Monitoring</code></pre>
 <p>软件发布。</p>
 <hr/>
 <h1 id="二十一成本估算">二十一、成本估算</h1>
-<h2 id="微调一次-qlora-7b">微调一次 QLoRA 7B</h2>
+<h2 id="微调一次-qlora-7b">微调一次 QLoRA 7B</h2><nav class="sec-nav"><a class="sn prev" href="#新模型"><span class="sn-label">← 上一节</span><span class="sn-name">新模型</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>RTX4090：</p>
 <p>3小时：</p>
 <pre><code>约5-10元</code></pre>
@@ -762,5 +841,48 @@ Qwen     DeepSeek    GPT
 <p>升级到：</p>
 <blockquote><p>能设计企业 AI 平台架构。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

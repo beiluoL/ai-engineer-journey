@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-class-与-instance类与实例" class="lvl3">3.1 class 与 instance【类与实例】</a><a href="#32-self-到底是什么" class="lvl3">3.2 self 到底是什么</a><a href="#33-init-是构造函数" class="lvl3">3.3 __init__ 是构造函数</a><a href="#34-继承抽出共同点" class="lvl3">3.4 继承：抽出共同点</a><a href="#35-封装把状态-操作状态的方法放在一起" class="lvl3">3.5 封装：把「状态 + 操作状态的方法」放在一起</a><a href="#36-组合优先于继承" class="lvl3">3.6 组合优先于继承</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1可变默认参数" class="lvl3">坑 1：可变默认参数</a><a href="#坑-2类属性被所有实例共享" class="lvl3">坑 2：类属性被所有实例共享</a><a href="#坑-3忘记-self" class="lvl3">坑 3：忘记 self</a><a href="#坑-4以为-x-真的私有" class="lvl3">坑 4：以为 _x 真的私有</a><a href="#坑-5抽象基类没实现完就想实例化" class="lvl3">坑 5：抽象基类没实现完就想实例化</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-00classes-and-oop类与面向对象">Project 02 — Chapter 00：Classes and OOP【类与面向对象】</h1>
 <blockquote><p>状态：✅ 已校对 前置：Project 01 v1.0（已有 <code>LLMClient</code> 类） 对应代码：<code>src/assistant/</code></p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Project 01 的 <code>LLMClient</code> <strong>已经是一个类</strong>了：</p>
 <pre><code>class LLMClient:
     def __init__(self, config: Config, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -&gt; None:
@@ -78,7 +157,7 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>把「一个类包打天下」重构成「抽象基类 + 具体实现 + 会话对象」的分层结构。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>脚本阶段（Project 01）的代码是<strong>按执行顺序</strong>组织的：</p>
 <pre><code>读配置 → 构造请求 → 发 HTTP → 解析 JSON → 打印</code></pre>
 <p>工程阶段（Project 02）的代码要<strong>按职责</strong>组织：</p>
@@ -90,7 +169,7 @@ li{margin:.3em 0;}
 <p>区别在哪里？脚本关心「<strong>怎么做</strong>」，工程关心「<strong>谁来做</strong>」。</p>
 <p>而表达「谁来做」的工具，就是<strong>类</strong>。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-class-与-instance类与实例">3.1 class 与 instance【类与实例】</h3>
 <pre><code>class LLMClient:          # 类：图纸
     def __init__(self, api_key: str) -&gt; None:
@@ -184,7 +263,7 @@ class MockClient(BaseLLMClient):          # 测试用：不联网
 <p>这是 Java 里天天在写的<strong>依赖注入</strong>：<code>AssistantService</code> 不关心传进来的是 DeepSeek 还是 Mock，只关心它实现了 <code>chat</code>。</p>
 <blockquote><p>这也正是后面 Chapter 03 的 <code>Protocol</code>、Chapter 09 的 FastAPI <code>Depends</code> 的基础。</p></blockquote>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <p>本章在 <code>src/</code> 下建立的分层（Chapter 01 会把 <code>chat</code> 改成 async）：</p>
 <pre><code>src/assistant/
 ├── errors.py        # 异常层级（P01 已有）
@@ -204,10 +283,10 @@ BaseLLMClient.chat()   ← 可以是 DeepSeekClient，也可以是 MockClient</c
 <hr/>
 <figure class="figure"><img alt="真实运行：dataclass 模型类自带的 __repr__ / __eq__、抽象基类拦住没实现方法的子类、同一个调用切换实现，以及 AssistantService 只依赖抽象照样跑通" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-oop.png" loading="lazy"/><figcaption>真实运行：dataclass 模型类自带的 __repr__ / __eq__、抽象基类拦住没实现方法的子类、同一个调用切换实现，以及 AssistantService 只依赖抽象照样跑通</figcaption></figure>
 <figure class="figure"><img alt="真实运行：继承 + 多态（上层只认 BaseLLMClient，换实现不改调用方）与 @property 返回副本，外部改不动内部状态" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-oop-poly.png" loading="lazy"/><figcaption>真实运行：继承 + 多态（上层只认 BaseLLMClient，换实现不改调用方）与 @property 返回副本，外部改不动内部状态</figcaption></figure>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>class X {}</code></td><td><code>class X:</code></td><td>同</td></tr><tr><td><code>this.field</code></td><td><code>self.field</code></td><td>Python 必须显式声明 <code>self</code> 参数</td></tr><tr><td><code>public X(...)</code> 构造器</td><td><code>def __init__(self, ...)</code></td><td>同类</td></tr><tr><td><code>abstract class</code></td><td><code>class X(ABC)</code></td><td>Python 靠继承 <code>ABC</code></td></tr><tr><td><code>abstract 方法</code></td><td><code>@abstractmethod</code></td><td>同</td></tr><tr><td><code>extends</code></td><td><code>class Sub(Base):</code></td><td>括号里写父类</td></tr><tr><td><code>implements</code></td><td>直接继承（Python 无接口关键字）</td><td>抽象基类 / <code>Protocol</code> 代替</td></tr><tr><td><code>super.method()</code></td><td><code>super().method()</code></td><td>同</td></tr><tr><td><code>private String x</code></td><td><code>self._x</code>（约定）</td><td>Python 没有真正的私有</td></tr><tr><td><code>public String getX()</code></td><td><code>@property def x(self)</code></td><td>调用方写 <code>obj.x</code></td></tr><tr><td><code>final</code></td><td>无关键字（约定全大写 / <code>frozen dataclass</code>）</td><td>靠自律</td></tr><tr><td><code>interface</code></td><td><code>typing.Protocol</code></td><td>Chapter 03 细讲</td></tr></tbody></table>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1可变默认参数">坑 1：可变默认参数</h3>
 <pre><code>def __init__(self, messages: list = []) -&gt; None:   # ❌ 灾难
     self.messages = messages</code></pre>
@@ -238,18 +317,61 @@ print(b.history)            # [&#x27;hi&#x27;] —— b 也被改了</code></pre
 MyClient()   # TypeError: Can&#x27;t instantiate abstract class MyClient</code></pre>
 <p>这是好事——错误提前暴露，而不是运行到一半崩。</p>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：写一个 <code>EchoClient(BaseLLMClient)</code>，它的 <code>chat()</code> 把最后一条 user 消息原样返回。用它跑通 <code>AssistantService</code>，验证「换实现不用改上层」。</p>
 <p><strong>挑战 2</strong>：给 <code>Conversation</code> 加一个 <code>token_estimate()</code> 方法，粗略估算历史长度（<code>len(text) // 2</code>），并在超过 2000 时自动丢弃最早的 user/assistant 对（保留 system）。</p>
 <p><strong>挑战 3（进阶）</strong>：把 <code>BaseLLMClient</code> 改写成 <code>typing.Protocol</code>（不继承、只声明方法签名），体会「结构化子类型」与「继承」的区别。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <p>遮住答案，看你能不能答出来：</p>
 <ul class="lvl"><li><code>self</code> 是谁？调用时为什么不用传？</li><li><code>__init__</code> 和 Java 构造器有什么本质区别？</li><li><code>@abstractmethod</code> 解决了什么问题？</li><li>为什么可变默认参数 <code>[]</code> 是坑？怎么修？</li><li>「组合」和「继承」分别在什么场景下用？为什么本项目选组合？</li><li>Python 的 <code>_x</code> 私有吗？怎么才算真正的封装？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能说清 <code>class / self / __init__ / 继承 / 封装</code> 各自解决什么问题</li><li>[ ] 实现 <code>BaseLLMClient</code>（抽象基类）+ 至少一个具体子类</li><li>[ ] 实现 <code>Conversation</code>，并用 <code>@property</code> 暴露只读 <code>messages</code></li><li>[ ] 实现 <code>AssistantService</code>，它<strong>只依赖抽象</strong>，不依赖具体厂商</li><li>[ ] 用 <code>MockClient</code> 在不联网的情况下跑通一次完整问答</li></ul>
 <p>下一章：<a href="01-async-await.html">01-async-await.md</a> —— 把 <code>chat()</code> 变成异步，解决并发。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

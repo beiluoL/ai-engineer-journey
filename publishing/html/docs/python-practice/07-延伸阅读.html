@@ -52,28 +52,107 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#71-先纠正一个误区" class="lvl2">7.1 先纠正一个误区</a><a href="#72-补系统性只挑-12-个" class="lvl2">7.2 补系统性：只挑 1–2 个</a><a href="#73-读生产代码四阶梯" class="lvl2">7.3 读生产代码：四阶梯</a><a href="#阶梯-13先读这些" class="lvl3">阶梯 1–3：先读这些</a><a href="#阶梯-4读系统而不是库" class="lvl3">阶梯 4：读「系统」而不是「库」</a><a href="#74-怎么读这节最重要" class="lvl2">7.4 怎么读（这节最重要）</a><a href="#75-避坑清单都是脚本当场抓出来的" class="lvl2">7.5 避坑清单（都是脚本当场抓出来的）</a><a href="#76-这份清单怎么维护" class="lvl2">7.6 这份清单怎么维护</a><a href="#77-自查问题" class="lvl2">7.7 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="07-延伸阅读从会写-python到读得懂生产代码">07 · 延伸阅读：从「会写 Python」到「读得懂生产代码」</h1>
 <blockquote><p><strong>这一篇不是教程，是一张书单加一套读法。</strong> 读完它不会让你多会一个语法，但能帮你省下几个月——因为绝大多数人卡住的地方， 不是「不知道学什么」，而是「一直在学入门，从不读成品」。</p><p>文中的星标数与最近提交日期，全部由 <a href="../../../../scripts/check_repos.py"><code>scripts/check_repos.py</code></a> 在写作当天现场抓取（见 <a href="#76-这份清单怎么维护">7.6</a> 的真实运行截图），没有一个是凭印象填的。</p></blockquote>
 <hr/>
-<h2 id="71-先纠正一个误区">7.1 先纠正一个误区</h2>
+<h2 id="71-先纠正一个误区">7.1 先纠正一个误区</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#72-补系统性只挑-12-个"><span class="sn-label">下一节 →</span><span class="sn-name">7.2 补系统性：只挑 1–2 个</span></a></nav>
 <p>你在搜索引擎里搜「Python 学习项目」，会得到几百个清单。它们大多在回答同一个问题： <strong>「我该怎么入门 Python」</strong>。</p>
 <p>但这个问题对你已经不成立了。你是 Java 后端，<code>for</code> / <code>if</code> / <code>class</code> / 异常 / 集合这些概念早就有了， Python 只是换了一套拼写方式。语言本身的语法密度并不高，两三周就能写顺。</p>
 <p>真正拉开差距的是另外两件事：</p>
 <table><thead><tr><th>差距来源</th><th>具体表现</th><th>怎么补</th></tr></thead><tbody><tr><td><strong>惯用法（idiomatic）</strong></td><td>你在写「用 Python 语法的 Java」——满屏 <code>for i in range(len(x))</code>、到处 <code>getXxx()</code>、拿 <code>class</code> 当唯一抽象手段</td><td>读 <a href="#72-补系统性只挑-12-个">7.2</a>，重点学推导式 / 生成器 / 协议 / 上下文管理器</td></tr><tr><td><strong>工程化</strong></td><td>写得出脚本，但不知道一个「包」怎么分层、怎么做可选依赖、怎么设计可测的接口</td><td>读 <a href="#73-读生产代码四阶梯">7.3</a>，从小的生产库开始读源码</td></tr></tbody></table>
 <p>所以下面两块：<strong>7.2 补系统性（挑 1–2 个就够）</strong>，<strong>7.3 读生产代码（重点）</strong>。</p>
 <hr/>
-<h2 id="72-补系统性只挑-12-个">7.2 补系统性：只挑 1–2 个</h2>
+<h2 id="72-补系统性只挑-12-个">7.2 补系统性：只挑 1–2 个</h2><nav class="sec-nav"><a class="sn prev" href="#71-先纠正一个误区"><span class="sn-label">← 上一节</span><span class="sn-name">7.1 先纠正一个误区</span></a><a class="sn next" href="#73-读生产代码四阶梯"><span class="sn-label">下一节 →</span><span class="sn-name">7.3 读生产代码：四阶梯</span></a></nav>
 <blockquote><p>别把这张表当待办清单。<strong>从里面挑 1 个做完，胜过 5 个都收藏。</strong></p></blockquote>
 <table><thead><tr><th>仓库</th><th>星标</th><th>最近提交</th><th>一句话</th><th>适合谁</th></tr></thead><tbody><tr><td><strong><a href="https://github.com/dabeaz-course/python-mastery" target="_blank" rel="noopener"><code>dabeaz-course/python-mastery</code></a></strong></td><td>13.3k</td><td>2025-12-22</td><td>David Beazley 的进阶课：生成器、装饰器、描述符、迭代器协议、元编程、协程</td><td><strong>最推荐</strong>。有 Java 背景的人读它收益最大——它回答的正是「Python 为什么没有 Java 那套东西」</td></tr><tr><td><a href="https://github.com/jackfrued/Python-100-Days" target="_blank" rel="noopener"><code>jackfrued/Python-100-Days</code></a></td><td>187.0k</td><td>2026-07-29</td><td>中文，100 天从语法到 Web / 数据分析 / AI</td><td>想要一份<strong>中文路线图</strong>时看它。缺点是偏教学，代码不是生产级——<strong>当目录用，别当范本抄</strong></td></tr><tr><td><a href="https://github.com/huangsam/ultimate-python" target="_blank" rel="noopener"><code>huangsam/ultimate-python</code></a></td><td>6.0k</td><td>2026-09-29</td><td>单文件，从语法到工程实践逐条覆盖</td><td>拿它当<strong>自查清单</strong>：逐条问自己「这条我会不会」。有不会的就地补</td></tr><tr><td><a href="https://github.com/rougier/numpy-100" target="_blank" rel="noopener"><code>rougier/numpy-100</code></a></td><td>14.5k</td><td>2026-08-26</td><td>100 道 numpy 练习（带答案）</td><td>你只要碰数据就必须刷。向量化思维是 Python 数据方向的分水岭</td></tr><tr><td><a href="https://github.com/fluentpython/example-code-2e" target="_blank" rel="noopener"><code>fluentpython/example-code-2e</code></a></td><td>4.1k</td><td>2025-06-04</td><td>《Fluent Python》第 2 版配套代码</td><td>工具书性质。<strong>按需查，不要通读</strong></td></tr><tr><td><a href="https://github.com/trekhleb/learn-python" target="_blank" rel="noopener"><code>trekhleb/learn-python</code></a></td><td>18.3k</td><td>2026-04-06</td><td>按主题切分的可运行代码示例集</td><td>遇到不确定的语法点时当速查</td></tr><tr><td><a href="https://github.com/swaroopch/byte-of-python" target="_blank" rel="noopener"><code>swaroopch/byte-of-python</code></a></td><td>2.5k</td><td>2026-09-15</td><td>面向完全零编程基础的书</td><td>你是 Java 背景，<strong>可以跳过</strong></td></tr><tr><td><a href="https://github.com/gto76/python-cheatsheet" target="_blank" rel="noopener"><code>gto76/python-cheatsheet</code></a></td><td>38.7k</td><td>2026-07-27</td><td>一页纸速查表</td><td>贴在手边，别当教材读</td></tr><tr><td><a href="https://github.com/vinta/awesome-python" target="_blank" rel="noopener"><code>vinta/awesome-python</code></a></td><td>324.2k</td><td>2026-09-29</td><td>「我想做 X，该用哪个库」的答案</td><td><strong>索引不是教材</strong>。解决问题时来查</td></tr><tr><td><a href="https://github.com/practical-tutorials/project-based-learning" target="_blank" rel="noopener"><code>practical-tutorials/project-based-learning</code></a></td><td>285.3k</td><td>2026-09-28</td><td>按项目组织的教程索引</td><td>同上，索引性质。本仓库 <a href="README.html"><code>python-practice/</code></a> 的前四个项目就是这类东西的「已跑通版」</td></tr></tbody></table>
 <p><strong>两个已经停滞的</strong>（脚本实测判定为 <code>STALE</code>，见 <a href="#75-避坑清单都是脚本当场抓出来的">7.5</a>）：</p>
 <table><thead><tr><th>仓库</th><th>星标</th><th>最近提交</th><th>情况</th></tr></thead><tbody><tr><td><a href="https://github.com/donnemartin/interactive-coding-challenges" target="_blank" rel="noopener"><code>donnemartin/interactive-coding-challenges</code></a></td><td>31.9k</td><td>2020-08-05</td><td>已 <strong>2247 天</strong>无提交（六年多），题目仍可用但无人维护</td></tr><tr><td><a href="https://github.com/grantjenks/free-python-games" target="_blank" rel="noopener"><code>grantjenks/free-python-games</code></a></td><td>4.0k</td><td>2022-12-28</td><td>已 <strong>1372 天</strong>无提交（近四年）。学语法可以，别指望更新</td></tr></tbody></table>
 <p>另有一个<strong>仍在维护、但内容偏旧</strong>的：<a href="https://github.com/realpython/python-guide" target="_blank" rel="noopener"><code>realpython/python-guide</code></a>（29.8k，2026-07-27 仍有提交）——质量高，但部分章节停留在 Python 3.6 时代，按需查即可，别当主线。</p>
 <hr/>
-<h2 id="73-读生产代码四阶梯">7.3 读生产代码：四阶梯</h2>
+<h2 id="73-读生产代码四阶梯">7.3 读生产代码：四阶梯</h2><nav class="sec-nav"><a class="sn prev" href="#72-补系统性只挑-12-个"><span class="sn-label">← 上一节</span><span class="sn-name">7.2 补系统性：只挑 1–2 个</span></a><a class="sn next" href="#74-怎么读这节最重要"><span class="sn-label">下一节 →</span><span class="sn-name">7.4 怎么读（这节最重要）</span></a></nav>
 <p><strong>顺序不能乱。</strong> 直接打开 Django 或 Superset，你看到的只会是一屏 <code>import</code> 和元类，然后关掉—— 这跟「用一本字典学英语」是同一个错误。</p>
 <div class="mermaid-svg"><svg viewBox="0 0 640 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="读生产代码四阶梯">
   <defs>
@@ -112,7 +191,7 @@ li{margin:.3em 0;}
 <h3 id="阶梯-4读系统而不是库">阶梯 4：读「系统」而不是「库」</h3>
 <table><thead><tr><th>仓库</th><th>星标</th><th>最近提交</th><th>读它学什么</th></tr></thead><tbody><tr><td><a href="https://github.com/getsentry/sentry" target="_blank" rel="noopener"><code>getsentry/sentry</code></a></td><td>44.9k</td><td>2026-09-30</td><td>Django 写的真实产品：多租户隔离、限流、事件处理流水线。看一个「真的有人在用」的系统怎么分层</td></tr><tr><td><a href="https://github.com/apache/superset" target="_blank" rel="noopener"><code>apache/superset</code></a></td><td>75.0k</td><td>2026-09-30</td><td>大型 Flask 应用怎么分模块；前后端如何协作；插件化图表体系</td></tr><tr><td><a href="https://github.com/PrefectHQ/prefect" target="_blank" rel="noopener"><code>PrefectHQ/prefect</code></a></td><td>24.0k</td><td>2026-09-29</td><td>编排引擎：状态机、任务依赖、重试与超时语义。<strong>对照你熟悉的 Quartz / Spring Batch 读</strong></td></tr><tr><td><a href="https://github.com/celery/celery" target="_blank" rel="noopener"><code>celery/celery</code></a></td><td>28.9k</td><td>2026-09-30</td><td>分布式任务队列：broker / worker / result backend 三段式设计</td></tr><tr><td><a href="https://github.com/python-poetry/poetry" target="_blank" rel="noopener"><code>python-poetry/poetry</code></a></td><td>34.3k</td><td>2026-09-27</td><td>依赖解析算法与锁文件。<strong>对照 Maven 的依赖收敛问题</strong></td></tr><tr><td><a href="https://github.com/simonw/datasette" target="_blank" rel="noopener"><code>simonw/datasette</code></a></td><td>11.5k</td><td>2026-09-24</td><td>一个人的项目能有多干净。<strong>可读性最佳样本</strong>，适合学「怎么把代码写成别人愿意读的样子」</td></tr><tr><td><a href="https://github.com/kedro-org/kedro" target="_blank" rel="noopener"><code>kedro-org/kedro</code></a></td><td>11.0k</td><td>2026-09-29</td><td>一个包如何用强 CI、Click 插件机制、可选依赖撑起可扩展性</td></tr><tr><td><a href="https://github.com/Textualize/rich" target="_blank" rel="noopener"><code>Textualize/rich</code></a></td><td>57.5k</td><td>2026-06-23</td><td>终端渲染，以及 <code>__rich__</code> 这种「协议式接口」——Python 版的 <code>toString()</code> 但更灵活</td></tr><tr><td><a href="https://github.com/sqlalchemy/sqlalchemy" target="_blank" rel="noopener"><code>sqlalchemy/sqlalchemy</code></a></td><td>12.2k</td><td>2026-09-29</td><td>ORM 内核：表达式树怎么编译成 SQL。<strong>对照 JPA / Hibernate</strong></td></tr><tr><td><a href="https://github.com/dagster-io/dagster" target="_blank" rel="noopener"><code>dagster-io/dagster</code></a></td><td>16.2k</td><td>2026-09-30</td><td>数据资产编排的另一种设计取向（对比 Prefect 看差异）</td></tr></tbody></table>
 <hr/>
-<h2 id="74-怎么读这节最重要">7.4 怎么读（这节最重要）</h2>
+<h2 id="74-怎么读这节最重要">7.4 怎么读（这节最重要）</h2><nav class="sec-nav"><a class="sn prev" href="#73-读生产代码四阶梯"><span class="sn-label">← 上一节</span><span class="sn-name">7.3 读生产代码：四阶梯</span></a><a class="sn next" href="#75-避坑清单都是脚本当场抓出来的"><span class="sn-label">下一节 →</span><span class="sn-name">7.5 避坑清单（都是脚本当场抓出来的）</span></a></nav>
 <p>前面都是「读什么」，这一节是「怎么读」。<strong>方法不对，读了等于没读。</strong></p>
 <ul class="lvl"><li><strong>用你已经在用的库当教材。</strong> 不要挑陌生的。你的 <a href="README.html"><code>python-practice/</code></a> 里 <code>pytest</code>、<code>requests</code>、<code>FastAPI</code>、<code>pandas</code> 都在跑—— 就读它们，你有真实的疑问可以驱动阅读。<strong>带着问题读源码，效率是漫无目的读的十倍。</strong></li></ul>
 <ul class="lvl"><li><strong>顺序固定：README 的 &quot;Why&quot; → <code>tests/</code> → 实现。</strong><ol class="lvl"><li>README 先看「为什么会有这个东西、它跟替代方案的区别」；</li><li>然后读 <strong>测试文件</strong>——测试是最好的使用文档，它把「怎么用」和「边界在哪」都写清楚了；</li><li>最后才挑一个你踩过坑的功能，顺着实现读下去。</li></ol></li></ul>
@@ -120,7 +199,7 @@ li{margin:.3em 0;}
 <ul class="lvl"><li><strong>别追求读完。</strong> 读完 Flask 核心算毕业；读完 Django 不现实，也不需要。 读源码的目标是<strong>建立判断力</strong>——知道设计问题大概会落在哪一层，而不是背下实现。</li></ul>
 <ul class="lvl"><li><strong>读到能改它，才算读懂。</strong> 和 <a href="00-how-to-practice.html"><code>00-how-to-practice.md</code></a> 里说的是一回事： 最小的验证动作是给这个库提一个 issue、修一个 typo、加一个测试。 你有 Java 工程经验，这一步比语法学习更能证明你的工程能力。</li></ul>
 <hr/>
-<h2 id="75-避坑清单都是脚本当场抓出来的">7.5 避坑清单（都是脚本当场抓出来的）</h2>
+<h2 id="75-避坑清单都是脚本当场抓出来的">7.5 避坑清单（都是脚本当场抓出来的）</h2><nav class="sec-nav"><a class="sn prev" href="#74-怎么读这节最重要"><span class="sn-label">← 上一节</span><span class="sn-name">7.4 怎么读（这节最重要）</span></a><a class="sn next" href="#76-这份清单怎么维护"><span class="sn-label">下一节 →</span><span class="sn-name">7.6 这份清单怎么维护</span></a></nav>
 <p>网上流传的清单普遍有三类腐烂，<strong>下面每一条都是 <code>check_repos.py</code> 实测结果，不是转述</strong>：</p>
 <p><strong>① 已归档</strong>——仓库还开着，但已变成只读，不再接受任何提交。</p>
 <table><thead><tr><th>仓库</th><th>星标</th><th>状态</th></tr></thead><tbody><tr><td><a href="https://github.com/Netflix/dispatch" target="_blank" rel="noopener"><code>Netflix/dispatch</code></a></td><td>6.5k</td><td><strong>2025-09-03 已归档</strong>（read-only）。它是事件管理平台，多篇中文清单仍在推荐</td></tr></tbody></table>
@@ -130,7 +209,7 @@ li{margin:.3em 0;}
 <table><thead><tr><th>旧地址</th><th>实际地址</th></tr></thead><tbody><tr><td><code>tiangolo/fastapi</code></td><td><a href="https://github.com/fastapi/fastapi" target="_blank" rel="noopener"><code>fastapi/fastapi</code></a></td></tr><tr><td><code>hiyouga/LLaMA-Factory</code></td><td><a href="https://github.com/hiyouga/LlamaFactory" target="_blank" rel="noopener"><code>hiyouga/LlamaFactory</code></a></td></tr><tr><td><code>microsoft/DeepSpeed</code></td><td><a href="https://github.com/deepspeedai/DeepSpeed" target="_blank" rel="noopener"><code>deepspeedai/DeepSpeed</code></a></td></tr></tbody></table>
 <p><strong>④ 星标 ≠ 学习价值。</strong> <code>vinta/awesome-python</code>（324k）和 <code>practical-tutorials/project-based-learning</code>（285k） 是本页星标最高的两个，但它们是<strong>索引</strong>。索引用来查，不用来学—— 真正适合当教材的 <code>dabeaz-course/python-mastery</code> 只有 13.3k 星。</p>
 <hr/>
-<h2 id="76-这份清单怎么维护">7.6 这份清单怎么维护</h2>
+<h2 id="76-这份清单怎么维护">7.6 这份清单怎么维护</h2><nav class="sec-nav"><a class="sn prev" href="#75-避坑清单都是脚本当场抓出来的"><span class="sn-label">← 上一节</span><span class="sn-name">7.5 避坑清单（都是脚本当场抓出来的）</span></a><a class="sn next" href="#77-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">7.7 自查问题</span></a></nav>
 <p>推荐清单是最容易腐烂的东西：<strong>库会归档、会搬家、会进维护模式，而你写下的那行链接永远不会自己变。</strong></p>
 <p>所以本仓库加了一个脚本 <a href="../../../../scripts/check_repos.py"><code>scripts/check_repos.py</code></a>， 把这件事变成一次可复现的运行。它从文档里抽出所有 GitHub 链接，逐个探测：</p>
 <table><thead><tr><th>探测项</th><th>手段</th><th>为什么要看</th></tr></thead><tbody><tr><td>是否可访问</td><td>仓库首页 HTTP 状态</td><td>排除 404</td></tr><tr><td>星标数</td><td>首页 <code>repo-stars-counter-star</code></td><td>给出「有多少人在用」的量级</td></tr><tr><td>是否归档</td><td>首页内嵌 JSON 的 <code>&quot;isArchived&quot;:true</code></td><td>归档 = 官方宣布不再维护</td></tr><tr><td>是否搬家</td><td>首页是否 302 到别的地址</td><td>避免引用过时地址</td></tr><tr><td>最近提交</td><td><code>commits.atom</code>（Atom feed，公开不限流）</td><td>判断是否名存实亡</td></tr><tr><td>是否声明维护模式</td><td>首页内嵌 README 里的 &quot;maintenance mode&quot;</td><td>有些库不归档但明确不接新功能了</td></tr><tr><td><strong>取不到 vs 真的没有</strong></td><td>网络失败（<code>NET</code>）与 404（<code>DEAD</code>）分开报</td><td>连扫几十个仓库会被限流，<strong>不能把「被拒连」写成「仓库已死」</strong>——那是最容易发生的假消息</td></tr></tbody></table>
@@ -143,12 +222,55 @@ python3 scripts/check_repos.py --delay 1.5            # 被 GitHub 限流时放�
 <p>真实运行结果：</p>
 <figure class="figure"><img alt="check_repos.py 真实运行输出" src="../../../../python-practice/assets/term-check-repos.png" loading="lazy"/><figcaption>check_repos.py 真实运行输出</figcaption></figure>
 <hr/>
-<h2 id="77-自查问题">7.7 自查问题</h2>
+<h2 id="77-自查问题">7.7 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#76-这份清单怎么维护"><span class="sn-label">← 上一节</span><span class="sn-name">7.6 这份清单怎么维护</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>读完这一篇，你应该能回答：</p>
 <ul class="lvl"><li>为什么「Python 学习项目清单」对 Java 背景的人价值有限？你该补的是哪两种能力？</li><li>读源码为什么建议从 <code>httpx</code> 这种小库开始，而不是从 Django 开始？</li><li>判断一个开源库「还能不能读」，除了看星标还应该看哪几个信号？</li><li>你的 <code>python-practice/</code> 里已经装了哪些库？挑一个，找出它的 <code>tests/</code> 目录，用 5 分钟回答「它的核心接口有几个」。</li></ul>
 <blockquote><p>下一站：Python 之后要往大模型走，教程 / 微调 / Agent 开发方向的资源清单见 <a href="../llm-fundamentals/12-tutorials-and-agent.html"><code>llm-fundamentals/12-tutorials-and-agent.md</code></a>。</p></blockquote>
 <hr/>
 <p class="nav-footer"><a href="README.html">← 返回练手项目总览</a> · <a href="../README.html">返回仓库首页</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

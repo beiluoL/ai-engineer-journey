@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#怎么跑起来" class="lvl2">怎么跑起来</a><a href="#真实运行结果v10" class="lvl2">真实运行结果（v1.0）</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>从 AI 应用层进入模型内部，从零构建 Mini Transformer Decoder。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>会调用 LLM 不等同于理解 LLM。Project 01–05 我做的是「怎么把模型用好」—— CLI、RAG、Agent、工具调用，模型始终是黑盒。作为 AI 工程师，必须知道 Transformer 内部发生了什么，才能在它出问题时定位到是哪一层。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>只会&quot;调 API&quot;，看不懂模型内部代码</li><li>不理解 Attention【注意力机制】到底做了什么</li><li>不知道怎么从零写一个 Transformer Decoder</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>数据
     ↓
 Token
@@ -78,16 +157,16 @@ Training
     ↓
 Inference</code></pre>
 <p>自己解释和实现核心链路。</p>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <p>核心实现用<strong>纯 Python 标准库</strong>（numpy 允许但不必需），不引入 torch：</p>
 <ul class="lvl"><li><code>from collections import Counter</code> —— BPE 的 pair 频次统计</li><li><code>abc.ABC</code> —— Tokenizer 契约抽象</li><li><code>json</code> —— 词表 / merges 落盘</li></ul>
 <p><strong>为什么故意不用 PyTorch</strong>：<code>nn.MultiheadAttention</code> 一行能跑通的东西，不可能让我 理解 Attention。这一版要的是 <code>softmax(QKᵀ/√d_k)V</code> 真的被手写出来 —— 包括 mask 怎么加、维度怎么 reshape。代价是训不了真模型，只能训玩具规模；而玩具规模正好 能把每一步的中间结果打印出来看。等手写版能跑，再对照 PyTorch 就是「哦，它也是 这么做的」。</p>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Project Architecture</td><td>五层拆分与输入输出契约</td><td>✅ 已落地</td></tr><tr><td>02</td><td>Tokenizer</td><td>字符级 / BPE 子词、特殊 token、往返一致性</td><td>✅ 已落地</td></tr><tr><td>03</td><td>Embedding</td><td>查表 Embedding + 正弦位置编码 + combine</td><td>✅ 已落地</td></tr><tr><td>04</td><td>Attention</td><td><code>softmax(QKᵀ/√d_k)V</code> 手写 + 因果掩码</td><td>✅ 已落地</td></tr><tr><td>05</td><td>Multi-Head Attention</td><td>分头 / 拼接 / 输出线性映射</td><td>✅ 已落地</td></tr><tr><td>06</td><td>Transformer Block</td><td>Pre-LN + 残差 + FFN</td><td>✅ 已落地</td></tr><tr><td>07</td><td>Decoder Stacking</td><td>因果掩码 + N 层堆叠 + 输出投影</td><td>✅ 已落地</td></tr><tr><td>08</td><td>Dataset / DataLoader</td><td>滑窗采样、batch 与 pad、mask</td><td>✅ 已落地</td></tr><tr><td>09</td><td>Training Loop</td><td>从零 autograd 反传 + 交叉熵 + 优化器</td><td>✅ 已落地</td></tr><tr><td>10</td><td>Inference / Sampling</td><td>greedy / temperature / top-k 生成</td><td>✅ 已落地</td></tr></tbody></table>
 <p>拆分顺序 = 数据流动的方向（Tokenizer → Embedding → Block → Training → Inference）， 理由与整张依赖图见 <a href="milestones/01-project-architecture.html">Milestone 01</a>。</p>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#怎么跑起来"><span class="sn-label">下一节 →</span><span class="sn-name">怎么跑起来</span></a></nav>
 <p><strong>v1.0 —— 10/10 Milestone 全部落地：<code>src/tokenizer/</code>（M01-M02）+ <code>src/model/</code>（M03-M10，含从零 autograd），150 项 pytest 全绿（51 分词器 + 99 模型），9 个真实可跑 demo（demo_01 + demo_03~10），配图 11 张手写 SVG + 10 张真实终端截图。</strong></p>
-<h2 id="怎么跑起来">怎么跑起来</h2>
+<h2 id="怎么跑起来">怎么跑起来</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#真实运行结果v10"><span class="sn-label">下一节 →</span><span class="sn-name">真实运行结果（v1.0）</span></a></nav>
 <pre><code>cd projects/06-mini-transformer-llm
 
 # 1. 建虚拟环境
@@ -107,7 +186,7 @@ python3 -m venv .venv
 .venv/bin/python demos/demo_08_dataloader.py    # M08 Dataset / DataLoader
 .venv/bin/python demos/demo_09_training.py      # M09 Training Loop（loss 下降 + 梯度校验）
 .venv/bin/python demos/demo_10_inference.py     # M10 Inference / Sampling</code></pre>
-<h2 id="真实运行结果v10">真实运行结果（v1.0）</h2>
+<h2 id="真实运行结果v10">真实运行结果（v1.0）</h2><nav class="sec-nav"><a class="sn prev" href="#怎么跑起来"><span class="sn-label">← 上一节</span><span class="sn-name">怎么跑起来</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p><strong>Tokenizer（M01-M02）</strong></p>
 <pre><code>语料            1224 字符 / 295 个唯一字符 / 25 行（手写，不联网下载）
 字符级词表      vocab_size = 299（4 个特殊 token + 295 个字符）
@@ -125,7 +204,7 @@ Transformer    整机 logits (seq, 500)；Pre-LN + 残差
 Training       玩具模型 150 步，loss 6.2100 → 4.7472（≈ log(500)=6.21 起，降 1.46）
 GradientCheck  手写 autograd 对有限差分最大相对误差 2.60e-05（≪ 1e-3，反向全对）
 Inference      贪心生成 15 token 全在词表内；temperature / top-k 采样输出为真实 token</code></pre>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#真实运行结果v10"><span class="sn-label">← 上一节</span><span class="sn-name">真实运行结果（v1.0）</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code>projects/06-mini-transformer-llm/
 ├── README.md                     # 本文件（10 个 milestone 勾选表）
 ├── pyproject.toml                # src/ 布局，pytest pythonpath=[&quot;src&quot;]
@@ -159,11 +238,54 @@ Inference      贪心生成 15 token 全在词表内；temperature / top-k 采�
 ├── assets/                       # 手写 SVG（架构图 / BPE 循环 / 词表增长曲线 / 各层图）+ 真实终端截图
 └── milestones/
     ├── 01-project-architecture.md … 10-inference-sampling.md   # 10 篇</code></pre>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-05 的所有能力</li><li>字符级与 BPE 两种分词器的实现与取舍（往返一致性、特殊 token、压缩率权衡）</li><li>从零手写 Transformer 全链路：Embedding + 正弦位置编码、<code>softmax(QKᵀ/√d_k)V</code> 与因果掩码、Multi-Head 切分/拼接、Pre-LN Transformer Block、Decoder 堆叠、滑窗 DataLoader</li><li><strong>从零自动微分</strong>：<code>Tensor</code> 拓扑排序 + 链式求导、广播梯度 <code>_unbroadcast</code>、中心差分 <code>grad_check</code> 验证反向正确（最大相对误差 2.60e-05）</li><li>训练闭环：前向 → mask 交叉熵 → <code>backward()</code> → 优化器 step，玩具模型 150 步 loss <code>6.21→4.75</code></li><li>自回归生成：greedy / temperature / top-k 三种采样策略</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>Project 06 已收官（v1.0）。下一个项目是 <a href="../../../../../projects/07-open-source-llm">Project 07 — Open Source LLM</a>： 接触真实开源模型生态，在本地跑通 Hugging Face 模型（本项目手写版跑通后，正好对照它&quot;原来也是这么做的&quot;）。</p>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/05-agent-mcp">Project 05 — Research Agent / MCP Assistant</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

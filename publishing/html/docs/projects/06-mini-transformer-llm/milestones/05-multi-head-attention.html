@@ -52,22 +52,101 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-what-why为什么要多头而不是把单头做大" class="lvl2">1. What / Why：为什么要多头，而不是把单头做大</a><a href="#2-design一份大权重切-h-份" class="lvl2">2. Design：一份大权重，切 h 份</a><a href="#3-realrun-evidence来自-demosoutdemo05multiheadtxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_05_multihead.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-05-multihead-attention把-dmodel-切成-h-份并行看">Milestone 05 — Multi-Head Attention：把 d_model 切成 h 份并行看</h1>
 <p>Milestone 04 写通了单头注意力：每个位置学<strong>一种</strong>「该看哪里」的模式。但语言里要同时关注的东西很多 —— 语法依存、指代、远近、语义相似。单头注意力一次只能学一个模式。Multi-Head Attention 的解法很朴素：<strong>把 <code>d_model</code> 切成 <code>h</code> 份，每份各自算一次注意力，再拼回去</strong>。</p>
 <p>在 Project 05 里 <code>nn.MultiheadAttention</code> 一行搞定；这里我必须自己写「线性投影 → 切头 → 逐头注意力 → 拼回 → 输出投影」整个过程，而且要保证<strong>每个 reshape/transpose 都有正确的反向</strong>，否则 <code>Wq</code> 的梯度回不来。</p>
 <hr/>
-<h2 id="1-what-why为什么要多头而不是把单头做大">1. What / Why：为什么要多头，而不是把单头做大</h2>
+<h2 id="1-what-why为什么要多头而不是把单头做大">1. What / Why：为什么要多头，而不是把单头做大</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design一份大权重切-h-份"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：一份大权重，切 h 份</span></a></nav>
 <p>单头注意力只有一个 <code>(seq, d_k)</code> 的「注意力视角」。多头让模型在<strong>不同的子空间</strong>并行学不同的关系：头 0 可能盯着就近的语法、头 1 盯着远距离指代…… 实现上不用 <code>h</code> 套独立权重 —— 一份大 <code>Wq</code> 切分即可，参数没变多，只是「看的角度」多了。</p>
 <p>关键工程点：<strong>切头/拼头全是 reshape + transpose，这些算子必须带反向</strong>，否则拼回去之后梯度对不上。本项目所有 reshape/transpose 都挂在 autograd 上（<code>src/model/autograd.py</code> 里 <code>reshape</code>/<code>transpose</code> 都写了 <code>_backward</code>）。</p>
-<h2 id="2-design一份大权重切-h-份">2. Design：一份大权重，切 h 份</h2>
+<h2 id="2-design一份大权重切-h-份">2. Design：一份大权重，切 h 份</h2><nav class="sec-nav"><a class="sn prev" href="#1-what-why为什么要多头而不是把单头做大"><span class="sn-label">← 上一节</span><span class="sn-name">1. What / Why：为什么要多头，而不是把单头做大</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo05multiheadtxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_05_multihead.txt）</span></a></nav>
 <p><code>src/model/multihead.py</code> 的 <code>MultiHeadAttention</code>：</p>
 <ul class="lvl"><li>构造时检查 <code>d_model % n_heads == 0</code>，否则直接 <code>ValueError</code>（下游维度就对齐不了）。</li><li>四个线性投影 <code>Wq/Wk/Wv/Wo</code>，都是 <code>Parameter(np.random.randn(d_model, d_model) * 0.02)</code>（共享一份大权重，再切头）。</li><li><code>_split_heads</code>：<code>(B, seq, d_model) → (B, n_heads, seq, d_k)</code>，先 reshape 再 transpose；未批处理时先补 batch 维。</li><li><code>_merge_heads</code>：反过来，<code>(B, n_heads, seq, d_k) → (B, seq, d_model)</code>。</li><li><code>forward</code>：<code>q = split(linear(x, Wq))</code> → 对每头 <code>scaled_dot_product_attention</code> → <code>merge</code> → <code>linear(ctx, Wo)</code>。</li></ul>
 <figure class="figure"><img alt="多头注意力数据流：X → 投影 → 切头 → 逐头并行 → 拼回 → 输出投影" src="../../../../../../projects/06-mini-transformer-llm/assets/multihead.svg" loading="lazy"/><figcaption>多头注意力数据流：X → 投影 → 切头 → 逐头并行 → 拼回 → 输出投影</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo05multiheadtxt">3. Real-run evidence（来自 <code>demos/out/demo_05_multihead.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo05multiheadtxt">3. Real-run evidence（来自 <code>demos/out/demo_05_multihead.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design一份大权重切-h-份"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：一份大权重，切 h 份</span></a><a class="sn next" href="#4-bugs-lessons"><span class="sn-label">下一节 →</span><span class="sn-name">4. Bugs / lessons</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
 <pre><code>d_model = 16, n_heads = 4, d_k = D/H = 4
 线性投影权重形状（Wq/Wk/Wv/Wo 各 16x16）
@@ -94,14 +173,57 @@ Wq.grad 有梯度 : True
 Wq.grad 有限   : True</code></pre>
 <p>这说明切头/拼头的 reshape+transpose 反向写对了：反向传播能一路乘回 <code>Wq</code>，训练时这层才学得到东西。</p>
 <figure class="figure"><img alt="Multi-Head Attention demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-05-multihead.png" loading="lazy"/><figcaption>Multi-Head Attention demo 真实运行输出</figcaption></figure>
-<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo05multiheadtxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_05_multihead.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <p>本 milestone demo 没有暴露真实运行 bug。一个<strong>设计层面要注意的坑</strong>：切头前必须保证 <code>d_model</code> 能被 <code>n_heads</code> 整除。源码在 <code>__init__</code> 里直接 <code>raise ValueError</code>，而不是让它静默算出一个怪形状 —— 否则 <code>(B, T, n_heads, d_k)</code> 的 reshape 会数组长度对不上，报一个很难定位的 <code>ValueError</code>。把这条约束<strong>前置到构造期</strong>而不是前向期，排查成本最低。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-bugs-lessons"><span class="sn-label">← 上一节</span><span class="sn-name">4. Bugs / lessons</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>多头 = 「把 <code>d_model</code> 切成 <code>h</code> 份，各自看一种关系」，参数没多，视角多了。</li><li>不需要 <code>h</code> 套独立权重：一份大 <code>Wq</code> 切分即可，拼回靠 reshape+transpose。</li><li>reshape/transpose <strong>必须带反向</strong>，否则 <code>Wq</code> 梯度回不来 —— 这里 <code>Wq.grad</code> 有限且非零，证明反向写对了。</li><li><code>d_model % n_heads != 0</code> 要在构造期就报错，别拖到前向 reshape 才炸。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/multihead.py</code></td><td><code>MultiHeadAttention</code>（4 个投影 Parameter + <code>_split_heads</code> / <code>_merge_heads</code> + <code>forward</code>）</td></tr><tr><td><code>src/model/attention.py</code></td><td>复用 <code>scaled_dot_product_attention</code> / <code>causal_mask</code></td></tr><tr><td><code>demos/demo_05_multihead.py</code></td><td>5 节演示：构造 / 未批处理 / 批处理 / 逐头权重 / 梯度，输出落 <code>demos/out/demo_05_multihead.txt</code></td></tr><tr><td><code>assets/multihead.svg</code></td><td>本章数据流图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，多头注意力落地（切头/拼头 reshape+transpose 反向正确，梯度可回写 <code>Wq</code>），演示真实跑通并核对每头分布与梯度，配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

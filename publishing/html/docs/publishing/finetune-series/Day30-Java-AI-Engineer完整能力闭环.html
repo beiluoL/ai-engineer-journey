@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#目标" class="lvl2">目标</a><a href="#llm" class="lvl2">LLM</a><a href="#模型参数" class="lvl2">模型参数</a><a href="#模型选择" class="lvl2">模型选择</a><a href="#hugging-face" class="lvl2">Hugging Face</a><a href="#safetensors" class="lvl2">Safetensors</a><a href="#gguf" class="lvl2">GGUF</a><a href="#ollama" class="lvl2">Ollama</a><a href="#vllm" class="lvl2">vLLM</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#1-prompt-engineering" class="lvl3">1. Prompt Engineering</a><a href="#2-structured-output" class="lvl3">2. Structured Output</a><a href="#3-streaming" class="lvl3">3. Streaming</a><a href="#文档解析" class="lvl2">文档解析</a><a href="#chunk" class="lvl2">Chunk</a><a href="#embedding" class="lvl2">Embedding</a><a href="#vector-database" class="lvl2">Vector Database</a><a href="#rerank" class="lvl2">Rerank</a><a href="#tool-calling" class="lvl2">Tool Calling</a><a href="#memory" class="lvl2">Memory</a><a href="#planning" class="lvl2">Planning</a><a href="#reflection" class="lvl2">Reflection</a><a href="#mcp" class="lvl2">MCP</a><a href="#sft" class="lvl2">SFT</a><a href="#lora" class="lvl2">LoRA</a><a href="#qlora" class="lvl2">QLoRA</a><a href="#gpu" class="lvl2">GPU</a><a href="#显存" class="lvl2">显存</a><a href="#cuda" class="lvl2">CUDA</a><a href="#docker" class="lvl2">Docker</a><a href="#kubernetes" class="lvl2">Kubernetes</a><a href="#vllm" class="lvl2">vLLM</a><a href="#evaluation" class="lvl2">Evaluation</a><a href="#golden-dataset" class="lvl2">Golden Dataset</a><a href="#model-registry" class="lvl2">Model Registry</a><a href="#灰度发布" class="lvl2">灰度发布</a><a href="#项目1" class="lvl2">项目1：</a><a href="#项目2" class="lvl2">项目2：</a><a href="#项目3" class="lvl2">项目3：</a><a href="#ai知识库助手" class="lvl2">AI知识库助手</a><a href="#ai-interview-agent" class="lvl2">AI Interview Agent</a><a href="#企业ai平台" class="lvl2">企业AI平台</a><a href="#java部分" class="lvl2">Java部分</a><a href="#ai部分" class="lvl2">AI部分</a><a href="#工程部分" class="lvl2">工程部分</a><a href="#第1个月" class="lvl2">第1个月</a><a href="#第2个月" class="lvl2">第2个月</a><a href="#第3个月" class="lvl2">第3个月</a><a href="#第46个月" class="lvl2">第4～6个月</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day30java-ai-engineer-完整能力闭环">Day30：Java AI Engineer 完整能力闭环</h1>
 <h1 id="从模型-应用-平台-企业架构">从模型 → 应用 → 平台 → 企业架构</h1>
@@ -164,13 +243,13 @@ RAG/Agent开发
 </code></pre>
 <hr/>
 <h1 id="三第一层模型认知能力">三、第一层：模型认知能力</h1>
-<h2 id="目标">目标</h2>
+<h2 id="目标">目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#llm"><span class="sn-label">下一节 →</span><span class="sn-name">LLM</span></a></nav>
 <p>不是训练GPT。</p>
 <p>而是：</p>
 <p>知道怎么选择模型。</p>
 <hr/>
 <p>你需要理解：</p>
-<h2 id="llm">LLM</h2>
+<h2 id="llm">LLM</h2><nav class="sec-nav"><a class="sn prev" href="#目标"><span class="sn-label">← 上一节</span><span class="sn-name">目标</span></a><a class="sn next" href="#模型参数"><span class="sn-label">下一节 →</span><span class="sn-name">模型参数</span></a></nav>
 <p>Large Language Model</p>
 <p>大语言模型。</p>
 <p>例如：</p>
@@ -179,7 +258,7 @@ RAG/Agent开发
 <ul class="lvl"><li>Qwen</li></ul>
 <ul class="lvl"><li>DeepSeek</li></ul>
 <hr/>
-<h2 id="模型参数">模型参数</h2>
+<h2 id="模型参数">模型参数</h2><nav class="sec-nav"><a class="sn prev" href="#llm"><span class="sn-label">← 上一节</span><span class="sn-name">LLM</span></a><a class="sn next" href="#模型选择"><span class="sn-label">下一节 →</span><span class="sn-name">模型选择</span></a></nav>
 <p>例如：</p>
 <p>Qwen2.5-7B</p>
 <p>含义：</p>
@@ -193,7 +272,7 @@ RAG/Agent开发
 
 70亿参数</code></pre>
 <hr/>
-<h2 id="模型选择">模型选择</h2>
+<h2 id="模型选择">模型选择</h2><nav class="sec-nav"><a class="sn prev" href="#模型参数"><span class="sn-label">← 上一节</span><span class="sn-name">模型参数</span></a><a class="sn next" href="#hugging-face"><span class="sn-label">下一节 →</span><span class="sn-name">Hugging Face</span></a></nav>
 <p>场景：</p>
 <table><thead><tr><th>需求</th><th>选择</th></tr></thead><tbody><tr><td>简单问答</td><td>小模型</td></tr><tr><td>复杂推理</td><td>大模型</td></tr><tr><td>代码</td><td>Code模型</td></tr><tr><td>企业私有</td><td>开源模型</td></tr></tbody></table>
 <hr/>
@@ -224,24 +303,24 @@ API
 业务调用</code></pre>
 <hr/>
 <p>掌握：</p>
-<h2 id="hugging-face">Hugging Face</h2>
+<h2 id="hugging-face">Hugging Face</h2><nav class="sec-nav"><a class="sn prev" href="#模型选择"><span class="sn-label">← 上一节</span><span class="sn-name">模型选择</span></a><a class="sn next" href="#safetensors"><span class="sn-label">下一节 →</span><span class="sn-name">Safetensors</span></a></nav>
 <p>模型仓库。</p>
 <hr/>
-<h2 id="safetensors">Safetensors</h2>
+<h2 id="safetensors">Safetensors</h2><nav class="sec-nav"><a class="sn prev" href="#hugging-face"><span class="sn-label">← 上一节</span><span class="sn-name">Hugging Face</span></a><a class="sn next" href="#gguf"><span class="sn-label">下一节 →</span><span class="sn-name">GGUF</span></a></nav>
 <p>模型权重格式。</p>
 <hr/>
-<h2 id="gguf">GGUF</h2>
+<h2 id="gguf">GGUF</h2><nav class="sec-nav"><a class="sn prev" href="#safetensors"><span class="sn-label">← 上一节</span><span class="sn-name">Safetensors</span></a><a class="sn next" href="#ollama"><span class="sn-label">下一节 →</span><span class="sn-name">Ollama</span></a></nav>
 <p>本地模型格式。</p>
 <hr/>
-<h2 id="ollama">Ollama</h2>
+<h2 id="ollama">Ollama</h2><nav class="sec-nav"><a class="sn prev" href="#gguf"><span class="sn-label">← 上一节</span><span class="sn-name">GGUF</span></a><a class="sn next" href="#vllm"><span class="sn-label">下一节 →</span><span class="sn-name">vLLM</span></a></nav>
 <p>个人运行。</p>
 <hr/>
-<h2 id="vllm">vLLM</h2>
+<h2 id="vllm">vLLM</h2><nav class="sec-nav"><a class="sn prev" href="#ollama"><span class="sn-label">← 上一节</span><span class="sn-name">Ollama</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav><nav class="sec-nav"><a class="sn prev" href="#kubernetes"><span class="sn-label">← 上一节</span><span class="sn-name">Kubernetes</span></a><a class="sn next" href="#evaluation"><span class="sn-label">下一节 →</span><span class="sn-name">Evaluation</span></a></nav>
 <p>企业部署。</p>
 <hr/>
 <h1 id="五第三层大模型应用开发">五、第三层：大模型应用开发</h1>
 <p>这是你的核心。</p>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#vllm"><span class="sn-label">← 上一节</span><span class="sn-name">vLLM</span></a><a class="sn next" href="#文档解析"><span class="sn-label">下一节 →</span><span class="sn-name">文档解析</span></a></nav>
 <p>你的目标：</p>
 <pre><code>Spring Boot
 
@@ -327,23 +406,23 @@ LLM
 回答</code></pre>
 <hr/>
 <p>你需要掌握：</p>
-<h2 id="文档解析">文档解析</h2>
+<h2 id="文档解析">文档解析</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#chunk"><span class="sn-label">下一节 →</span><span class="sn-name">Chunk</span></a></nav>
 <p>PDF</p>
 <p>Word</p>
 <p>Markdown</p>
 <hr/>
-<h2 id="chunk">Chunk</h2>
+<h2 id="chunk">Chunk</h2><nav class="sec-nav"><a class="sn prev" href="#文档解析"><span class="sn-label">← 上一节</span><span class="sn-name">文档解析</span></a><a class="sn next" href="#embedding"><span class="sn-label">下一节 →</span><span class="sn-name">Embedding</span></a></nav>
 <p>文本切片。</p>
 <hr/>
-<h2 id="embedding">Embedding</h2>
+<h2 id="embedding">Embedding</h2><nav class="sec-nav"><a class="sn prev" href="#chunk"><span class="sn-label">← 上一节</span><span class="sn-name">Chunk</span></a><a class="sn next" href="#vector-database"><span class="sn-label">下一节 →</span><span class="sn-name">Vector Database</span></a></nav>
 <p>文本向量化。</p>
 <hr/>
-<h2 id="vector-database">Vector Database</h2>
+<h2 id="vector-database">Vector Database</h2><nav class="sec-nav"><a class="sn prev" href="#embedding"><span class="sn-label">← 上一节</span><span class="sn-name">Embedding</span></a><a class="sn next" href="#rerank"><span class="sn-label">下一节 →</span><span class="sn-name">Rerank</span></a></nav>
 <p>向量数据库。</p>
 <p>例如：</p>
 <p>Milvus。</p>
 <hr/>
-<h2 id="rerank">Rerank</h2>
+<h2 id="rerank">Rerank</h2><nav class="sec-nav"><a class="sn prev" href="#vector-database"><span class="sn-label">← 上一节</span><span class="sn-name">Vector Database</span></a><a class="sn next" href="#tool-calling"><span class="sn-label">下一节 →</span><span class="sn-name">Tool Calling</span></a></nav>
 <p>重新排序。</p>
 <p>提升召回质量。</p>
 <hr/>
@@ -377,24 +456,24 @@ LLM
 完成任务</code></pre>
 <hr/>
 <p>你掌握：</p>
-<h2 id="tool-calling">Tool Calling</h2>
+<h2 id="tool-calling">Tool Calling</h2><nav class="sec-nav"><a class="sn prev" href="#rerank"><span class="sn-label">← 上一节</span><span class="sn-name">Rerank</span></a><a class="sn next" href="#memory"><span class="sn-label">下一节 →</span><span class="sn-name">Memory</span></a></nav>
 <p>模型调用外部能力。</p>
 <p>例如：</p>
 <p>查询订单。</p>
 <hr/>
-<h2 id="memory">Memory</h2>
+<h2 id="memory">Memory</h2><nav class="sec-nav"><a class="sn prev" href="#tool-calling"><span class="sn-label">← 上一节</span><span class="sn-name">Tool Calling</span></a><a class="sn next" href="#planning"><span class="sn-label">下一节 →</span><span class="sn-name">Planning</span></a></nav>
 <p>记忆。</p>
 <p>包括：</p>
 <ul class="lvl"><li>短期记忆</li></ul>
 <ul class="lvl"><li>长期记忆</li></ul>
 <hr/>
-<h2 id="planning">Planning</h2>
+<h2 id="planning">Planning</h2><nav class="sec-nav"><a class="sn prev" href="#memory"><span class="sn-label">← 上一节</span><span class="sn-name">Memory</span></a><a class="sn next" href="#reflection"><span class="sn-label">下一节 →</span><span class="sn-name">Reflection</span></a></nav>
 <p>规划。</p>
 <hr/>
-<h2 id="reflection">Reflection</h2>
+<h2 id="reflection">Reflection</h2><nav class="sec-nav"><a class="sn prev" href="#planning"><span class="sn-label">← 上一节</span><span class="sn-name">Planning</span></a><a class="sn next" href="#mcp"><span class="sn-label">下一节 →</span><span class="sn-name">MCP</span></a></nav>
 <p>反思。</p>
 <hr/>
-<h2 id="mcp">MCP</h2>
+<h2 id="mcp">MCP</h2><nav class="sec-nav"><a class="sn prev" href="#reflection"><span class="sn-label">← 上一节</span><span class="sn-name">Reflection</span></a><a class="sn next" href="#sft"><span class="sn-label">下一节 →</span><span class="sn-name">SFT</span></a></nav>
 <p>Model Context Protocol。</p>
 <p>模型连接工具标准。</p>
 <hr/>
@@ -422,35 +501,35 @@ QLoRA</code></pre>
 <p>企业主要：</p>
 <p>不是重新训练。</p>
 <p>而是：</p>
-<h2 id="sft">SFT</h2>
+<h2 id="sft">SFT</h2><nav class="sec-nav"><a class="sn prev" href="#mcp"><span class="sn-label">← 上一节</span><span class="sn-name">MCP</span></a><a class="sn next" href="#lora"><span class="sn-label">下一节 →</span><span class="sn-name">LoRA</span></a></nav>
 <p>监督微调。</p>
 <p>让模型学习：</p>
 <p>特定任务。</p>
 <hr/>
-<h2 id="lora">LoRA</h2>
+<h2 id="lora">LoRA</h2><nav class="sec-nav"><a class="sn prev" href="#sft"><span class="sn-label">← 上一节</span><span class="sn-name">SFT</span></a><a class="sn next" href="#qlora"><span class="sn-label">下一节 →</span><span class="sn-name">QLoRA</span></a></nav>
 <p>低秩适配。</p>
 <p>降低训练成本。</p>
 <hr/>
-<h2 id="qlora">QLoRA</h2>
+<h2 id="qlora">QLoRA</h2><nav class="sec-nav"><a class="sn prev" href="#lora"><span class="sn-label">← 上一节</span><span class="sn-name">LoRA</span></a><a class="sn next" href="#gpu"><span class="sn-label">下一节 →</span><span class="sn-name">GPU</span></a></nav>
 <p>量化+LoRA。</p>
 <p>个人GPU也可以训练。</p>
 <hr/>
 <h1 id="九第七层模型部署能力">九、第七层：模型部署能力</h1>
 <p>企业工程师必须懂。</p>
 <hr/>
-<h2 id="gpu">GPU</h2>
+<h2 id="gpu">GPU</h2><nav class="sec-nav"><a class="sn prev" href="#qlora"><span class="sn-label">← 上一节</span><span class="sn-name">QLoRA</span></a><a class="sn next" href="#显存"><span class="sn-label">下一节 →</span><span class="sn-name">显存</span></a></nav>
 <p>负责AI计算。</p>
 <hr/>
-<h2 id="显存">显存</h2>
+<h2 id="显存">显存</h2><nav class="sec-nav"><a class="sn prev" href="#gpu"><span class="sn-label">← 上一节</span><span class="sn-name">GPU</span></a><a class="sn next" href="#cuda"><span class="sn-label">下一节 →</span><span class="sn-name">CUDA</span></a></nav>
 <p>决定模型大小。</p>
 <hr/>
-<h2 id="cuda">CUDA</h2>
+<h2 id="cuda">CUDA</h2><nav class="sec-nav"><a class="sn prev" href="#显存"><span class="sn-label">← 上一节</span><span class="sn-name">显存</span></a><a class="sn next" href="#docker"><span class="sn-label">下一节 →</span><span class="sn-name">Docker</span></a></nav>
 <p>GPU计算平台。</p>
 <hr/>
-<h2 id="docker">Docker</h2>
+<h2 id="docker">Docker</h2><nav class="sec-nav"><a class="sn prev" href="#cuda"><span class="sn-label">← 上一节</span><span class="sn-name">CUDA</span></a><a class="sn next" href="#kubernetes"><span class="sn-label">下一节 →</span><span class="sn-name">Kubernetes</span></a></nav>
 <p>环境封装。</p>
 <hr/>
-<h2 id="kubernetes">Kubernetes</h2>
+<h2 id="kubernetes">Kubernetes</h2><nav class="sec-nav"><a class="sn prev" href="#docker"><span class="sn-label">← 上一节</span><span class="sn-name">Docker</span></a><a class="sn next" href="#vllm"><span class="sn-label">下一节 →</span><span class="sn-name">vLLM</span></a></nav>
 <p>服务管理。</p>
 <hr/>
 <h2 id="vllm">vLLM</h2>
@@ -512,16 +591,16 @@ API</code></pre>
 优化</code></pre>
 <hr/>
 <p>掌握：</p>
-<h2 id="evaluation">Evaluation</h2>
+<h2 id="evaluation">Evaluation</h2><nav class="sec-nav"><a class="sn prev" href="#vllm"><span class="sn-label">← 上一节</span><span class="sn-name">vLLM</span></a><a class="sn next" href="#golden-dataset"><span class="sn-label">下一节 →</span><span class="sn-name">Golden Dataset</span></a></nav>
 <p>模型评测。</p>
 <hr/>
-<h2 id="golden-dataset">Golden Dataset</h2>
+<h2 id="golden-dataset">Golden Dataset</h2><nav class="sec-nav"><a class="sn prev" href="#evaluation"><span class="sn-label">← 上一节</span><span class="sn-name">Evaluation</span></a><a class="sn next" href="#model-registry"><span class="sn-label">下一节 →</span><span class="sn-name">Model Registry</span></a></nav>
 <p>黄金测试集。</p>
 <hr/>
-<h2 id="model-registry">Model Registry</h2>
+<h2 id="model-registry">Model Registry</h2><nav class="sec-nav"><a class="sn prev" href="#golden-dataset"><span class="sn-label">← 上一节</span><span class="sn-name">Golden Dataset</span></a><a class="sn next" href="#灰度发布"><span class="sn-label">下一节 →</span><span class="sn-name">灰度发布</span></a></nav>
 <p>模型版本管理。</p>
 <hr/>
-<h2 id="灰度发布">灰度发布</h2>
+<h2 id="灰度发布">灰度发布</h2><nav class="sec-nav"><a class="sn prev" href="#model-registry"><span class="sn-label">← 上一节</span><span class="sn-name">Model Registry</span></a><a class="sn next" href="#项目1"><span class="sn-label">下一节 →</span><span class="sn-name">项目1：</span></a></nav>
 <p>小流量验证。</p>
 <hr/>
 <h1 id="十一第九层企业ai架构能力">十一、第九层：企业AI架构能力</h1>
@@ -583,7 +662,7 @@ API</code></pre>
 <p>6年Java。</p>
 <p>不要做简单Demo。</p>
 <p>应该打造：</p>
-<h2 id="项目1">项目1：</h2>
+<h2 id="项目1">项目1：</h2><nav class="sec-nav"><a class="sn prev" href="#灰度发布"><span class="sn-label">← 上一节</span><span class="sn-name">灰度发布</span></a><a class="sn next" href="#项目2"><span class="sn-label">下一节 →</span><span class="sn-name">项目2：</span></a></nav>
 <h1 id="ai知识库助手">AI知识库助手</h1>
 <p>技术：</p>
 <pre><code>Spring Boot
@@ -600,7 +679,7 @@ SSE</code></pre>
 <p>能力：</p>
 <p>企业知识问答。</p>
 <hr/>
-<h2 id="项目2">项目2：</h2>
+<h2 id="项目2">项目2：</h2><nav class="sec-nav"><a class="sn prev" href="#项目1"><span class="sn-label">← 上一节</span><span class="sn-name">项目1：</span></a><a class="sn next" href="#项目3"><span class="sn-label">下一节 →</span><span class="sn-name">项目3：</span></a></nav>
 <h1 id="ai-interview-agent">AI Interview Agent</h1>
 <p>技术：</p>
 <pre><code>Agent
@@ -615,7 +694,7 @@ LoRA</code></pre>
 <p>能力：</p>
 <p>模拟面试。</p>
 <hr/>
-<h2 id="项目3">项目3：</h2>
+<h2 id="项目3">项目3：</h2><nav class="sec-nav"><a class="sn prev" href="#项目2"><span class="sn-label">← 上一节</span><span class="sn-name">项目2：</span></a><a class="sn next" href="#ai知识库助手"><span class="sn-label">下一节 →</span><span class="sn-name">AI知识库助手</span></a></nav>
 <h1 id="blogagent">BlogAgent</h1>
 <p>你的优势项目。</p>
 <p>升级：</p>
@@ -655,19 +734,19 @@ LoRA</code></pre>
 <hr/>
 <p>写：</p>
 <p>✅</p>
-<h2 id="ai知识库助手">AI知识库助手</h2>
+<h2 id="ai知识库助手">AI知识库助手</h2><nav class="sec-nav"><a class="sn prev" href="#项目3"><span class="sn-label">← 上一节</span><span class="sn-name">项目3：</span></a><a class="sn next" href="#ai-interview-agent"><span class="sn-label">下一节 →</span><span class="sn-name">AI Interview Agent</span></a></nav>
 <blockquote><p>基于Spring Boot、LangChain4j和Milvus构建企业级RAG知识库系统，实现文档解析、智能切片、Embedding向量检索、Rerank优化和大模型生成回答。</p></blockquote>
 <hr/>
-<h2 id="ai-interview-agent">AI Interview Agent</h2>
+<h2 id="ai-interview-agent">AI Interview Agent</h2><nav class="sec-nav"><a class="sn prev" href="#ai知识库助手"><span class="sn-label">← 上一节</span><span class="sn-name">AI知识库助手</span></a><a class="sn next" href="#企业ai平台"><span class="sn-label">下一节 →</span><span class="sn-name">企业AI平台</span></a></nav>
 <blockquote><p>设计并开发基于Multi-Agent架构的智能面试系统，通过Agent规划、Tool Calling、Memory和RAG技术实现自动出题、回答评估和个性化学习规划。</p></blockquote>
 <hr/>
-<h2 id="企业ai平台">企业AI平台</h2>
+<h2 id="企业ai平台">企业AI平台</h2><nav class="sec-nav"><a class="sn prev" href="#ai-interview-agent"><span class="sn-label">← 上一节</span><span class="sn-name">AI Interview Agent</span></a><a class="sn next" href="#java部分"><span class="sn-label">下一节 →</span><span class="sn-name">Java部分</span></a></nav>
 <blockquote><p>构建私有大模型应用平台，通过vLLM部署Qwen模型，结合LLM Gateway实现模型路由、成本控制和服务监控。</p></blockquote>
 <hr/>
 <h1 id="十四面试能力地图">十四、面试能力地图</h1>
 <p>面试官可能问：</p>
 <hr/>
-<h2 id="java部分">Java部分</h2>
+<h2 id="java部分">Java部分</h2><nav class="sec-nav"><a class="sn prev" href="#企业ai平台"><span class="sn-label">← 上一节</span><span class="sn-name">企业AI平台</span></a><a class="sn next" href="#ai部分"><span class="sn-label">下一节 →</span><span class="sn-name">AI部分</span></a></nav>
 <p>必须保持：</p>
 <p>⭐⭐⭐⭐⭐</p>
 <ul class="lvl"><li>HashMap</li></ul>
@@ -678,7 +757,7 @@ LoRA</code></pre>
 <ul class="lvl"><li>Redis</li></ul>
 <ul class="lvl"><li>MQ</li></ul>
 <hr/>
-<h2 id="ai部分">AI部分</h2>
+<h2 id="ai部分">AI部分</h2><nav class="sec-nav"><a class="sn prev" href="#java部分"><span class="sn-label">← 上一节</span><span class="sn-name">Java部分</span></a><a class="sn next" href="#工程部分"><span class="sn-label">下一节 →</span><span class="sn-name">工程部分</span></a></nav>
 <p>重点：</p>
 <p>⭐⭐⭐⭐⭐</p>
 <ul class="lvl"><li>LLM</li></ul>
@@ -691,7 +770,7 @@ LoRA</code></pre>
 <ul class="lvl"><li>Agent</li></ul>
 <ul class="lvl"><li>MCP</li></ul>
 <hr/>
-<h2 id="工程部分">工程部分</h2>
+<h2 id="工程部分">工程部分</h2><nav class="sec-nav"><a class="sn prev" href="#ai部分"><span class="sn-label">← 上一节</span><span class="sn-name">AI部分</span></a><a class="sn next" href="#第1个月"><span class="sn-label">下一节 →</span><span class="sn-name">第1个月</span></a></nav>
 <p>高级：</p>
 <p>⭐⭐⭐⭐</p>
 <ul class="lvl"><li>Docker</li></ul>
@@ -702,7 +781,7 @@ LoRA</code></pre>
 <ul class="lvl"><li>MLOps</li></ul>
 <hr/>
 <h1 id="十五未来6个月成长路线">十五、未来6个月成长路线</h1>
-<h2 id="第1个月">第1个月</h2>
+<h2 id="第1个月">第1个月</h2><nav class="sec-nav"><a class="sn prev" href="#工程部分"><span class="sn-label">← 上一节</span><span class="sn-name">工程部分</span></a><a class="sn next" href="#第2个月"><span class="sn-label">下一节 →</span><span class="sn-name">第2个月</span></a></nav>
 <p>目标：</p>
 <p>Java AI工程师入门。</p>
 <p>完成：</p>
@@ -710,19 +789,19 @@ LoRA</code></pre>
 <ul class="lvl"><li>LangChain4j</li></ul>
 <ul class="lvl"><li>Agent</li></ul>
 <hr/>
-<h2 id="第2个月">第2个月</h2>
+<h2 id="第2个月">第2个月</h2><nav class="sec-nav"><a class="sn prev" href="#第1个月"><span class="sn-label">← 上一节</span><span class="sn-name">第1个月</span></a><a class="sn next" href="#第3个月"><span class="sn-label">下一节 →</span><span class="sn-name">第3个月</span></a></nav>
 <p>模型能力：</p>
 <ul class="lvl"><li>Ollama</li></ul>
 <ul class="lvl"><li>vLLM</li></ul>
 <ul class="lvl"><li>QLoRA</li></ul>
 <hr/>
-<h2 id="第3个月">第3个月</h2>
+<h2 id="第3个月">第3个月</h2><nav class="sec-nav"><a class="sn prev" href="#第2个月"><span class="sn-label">← 上一节</span><span class="sn-name">第2个月</span></a><a class="sn next" href="#第46个月"><span class="sn-label">下一节 →</span><span class="sn-name">第4～6个月</span></a></nav>
 <p>企业能力：</p>
 <ul class="lvl"><li>Kubernetes</li></ul>
 <ul class="lvl"><li>MLOps</li></ul>
 <ul class="lvl"><li>Monitoring</li></ul>
 <hr/>
-<h2 id="第46个月">第4～6个月</h2>
+<h2 id="第46个月">第4～6个月</h2><nav class="sec-nav"><a class="sn prev" href="#第3个月"><span class="sn-label">← 上一节</span><span class="sn-name">第3个月</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>打造：</p>
 <p>AI产品。</p>
 <p>方向：</p>
@@ -840,5 +919,48 @@ Day30
 <p>开始把学习成果转换成：</p>
 <p><strong>可投递、可面试、可拿Offer的能力。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

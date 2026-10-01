@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-04-ai-knowledge-base-rag-assistant">Project 04 — AI Knowledge Base / RAG Assistant</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>给 AI 加上外部知识，构建真正的 RAG【检索增强生成】系统。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>LLM 有知识截止日期，而且幻觉不可避免。RAG 让模型能检索外部知识，是目前生产级 AI 应用的标配能力。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>LLM 不知道最新信息（知识截止日期）</li><li>LLM 可能编造事实（幻觉）</li><li>私有知识（文档 / 数据库）无法直接给 LLM 用</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>Document
     ↓
 Parsing
@@ -83,9 +162,9 @@ Context
 LLM
     ↓
 Answer</code></pre>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li>Document Ingestion（文档解析）</li><li>Chunking（文档切分）</li><li>Embedding（文本向量化）</li><li>Vector Database（Chroma / FAISS / Milvus）</li><li>Retrieval（检索）</li><li>Rerank（重排序）</li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <pre><code>AI Chat Web
     ↓ Document Ingestion
 Personal RAG v0.1
@@ -93,15 +172,15 @@ Personal RAG v0.1
 Personal RAG v0.2
     ↓ Retrieval + Rerank + Pipeline
 Personal RAG v1.0</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>状态</th><th>核心能力</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-document-ingestion.html">Document Ingestion</a></td><td>✅</td><td>文档加载 / 解析 / PDF / Markdown</td></tr><tr><td>02</td><td><a href="milestones/02-chunking.html">Chunking</a></td><td>✅</td><td>切分策略 / chunk size / overlap</td></tr><tr><td>03</td><td><a href="milestones/03-embedding.html">Embedding</a></td><td>✅</td><td>文本向量化 / Embedding 模型</td></tr><tr><td>04</td><td><a href="milestones/04-vector-database.html">Vector Database</a></td><td>✅</td><td>Chroma / FAISS / 向量存储</td></tr><tr><td>05</td><td><a href="milestones/05-retrieval.html">Retrieval</a></td><td>✅</td><td>向量检索 / 混合检索 / MMR</td></tr><tr><td>06</td><td><a href="milestones/06-similarity-search.html">Similarity Search</a></td><td>✅</td><td>余弦相似度 / 欧氏距离</td></tr><tr><td>07</td><td><a href="milestones/07-rerank.html">Rerank</a></td><td>✅</td><td>重排序 / Cross-Encoder</td></tr><tr><td>08</td><td><a href="milestones/08-context-assembly.html">Context Assembly</a></td><td>✅</td><td>上下文组装 / 引用溯源</td></tr><tr><td>09</td><td><a href="milestones/09-rag-pipeline.html">RAG Pipeline</a></td><td>✅</td><td>完整 Pipeline 整合</td></tr><tr><td>10</td><td><a href="milestones/10-rag-evaluation.html">RAG Evaluation</a></td><td>✅</td><td>Hit Rate / MRR / 忠实度</td></tr><tr><td>11</td><td><a href="milestones/11-real-service-integration.html">Real Service Integration</a></td><td>✅</td><td>真实 embedding + Chroma 持久化</td></tr><tr><td>12</td><td><a href="milestones/12-real-llm-integration.html">Real LLM Integration</a></td><td>✅</td><td>真实 LLM 生成 + 忠实度审计</td></tr><tr><td>13</td><td><a href="milestones/13-fastapi-web-api.html">FastAPI Web API</a></td><td>✅</td><td>POST /ask + SSE /ask/stream</td></tr><tr><td>14</td><td><a href="milestones/14-real-rag-evaluation.html">Real RAG Evaluation</a></td><td>✅</td><td>30 条 EvalCase + 真实 embedding/LLM 评估</td></tr><tr><td>15</td><td><a href="milestones/15-observability.html">Observability</a></td><td>✅</td><td>metrics 埋点：latency / 分数分布 / 调用计数</td></tr><tr><td>16</td><td><a href="milestones/16-real-reranker-and-calibration.html">Real Reranker &amp; Calibration</a></td><td>✅</td><td>LLM 精排 A/B + min_score 阈值校准 + 指标跨进程对比</td></tr><tr><td>17</td><td><a href="milestones/17-chat-ui-and-session-history.html">Chat UI &amp; Session History</a></td><td>✅</td><td>前端 Chat UI / 会话历史 / 多轮追问</td></tr></tbody></table>
 <p>状态：✅ 内容已就绪 · ✅ 代码已落地 · ✅ 测试全绿 · ✅ 已配真实运行截图</p>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <p><strong>17 / 17 个 Milestone 文档 + <code>src/rag/</code> + 离线/真实服务测试 + 真实运行截图</strong> 全部完成。RAG 两条链路（离线索引 <code>parse → chunk → embed → store</code>、在线问答 <code>retrieve → rerank → assemble → llm</code>）已跑通；新增真实 embedding + Chroma 持久化、真实 LLM、FastAPI Web API、真实 RAG 评估、可观测性、真实精排与阈值校准六章。</p>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p><strong>v0.8 产品化</strong>：<code>src/rag/</code> 共 19 个模块 + <code>web/</code> 原生前端，197 项 pytest 全绿。真实链路已跑通：</p>
 <ul class="lvl"><li><code>DashScopeEmbeddingClient</code> 接百炼 <code>text-embedding-v3</code></li><li><code>ChromaVectorStore</code> 落盘 <code>chroma_db/rag_chunks/</code>，重启后数据可恢复</li><li><code>DeepSeekLLMClient</code> 接入 RAGService；<code>RAGAnswer.system_prompt</code> 留档可回放</li><li>忠实度审计 + 注入式自测，可离线验证审计判据有区分度</li><li>FastAPI Web API：<code>POST /ask</code> + <code>POST /ask/stream</code>（SSE）+ <code>/health</code> + <code>/stats</code> + <code>/index</code></li><li>30 条手写 EvalCase，真实 embedding + DeepSeek 跑出完整评估报告</li><li>可观测性：<code>MetricsRegistry</code> + 计量壳（embedding/LLM），四段耗时、分数分桶、<code>/stats</code> 直接读</li><li>真实精排 <code>LLMReranker</code>（DeepSeek listwise）：MRR 0.711→0.767；<code>min_score</code> 按 F1 扫描校准（余弦量纲最优 0.60）</li><li>指标落盘 <code>--save/--baseline</code> 跨进程对比，20% 容忍带不误报</li><li>前端零构建 Chat UI：会话列表 / 流式打字 / 引用来源 / 中止生成；SSE 增量渲染 + 历史自动落库</li><li>CLI 支持 <code>--index</code> 与 <code>--ask --fake</code> 全离线演示；<code>demo_12/13/14/15/16/17/18</code> 支持真实服务全流程演示</li></ul>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code>projects/04-rag/
 ├── data/               # 示例知识库 + 30 条 EvalCase；会话落盘 data/sessions/（可选）
 ├── demos/              # 18 个真实运行 demo（demo_01～18）+ 公共装置
@@ -127,11 +206,54 @@ Personal RAG v1.0</code></pre>
 ├── tests/              # 全部离线（FakeEmbeddingClient + InMemoryVectorStore）
 ├── web/                # 17 章：零构建原生 Chat UI（index.html / style.css / app.js）
 └── assets/             # 44 张真实运行截图</code></pre>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-03 的所有能力（Python 工程化、async、FastAPI、pytest、Prompt / 流式 / 工具调用）</li><li>文档解析、Chunk 切分、Embedding 向量化、向量检索（hybrid + MMR）、重排序、上下文组装</li><li>可离线跑通的完整 RAG 流水线，120 项 pytest 验证</li><li>真实 embedding（百炼 text-embedding-v3）与 Chroma 持久化落盘，重启恢复验证</li><li>真实 LLM（DeepSeek）生成、token 计量、拒答闸门、流式接入</li><li>忠实度审计，逐句标出无出处内容，并可用注入式自测验证判据</li><li>真实 RAG 评估：30 条 EvalCase，top_k 对照、忠实度审计、可复现性验证</li><li>可观测性：四段耗时占比、召回分数分桶、embedding/LLM 调用计数（并发安全）</li><li>产品化：零构建前端 Chat UI、会话历史、多轮追问</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>有 cross-encoder 权限后，把 <code>LLMReranker</code> 换成 <code>bge-reranker-v2-m3</code>（阈值重扫一遍）</li><li>把 pytest/CI 接到 GitHub Actions，PR 上跑 check_links + 全量测试</li><li>前端 UI 继续打磨：移动端适配、Markdown 渲染、代码块高亮、深色模式</li></ul>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/03-ai-application">Project 03 — AI Application</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

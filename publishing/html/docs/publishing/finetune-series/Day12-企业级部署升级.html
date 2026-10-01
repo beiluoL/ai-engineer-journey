@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-服务挂了怎么办" class="lvl3">1. 服务挂了怎么办？</a><a href="#2-服务器重启怎么办" class="lvl3">2. 服务器重启怎么办？</a><a href="#3-如何管理多个服务" class="lvl3">3. 如何管理多个服务？</a><a href="#image" class="lvl2">image</a><a href="#runtime" class="lvl2">runtime</a><a href="#volumes" class="lvl2">volumes</a><a href="#gpu" class="lvl2">GPU</a><a href="#vllm" class="lvl2">vLLM</a><a href="#prometheus" class="lvl2">Prometheus</a><a href="#个人项目" class="lvl2">个人项目</a><a href="#小团队" class="lvl2">小团队</a><a href="#企业生产" class="lvl2">企业生产</a><a href="#企业级-lora-微调部署数据-qlora训练-模型合并-vllm加载-灰度发布" class="lvl2">《企业级 LoRA 微调部署：数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布》</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day12-企业级部署升级">Day12 企业级部署升级</h1>
 <h1 id="docker-compose-vllm-nginx-https-api鉴权-监控">Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控</h1>
@@ -272,16 +351,16 @@ services:
       --dtype auto</code></pre>
 <hr/>
 <p>解释：</p>
-<h2 id="image">image</h2>
+<h2 id="image">image</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#runtime"><span class="sn-label">下一节 →</span><span class="sn-name">runtime</span></a></nav>
 <pre><code>vllm/vllm-openai</code></pre>
 <p>官方 vLLM 镜像。</p>
 <hr/>
-<h2 id="runtime">runtime</h2>
+<h2 id="runtime">runtime</h2><nav class="sec-nav"><a class="sn prev" href="#image"><span class="sn-label">← 上一节</span><span class="sn-name">image</span></a><a class="sn next" href="#volumes"><span class="sn-label">下一节 →</span><span class="sn-name">volumes</span></a></nav>
 <pre><code>nvidia</code></pre>
 <p>允许：</p>
 <p>Docker使用GPU。</p>
 <hr/>
-<h2 id="volumes">volumes</h2>
+<h2 id="volumes">volumes</h2><nav class="sec-nav"><a class="sn prev" href="#runtime"><span class="sn-label">← 上一节</span><span class="sn-name">runtime</span></a><a class="sn next" href="#gpu"><span class="sn-label">下一节 →</span><span class="sn-name">GPU</span></a></nav>
 <pre><code>./models:/models</code></pre>
 <p>宿主机：</p>
 <pre><code>/models</code></pre>
@@ -475,21 +554,21 @@ rate=5r/s;</code></pre>
 <p>企业必须知道：</p>
 <p>模型状态。</p>
 <p>监控：</p>
-<h2 id="gpu">GPU</h2>
+<h2 id="gpu">GPU</h2><nav class="sec-nav"><a class="sn prev" href="#volumes"><span class="sn-label">← 上一节</span><span class="sn-name">volumes</span></a><a class="sn next" href="#vllm"><span class="sn-label">下一节 →</span><span class="sn-name">vLLM</span></a></nav>
 <p>例如：</p>
 <p>显存：</p>
 <pre><code>20GB / 24GB</code></pre>
 <p>GPU利用率：</p>
 <pre><code>95%</code></pre>
 <hr/>
-<h2 id="vllm">vLLM</h2>
+<h2 id="vllm">vLLM</h2><nav class="sec-nav"><a class="sn prev" href="#gpu"><span class="sn-label">← 上一节</span><span class="sn-name">GPU</span></a><a class="sn next" href="#prometheus"><span class="sn-label">下一节 →</span><span class="sn-name">Prometheus</span></a></nav>
 <p>监控：</p>
 <ul class="lvl"><li>请求数</li></ul>
 <ul class="lvl"><li>延迟</li></ul>
 <ul class="lvl"><li>Token速度</li></ul>
 <ul class="lvl"><li>队列长度</li></ul>
 <hr/>
-<h2 id="prometheus">Prometheus</h2>
+<h2 id="prometheus">Prometheus</h2><nav class="sec-nav"><a class="sn prev" href="#vllm"><span class="sn-label">← 上一节</span><span class="sn-name">vLLM</span></a><a class="sn next" href="#个人项目"><span class="sn-label">下一节 →</span><span class="sn-name">个人项目</span></a></nav>
 <p>架构：</p>
 <pre><code> id=&quot;m6rj88&quot;
 vLLM
@@ -601,19 +680,19 @@ GPU
 返回</code></pre>
 <hr/>
 <h1 id="十六成本估算">十六、成本估算</h1>
-<h2 id="个人项目">个人项目</h2>
+<h2 id="个人项目">个人项目</h2><nav class="sec-nav"><a class="sn prev" href="#prometheus"><span class="sn-label">← 上一节</span><span class="sn-name">Prometheus</span></a><a class="sn next" href="#小团队"><span class="sn-label">下一节 →</span><span class="sn-name">小团队</span></a></nav>
 <p>RTX4090：</p>
 <p>运行：</p>
 <p>8小时/天</p>
 <p>费用：</p>
 <pre><code>约500元/月</code></pre>
 <hr/>
-<h2 id="小团队">小团队</h2>
+<h2 id="小团队">小团队</h2><nav class="sec-nav"><a class="sn prev" href="#个人项目"><span class="sn-label">← 上一节</span><span class="sn-name">个人项目</span></a><a class="sn next" href="#企业生产"><span class="sn-label">下一节 →</span><span class="sn-name">企业生产</span></a></nav>
 <p>A10：</p>
 <p>24小时运行：</p>
 <pre><code>2000～5000元/月</code></pre>
 <hr/>
-<h2 id="企业生产">企业生产</h2>
+<h2 id="企业生产">企业生产</h2><nav class="sec-nav"><a class="sn prev" href="#小团队"><span class="sn-label">← 上一节</span><span class="sn-name">小团队</span></a><a class="sn next" href="#企业级-lora-微调部署数据-qlora训练-模型合并-vllm加载-灰度发布"><span class="sn-label">下一节 →</span><span class="sn-name">《企业级 LoRA 微调部署：数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布》</span></a></nav>
 <p>A100：</p>
 <pre><code>10000元+/月</code></pre>
 <hr/>
@@ -627,7 +706,7 @@ GPU
 <p><strong>AI Application Engineer【AI应用工程师】级别能力。</strong></p>
 <hr/>
 <h1 id="下一节-day13">下一节 Day13</h1>
-<h2 id="企业级-lora-微调部署数据-qlora训练-模型合并-vllm加载-灰度发布">《企业级 LoRA 微调部署：数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布》</h2>
+<h2 id="企业级-lora-微调部署数据-qlora训练-模型合并-vllm加载-灰度发布">《企业级 LoRA 微调部署：数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布》</h2><nav class="sec-nav"><a class="sn prev" href="#企业生产"><span class="sn-label">← 上一节</span><span class="sn-name">企业生产</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>我们会完成：</p>
 <pre><code>业务数据
 
@@ -657,5 +736,48 @@ vLLM部署
 <p>这一步就是：</p>
 <p><strong>真正企业的大模型定制流程。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

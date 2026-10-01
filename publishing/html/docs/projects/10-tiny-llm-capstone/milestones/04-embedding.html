@@ -52,17 +52,96 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why两件事必须被证明而不是被相信" class="lvl2">1. Why：两件事必须被证明，而不是被相信</a><a href="#2-design一次查表-一次相加" class="lvl2">2. Design：一次查表 + 一次相加</a><a href="#3-realrun-evidence来自-demosoutdemo04embeddingterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_04_embedding_terminal.txt）</a><a href="#31-token-embedding-就是一张查找表" class="lvl3">3.1 Token Embedding 就是一张查找表</a><a href="#32-查表-onehot-矩阵等价性实测" class="lvl3">3.2 查表 = one-hot × 矩阵（等价性实测）</a><a href="#33-正弦位置编码不训练也能表达顺序" class="lvl3">3.3 正弦位置编码：不训练也能表达顺序</a><a href="#34-combineembedding-位置编码直接相加" class="lvl3">3.4 combine：Embedding + 位置编码直接相加</a><a href="#35-参数大头在哪" class="lvl3">3.5 参数大头在哪</a><a href="#36-位置编码不在参数表里" class="lvl3">3.6 位置编码不在参数表里</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-04-embedding查表-正弦位置编码以及参数都花在哪了">Milestone 04 — Embedding：查表 + 正弦位置编码，以及参数都花在哪了</h1>
 <p>M03 把文本变成了 <code>(64,)</code> 的 id 序列。这一章把它变成 <code>(B, T, 64)</code> 的向量：<strong>token embedding 一次查表 + 位置编码一次相加</strong>。</p>
 <p>本章的结论是定量的，而且会直接影响后续调参方向：<strong>词嵌入与输出投影合计占掉 71.1% 的参数</strong>。在 23 万参数的小模型上，&quot;先看词表&quot;比&quot;先动 d_model&quot;更有效。</p>
 <hr/>
-<h2 id="1-why两件事必须被证明而不是被相信">1. Why：两件事必须被证明，而不是被相信</h2>
+<h2 id="1-why两件事必须被证明而不是被相信">1. Why：两件事必须被证明，而不是被相信</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design一次查表-一次相加"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：一次查表 + 一次相加</span></a></nav>
 <ul class="lvl"><li><strong>&quot;查表&quot;和&quot;one-hot × W&quot;必须数学等价。</strong> 这是 embedding 层的定义。如果不等价，说明有人在查表逻辑里动了手脚（缩放、归一化），而模型学到的东西就和你以为的不一样。</li><li><strong>位置编码不能进优化器。</strong> 正弦位置编码是<strong>常量表</strong>，不是可训练参数。如果它被误当成参数交给 Adam，模型会去&quot;学习位置&quot;，而它本来已经有一个正确的解析解 —— 更糟的是，它还会被算进参数量，让你对模型规模判断失误。</li></ul>
-<h2 id="2-design一次查表-一次相加">2. Design：一次查表 + 一次相加</h2>
+<h2 id="2-design一次查表-一次相加">2. Design：一次查表 + 一次相加</h2><nav class="sec-nav"><a class="sn prev" href="#1-why两件事必须被证明而不是被相信"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：两件事必须被证明，而不是被相信</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo04embeddingterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_embedding_terminal.txt）</span></a></nav>
 <p><strong>前向</strong>（<code>P06</code> 的 <code>TokenEmbedding</code>）：</p>
 <pre><code>x: (B, T) int64
   → token_emb.weight[x]          # (B, T, d_model)，一次花 O(d) 的查表
@@ -70,7 +149,7 @@ li{margin:.3em 0;}
   = (B, T, d_model)</code></pre>
 <p><strong>为什么&quot;查表 ≠ one-hot × W&quot;要专门证明</strong>：one-hot 矩阵是 <code>(V, V)</code>，乘一次是 <code>O(V·d)</code>；查表是 <code>O(d)</code>。V=1280 时差 1280 倍。这不是&quot;优化技巧&quot;，是<strong>为什么 embedding 层能存在</strong>的原因。</p>
 <figure class="figure"><img alt="M04 Embedding 查表 + 位置编码 + 参数占比" src="../../../../../../projects/10-tiny-llm-capstone/assets/embedding.svg" loading="lazy"/><figcaption>M04 Embedding 查表 + 位置编码 + 参数占比</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo04embeddingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_embedding_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo04embeddingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_embedding_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design一次查表-一次相加"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：一次查表 + 一次相加</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M04 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-04-embedding.png" loading="lazy"/><figcaption>M04 真实运行</figcaption></figure>
 <h3 id="31-token-embedding-就是一张查找表">3.1 Token Embedding 就是一张查找表</h3>
 <pre><code>词表大小 V     1280
@@ -118,14 +197,57 @@ Embedding 参数 = V × d_model = 1280 × 64 = 81,920
 是否含 pos_enc  False
 前 3 个张量      token_emb.weight, decoder.blocks.0.ln1.gamma, decoder.blocks.0.ln1.beta</code></pre>
 <p>28 个张量里没有 <code>pos_enc</code> —— 这是&quot;它不进优化器&quot;的<strong>可执行证据</strong>，而不是口头承诺。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo04embeddingterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_embedding_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>词表是&quot;参数预算&quot;里的隐形大头。</strong> 大模型上 FFN 会主导参数量，所以很多人形成了&quot;参数都在 FFN&quot;的直觉。但在 23 万参数的小模型上，<code>V × d_model</code> 一项就占 35.6%。<strong>词表大小是一个可以调的超参</strong>，而且它同时影响参数量、压缩率、OOV 率三件事。</li><li><strong>位置编码的幅度会改变向量量级。</strong> 实测范数从 1.19 跳到 5.60。如果 embedding 初始化尺度很大，位置信号会被淹没；如果很小，位置会主导。这也是 Transformer 必须在每个子层前做 LN 的原因之一。</li><li><strong>&quot;每个位置的范数恒定&quot;是正弦构造的副产品，不是设计目标。</strong> 但它让不同位置的编码&quot;可比&quot; —— 这是一个几乎白拿的性质，也是它比&quot;可学习位置编码&quot;更抗过拟合的地方（0 个参数 vs <code>max_len × d_model</code> 个参数）。</li><li><strong>低频维在相邻位置上几乎不变（0.0000）。</strong> 初看像缺陷，实际上是设计：那几维负责区分&quot;远距离的位置段&quot;，高频维负责区分&quot;相邻位置&quot;。用一条&quot;相邻变化量&quot;去看整体，会得出错误结论。</li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><code>(1280, 64)</code> 的查找表 = 81,920 参数，占全模型 <strong>35.6%</strong>；与输出投影合计 <strong>71.1%</strong>。</li><li>查表与 <code>one-hot @ W</code> 最大绝对误差 <strong>0.000e+00</strong>，乘法次数 81,920 → 0。</li><li>位置编码 <code>(64, 64)</code>、<strong>0 个可训练参数</strong>、每位置范数恒定 <strong>5.6569</strong>，且相似度随距离单调下降（0.9662 → 0.7004 → 0.6111）。</li><li>Embedding 与位置编码直接相加（误差 0.000e+00），相加后向量范数 1.1910 → 5.6030。</li><li>遍历到的 28 个张量<strong>不含</strong> <code>pos_enc</code> ⇒ 常量表确实没进优化器。</li><li>直接结论：<strong>在 Tiny LLM 上，先动词表比先动 d_model 更有效</strong>（词表减半即可省 40,960 参数），但代价是 OOV 上升 —— 这是一个真实的权衡，不是单向优化。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/model.py</code></td><td><code>build_model</code>（唯一构造入口）/ <code>walk_parameters</code>（递归遍历，<strong>不漏词嵌入</strong>）/ <code>parameter_report</code>（分组参数账）/ <code>forward_sanity</code>（因果性自检）<code>/ set_seed</code></td></tr><tr><td>P06 <code>model/embeddings.py</code></td><td><code>TokenEmbedding</code>（查表）+ 正弦 <code>pos_enc</code>（常量表，不注册为 Parameter）</td></tr><tr><td><code>demos/demo_04_embedding.py</code></td><td>6 节：查表 / 等价性 / 位置编码性质 / combine / 参数占比 / 张量清单</td></tr><tr><td><code>demos/out/demo_04_embedding_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/embedding.svg</code></td><td>查表 + 位置编码 + 参数占比条</td></tr><tr><td><code>assets/term-04-embedding.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，Embedding 层落地并被量化。实测：<code>(1280, 64)</code> = 81,920 参数占 35.6%，与输出投影合计 <strong>71.1%</strong>；查表 vs <code>one-hot @ W</code> 误差 <strong>0.000e+00</strong>（乘法 81,920 → 0）；位置编码 0 个可训练参数、每位置范数恒为 5.6569、位置 0↔1/8/32 相似度 0.9662 / 0.7004 / 0.6111；<code>combine</code> 后范数 1.1910 → 5.6030；28 个张量中不含 <code>pos_enc</code>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#91-符号约定先统一口径" class="lvl2">9.1 符号约定（先统一口径）</a><a href="#92-前置三个必须熟练的运算" class="lvl2">9.2 前置：三个必须熟练的运算</a><a href="#921-矩阵乘法与形状检查" class="lvl3">9.2.1 矩阵乘法与形状检查</a><a href="#922-点积与余弦相似度" class="lvl3">9.2.2 点积与余弦相似度</a><a href="#923-转置与广播" class="lvl3">9.2.3 转置与广播</a><a href="#93-selfattention-的缩放为什么是-dk" class="lvl2">9.3 Self-Attention 的缩放：为什么是 √d_k</a><a href="#推导思路" class="lvl3">推导思路</a><a href="#顺带softmax-的雅可比矩阵推导思路" class="lvl3">顺带：Softmax 的雅可比矩阵（推导思路）</a><a href="#94-softmax-与交叉熵梯度为什么这么漂亮" class="lvl2">9.4 Softmax 与交叉熵：梯度为什么这么漂亮</a><a href="#941-softmax-的数值稳定性" class="lvl3">9.4.1 Softmax 的数值稳定性</a><a href="#942-交叉熵" class="lvl3">9.4.2 交叉熵</a><a href="#943-梯度推导" class="lvl3">9.4.3 梯度推导</a><a href="#944-困惑度" class="lvl3">9.4.4 困惑度</a><a href="#95-位置编码与-rope" class="lvl2">9.5 位置编码与 RoPE</a><a href="#951-正弦位置编码" class="lvl3">9.5.1 正弦位置编码</a><a href="#952-rope把旋转搬到-qk-上" class="lvl3">9.5.2 RoPE：把旋转搬到 Q/K 上</a><a href="#96-反向传播与自动微分" class="lvl2">9.6 反向传播与自动微分</a><a href="#961-链式法则" class="lvl3">9.6.1 链式法则</a><a href="#962-计算图前向-反向" class="lvl3">9.6.2 计算图（前向 → 反向）</a><a href="#963-为什么必须用-autograd" class="lvl3">9.6.3 为什么必须用 autograd</a><a href="#964-梯度累积与裁剪" class="lvl3">9.6.4 梯度累积与裁剪</a><a href="#97-优化器从-sgd-到-adamw" class="lvl2">9.7 优化器：从 SGD 到 AdamW</a><a href="#98-概率与信息论速查" class="lvl2">9.8 概率与信息论速查</a><a href="#981-熵交叉熵kl-散度" class="lvl3">9.8.1 熵、交叉熵、KL 散度</a><a href="#982-采样温度与-topp-的数学" class="lvl3">9.8.2 采样：温度与 top-p 的数学</a><a href="#983-奖励模型里的-bradleyterry" class="lvl3">9.8.3 奖励模型里的 Bradley-Terry</a><a href="#99-手推清单面试前自查" class="lvl2">9.9 手推清单（面试前自查）</a><a href="#910-自查问题" class="lvl2">9.10 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="09-数学基础关键公式与推导思路">09 · 数学基础：关键公式与推导思路</h1>
 <blockquote><p><strong>一句话结论</strong>：LLM 用到的数学其实不多——<strong>矩阵乘法、softmax、交叉熵、链式法则、几个优化器</strong>。 难的不是数学本身，而是把符号和工程实现对应起来。本章按&quot;符号 → 公式 → 推导思路 → 实现注意&quot;的顺序过一遍。</p></blockquote>
 <p><strong>怎么读这一章</strong>：第 02/03/07 章已经把结论用掉了。本章是&quot;回头补推导&quot;的地方，第一次读可以跳读，第二遍再细看。</p>
 <hr/>
-<h2 id="91-符号约定先统一口径">9.1 符号约定（先统一口径）</h2>
+<h2 id="91-符号约定先统一口径">9.1 符号约定（先统一口径）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#92-前置三个必须熟练的运算"><span class="sn-label">下一节 →</span><span class="sn-name">9.2 前置：三个必须熟练的运算</span></a></nav>
 <table><thead><tr><th>符号</th><th>含义</th><th>典型值</th></tr></thead><tbody><tr><td>$n$ / $T$</td><td>序列长度（token 数）</td><td>512 – 128k</td></tr><tr><td>$d$ / $d_{model}$</td><td>隐藏维度</td><td>4096</td></tr><tr><td>$h$</td><td>注意力头数</td><td>32</td></tr><tr><td>$d_k = d/h$</td><td>每个头的维度</td><td>128</td></tr><tr><td>$V$</td><td>词表大小</td><td>32k – 200k</td></tr><tr><td>$L$</td><td>层数</td><td>32</td></tr><tr><td>$B$</td><td>批大小（batch size）</td><td>1 – 512</td></tr><tr><td>$X \in \mathbb{R}^{n \times d}$</td><td>输入序列的表示矩阵</td><td>—</td></tr><tr><td>$x_t \in \mathbb{R}^{d}$</td><td>第 t 个 token 的向量（行向量约定）</td><td>—</td></tr><tr><td>$W \in \mathbb{R}^{d \times d&#x27;}$</td><td>权重矩阵</td><td>—</td></tr><tr><td>$z \in \mathbb{R}^{V}$</td><td>logits（未归一化打分）</td><td>—</td></tr><tr><td>$p$</td><td>概率分布，$\sum_i p_i = 1$</td><td>—</td></tr><tr><td>$\theta$</td><td>全部可训练参数</td><td>7e9</td></tr><tr><td>$\eta$</td><td>学习率</td><td>1e-4</td></tr><tr><td>$\sigma$</td><td>sigmoid：$\frac{1}{1+e^{-x}}$</td><td>—</td></tr><tr><td>$\odot$</td><td>逐元素乘（Hadamard）</td><td>—</td></tr><tr><td>$\nabla_\theta$</td><td>对参数的梯度</td><td>—</td></tr></tbody></table>
 <blockquote><p><strong>约定说明</strong>：本笔记与多数实现一致，<strong>每个 token 是矩阵的一行</strong>（$X \in \mathbb{R}^{n \times d}$）。看到公式里的行/列要能自动换算——这是读论文时最常见的困惑来源。</p></blockquote>
 <hr/>
-<h2 id="92-前置三个必须熟练的运算">9.2 前置：三个必须熟练的运算</h2>
+<h2 id="92-前置三个必须熟练的运算">9.2 前置：三个必须熟练的运算</h2><nav class="sec-nav"><a class="sn prev" href="#91-符号约定先统一口径"><span class="sn-label">← 上一节</span><span class="sn-name">9.1 符号约定（先统一口径）</span></a><a class="sn next" href="#93-selfattention-的缩放为什么是-dk"><span class="sn-label">下一节 →</span><span class="sn-name">9.3 Self-Attention 的缩放：为什么是 √d_k</span></a></nav>
 <h3 id="921-矩阵乘法与形状检查">9.2.1 矩阵乘法与形状检查</h3>
 <p>$$ (A B)_{ij} = \sum_{k} A_{ik} B_{kj}, \qquad \underbrace{(m \times k)}_{A} \cdot \underbrace{(k \times p)}_{B} = \underbrace{(m \times p)}_{AB} $$</p>
 <p><strong>形状检查是调试的第一手段</strong>：算不出来 90% 是形状不对（内维必须相等）。</p>
@@ -75,7 +154,7 @@ li{margin:.3em 0;}
 <h3 id="923-转置与广播">9.2.3 转置与广播</h3>
 <ul class="lvl"><li>$(AB)^{\top} = B^{\top}A^{\top}$ —— 反向传播推导的基础</li><li>广播（broadcast）：<code>(n,1)</code> 与 <code>(1,m)</code> 相加得到 <code>(n,m)</code>，掩码就是这么加的</li></ul>
 <hr/>
-<h2 id="93-selfattention-的缩放为什么是-dk">9.3 Self-Attention 的缩放：为什么是 √d_k</h2>
+<h2 id="93-selfattention-的缩放为什么是-dk">9.3 Self-Attention 的缩放：为什么是 √d_k</h2><nav class="sec-nav"><a class="sn prev" href="#92-前置三个必须熟练的运算"><span class="sn-label">← 上一节</span><span class="sn-name">9.2 前置：三个必须熟练的运算</span></a><a class="sn next" href="#94-softmax-与交叉熵梯度为什么这么漂亮"><span class="sn-label">下一节 →</span><span class="sn-name">9.4 Softmax 与交叉熵：梯度为什么这么漂亮</span></a></nav>
 <p><strong>结论</strong>：为了让注意力打分矩阵在初始化时保持<strong>单位方差</strong>，softmax 不至于饱和。</p>
 <h3 id="推导思路">推导思路</h3>
 <p><strong>前提假设</strong>：$q$ 和 $k$ 的各分量独立同分布，均值 0、方差 1（这是合理的初始化假设——现代网络的激活尺度控制就是朝这个方向设计的）。</p>
@@ -93,7 +172,7 @@ li{margin:.3em 0;}
 <p>$$ \frac{\partial p_i}{\partial z_j} = p_i (\delta_{ij} - p_j) \qquad\Longrightarrow\qquad \frac{\partial \mathcal{L}}{\partial z} = p - y \quad (\text{与交叉熵复合后}) $$</p>
 <p>这个&quot;$p - y$&quot;结果极其重要（见 9.4），也是为什么 softmax + 交叉熵的组合在框架里常常被合并成一个 op（<code>cross_entropy_with_logits</code>）—— 不只是为了数值稳定，也因为梯度形式特别简洁。</p>
 <hr/>
-<h2 id="94-softmax-与交叉熵梯度为什么这么漂亮">9.4 Softmax 与交叉熵：梯度为什么这么漂亮</h2>
+<h2 id="94-softmax-与交叉熵梯度为什么这么漂亮">9.4 Softmax 与交叉熵：梯度为什么这么漂亮</h2><nav class="sec-nav"><a class="sn prev" href="#93-selfattention-的缩放为什么是-dk"><span class="sn-label">← 上一节</span><span class="sn-name">9.3 Self-Attention 的缩放：为什么是 √d_k</span></a><a class="sn next" href="#95-位置编码与-rope"><span class="sn-label">下一节 →</span><span class="sn-name">9.5 位置编码与 RoPE</span></a></nav>
 <h3 id="941-softmax-的数值稳定性">9.4.1 Softmax 的数值稳定性</h3>
 <p>$$ \operatorname{softmax}(z)_i = \frac{e^{z_i - c}}{\sum_j e^{z_j - c}} \quad \text{对任意常数 } c \text{ 成立} $$</p>
 <p>取 $c = \max_j z_j$，指数项的取值范围被压到 $(-\infty, 0]$，永不溢出。真实实验见 <a href="01-basics-language-model.html">第 01 章</a>（<code>logits=[1000,1001,999]</code> 时 naive 版本得到 <code>nan</code>）。</p>
@@ -114,7 +193,7 @@ li{margin:.3em 0;}
 <p>$$ \mathrm{PPL} = \left(\prod_{t=1}^{T} \frac{1}{p_t}\right)^{1/T} = \exp\!\left(-\frac{1}{T}\sum_t \log p_t\right) = e^{\mathcal{L}} $$</p>
 <p><strong>直觉</strong>：PPL 相当于&quot;模型每次预测时，等价于在 PPL 个候选里均匀犹豫&quot;。</p>
 <hr/>
-<h2 id="95-位置编码与-rope">9.5 位置编码与 RoPE</h2>
+<h2 id="95-位置编码与-rope">9.5 位置编码与 RoPE</h2><nav class="sec-nav"><a class="sn prev" href="#94-softmax-与交叉熵梯度为什么这么漂亮"><span class="sn-label">← 上一节</span><span class="sn-name">9.4 Softmax 与交叉熵：梯度为什么这么漂亮</span></a><a class="sn next" href="#96-反向传播与自动微分"><span class="sn-label">下一节 →</span><span class="sn-name">9.6 反向传播与自动微分</span></a></nav>
 <h3 id="951-正弦位置编码">9.5.1 正弦位置编码</h3>
 <p>$$ PE_{(pos,\,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \qquad PE_{(pos,\,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right) $$</p>
 <p>定义角频率 $\omega_i = 10000^{-2i/d}$，则 $\operatorname{PE}(pos) = [\sin(\omega_0 pos), \cos(\omega_0 pos), \sin(\omega_1 pos), \cos(\omega_1 pos), \dots]$</p>
@@ -133,7 +212,7 @@ li{margin:.3em 0;}
 <p>因为 $R^{\top}_m R_n = R_{n-m}$（旋转矩阵的正交性与可加性）。<strong>内积只依赖 $n-m$，即相对位置。</strong> 而且这个操作不增加任何参数，也不改变向量模长（正交变换）。</p>
 <table><thead><tr><th>实现细节</th><th>说明</th></tr></thead><tbody><tr><td>应用到哪些位置</td><td>只对 Q、K 旋转，<strong>V 不动</strong></td></tr><tr><td>计算方式</td><td>用 <code>cos/sin</code> 预计算表，偶数维用 sin、奇数维用 cos 配对旋转</td></tr><tr><td>长上下文扩展</td><td>位置插值 / 调整 $\theta_i$ 基底（NTK-aware）/ YaRN</td></tr></tbody></table>
 <hr/>
-<h2 id="96-反向传播与自动微分">9.6 反向传播与自动微分</h2>
+<h2 id="96-反向传播与自动微分">9.6 反向传播与自动微分</h2><nav class="sec-nav"><a class="sn prev" href="#95-位置编码与-rope"><span class="sn-label">← 上一节</span><span class="sn-name">9.5 位置编码与 RoPE</span></a><a class="sn next" href="#97-优化器从-sgd-到-adamw"><span class="sn-label">下一节 →</span><span class="sn-name">9.7 优化器：从 SGD 到 AdamW</span></a></nav>
 <h3 id="961-链式法则">9.6.1 链式法则</h3>
 <p>$$ \frac{\partial \mathcal{L}}{\partial \theta} = \frac{\partial \mathcal{L}}{\partial z} \cdot \frac{\partial z}{\partial h} \cdot \frac{\partial h}{\partial \theta} $$</p>
 <p><strong>反向传播 = 按计算图的逆序，反复应用链式法则</strong>，同时复用中间梯度（所以它比&quot;逐个参数数值求导&quot;快几个数量级）。</p>
@@ -151,7 +230,7 @@ li{margin:.3em 0;}
 <p>梯度裁剪（防爆炸）：</p>
 <p>$$ g \leftarrow g \cdot \min\!\left(1, \frac{c}{\|g\|}\right) \qquad (c \text{ 通常取 } 1.0) $$</p>
 <hr/>
-<h2 id="97-优化器从-sgd-到-adamw">9.7 优化器：从 SGD 到 AdamW</h2>
+<h2 id="97-优化器从-sgd-到-adamw">9.7 优化器：从 SGD 到 AdamW</h2><nav class="sec-nav"><a class="sn prev" href="#96-反向传播与自动微分"><span class="sn-label">← 上一节</span><span class="sn-name">9.6 反向传播与自动微分</span></a><a class="sn next" href="#98-概率与信息论速查"><span class="sn-label">下一节 →</span><span class="sn-name">9.8 概率与信息论速查</span></a></nav>
 <table><thead><tr><th>优化器</th><th>更新公式</th><th>特点</th></tr></thead><tbody><tr><td>SGD</td><td>$\theta \leftarrow \theta - \eta g$</td><td>简单，收敛慢，对 LR 敏感</td></tr><tr><td>Momentum</td><td>$v \leftarrow \beta v + g;\; \theta \leftarrow \theta - \eta v$</td><td>抑制震荡，加速方向一致性</td></tr><tr><td>RMSProp</td><td>$s \leftarrow \beta s + (1-\beta)g^2;\; \theta \leftarrow \theta - \eta \frac{g}{\sqrt{s}+\epsilon}$</td><td>自适应学习率</td></tr><tr><td><strong>Adam</strong></td><td>$m \leftarrow \beta_1 m + (1-\beta_1)g$&lt;br/&gt;$v \leftarrow \beta_2 v + (1-\beta_2)g^2$&lt;br/&gt;$\hat m = \frac{m}{1-\beta_1^t},\; \hat v = \frac{v}{1-\beta_2^t}$&lt;br/&gt;$\theta \leftarrow \theta - \eta\frac{\hat m}{\sqrt{\hat v}+\epsilon}$</td><td>一阶+二阶动量，几乎所有 LLM 都用</td></tr><tr><td><strong>AdamW</strong></td><td>同 Adam，但权重衰减<strong>独立</strong>于梯度：$\theta \leftarrow \theta - \eta(\frac{\hat m}{\sqrt{\hat v}+\epsilon} + \lambda\theta)$</td><td>修正原版 Adam 中 L2 与自适应缩放耦合的问题</td></tr></tbody></table>
 <p><strong>符号含义</strong>：</p>
 <table><thead><tr><th>符号</th><th>含义</th><th>默认值</th></tr></thead><tbody><tr><td>$\beta_1$</td><td>一阶动量衰减</td><td>0.9</td></tr><tr><td>$\beta_2$</td><td>二阶动量衰减</td><td>0.95（LLM 常用，而非 0.999）</td></tr><tr><td>$\epsilon$</td><td>数值稳定项</td><td>1e-8</td></tr><tr><td>$\lambda$</td><td>权重衰减系数</td><td>0.1</td></tr><tr><td>$\hat m, \hat v$</td><td>偏差校正后的动量（因为初始为 0，前几步偏小）</td><td>—</td></tr></tbody></table>
@@ -159,7 +238,7 @@ li{margin:.3em 0;}
 <p>$$ \text{优化器状态} = 8N \text{ bytes} = 8 \times 7\times10^9 \approx 52\ \text{GB} $$</p>
 <p>（<a href="05-finetuning.html">第 05 章</a>里的显存账就是这么来的。）</p>
 <hr/>
-<h2 id="98-概率与信息论速查">9.8 概率与信息论速查</h2>
+<h2 id="98-概率与信息论速查">9.8 概率与信息论速查</h2><nav class="sec-nav"><a class="sn prev" href="#97-优化器从-sgd-到-adamw"><span class="sn-label">← 上一节</span><span class="sn-name">9.7 优化器：从 SGD 到 AdamW</span></a><a class="sn next" href="#99-手推清单面试前自查"><span class="sn-label">下一节 →</span><span class="sn-name">9.9 手推清单（面试前自查）</span></a></nav>
 <h3 id="981-熵交叉熵kl-散度">9.8.1 熵、交叉熵、KL 散度</h3>
 <p>$$ H(p) = -\sum_i p_i \log p_i \qquad H(p,q) = -\sum_i p_i \log q_i \qquad \mathrm{KL}(p \| q) = \sum_i p_i \log \frac{p_i}{q_i} $$</p>
 <p>三者的关系（<strong>这是理解&quot;为什么训练目标合理&quot;的关键</strong>）：</p>
@@ -179,14 +258,57 @@ li{margin:.3em 0;}
 <p>见 <a href="08-alignment-rlhf.html">第 08 章 8.2.1</a>，本质是用 sigmoid 把&quot;分数差&quot;映射为偏好概率：</p>
 <p>$$ P(y_w \succ y_l) = \sigma(r_w - r_l) $$</p>
 <hr/>
-<h2 id="99-手推清单面试前自查">9.9 手推清单（面试前自查）</h2>
+<h2 id="99-手推清单面试前自查">9.9 手推清单（面试前自查）</h2><nav class="sec-nav"><a class="sn prev" href="#98-概率与信息论速查"><span class="sn-label">← 上一节</span><span class="sn-name">9.8 概率与信息论速查</span></a><a class="sn next" href="#910-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">9.10 自查问题</span></a></nav>
 <p>能不看笔记推出下面这些，理论部分就过关了：</p>
 <table><thead><tr><th>#</th><th>推导</th><th>关键工具</th></tr></thead><tbody><tr><td>1</td><td>注意力公式中 √d_k 的来历</td><td>方差可加性</td></tr><tr><td>2</td><td>softmax 的雅可比 $p_i(\delta_{ij}-p_j)$</td><td>商的求导</td></tr><tr><td>3</td><td>交叉熵对 logits 的梯度 $p - y$</td><td>链式法则 + log-sum-exp</td></tr><tr><td>4</td><td>PPL 与交叉熵的关系</td><td>几何平均</td></tr><tr><td>5</td><td>正弦位置编码的&quot;相对位置线性变换&quot;性质</td><td>和角公式</td></tr><tr><td>6</td><td>RoPE 内积只依赖相对位置</td><td>旋转矩阵正交性 $R_m^{\top}R_n = R_{n-m}$</td></tr><tr><td>7</td><td>矩阵乘的反向传播</td><td>$(AB)^{\top}=B^{\top}A^{\top}$</td></tr><tr><td>8</td><td>Adam 的偏差校正为什么必要</td><td>初始动量全 0</td></tr><tr><td>9</td><td>$C \approx 6ND$ 的由来</td><td>前向 2ND + 反向 4ND</td></tr><tr><td>10</td><td>KL 惩罚如何抑制 reward hacking</td><td>前向 KL 的 mode-covering 行为</td></tr></tbody></table>
 <hr/>
-<h2 id="910-自查问题">9.10 自查问题</h2>
+<h2 id="910-自查问题">9.10 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#99-手推清单面试前自查"><span class="sn-label">← 上一节</span><span class="sn-name">9.9 手推清单（面试前自查）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>为什么注意力要除以 √d_k？请写出方差推导的两步。</li><li>交叉熵对 logits 的梯度是什么？为什么这个形式带来训练稳定性？</li><li>正弦位置编码为什么能表达相对位置？RoPE 的做法有什么不同？</li><li>反向传播为什么比数值求导快几个数量级？</li><li>AdamW 和 Adam 的区别是什么？为什么要做这个改动？</li><li>交叉熵、KL 散度、熵三者的关系式是什么？为什么最小化交叉熵是合理的？</li><li>温度 T→0 和 T→∞ 时，softmax 分别退化成什么？为什么？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="08-alignment-rlhf.html">← 上一章：对齐（RLHF 与 DPO）</a> · <a href="README.html">返回总览</a> · <a href="10-glossary.html">下一章：术语表 →</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

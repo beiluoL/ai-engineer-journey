@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why服务化的验收标准不是能返回" class="lvl2">1. Why：服务化的验收标准不是&amp;quot;能返回&amp;quot;</a><a href="#2-design协议照抄-openai" class="lvl2">2. Design：协议照抄 OpenAI</a><a href="#3-realrun-evidence来自-demosoutdemo10servingterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_10_serving_terminal.txt）</a><a href="#31-服务配置" class="lvl3">3.1 服务配置</a><a href="#32-请求体openai-兼容形状" class="lvl3">3.2 请求体（OpenAI 兼容形状）</a><a href="#33-健康检查-指标端点" class="lvl3">3.3 健康检查 / 指标端点</a><a href="#34-非流式对话-usage-计量" class="lvl3">3.4 非流式对话 + usage 计量</a><a href="#35-流式sse逐-token-交付-末尾-usage" class="lvl3">3.5 流式（SSE）：逐 token 交付 + 末尾 usage</a><a href="#36-错误路径非法参数必须返回-4xx" class="lvl3">3.6 错误路径：非法参数必须返回 4xx</a><a href="#37-一键冒烟四项全过才算服务可用" class="lvl3">3.7 一键冒烟：四项全过才算服务可用</a><a href="#38-并发压测" class="lvl3">3.8 并发压测</a><a href="#39-打完流量后的运行指标" class="lvl3">3.9 打完流量后的运行指标</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-10-servingopenai-兼容接口-sse-流式-健康检查-并发压测">Milestone 10 — Serving：OpenAI 兼容接口 / SSE 流式 / 健康检查 / 并发压测</h1>
 <p>M08/M09 把模型变成了&quot;能快速推理的东西&quot;。这一章把它变成一个<strong>服务</strong>——别人能用一行 <code>curl</code>、一个 OpenAI SDK 调起来的东西。</p>
 <p>本章有一个刻意的选择：<strong>不自己写 HTTP 服务器，直接复用 P09 已经压测过的实现</strong>。协议层的坑（分块传输、SSE 格式、并发线程、状态码）它已经踩完了。<strong>这也是&quot;AI 工程&quot;和&quot;从零造轮子&quot;的分界：协议细节不该在小项目里重造。</strong></p>
 <hr/>
-<h2 id="1-why服务化的验收标准不是能返回">1. Why：服务化的验收标准不是&quot;能返回&quot;</h2>
+<h2 id="1-why服务化的验收标准不是能返回">1. Why：服务化的验收标准不是&quot;能返回&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design协议照抄-openai"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：协议照抄 OpenAI</span></a></nav>
 <p>一个 demo 化的服务，最常见的验收方式是&quot;我 curl 了一下，有输出&quot;。但这对上线毫无意义。真正的验收标准是<strong>四项冒烟 + 一轮压测</strong>，缺一项都不算服务可用：</p>
 <ul class="lvl"><li><strong>health</strong>：服务活着吗？（进程在 ≠ 服务可用）</li><li><strong>非流式</strong>：正常请求能不能返回，<code>usage</code> 对不对？（计费口径）</li><li><strong>流式</strong>：SSE 事件拼起来是不是完整答案，末尾有没有 <code>[DONE]</code>？（前端体验）</li><li><strong>错误路径</strong>：非法参数<strong>必须返回 4xx</strong>，而不是 500。</li></ul>
 <p>第 4 项是最容易漏、也最容易出事的：<strong>如果错误被吞成 500，前端就分不清&quot;我传错了参数&quot;和&quot;服务挂了&quot;。</strong> 前者应该提示用户改，后者应该重试。混在一起，前端就只剩&quot;弹个红色报错&quot;。</p>
-<h2 id="2-design协议照抄-openai">2. Design：协议照抄 OpenAI</h2>
+<h2 id="2-design协议照抄-openai">2. Design：协议照抄 OpenAI</h2><nav class="sec-nav"><a class="sn prev" href="#1-why服务化的验收标准不是能返回"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：服务化的验收标准不是&amp;quot;能返回&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo10servingterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_10_serving_terminal.txt）</span></a></nav>
 <pre><code>POST /v1/chat/completions     # 非流式 &amp; stream=true（SSE）
 GET  /health                  # {&quot;status&quot;: &quot;ok&quot;}
 GET  /metrics                 # requests / generated_tokens / latency 分位</code></pre>
@@ -77,7 +156,7 @@ data: {&quot;content&quot;: &quot;个&quot;}
 data: {&quot;usage&quot;: {...}}     # 只在 stream_options.include_usage=true 时出现
 data: [DONE]</code></pre>
 <figure class="figure"><img alt="M10 Serving：OpenAI 兼容端点 + 四项冒烟 + 并发压测" src="../../../../../../projects/10-tiny-llm-capstone/assets/serving.svg" loading="lazy"/><figcaption>M10 Serving：OpenAI 兼容端点 + 四项冒烟 + 并发压测</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo10servingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_10_serving_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo10servingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_10_serving_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design协议照抄-openai"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：协议照抄 OpenAI</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M10 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-10-serving.png" loading="lazy"/><figcaption>M10 真实运行</figcaption></figure>
 <h3 id="31-服务配置">3.1 服务配置</h3>
 <pre><code>绑定地址    127.0.0.1:端口由操作系统分配（port=0）
@@ -154,14 +233,57 @@ P95 延迟          22.88 ms</code></pre>
 <ul class="lvl"><li><strong>P50 = 5.41 ms</strong> 说明&quot;一半的请求很快&quot;；</li><li><strong>P95 = 22.88 ms</strong> 说明&quot;最慢的 5% 要等 22.88 ms&quot;。</li></ul>
 <p><strong>如果只看平均 8.14 ms，你会以为&quot;这个服务稳定在 8 ms 左右&quot;；实际上尾部的请求慢了近 3 倍。</strong> 这些尾部请求往往是&quot;并发压力最大的那几个&quot;——<strong>P95 是唯一能暴露这个的指标。</strong> 这就是 §2 里为什么要专门做分位数统计。</p>
 <p>另外，&quot;错误数 2（含被正确拒绝的 400）&quot;——<strong>这 2 个错误是特意发的非法请求，被正确拒绝（400）</strong>。所以&quot;有错误&quot;不等于&quot;服务坏了&quot;，<strong>要看错误是 4xx（请求问题）还是 5xx（服务问题）</strong>。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo10servingterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_10_serving_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>&quot;能返回&quot;不等于&quot;服务可用&quot;。</strong> 验收标准是四项冒烟全过 + 压测通过。<strong>只 curl 一下看到输出，漏掉了 health、流式、错误码三件事。</strong></li><li><strong>错误被吞成 500 是最常见的服务缺陷。</strong> <code>max_tokens=0</code> 的正确响应是 <strong>400 + invalid_request_error</strong>，不是 500。<strong>500 会让前端失去&quot;能不能重试&quot;的判据。</strong></li><li><strong>P95 22.88 ms vs 平均 8.14 ms——平均值骗人。</strong> 平均值被大量快请求稀释，<strong>长尾才决定体验</strong>。所以 <code>/metrics</code> 必须输出分位数，不能只有 mean。</li><li><strong>并发 4 只加速 1.38× 不是 bug。</strong> 原因有二：<strong>Python GIL</strong> 限制了 numpy 之外的多线程并行；且<strong>小模型的请求里 HTTP 开销占比很高</strong>，真正能并行的计算部分很小。<strong>这个数字要如实报告，不能拿&quot;理论 4×&quot;去解释。</strong></li><li><strong><code>finish_reason</code> 和 <code>usage</code> 是&quot;服务契约&quot;的一部分，不是可选项。</strong> <code>finish_reason=length</code> 告诉前端答案被截断；<code>usage</code> 是计费口径。<strong>缺了它们，服务就只是&quot;能吐字&quot;，不是&quot;能接入&quot;。</strong></li><li><strong><code>port=0</code> 是一个被低估的工程细节。</strong> 固定端口在 CI 上会随机失败（端口被占），<code>port=0</code> 让操作系统分配——<strong>小选择，但决定了测试能不能稳定跑。</strong></li><li><strong>流式的&quot;事件拼接 == 完整答案&quot;是并发安全的判据。</strong> 多线程写 SSE 时如果有竞态，这一步会拼出乱序或丢字——<strong>它是唯一能抓住这类 bug 的检查。</strong></li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>端点</strong>：<code>POST /v1/chat/completions</code>（流式/非流式）、<code>GET /health</code>、<code>GET /metrics</code>；<code>port=0</code> 由 OS 分配，永不撞端口。</li><li><strong>非流式</strong>：200 / <code>finish_reason=length</code> / <code>usage</code> = <strong>21 + 16 = 37</strong> token。</li><li><strong>流式 SSE</strong>：<strong>16 个 delta + 1 个 usage</strong>，含 <code>[DONE]</code>，<strong>事件拼接 == 完整答案</strong>。</li><li><strong>错误路径</strong>：<code>max_tokens=0</code> → <strong>400</strong>（<code>invalid_request_error</code>），而非 500。</li><li><strong>冒烟</strong>：health <strong>200</strong> / 非流式 <strong>200</strong> / 流式 <strong>200</strong>（8 delta + 1 usage + DONE）/ 错误 <strong>400</strong> ⇒ <strong>整体通过 True</strong>。</li><li><strong>压测</strong>：并发 1 → <strong>91.60 req/s</strong>、并发 4 → <strong>130.60 req/s（1.38×）</strong>，<strong>6/6 全部成功</strong>，单请求耗时稳定 11 ms。</li><li><strong>运行指标</strong>：累计 <strong>20 请求 / 496 token / 2 个被正确拒绝的 400</strong>；平均 <strong>8.14 ms</strong>、P50 <strong>5.41 ms</strong>、<strong>P95 22.88 ms</strong>。</li><li>一句话结论：<strong>服务化的验收标准不是&quot;能返回&quot;，而是&quot;四项冒烟 + 压测都过&quot;。</strong></li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/serve.py</code></td><td><code>build_engine</code> / <code>serve_model</code> / <code>chat_payload</code> / <code>_post</code>（捕获 HTTPError 读错误体）/ <code>chat_completion</code> / <code>stream_completion</code> / <code>health</code> / <code>metrics</code> / <code>smoke_test</code> / <code>load_test</code> / <code>ServingSession</code></td></tr><tr><td>P09 <code>src/ie/serve.py</code></td><td>OpenAI 兼容的 <code>http.server</code> + SSE 实现（协议细节复用）</td></tr><tr><td>P09 <code>src/ie/engine.py</code></td><td>指标统计（mean / P50 / P95 / throughput）</td></tr><tr><td><code>demos/demo_10_serving.py</code></td><td>10 节：配置 / 请求体 / 起服务 / health+metrics / 非流式 / 流式 / 错误 / 冒烟 / 压测 / 流量后指标</td></tr><tr><td><code>demos/out/demo_10_serving_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/serving.svg</code></td><td>三个端点 + 四项冒烟 + 压测 + 指标</td></tr><tr><td><code>assets/term-10-serving.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.9 → <strong>v0.10</strong>，服务化落地并验收。实测：OpenAI 兼容三端点 + <code>port=0</code>；非流式 200 / <code>usage</code> <strong>21+16=37</strong>；SSE <strong>16 delta + 1 usage + [DONE]</strong>、事件拼接一致；错误路径 <code>max_tokens=0</code> → <strong>400</strong>；<strong>冒烟四项全过</strong>（200/200/200/400）；压测并发 1 <strong>91.60 req/s</strong> → 并发 4 <strong>130.60 req/s（1.38×）</strong>，<strong>6/6 成功</strong>；累计 <strong>20 请求 / 496 token</strong>，平均 <strong>8.14 ms</strong> / P50 <strong>5.41 ms</strong> / <strong>P95 22.88 ms</strong>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

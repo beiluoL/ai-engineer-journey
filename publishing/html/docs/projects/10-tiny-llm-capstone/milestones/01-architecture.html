@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么-capstone-的第一章是架构而不是模型" class="lvl2">1. Why：为什么 Capstone 的第一章是「架构」而不是「模型」</a><a href="#2-design三条硬规矩-三层复用" class="lvl2">2. Design：三条硬规矩 + 三层复用</a><a href="#3-realrun-evidence来自-demosoutdemo01architectureterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_01_architecture_terminal.txt）</a><a href="#31-唯一配置入口8-行就能看完全部超参" class="lvl3">3.1 唯一配置入口（8 行就能看完全部超参）</a><a href="#32-依赖自检缺目录时报错要能指到根因" class="lvl3">3.2 依赖自检：缺目录时报错要能指到根因</a><a href="#33-参数账本第一个能发现配置写错的探针" class="lvl3">3.3 参数账本：第一个能发现配置写错的探针</a><a href="#34-规模是怎么定下来的" class="lvl3">3.4 规模是怎么定下来的</a><a href="#35-配置校验故意写错会被挡住" class="lvl3">3.5 配置校验：故意写错会被挡住</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-01-project-architecture一个配置八段链路三层复用">Milestone 01 — Project Architecture：一个配置、八段链路、三层复用</h1>
 <p>Capstone 的第一件事不是写模型，而是<strong>定边界</strong>。前面 9 个项目各交付一块能力，但如果把它们堆在一起就开写，最后一定得到一堆&quot;能跑但不可复现&quot;的脚本 —— P08 的 hparams 扫描和 P09 的模型对比都吃过这个亏：两份代码各自抄了一份默认值，跑出来的数字互相矛盾。</p>
 <p>所以 M01 只做三件事：<strong>定唯一配置入口、画清复用边界、把依赖缺失变成一句能看懂的报错</strong>。</p>
 <hr/>
-<h2 id="1-why为什么-capstone-的第一章是架构而不是模型">1. Why：为什么 Capstone 的第一章是「架构」而不是「模型」</h2>
+<h2 id="1-why为什么-capstone-的第一章是架构而不是模型">1. Why：为什么 Capstone 的第一章是「架构」而不是「模型」</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design三条硬规矩-三层复用"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：三条硬规矩 + 三层复用</span></a></nav>
 <p>三个必须回答的问题：</p>
 <ul class="lvl"><li><strong>哪些是要自己写的？</strong> —— 如果连 Transformer 都重写，那这 10 个项目的关系就断了；如果全部照抄，那 Capstone 就没有独立价值。答案在依赖边界上。</li><li><strong>配置从哪来？</strong> —— 超参数散落在各个脚本里，实验就不可复现。这个坑 P08/P09 都踩过。</li><li><strong>依赖缺了会怎样？</strong> —— 一份 clone 下来的仓库少了同级项目，是应该在 <code>paths.py</code> 给出&quot;缺哪个目录&quot;，还是让某一行 <code>from model import ...</code> 抛一个不知所以然的 <code>ModuleNotFoundError</code>？</li></ul>
-<h2 id="2-design三条硬规矩-三层复用">2. Design：三条硬规矩 + 三层复用</h2>
+<h2 id="2-design三条硬规矩-三层复用">2. Design：三条硬规矩 + 三层复用</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么-capstone-的第一章是架构而不是模型"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么 Capstone 的第一章是「架构」而不是「模型」</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo01architectureterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_01_architecture_terminal.txt）</span></a></nav>
 <p><strong>复用边界</strong>（<code>src/tiny/paths.py</code> 负责挂 <code>sys.path</code>）：</p>
 <table><thead><tr><th>来源</th><th>复用什么</th><th>为什么不重写</th></tr></thead><tbody><tr><td>P06</td><td><code>TransformerLM</code>（含从零 autograd）、<code>BPETokenizer</code> / <code>CharTokenizer</code></td><td>手写 autograd 是本仓库最难也最值钱的一块，重写只会引入新 bug</td></tr><tr><td>P08</td><td><code>ft.paths.enable_deterministic_autograd()</code></td><td><code>Tensor._prev</code> 是 <code>set</code>，迭代顺序依赖对象地址 ⇒ 跨进程不可复现。P10 要拿真实数字下结论，必须就地打补丁</td></tr><tr><td>P09</td><td><code>ie.metrics</code> / <code>quantize</code> / <code>kvbook</code> / <code>engine</code> / <code>serve</code></td><td>评估指标、量化、KV Cache 账本、OpenAI 兼容服务都已跑通并压测过</td></tr></tbody></table>
 <p><strong>自研的十一个模块</strong>：<code>paths</code> <code>config</code> <code>tok</code> <code>data</code> <code>model</code> <code>train</code> <code>evaluate</code> <code>infer</code> <code>optimize</code> <code>serve</code> <code>pipeline</code>。</p>
@@ -71,7 +150,7 @@ li{margin:.3em 0;}
 <ul class="lvl"><li>所有可调项只进 <code>TinyConfig</code>，任何脚本只能从它读；</li><li><code>TinyConfig.validate()</code> 在<strong>建模型之前</strong>挡掉不自洽的组合（如 <code>d_model % n_heads != 0</code>）；</li><li>配置能存成 JSON、能读回来，训练产物目录里<strong>一定留一份</strong> <code>models/config.json</code>。</li></ul>
 <figure class="figure"><img alt="M01 架构：8 段流水线与三层复用" src="../../../../../../projects/10-tiny-llm-capstone/assets/architecture.svg" loading="lazy"/><figcaption>M01 架构：8 段流水线与三层复用</figcaption></figure>
 <p><strong>一个刻意的约定</strong>：<code>model.vocab_size = 0</code> 表示&quot;跟着分词器走&quot;。词表大小由分词器决定，而分词器要先看到语料才能训出来 —— 但模型结构配置在写文件时并不知道这个数。所以建模型前统一由 <code>resolve_vocab_size()</code> 填实，避免出现&quot;模型词表 1000、分词器词表 1024&quot;这种<strong>能跑但会越界</strong>的隐患。</p>
-<h2 id="3-realrun-evidence来自-demosoutdemo01architectureterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_01_architecture_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo01architectureterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_01_architecture_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design三条硬规矩-三层复用"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：三条硬规矩 + 三层复用</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M01 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-01-architecture.png" loading="lazy"/><figcaption>M01 真实运行</figcaption></figure>
 <h3 id="31-唯一配置入口8-行就能看完全部超参">3.1 唯一配置入口（8 行就能看完全部超参）</h3>
 <pre><code>name                tiny-llm
@@ -108,14 +187,57 @@ train / val 行数      251 / 44
 <pre><code>非法配置被拦截   True
   - model.d_model(64) 必须能被 n_heads(3) 整除，否则无法把向量均分到各头</code></pre>
 <p>报错里带上<strong>具体数值和原因</strong>，不是一句 &quot;invalid config&quot;。这是能省下最多调试时间的一行代码。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo01architectureterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_01_architecture_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong><code>Tensor._prev</code> 是 <code>set</code>，跨进程不可复现。</strong> 它的迭代顺序由对象地址决定，于是&quot;同一份配置 + 同 seed&quot;在不同进程里会得到不同梯度。P08 已经诊断出这一点，P10 在 <code>paths.py</code> 里<strong>就地</strong>打补丁（必须在任何 <code>Tensor</code> 被创建之前生效，这也是为什么这件事写在 <code>paths.py</code> 而不是 <code>train.py</code>）。</li><li><strong><code>Module.parameters()</code> 漏掉了整个词嵌入。</strong> <code>TokenEmbedding</code> 没继承 <code>Module</code>，65,536 个参数不在 P06 的参数表里。P10 改用自己写的 <code>walk_parameters()</code> 递归遍历，28 个张量一个不漏 —— M06 的检查点&quot;存 28 / 读 28&quot;能对上，靠的就是这个。</li><li><strong>&quot;能跑但越界&quot;是最难查的配置错误。</strong> 模型词表 1000、分词器词表 1024，绝大多数 token 都正常，只有少数几个 id 会索引越界。所以 <code>resolve_vocab_size()</code> 宁可显式抛错也不允许两者不一致。</li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>Capstone 的复用边界是<strong>明确的</strong>：P06 出模型与分词器、P08 出确定性补丁、P09 出评估/推理/服务组件；P10 自己写的是<strong>工程化与编排</strong>。</li><li>一个 <code>TinyConfig</code> 管住全部超参，<code>models/config.json</code> 每次必留 —— 报告里的每个数字都能追溯。</li><li>依赖缺失时给出<strong>带完整路径</strong>的报错，而不是让 <code>import</code> 崩在无关的位置。</li><li>参数账本 230,400 / 28 张量，其中词表相关占 <strong>71.1%</strong>，这直接决定了后续章节的调参方向。</li><li>配置校验在<strong>建模型之前</strong>执行：实测 <code>d_model=64 / n_heads=3</code> 会被拦下，报错带上具体数值。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/paths.py</code></td><td>路径推导（不硬编码绝对路径）+ 挂 P06/P08/P09 的 <code>src</code> + 启用确定性 autograd</td></tr><tr><td><code>src/tiny/config.py</code></td><td><code>TinyConfig</code> 及六个子配置；<code>validate()</code> / <code>to_json()</code> / <code>from_dict()</code> / <code>summary_lines()</code></td></tr><tr><td><code>src/tiny/__init__.py</code></td><td>分层导出的门面；<code>__version__ = &quot;0.1.0&quot;</code></td></tr><tr><td><code>demos/demo_01_architecture.py</code></td><td>6 节：唯一配置入口 / 分层与复用 / 依赖自检 / 规模推导 / 参数账本 / 配置校验</td></tr><tr><td><code>demos/out/demo_01_architecture_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/architecture.svg</code></td><td>8 段链路 + 三层复用图</td></tr><tr><td><code>assets/term-01-architecture.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.0 → <strong>v0.1</strong>，Capstone 骨架落地。实测：语料 295 行 / 10,651 字符 / 876 个不同字符；模型 230,400 参数 / 28 个张量 / 1.76 MiB(fp64)；词表相关参数占 71.1%；故意写错的配置被 <code>validate()</code> 拦下并给出一句话原因。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

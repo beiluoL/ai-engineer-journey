@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么必须实测而不是相信理论上快" class="lvl2">1. Why：为什么必须实测，而不是相信&amp;quot;理论上快&amp;quot;</a><a href="#2-design两阶段-一个一致性对拍" class="lvl2">2. Design：两阶段 + 一个一致性对拍</a><a href="#3-realrun-evidence来自-demosoutdemo07inferenceengineterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_07_inference_engine_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-小模型上-kv-cache-只有-220-别拿这个数去推大模型" class="lvl3">4.1 ⚠ 小模型上 KV Cache 只有 2.20× —— 别拿这个数去推大模型</a><a href="#42-生成的-token-一样不是正确性证明-要看-logits" class="lvl3">4.2 &amp;quot;生成的 token 一样&amp;quot;不是正确性证明 —— 要看 logits</a><a href="#43-必须先-warmup否则第一轮慢到不可信" class="lvl3">4.3 必须先 warmup，否则第一轮慢到不可信</a><a href="#44-取中位数不取均值" class="lvl3">4.4 取中位数，不取均值</a><a href="#45-concatenate-每步都把整个-kv-拷一遍-这是实现债不是设计" class="lvl3">4.5 concatenate 每步都把整个 KV 拷一遍 —— 这是实现债，不是设计</a><a href="#46-maxlen-边界必须在-decodestep-里检查" class="lvl3">4.6 max_len 边界必须在 decode_step 里检查</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-07-inference-enginekv-cache-到底快多少">Milestone 07 — Inference Engine：KV Cache 到底快多少</h1>
 <p>前六层把&quot;模型好不好&quot;回答完了。后半段主线转向第二个问题：<strong>怎么让它跑得快？</strong></p>
@@ -63,14 +142,14 @@ li{margin:.3em 0;}
 <p>正确性上这是恒等变换（注意力对历史部分的计算不依赖未来 token），但<strong>性能上必须实测</strong> —— 尤其在 <code>d_model=64</code>、只有 2 层的玩具模型上，省下的矩阵乘法可能还抵不过缓存管理的开销。</p>
 <p><strong>纯 numpy 手写</strong>：<code>CausalLMWithKVCache</code> 直接读 P06 模型的参数，用 numpy 重写完整前向与增量前向（<code>src/ie/engine.py</code>）。不走 autograd —— 推理不需要建图。</p>
 <hr/>
-<h2 id="1-why为什么必须实测而不是相信理论上快">1. Why：为什么必须实测，而不是相信&quot;理论上快&quot;</h2>
+<h2 id="1-why为什么必须实测而不是相信理论上快">1. Why：为什么必须实测，而不是相信&quot;理论上快&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design两阶段-一个一致性对拍"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：两阶段 + 一个一致性对拍</span></a></nav>
 <p>教科书会说 KV Cache 把复杂度从 <code>O(T²)</code> 降到 <code>O(T)</code>。<strong>这个说法只在&quot;计算是唯一成本&quot;时成立。</strong></p>
 <p>真实成本 = 每步的固定开销 + 随序列长度增长的计算：</p>
 <pre><code>无 KV：16 步 × 完整前向（长度 41 → 56）
 有 KV：1 次 prefill（41） + 16 步 × 单 token 解码</code></pre>
 <p>固定开销包括：Python 函数调用、numpy 数组分配、每层 4 次 <code>matmul</code> 之外的 <code>transpose</code> / <code>reshape</code> / <code>split</code> / <code>merge</code>、LayerNorm、FFN、以及<strong>每步把新 K/V <code>concatenate</code> 进缓存的 O(T) 拷贝</strong>。</p>
 <p><strong>当 <code>d_model=64</code>、<code>n_layers=2</code> 时，矩阵小到固定开销占主导</strong> —— 这时候&quot;少算了多少 token&quot;和&quot;快了多少&quot;之间的比例会被严重稀释。所以本章的数字必须自己测，不能照搬业界&quot;KV Cache 加速 10×&quot;的说法。</p>
-<h2 id="2-design两阶段-一个一致性对拍">2. Design：两阶段 + 一个一致性对拍</h2>
+<h2 id="2-design两阶段-一个一致性对拍">2. Design：两阶段 + 一个一致性对拍</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么必须实测而不是相信理论上快"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么必须实测，而不是相信&amp;quot;理论上快&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo07inferenceengineterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_inference_engine_terminal.txt）</span></a></nav>
 <pre><code>class CausalLMWithKVCache:
     prefill(ids)                -&gt; (last_logits, KVCacheState)   # 一次性算完 prompt
     decode_step(token, state)   -&gt; (last_logits, new_state)      # 只算 1 个新 token
@@ -80,7 +159,7 @@ li{margin:.3em 0;}
 <p>四个关键点：</p>
 <ul class="lvl"><li><strong>两阶段分离</strong>：<code>prefill</code> 处理整个 prompt 并产出缓存；<code>decode_step</code> 只吃 1 个 token。<strong>两者的代码路径不同</strong>（prefill 需要 causal mask，decode 不需要 —— 单 token 的 Q 天然能看到全部历史），但产出必须一致。</li><li><strong>位置编码靠 <code>start_pos</code></strong>（<code>src/ie/engine.py:101</code>）：<code>self.model.pos_enc.pe[start_pos : start_pos + 1]</code>。增量解码时位置索引必须接着缓存长度走，否则位置编码全错 —— 这是 KV Cache 最容易写错的地方之一，<strong>而且写错了不会报错，只会让生成质量变差</strong>。</li><li><strong><code>decode_step</code> 里没有 causal mask</strong>：单 token 的 query 对 <code>k</code> 做注意力时，历史全部可见，天然满足因果性。</li><li><strong>一致性对拍 <code>cache_consistency_error</code></strong>（<code>src/ie/engine.py:198</code>）：对比 <code>decode_step</code> 产出的 logits 与&quot;把 <code>prompt + [token]</code> 整体前向&quot;的 logits。<strong>这比&quot;生成的 token 序列相同&quot;强得多</strong> —— 后者完全可能只是 <code>argmax</code> 恰好一致。</li></ul>
 <figure class="figure"><img alt="M07 自回归引擎：无 KV 全量重算 vs 有 KV 增量解码" src="../../../../../../projects/09-evaluation-inference/assets/inference-engine.svg" loading="lazy"/><figcaption>M07 自回归引擎：无 KV 全量重算 vs 有 KV 增量解码</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo07inferenceengineterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_inference_engine_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo07inferenceengineterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_inference_engine_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design两阶段-一个一致性对拍"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：两阶段 + 一个一致性对拍</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。模型 <code>d_model=64 / n_heads=4 / head_dim=16 / n_layers=2 / max_len=256</code>。prompt 41 token，生成 16 token，<strong>7 轮计时取中位数</strong>。</p>
 <pre><code>  Prompt tokens                      41
   生成 tokens                          16
@@ -102,7 +181,7 @@ li{margin:.3em 0;}
 <p>四个读数：</p>
 <ul class="lvl"><li><strong>2.20× 是真实测到的加速</strong>，中位数 6.155 ms → 2.794 ms。两路生成出的 <strong>16 个 token id 完全一致</strong>。</li><li><strong>单步 logits 最大误差 4.441e-15</strong>，比要求的 <code>1e-8</code> 小 7 个数量级。这是 <strong>fp64 的舍入级别</strong> —— 说明增量解码与全量重算在数学上严格等价，<strong>KV Cache 实现正确</strong>，不是&quot;碰巧生成了同样的 token&quot;。</li><li><strong>单轮加速在 1.91× ~ 2.57× 之间抖动</strong>（第 7 轮 2.57× 明显偏高）。这就是为什么要取<strong>中位数</strong>而不是均值或最小值。</li><li>有缓存一侧的绝对耗时只有 <strong>2.794 ms / 16 token ≈ 0.175 ms/token</strong> —— 这个数在 M09 会被直接拿去当离散事件仿真的 <code>step_ms</code> 基准。</li></ul>
 <figure class="figure"><img alt="M07 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-07-inference-engine.png" loading="lazy"/><figcaption>M07 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo07inferenceengineterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_inference_engine_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-小模型上-kv-cache-只有-220-别拿这个数去推大模型">4.1 ⚠ 小模型上 KV Cache 只有 2.20× —— 别拿这个数去推大模型</h3>
 <p>这是本章最重要的负结果，也是<strong>为什么&quot;实测&quot;比&quot;理论上 O(T²)→O(T)&quot;更可信</strong>的理由。</p>
 <p>先算理论上省了多少：无 KV 时 16 步分别前向了长度 41…56 的序列，累计处理了</p>
@@ -141,12 +220,55 @@ return float(np.max(np.abs(cached[0] - full)))</code></pre>
     raise ValueError(&quot;KV Cache 已达到模型最大上下文长度&quot;)</code></pre>
 <p class="nav-footer">P06 的位置编码表只有 <code>max_len=256</code> 行。如果不在 decode 时拦截，<code>pos_enc.pe[start_pos:start_pos+1]</code> 会<strong>静默返回空数组</strong>，然后广播出一个形状错误的 hidden state —— numpy 有时不报错，直接给出垃圾输出。</p>
 <p>同理 <code>generate_ids</code> 开头也检查 <code>len(prompt_ids) + max_new_tokens &gt; self.max_len</code>。<strong>边界检查要放在&quot;会静默产生错误结果&quot;的地方，而不只是&quot;会崩溃&quot;的地方。</strong></p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>KV Cache = <strong>prefill（一次算完 prompt）+ decode_step（每次 1 token）</strong>；位置编码靠 <code>start_pos</code> 接续。</li><li>实测（41 token prompt → 生成 16）：无 KV <strong>6.155 ms</strong>、有 KV <strong>2.794 ms</strong>，<strong>真实加速 2.20×</strong>，生成的 16 个 token <strong>完全一致</strong>。</li><li><strong>单步 logits 最大误差 4.441e-15</strong>（阈值 1e-8）—— fp64 舍入级别，证明实现严格等价；<strong>比对 logits 而不是 argmax</strong> 才能抓到真正的 bug。</li><li>⚠ <strong>小模型上只有 2.20×</strong>：理论省了 13.6 倍 token 重算，反解出&quot;每次前向固定开销 ≈ 30 个 token 位的计算量&quot;（<strong>推算</strong>）。<strong>别拿 2.20× 推大模型</strong>（业界 7B 常见 5~20×，非本机实测），也别用它论证 KV Cache 收益有限。</li><li><strong>两路都要 warmup</strong>（各跑 2 token），否则加速比失真；<strong>取中位数不取均值</strong>（7 轮抖动 1.91×~2.57×）。</li><li><code>concatenate</code> 每步拷贝整个 KV 是实现债（真实引擎用预分配 buffer 追加），因此 2.20× 是<strong>偏保守的下界</strong>。</li><li><code>max_len</code> 必须在 decode 时检查 —— 越界会让 <code>pos_enc</code> 切片为空，静默产生垃圾输出。</li><li>手写实现的意义：因为增量解码和全量前向都是自己写的 numpy，我才能把两者的 <strong>logits 逐元素对比</strong>并拿到 4.441e-15 —— 用 <code>transformers</code> 的 <code>use_cache=True</code> 只能选择&quot;信或不信&quot;。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/engine.py</code></td><td><code>KVCacheState</code>（keys/values/length）/ <code>CausalLMWithKVCache._embed</code>（<code>start_pos</code> 位置编码）/ <code>forward</code>（全量，带 causal mask）/ <code>prefill</code> / <code>decode_step</code>（增量，无 mask）/ <code>generate_ids</code>（<code>use_kv_cache</code> 可切换）/ <code>benchmark</code>（两路 warmup + 7 轮计时 + 中位数）/ <code>cache_consistency_error</code>（增量 vs 全量 logits 误差）</td></tr><tr><td><code>src/ie/engine.py:101</code></td><td><code>self.model.pos_enc.pe[start_pos : start_pos + ids.shape[-1]]</code> —— 增量解码的位置编码接续点</td></tr><tr><td><code>src/ie/engine.py:109</code></td><td><code>np.concatenate([state.keys[index], current_k], axis=2)</code> —— 每步 O(T) 拷贝（实现债）</td></tr><tr><td><code>src/ie/engine.py:198</code></td><td><code>cache_consistency_error</code>：比对 logits 而非 argmax</td></tr><tr><td><code>demos/demo_07_inference_engine.py</code></td><td>3 节：benchmark / 7 轮原始计时 / 结论</td></tr><tr><td><code>demos/out/demo_07_inference_engine_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/inference-engine.svg</code></td><td>本章自回归引擎有无 KV Cache 对比图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，M07 推理引擎与真实 KV Cache 落地。实测（41 token prompt → 生成 16，7 轮取中位数）：无 KV <strong>6.155 ms</strong>、有 KV <strong>2.794 ms</strong>，<strong>真实加速 2.20×</strong>；生成 token 完全一致 <code>True</code>；<strong>单步 logits 最大误差 4.441e-15</strong>（阈值 1e-8，fp64 舍入级别）；单轮加速分布在 1.91×~2.57×。并诚实记录「⚠ 理论上省了 13.6 倍 token 重算却只快 2.20×，反解出每次前向固定开销 ≈ 30 个 token 位计算量（推算），<strong>别拿 2.20× 推大模型</strong>」「比对 logits 而非 argmax 才能证明等价」「两路都需 warmup、取中位数不取均值」「<code>concatenate</code> 每步拷贝使 2.20× 偏保守（下界）」。纯 numpy、无 torch。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

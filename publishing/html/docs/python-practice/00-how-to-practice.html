@@ -52,24 +52,103 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#一个残酷的观察" class="lvl2">一个残酷的观察</a><a href="#三遍法" class="lvl2">三遍法</a><a href="#卡住的时候怎么办" class="lvl2">卡住的时候怎么办</a><a href="#怎么算练会了" class="lvl2">怎么算「练会了」</a><a href="#用-git-记录你的练习" class="lvl2">用 Git 记录你的练习</a><a href="#每个练习至少写一个测试" class="lvl2">每个练习至少写一个测试</a><a href="#关于问-ai" class="lvl2">关于「问 AI」</a><a href="#六个项目的推荐顺序" class="lvl2">六个项目的推荐顺序</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="练手方法怎么练才不是抄代码">练手方法：怎么练才不是「抄代码」</h1>
 <blockquote><p>这份文档和具体某个项目无关，但比任何一个项目都重要。 上级目录：<a href="README.html">练手项目总览</a></p></blockquote>
-<h2 id="一个残酷的观察">一个残酷的观察</h2>
+<h2 id="一个残酷的观察">一个残酷的观察</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#三遍法"><span class="sn-label">下一节 →</span><span class="sn-name">三遍法</span></a></nav>
 <p>看完一段代码觉得「懂了」，和合上电脑自己写出来，中间隔着一整个太平洋。</p>
 <p><strong>看懂了</strong>只是「识别」——大脑在比对模式，很轻松。<strong>写出来</strong>需要「生成」——从空白处造出结构，很累。而编程能力只长在后者身上。</p>
 <p>所以本目录里每个项目的 README 都<strong>不是</strong>可以顺着敲下来的教程。它们的结构是：</p>
 <pre><code>你要做的东西  →  先看结果（真实截图）  →  你要学到的知识点  →  怎么跑  →  关键代码拆解  →  常见坑  →  验收标准  →  进阶挑战</code></pre>
 <p>「关键代码拆解」和「常见坑」是<strong>卡住之后再看</strong>的，不是一开始就照着抄的。</p>
-<h2 id="三遍法">三遍法</h2>
+<h2 id="三遍法">三遍法</h2><nav class="sec-nav"><a class="sn prev" href="#一个残酷的观察"><span class="sn-label">← 上一节</span><span class="sn-name">一个残酷的观察</span></a><a class="sn next" href="#卡住的时候怎么办"><span class="sn-label">下一节 →</span><span class="sn-name">卡住的时候怎么办</span></a></nav>
 <p>同一个练习做三遍，每次的目的完全不同：</p>
 <table><thead><tr><th>遍数</th><th>做法</th><th>目的</th></tr></thead><tbody><tr><td><strong>第一遍</strong></td><td>照着要求写，允许看参考实现。目标是<strong>跑起来</strong></td><td>建立「这东西长什么样」的手感</td></tr><tr><td><strong>第二遍</strong></td><td>隔两三天，<strong>关掉参考实现</strong>，从空文件开始重写</td><td>把「认得」变成「写得出来」</td></tr><tr><td><strong>第三遍</strong></td><td>自己改需求（见每个项目的「进阶挑战」）</td><td>证明你理解了结构，而不是记住了字符</td></tr></tbody></table>
 <p><strong>只有第三遍才算真的练了。</strong> 前两遍是必要成本，但不是成果。</p>
 <p>如果你时间有限，宁可把<strong>一个项目做三遍</strong>，也不要把六个项目各做一遍。</p>
-<h2 id="卡住的时候怎么办">卡住的时候怎么办</h2>
+<h2 id="卡住的时候怎么办">卡住的时候怎么办</h2><nav class="sec-nav"><a class="sn prev" href="#三遍法"><span class="sn-label">← 上一节</span><span class="sn-name">三遍法</span></a><a class="sn next" href="#怎么算练会了"><span class="sn-label">下一节 →</span><span class="sn-name">怎么算「练会了」</span></a></nav>
 <p>先看一张图——这是真实跑出来的三条报错，<strong>逐字未改</strong>：</p>
 <figure class="figure"><img alt="三种最常撞上的报错" src="../../../../python-practice/assets/term-how-to-read-traceback.png" loading="lazy"/><figcaption>三种最常撞上的报错</figcaption></figure>
 <p>先别读细节，只看关键：<strong>这三条的最后一行，都已经把「什么错」说清楚了。</strong></p>
@@ -77,11 +156,11 @@ li{margin:.3em 0;}
 <p>按这个顺序试，不要直接跳到第 5 步：</p>
 <ul class="lvl"><li><strong>读完整条报错</strong>，从最后一行往回读。Python 的 traceback 最后一行是「什么错」，倒数第二组是「在哪一行」。</li><li><strong>看类型</strong>。<code>TypeError: &#x27;NoneType&#x27; object is not subscriptable</code> 意思是「你以为是个 dict，其实是 None」——问题在更早的地方，不在报错那一行。</li><li><strong>二分定位</strong>。在中间插一句 <code>print(type(x), x)</code>，把范围砍一半。</li><li><strong>写最小复现</strong>。新建一个 10 行的文件，只保留出问题的那段逻辑。<strong>十有八九在这一步你就发现问题了</strong>——这是最高效的一招。</li><li>实在不行再看参考实现。看的时候<strong>只找出问题的那一段</strong>，别顺手把整个文件读完。</li></ul>
 <blockquote><p>反直觉但真实：<strong>调试花的时间不是浪费，是主要收获。</strong> 顺着教程敲一遍什么都不会发生，只有卡住又爬出来才会留下东西。</p></blockquote>
-<h2 id="怎么算练会了">怎么算「练会了」</h2>
+<h2 id="怎么算练会了">怎么算「练会了」</h2><nav class="sec-nav"><a class="sn prev" href="#卡住的时候怎么办"><span class="sn-label">← 上一节</span><span class="sn-name">卡住的时候怎么办</span></a><a class="sn next" href="#用-git-记录你的练习"><span class="sn-label">下一节 →</span><span class="sn-name">用 Git 记录你的练习</span></a></nav>
 <p>三道自检题，都要能回答「是」：</p>
 <ul class="lvl"><li>[ ] <strong>不看代码</strong>，能在 10 分钟内重写出核心逻辑（不用逐字一致，能跑通即可）</li><li>[ ] 能<strong>跟别人讲清楚</strong>为什么这么写——比如「为什么 SQL 要用 <code>?</code> 占位符」「为什么 404 要自己抛」</li><li>[ ] 能<strong>改动需求</strong>：给它加一个原本没有的小功能，而不破坏现有结构</li></ul>
 <p>只要有一项是否，就还没到「练会」的程度。这时候不要急着进入下一个项目。</p>
-<h2 id="用-git-记录你的练习">用 Git 记录你的练习</h2>
+<h2 id="用-git-记录你的练习">用 Git 记录你的练习</h2><nav class="sec-nav"><a class="sn prev" href="#怎么算练会了"><span class="sn-label">← 上一节</span><span class="sn-name">怎么算「练会了」</span></a><a class="sn next" href="#每个练习至少写一个测试"><span class="sn-label">下一节 →</span><span class="sn-name">每个练习至少写一个测试</span></a></nav>
 <p>每个项目建议这么开：</p>
 <pre><code>cd python-practice
 git checkout -b practice/01-todo-cli     # 自己的练习分支
@@ -89,7 +168,7 @@ git checkout -b practice/01-todo-cli     # 自己的练习分支
 git add . &amp;&amp; git commit -m &quot;feat(01): 我的待办清单 v1&quot;</code></pre>
 <p>好处有两个：一是<strong>能看到自己第二遍、第三遍的差异</strong>（比任何笔记都直观）；二是万一改坏了，<code>git checkout .</code> 就回到上一个能跑的版本。</p>
 <blockquote><p>本仓库的参考实现都在 <code>main</code> 分支上。你在自己的分支上练习，跑不动了随时 <code>git checkout main -- python-practice/01-todo-cli</code> 拿回参考版对照。</p></blockquote>
-<h2 id="每个练习至少写一个测试">每个练习至少写一个测试</h2>
+<h2 id="每个练习至少写一个测试">每个练习至少写一个测试</h2><nav class="sec-nav"><a class="sn prev" href="#用-git-记录你的练习"><span class="sn-label">← 上一节</span><span class="sn-name">用 Git 记录你的练习</span></a><a class="sn next" href="#关于问-ai"><span class="sn-label">下一节 →</span><span class="sn-name">关于「问 AI」</span></a></nav>
 <p>哪怕只有三行：</p>
 <pre><code>def test_add_then_list():
     store = Store(Path(&quot;:memory:&quot;))   # 或者用 tmp_path
@@ -97,12 +176,12 @@ git add . &amp;&amp; git commit -m &quot;feat(01): 我的待办清单 v1&quot;</
     assert len(store.items) == 1</code></pre>
 <p>理由不是「工程规范」，而是<strong>测试是你唯一能自动验证「我没改坏」的手段</strong>。没有测试的话，你每次改代码都得手动把整个流程点一遍——很快就会烦到不点了，然后某天发现三个功能全坏了。</p>
 <p><code>01-todo-cli</code> 的进阶挑战 1 和 <code>04-fastapi-blog</code> 的 <code>test_api.py</code> 就是两个层次的范例。</p>
-<h2 id="关于问-ai">关于「问 AI」</h2>
+<h2 id="关于问-ai">关于「问 AI」</h2><nav class="sec-nav"><a class="sn prev" href="#每个练习至少写一个测试"><span class="sn-label">← 上一节</span><span class="sn-name">每个练习至少写一个测试</span></a><a class="sn next" href="#六个项目的推荐顺序"><span class="sn-label">下一节 →</span><span class="sn-name">六个项目的推荐顺序</span></a></nav>
 <p>这个时代最大的陷阱是：<strong>让 AI 把代码写好，你只是复制粘贴</strong>。那样你会得到能跑的项目，和零增长的能力。</p>
 <p>几种问法，效果差别巨大：</p>
 <table><thead><tr><th>问法</th><th>效果</th></tr></thead><tbody><tr><td>❌「帮我写一个待办清单」</td><td>得到代码，失去练习</td></tr><tr><td>⚠️「这段代码为什么报 <code>KeyError</code>」</td><td>学到知识点，但容易变成「AI 帮我修」</td></tr><tr><td>✅「我自己写完了，帮我挑出设计上的问题」</td><td>高质量反馈 + 自己动手</td></tr><tr><td>✅「我想用 BFS 爬取，但不确定队列怎么去重，我的做法是……对吗」</td><td>带着方案去验证</td></tr></tbody></table>
 <p><strong>先自己写出一版（哪怕很烂），再让 AI 挑问题。</strong> 这一条能挡住 90% 的「学习幻觉」。</p>
-<h2 id="六个项目的推荐顺序">六个项目的推荐顺序</h2>
+<h2 id="六个项目的推荐顺序">六个项目的推荐顺序</h2><nav class="sec-nav"><a class="sn prev" href="#关于问-ai"><span class="sn-label">← 上一节</span><span class="sn-name">关于「问 AI」</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>严格按难度递增走，不要跳：</p>
 <pre><code>01 命令行待办清单   ●○○  1 个周末   变量/列表/字典/文件/命令行
 02 Excel 报表自动化 ●●○  2–3 天     pandas/清洗/聚合/Excel/绘图
@@ -113,5 +192,48 @@ git add . &amp;&amp; git commit -m &quot;feat(01): 我的待办清单 v1&quot;</
 <p>01–04 在本目录里可以直接跑；05、06 的完整实现已经在本仓库的 <code>projects/</code> 层，本目录只给指路和自测路线。</p>
 <p><strong>01 和 02 之间有一条隐形的分界线</strong>：01 只用标准库，02 开始引入第三方库。跨过这条线之后，「读官方文档」会变成你最主要的学习方式——所以 01 刻意让你先把 Python 本身吃透。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,21 +52,100 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-what-why自回归-补齐为什么缺一不可" class="lvl2">1. What / Why：自回归 + 补齐为什么缺一不可</a><a href="#2-design滑窗-xy-pad-xymask" class="lvl2">2. Design：滑窗 → (x,y) → pad → (X,Y,mask)</a><a href="#3-realrun-evidence来自-demosoutdemo08dataloadertxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_08_dataloader.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-08-dataset-dataloader把语料变成自回归训练批次">Milestone 08 — Dataset / DataLoader：把语料变成自回归训练批次</h1>
 <p>Milestone 07 的整机已经能从 id 吐出 logits。但「id 从哪来、怎么组织成训练样本」还没解决。语言模型是<strong>自回归</strong>的：用前 <code>L</code> 个 token 预测第 <code>L+1</code> 个。这一层负责把整段语料切成这种 <code>(x, y)</code> 样本，再把长短不一的句子拼成一个 batch、补齐、给 mask。</p>
 <p>在 Project 05 里数据集是别人喂好的；这里我亲手写滑窗和补齐 —— 而且补齐不是装饰：<strong>pad 的位置不能算进 loss</strong>，否则模型会被「预测 pad」带偏。</p>
 <hr/>
-<h2 id="1-what-why自回归-补齐为什么缺一不可">1. What / Why：自回归 + 补齐为什么缺一不可</h2>
+<h2 id="1-what-why自回归-补齐为什么缺一不可">1. What / Why：自回归 + 补齐为什么缺一不可</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design滑窗-xy-pad-xymask"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：滑窗 → (x,y) → pad → (X,Y,mask)</span></a></nav>
 <ul class="lvl"><li><strong>滑窗（自回归）</strong>：<code>x = ids[i:i+L]</code>，<code>y = ids[i+1:i+L+1]</code>，逐位错开。这就是「预测下一个 token」的训练目标。</li><li><strong>变长补齐</strong>：一个 batch 里句子长短不一，按 batch 内最长右侧 pad 到同样长，才能塞进一个矩阵。但 pad 位是假的，必须给 <code>mask</code>（1=真实 / 0=pad），训练时只对真实位算 loss。</li></ul>
-<h2 id="2-design滑窗-xy-pad-xymask">2. Design：滑窗 → (x,y) → pad → (X,Y,mask)</h2>
+<h2 id="2-design滑窗-xy-pad-xymask">2. Design：滑窗 → (x,y) → pad → (X,Y,mask)</h2><nav class="sec-nav"><a class="sn prev" href="#1-what-why自回归-补齐为什么缺一不可"><span class="sn-label">← 上一节</span><span class="sn-name">1. What / Why：自回归 + 补齐为什么缺一不可</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo08dataloadertxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_08_dataloader.txt）</span></a></nav>
 <p><code>src/model/dataloader.py</code>：</p>
 <ul class="lvl"><li><code>build_examples(ids, context_len)</code>：把<strong>一整条</strong> id 序列当长序列滑窗，产出等长样本（用于演示基本滑窗）。</li><li><code>examples_from_lines(id_lines, context_len)</code>：多行语料各自变样本 —— 短于 <code>context_len</code> 的行用整行（<code>x=行[:-1], y=行[1:]</code>），更长的行切块。行长不同 → 天然触发补齐。</li><li><code>_pad_batch(pairs, pad_id)</code>：右侧补齐到 batch 内最大长度，返回 <code>X, Y, mask</code>。</li><li><code>DataLoader</code>：按 <code>batch_size</code> 产出 <code>(X, Y, mask)</code>，支持 <code>shuffle</code>（尊重全局 <code>np.random</code>，可用 <code>seed</code> 复现）。</li></ul>
 <figure class="figure"><img alt="DataLoader 数据流：语料 → 滑窗 → (x,y) → 批处理补齐 + mask" src="../../../../../../projects/06-mini-transformer-llm/assets/dataloader.svg" loading="lazy"/><figcaption>DataLoader 数据流：语料 → 滑窗 → (x,y) → 批处理补齐 + mask</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo08dataloadertxt">3. Real-run evidence（来自 <code>demos/out/demo_08_dataloader.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo08dataloadertxt">3. Real-run evidence（来自 <code>demos/out/demo_08_dataloader.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design滑窗-xy-pad-xymask"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：滑窗 → (x,y) → pad → (X,Y,mask)</span></a><a class="sn next" href="#4-bugs-lessons"><span class="sn-label">下一节 →</span><span class="sn-name">4. Bugs / lessons</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
 <p>基本滑窗：12 长序列、context_len=5 → 恰 <code>12-5=7</code> 个样本：</p>
 <pre><code>id 序列长度 = 12，context_len = 5
@@ -89,14 +168,57 @@ mask（1=真实 token，0=pad，pad 不计入 loss）：
 batch 内最长序列长度 : 16
 真实 token 占比 : 100.0%</code></pre>
 <figure class="figure"><img alt="DataLoader demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-08-dataloader.png" loading="lazy"/><figcaption>DataLoader demo 真实运行输出</figcaption></figure>
-<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo08dataloadertxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_08_dataloader.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <p>本 milestone demo 没有暴露真实运行 bug。一个<strong>设计提醒（来自源码注释）</strong>：<code>examples_from_lines</code> 对「短于 <code>context_len</code> 的行用整行」、对「更长行切块」，两条分支都必须保证 <code>x</code> 和 <code>y</code> 长度一致（<code>x=行[:-1], y=行[1:]</code>），否则进 <code>_pad_batch</code> 后 <code>X</code> 和 <code>Y</code> 长度对不上。demo 里 <code>X/Y/mask</code> 形状一致、<code>真实 token 占比 100%</code> 都印证了补齐逻辑正确。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-bugs-lessons"><span class="sn-label">← 上一节</span><span class="sn-name">4. Bugs / lessons</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>自回归训练目标就是滑窗：<code>x=ids[i:i+L]</code> 预测 <code>y=ids[i+1:i+L+1]</code>，逐位错开。</li><li>变长样本按 batch 内最长<strong>右侧 pad</strong>，pad_id=0。</li><li>mask（1=真实/0=pad）是必须的：pad 位不计入 loss，否则模型被假目标带偏。</li><li><code>X / Y / mask</code> 三者形状必须严格一致，这是 <code>_pad_batch</code> 的硬约束。</li><li><code>DataLoader</code> 尊重全局 <code>np.random</code>，用 <code>seed(0)</code> 即可复现，方便测试与梯度校验。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/dataloader.py</code></td><td><code>build_examples</code>（单序列滑窗）、<code>examples_from_lines</code>（多行变长）、<code>_pad_batch</code>（右侧补齐+mask）、<code>DataLoader</code>（batch 迭代器，可 shuffle）</td></tr><tr><td><code>demos/demo_08_dataloader.py</code></td><td>4 节演示：滑窗 / 多行变长 / 批处理补齐 / 真实 batch，输出落 <code>demos/out/demo_08_dataloader.txt</code></td></tr><tr><td><code>assets/dataloader.svg</code></td><td>本章数据流图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，Dataset/DataLoader 落地（自回归滑窗 + 右侧补齐 + mask），<code>X/Y/mask</code> 形状一致性验证，演示真实跑通并核对样本数与补齐结果，配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

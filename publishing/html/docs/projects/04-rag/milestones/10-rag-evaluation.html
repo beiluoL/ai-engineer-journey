@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-指标总览每个指标测哪一段" class="lvl3">3.1 指标总览：每个指标测哪一段</a><a href="#32-hit-ratek-与-mrr手算一遍" class="lvl3">3.2 Hit Rate@k 与 MRR：手算一遍</a><a href="#33-评测集怎么建黄金标准来自文档本身" class="lvl3">3.3 评测集怎么建：黄金标准来自文档本身</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1评测问题混进了知识库语料" class="lvl3">坑 1：评测问题混进了知识库语料</a><a href="#坑-2expectedsource-写错案例永远-fail" class="lvl3">坑 2：expected_source 写错，案例永远 fail</a><a href="#坑-3只测-happy-path不测拒答" class="lvl3">坑 3：只测 happy path，不测拒答</a><a href="#坑-4指标口径不一致前后对比失真" class="lvl3">坑 4：指标口径不一致，前后对比失真</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-04-chapter-10rag-evaluationrag-效果评估">Project 04 — Chapter 10：RAG Evaluation【RAG 效果评估】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/evaluation.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
-<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Chapter 09 把流水线跑通了。接下来你想优化：换一个 embedding 模型？把 chunk_size 从 500 调到 300？打开 hybrid 检索？</p>
 <p>每次改完，你问了三个问题，回答都变好了，于是得出结论：「效果提升了」。</p>
 <pre><code>你以为：  我问了几个问题，回答变好了，说明改动有效
@@ -73,7 +152,7 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>把 RAG 效果拆成三段分别量化，用一套固定评测集把「感觉变好」变成「指标变好」。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-本章要解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 本章要解决什么问题</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>RAG 链路是一条三段接力：检索 → 组装 → 生成。整体效果差时，「整体问一下好不好」无法定位问题出在哪一段。所以必须拆开测：</p>
 <pre><code>第一段  检索质量：  能不能找对文档？      → Hit Rate@k / MRR
 第二段  上下文质量：找对的有没有装进 prompt？（预算截断有没有把答案截掉？）
@@ -82,7 +161,7 @@ li{margin:.3em 0;}
 <p>拆开测的直接好处是<strong>调参有方向</strong>：Hit Rate 低，说明问题在检索层（换 embedding 模型、调 chunk 策略），改 prompt 措辞毫无用处；Hit Rate 高但答案不对，说明资料找对了模型却在自由发挥，该改 system 规则或换模型。<strong>不看分段指标就调参，等于蒙着眼睛拧螺丝。</strong></p>
 <p>Java 里这对应单元测试与集成测试的分层：DAO 层单测、Service 层集成测试，挂了先看哪一层红；Python 里就是检索层指标 + 端到端指标两级。也对应覆盖率报告的思路——覆盖率不会告诉你代码没 bug，但它会告诉你「哪些地方你根本没测到」。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-动手实现设计稿"><span class="sn-label">下一节 →</span><span class="sn-name">4. 动手实现（设计稿）</span></a></nav>
 <h3 id="31-指标总览每个指标测哪一段">3.1 指标总览：每个指标测哪一段</h3>
 <table><thead><tr><th>指标</th><th>测哪段</th><th>问题</th><th>计算成本</th></tr></thead><tbody><tr><td>Hit Rate@k</td><td>检索</td><td>top-k 里有没有出现正确文档</td><td>零成本，纯规则</td></tr><tr><td>MRR</td><td>检索</td><td>正确文档排得靠不靠前</td><td>零成本，纯规则</td></tr><tr><td>上下文命中率</td><td>组装</td><td>正确文档是否被装进最终 prompt</td><td>零成本，纯规则</td></tr><tr><td>忠实度 Faithfulness</td><td>生成</td><td>答案的每句话是否被资料支持</td><td>需要裁判（LLM Judge）</td></tr><tr><td>答案相关性</td><td>生成</td><td>答案是否回应了用户的问题</td><td>需要裁判（LLM Judge）</td></tr></tbody></table>
 <p>前三个是<strong>确定性指标</strong>，代码就能算，学习阶段先把这三个做扎实。后两个需要 LLM 当裁判（本章只做采样观察，进阶可选）。</p>
@@ -119,7 +198,7 @@ class EvalCase:
 <p>黄金标准来自文档本身，意味着<strong>建评测集的成本很低，但它是唯一能复现的基准</strong>。没有它，每次调参你都在重新掷骰子。</p>
 <hr/>
 <figure class="figure"><img alt="真实运行：7 条 EvalCase 的逐条明细与 hit_rate / MRR / 拒答指标汇总" src="../../../../../../projects/04-rag/assets/term-eval.png" loading="lazy"/><figcaption>真实运行：7 条 EvalCase 的逐条明细与 hit_rate / MRR / 拒答指标汇总</figcaption></figure>
-<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-踩坑清单"><span class="sn-label">下一节 →</span><span class="sn-name">5. 踩坑清单</span></a></nav>
 <p>以下代码将在 <code>src/rag/evaluation.py</code> 落地，这里先当设计稿读。评估只依赖 Chapter 09 <code>RAGService</code> 的公开接口（<code>ask()</code> 返回的 <code>RAGAnswer</code> 里有 <code>retrieved_sources</code> 和 <code>citations</code>），内部零件对评估代码是黑盒。</p>
 <pre><code>&quot;&quot;&quot;RAG 三段式评估：检索 / 组装指标（确定性） + 生成质量（LLM Judge 进阶可选）。&quot;&quot;&quot;
 
@@ -216,7 +295,7 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
 <p>两点定位说明：</p>
 <ul class="lvl"><li><strong>LLM Judge 是进阶可选</strong>。上面只用了「关键词 + 拒答」这类确定性检查；忠实度（答案是否被资料支持）严格来说要靠 LLM 当裁判——把「参考资料 + 答案」发给裁判模型逐句判断。学习阶段可以做一个 <code>NoopLLMJudge</code> 占位接口（只记录样本、不判分），之后接入 DeepSeek 实现真实采样，不阻塞主线。</li><li><strong>RAGAS / TruLens 等框架是生产工具</strong>。它们把指标、裁判、报告都封装好了，生产可直接用。但学习阶段建议先手写这 100 行——手写过 MRR 的分子分母，才真正理解指标口径；框架对你才是透明盒而不是魔法。</li></ul>
 <hr/>
-<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2><nav class="sec-nav"><a class="sn prev" href="#4-动手实现设计稿"><span class="sn-label">← 上一节</span><span class="sn-name">4. 动手实现（设计稿）</span></a><a class="sn next" href="#6-自检清单"><span class="sn-label">下一节 →</span><span class="sn-name">6. 自检清单</span></a></nav>
 <h3 id="坑-1评测问题混进了知识库语料">坑 1：评测问题混进了知识库语料</h3>
 <pre><code>现象：  所有指标满分，Hit Rate@5 = 1.0、MRR = 1.0，完美得可疑
 原因：  建索引用了某批文档，建评测集时又&quot;顺手&quot;从同一批文档
@@ -244,9 +323,52 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
         对比只允许同口径、同评测集前后对照</code></pre>
 <figure class="figure"><img alt="真实运行：失败明细定位到「缺关键词」；报告 dump → load 往返一致，保证同口径对比" src="../../../../../../projects/04-rag/assets/term-eval-report.png" loading="lazy"/><figcaption>真实运行：失败明细定位到「缺关键词」；报告 dump → load 往返一致，保证同口径对比</figcaption></figure>
 <hr/>
-<h2 id="6-自检清单">6. 自检清单</h2>
+<h2 id="6-自检清单">6. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能说出三段式评估各段对应哪些指标，以及「检索差该改什么、生成差该改什么」</li><li>[ ] 给 4 个检索结果，能手算 Hit Rate@k 和 MRR</li><li>[ ] 评测集含 should_refuse 拒答案例，且拒答率被单独统计</li><li>[ ] expected_source 经过程序自检，且比对口径统一（文件名）</li><li>[ ] 调参前后能产出两份同口径的 EvalReport JSON 并对比</li><li>[ ] 知道 LLM Judge（忠实度）与 RAGAS / TruLens 的定位，且明白学习阶段先手写的价值</li></ul>
 <p>上一章：<a href="09-rag-pipeline.html">09-rag-pipeline.md</a> 回到项目主页：<a href="../README.html">../README.md</a> 下一步：Project 05 —— Research Agent / MCP。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

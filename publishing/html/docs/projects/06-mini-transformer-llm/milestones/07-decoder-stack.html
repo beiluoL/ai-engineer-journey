@@ -52,22 +52,101 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-what-why堆叠层数为什么不影响接口" class="lvl2">1. What / Why：堆叠层数为什么不影响接口</a><a href="#2-designn-层-最终-ln-投影" class="lvl2">2. Design：N 层 + 最终 LN + 投影</a><a href="#3-realrun-evidence来自-demosoutdemo07decodertxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_07_decoder.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-07-decoderstack把-n-层堆起来输出-logits">Milestone 07 — DecoderStack：把 N 层堆起来，输出 logits</h1>
 <p>Milestone 03–06 已经把「单个 Block」写好了。这一层把它们<strong>堆成整条前向链路</strong>：Embedding 进来，过 N 个 Block，最后接一个最终 LayerNorm 和输出投影，把每个位置的隐藏向量变成词表上的 <code>logits</code>。到这里，从 id 到 logits 的整条路就闭环了 —— 下一步交给交叉熵算损失。</p>
 <p>在 Project 05 里 <code>model(_messages) → text</code> 是个黑盒；这里 <code>ids → Embedding → [Block × N] → LN → proj → logits(seq, V)</code> 每一步的形状我都亲手钉死。</p>
 <hr/>
-<h2 id="1-what-why堆叠层数为什么不影响接口">1. What / Why：堆叠层数为什么不影响接口</h2>
+<h2 id="1-what-why堆叠层数为什么不影响接口">1. What / Why：堆叠层数为什么不影响接口</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-designn-层-最终-ln-投影"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：N 层 + 最终 LN + 投影</span></a></nav>
 <p><code>DecoderStack</code> 把 N 个 Block 串起来。关键性质：<strong>不论堆几层，输入 <code>(B, seq, d_model)</code>、输出还是 <code>(B, seq, d_model)</code></strong> —— 每个 Block 都保持维度不变（残差保证的）。所以「换层数」只改容量，不改接口，训练侧和推理侧都不用动。最后一层投影 <code>(d_model → vocab)</code> 才把维度掰到词表大小。</p>
 <p><code>TransformerLM</code> 是把 <code>Embedding + DecoderStack</code> 缝在一起的整机，训练和推理都直接用它（Milestone 09/10 直接用）。</p>
-<h2 id="2-designn-层-最终-ln-投影">2. Design：N 层 + 最终 LN + 投影</h2>
+<h2 id="2-designn-层-最终-ln-投影">2. Design：N 层 + 最终 LN + 投影</h2><nav class="sec-nav"><a class="sn prev" href="#1-what-why堆叠层数为什么不影响接口"><span class="sn-label">← 上一节</span><span class="sn-name">1. What / Why：堆叠层数为什么不影响接口</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo07decodertxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_decoder.txt）</span></a></nav>
 <p><code>src/model/decoder.py</code>：</p>
 <ul class="lvl"><li><code>DecoderStack.__init__</code>：<code>self.blocks = [TransformerBlock(...) for _ in range(n_layers)]</code>、一个 <code>_FinalLayerNorm</code>、<code>self.proj = Parameter(np.random.randn(d_model, vocab_size) * 0.02)</code>。</li><li><code>forward</code>：<code>h = x; for block in blocks: h = block(h, mask); h = ln_f(h); return linear(h, proj)</code>。</li><li><code>TransformerLM</code>：<code>token_emb + pos_enc + decoder</code> 三件套；<code>forward(ids)</code> 自动按序列长生成因果掩码，返回 <code>logits (B, seq, vocab)</code>。</li></ul>
 <figure class="figure"><img alt="DecoderStack → logits 前向闭环" src="../../../../../../projects/06-mini-transformer-llm/assets/decoder.svg" loading="lazy"/><figcaption>DecoderStack → logits 前向闭环</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo07decodertxt">3. Real-run evidence（来自 <code>demos/out/demo_07_decoder.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo07decodertxt">3. Real-run evidence（来自 <code>demos/out/demo_07_decoder.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-designn-层-最终-ln-投影"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：N 层 + 最终 LN + 投影</span></a><a class="sn next" href="#4-bugs-lessons"><span class="sn-label">下一节 →</span><span class="sn-name">4. Bugs / lessons</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。<strong>注意这是随机初始化、未训练的模型，只看形状与数值合理性。</strong></p>
 <pre><code>vocab=500, d_model=24, n_heads=4, d_ff=64, n_layers=2
 DecoderStack 参数个数 : 27
@@ -88,14 +167,57 @@ logits 有限 : True</code></pre>
 n_layers=3 → logits 形状 (1, 12, 500)</code></pre>
 <p><code>|max| ≈ 0.409</code> 也印证了小初始化（0.02）按预期生效：随机初始的 logits 离「均匀」不远，没一上来就饱和。</p>
 <figure class="figure"><img alt="DecoderStack demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-07-decoder.png" loading="lazy"/><figcaption>DecoderStack demo 真实运行输出</figcaption></figure>
-<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo07decodertxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_decoder.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <p>本 milestone demo 没有暴露真实运行 bug。一个<strong>值得记的设计点</strong>：<code>TransformerLM.forward</code> 在 <code>mask is None</code> 时自动按当前 <code>seq_len</code> 生成因果掩码（<code>causal_mask(seq_len)</code>），并校验 <code>seq_len ≤ max_len</code>。这条把「模型自己管掩码」收口在一处，避免训练/推理两边各写一份掩码逻辑、对齐出错（Milestone 02 强调过「特殊 token 顺序写死、两边不许各写一套」，掩码同理）。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-bugs-lessons"><span class="sn-label">← 上一节</span><span class="sn-name">4. Bugs / lessons</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>DecoderStack = <code>[Block × N] → FinalLN → 投影(d_model→V)</code>，输出 <code>(seq, vocab)</code> 的 logits。</li><li>因为 Block 维度不变，<strong>层数只改容量、不改接口</strong> —— <code>n_layers=1</code> 和 <code>3</code> 输出形状相同。</li><li><code>TransformerLM</code> 把 Embedding+Decoder 缝成整机，并<strong>统一负责因果掩码</strong>，训练/推理共用一份逻辑。</li><li>随机初始 logits <code>|max|≈0.409</code>，说明小初始化按预期生效，没饱和。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/decoder.py</code></td><td><code>DecoderStack</code>（N 层 Block + FinalLN + proj）、<code>TransformerLM</code>（Embedding+PosEnc+Decoder 整机，统一管掩码）</td></tr><tr><td><code>src/model/block.py</code></td><td>复用的 <code>TransformerBlock</code></td></tr><tr><td><code>src/model/embedding.py</code></td><td>复用的 <code>TokenEmbedding</code> / <code>PositionalEncoding</code> / <code>combine</code></td></tr><tr><td><code>demos/demo_07_decoder.py</code></td><td>4 节演示：构造 / 前向 / 未训练预测 / 层数无关性，输出落 <code>demos/out/demo_07_decoder.txt</code></td></tr><tr><td><code>assets/decoder.svg</code></td><td>本章前向闭环图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.5 → <strong>v0.6</strong>，DecoderStack + TransformerLM 整机落地（id→logits 全链路闭环，层数无关接口验证），演示真实跑通并核对 logits 形状/未训练预测，配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

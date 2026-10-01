@@ -52,25 +52,147 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#c-条件与循环milestone-03" class="lvl2">C. 条件与循环（Milestone 03）</a><a href="#d-函数milestone-04" class="lvl2">D. 函数（Milestone 04）</a><a href="#e-模块与包milestone-05" class="lvl2">E. 模块与包（Milestone 05）</a><a href="#f-异常milestone-06" class="lvl2">F. 异常（Milestone 06）</a><a href="#验收标准" class="lvl2">验收标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="exercises-02practice-milestone-0306-配套练习">Exercises 02-practice — Milestone 03-06 配套练习</h1>
 <blockquote><p>对应：<code>03-condition-loop.md</code> · <code>04-function.md</code> · <code>05-module-package.md</code> · <code>06-exception.md</code> 状态：⬜ 题目已播种，未开始做。做到哪题就把前面的 <code>- [ ]</code> 改成 <code>- [x]</code>。 规则同 01：<strong>亲手敲，不复制粘贴</strong>。写完的代码放本目录（如 <code>03_answers.py</code>）。</p></blockquote>
 <hr/>
-<h2 id="c-条件与循环milestone-03">C. 条件与循环（Milestone 03）</h2>
+<h2 id="c-条件与循环milestone-03">C. 条件与循环（Milestone 03）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#d-函数milestone-04"><span class="sn-label">下一节 →</span><span class="sn-name">D. 函数（Milestone 04）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>C1</strong> 写 <code>guess_number(answer, guess)</code>：返回 <code>&quot;大了&quot; / &quot;小了&quot; / &quot;猜对了&quot;</code> 三选一（用 <code>if / elif / else</code>）</li><li>[ ] <strong>C2</strong> 遍历 <code>messages</code> 列表，只打印 <code>role == &quot;user&quot;</code> 的 content（用 <code>for ... in</code>）</li><li>[ ] <strong>C3</strong> 用 <code>while</code> 写一个「一直问，直到输入 quit 才退出」的循环，注意别写成死循环</li><li>[ ] <strong>C4</strong> 对比 <code>range(5)</code>、<code>list(range(5))</code>、<code>enumerate([&quot;a&quot;,&quot;b&quot;])</code> 各自打印什么；用 <code>enumerate</code> 重写 C2，把序号一起打印</li><li>[ ] <strong>C5（挑战）</strong> 用列表推导式把 <code>[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;]</code> 转成 <code>[1,2,3]</code>，再写出等价的普通 for 版本，体会两者的可读性差异</li></ul>
 <blockquote><p>Java 类比：<code>for x in list</code> ≈ 增强 for；Python 没有 <code>for(int i=0;...)</code>，要下标就用 <code>enumerate</code>。</p></blockquote>
-<h2 id="d-函数milestone-04">D. 函数（Milestone 04）</h2>
+<h2 id="d-函数milestone-04">D. 函数（Milestone 04）</h2><nav class="sec-nav"><a class="sn prev" href="#c-条件与循环milestone-03"><span class="sn-label">← 上一节</span><span class="sn-name">C. 条件与循环（Milestone 03）</span></a><a class="sn next" href="#e-模块与包milestone-05"><span class="sn-label">下一节 →</span><span class="sn-name">E. 模块与包（Milestone 05）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>D1</strong> 写 <code>add(a, b=1)</code>，分别用 <code>add(3)</code> 和 <code>add(3, 5)</code> 调用，观察默认参数</li><li>[ ] <strong>D2</strong> 写 <code>sum_all(*nums)</code>，接收任意个数字并返回总和（可变参数）</li><li>[ ] <strong>D3</strong> 故意踩坑：写 <code>def bad(items=[]): items.append(1); return items</code>，连续调用 3 次看结果，然后解释为什么（提示：默认参数只求值一次）</li><li>[ ] <strong>D4</strong> 写 <code>divide(a, b)</code>，用类型注解 <code>-&gt; float</code>，并用 <code>help(divide)</code> 看注解是否显示</li><li>[ ] <strong>D5（挑战）</strong> 写一个 <code>retry(func, times)</code>：把任意函数包一层，失败就重试 N 次（函数当参数传，Java 里要靠接口/Lambda）</li></ul>
-<h2 id="e-模块与包milestone-05">E. 模块与包（Milestone 05）</h2>
+<h2 id="e-模块与包milestone-05">E. 模块与包（Milestone 05）</h2><nav class="sec-nav"><a class="sn prev" href="#d-函数milestone-04"><span class="sn-label">← 上一节</span><span class="sn-name">D. 函数（Milestone 04）</span></a><a class="sn next" href="#f-异常milestone-06"><span class="sn-label">下一节 →</span><span class="sn-name">F. 异常（Milestone 06）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>E1</strong> 在本目录建 <code>mymath.py</code>（放一个 <code>square(n)</code>），再从另一个文件 <code>import mymath</code> 调用它</li><li>[ ] <strong>E2</strong> 建包 <code>tools/</code>（含 <code>__init__.py</code>、<code>tools/strutil.py</code>、<code>tools/numutil.py</code>），从外部 <code>from tools import strutil</code> 调用</li><li>[ ] <strong>E3</strong> 在 <code>mymath.py</code> 底部加 <code>if __name__ == &quot;__main__&quot;:</code> 自测代码，分别「直接运行」和「被 import」两种方式跑，观察区别</li><li>[ ] <strong>E4</strong> 故意漏写 <code>__init__.py</code>，看报什么错；再补回来（Python 3 的命名空间包能 import，但显式写更稳）</li><li>[ ] <strong>E5（挑战）</strong> 对照 <code>projects/01-python-ai-cli/src/assistant/</code> 这个真实包，画出它的模块依赖关系，说明 <code>__init__.py</code> 在这里承担什么职责</li></ul>
-<h2 id="f-异常milestone-06">F. 异常（Milestone 06）</h2>
+<h2 id="f-异常milestone-06">F. 异常（Milestone 06）</h2><nav class="sec-nav"><a class="sn prev" href="#e-模块与包milestone-05"><span class="sn-label">← 上一节</span><span class="sn-name">E. 模块与包（Milestone 05）</span></a><a class="sn next" href="#验收标准"><span class="sn-label">下一节 →</span><span class="sn-name">验收标准</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>F1</strong> 触发并捕获三种异常：<code>ZeroDivisionError</code> / <code>KeyError</code> / <code>FileNotFoundError</code>，各自打印友好提示</li><li>[ ] <strong>F2</strong> 写 <code>safe_divide(a, b)</code>：失败时返回 <code>None</code> 而不是抛异常，并说明什么时候该返回 None、什么时候该抛</li><li>[ ] <strong>F3</strong> 用 <code>try / except / else / finally</code> 完整四段写一遍文件读取，观察 <code>finally</code> 在异常时是否仍执行</li><li>[ ] <strong>F4</strong> 自定义异常 <code>class ConfigError(Exception)</code>，在「配置缺 key」时抛出，并在调用方捕获</li><li>[ ] <strong>F5（挑战）</strong> 读 <code>projects/01-python-ai-cli/src/assistant/errors.py</code>，说明它定义的异常层级（基类 → 子类）是怎么设计的，为什么这么分层</li></ul>
 <hr/>
-<h2 id="验收标准">验收标准</h2>
+<h2 id="验收标准">验收标准</h2><nav class="sec-nav"><a class="sn prev" href="#f-异常milestone-06"><span class="sn-label">← 上一节</span><span class="sn-name">F. 异常（Milestone 06）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>C1-C4 + D1-D4 + E1-E4 + F1-F4 全部亲手跑通 = Milestone 03-06 可标记 🎓。 C5 / D5 / E5 / F5 是思考题，做不出来先跳过，回头再补。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

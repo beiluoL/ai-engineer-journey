@@ -52,22 +52,144 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#a-会话记忆m05" class="lvl2">A. 会话记忆（M05）</a><a href="#b-token-context-windowm07" class="lvl2">B. Token / Context Window（M07）</a><a href="#c-function-callingm08" class="lvl2">C. Function Calling（M08）</a><a href="#d-应用架构m09" class="lvl2">D. 应用架构（M09）</a><a href="#运行参考答案" class="lvl2">运行参考答案</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="03-memorytokentools-与应用架构-m05-m07-m08-m09-配套练习">03 Memory、Token、Tools 与应用架构 — M05 / M07 / M08 / M09 配套练习</h1>
 <blockquote><p>先独立完成，再按题号查看 <code>answers.py</code> 中对应函数。所有状态从 ⬜ 开始；参考答案跑通不代表你已掌握。</p></blockquote>
-<h2 id="a-会话记忆m05">A. 会话记忆（M05）</h2>
+<h2 id="a-会话记忆m05">A. 会话记忆（M05）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#b-token-context-windowm07"><span class="sn-label">下一节 →</span><span class="sn-name">B. Token / Context Window（M07）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>A1</strong> 用真实 <code>SessionStore</code> 创建 A/B 两个会话并写入不同偏好，断言内容互不串台、相同 session_id 返回同一对象；reset A 后再 get，断言 A 得到空的新会话而 B 不受影响。</li><li>[ ] <strong>A2</strong> 给真实 <code>Conversation</code> 写入多轮长消息并以 user 消息收尾，调用 <code>trim_to_budget</code>，断言确实丢弃历史、system 仍在首位、最后一个 user 输入仍保留，并打印裁剪前后真实 token 数。</li><li>[ ] <strong>A3</strong> 对真实 <code>Conversation.tokens()</code> 与 <code>estimate_messages_tokens(conv.to_messages())</code> 做同输入对比，断言结果完全一致；clear 后断言 turns 为空但 system 仍由 <code>to_messages()</code> 保留。</li></ul>
-<h2 id="b-token-context-windowm07">B. Token / Context Window（M07）</h2>
+<h2 id="b-token-context-windowm07">B. Token / Context Window（M07）</h2><nav class="sec-nav"><a class="sn prev" href="#a-会话记忆m05"><span class="sn-label">← 上一节</span><span class="sn-name">A. 会话记忆（M05）</span></a><a class="sn next" href="#c-function-callingm08"><span class="sn-label">下一节 →</span><span class="sn-name">C. Function Calling（M08）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>B1</strong> 对空串、纯中文、纯英文和中英混排分别调用真实 <code>estimate_tokens</code>，再按 <code>tokens.py</code> 的 CJK×0.9、其他字符÷3.5 规则独立计算并逐项断言一致，不能写死结果数字。</li><li>[ ] <strong>B2</strong> 用真实 <code>estimate_messages_tokens</code> 证明完整 messages 的估值大于仅 content 的估值；再构造真实 <code>Budget(1000, 200, 0.5)</code>，断言 <code>history_budget</code> 与 ok/trim/overflow 三个边界判断。</li><li>[ ] <strong>B3</strong> 用真实 <code>cost_cny</code> 对同样数量的输入与输出 token 分别计价，断言当前 <code>deepseek-chat</code> 输出成本更高、未知模型使用默认价格，并打印本次动态算出的费用。</li></ul>
-<h2 id="c-function-callingm08">C. Function Calling（M08）</h2>
+<h2 id="c-function-callingm08">C. Function Calling（M08）</h2><nav class="sec-nav"><a class="sn prev" href="#b-token-context-windowm07"><span class="sn-label">← 上一节</span><span class="sn-name">B. Token / Context Window（M07）</span></a><a class="sn next" href="#d-应用架构m09"><span class="sn-label">下一节 →</span><span class="sn-name">D. 应用架构（M09）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>C1</strong> 从真实 <code>schemas()</code> 找到 <code>add</code>，断言参数 <code>a/b</code> 都是 JSON Schema 的 number 且均 required；再注册一个带默认参数的临时工具，断言默认参数不会进入 required，最后清理注册表。</li><li>[ ] <strong>C2</strong> 用真实 <code>dispatch</code> 验证 add 与 multiply 的计算结果；再分别传坏 JSON、缺参数和未知工具名，断言三种失败都返回含 <code>error</code> 的字典而不是向外抛异常。</li><li>[ ] <strong>C3</strong> 用真实 <code>FakeClient</code> 编排一次 add 工具调用和最终回答，运行真实 <code>run_agent</code>，断言第二次请求包含 role=tool、<code>tool_call_id</code> 原样回灌、content 中是真实计算结果。</li><li>[ ] <strong>C4</strong> 让真实 <code>FakeClient</code> 连续请求工具超过 <code>max_iterations=3</code>，断言真实 <code>run_agent</code> 抛 <code>ToolLoopError</code>，且客户端调用次数严格等于上限而不是继续循环。</li></ul>
-<h2 id="d-应用架构m09">D. 应用架构（M09）</h2>
+<h2 id="d-应用架构m09">D. 应用架构（M09）</h2><nav class="sec-nav"><a class="sn prev" href="#c-function-callingm08"><span class="sn-label">← 上一节</span><span class="sn-name">C. Function Calling（M08）</span></a><a class="sn next" href="#运行参考答案"><span class="sn-label">下一节 →</span><span class="sn-name">运行参考答案</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>D1</strong> 用真实 <code>build_service(Settings(...), FakeClient(...))</code> 注入模型替身，连续调用 <code>ask</code>，断言编排层返回替身答案、记录 usage 调用次数，并在第二次请求里带上第一次完整问答历史。</li><li>[ ] <strong>D2</strong> 用真实 <code>create_app()</code>、依赖覆盖与 FastAPI <code>TestClient</code> 在进程内访问 <code>/health</code>、<code>/chat</code>、<code>/reset</code>，断言 HTTP 层复用注入的 service、空消息返回 422、reset 后指定会话历史为空且全程不启动端口。</li></ul>
-<h2 id="运行参考答案">运行参考答案</h2>
+<h2 id="运行参考答案">运行参考答案</h2><nav class="sec-nav"><a class="sn prev" href="#d-应用架构m09"><span class="sn-label">← 上一节</span><span class="sn-name">D. 应用架构（M09）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <pre><code>.venv/bin/python exercises/03-memory-tokens-tools/answers.py</code></pre>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

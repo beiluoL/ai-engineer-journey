@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-记忆的三个层次" class="lvl3">3.1 记忆的三个层次</a><a href="#32-策略一按-token-预算裁剪" class="lvl3">3.2 策略一：按 token 预算裁剪</a><a href="#33-策略二摘要压缩" class="lvl3">3.3 策略二：摘要压缩</a><a href="#34-会话必须隔离" class="lvl3">3.4 会话必须隔离</a><a href="#35-成本随轮数平方增长" class="lvl3">3.5 成本随轮数平方增长</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1裁剪时把-system-裁掉了" class="lvl3">坑 1：裁剪时把 system 裁掉了</a><a href="#坑-2切在工具调用中间" class="lvl3">坑 2：切在工具调用中间</a><a href="#坑-3多用户共享会话" class="lvl3">坑 3：多用户共享会话</a><a href="#坑-4摘要太频繁反而更贵" class="lvl3">坑 4：摘要太频繁，反而更贵</a><a href="#坑-5用-len字符串-当-token-数" class="lvl3">坑 5：用 len(字符串) 当 token 数</a><a href="#坑-6进程重启后会话全丢" class="lvl3">坑 6：进程重启后会话全丢</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-03-chapter-05conversation-memory对话记忆">Project 03 — Chapter 05：Conversation Memory【对话记忆】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/memory.py</code>、<code>src/assistant/tokens.py</code></p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Chapter 02 解决了「怎么把历史发出去」，这一章解决：</p>
 <blockquote><p><strong>历史越来越长，怎么办？</strong></p></blockquote>
 <p>现在的实现是全量累积：</p>
@@ -71,14 +150,14 @@ li{margin:.3em 0;}
 <p>本章目标：</p>
 <blockquote><p><strong>在「记得住」和「装得下」之间做工程取舍：预算裁剪 + 摘要压缩。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>「记忆」是 AI 应用最容易被低估的复杂度。它不像写代码，错了会报错——<strong>记忆出错的表现是模型慢慢变笨</strong>：</p>
 <pre><code>第 5 轮：  回答精准
 第 15 轮： 开始忘记开头说过的要求
 第 25 轮： 把用户 A 的偏好答给用户 B（如果共享了会话）</code></pre>
 <p>而且成本是隐性的：一个每天 1000 次调用的应用，如果每次都带 8000 token 的历史，一个月的光是历史部分就是一笔真金白银。</p>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-记忆的三个层次">3.1 记忆的三个层次</h3>
 <table><thead><tr><th>层次</th><th>放什么</th><th>实现</th><th>对应章节</th></tr></thead><tbody><tr><td>短期记忆</td><td>最近若干轮原文</td><td>滑动窗口 / token 预算裁剪</td><td>本章</td></tr><tr><td>中期记忆</td><td>较早内容的压缩摘要</td><td>让模型总结历史</td><td>本章</td></tr><tr><td>长期记忆</td><td>知识库、用户画像</td><td>向量检索（RAG）</td><td>Project 04</td></tr></tbody></table>
 <h3 id="32-策略一按-token-预算裁剪">3.2 策略一：按 token 预算裁剪</h3>
@@ -131,7 +210,7 @@ _sessions: dict[str, Conversation] = {}</code></pre>
 总消耗 ≈ 1 + 2 + 3 + ... + n = O(n²)</code></pre>
 <p>30 轮对话的总 token 消耗，大约是单轮的 465 倍（30×31/2）。所以<strong>裁剪不是优化，是必需</strong>。</p>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <pre><code>src/assistant/
 ├── memory.py     # Conversation：add_* / to_messages() / trim_to_budget() / summarize()
 ├── tokens.py     # estimate_tokens() / TokenBudget
@@ -149,12 +228,12 @@ to_messages()  →  client.chat()
     ↓
 add_assistant(reply)</code></pre>
 <hr/>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>HttpSession</code></td><td><code>Conversation</code> 对象</td><td>都是会话状态</td></tr><tr><td><code>@SessionAttributes</code></td><td><code>session_id → Conversation</code> 字典</td><td>同</td></tr><tr><td>Redis 存 session</td><td>Redis 存会话 JSON</td><td>生产环境都走外部存储</td></tr><tr><td>LRU <code>LinkedHashMap</code></td><td><code>trim_to_budget()</code></td><td>同是「保留最近」</td></tr><tr><td>分页（丢掉旧页）</td><td>滑动窗口</td><td>同</td></tr><tr><td>对象序列化 <code>Serializable</code></td><td><code>to_messages()</code> → JSON</td><td>同</td></tr><tr><td>Ehcache / Caffeine 淘汰策略</td><td>token 预算裁剪</td><td>目标一致：有界内存</td></tr></tbody></table>
 <p>一个提醒：</p>
 <blockquote><p><strong>Java 里 session 存多了是内存问题；AI 应用里历史存多了是钱的问题。</strong> 后者更容易被忽视，因为账单是月底才来的。</p></blockquote>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1裁剪时把-system-裁掉了">坑 1：裁剪时把 system 裁掉了</h3>
 <p>裁剪逻辑从后往前保留，很容易连开头的 system 一起丢掉，结果是「聊了几轮后人设没了」。</p>
 <p>修法：system 不参与裁剪，单独保存、单独拼装（Chapter 02 已埋好这个设计）。</p>
@@ -172,17 +251,60 @@ add_assistant(reply)</code></pre>
 <h3 id="坑-6进程重启后会话全丢">坑 6：进程重启后会话全丢</h3>
 <p><code>dict</code> 在内存里，服务重启 = 所有人失忆。开发环境无所谓，生产环境必须外部化（Redis / 数据库）。</p>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：实现 <code>trim_to_budget()</code>，保证 system 和最后一轮输入一定保留。</p>
 <p><strong>挑战 2</strong>：实现两级阈值——软阈值裁剪、硬阈值摘要，并在日志里记录触发了哪一级。</p>
 <p><strong>挑战 3（进阶）</strong>：实现多会话隔离（<code>session_id</code> → <code>Conversation</code>），并写一个测试：<strong>两个会话交替提问，验证历史不会串味</strong>。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li>为什么对话成本是 O(n²) 而不是 O(n)？</li><li>裁剪的三条铁律是什么？</li><li>裁剪和摘要的区别与各自的适用场景？</li><li>什么时候该用摘要而不是直接丢掉？</li><li>多用户共享一个 Conversation 会造成什么级别的后果？</li><li>为什么裁剪要以「轮」为单位而不是「条」？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] <code>Conversation</code> 有 token 预算裁剪，system 与最后一轮输入必留</li><li>[ ] 有软/硬两级阈值，硬阈值触发摘要压缩</li><li>[ ] 多会话隔离：并发交替提问不会串味（有测试覆盖）</li><li>[ ] 每次调用能在日志里看到历史的 token 数与是否触发裁剪</li><li>[ ] 连续 20 轮对话不会报上下文超长错误</li></ul>
 <p>上一章：<a href="04-streaming.html">04-streaming.md</a> 下一章：<a href="06-model-parameters.html">06-model-parameters.md</a> —— 给模型调参。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

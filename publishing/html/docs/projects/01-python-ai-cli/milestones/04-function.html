@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#print" class="lvl3">print()</a><a href="#return" class="lvl3">return</a><a href="#联系描述" class="lvl3">联系描述</a><a href="#function函数" class="lvl2">Function【函数】</a><a href="#parameter参数" class="lvl2">Parameter【参数】</a><a href="#argument实参" class="lvl2">Argument【实参】</a><a href="#return返回值" class="lvl2">Return【返回值】</a><a href="#scope作用域" class="lvl2">Scope【作用域】</a><a href="#abstraction抽象" class="lvl2">Abstraction【抽象】</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#level-1" class="lvl3">Level 1</a><a href="#level-2" class="lvl3">Level 2</a><a href="#level-3" class="lvl3">Level 3</a><a href="#level-4" class="lvl3">Level 4</a><a href="#level-5" class="lvl3">Level 5</a><a href="#level-6" class="lvl3">Level 6</a><a href="#level-7" class="lvl3">Level 7</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="lesson-04-function把-ai-cli-assistant-从能跑变成可维护">Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”</h1>
 <blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   主线项目：Python AI CLI Assistant   本章目标：通过重构已有项目，理解函数、参数、返回值、作用域，并建立最基本的代码模块化思维。</p></blockquote>
@@ -979,28 +1058,28 @@ assistant: 我收到你的问题了：我正在学习 Python
 <p>主循环负责控制程序运行和决定当前需要执行哪个动作，而每个函数只负责一个明确职责。外部数据通过参数进入函数，函数处理完成后可以通过 <code>return</code> 把结果交给调用者。这样主循环不需要知道每个功能内部的实现细节，程序开始具备基本的模块化和抽象能力。以后接入真正的 LLM API 时，只需要替换模型响应相关函数，而不用把整个 CLI 程序重新写一遍。</p>
 <hr/>
 <h1 id="37-本章几个核心概念">37. 本章几个核心概念</h1>
-<h2 id="function函数">Function【函数】</h2>
+<h2 id="function函数">Function【函数】</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#parameter参数"><span class="sn-label">下一节 →</span><span class="sn-name">Parameter【参数】</span></a></nav>
 <p>一段具有明确职责、可以重复调用的代码。</p>
 <hr/>
-<h2 id="parameter参数">Parameter【参数】</h2>
+<h2 id="parameter参数">Parameter【参数】</h2><nav class="sec-nav"><a class="sn prev" href="#function函数"><span class="sn-label">← 上一节</span><span class="sn-name">Function【函数】</span></a><a class="sn next" href="#argument实参"><span class="sn-label">下一节 →</span><span class="sn-name">Argument【实参】</span></a></nav>
 <p>函数接收外部数据的入口。</p>
 <pre><code>def show_history(messages):</code></pre>
 <p><code>messages</code> 就是参数。</p>
 <hr/>
-<h2 id="argument实参">Argument【实参】</h2>
+<h2 id="argument实参">Argument【实参】</h2><nav class="sec-nav"><a class="sn prev" href="#parameter参数"><span class="sn-label">← 上一节</span><span class="sn-name">Parameter【参数】</span></a><a class="sn next" href="#return返回值"><span class="sn-label">下一节 →</span><span class="sn-name">Return【返回值】</span></a></nav>
 <p>调用函数时真正传进去的数据：</p>
 <pre><code>show_history(messages)</code></pre>
 <hr/>
-<h2 id="return返回值">Return【返回值】</h2>
+<h2 id="return返回值">Return【返回值】</h2><nav class="sec-nav"><a class="sn prev" href="#argument实参"><span class="sn-label">← 上一节</span><span class="sn-name">Argument【实参】</span></a><a class="sn next" href="#scope作用域"><span class="sn-label">下一节 →</span><span class="sn-name">Scope【作用域】</span></a></nav>
 <p>函数将结果交给调用者：</p>
 <pre><code>return result</code></pre>
 <hr/>
-<h2 id="scope作用域">Scope【作用域】</h2>
+<h2 id="scope作用域">Scope【作用域】</h2><nav class="sec-nav"><a class="sn prev" href="#return返回值"><span class="sn-label">← 上一节</span><span class="sn-name">Return【返回值】</span></a><a class="sn next" href="#abstraction抽象"><span class="sn-label">下一节 →</span><span class="sn-name">Abstraction【抽象】</span></a></nav>
 <p>决定变量在哪些代码范围内可以访问。</p>
 <p>本章先掌握：</p>
 <blockquote><p>函数内部变量默认属于函数内部。</p></blockquote>
 <hr/>
-<h2 id="abstraction抽象">Abstraction【抽象】</h2>
+<h2 id="abstraction抽象">Abstraction【抽象】</h2><nav class="sec-nav"><a class="sn prev" href="#scope作用域"><span class="sn-label">← 上一节</span><span class="sn-name">Scope【作用域】</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>隐藏复杂实现，只暴露清晰的功能接口。</p>
 <p>例如：</p>
 <pre><code>generate_response(user_input)</code></pre>
@@ -1197,5 +1276,48 @@ HTTP
 LLM API</code></pre>
 <p>这就是我们整个 <strong>AI Engineer Journey</strong> 的“项目驱动”主线。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,25 +52,104 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-一个大-agent-的问题" class="lvl2">1. 一个大 Agent 的问题</a><a href="#2-workflow-的做法" class="lvl2">2. Workflow 的做法</a><a href="#3-但拆开真的划算吗-规模扫描" class="lvl2">3. 但拆开真的划算吗？—— 规模扫描</a><a href="#4-上下文隔离的证据" class="lvl2">4. 上下文隔离的证据</a><a href="#5-真实模型跑通整个-workflow" class="lvl2">5. 真实模型跑通整个 Workflow</a><a href="#6-踩到的坑" class="lvl2">6. 踩到的坑</a><a href="#7-结论" class="lvl2">7. 结论</a><a href="#8-代码位置" class="lvl2">8. 代码位置</a><a href="#9-版本" class="lvl2">9. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-10-agent-workflow把计划派给多个-worker">Milestone 10 — Agent Workflow：把计划派给多个 Worker</h1>
 <blockquote><p>到 Milestone 09 为止，一个任务始终是<strong>一个 Agent 从头跑到尾</strong>。 它有了计划（06）、草稿纸（05）、还能用别人的工具（09）， 但所有步骤仍挤在同一段对话里。</p></blockquote>
-<h2 id="1-一个大-agent-的问题">1. 一个大 Agent 的问题</h2>
+<h2 id="1-一个大-agent-的问题">1. 一个大 Agent 的问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-workflow-的做法"><span class="sn-label">下一节 →</span><span class="sn-name">2. Workflow 的做法</span></a></nav>
 <p>一个跑了 N 步的 Agent，第 N 步做「汇总」时，前面 N-1 步的检索<strong>原文</strong>全还在上下文里 —— 而它真正需要的只是那 N-1 步各自的<strong>结论</strong>。</p>
 <p>Milestone 05 的裁剪能压掉一部分，但压掉的是&quot;早的&quot;，不是&quot;无关的&quot;。</p>
 <p>真实测量（<code>demos/out/demo_10_workflow.txt</code> 第 1 节）：</p>
 <figure class="figure"><img alt="单 Agent 的上下文增长" src="../../../../../../projects/05-agent-mcp/assets/term-10-context-growth.png" loading="lazy"/><figcaption>单 Agent 的上下文增长</figcaption></figure>
-<h2 id="2-workflow-的做法">2. Workflow 的做法</h2>
+<h2 id="2-workflow-的做法">2. Workflow 的做法</h2><nav class="sec-nav"><a class="sn prev" href="#1-一个大-agent-的问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 一个大 Agent 的问题</span></a><a class="sn next" href="#3-但拆开真的划算吗-规模扫描"><span class="sn-label">下一节 →</span><span class="sn-name">3. 但拆开真的划算吗？—— 规模扫描</span></a></nav>
 <pre><code>Plan 的每个子任务 → 派给一个独立的 Worker（自己的 ReActAgent、自己的 messages）
 Worker 只拿到    → 这个子任务是什么 + 它依赖的那些子任务的结论
 Worker 做完后    → 结论写进共享草稿纸 + 在 Plan 上标 done</code></pre>
 <p>三条好处：</p>
 <ul class="lvl"><li><strong>上下文隔离</strong> —— 每个 Worker 只看自己需要的那一点</li><li><strong>失败不扩散</strong> —— 一个子任务炸了，只影响 Plan 算好的下游</li><li><strong>同批可并行</strong> —— Milestone 06 算出的 <code>batches()</code> 在这里派上用场</li></ul>
 <p>代价也要说清楚：<strong>Worker 之间不能直接对话</strong>，只能通过草稿纸 / Plan 传结论。 所以「子任务的结论该写多详细」是个真问题 —— 写少了汇总时信息不够，写多了又回到膨胀。</p>
-<h2 id="3-但拆开真的划算吗-规模扫描">3. 但拆开真的划算吗？—— 规模扫描</h2>
+<h2 id="3-但拆开真的划算吗-规模扫描">3. 但拆开真的划算吗？—— 规模扫描</h2><nav class="sec-nav"><a class="sn prev" href="#2-workflow-的做法"><span class="sn-label">← 上一节</span><span class="sn-name">2. Workflow 的做法</span></a><a class="sn next" href="#4-上下文隔离的证据"><span class="sn-label">下一节 →</span><span class="sn-name">4. 上下文隔离的证据</span></a></nav>
 <p>诚实的结果：<strong>3 个子任务时，拆开反而更贵</strong>（691 → 1758 token）。 每个 Worker 都要重新带一遍 system 提示和自己的提问，这笔固定开销在短任务上压过了省下的历史。</p>
 <p>所以真正该问的是「什么时候拆才划算」。规模扫描给出了答案：</p>
 <figure class="figure"><img alt="规模扫描" src="../../../../../../projects/05-agent-mcp/assets/term-10-scale-scan.png" loading="lazy"/><figcaption>规模扫描</figcaption></figure>
@@ -79,17 +158,17 @@ Worker 做完后    → 结论写进共享草稿纸 + 在 Plan 上标 done</code
 <p><strong>单 Agent 的单轮体量随步数线性增长（234 → 654），Worker 的基本恒定（260 → 353）。</strong></p>
 <p>8 个子任务时峰值低 46%。峰值低意味着不容易撞上下文窗口上限 —— 这是总量之外的另一个维度， 而且往往是更关键的那个：<strong>上下文窗口是硬上限，超了就直接失败，不是多花点钱的事。</strong></p>
 <p>所以 <code>PLANNER_PROMPT</code> 里写的是「3 到 6 个子任务为宜」——太碎不划算，太少又压不住峰值。</p>
-<h2 id="4-上下文隔离的证据">4. 上下文隔离的证据</h2>
+<h2 id="4-上下文隔离的证据">4. 上下文隔离的证据</h2><nav class="sec-nav"><a class="sn prev" href="#3-但拆开真的划算吗-规模扫描"><span class="sn-label">← 上一节</span><span class="sn-name">3. 但拆开真的划算吗？—— 规模扫描</span></a><a class="sn next" href="#5-真实模型跑通整个-workflow"><span class="sn-label">下一节 →</span><span class="sn-name">5. 真实模型跑通整个 Workflow</span></a></nav>
 <p>汇总者收到的提问里<strong>只有结论、没有原文</strong>：</p>
 <figure class="figure"><img alt="隔离证据与失败传播" src="../../../../../../projects/05-agent-mcp/assets/term-10-isolation.png" loading="lazy"/><figcaption>隔离证据与失败传播</figcaption></figure>
 <pre><code>✓ 有上游结论      ：True
 ✗ 有检索原文      ：False</code></pre>
 <p>这条有专门的测试锁着（<code>tests/test_workflow.py::TestContextIsolation</code>）—— 没有断言的话，「隔离」就只是一句口号。</p>
-<h2 id="5-真实模型跑通整个-workflow">5. 真实模型跑通整个 Workflow</h2>
+<h2 id="5-真实模型跑通整个-workflow">5. 真实模型跑通整个 Workflow</h2><nav class="sec-nav"><a class="sn prev" href="#4-上下文隔离的证据"><span class="sn-label">← 上一节</span><span class="sn-name">4. 上下文隔离的证据</span></a><a class="sn next" href="#6-踩到的坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 踩到的坑</span></a></nav>
 <p>用 DeepSeek + MCP 子进程跑「对比 P01 与 P04 的状态持久化」：</p>
 <figure class="figure"><img alt="真实 Workflow" src="../../../../../../projects/05-agent-mcp/assets/term-10-real-workflow.png" loading="lazy"/><figcaption>真实 Workflow</figcaption></figure>
 <ul class="lvl"><li>3 个子任务<strong>全部完成</strong>（t1 用 10 步 / 7 次调用，t2 用 8 步 / 5 次，t3 用 3 步 / 1 次）</li><li>模型<strong>自己</strong>往草稿纸写了 3 条笔记（<code>t1_p01_persistence</code>、<code>t2_p04_persistence</code>、<code>t3_diff_summary</code>）</li><li>汇总输出了完整对比，还带一张表格</li></ul>
-<h2 id="6-踩到的坑">6. 踩到的坑</h2>
+<h2 id="6-踩到的坑">6. 踩到的坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-真实模型跑通整个-workflow"><span class="sn-label">← 上一节</span><span class="sn-name">5. 真实模型跑通整个 Workflow</span></a><a class="sn next" href="#7-结论"><span class="sn-label">下一节 →</span><span class="sn-name">7. 结论</span></a></nav>
 <p><strong>坑 1：批次不能预先派完 —— 计划是静态的，执行是动态的。</strong> 一开始 <code>run()</code> 直接 <code>for batch in plan.batches()</code> 派活。但某个子任务失败后， 它的下游会被 <code>skip_downstream</code> 标成 SKIPPED，<strong>而照开局的批次派，它们照样会被派出去</strong>。 （测试 <code>test_failed_task_skips_downstream</code> 就是这么挂的：t1 失败了，t3 还在跑。）</p>
 <p>改成每轮动态取 <code>ready()</code>：</p>
 <pre><code>while True:
@@ -102,12 +181,55 @@ Worker 做完后    → 结论写进共享草稿纸 + 在 Plan 上标 done</code
 <p>草稿纸是 Agent <strong>自己的状态</strong>，不是外部能力，必须留在本地：</p>
 <pre><code>registry = ToolRegistry(list(mcp_tools(client)) + [WriteNoteTool(pad), ReadNotesTool(pad)])</code></pre>
 <p><strong>坑 3：<code>_stats</code> 差点写成类属性。</strong> <code>Workflow</code> 不是 dataclass，<code>_stats: dict = field(default_factory=dict)</code> 得到的是一个 <code>Field</code> 对象而不是字典。统计必须每个实例一份，初始化放在 <code>__init__</code> 里。</p>
-<h2 id="7-结论">7. 结论</h2>
+<h2 id="7-结论">7. 结论</h2><nav class="sec-nav"><a class="sn prev" href="#6-踩到的坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 踩到的坑</span></a><a class="sn next" href="#8-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">8. 代码位置</span></a></nav>
 <ul class="lvl"><li><strong>Workflow 的价值不是省钱，是让单轮体量恒定</strong> —— 撞不撞上下文窗口是硬约束。</li><li><strong>计划静态、执行动态</strong> —— 失败会改变后面的派活。</li><li><strong>本地状态不要走 MCP</strong> —— 草稿纸是 Agent 自己的，检索才是外部能力。</li></ul>
-<h2 id="8-代码位置">8. 代码位置</h2>
+<h2 id="8-代码位置">8. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#7-结论"><span class="sn-label">← 上一节</span><span class="sn-name">7. 结论</span></a><a class="sn next" href="#9-版本"><span class="sn-label">下一节 →</span><span class="sn-name">9. 版本</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/workflow.py</code></td><td><code>Workflow</code> / <code>WorkflowResult</code> / <code>build_workflow</code> / Planner 与 Worker 提示词</td></tr><tr><td><code>tests/test_workflow.py</code></td><td>14 项，其中 <code>TestContextIsolation</code> 锁住隔离主张</td></tr><tr><td><code>demos/demo_10_workflow.py</code></td><td>6 节，<code>--real</code> 跑真实 DeepSeek + MCP</td></tr></tbody></table>
-<h2 id="9-版本">9. 版本</h2>
+<h2 id="9-版本">9. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#8-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">8. 代码位置</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.10 → <strong>v1.0</strong>，Project 05 收官：10/10 Milestone 全部落地。 测试 230 → <strong>244 passed</strong>，真实链路全部跑通，截图 24 → 28 张。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

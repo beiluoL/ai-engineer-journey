@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么排行榜必须有三个同一" class="lvl2">1. Why：为什么&amp;quot;排行榜&amp;quot;必须有三个&amp;quot;同一&amp;quot;</a><a href="#2-design三个对象" class="lvl2">2. Design：三个对象</a><a href="#3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_02_benchmark_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-忠实度是查准率不是查全率-越短越容易满分" class="lvl3">4.1 忠实度是&amp;quot;查准率&amp;quot;，不是&amp;quot;查全率&amp;quot;—— 越短越容易满分</a><a href="#42-参考答案自己拿不到-100-分-这是特性不是-bug" class="lvl3">4.2 参考答案自己拿不到 100 分 —— 这是特性不是 bug</a><a href="#43-三个模型都是规则函数-这不是偷懒" class="lvl3">4.3 三个&amp;quot;模型&amp;quot;都是规则函数 —— 这不是偷懒</a><a href="#44-排序键必须全序否则排行榜不可复现" class="lvl3">4.4 排序键必须全序，否则排行榜不可复现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-02-benchmark任务定义统一打分与排行">Milestone 02 — Benchmark：任务定义、统一打分与排行</h1>
 <p>M01 建立了<strong>指标</strong>：PPL、Token Acc、ECE。但指标只描述&quot;模型在某个数据集上的表现&quot;，还没回答&quot;我要拿它干什么&quot;。</p>
@@ -63,19 +142,19 @@ li{margin:.3em 0;}
 <table><thead><tr><th></th><th>M01 Evaluation</th><th>M02 Benchmark</th></tr></thead><tbody><tr><td>单位</td><td>token</td><td>任务（task）</td></tr><tr><td>打分</td><td>概率分布层面的统计量</td><td>可读答案的多维规则评分</td></tr><tr><td>可比性</td><td>同一分词器、同一数据</td><td>同一任务集 + 同一评分函数 + 同一汇总口径</td></tr></tbody></table>
 <p><strong>纯 numpy 手写</strong>：任务集、评分器、汇总、排行全部自己实现（<code>src/ie/benchmark.py</code>、<code>src/ie/autoeval.py</code>），不引入任何评测框架。</p>
 <hr/>
-<h2 id="1-why为什么排行榜必须有三个同一">1. Why：为什么&quot;排行榜&quot;必须有三个&quot;同一&quot;</h2>
+<h2 id="1-why为什么排行榜必须有三个同一">1. Why：为什么&quot;排行榜&quot;必须有三个&quot;同一&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design三个对象"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：三个对象</span></a></nav>
 <p>一个 benchmark 分数只有在<strong>三个东西都固定</strong>的时候才可比较：</p>
 <ul class="lvl"><li><strong>同一任务</strong> —— prompt 必须一字不差（否则测的是 prompt 工程，不是模型）。</li><li><strong>同一评分函数</strong> —— 参数、权重、阈值都不能变。</li><li><strong>同一汇总口径</strong> —— 每题打分后怎么平均（本项目用简单算术平均，<code>aggregate_scores</code>）。</li></ul>
 <p>违反任何一条，排行榜就是噪音。现实中大量&quot;某某模型超越 GPT-4&quot;的结论，问题都出在第三条 —— 换个汇总方式（macro vs micro、去极值与否）结论就翻。</p>
 <p>本项目刻意<strong>不碰</strong> MMLU / HumanEval 这类真实榜单：它们需要真实大模型才能跑出有意义的结果。这里的价值是<strong>把排行榜的骨架做对</strong> —— 任务集抽象、评分器接口、可复现的排行，这些换到任何榜单上都一样。</p>
-<h2 id="2-design三个对象">2. Design：三个对象</h2>
+<h2 id="2-design三个对象">2. Design：三个对象</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么排行榜必须有三个同一"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么&amp;quot;排行榜&amp;quot;必须有三个&amp;quot;同一&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_02_benchmark_terminal.txt）</span></a></nav>
 <pre><code>BenchmarkTask(task_id, prompt, reference, keywords, topic)   # 一个任务
 Benchmark(name, tasks).evaluate(model_name, predictor)        # 一个模型跑完所有任务
 Benchmark.compare({name: predictor})                          # 多个模型 → 排行榜</code></pre>
 <ul class="lvl"><li><code>predictor: Callable[[str], str]</code> —— <strong>模型被抽象成一个函数</strong>。这是整个设计的核心：不管背后是 7B 还是规则拼字符串，只要 <code>prompt → answer</code>，就能进排行榜。本项目三个&quot;模型&quot;里有两个就是规则函数。</li><li><code>tasks_from_records(records)</code> —— 直接把 M03 的 held-out 记录转成任务（<code>instruction → prompt</code>，<code>output → reference</code>，<code>topic</code> 由 <code>infer_topic</code> 推断）。<strong>评估集和 benchmark 用同一批数据</strong>，避免&quot;两套数据各说各话&quot;。</li><li><code>Benchmark.compare</code> 按 <code>(-total, model)</code> 排序 —— <strong>分数相同时按名字排序</strong>，保证排行榜在不同机器上完全一样（可复现性细节，但很重要）。</li></ul>
 <p>打分函数来自 M04 的 <code>evaluate_answer</code>（关键词 40% + 格式 15% + 长度 15% + 忠实度 20% + 去重复 10%），这里只做<strong>汇总与排行</strong>。</p>
 <figure class="figure"><img alt="M02 Benchmark 流水线：任务集 → 多个 predictor → 统一评分 → 汇总排行" src="../../../../../../projects/09-evaluation-inference/assets/benchmark.svg" loading="lazy"/><figcaption>M02 Benchmark 流水线：任务集 → 多个 predictor → 统一评分 → 汇总排行</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_benchmark_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_benchmark_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design三个对象"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：三个对象</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>任务集 <strong>Java held-out v1</strong>，6 个任务 / 4 个主题（从 M03 的 held-out 前 6 条构造）。三个&quot;模型&quot;全是规则函数：</p>
 <table><thead><tr><th>模型</th><th>做法</th></tr></thead><tbody><tr><td>参考答案</td><td>直接返回 <code>record[&quot;output&quot;]</code>（理论上界）</td></tr><tr><td>首句摘要</td><td>只返回参考答案的第一句</td></tr><tr><td>弱基线</td><td>无论问什么都回答「Java 中需要根据具体情况分析。」</td></tr></tbody></table>
 <pre><code>── 总分排行（全部由规则评分真实计算） ─────────────────────────────
@@ -89,7 +168,7 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
 <p>四个读数：</p>
 <ul class="lvl"><li><strong>参考答案 94.38，不是 100</strong>。这是最有信息量的一行：连&quot;把参考答案原样交上去&quot;都拿不到满分，说明评分函数<strong>不是&quot;跟参考答案比对&quot;</strong>，而是在独立地衡量答案质量。<code>0.700</code>（格式）和 <code>0.888</code>（去重复）是参考答案自己丢的分 —— 参考答案里有重复的 3-gram，格式也不完全符合&quot;有列表/有冒号&quot;的加分项。</li><li><strong>首句摘要 75.56，忠实度却是满分 1.000</strong>。因为忠实度的定义是 <code>|answer_terms ∩ reference_terms| / |answer_terms|</code> —— <strong>分母是答案自己的词</strong>，所以&quot;少说&quot;完全不被惩罚，只惩罚&quot;多说&quot;。这是本评分器的已知偏向，见 4.1。</li><li><strong>弱基线 21.87，其中去重复 1.000（满分）</strong>。一个 13 个字的车轱辘话，在&quot;去重复&quot;这一项上拿了满分 —— 因为它根本没重复。<strong>单一维度完全不能判优劣</strong>，必须看加权总分和各分项。</li><li><strong>弱基线忠实度 0.015</strong>，几乎为 0。它说的「Java」「根据」「具体」「情况」「分析」几乎都不是参考答案里的词。<strong>这一项才是真正把废话答案区分出来的东西</strong>（权重 20%，仅次于关键词）。</li></ul>
 <figure class="figure"><img alt="M02 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-02-benchmark.png" loading="lazy"/><figcaption>M02 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_02_benchmark_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-忠实度是查准率不是查全率-越短越容易满分">4.1 忠实度是&quot;查准率&quot;，不是&quot;查全率&quot;—— 越短越容易满分</h3>
 <pre><code>faithfulness = |answer_terms ∩ reference_terms| / |answer_terms|     # src/ie/autoeval.py:97</code></pre>
 <p>分母是<strong>答案自己的词数</strong>。后果：</p>
@@ -110,12 +189,55 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
 <pre><code>rows.sort(key=lambda row: (-row[&quot;total&quot;], row[&quot;model&quot;]))    # src/ie/benchmark.py:54</code></pre>
 <p>只按 <code>-total</code> 排序时，Python 的 <code>sort</code> 是稳定的 —— 相同分数会保持<strong>输入字典的顺序</strong>，而 dict 顺序依赖于插入顺序。加上 <code>model</code> 作为第二键，排序变成<strong>全序</strong>，任何机器上跑出同一张表。</p>
 <p>这类&quot;可复现性细节&quot;在 P08 已经踩过一次（<code>Tensor._prev</code> 是 set 导致跨进程不可复现）。本项目在排序、抽样（M03 的 seed）、指标汇总处都做了同样的处理。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>Benchmark = <strong>任务集 + 评分函数 + 汇总口径</strong>；三者任一变化，分数就不可比。</li><li><code>predictor: str → str</code> 是核心抽象：<strong>模型只是一个函数</strong>，规则函数也能进排行榜当对照组。</li><li>实测排行：<strong>参考答案 94.38 &gt; 首句摘要 75.56 &gt; 弱基线 21.87</strong>（6 任务 / 4 主题，全部由规则评分真实计算）。</li><li><strong>参考答案只拿 94.38</strong>（格式 0.700、去重复 0.888）—— 评分器衡量的是&quot;像不像好答案&quot;，不是&quot;像不像参考答案&quot;。</li><li><strong>忠实度是查准率不是查全率</strong>：首句摘要忠实度 1.000 却只拿 75.56，靠长度项 0.639 兜底。比值型指标必须先问分母是什么。</li><li><strong>弱基线去重复满分 1.000 却总分 21.87</strong> —— 单一维度不能判优劣，必须看加权总分 + 分项表。</li><li>手写实现的意义：因为评分器是自己写的，我才知道&quot;参考答案为什么不是 100 分&quot;；用 <code>lm-eval-harness</code> 这类框架只能拿到一个分数，解释不了它。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/benchmark.py</code></td><td><code>BenchmarkTask</code>（task_id/prompt/reference/keywords/topic）/ <code>Benchmark.evaluate</code>（单模型跑全任务）/ <code>Benchmark.compare</code>（多模型排行，<code>(-total, model)</code> 全序排序）/ <code>tasks_from_records</code>（把 held-out 记录转成任务）</td></tr><tr><td><code>src/ie/autoeval.py</code></td><td>提供 <code>evaluate_answer</code> 与 <code>aggregate_scores</code>（本章的打分与汇总口径来源，详见 M04）</td></tr><tr><td><code>src/ie/evalset.py</code></td><td><code>infer_topic</code>：给任务打主题标签，供&quot;主题数&quot;统计</td></tr><tr><td><code>demos/demo_02_benchmark.py</code></td><td>3 节：任务集构造 / 三个 predictor / 总分排行</td></tr><tr><td><code>demos/out/demo_02_benchmark_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/benchmark.svg</code></td><td>本章 benchmark 流水线图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 → <strong>v0.2</strong>，M02 Benchmark 落地。实测（Java held-out v1，6 任务 / 4 主题）：排行 <strong>参考答案 94.38 &gt; 首句摘要 75.56 &gt; 弱基线 21.87</strong>；分项显示参考答案格式 0.700 / 去重复 0.888（拿不到满分），首句摘要忠实度 1.000 但长度仅 0.639，弱基线去重复 1.000 而忠实度仅 0.015。并诚实记录「忠实度分母是答案自身 → 惩罚胡说不惩罚少说」「三个&quot;模型&quot;均为规则函数，用于标定评分器动态范围」。纯 numpy、无评测框架。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

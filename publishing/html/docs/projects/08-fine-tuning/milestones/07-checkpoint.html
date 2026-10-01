@@ -52,28 +52,107 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么只存-ab不叫断点续训" class="lvl2">1. Why：为什么&amp;quot;只存 A/B&amp;quot;不叫断点续训</a><a href="#2-design存什么怎么存" class="lvl2">2. Design：存什么、怎么存</a><a href="#3-realrun-evidence来自-demosoutdemo07checkpointterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_07_checkpoint_terminal.txt）</a><a href="#31-存盘体积实测" class="lvl3">3.1 存盘体积（实测）</a><a href="#32-b-真续训实测曲线接上了" class="lvl3">3.2 B 真续训（实测：曲线接上了）</a><a href="#33-c-假续训实测偏差-3173e01" class="lvl3">3.3 C 假续训（实测：偏差 3.173e-01）</a><a href="#34-三组对比实测" class="lvl3">3.4 三组对比（实测）</a><a href="#35-存-取-往返一致性实测" class="lvl3">3.5 存 → 取 → 往返一致性（实测）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-p06-的-adam-动量从未累积实测-0-54272" class="lvl3">4.1 P06 的 Adam 动量从未累积（实测 0 / 54,272）</a><a href="#42-只存权重悄悄变成了重新训练实测-3173e01-vs-1290e04" class="lvl3">4.2 &amp;quot;只存权重&amp;quot;悄悄变成了&amp;quot;重新训练&amp;quot;（实测 3.173e-01 vs 1.290e-04）</a><a href="#43-加载必须就地写不能替换-parameter-对象实现约束" class="lvl3">4.3 加载必须就地写，不能替换 Parameter 对象（实现约束）</a><a href="#44-体积倍率有两个口径诚实标注" class="lvl3">4.4 体积倍率有两个口径（诚实标注）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-07-checkpoint一百多-kb-一个任务以及假续训长什么样">Milestone 07 — Checkpoint：一百多 KB 一个任务，以及&quot;假续训&quot;长什么样</h1>
 <p>M06 扫出了可用的超参组合。接下来是工程上最好用的一环：<strong>adapter 的存 / 取 / 续训</strong>。</p>
 <p>LoRA 在生产里普及的真正原因不是省显存，是<strong>部署形态的改变</strong>：全量微调一个 7B 模型，每个任务都要存一份 28 GB 权重 —— 存不起也传不动。LoRA 之后每个任务只存<strong>一百多 KB</strong>。</p>
 <p><strong>纯 numpy 手写</strong>：<code>np.savez</code> + 一个 json 元信息，78 个数组。没有 <code>save_pretrained</code>，所以每个字段为什么要存、不存会怎样，都得自己想清楚。</p>
 <hr/>
-<h2 id="1-why为什么只存-ab不叫断点续训">1. Why：为什么&quot;只存 A/B&quot;不叫断点续训</h2>
+<h2 id="1-why为什么只存-ab不叫断点续训">1. Why：为什么&quot;只存 A/B&quot;不叫断点续训</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design存什么怎么存"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：存什么、怎么存</span></a></nav>
 <p>一个常见误解：adapter 训练是轻量的，丢了就重训。但<strong>只存 A/B 不叫「断点续训」，叫「重新训练」</strong>。Adam 的一阶/二阶动量是<strong>训练状态</strong>的一部分，丢了它们，resume 之后的第一步会像没训过一样大步乱走，loss 会先弹上去再慢慢回落。</p>
 <p>所以本模块落盘两样东西：</p>
 <ul class="lvl"><li><code>xxx.npz</code>：所有 adapter 张量（<code>A::&lt;path&gt;</code> / <code>B::&lt;path&gt;</code>）+ 可选的 Adam 动量</li><li><code>xxx.json</code>：元信息（r / alpha / 注入位置 / 训练步数 / loss 曲线 / 优化器配置）</li></ul>
 <p>并用三组对照实验证明这件事：<strong>A 一次性 100 步</strong>（基准）、<strong>B 真续训</strong>（含训练状态）、<strong>C 假续训</strong>（只加载权重）。</p>
-<h2 id="2-design存什么怎么存">2. Design：存什么、怎么存</h2>
+<h2 id="2-design存什么怎么存">2. Design：存什么、怎么存</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么只存-ab不叫断点续训"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么&amp;quot;只存 A/B&amp;quot;不叫断点续训</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo07checkpointterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_checkpoint_terminal.txt）</span></a></nav>
 <p><strong>落盘精度 fp32。</strong> 训练时是 fp64（本项目用 float64 便于数值对拍），落盘转 fp32 —— 工业界惯例，体积减半、精度足够。要做<strong>逐位</strong>往返一致性验证时传 <code>np.float64</code>。</p>
 <p><strong>加载必须就地写入。</strong></p>
 <pre><code>layer.A.data[:] = a.astype(layer.A.data.dtype)   # 就地</code></pre>
 <p>不能替换 <code>Parameter</code> 对象 —— P06 的 <code>Adam</code> 是按 <code>id(p)</code> 建 state 的，换了对象动量就全丢了。</p>
 <p><strong><code>include_optimizer</code> 开关。</strong> 只分发推理权重时关掉，体积立减 2/3（115.76 KB vs 341.68 KB）。</p>
 <figure class="figure"><img alt="M07 Checkpoint 存取与三组对照" src="../../../../../../projects/08-fine-tuning/assets/checkpoint.svg" loading="lazy"/><figcaption>M07 Checkpoint 存取与三组对照</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo07checkpointterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_checkpoint_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo07checkpointterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_checkpoint_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design存什么怎么存"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：存什么、怎么存</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>基座参数量 / fp32 体积 <strong>230,656 / 901.00 KB</strong>；adapter 参数量 <strong>27,136</strong>（注入 r=8 后，占总量 10.53%）。</p>
 <h3 id="31-存盘体积实测">3.1 存盘体积（实测）</h3>
 <table><thead><tr><th>文件</th><th>内容</th><th>体积</th><th>占基座 fp32</th></tr></thead><tbody><tr><td><code>demo07_weights_only.npz</code></td><td>仅 A/B 权重</td><td><strong>115.76 KB</strong></td><td>12.85%</td></tr><tr><td><code>demo07_full.npz</code></td><td>A/B + Adam m/v</td><td><strong>341.68 KB</strong></td><td>37.92%</td></tr><tr><td>（对照）基座权重</td><td>全部基座参数 fp32</td><td>1,007.00 KB</td><td>100.00%</td></tr></tbody></table>
@@ -100,7 +179,7 @@ C 与 A 的逐点最大差                      3.173e-01</code></pre>
 <pre><code>fp32 落盘的往返最大误差       7.449e-09   相对量级 ~1e-7（fp32 精度）
 fp64 落盘的往返最大误差       0.000e+00   逐位一致</code></pre>
 <figure class="figure"><img alt="M07 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-07-checkpoint.png" loading="lazy"/><figcaption>M07 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo07checkpointterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_07_checkpoint_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-p06-的-adam-动量从未累积实测-0-54272">4.1 P06 的 Adam 动量从未累积（实测 0 / 54,272）</h3>
 <p>这是本章最刺眼的发现：</p>
 <pre><code>训了 30 步后 Adam state 里非零元素      0 / 54,272
@@ -121,12 +200,55 @@ fp64 落盘的往返最大误差       0.000e+00   逐位一致</code></pre>
 <h3 id="44-体积倍率有两个口径诚实标注">4.4 体积倍率有两个口径（诚实标注）</h3>
 <ul class="lvl"><li>按 <code>demo07_weights_only.npz</code>（115.76 KB）对基座 <strong>1,007.00 KB</strong> → <strong>8.70×</strong></li><li>按基座 <strong>901.00 KB</strong>（纯基座参数，不含 A/B）→ <strong>7.8×</strong></li></ul>
 <p>两个都在本章出现，来源是&quot;分母是否包含注入后的 adapter&quot;。<strong>引用时要说清口径</strong>，我自己就踩过混用的坑。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>adapter 只存权重 115.76 KB，含 Adam 状态 341.68 KB</strong>，基座 901 KB —— <strong>7.8×</strong>（另一口径 8.70×）。</li><li><strong>真续训与一次性训练逐点最大差 1.290e-04</strong>，断点跳变与基准完全相同（0.1981）—— 曲线接上了。</li><li><strong>假续训（丢状态）偏差 3.173e-01</strong>，约为真续训的 2500 倍；但它的终点指标反而更低，是典型陷阱。</li><li><strong>fp64 往返误差 <code>0.000e+00</code></strong>（逐位一致），fp32 往返 <code>7.449e-09</code>。</li><li><strong>⚠ 实测发现 P06 的 Adam 动量从未累积</strong>（state 非零元素 0/54,272），断点真正需要恢复的只有步数 <code>t</code>。本项目不改 P06，照实记录，m/v 仍落盘。</li><li>实践含义：<strong>一个基座常驻，每个下游任务一个一百多 KB 的 adapter 文件，切任务只换 adapter</strong> —— 这是全量微调根本做不到的部署形态。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/checkpoint.py</code></td><td><code>save_adapter</code> / <code>save_checkpoint</code>（A/B + opt_m/opt_v + json 元信息）、<code>load_adapter</code>（<strong>就地</strong>写回 <code>A.data[:]</code>）、<code>load_checkpoint</code>（恢复动量与 step 计数）、<code>adapter_report</code></td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>optimizer_state()</code> / <code>load_optimizer_state()</code>：导出 / 恢复 Adam 的 m/v 与 <code>t</code>；<code>run()</code> 里 <code>start = self.step</code> 保证续训时 batch 顺序连续</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>lora_layers()</code>（按 path 定位，存盘与加载的 path 必须一致）、<code>count_parameters</code></td></tr><tr><td><code>demos/demo_07_checkpoint.py</code></td><td>7 节：基准 A / 真续训 B / 假续训 C / 三组对比 / P06 Adam 发现 / 往返一致性 / 关键数字</td></tr><tr><td><code>demos/out/demo_07_checkpoint_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td>`models/adapters/demo07_*.npz</td><td>.json`</td><td>真实产物（115.76 KB / 341.68 KB）</td></tr><tr><td><code>assets/checkpoint.svg</code></td><td>本章存取流程 + 三组对照图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，M07 checkpoint 与断点续训落地。实测：adapter 仅权重 <strong>115.76 KB</strong>、含 Adam 状态 <strong>341.68 KB</strong>、基座 901 KB（<strong>7.8×</strong>）；真续训与一次性训练逐点最大差 <strong>1.290e-04</strong>，假续训偏差 <strong>3.173e-01</strong>；fp64 往返误差 <strong>0.000e+00</strong>。并实测记录「P06 的 Adam 动量从未累积（state 非零元素 0/54,272）」—— 不改 P06，照实记录。纯 numpy、无 torch。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

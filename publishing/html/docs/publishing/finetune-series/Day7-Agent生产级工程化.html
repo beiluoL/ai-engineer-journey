@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#为什么需要-sse" class="lvl2">为什么需要 SSE？</a><a href="#sse" class="lvl2">SSE</a><a href="#trace链路追踪" class="lvl2">Trace【链路追踪】</a><a href="#1-retrieval-accuracy检索准确率" class="lvl2">1. Retrieval Accuracy【检索准确率】</a><a href="#2-answer-quality回答质量" class="lvl2">2. Answer Quality【回答质量】</a><a href="#3-hallucination幻觉" class="lvl2">3. Hallucination【幻觉】</a><a href="#llm超时" class="lvl2">LLM超时</a><a href="#模型不可用" class="lvl2">模型不可用</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="大模型微调实战-day7spring-boot-langchain4j-agent-生产级工程化">大模型微调实战 Day7：Spring Boot + LangChain4j Agent 生产级工程化</h1>
 <h1 id="spring-boot-langchain4j-agent-生产级工程化">Spring Boot + LangChain4j Agent 生产级工程化</h1>
@@ -174,7 +253,7 @@ LLM
 </code></pre>
 <hr/>
 <h1 id="二第一步streaming-sse-流式输出">二、第一步：Streaming SSE 流式输出</h1>
-<h2 id="为什么需要-sse">为什么需要 SSE？</h2>
+<h2 id="为什么需要-sse">为什么需要 SSE？</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#sse"><span class="sn-label">下一节 →</span><span class="sn-name">SSE</span></a></nav>
 <p>普通接口：</p>
 <p>请求：</p>
 <pre><code> id=&quot;y1yb9r&quot;
@@ -193,7 +272,7 @@ LLM
 <p>因为：</p>
 <p>Token一个个输出。</p>
 <hr/>
-<h2 id="sse">SSE</h2>
+<h2 id="sse">SSE</h2><nav class="sec-nav"><a class="sn prev" href="#为什么需要-sse"><span class="sn-label">← 上一节</span><span class="sn-name">为什么需要 SSE？</span></a><a class="sn next" href="#trace链路追踪"><span class="sn-label">下一节 →</span><span class="sn-name">Trace【链路追踪】</span></a></nav>
 <p>全称：</p>
 <p><strong>Server-Sent Events【服务器发送事件】</strong></p>
 <p>流程：</p>
@@ -401,7 +480,7 @@ public String search(){
 <p>AI系统最大问题：</p>
 <p>不知道为什么回答。</p>
 <p>需要记录：</p>
-<h2 id="trace链路追踪">Trace【链路追踪】</h2>
+<h2 id="trace链路追踪">Trace【链路追踪】</h2><nav class="sec-nav"><a class="sn prev" href="#sse"><span class="sn-label">← 上一节</span><span class="sn-name">SSE</span></a><a class="sn next" href="#1-retrieval-accuracy检索准确率"><span class="sn-label">下一节 →</span><span class="sn-name">1. Retrieval Accuracy【检索准确率】</span></a></nav>
 <p>例如：</p>
 <p>一次请求：</p>
 <pre><code>{
@@ -474,16 +553,16 @@ public String search(){
 <hr/>
 <p>自动评估：</p>
 <p>指标：</p>
-<h2 id="1-retrieval-accuracy检索准确率">1. Retrieval Accuracy【检索准确率】</h2>
+<h2 id="1-retrieval-accuracy检索准确率">1. Retrieval Accuracy【检索准确率】</h2><nav class="sec-nav"><a class="sn prev" href="#trace链路追踪"><span class="sn-label">← 上一节</span><span class="sn-name">Trace【链路追踪】</span></a><a class="sn next" href="#2-answer-quality回答质量"><span class="sn-label">下一节 →</span><span class="sn-name">2. Answer Quality【回答质量】</span></a></nav>
 <p>RAG有没有找到正确文档。</p>
-<h2 id="2-answer-quality回答质量">2. Answer Quality【回答质量】</h2>
+<h2 id="2-answer-quality回答质量">2. Answer Quality【回答质量】</h2><nav class="sec-nav"><a class="sn prev" href="#1-retrieval-accuracy检索准确率"><span class="sn-label">← 上一节</span><span class="sn-name">1. Retrieval Accuracy【检索准确率】</span></a><a class="sn next" href="#3-hallucination幻觉"><span class="sn-label">下一节 →</span><span class="sn-name">3. Hallucination【幻觉】</span></a></nav>
 <p>答案是否完整。</p>
-<h2 id="3-hallucination幻觉">3. Hallucination【幻觉】</h2>
+<h2 id="3-hallucination幻觉">3. Hallucination【幻觉】</h2><nav class="sec-nav"><a class="sn prev" href="#2-answer-quality回答质量"><span class="sn-label">← 上一节</span><span class="sn-name">2. Answer Quality【回答质量】</span></a><a class="sn next" href="#llm超时"><span class="sn-label">下一节 →</span><span class="sn-name">LLM超时</span></a></nav>
 <p>是否编造。</p>
 <hr/>
 <h1 id="十一第八步异常处理">十一、第八步：异常处理</h1>
 <p>生产必须考虑：</p>
-<h2 id="llm超时">LLM超时</h2>
+<h2 id="llm超时">LLM超时</h2><nav class="sec-nav"><a class="sn prev" href="#3-hallucination幻觉"><span class="sn-label">← 上一节</span><span class="sn-name">3. Hallucination【幻觉】</span></a><a class="sn next" href="#模型不可用"><span class="sn-label">下一节 →</span><span class="sn-name">模型不可用</span></a></nav>
 <p>例如：</p>
 <p>30秒没返回。</p>
 <p>处理：</p>
@@ -497,7 +576,7 @@ Retry
 
 Fallback</code></pre>
 <hr/>
-<h2 id="模型不可用">模型不可用</h2>
+<h2 id="模型不可用">模型不可用</h2><nav class="sec-nav"><a class="sn prev" href="#llm超时"><span class="sn-label">← 上一节</span><span class="sn-name">LLM超时</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>例如：</p>
 <p>Qwen挂了。</p>
 <p>备用：</p>
@@ -640,5 +719,48 @@ Production Engineering</code></pre>
 <ul class="lvl"><li>如何避免“微调模型”被面试官追问穿</li></ul>
 <p>因为对于你目前求职目标（Java + AI），<strong>工程落地表达能力比继续堆技术更重要。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

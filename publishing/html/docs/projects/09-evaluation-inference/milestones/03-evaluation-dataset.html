@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么评估集比评估指标更先决定结论可信度" class="lvl2">1. Why：为什么&amp;quot;评估集&amp;quot;比&amp;quot;评估指标&amp;quot;更先决定结论可信度</a><a href="#2-design四步" class="lvl2">2. Design：四步</a><a href="#3-realrun-evidence来自-demosoutdemo03evaluationdatasetterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_03_evaluation_dataset_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-p08-的域内评估集其实是训练集-这是本章存在的全部理由" class="lvl3">4.1 P08 的&amp;quot;域内评估集&amp;quot;其实是训练集 —— 这是本章存在的全部理由</a><a href="#42-去重删除-0不等于去重这一步可以省" class="lvl3">4.2 「去重删除 0」不等于&amp;quot;去重这一步可以省&amp;quot;</a><a href="#43-顺序反了会制造查不出来的泄漏" class="lvl3">4.3 顺序反了会制造&amp;quot;查不出来的泄漏&amp;quot;</a><a href="#44-分层抽样的每层-1-个是预期行为不是抽样坏了" class="lvl3">4.4 分层抽样的&amp;quot;每层 1 个&amp;quot;是预期行为，不是抽样坏了</a><a href="#45-泄漏检查用-raise-而不是-warning" class="lvl3">4.5 泄漏检查用 raise 而不是 warning</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-03-evaluation-datasetheldout分层与防泄漏">Milestone 03 — Evaluation Dataset：held-out、分层与防泄漏</h1>
 <p>M02 有了 benchmark，但有个致命问题：<strong>它用的 held-out 是哪来的？</strong></p>
@@ -63,12 +142,12 @@ li{margin:.3em 0;}
 <ul class="lvl"><li>从 59 条原始数据里<strong>切出</strong>一份<strong>从未参与训练</strong>的 held-out；</li><li>切的时候<strong>分层</strong>，保证主题和长度都覆盖到；</li><li>切完<strong>跑泄漏检查</strong>，交集非空就直接 <code>raise</code>。</li></ul>
 <p><strong>顺序不能反</strong>：先切 held-out，再训练 adapter。P08 的全量微调把 59 条全喂进去了，所以 P09 的所有结论（M01 的 PPL、M05 的配对比较）都必须建立在&quot;重新切分 + 重新训练&quot;之上。</p>
 <hr/>
-<h2 id="1-why为什么评估集比评估指标更先决定结论可信度">1. Why：为什么&quot;评估集&quot;比&quot;评估指标&quot;更先决定结论可信度</h2>
+<h2 id="1-why为什么评估集比评估指标更先决定结论可信度">1. Why：为什么&quot;评估集&quot;比&quot;评估指标&quot;更先决定结论可信度</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design四步"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：四步</span></a></nav>
 <p>一个评估结论的可信度，取决于<strong>最弱的一环</strong>。三件事会同时毁掉它：</p>
 <table><thead><tr><th>失效模式</th><th>后果</th><th>本项目的防线</th></tr></thead><tbody><tr><td><strong>泄漏</strong>：评估题在训练数据里出现过</td><td>指标虚高，测的是记忆</td><td><code>leakage_report</code> → 交集非空即抛异常</td></tr><tr><td><strong>偏斜</strong>：held-out 全是某一个主题</td><td>指标只反映该主题</td><td><code>record_stratum</code> 分层抽样</td></tr><tr><td><strong>不可复现</strong>：每次切的不一样</td><td>两次实验结论不可比</td><td><code>np.random.default_rng(seed)</code></td></tr></tbody></table>
 <p>第三条最容易被忽略，但它是&quot;比较&quot;这件事的地基：<strong>如果今天的 held-out 和昨天的不一样，M05 里那 10 个 seed 的配对比较就毫无意义。</strong></p>
 <p>还有一个顺序问题必须写清楚：<strong>去重必须在切分之前</strong>。如果先切分再去重，同一条 instruction 可能一条进 train、一条进 held-out —— 去重只能删掉一条，另一条留在 held-out 里，泄漏检查也抓不到（因为归一化后的 key 只出现一次）。</p>
-<h2 id="2-design四步">2. Design：四步</h2>
+<h2 id="2-design四步">2. Design：四步</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么评估集比评估指标更先决定结论可信度"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么&amp;quot;评估集&amp;quot;比&amp;quot;评估指标&amp;quot;更先决定结论可信度</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo03evaluationdatasetterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_03_evaluation_dataset_terminal.txt）</span></a></nav>
 <pre><code>build_evaluation_set(records, heldout_size, seed=0, training_records=None)
     ├── 1. deduplicate_records()   NFKC + casefold + 去所有非字母数字 → 按 key 去重
     ├── 2. 可选：剔除 training_records 里已出现过的 instruction
@@ -77,7 +156,7 @@ li{margin:.3em 0;}
 <p>几个设计细节：</p>
 <ul class="lvl"><li><strong><code>normalize_instruction</code></strong>（<code>src/ie/evalset.py:19</code>）：<code>unicodedata.normalize(&quot;NFKC&quot;)</code> 统一全角/半角，<code>casefold()</code> 统一大小写，<code>re.sub(r&quot;[\W_]+&quot;, &quot;&quot;)</code> 删掉所有标点和空白。<strong>&quot;HashMap 怎么扩容？&quot; 和 &quot;hashmap怎么扩容&quot; 必须被判为同一条</strong>，否则去重和泄漏检查都是漏的。</li><li><strong><code>record_stratum</code></strong>：<code>f&quot;{主题}/{长度}&quot;</code>，主题由 <code>infer_topic</code> 按关键词推断（并发 / JVM / 集合 / Spring / 数据与网络 / 兜底&quot;Java 基础&quot;），长度按 instruction 字符数 ≤18 短 / ≤30 中 / 否则长。<strong>6 个主题 × 3 个长度 = 最多 18 层</strong>。</li><li><strong><code>_stratified_pick</code> 的 round-robin</strong>（<code>src/ie/evalset.py:91</code>）：把层名打乱后轮流从每层取一个，取够了就停。<strong>保证小层也有样本</strong>，而不是按层大小比例抽样（那样小层会被吃掉）。</li><li><strong><code>leakage_report</code> 失败即 <code>RuntimeError</code></strong>（<code>src/ie/evalset.py:145</code>）：不是打一行警告，是<strong>直接崩</strong>。泄漏是&quot;结论无效&quot;级别的 bug，不值得给它一个 soft path。</li></ul>
 <figure class="figure"><img alt="M03 held-out 切分与泄漏检查：去重 → 分层抽样 → 交集校验" src="../../../../../../projects/09-evaluation-inference/assets/evalset.svg" loading="lazy"/><figcaption>M03 held-out 切分与泄漏检查：去重 → 分层抽样 → 交集校验</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo03evaluationdatasetterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_03_evaluation_dataset_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo03evaluationdatasetterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_03_evaluation_dataset_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design四步"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：四步</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>原始语料 59 条（P08 的 <code>load_java_records()</code>），<code>heldout_size=12</code>、<code>seed=0</code>：</p>
 <pre><code>  原始记录                               59
   归一化去重后                             59
@@ -99,7 +178,7 @@ li{margin:.3em 0;}
 <p>五个读数：</p>
 <ul class="lvl"><li><strong>59 → 59，去重删 0</strong>。这一行容易被误读成&quot;去重没用&quot;。真实含义是：<strong>这批语料本身没有重复</strong>。去重是防御性步骤，本例恰好没触发 —— 见 4.2。</li><li><strong>训练 47 / held-out 12</strong>。切分比例约 20%，是 8~12 条这种小评估集上常见的选择（太小则置信区间太宽，太大则训练数据不够）。M01/M05 用的是 <code>heldout_size=8</code>，M03 演示用 12 —— <strong>同一个函数、只改参数</strong>，这是刻意的。</li><li><strong>12 条 held-out 落在 12 个不同的「主题/长度」层</strong>，覆盖全部 <strong>6 个主题</strong>（JVM / Java 基础 / Spring / 并发 / 数据与网络 / 集合）。每层的样本数都是 1 —— 这正是 round-robin 分层抽样的预期行为：<strong>层比样本多时，先保证覆盖率，不保证每层配额</strong>。</li><li><strong>instruction 交集 0，泄漏检查通过</strong>。这是整章唯一的&quot;硬门槛&quot;，过了才能谈后面的指标。</li><li><strong>同 seed 两次切分完全一致 <code>True</code></strong>。可复现性实测通过，不是&quot;理论上应该&quot;。</li></ul>
 <figure class="figure"><img alt="M03 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-03-evaluation-dataset.png" loading="lazy"/><figcaption>M03 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo03evaluationdatasetterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_03_evaluation_dataset_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-p08-的域内评估集其实是训练集-这是本章存在的全部理由">4.1 P08 的&quot;域内评估集&quot;其实是训练集 —— 这是本章存在的全部理由</h3>
 <p>P08 M09 报的&quot;域内困惑度 3,649.9 → 421.1（↓88.46%）&quot;，评估用的是<strong>全部 59 条</strong>，而这 59 条正是 SFT 的训练数据。</p>
 <p>那个数字<strong>没有错</strong>，但它回答的问题是&quot;模型有没有把这 59 条背下来&quot;，不是&quot;模型有没有学会回答 Java 面试题&quot;。P08 自己也在结论里写了&quot;困惑度下降 ≠ 可用&quot;（定性生成仍是乱码）—— 现在多了一条解释：<strong>评估集本身被污染了</strong>。</p>
@@ -121,12 +200,55 @@ li{margin:.3em 0;}
 <pre><code>if not report[&quot;leakage_free&quot;]:
     raise RuntimeError(f&quot;评估集泄漏：发现 {report[&#x27;overlap_count&#x27;]} 条 instruction 重叠&quot;)</code></pre>
 <p>理由：<strong>泄漏后的所有下游数字都是无效的</strong>，让流程继续跑下去只是浪费时间和制造误导。相比之下，P08 的&quot;遗忘判定&quot;用 ±10% 容忍度是合理的 —— 那是一个连续量，需要人为设阈值；而&quot;交集是否为空&quot;是一个<strong>布尔事实</strong>，没有灰度。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>评估集是结论可信度的第一环</strong>，比指标本身更先决定成败。三种失效模式：泄漏、偏斜、不可复现。</li><li>实测：<strong>59 条 → 去重后 59（删 0）→ 训练 47 / held-out 12</strong>，instruction 交集 <strong>0</strong>，泄漏检查通过；12 条覆盖全部 <strong>6 个主题层</strong>。</li><li><strong>顺序即正确性</strong>：先去重 → 再剔除已训 instruction → 再分层切分 → 最后泄漏检查。顺序反了会制造&quot;查不出来的泄漏&quot;。</li><li><strong>先切 held-out 再训练 adapter</strong>。P08 的 421.1 与 P09 的 5496.76 差 13 倍，差的不是模型，是评估集。</li><li><strong>分层用 round-robin 保证覆盖率</strong>：层比样本多时每层 1 条是预期行为；代价是分层维度置信区间极宽，需靠 M05 的 bootstrap 补。</li><li><strong>泄漏是布尔事实，没有灰度</strong> —— <code>raise</code> 而不是 <code>warning</code>。</li><li><strong>同 seed 两次切分完全一致（实测 <code>True</code>）</strong>，这是 M05 配对比较的地基。</li><li>手写实现的意义：因为切分、去重、泄漏检查都是自己的代码，我能精确回答&quot;held-out 里到底有什么&quot;（12 行分层表就是答案）；用 <code>train_test_split</code> 只能拿到两个数组。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/evalset.py</code></td><td><code>normalize_instruction</code>（NFKC + casefold + 去标点）/ <code>infer_topic</code> / <code>length_stratum</code> / <code>record_stratum</code>（主题/长度层键）/ <code>deduplicate_records</code> / <code>leakage_report</code>（交集检查）/ <code>_stratified_pick</code>（round-robin 分层抽样）/ <code>stratum_counts</code> / <code>build_evaluation_set</code>（四步主流程，泄漏即 <code>raise</code>）</td></tr><tr><td><code>src/ie/evalset.py:145</code></td><td>泄漏检查失败 → <code>RuntimeError</code>，无 soft path</td></tr><tr><td><code>demos/_common.py</code></td><td><code>data_split</code> / <code>base_bundle</code> / <code>adapter_bundle</code>：<strong>先切 held-out 再训 adapter</strong> 的落地处</td></tr><tr><td><code>demos/demo_03_evaluation_dataset.py</code></td><td>3 节：切分统计 / held-out 分层表 / 可复现性验证</td></tr><tr><td><code>demos/out/demo_03_evaluation_dataset_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/evalset.svg</code></td><td>本章 held-out 切分与泄漏检查图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.2 → <strong>v0.3</strong>，M03 评估数据集落地。实测：<code>heldout_size=12 / seed=0</code> → 原始 59 条、去重后 59（删 0）、训练 <strong>47</strong> / held-out <strong>12</strong>、instruction 交集 <strong>0</strong>、泄漏检查通过；12 条落在 12 个不同的「主题/长度」层，<strong>覆盖全部 6 个主题</strong>（JVM / Java 基础 / Spring / 并发 / 数据与网络 / 集合）；同 seed 两次切分完全一致 <code>True</code>。并诚实记录「P08 的域内评估集实为训练集，421.1 vs 5496.76 差 13 倍源于评估集而非模型」「去重删除 0 不代表该步骤可省」「顺序反了会制造查不出的泄漏」。纯 numpy + 标准库。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

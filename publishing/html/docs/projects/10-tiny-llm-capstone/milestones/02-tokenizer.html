@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么往返一致性是分词器的底线" class="lvl2">1. Why：为什么「往返一致性」是分词器的底线</a><a href="#2-design先切分再训词表失败按原因分类" class="lvl2">2. Design：先切分、再训词表；失败按原因分类</a><a href="#3-realrun-evidence来自-demosoutdemo02tokenizerterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_02_tokenizer_terminal.txt）</a><a href="#31-词表构成" class="lvl3">3.1 词表构成</a><a href="#32-前-8-条合并规则bpe-到底学了什么" class="lvl3">3.2 前 8 条合并规则：BPE 到底学了什么</a><a href="#33-压缩率bpe-存在的意义" class="lvl3">3.3 压缩率：BPE 存在的意义</a><a href="#34-切词示例模型眼里的文本" class="lvl3">3.4 切词示例：模型&amp;quot;眼里&amp;quot;的文本</a><a href="#35-往返一致性训练集-100验证集的失败全部有归因" class="lvl3">3.5 往返一致性：训练集 100%，验证集的失败全部有归因</a><a href="#36-oov-率与覆盖" class="lvl3">3.6 OOV 率与覆盖</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-02-tokenizerbpe-的合并以及往返失败的归因">Milestone 02 — Tokenizer：BPE 的「合并」，以及往返失败的「归因」</h1>
 <p>M01 定了语料规模（10,651 字符 / 876 个不同字符），也定了词表大小 1280。这一章回答两个问题：</p>
 <ul class="lvl"><li><strong>BPE 到底把什么合成了新 token？</strong> —— 直接打印前 8 条合并规则，而不是&quot;信任算法&quot;。</li><li><strong>往返失败是词表不够大，还是代码写错了？</strong> —— 这是本章最有价值的一处设计：<strong>失败必须能归因</strong>。</li></ul>
 <hr/>
-<h2 id="1-why为什么往返一致性是分词器的底线">1. Why：为什么「往返一致性」是分词器的底线</h2>
+<h2 id="1-why为什么往返一致性是分词器的底线">1. Why：为什么「往返一致性」是分词器的底线</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design先切分再训词表失败按原因分类"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：先切分、再训词表；失败按原因分类</span></a></nav>
 <p><code>decode(encode(s)) == s</code>。如果它不成立，后面所有训练都是在<strong>学噪声</strong> —— 因为模型看到的文本已经被改变了，而你浑然不觉。</p>
 <p>但只报一个&quot;通过率 68%&quot;是没有信息量的：它既可能是词表没覆盖验证集里某个生僻字（正常），也可能是代码把两个不同的字塌缩成了同一个 id（严重 bug）。<strong>两者的处理方式完全相反</strong>，所以必须分开报。</p>
-<h2 id="2-design先切分再训词表失败按原因分类">2. Design：先切分、再训词表；失败按原因分类</h2>
+<h2 id="2-design先切分再训词表失败按原因分类">2. Design：先切分、再训词表；失败按原因分类</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么往返一致性是分词器的底线"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么「往返一致性」是分词器的底线</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo02tokenizerterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_02_tokenizer_terminal.txt）</span></a></nav>
 <p><strong>顺序不可颠倒</strong>：<code>clean → split → build_tokenizer(train_lines)</code>。用验证集一起训词表等于把验证集的信息泄漏进模型，这是<strong>最隐蔽的泄漏</strong>（P06 也踩过）。</p>
 <p><strong>归因规则</strong>（<code>tok.roundtrip_report</code>）：</p>
 <pre><code>missing = {ch for ch in line if ch not in vocab}          # 这一行里词表没有的字符
@@ -71,7 +150,7 @@ caused_by_unk = bool(missing) and all(ch not in recovered for ch in missing)</co
 <ul class="lvl"><li><code>unk_caused</code> —— 词表覆盖问题。可度量、可接受（要么把字符补进词表，要么承认它就该被 <code>unk</code>）。</li><li><code>other_caused</code> —— <strong>实现 bug，必须为 0</strong>。非 0 就说明代码错了，而不是词表不够大。</li></ul>
 <p><strong>BPE 早停</strong>：<code>min_pair_freq</code> 控制&quot;低于该频次的相邻符号对不再合并&quot;。不设这个门槛，算法会为只出现 1 次的拼写噪声专门建一个 token —— 那个 token 永远不会被正确使用。</p>
 <figure class="figure"><img alt="M02 BPE 的合并与往返归因" src="../../../../../../projects/10-tiny-llm-capstone/assets/tokenizer.svg" loading="lazy"/><figcaption>M02 BPE 的合并与往返归因</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo02tokenizerterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_tokenizer_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo02tokenizerterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_tokenizer_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design先切分再训词表失败按原因分类"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：先切分、再训词表；失败按原因分类</span></a><a class="sn next" href="#4-踩坑与反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑与反直觉发现</span></a></nav>
 <figure class="figure"><img alt="M02 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-02-tokenizer.png" loading="lazy"/><figcaption>M02 真实运行</figcaption></figure>
 <h3 id="31-词表构成">3.1 词表构成</h3>
 <pre><code>分词器类型              bpe
@@ -121,18 +200,61 @@ pieces = 问 | ： | 什么是 |   | KV |   | Cache | ？ | 答 | ： | KV |   |
 语料里未进词表的字符      23 个   7乎们共副卡叫塞太导待敛
 训练集已覆盖字符        853</code></pre>
 <p>这 23 个字符就是&quot;验证集往返失败&quot;的全部原因，而且它们<strong>只出现在训练集之外</strong> —— 这正是&quot;先用训练集训词表&quot;的正确代价。</p>
-<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo02tokenizerterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_02_tokenizer_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <ul class="lvl"><li><strong>词表一旦变化 ⇒ 所有权重全部错位。</strong> 这不是理论风险，本项目真实踩到：测试代码把 char 分词器（vocab 858）写进了 <code>models/tokenizer.json</code>，下一次 demo 加载 1280 词表的权重直接炸：</li></ul>
 <pre><code>   ValueError: cannot reshape array of size 81920 into shape (858, 64)</code></pre>
 <p>根因是 <code>ensure_tokenizer(cfg, texts, path=TOKENIZER_JSON)</code> 的<strong>默认参数在 <code>def</code> 时就绑定好了</strong>，测试里 <code>monkeypatch.setattr(tok, &quot;TOKENIZER_JSON&quot;, ...)</code> 对它完全无效；而且 <code>tests/conftest.py</code> 的 <code>tmp_models_dir</code> 只重定向了 <code>tok.TOKENIZER_JSON</code>，漏了 <code>pipeline.TOKENIZER_JSON</code>（这个名字在两个模块里各有一份）。修复是三件事一起做：默认路径改成<strong>调用时解析</strong> + 逐条登记 <code>(模块, 常量名)</code> + 加一道&quot;整轮测试不许动真实 <code>models/</code>&quot;的守卫。</p>
 <ul class="lvl"><li><strong>压缩率不是越高越好。</strong> 词表越大压缩率越高，但 OOV 越少 × 词表越大 = 参数越多。M04 会算出：词表相关的参数占 71.1%。词表大小是<strong>参数预算与压缩率的权衡</strong>，不是单调优化目标。</li></ul>
 <ul class="lvl"><li><strong><code>roundtrip_report</code> 只返回前 5 条反例</strong>，但要给出失败总数与归因计数。否则一个小 bug 会淹没在几百条样例里，或者反过来，你会以为&quot;只有 5 条失败&quot;。</li></ul>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑与反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑与反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>词表 1280 = 4 个特殊 token + 854 个基础字符 + <strong>422 条合并规则</strong>；压缩率 <strong>1.445 字/token，省 30.79% token</strong>。</li><li>训练集往返 <strong>251 / 251 = 100.00%</strong>；验证集 30 / 44 = 68.18%，其中 <strong>14 条全部由 OOV 引起、实现 bug 0 条</strong>。</li><li>归因机制让&quot;68% 通过率&quot;从&quot;看起来有 bug&quot;变成&quot;可解释的覆盖率事实&quot;。</li><li>语料里有 <strong>23 个字符没进词表</strong>，于是 UNK 占 0.330%，并直接造成那 14 条验证集往返失败 —— 这就是验证集指标的上限来源之一。</li><li>真实踩坑：分词器缓存被测试污染会以 <code>cannot reshape</code> 的形式在<strong>别的章节</strong>爆出来。缓存路径必须可被测试重定向，并且要有一道守卫。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/tok.py</code></td><td><code>build_tokenizer</code> / <code>save_tokenizer</code> / <code>load_tokenizer</code> / <code>ensure_tokenizer</code>（缓存）/ <code>roundtrip_report</code>（<strong>带归因</strong>）/ <code>tokenizer_stats</code> / <code>oov_chars</code></td></tr><tr><td><code>src/tiny/data.py</code></td><td><code>clean_lines</code> / <code>split_lines</code>（供&quot;先切分再训词表&quot;使用）</td></tr><tr><td><code>demos/demo_02_tokenizer.py</code></td><td>6 节：词表构成 / 前 8 条合并 / 压缩率 / 切词示例 / 往返与归因 / OOV 覆盖</td></tr><tr><td><code>demos/out/demo_02_tokenizer_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/tokenizer.svg</code></td><td>BPE 合并 + 往返归因图（含真实缓存污染事故）</td></tr><tr><td><code>assets/term-02-tokenizer.png</code></td><td>真实运行截图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 → <strong>v0.2</strong>，分词器落地并完成归因化验证。实测：词表 1280（4 + 854 字符 + 422 合并）；压缩率 1.445 字/token（省 30.79% token）；训练集往返 100.00%、验证集 68.18%，<strong>14 条失败全部由 OOV 解释、实现 bug 0 条</strong>；UNK 率 0.330%。并定位并修复&quot;测试污染 <code>models/tokenizer.json</code>&quot;导致的跨章节 <code>cannot reshape</code> 事故。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

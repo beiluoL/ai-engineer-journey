@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么必须自己走一遍这条流水线" class="lvl2">1. Why：为什么必须自己走一遍这条流水线</a><a href="#2-design渲染-编码-切-mask-补齐" class="lvl2">2. Design：渲染 → 编码 → 切 mask → 补齐</a><a href="#3-realrun-evidence来自-demosoutdemo02datasetprepterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_02_dataset_prep_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-模板字符-不在分词器语料里-prompt-开头是三个-unk实测踩过" class="lvl3">4.1 模板字符 ### 不在分词器语料里 → prompt 开头是三个 &amp;lt;unk&amp;gt;（实测踩过）</a><a href="#42-词表-300600-在这个数据集上做不到实测" class="lvl3">4.2 &amp;quot;词表 300~600&amp;quot; 在这个数据集上做不到（实测）</a><a href="#43-该截哪一头是个有方向性的决定实测-2-条被截" class="lvl3">4.3 该截哪一头，是个有方向性的决定（实测 2 条被截）</a><a href="#44-这个数据集小到只能验证流程必须诚实标注" class="lvl3">4.4 这个数据集小到只能验证流程（必须诚实标注）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-02-dataset-preparation59-条问答是怎么变成-x-y-m-的">Milestone 02 — Dataset Preparation：59 条问答，是怎么变成 <code>(X, Y, M)</code> 的</h1>
 <p>M01 证明了&quot;值得微调&quot;（1/8.5 的参数换 loss 追平），但那 60 步喂进去的是什么，还没交代。这一层把数据流水线摊开：<strong>P07 的 Alpaca 三元组 → 渲染成指令模板 → BPE 编码 → 切成 <code>(x, y, mask)</code> → 右侧补齐成批次</strong>。</p>
 <p>这是整条主线上唯一一次&quot;纯粹处理数据&quot;的环节，但后面每一章的结论都受它约束：答案区占 81.41% 决定了 mask 的收益（M03），词表 1024 决定了困惑度只能在同分词器内部比较（M09），59 条的规模决定了所有结论都只能叫&quot;流程跑通&quot;。</p>
 <p><strong>纯 numpy 手写</strong>，没有 <code>datasets</code> 库没有 <code>DataCollator</code> —— <code>pad_batch</code> 就是十几行 numpy，每个统计量都是 <code>encode</code> 出来数出来的。</p>
 <hr/>
-<h2 id="1-why为什么必须自己走一遍这条流水线">1. Why：为什么必须自己走一遍这条流水线</h2>
+<h2 id="1-why为什么必须自己走一遍这条流水线">1. Why：为什么必须自己走一遍这条流水线</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design渲染-编码-切-mask-补齐"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：渲染 → 编码 → 切 mask → 补齐</span></a></nav>
 <p>三个必须当场定死的量，框架不会替你决定：</p>
 <ul class="lvl"><li><strong><code>max_len</code> 取多少。</strong> 拍脑袋写 64 是常见做法（很多教程的建议），但实测 Java 数据平均一条 182.2 token、中位 176、最长 255。取 64 会让绝大多数样本的<strong>答案被整段切掉</strong>，&quot;只在答案区算 loss&quot;就变成一句空话。</li><li><strong>词表取多大。</strong> 建议口径常写&quot;300~600&quot;，但这份数据里有 <strong>843 个不同字符</strong>，而 BPE 的基础词表就是字符集本身 —— 压到 600 必然引入 <code>&lt;unk&gt;</code>。</li><li><strong>截断该截哪头。</strong> 样本超长时，截开头还是截结尾？答案区永远不能被切，否则监督信号直接丢失。</li></ul>
-<h2 id="2-design渲染-编码-切-mask-补齐">2. Design：渲染 → 编码 → 切 mask → 补齐</h2>
+<h2 id="2-design渲染-编码-切-mask-补齐">2. Design：渲染 → 编码 → 切 mask → 补齐</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么必须自己走一遍这条流水线"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么必须自己走一遍这条流水线</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo02datasetprepterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_02_dataset_prep_terminal.txt）</span></a></nav>
 <p><strong>模板（<code>src/ft/sft_data.py:55</code>）：</strong></p>
 <pre><code>### 指令:
 {instruction}
@@ -79,7 +158,7 @@ li{margin:.3em 0;}
 <p><strong>截断方向：</strong> 超长样本<strong>从左侧截断</strong>（丢 prompt 开头），保证答案区永远完整留在窗口里。prompt 少看几个字无所谓，答案被截断才是真的丢监督信号。</p>
 <p><strong>分词器（<code>base.py</code>）：</strong> 在「通用语料 + <strong>渲染后的</strong>领域语料」的<strong>并集</strong>上训 BPE。基座没见过领域词没关系（那正是要微调的原因），但<strong>分词器</strong>必须认识它们。</p>
 <figure class="figure"><img alt="M02 数据流水线" src="../../../../../../projects/08-fine-tuning/assets/dataset-prep.svg" loading="lazy"/><figcaption>M02 数据流水线</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo02datasetprepterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_dataset_prep_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo02datasetprepterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_dataset_prep_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design渲染-编码-切-mask-补齐"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：渲染 → 编码 → 切 mask → 补齐</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p><strong>原始数据（只读复用 P07 的 <code>data/java_interview.json</code>）：</strong></p>
 <table><thead><tr><th>项</th><th>实测值</th></tr></thead><tbody><tr><td>样本条数</td><td><strong>59</strong></td></tr><tr><td>字段</td><td><code>input, instruction, output</code>（Alpaca 三元组）</td></tr><tr><td>有 <code>input</code> 的条数</td><td><strong>0</strong>（全部为空 → 渲染时省略「### 输入:」段）</td></tr><tr><td>instruction 字符数</td><td>平均 <strong>27.2</strong>（最短 13 / 最长 62）</td></tr><tr><td>output 字符数</td><td>平均 <strong>177.7</strong>（最短 128 / 最长 265）</td></tr><tr><td>总字符数</td><td><strong>12,089</strong></td></tr></tbody></table>
 <p><strong>token 化后的真实统计：</strong></p>
@@ -96,7 +175,7 @@ prompt 的 BPE 切分（前 24 个）：
   [&#x27;#&#x27;, &#x27;#&#x27;, &#x27;#&#x27;, &#x27; &#x27;, &#x27;指令&#x27;, &#x27;:&#x27;, &#x27;\n&#x27;, &#x27;请&#x27;, &#x27;解&#x27;, &#x27;释&#x27;, &#x27; &#x27;, &#x27;Java&#x27;, &#x27; &#x27;, &#x27;中&#x27;, &#x27; &#x27;, &#x27;HashMap&#x27;, …]</code></pre>
 <p>注意 <code>###</code> 被切成三个独立的 <code>&#x27;#&#x27;</code> 而不是一个 <code>&#x27;###&#x27;</code> token —— 这是 BPE 合并次数有限的结果，也是下一节那个坑的伏笔。</p>
 <figure class="figure"><img alt="M02 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-02-dataset-prep.png" loading="lazy"/><figcaption>M02 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo02datasetprepterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_02_dataset_prep_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-模板字符-不在分词器语料里-prompt-开头是三个-unk实测踩过">4.1 模板字符 <code>###</code> 不在分词器语料里 → prompt 开头是三个 <code>&lt;unk&gt;</code>（实测踩过）</h3>
 <p>第一版直接拿通用语料训 BPE 就去编码领域数据，模型看到的 prompt 开头是三个 <code>&lt;unk&gt;</code> —— <strong>模板白写了</strong>。消息量最大的三个字符（指令/回答的分界标记）被丢了。</p>
 <p>修法写在 <code>src/ft/base.py:93</code>：<code>_java_corpus()</code> 必须用 <code>render_example</code> <strong>渲染后的</strong>文本去喂分词器，而不是直接拼 <code>instruction + input + output</code>。这件事光看 <code>vocab_size</code> 是发现不了的（词表照样是 1024），只有把切分结果打出来才看得见。</p>
@@ -112,12 +191,55 @@ prompt 的 BPE 切分（前 24 个）：
 <p>59 条、10.75 千 token。demo 输出的原话：</p>
 <blockquote><p>这个数据集小到只能验证「流程是否跑通」，不足以训出真正好用的模型。</p></blockquote>
 <p>本项目<strong>刻意保留</strong>这个真实约束 —— 后面 M06 的超参扫描、M09 的评估结论，全部带着这个前提读。把玩具实验的结论当生产结论，是这类项目最常见的翻车方式。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>Alpaca 三元组渲染后切成 <code>(x, y, mask)</code>，核心是那个 off-by-one：<code>mask[i] = 1</code> 当且仅当 <code>i + 1 &gt;= n_prompt</code>。</li><li>59 条 → <strong>10,750 token</strong>，答案区 <strong>8,752 = 81.41%</strong> —— 这个比例直接决定 M03 的 mask 收益。</li><li><code>max_len</code> 必须取 <strong>256</strong>（实测中位 176 / 最长 255），超长样本<strong>从左侧截</strong>，答案区永远完整。</li><li>词表必须 <strong>1024</strong>：843 个不同字符，压到 600 会带来 <strong>2.84% <code>&lt;unk&gt;</code></strong>。</li><li><strong>分词器语料必须包含模板字符</strong>：否则 <code>###</code> 变成三个 <code>&lt;unk&gt;</code>，模板白写 —— 且不会报错。</li><li>手写实现的意义：<code>pad_batch</code> 十几行 numpy 就把&quot;变长 → 定长 + mask&quot;讲透了，也让你能一眼看出截断方向、mask 边界这些框架替你藏起来的决定。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/sft_data.py</code></td><td><code>load_java_records</code>（只读 P07 数据）/ <code>render_example</code>（模板渲染）/ <code>build_sft_examples</code>（切 x,y,mask + 左侧截断）/ <code>build_lm_examples</code>（通用语料，mask 全 1）/ <code>pad_batch</code> / <code>dataset_stats</code> / <code>visualize_example</code></td></tr><tr><td><code>src/ft/base.py</code></td><td><code>build_tokenizer</code>（通用 + 渲染后领域语料的并集）、<code>_java_corpus()</code>（踩坑 4.1 的修法）、<code>_build_pretrain_examples</code></td></tr><tr><td><code>src/ft/paths.py</code></td><td><code>ensure_p07_dataset()</code>：只读校验 P07 数据集存在，绝不修改</td></tr><tr><td><code>demos/demo_02_dataset_prep.py</code></td><td>5 节：原始数据 / 词表 / token 统计 / 单样本解剖 / 关键数字</td></tr><tr><td><code>demos/out/demo_02_dataset_prep_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/dataset-prep.svg</code></td><td>本章数据流水线图（含长度直方图与词表约束）</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 → <strong>v0.2</strong>，M02 数据流水线落地。实测：59 条 / 10,750 token / 答案区 81.41%，prompt 34.9 / answer 148.3 token，截断 2 条，词表 1024（843 个不同字符，压到 600 会有 2.84% <code>&lt;unk&gt;</code>）；并定位「模板字符 <code>###</code> 未进分词器语料 → prompt 开头三个 <code>&lt;unk&gt;</code>」这一静默失败。纯 numpy、无 torch/transformers/datasets。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#写法一import" class="lvl2">写法一：import</a><a href="#写法二from-import" class="lvl2">写法二：from ... import ...</a><a href="#直接运行" class="lvl3">直接运行</a><a href="#联系描述" class="lvl3">联系描述</a><a href="#形式-1" class="lvl3">形式 1</a><a href="#形式-2" class="lvl3">形式 2</a><a href="#形式-3" class="lvl3">形式 3</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#conversationpy" class="lvl2">conversation.py</a><a href="#assistantpy" class="lvl2">assistant.py</a><a href="#configpy" class="lvl2">config.py</a><a href="#mainpy" class="lvl2">main.py</a><a href="#level-1" class="lvl3">Level 1</a><a href="#level-2" class="lvl3">Level 2</a><a href="#level-3" class="lvl3">Level 3</a><a href="#level-4" class="lvl3">Level 4</a><a href="#level-5" class="lvl3">Level 5</a><a href="#level-6" class="lvl3">Level 6</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="lesson-05-module-package把-ai-cli-assistant-从脚本变成-python-项目">Lesson 05 — Module / Package：把 AI CLI Assistant 从脚本变成 Python 项目</h1>
 <blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   主线项目：Python AI CLI Assistant   本章目标：通过拆分现有项目，理解 Module【模块】、Package【包】、import，以及基本的 Python 项目结构。</p></blockquote>
@@ -309,14 +388,14 @@ add()</code></pre>
 <pre><code>print(add(10, 20))</code></pre>
 <hr/>
 <h1 id="9-两种导入方式">9. 两种导入方式</h1>
-<h2 id="写法一import">写法一：<code>import</code></h2>
+<h2 id="写法一import">写法一：<code>import</code></h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#写法二from-import"><span class="sn-label">下一节 →</span><span class="sn-name">写法二：from ... import ...</span></a></nav>
 <pre><code>import math_utils
 
 result = math_utils.add(10, 20)</code></pre>
 <p>特点：</p>
 <blockquote><p>使用时带模块名。</p></blockquote>
 <hr/>
-<h2 id="写法二from-import">写法二：<code>from ... import ...</code></h2>
+<h2 id="写法二from-import">写法二：<code>from ... import ...</code></h2><nav class="sec-nav"><a class="sn prev" href="#写法一import"><span class="sn-label">← 上一节</span><span class="sn-name">写法一：import</span></a><a class="sn next" href="#conversationpy"><span class="sn-label">下一节 →</span><span class="sn-name">conversation.py</span></a></nav>
 <pre><code>from math_utils import add
 
 result = add(10, 20)</code></pre>
@@ -909,7 +988,7 @@ show_history</code></pre>
         ├── assistant.py
         └── config.py</code></pre>
 <hr/>
-<h2 id="conversationpy"><code>conversation.py</code></h2>
+<h2 id="conversationpy"><code>conversation.py</code></h2><nav class="sec-nav"><a class="sn prev" href="#写法二from-import"><span class="sn-label">← 上一节</span><span class="sn-name">写法二：from ... import ...</span></a><a class="sn next" href="#assistantpy"><span class="sn-label">下一节 →</span><span class="sn-name">assistant.py</span></a></nav>
 <p>至少实现：</p>
 <pre><code>add_message()
 clear_history()
@@ -917,15 +996,15 @@ get_message_count()
 show_history()
 show_last_message()</code></pre>
 <hr/>
-<h2 id="assistantpy"><code>assistant.py</code></h2>
+<h2 id="assistantpy"><code>assistant.py</code></h2><nav class="sec-nav"><a class="sn prev" href="#conversationpy"><span class="sn-label">← 上一节</span><span class="sn-name">conversation.py</span></a><a class="sn next" href="#configpy"><span class="sn-label">下一节 →</span><span class="sn-name">config.py</span></a></nav>
 <p>至少实现：</p>
 <pre><code>generate_mock_response()</code></pre>
 <hr/>
-<h2 id="configpy"><code>config.py</code></h2>
+<h2 id="configpy"><code>config.py</code></h2><nav class="sec-nav"><a class="sn prev" href="#assistantpy"><span class="sn-label">← 上一节</span><span class="sn-name">assistant.py</span></a><a class="sn next" href="#mainpy"><span class="sn-label">下一节 →</span><span class="sn-name">main.py</span></a></nav>
 <p>先实现：</p>
 <pre><code>APP_NAME = &quot;AI Engineer CLI Assistant&quot;</code></pre>
 <hr/>
-<h2 id="mainpy"><code>main.py</code></h2>
+<h2 id="mainpy"><code>main.py</code></h2><nav class="sec-nav"><a class="sn prev" href="#configpy"><span class="sn-label">← 上一节</span><span class="sn-name">config.py</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>负责：</p>
 <pre><code>启动
  ↓
@@ -1109,5 +1188,48 @@ raise</code></pre>
 程序继续运行</code></pre>
 <p>这会第一次让你真正接触<strong>工程级错误处理</strong>。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

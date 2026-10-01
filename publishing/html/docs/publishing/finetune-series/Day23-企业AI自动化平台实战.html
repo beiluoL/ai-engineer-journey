@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#场景1销售助手" class="lvl2">场景1：销售助手</a><a href="#场景2hr助手" class="lvl2">场景2：HR助手</a><a href="#场景3研发助手" class="lvl2">场景3：研发助手</a><a href="#1-supervisor-agent" class="lvl2">1. Supervisor Agent</a><a href="#2-research-agent" class="lvl2">2. Research Agent</a><a href="#3-writer-agent" class="lvl2">3. Writer Agent</a><a href="#4-image-agent" class="lvl2">4. Image Agent</a><a href="#5-reviewer-agent" class="lvl2">5. Reviewer Agent</a><a href="#retry重试" class="lvl2">Retry【重试】</a><a href="#fallback降级" class="lvl2">Fallback【降级】</a><a href="#human-approval人工审批" class="lvl2">Human Approval【人工审批】</a><a href="#q" class="lvl2">Q：</a><a href="#q" class="lvl2">Q：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day23企业-ai-自动化平台实战">Day23：企业 AI 自动化平台实战</h1>
 <h1 id="agent-workflow-mcp-打造数字员工">Agent + Workflow + MCP 打造数字员工</h1>
@@ -108,7 +187,7 @@ AI理解任务
 返回结果</code></pre>
 <hr/>
 <h1 id="二企业真实场景">二、企业真实场景</h1>
-<h2 id="场景1销售助手">场景1：销售助手</h2>
+<h2 id="场景1销售助手">场景1：销售助手</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#场景2hr助手"><span class="sn-label">下一节 →</span><span class="sn-name">场景2：HR助手</span></a></nav>
 <p>老板：</p>
 <blockquote><p>帮我分析本周销售情况。</p></blockquote>
 <p>AI：</p>
@@ -131,7 +210,7 @@ AI理解任务
 
 发送邮件</code></pre>
 <hr/>
-<h2 id="场景2hr助手">场景2：HR助手</h2>
+<h2 id="场景2hr助手">场景2：HR助手</h2><nav class="sec-nav"><a class="sn prev" href="#场景1销售助手"><span class="sn-label">← 上一节</span><span class="sn-name">场景1：销售助手</span></a><a class="sn next" href="#场景3研发助手"><span class="sn-label">下一节 →</span><span class="sn-name">场景3：研发助手</span></a></nav>
 <p>员工：</p>
 <blockquote><p>帮我申请年假。</p></blockquote>
 <p>AI：</p>
@@ -149,7 +228,7 @@ AI理解任务
 
 提交OA</code></pre>
 <hr/>
-<h2 id="场景3研发助手">场景3：研发助手</h2>
+<h2 id="场景3研发助手">场景3：研发助手</h2><nav class="sec-nav"><a class="sn prev" href="#场景2hr助手"><span class="sn-label">← 上一节</span><span class="sn-name">场景2：HR助手</span></a><a class="sn next" href="#1-supervisor-agent"><span class="sn-label">下一节 →</span><span class="sn-name">1. Supervisor Agent</span></a></nav>
 <p>开发：</p>
 <blockquote><p>分析线上异常。</p></blockquote>
 <p>AI：</p>
@@ -292,14 +371,14 @@ task:
 ]</code></pre>
 <hr/>
 <h1 id="七agent角色设计">七、Agent角色设计</h1>
-<h2 id="1-supervisor-agent">1. Supervisor Agent</h2>
+<h2 id="1-supervisor-agent">1. Supervisor Agent</h2><nav class="sec-nav"><a class="sn prev" href="#场景3研发助手"><span class="sn-label">← 上一节</span><span class="sn-name">场景3：研发助手</span></a><a class="sn next" href="#2-research-agent"><span class="sn-label">下一节 →</span><span class="sn-name">2. Research Agent</span></a></nav>
 <p>主管。</p>
 <p>职责：</p>
 <ul class="lvl"><li>接收目标</li></ul>
 <ul class="lvl"><li>分配任务</li></ul>
 <ul class="lvl"><li>控制流程</li></ul>
 <hr/>
-<h2 id="2-research-agent">2. Research Agent</h2>
+<h2 id="2-research-agent">2. Research Agent</h2><nav class="sec-nav"><a class="sn prev" href="#1-supervisor-agent"><span class="sn-label">← 上一节</span><span class="sn-name">1. Supervisor Agent</span></a><a class="sn next" href="#3-writer-agent"><span class="sn-label">下一节 →</span><span class="sn-name">3. Writer Agent</span></a></nav>
 <p>研究。</p>
 <p>工具：</p>
 <pre><code>搜索API
@@ -308,14 +387,14 @@ task:
 
 知识库</code></pre>
 <hr/>
-<h2 id="3-writer-agent">3. Writer Agent</h2>
+<h2 id="3-writer-agent">3. Writer Agent</h2><nav class="sec-nav"><a class="sn prev" href="#2-research-agent"><span class="sn-label">← 上一节</span><span class="sn-name">2. Research Agent</span></a><a class="sn next" href="#4-image-agent"><span class="sn-label">下一节 →</span><span class="sn-name">4. Image Agent</span></a></nav>
 <p>写作。</p>
 <p>输入：</p>
 <p>资料。</p>
 <p>输出：</p>
 <p>文章。</p>
 <hr/>
-<h2 id="4-image-agent">4. Image Agent</h2>
+<h2 id="4-image-agent">4. Image Agent</h2><nav class="sec-nav"><a class="sn prev" href="#3-writer-agent"><span class="sn-label">← 上一节</span><span class="sn-name">3. Writer Agent</span></a><a class="sn next" href="#5-reviewer-agent"><span class="sn-label">下一节 →</span><span class="sn-name">5. Reviewer Agent</span></a></nav>
 <p>生成图片。</p>
 <p>调用：</p>
 <pre><code>Stable Diffusion
@@ -324,7 +403,7 @@ Flux
 
 DALL-E</code></pre>
 <hr/>
-<h2 id="5-reviewer-agent">5. Reviewer Agent</h2>
+<h2 id="5-reviewer-agent">5. Reviewer Agent</h2><nav class="sec-nav"><a class="sn prev" href="#4-image-agent"><span class="sn-label">← 上一节</span><span class="sn-name">4. Image Agent</span></a><a class="sn next" href="#retry重试"><span class="sn-label">下一节 →</span><span class="sn-name">Retry【重试】</span></a></nav>
 <p>审核：</p>
 <p>检查：</p>
 <ul class="lvl"><li>内容质量</li></ul>
@@ -583,7 +662,7 @@ duration</code></pre>
 <p>整个任务失败。</p>
 <hr/>
 <p>设计：</p>
-<h2 id="retry重试">Retry【重试】</h2>
+<h2 id="retry重试">Retry【重试】</h2><nav class="sec-nav"><a class="sn prev" href="#5-reviewer-agent"><span class="sn-label">← 上一节</span><span class="sn-name">5. Reviewer Agent</span></a><a class="sn next" href="#fallback降级"><span class="sn-label">下一节 →</span><span class="sn-name">Fallback【降级】</span></a></nav>
 <pre><code>失败
 
 ↓
@@ -594,13 +673,13 @@ duration</code></pre>
 
 重试3次</code></pre>
 <hr/>
-<h2 id="fallback降级">Fallback【降级】</h2>
+<h2 id="fallback降级">Fallback【降级】</h2><nav class="sec-nav"><a class="sn prev" href="#retry重试"><span class="sn-label">← 上一节</span><span class="sn-name">Retry【重试】</span></a><a class="sn next" href="#human-approval人工审批"><span class="sn-label">下一节 →</span><span class="sn-name">Human Approval【人工审批】</span></a></nav>
 <p>例如：</p>
 <p>GPT失败：</p>
 <p>↓</p>
 <p>DeepSeek</p>
 <hr/>
-<h2 id="human-approval人工审批">Human Approval【人工审批】</h2>
+<h2 id="human-approval人工审批">Human Approval【人工审批】</h2><nav class="sec-nav"><a class="sn prev" href="#fallback降级"><span class="sn-label">← 上一节</span><span class="sn-name">Fallback【降级】</span></a><a class="sn next" href="#q"><span class="sn-label">下一节 →</span><span class="sn-name">Q：</span></a></nav>
 <p>高风险：</p>
 <p>暂停。</p>
 <hr/>
@@ -762,7 +841,7 @@ Publisher Agent</code></pre>
 <p>这就是企业内容自动化 Agent。</p>
 <hr/>
 <h1 id="十九面试回答">十九、面试回答</h1>
-<h2 id="q">Q：</h2>
+<h2 id="q">Q：</h2><nav class="sec-nav"><a class="sn prev" href="#human-approval人工审批"><span class="sn-label">← 上一节</span><span class="sn-name">Human Approval【人工审批】</span></a><a class="sn next" href="#q"><span class="sn-label">下一节 →</span><span class="sn-name">Q：</span></a></nav><nav class="sec-nav"><a class="sn prev" href="#q"><span class="sn-label">← 上一节</span><span class="sn-name">Q：</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>企业为什么需要 Workflow，而不是全部交给Agent？</p></blockquote>
 <p>标准回答：</p>
 <blockquote><p>Agent适合处理复杂任务中的决策和规划，但是完全依赖Agent会导致流程不可控。因此企业通常采用Agent负责任务理解和动态决策，Workflow负责关键业务流程执行，通过状态管理、重试、权限控制保证系统稳定性。</p></blockquote>
@@ -816,5 +895,48 @@ AI数字员工
 <ul class="lvl"><li>Long-running Agent【长期运行智能体】</li></ul>
 <p>这部分是构建真正高级 Agent 的核心。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

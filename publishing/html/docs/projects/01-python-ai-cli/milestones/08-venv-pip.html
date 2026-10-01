@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-python-interpreterpython-解释器" class="lvl2">1. Python Interpreter【Python 解释器】</a><a href="#venv" class="lvl2">.venv/</a><a href="#env" class="lvl2">.env</a><a href="#pycache" class="lvl2">__pycache__/</a><a href="#pyc" class="lvl2">*.pyc</a><a href="#mainpy" class="lvl2">main.py</a><a href="#configpy" class="lvl2">config.py</a><a href="#conversationpy" class="lvl2">conversation.py</a><a href="#assistantpy" class="lvl2">assistant.py</a><a href="#formatterpy" class="lvl2">formatter.py</a><a href="#storagepy" class="lvl2">storage.py</a><a href="#路线描述" class="lvl3">路线描述</a><a href="#程序能力" class="lvl3">程序能力</a><a href="#工程能力" class="lvl3">工程能力</a><a href="#问题-1" class="lvl2">问题 1</a><a href="#问题-2" class="lvl2">问题 2</a><a href="#问题-3" class="lvl2">问题 3</a><a href="#问题-4" class="lvl2">问题 4</a><a href="#问题-5" class="lvl2">问题 5</a><a href="#问题-6" class="lvl2">问题 6</a><a href="#问题-7" class="lvl2">问题 7</a><a href="#问题-8" class="lvl2">问题 8</a><a href="#问题-9" class="lvl2">问题 9</a><a href="#问题-10" class="lvl2">问题 10</a><a href="#题目为什么-python-项目需要虚拟环境" class="lvl2">题目：为什么 Python 项目需要虚拟环境？</a><a href="#标准回答" class="lvl3">标准回答</a><a href="#题目requirementstxt-是干什么的" class="lvl2">题目：requirements.txt 是干什么的？</a><a href="#标准回答" class="lvl3">标准回答</a><a href="#题目为什么-api-key-不应该写死在代码里" class="lvl2">题目：为什么 API Key 不应该写死在代码里？</a><a href="#标准回答" class="lvl3">标准回答</a><a href="#题目env-和环境变量是什么关系" class="lvl2">题目：.env 和环境变量是什么关系？</a><a href="#标准回答" class="lvl3">标准回答</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="lesson-08-venv-pip-environment给-ai-cli-assistant-建立真正的-python-开发环境">Lesson 08 — venv / pip / Environment：给 AI CLI Assistant 建立真正的 Python 开发环境</h1>
 <blockquote><p>项目：Python AI CLI Assistant   版本：v0.8   核心主题：Virtual Environment【虚拟环境】、pip【Python 包管理工具】、Dependency【依赖】、Environment Variable【环境变量】、<code>.env</code> 配置、<code>.gitignore</code></p></blockquote>
@@ -135,7 +214,7 @@ AI CLI Assistant
 <p>可能得到：</p>
 <pre><code>/opt/homebrew/bin/python3</code></pre>
 <p>这里实际上存在两个概念。</p>
-<h2 id="1-python-interpreterpython-解释器">1. Python Interpreter【Python 解释器】</h2>
+<h2 id="1-python-interpreterpython-解释器">1. Python Interpreter【Python 解释器】</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#venv"><span class="sn-label">下一节 →</span><span class="sn-name">.venv/</span></a></nav>
 <p>Interpreter【解释器】就是：</p>
 <blockquote><p>真正负责执行 Python 代码的程序。</p></blockquote>
 <p>当你执行：</p>
@@ -423,11 +502,11 @@ __pycache__/
 *.pyc</code></pre>
 <hr/>
 <h1 id="十七每一行是什么意思">十七、每一行是什么意思？</h1>
-<h2 id="venv"><code>.venv/</code></h2>
+<h2 id="venv"><code>.venv/</code></h2><nav class="sec-nav"><a class="sn prev" href="#1-python-interpreterpython-解释器"><span class="sn-label">← 上一节</span><span class="sn-name">1. Python Interpreter【Python 解释器】</span></a><a class="sn next" href="#env"><span class="sn-label">下一节 →</span><span class="sn-name">.env</span></a></nav>
 <p>表示：</p>
 <blockquote><p>不提交 Python 虚拟环境。</p></blockquote>
 <hr/>
-<h2 id="env"><code>.env</code></h2>
+<h2 id="env"><code>.env</code></h2><nav class="sec-nav"><a class="sn prev" href="#venv"><span class="sn-label">← 上一节</span><span class="sn-name">.venv/</span></a><a class="sn next" href="#pycache"><span class="sn-label">下一节 →</span><span class="sn-name">__pycache__/</span></a></nav>
 <p>表示：</p>
 <blockquote><p>不提交本地敏感配置。</p></blockquote>
 <p>这个尤其重要。</p>
@@ -438,13 +517,13 @@ __pycache__/
 <p>API Key【应用程序编程接口密钥】属于敏感凭证。</p>
 <p>不能直接提交到 GitHub。</p>
 <hr/>
-<h2 id="pycache"><code>__pycache__/</code></h2>
+<h2 id="pycache"><code>__pycache__/</code></h2><nav class="sec-nav"><a class="sn prev" href="#env"><span class="sn-label">← 上一节</span><span class="sn-name">.env</span></a><a class="sn next" href="#pyc"><span class="sn-label">下一节 →</span><span class="sn-name">*.pyc</span></a></nav>
 <p>Python 运行过程中可能产生：</p>
 <pre><code>__pycache__</code></pre>
 <p>里面主要是缓存相关文件。</p>
 <p>通常也不需要提交。</p>
 <hr/>
-<h2 id="pyc"><code>*.pyc</code></h2>
+<h2 id="pyc"><code>*.pyc</code></h2><nav class="sec-nav"><a class="sn prev" href="#pycache"><span class="sn-label">← 上一节</span><span class="sn-name">__pycache__/</span></a><a class="sn next" href="#mainpy"><span class="sn-label">下一节 →</span><span class="sn-name">main.py</span></a></nav>
 <p>Python 字节码缓存文件。</p>
 <p>同样属于运行产物。</p>
 <hr/>
@@ -846,35 +925,35 @@ API</code></pre>
 <p>源代码。</p>
 <hr/>
 <h1 id="三十九把整个项目的职责重新梳理一遍">三十九、把整个项目的职责重新梳理一遍</h1>
-<h2 id="mainpy">main.py</h2>
+<h2 id="mainpy">main.py</h2><nav class="sec-nav"><a class="sn prev" href="#pyc"><span class="sn-label">← 上一节</span><span class="sn-name">*.pyc</span></a><a class="sn next" href="#configpy"><span class="sn-label">下一节 →</span><span class="sn-name">config.py</span></a></nav>
 <p>负责：</p>
 <pre><code>程序入口
 程序主流程</code></pre>
 <hr/>
-<h2 id="configpy">config.py</h2>
+<h2 id="configpy">config.py</h2><nav class="sec-nav"><a class="sn prev" href="#mainpy"><span class="sn-label">← 上一节</span><span class="sn-name">main.py</span></a><a class="sn next" href="#conversationpy"><span class="sn-label">下一节 →</span><span class="sn-name">conversation.py</span></a></nav>
 <p>负责：</p>
 <pre><code>项目配置
 环境变量
 .env</code></pre>
 <hr/>
-<h2 id="conversationpy">conversation.py</h2>
+<h2 id="conversationpy">conversation.py</h2><nav class="sec-nav"><a class="sn prev" href="#configpy"><span class="sn-label">← 上一节</span><span class="sn-name">config.py</span></a><a class="sn next" href="#assistantpy"><span class="sn-label">下一节 →</span><span class="sn-name">assistant.py</span></a></nav>
 <p>负责：</p>
 <pre><code>聊天记录
 消息添加
 历史查询
 清空</code></pre>
 <hr/>
-<h2 id="assistantpy">assistant.py</h2>
+<h2 id="assistantpy">assistant.py</h2><nav class="sec-nav"><a class="sn prev" href="#conversationpy"><span class="sn-label">← 上一节</span><span class="sn-name">conversation.py</span></a><a class="sn next" href="#formatterpy"><span class="sn-label">下一节 →</span><span class="sn-name">formatter.py</span></a></nav>
 <p>负责：</p>
 <pre><code>Assistant 行为</code></pre>
 <p>目前还是：</p>
 <pre><code>Mock Response【模拟响应】</code></pre>
 <hr/>
-<h2 id="formatterpy">formatter.py</h2>
+<h2 id="formatterpy">formatter.py</h2><nav class="sec-nav"><a class="sn prev" href="#assistantpy"><span class="sn-label">← 上一节</span><span class="sn-name">assistant.py</span></a><a class="sn next" href="#storagepy"><span class="sn-label">下一节 →</span><span class="sn-name">storage.py</span></a></nav>
 <p>负责：</p>
 <pre><code>输出格式</code></pre>
 <hr/>
-<h2 id="storagepy">storage.py</h2>
+<h2 id="storagepy">storage.py</h2><nav class="sec-nav"><a class="sn prev" href="#formatterpy"><span class="sn-label">← 上一节</span><span class="sn-name">formatter.py</span></a><a class="sn next" href="#问题-1"><span class="sn-label">下一节 →</span><span class="sn-name">问题 1</span></a></nav>
 <p>负责：</p>
 <pre><code>JSON 持久化</code></pre>
 <hr/>
@@ -1143,40 +1222,40 @@ AI CLI Assistant 运行</code></pre>
 <h1 id="四十九主动回忆训练">四十九、主动回忆训练</h1>
 <p>现在不要马上看下面的答案。</p>
 <p>先自己回答。</p>
-<h2 id="问题-1">问题 1</h2>
+<h2 id="问题-1">问题 1</h2><nav class="sec-nav"><a class="sn prev" href="#storagepy"><span class="sn-label">← 上一节</span><span class="sn-name">storage.py</span></a><a class="sn next" href="#问题-2"><span class="sn-label">下一节 →</span><span class="sn-name">问题 2</span></a></nav>
 <p>为什么 Python 项目需要 Virtual Environment【虚拟环境】？</p>
 <hr/>
-<h2 id="问题-2">问题 2</h2>
+<h2 id="问题-2">问题 2</h2><nav class="sec-nav"><a class="sn prev" href="#问题-1"><span class="sn-label">← 上一节</span><span class="sn-name">问题 1</span></a><a class="sn next" href="#问题-3"><span class="sn-label">下一节 →</span><span class="sn-name">问题 3</span></a></nav>
 <pre><code>python3 -m venv .venv</code></pre>
 <p>这条命令具体做了什么？</p>
 <hr/>
-<h2 id="问题-3">问题 3</h2>
+<h2 id="问题-3">问题 3</h2><nav class="sec-nav"><a class="sn prev" href="#问题-2"><span class="sn-label">← 上一节</span><span class="sn-name">问题 2</span></a><a class="sn next" href="#问题-4"><span class="sn-label">下一节 →</span><span class="sn-name">问题 4</span></a></nav>
 <p>为什么推荐：</p>
 <pre><code>python -m pip install xxx</code></pre>
 <p>而不是无脑：</p>
 <pre><code>pip install xxx</code></pre>
 <hr/>
-<h2 id="问题-4">问题 4</h2>
+<h2 id="问题-4">问题 4</h2><nav class="sec-nav"><a class="sn prev" href="#问题-3"><span class="sn-label">← 上一节</span><span class="sn-name">问题 3</span></a><a class="sn next" href="#问题-5"><span class="sn-label">下一节 →</span><span class="sn-name">问题 5</span></a></nav>
 <p>Dependency【依赖】是什么意思？</p>
 <hr/>
-<h2 id="问题-5">问题 5</h2>
+<h2 id="问题-5">问题 5</h2><nav class="sec-nav"><a class="sn prev" href="#问题-4"><span class="sn-label">← 上一节</span><span class="sn-name">问题 4</span></a><a class="sn next" href="#问题-6"><span class="sn-label">下一节 →</span><span class="sn-name">问题 6</span></a></nav>
 <p><code>.venv</code> 和 <code>requirements.txt</code> 分别解决什么问题？</p>
 <hr/>
-<h2 id="问题-6">问题 6</h2>
+<h2 id="问题-6">问题 6</h2><nav class="sec-nav"><a class="sn prev" href="#问题-5"><span class="sn-label">← 上一节</span><span class="sn-name">问题 5</span></a><a class="sn next" href="#问题-7"><span class="sn-label">下一节 →</span><span class="sn-name">问题 7</span></a></nav>
 <p>为什么不能把 <code>.venv</code> 提交到 Git？</p>
 <hr/>
-<h2 id="问题-7">问题 7</h2>
+<h2 id="问题-7">问题 7</h2><nav class="sec-nav"><a class="sn prev" href="#问题-6"><span class="sn-label">← 上一节</span><span class="sn-name">问题 6</span></a><a class="sn next" href="#问题-8"><span class="sn-label">下一节 →</span><span class="sn-name">问题 8</span></a></nav>
 <p>为什么 <code>.env</code> 不应该提交到 GitHub？</p>
 <hr/>
-<h2 id="问题-8">问题 8</h2>
+<h2 id="问题-8">问题 8</h2><nav class="sec-nav"><a class="sn prev" href="#问题-7"><span class="sn-label">← 上一节</span><span class="sn-name">问题 7</span></a><a class="sn next" href="#问题-9"><span class="sn-label">下一节 →</span><span class="sn-name">问题 9</span></a></nav>
 <p><code>.env</code> 和 <code>.env.example</code> 有什么区别？</p>
 <hr/>
-<h2 id="问题-9">问题 9</h2>
+<h2 id="问题-9">问题 9</h2><nav class="sec-nav"><a class="sn prev" href="#问题-8"><span class="sn-label">← 上一节</span><span class="sn-name">问题 8</span></a><a class="sn next" href="#问题-10"><span class="sn-label">下一节 →</span><span class="sn-name">问题 10</span></a></nav>
 <p>下面代码：</p>
 <pre><code>os.getenv(&quot;MODEL_NAME&quot;, &quot;demo-model&quot;)</code></pre>
 <p>第二个参数有什么作用？</p>
 <hr/>
-<h2 id="问题-10">问题 10</h2>
+<h2 id="问题-10">问题 10</h2><nav class="sec-nav"><a class="sn prev" href="#问题-9"><span class="sn-label">← 上一节</span><span class="sn-name">问题 9</span></a><a class="sn next" href="#题目为什么-python-项目需要虚拟环境"><span class="sn-label">下一节 →</span><span class="sn-name">题目：为什么 Python 项目需要虚拟环境？</span></a></nav>
 <p>请你完整描述：</p>
 <pre><code>.env
 → python-dotenv
@@ -1187,19 +1266,19 @@ AI CLI Assistant 运行</code></pre>
 <hr/>
 <h1 id="五十面试标准话术">五十、面试标准话术</h1>
 <p>这一章已经开始出现非常典型的 Python 工程面试问题。</p>
-<h2 id="题目为什么-python-项目需要虚拟环境">题目：为什么 Python 项目需要虚拟环境？</h2>
+<h2 id="题目为什么-python-项目需要虚拟环境">题目：为什么 Python 项目需要虚拟环境？</h2><nav class="sec-nav"><a class="sn prev" href="#问题-10"><span class="sn-label">← 上一节</span><span class="sn-name">问题 10</span></a><a class="sn next" href="#题目requirementstxt-是干什么的"><span class="sn-label">下一节 →</span><span class="sn-name">题目：requirements.txt 是干什么的？</span></a></nav>
 <h3 id="标准回答">标准回答</h3>
 <blockquote><p>Python 项目使用虚拟环境主要是为了隔离不同项目之间的 Python 解释器和第三方依赖。因为不同项目可能依赖不同版本的包，如果共用全局环境，容易产生版本冲突。通过 <code>venv</code> 可以为每个项目创建独立环境，项目之间互不影响。</p></blockquote>
 <hr/>
-<h2 id="题目requirementstxt-是干什么的">题目：requirements.txt 是干什么的？</h2>
+<h2 id="题目requirementstxt-是干什么的">题目：requirements.txt 是干什么的？</h2><nav class="sec-nav"><a class="sn prev" href="#题目为什么-python-项目需要虚拟环境"><span class="sn-label">← 上一节</span><span class="sn-name">题目：为什么 Python 项目需要虚拟环境？</span></a><a class="sn next" href="#题目为什么-api-key-不应该写死在代码里"><span class="sn-label">下一节 →</span><span class="sn-name">题目：为什么 API Key 不应该写死在代码里？</span></a></nav>
 <h3 id="标准回答">标准回答</h3>
 <blockquote><p><code>requirements.txt</code> 用于记录项目所依赖的 Python 包及其版本信息。它本身不是运行环境，而是依赖声明文件。其他开发者拿到项目之后，可以通过 <code>pip install -r requirements.txt</code> 安装这些依赖，从而恢复项目所需的 Python 包环境。</p></blockquote>
 <hr/>
-<h2 id="题目为什么-api-key-不应该写死在代码里">题目：为什么 API Key 不应该写死在代码里？</h2>
+<h2 id="题目为什么-api-key-不应该写死在代码里">题目：为什么 API Key 不应该写死在代码里？</h2><nav class="sec-nav"><a class="sn prev" href="#题目requirementstxt-是干什么的"><span class="sn-label">← 上一节</span><span class="sn-name">题目：requirements.txt 是干什么的？</span></a><a class="sn next" href="#题目env-和环境变量是什么关系"><span class="sn-label">下一节 →</span><span class="sn-name">题目：.env 和环境变量是什么关系？</span></a></nav>
 <h3 id="标准回答">标准回答</h3>
 <blockquote><p>因为 API Key 属于敏感凭证，直接写在源码里容易被提交到 Git 仓库，造成泄露。同时不同环境的配置通常不同，所以更合理的方式是通过环境变量或者 <code>.env</code> 等配置方式注入，代码只负责读取配置，不直接保存敏感信息。</p></blockquote>
 <hr/>
-<h2 id="题目env-和环境变量是什么关系">题目：<code>.env</code> 和环境变量是什么关系？</h2>
+<h2 id="题目env-和环境变量是什么关系">题目：<code>.env</code> 和环境变量是什么关系？</h2><nav class="sec-nav"><a class="sn prev" href="#题目为什么-api-key-不应该写死在代码里"><span class="sn-label">← 上一节</span><span class="sn-name">题目：为什么 API Key 不应该写死在代码里？</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <h3 id="标准回答">标准回答</h3>
 <blockquote><p>环境变量是操作系统运行环境提供给程序的配置值，而 <code>.env</code> 是开发阶段常用的本地配置文件。像 <code>python-dotenv</code> 这样的工具可以把 <code>.env</code> 中的配置加载到环境变量中，然后程序通过 <code>os.getenv()</code> 统一读取。</p></blockquote>
 <hr/>
@@ -1369,5 +1448,48 @@ Python</code></pre>
 AI CLI Assistant</code></pre>
 <p>就只差最后一层。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

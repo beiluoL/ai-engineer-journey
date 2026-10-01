@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#你的项目" class="lvl2">你的项目：</a><a href="#第一梯队" class="lvl2">第一梯队</a><a href="#qwen25-qwen3" class="lvl3">Qwen2.5 / Qwen3</a><a href="#第二" class="lvl2">第二：</a><a href="#第三" class="lvl2">第三：</a><a href="#1b3b" class="lvl2">1B～3B</a><a href="#7b8b" class="lvl2">7B～8B</a><a href="#14b" class="lvl2">14B</a><a href="#32b" class="lvl2">32B</a><a href="#70b" class="lvl2">70B</a><a href="#1-hugging-face" class="lvl2">1. Hugging Face</a><a href="#2-modelscope" class="lvl2">2. ModelScope</a><a href="#3-ollama" class="lvl2">3. Ollama</a><a href="#方案a学习个人项目" class="lvl2">方案A：学习/个人项目</a><a href="#入门部署" class="lvl3">入门部署</a><a href="#方案b企业测试环境" class="lvl2">方案B：企业测试环境</a><a href="#方案c生产环境" class="lvl2">方案C：生产环境</a><a href="#服务器配置" class="lvl2">服务器配置</a><a href="#1-nvidia-driver" class="lvl2">1. NVIDIA Driver</a><a href="#2-docker" class="lvl2">2. Docker</a><a href="#3-nvidia-container-toolkit" class="lvl2">3. NVIDIA Container Toolkit</a><a href="#qlora-7b" class="lvl2">QLoRA 7B</a><a href="#qlora-14b" class="lvl2">QLoRA 14B</a><a href="#全量微调" class="lvl2">全量微调</a><a href="#java-ai-knowledge-platform" class="lvl2">Java AI Knowledge Platform</a><a href="#方案1学习推荐" class="lvl2">方案1：学习（推荐）</a><a href="#方案2个人demo上线" class="lvl2">方案2：个人Demo上线</a><a href="#方案3小企业生产" class="lvl2">方案3：小企业生产</a><a href="#day11实战" class="lvl2">Day11-实战</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <p>你的方向调整是对的。</p>
 <p>前面 Day1～Day10 更偏向：</p>
@@ -182,7 +261,7 @@ LangChain4j
 <p>应该问：</p>
 <blockquote><p>我的业务需要什么？</p></blockquote>
 <hr/>
-<h2 id="你的项目">你的项目：</h2>
+<h2 id="你的项目">你的项目：</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#第一梯队"><span class="sn-label">下一节 →</span><span class="sn-name">第一梯队</span></a></nav>
 <p>Java AI Interview Agent</p>
 <p>需求：</p>
 <ul class="lvl"><li>中文好</li></ul>
@@ -191,7 +270,7 @@ LangChain4j
 <ul class="lvl"><li>可以部署</li></ul>
 <p>推荐：</p>
 <hr/>
-<h2 id="第一梯队">第一梯队</h2>
+<h2 id="第一梯队">第一梯队</h2><nav class="sec-nav"><a class="sn prev" href="#你的项目"><span class="sn-label">← 上一节</span><span class="sn-name">你的项目：</span></a><a class="sn next" href="#第二"><span class="sn-label">下一节 →</span><span class="sn-name">第二：</span></a></nav>
 <h3 id="qwen25-qwen3">Qwen2.5 / Qwen3</h3>
 <p>适合：</p>
 <p>中国企业。</p>
@@ -206,14 +285,14 @@ LangChain4j
 <p><a href="https://www.modelscope.cn/models" target="_blank" rel="noopener">https://www.modelscope.cn/models</a></p>
 <p>Qwen 官方提供模型和部署说明。(<a href="https://github.com/QwenLM/Qwen?utm_source=chatgpt.com &quot;GitHub - QwenLM/Qwen: The official repo of Qwen (通义千问" target="_blank" rel="noopener">GitHub</a> chat &amp; pretrained large language model proposed by Alibaba Cloud. · GitHub&quot;))</p>
 <hr/>
-<h2 id="第二">第二：</h2>
+<h2 id="第二">第二：</h2><nav class="sec-nav"><a class="sn prev" href="#第一梯队"><span class="sn-label">← 上一节</span><span class="sn-name">第一梯队</span></a><a class="sn next" href="#第三"><span class="sn-label">下一节 →</span><span class="sn-name">第三：</span></a></nav>
 <p>DeepSeek</p>
 <p>适合：</p>
 <ul class="lvl"><li>推理</li></ul>
 <ul class="lvl"><li>编程</li></ul>
 <ul class="lvl"><li>Agent</li></ul>
 <hr/>
-<h2 id="第三">第三：</h2>
+<h2 id="第三">第三：</h2><nav class="sec-nav"><a class="sn prev" href="#第二"><span class="sn-label">← 上一节</span><span class="sn-name">第二：</span></a><a class="sn next" href="#1b3b"><span class="sn-label">下一节 →</span><span class="sn-name">1B～3B</span></a></nav>
 <p>Llama</p>
 <p>适合：</p>
 <p>国际生态。</p>
@@ -221,7 +300,7 @@ LangChain4j
 <h1 id="第三部分模型大小怎么选择">第三部分：模型大小怎么选择？</h1>
 <p>这是新手最大误区。</p>
 <p>不是越大越好。</p>
-<h2 id="1b3b">1B～3B</h2>
+<h2 id="1b3b">1B～3B</h2><nav class="sec-nav"><a class="sn prev" href="#第三"><span class="sn-label">← 上一节</span><span class="sn-name">第三：</span></a><a class="sn next" href="#7b8b"><span class="sn-label">下一节 →</span><span class="sn-name">7B～8B</span></a></nav>
 <p>用途：</p>
 <pre><code>个人电脑
 边缘设备
@@ -229,7 +308,7 @@ LangChain4j
 <p>资源：</p>
 <p>8GB显存左右</p>
 <hr/>
-<h2 id="7b8b">7B～8B</h2>
+<h2 id="7b8b">7B～8B</h2><nav class="sec-nav"><a class="sn prev" href="#1b3b"><span class="sn-label">← 上一节</span><span class="sn-name">1B～3B</span></a><a class="sn next" href="#14b"><span class="sn-label">下一节 →</span><span class="sn-name">14B</span></a></nav>
 <p>个人和企业最常用。</p>
 <p>例如：</p>
 <pre><code>Qwen2.5-7B</code></pre>
@@ -239,17 +318,17 @@ LangChain4j
 <p>大约：</p>
 <p>8～12GB显存。</p>
 <hr/>
-<h2 id="14b">14B</h2>
+<h2 id="14b">14B</h2><nav class="sec-nav"><a class="sn prev" href="#7b8b"><span class="sn-label">← 上一节</span><span class="sn-name">7B～8B</span></a><a class="sn next" href="#32b"><span class="sn-label">下一节 →</span><span class="sn-name">32B</span></a></nav>
 <p>效果明显提升。</p>
 <p>需要：</p>
 <p>16～24GB显存。</p>
 <hr/>
-<h2 id="32b">32B</h2>
+<h2 id="32b">32B</h2><nav class="sec-nav"><a class="sn prev" href="#14b"><span class="sn-label">← 上一节</span><span class="sn-name">14B</span></a><a class="sn next" href="#70b"><span class="sn-label">下一节 →</span><span class="sn-name">70B</span></a></nav>
 <p>企业级。</p>
 <p>需要：</p>
 <p>40GB+显存。</p>
 <hr/>
-<h2 id="70b">70B</h2>
+<h2 id="70b">70B</h2><nav class="sec-nav"><a class="sn prev" href="#32b"><span class="sn-label">← 上一节</span><span class="sn-name">32B</span></a><a class="sn next" href="#1-hugging-face"><span class="sn-label">下一节 →</span><span class="sn-name">1. Hugging Face</span></a></nav>
 <p>生产大模型。</p>
 <p>需要：</p>
 <p>多GPU。</p>
@@ -257,7 +336,7 @@ LangChain4j
 <h1 id="第四部分模型在哪里下载">第四部分：模型在哪里下载？</h1>
 <p>三个地方：</p>
 <hr/>
-<h2 id="1-hugging-face">1. Hugging Face</h2>
+<h2 id="1-hugging-face">1. Hugging Face</h2><nav class="sec-nav"><a class="sn prev" href="#70b"><span class="sn-label">← 上一节</span><span class="sn-name">70B</span></a><a class="sn next" href="#2-modelscope"><span class="sn-label">下一节 →</span><span class="sn-name">2. ModelScope</span></a></nav>
 <p>全球主流：</p>
 <p><a href="https://huggingface.co/" target="_blank" rel="noopener">https://huggingface.co</a></p>
 <p>例如：</p>
@@ -266,12 +345,12 @@ LangChain4j
 <pre><code>huggingface-cli download \
 Qwen/Qwen2.5-7B-Instruct</code></pre>
 <hr/>
-<h2 id="2-modelscope">2. ModelScope</h2>
+<h2 id="2-modelscope">2. ModelScope</h2><nav class="sec-nav"><a class="sn prev" href="#1-hugging-face"><span class="sn-label">← 上一节</span><span class="sn-name">1. Hugging Face</span></a><a class="sn next" href="#3-ollama"><span class="sn-label">下一节 →</span><span class="sn-name">3. Ollama</span></a></nav>
 <p>国内速度更好：</p>
 <pre><code>modelscope download \
 Qwen/Qwen2.5-7B-Instruct</code></pre>
 <hr/>
-<h2 id="3-ollama">3. Ollama</h2>
+<h2 id="3-ollama">3. Ollama</h2><nav class="sec-nav"><a class="sn prev" href="#2-modelscope"><span class="sn-label">← 上一节</span><span class="sn-name">2. ModelScope</span></a><a class="sn next" href="#方案a学习个人项目"><span class="sn-label">下一节 →</span><span class="sn-name">方案A：学习/个人项目</span></a></nav>
 <p>开发测试：</p>
 <pre><code>ollama pull qwen2.5:7b</code></pre>
 <p>但是：</p>
@@ -280,7 +359,7 @@ Qwen/Qwen2.5-7B-Instruct</code></pre>
 <h1 id="第五部分服务器怎么选择">第五部分：服务器怎么选择？</h1>
 <p>这是重点。</p>
 <hr/>
-<h2 id="方案a学习个人项目">方案A：学习/个人项目</h2>
+<h2 id="方案a学习个人项目">方案A：学习/个人项目</h2><nav class="sec-nav"><a class="sn prev" href="#3-ollama"><span class="sn-label">← 上一节</span><span class="sn-name">3. Ollama</span></a><a class="sn next" href="#方案b企业测试环境"><span class="sn-label">下一节 →</span><span class="sn-name">方案B：企业测试环境</span></a></nav>
 <p>推荐：</p>
 <p>云GPU租赁。</p>
 <p>例如：</p>
@@ -317,7 +396,7 @@ Ubuntu 22.04</code></pre>
 <pre><code>1～3元/小时</code></pre>
 <p>根据地区和平台变化。</p>
 <hr/>
-<h2 id="方案b企业测试环境">方案B：企业测试环境</h2>
+<h2 id="方案b企业测试环境">方案B：企业测试环境</h2><nav class="sec-nav"><a class="sn prev" href="#方案a学习个人项目"><span class="sn-label">← 上一节</span><span class="sn-name">方案A：学习/个人项目</span></a><a class="sn next" href="#方案c生产环境"><span class="sn-label">下一节 →</span><span class="sn-name">方案C：生产环境</span></a></nav>
 <p>配置：</p>
 <pre><code>GPU:
 A10 24GB
@@ -334,7 +413,7 @@ CPU:
 <p>大约：</p>
 <pre><code>2000～5000元/月</code></pre>
 <hr/>
-<h2 id="方案c生产环境">方案C：生产环境</h2>
+<h2 id="方案c生产环境">方案C：生产环境</h2><nav class="sec-nav"><a class="sn prev" href="#方案b企业测试环境"><span class="sn-label">← 上一节</span><span class="sn-name">方案B：企业测试环境</span></a><a class="sn next" href="#服务器配置"><span class="sn-label">下一节 →</span><span class="sn-name">服务器配置</span></a></nav>
 <p>例如：</p>
 <p>1000用户。</p>
 <p>可能：</p>
@@ -375,12 +454,12 @@ H100</code></pre>
 <h1 id="第七部分企业部署环境搭建">第七部分：企业部署环境搭建</h1>
 <p>假设：</p>
 <p>Ubuntu GPU服务器。</p>
-<h2 id="服务器配置">服务器配置</h2>
+<h2 id="服务器配置">服务器配置</h2><nav class="sec-nav"><a class="sn prev" href="#方案c生产环境"><span class="sn-label">← 上一节</span><span class="sn-name">方案C：生产环境</span></a><a class="sn next" href="#1-nvidia-driver"><span class="sn-label">下一节 →</span><span class="sn-name">1. NVIDIA Driver</span></a></nav>
 <p>Ubuntu:</p>
 <pre><code>22.04</code></pre>
 <p>安装：</p>
 <hr/>
-<h2 id="1-nvidia-driver">1. NVIDIA Driver</h2>
+<h2 id="1-nvidia-driver">1. NVIDIA Driver</h2><nav class="sec-nav"><a class="sn prev" href="#服务器配置"><span class="sn-label">← 上一节</span><span class="sn-name">服务器配置</span></a><a class="sn next" href="#2-docker"><span class="sn-label">下一节 →</span><span class="sn-name">2. Docker</span></a></nav>
 <p>查看：</p>
 <pre><code>nvidia-smi</code></pre>
 <p>看到：</p>
@@ -389,11 +468,11 @@ H100</code></pre>
 CUDA</code></pre>
 <p>成功。</p>
 <hr/>
-<h2 id="2-docker">2. Docker</h2>
+<h2 id="2-docker">2. Docker</h2><nav class="sec-nav"><a class="sn prev" href="#1-nvidia-driver"><span class="sn-label">← 上一节</span><span class="sn-name">1. NVIDIA Driver</span></a><a class="sn next" href="#3-nvidia-container-toolkit"><span class="sn-label">下一节 →</span><span class="sn-name">3. NVIDIA Container Toolkit</span></a></nav>
 <p>安装：</p>
 <pre><code>curl -fsSL https://get.docker.com | sh</code></pre>
 <hr/>
-<h2 id="3-nvidia-container-toolkit">3. NVIDIA Container Toolkit</h2>
+<h2 id="3-nvidia-container-toolkit">3. NVIDIA Container Toolkit</h2><nav class="sec-nav"><a class="sn prev" href="#2-docker"><span class="sn-label">← 上一节</span><span class="sn-name">2. Docker</span></a><a class="sn next" href="#qlora-7b"><span class="sn-label">下一节 →</span><span class="sn-name">QLoRA 7B</span></a></nav>
 <p>让 Docker 使用 GPU。</p>
 <hr/>
 <p>测试：</p>
@@ -522,7 +601,7 @@ A/B测试
 上线</code></pre>
 <hr/>
 <h1 id="微调服务器配置">微调服务器配置</h1>
-<h2 id="qlora-7b">QLoRA 7B</h2>
+<h2 id="qlora-7b">QLoRA 7B</h2><nav class="sec-nav"><a class="sn prev" href="#3-nvidia-container-toolkit"><span class="sn-label">← 上一节</span><span class="sn-name">3. NVIDIA Container Toolkit</span></a><a class="sn next" href="#qlora-14b"><span class="sn-label">下一节 →</span><span class="sn-name">QLoRA 14B</span></a></nav>
 <p>推荐：</p>
 <pre><code>GPU:
 RTX4090 24GB
@@ -541,11 +620,11 @@ RAM:
 SSD:
 200GB</code></pre>
 <hr/>
-<h2 id="qlora-14b">QLoRA 14B</h2>
+<h2 id="qlora-14b">QLoRA 14B</h2><nav class="sec-nav"><a class="sn prev" href="#qlora-7b"><span class="sn-label">← 上一节</span><span class="sn-name">QLoRA 7B</span></a><a class="sn next" href="#全量微调"><span class="sn-label">下一节 →</span><span class="sn-name">全量微调</span></a></nav>
 <p>推荐：</p>
 <pre><code>48GB GPU</code></pre>
 <hr/>
-<h2 id="全量微调">全量微调</h2>
+<h2 id="全量微调">全量微调</h2><nav class="sec-nav"><a class="sn prev" href="#qlora-14b"><span class="sn-label">← 上一节</span><span class="sn-name">QLoRA 14B</span></a><a class="sn next" href="#java-ai-knowledge-platform"><span class="sn-label">下一节 →</span><span class="sn-name">Java AI Knowledge Platform</span></a></nav>
 <p>需要：</p>
 <p>多张A100/H100。</p>
 <p>个人不要考虑。</p>
@@ -605,7 +684,7 @@ LoRA微调
 <hr/>
 <h1 id="第十二部分你的第一个企业级实战项目">第十二部分：你的第一个企业级实战项目</h1>
 <p>建议：</p>
-<h2 id="java-ai-knowledge-platform">Java AI Knowledge Platform</h2>
+<h2 id="java-ai-knowledge-platform">Java AI Knowledge Platform</h2><nav class="sec-nav"><a class="sn prev" href="#全量微调"><span class="sn-label">← 上一节</span><span class="sn-name">全量微调</span></a><a class="sn next" href="#方案1学习推荐"><span class="sn-label">下一节 →</span><span class="sn-name">方案1：学习（推荐）</span></a></nav>
 <p>架构：</p>
 <pre><code>                 用户
 
@@ -646,7 +725,7 @@ LoRA微调
      Answer</code></pre>
 <hr/>
 <h1 id="预算方案">预算方案</h1>
-<h2 id="方案1学习推荐">方案1：学习（推荐）</h2>
+<h2 id="方案1学习推荐">方案1：学习（推荐）</h2><nav class="sec-nav"><a class="sn prev" href="#java-ai-knowledge-platform"><span class="sn-label">← 上一节</span><span class="sn-name">Java AI Knowledge Platform</span></a><a class="sn next" href="#方案2个人demo上线"><span class="sn-label">下一节 →</span><span class="sn-name">方案2：个人Demo上线</span></a></nav>
 <p>成本：</p>
 <pre><code>0～300元/月</code></pre>
 <p>使用：</p>
@@ -654,13 +733,13 @@ LoRA微调
 <ul class="lvl"><li>AutoDL按小时</li></ul>
 <ul class="lvl"><li>本地Mac</li></ul>
 <hr/>
-<h2 id="方案2个人demo上线">方案2：个人Demo上线</h2>
+<h2 id="方案2个人demo上线">方案2：个人Demo上线</h2><nav class="sec-nav"><a class="sn prev" href="#方案1学习推荐"><span class="sn-label">← 上一节</span><span class="sn-name">方案1：学习（推荐）</span></a><a class="sn next" href="#方案3小企业生产"><span class="sn-label">下一节 →</span><span class="sn-name">方案3：小企业生产</span></a></nav>
 <p>成本：</p>
 <pre><code>500～1500元/月</code></pre>
 <p>配置：</p>
 <p>4090/A10。</p>
 <hr/>
-<h2 id="方案3小企业生产">方案3：小企业生产</h2>
+<h2 id="方案3小企业生产">方案3：小企业生产</h2><nav class="sec-nav"><a class="sn prev" href="#方案2个人demo上线"><span class="sn-label">← 上一节</span><span class="sn-name">方案2：个人Demo上线</span></a><a class="sn next" href="#day11实战"><span class="sn-label">下一节 →</span><span class="sn-name">Day11-实战</span></a></nav>
 <p>成本：</p>
 <pre><code>3000～10000元/月</code></pre>
 <p>配置：</p>
@@ -669,10 +748,53 @@ LoRA微调
 <h1 id="你下一步应该做">你下一步应该做：</h1>
 <p>不要继续理论。</p>
 <p>进入：</p>
-<h2 id="day11实战">Day11-实战</h2>
+<h2 id="day11实战">Day11-实战</h2><nav class="sec-nav"><a class="sn prev" href="#方案3小企业生产"><span class="sn-label">← 上一节</span><span class="sn-name">方案3：小企业生产</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>《从0租一台GPU服务器 → Ubuntu初始化 → Docker → NVIDIA环境 → 下载Qwen → vLLM部署 → Spring Boot调用》</p>
 <p>这一步才是真正“大模型部署能力”。</p>
 <p>你之前的 Java 后端经验会直接用上。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

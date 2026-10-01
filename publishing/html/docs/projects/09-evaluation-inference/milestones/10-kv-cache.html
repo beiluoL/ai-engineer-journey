@@ -52,22 +52,101 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么模型有多大不等于要多少显存" class="lvl2">1. Why：为什么&amp;quot;模型有多大&amp;quot;不等于&amp;quot;要多少显存&amp;quot;</a><a href="#2-design一个公式三个视角" class="lvl2">2. Design：一个公式，三个视角</a><a href="#3-realrun-evidence来自-demosoutdemo10kvcacheterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_10_kv_cache_terminal.txt）</a><a href="#31-kv-随序列长度与-batch-线性增长公式外推" class="lvl3">3.1 KV 随序列长度与 batch 线性增长（公式外推）</a><a href="#32-kv-何时超过权重公式外推" class="lvl3">3.2 KV 何时超过权重（公式外推）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-公式里必须是-kvheads不是-nheads-用错会高估-7-倍" class="lvl3">4.1 ⚠ 公式里必须是 kv_heads，不是 n_heads —— 用错会高估 7 倍</a><a href="#42-反超点把显存规划切成两个完全不同的问题" class="lvl3">4.2 反超点把&amp;quot;显存规划&amp;quot;切成两个完全不同的问题</a><a href="#43-总缓存-token-阈值恒定-2655k-这是账本的自检" class="lvl3">4.3 &amp;quot;总缓存 token 阈值&amp;quot;恒定 ≈ 265.5K —— 这是账本的自检</a><a href="#44-与-m08-的-2048-btoken-差整整-28-倍-别混用" class="lvl3">4.4 与 M08 的 2,048 B/token 差整整 28 倍 —— 别混用</a><a href="#45-本章数字全是外推不是实测-但有两个交叉验证" class="lvl3">4.5 本章数字全是外推，不是实测 —— 但有两个交叉验证</a><a href="#46-kv-量化是把账本砍半的最直接手段" class="lvl3">4.6 KV 量化是把账本砍半的最直接手段</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-10-kv-cache显存账本">Milestone 10 — KV Cache：显存账本</h1>
 <p>M07 说 KV Cache 能省时间，M08 说分页能省空间。这一层回答一个更根本的问题：<strong>KV Cache 到底占多少显存？什么时候它会反客为主，成为显存的主体？</strong></p>
 <p>答案是：<strong>它和 <code>batch_size × seq_len</code> 成正比</strong>，而且比例系数大到反直觉 —— 在高并发长上下文下，KV Cache 能轻松超过模型权重本身。</p>
 <p><strong>⚠ 诚实标注（读本章前必看）：本章的 7B 相关数字全部是按架构公式计算的，不是本机实测。</strong> 本机跑不动 7B。这些数字与 Project 07 已经算过的显存账本对齐（7B BF16 权重 14.18 GiB、KV 57,344 B/token）—— 也就是说，这是<strong>两个项目各自独立算出同一个数</strong>的交叉验证，但仍然属于&quot;外推&quot;而非&quot;实测&quot;。</p>
 <hr/>
-<h2 id="1-why为什么模型有多大不等于要多少显存">1. Why：为什么&quot;模型有多大&quot;不等于&quot;要多少显存&quot;</h2>
+<h2 id="1-why为什么模型有多大不等于要多少显存">1. Why：为什么&quot;模型有多大&quot;不等于&quot;要多少显存&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design一个公式三个视角"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：一个公式，三个视角</span></a></nav>
 <p>一个 7B 模型，BF16 权重 14.18 GiB。直觉是&quot;买张 24 GB 的卡就够了&quot;。<strong>这个直觉在高并发长上下文下错得离谱</strong>，因为显存至少要装三样东西：</p>
 <pre><code>总显存 ≈ 权重 + KV Cache + 激活值/临时缓冲</code></pre>
 <p>其中 <strong>KV Cache 是唯一一个随请求量线性增长的项</strong>，而且它的系数不小：</p>
 <pre><code>KV bytes/token = 2 × layers × kv_heads × head_dim × dtype_bytes</code></pre>
 <p><code>2</code> 是 K 和 V 两份。这个公式里每一项都在&quot;做大&quot;它：层数 × KV 头数 × 头维度 × 序列长度 × 批大小。</p>
-<h2 id="2-design一个公式三个视角">2. Design：一个公式，三个视角</h2>
+<h2 id="2-design一个公式三个视角">2. Design：一个公式，三个视角</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么模型有多大不等于要多少显存"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么&amp;quot;模型有多大&amp;quot;不等于&amp;quot;要多少显存&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo10kvcacheterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_10_kv_cache_terminal.txt）</span></a></nav>
 <p><code>src/ie/kvbook.py</code> 只做一件事 —— 把上面那个公式变成可查的账本：</p>
 <pre><code>bytes_per_token(KVArchitecture(layers, kv_heads, head_dim), dtype_bytes)
     = 2 × layers × kv_heads × head_dim × dtype_bytes
@@ -81,7 +160,7 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
 <table><thead><tr><th>函数</th><th>回答</th></tr></thead><tbody><tr><td><code>bytes_per_token</code></td><td>每存 1 个 token 的 KV 要多少字节（<strong>架构常数</strong>）</td></tr><tr><td><code>memory_table</code></td><td>给定 <code>(batch, seq)</code>，KV 占多少 GiB、是权重的百分之几</td></tr><tr><td><code>sequence_length_to_exceed_weights</code></td><td><strong>反超点</strong>：多长的序列会让 KV 超过权重</td></tr></tbody></table>
 <p>第三个最有决策价值：<strong>反超点之前，显存规划看权重；反超点之后，显存规划看 KV。</strong></p>
 <figure class="figure"><img alt="M10 KV 显存账本：随 seq 与 batch 线性增长，并在高并发下反超权重" src="../../../../../../projects/09-evaluation-inference/assets/kv-cache.svg" loading="lazy"/><figcaption>M10 KV 显存账本：随 seq 与 batch 线性增长，并在高并发下反超权重</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo10kvcacheterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_10_kv_cache_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo10kvcacheterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_10_kv_cache_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design一个公式三个视角"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：一个公式，三个视角</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>参考架构（Qwen2-7B 形态，与 P07 对齐）：<code>layers=28, kv_heads=4, head_dim=128</code>，BF16（<code>dtype_bytes=2</code>）。</p>
 <pre><code>  架构                                 layers=28, kv_heads=4, head_dim=128
   公式                                 2 × layers × kv_heads × head_dim × dtype_bytes
@@ -97,7 +176,7 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
 <p>三个读数：</p>
 <ul class="lvl"><li><strong>单请求（batch=1）要 seq 265,515 才反超</strong> —— 这个长度远超当前任何模型的上下文窗口。<strong>所以&quot;单人对话&quot;场景里 KV 永远不是瓶颈</strong>，权重才是。</li><li><strong>batch=64 时每请求只要 seq 4,149 就反超</strong> —— 4K 上下文是今天最普通的量级。<strong>高并发下 KV 立刻变成显存主体。</strong></li><li><strong>&quot;总缓存 token 阈值&quot;四行几乎恒定（265,515 / 265,516 / 265,520 / 265,536）</strong> —— 这是账本的自检，见 4.3。</li></ul>
 <figure class="figure"><img alt="M10 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-10-kv-cache.png" loading="lazy"/><figcaption>M10 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo10kvcacheterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_10_kv_cache_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-公式里必须是-kvheads不是-nheads-用错会高估-7-倍">4.1 ⚠ 公式里必须是 <code>kv_heads</code>，不是 <code>n_heads</code> —— 用错会高估 7 倍</h3>
 <p>这是 GQA（Grouped Query Attention）带来的坑。Qwen2-7B 有 <strong>28 个 query 头，但只有 4 个 KV 头</strong>：每 7 个 query 头共享 1 组 K/V。</p>
 <pre><code>正确：2 × 28 层 × 4 KV头 × 128 × 2 B = 57,344 B/token
@@ -133,12 +212,55 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
 <p><strong>KV 从 BF16 压到 INT8，显存直接减半</strong> —— 反超点也会相应翻倍（batch=64 时从 seq 4,149 抬到 8,298）。</p>
 <p>而且 KV 量化比权重量化<strong>更容易</strong>：KV 是运行时产生的激活，可以用&quot;校准集&quot;确定量化范围，也可以按通道/按头做粒度。工业界（vLLM、TensorRT-LLM）已经把 FP8 KV 作为标准选项。</p>
 <p><strong>但要注意</strong>：本章账本<strong>没有</strong>包含 KV 量化，表里全是 BF16。这是刻意的 —— 先给出一个干净的基准，量化是可以叠加在上面的独立变量。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>KV 显存公式：<code>2 × layers × kv_heads × head_dim × dtype_bytes × seq_len × batch_size</code>。参考架构（28 层 / 4 KV 头 / head_dim 128 / BF16）→ <strong>57,344 B/token</strong>。</li><li><strong>KV ∝ batch × seq_len</strong>：表里的对角线（<code>batch×seq</code> 相同 → 占比相同）直接验证了这一点。</li><li>实测（<strong>公式外推</strong>）：<code>batch=16, seq=32,768</code> → KV <strong>28.00 GiB</strong>，达权重的 <strong>197.46%</strong>（权重 14.18 GiB，合计 42.18 GiB —— A100 80G 可行，24 GB 卡不行）。</li><li><strong>反超点</strong>：batch 1 → <strong>seq 265,515</strong>（单人对话永远碰不到）；batch 4 → 66,379；batch 16 → <strong>16,595</strong>；batch 64 → <strong>4,149</strong>（高并发下 4K 上下文即反超）。</li><li>⚠ <strong>公式里必须用 <code>kv_heads</code>（GQA=4），用 <code>n_heads</code>（=28）会高估 7 倍</strong>（401,408 vs 57,344）。</li><li><strong>反超点把显存规划切成两个问题</strong>：之前优化权重（量化、切分），之后优化 KV（分页、KV 量化、GQA、前缀共享）—— 两类解法几乎不重叠。</li><li><strong>&quot;总缓存 token 阈值&quot;恒定 ≈ 265,514</strong>（<code>weight_bytes / bytes_per_token</code>，与 batch 无关）—— 账本自检不变量。</li><li><strong>与 M08 的 2,048 B/token 差 28 倍</strong>（架构 + dtype 都不同），引用必须带口径。</li><li>⚠ <strong>全部数字是公式外推，非本机实测</strong>；但与 P07 独立算出的 14.18 GiB / 57,344 B 交叉验证一致。</li><li><strong>KV 量化到 INT8 可直接减半</strong>（反超点翻倍），且比权重量化更容易 —— 本章账本为干净基准，未叠加该变量。</li><li>手写实现的意义：因为公式是自己写的，我才能把它拆成&quot;架构常数 × 序列 × 批&quot;三段并做对角线自检 —— 用现成的显存计算器只能拿到一个总数，无法验证。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/kvbook.py</code></td><td><code>KVArchitecture</code>（<strong><code>layers</code> / <code>kv_heads</code> / <code>head_dim</code> 三字段分离，逼你区分 query 头与 KV 头</strong>）/ <code>bytes_per_token</code> / <code>kv_cache_bytes</code> / <code>memory_table</code>（batch × seq 二维表 + <code>vs_weights</code> 占比）/ <code>sequence_length_to_exceed_weights</code>（反超点）/ <code>model_weight_bytes</code> / <code>qwen7b_reference</code>（从 28 层 / 4 KV 头 / 128 重推 P07 的数字）</td></tr><tr><td><code>src/ie/kvbook.py:23</code></td><td><code>2 * layers * kv_heads * head_dim * dtype_bytes</code> —— 核心公式，<code>kv_heads</code> 而非 <code>n_heads</code></td></tr><tr><td><code>src/ie/kvbook.py:68</code></td><td><code>math.floor(weight_bytes / per_position) + 1</code> —— 反超点（+1 保证&quot;严格超过&quot;）</td></tr><tr><td><code>demos/demo_10_kv_cache.py</code></td><td>3 节：架构与公式 / KV 增长表 / 反超点表</td></tr><tr><td><code>demos/out/demo_10_kv_cache_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/kv-cache.svg</code></td><td>本章 KV 显存增长与反超点图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.9 → <strong>v0.10</strong>，M10 KV Cache 显存账本落地。参考架构 <code>layers=28 / kv_heads=4 / head_dim=128</code>、BF16：每 token <strong>57,344 B</strong>、7B BF16 权重 <strong>14.18 GiB</strong>；增长表显示 <code>batch=16 @ seq=32,768</code> 时 KV 达 <strong>28,672 MiB = 28.000 GiB</strong>，为权重的 <strong>197.46%</strong>（合计 42.18 GiB）；<strong>反超点 batch 1 → seq 265,515 / batch 4 → 66,379 / batch 16 → 16,595 / batch 64 → 4,149</strong>。并诚实记录「⚠ 本章 7B 数字<strong>全部是按架构公式外推、非本机实测</strong>，但与 Project 07 独立算出的 14.18 GiB / 57,344 B 交叉验证一致」「公式必须用 <code>kv_heads</code>（GQA=4），误用 <code>n_heads</code>(=28) 会高估 7 倍 → 401,408 B/token」「<strong>总缓存 token 阈值恒定 ≈ 265,514</strong>（与 batch 无关），是账本自检不变量」「与 M08 的 2,048 B/token 差 28 倍（架构 + dtype 均不同），不可混用」。纯 Python 标准库 + numpy，无 GPU 实测。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

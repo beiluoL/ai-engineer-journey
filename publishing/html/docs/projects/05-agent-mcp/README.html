@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-05-research-agent-mcp-assistant">Project 05 — Research Agent / MCP Assistant</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>让 AI 不只是回答，而是能自主规划和调用工具，变成真正的 Agent【智能体】。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>RAG 解决了知识问题，但 AI 还不能主动做事。Agent + MCP 是让 AI 从「问答」到「执行多步骤任务」的关键一跃。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>AI 只能按给定 Prompt 回答，不能自主做事</li><li>需要 AI 调用外部 API / 浏览器 / 数据库</li><li>需要 AI 分解复杂任务为多步骤</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>LLM
     ↓
 Tool
@@ -77,9 +156,9 @@ Multi-Step Agent
 MCP
     ↓
 可扩展 Agent System</code></pre>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li>Function Calling 高级用法</li><li>Agent Loop（ReAct / Plan-Execute）</li><li>Tool 设计与注册</li><li>MCP 协议（Model Context Protocol）</li><li>Memory（短期 / 长期）</li><li>Multi-Agent Workflow</li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <pre><code>Personal RAG
     ↓ Tool / Function Calling
 Research Agent v0.1
@@ -89,14 +168,14 @@ Research Agent v0.2
 Research Agent v0.3
     ↓ Agent Workflow
 Research Agent v1.0</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>状态</th><th>核心能力</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-tool.html">Tool</a></td><td>✅</td><td>工具三件套 / ToolResult / 检索即工具 / 沙箱计算</td></tr><tr><td>02</td><td><a href="milestones/02-tool-schema.html">Tool Schema</a></td><td>✅</td><td>JSON Schema / 签名推导 / 参数纠偏 / 校验拦截</td></tr><tr><td>03</td><td><a href="milestones/03-function-calling.html">Function Calling</a></td><td>✅</td><td>tool 消息三字段 / 协议顺序 / 真实链路三坑</td></tr><tr><td>04</td><td><a href="milestones/04-agent.html">Agent</a></td><td>✅</td><td>ReAct 循环 / 两道闸门 / 轨迹落盘 / CLI 入口</td></tr><tr><td>05</td><td><a href="milestones/05-agent-loop.html">Agent Loop</a></td><td>✅</td><td>工作记忆裁剪 / 草稿纸 / 重复闸门 / 多步骤任务</td></tr><tr><td>06</td><td><a href="milestones/06-multi-step-task.html">Multi-Step Task</a></td><td>✅</td><td>显式 Plan / 依赖拓扑 / 失败传播 / 计划工具</td></tr><tr><td>07</td><td><a href="milestones/07-mcp.html">MCP</a></td><td>✅</td><td>JSON-RPC 2.0 / 四种消息 / stdio 帧格式</td></tr><tr><td>08</td><td><a href="milestones/08-mcp-server.html">MCP Server</a></td><td>✅</td><td>工具跨进程暴露 / 两类错误 / 错误码选择</td></tr><tr><td>09</td><td><a href="milestones/09-mcp-client.html">MCP Client</a></td><td>✅</td><td>握手 / Schema 转换 / 桥接进 ToolRegistry</td></tr><tr><td>10</td><td><a href="milestones/10-agent-workflow.html">Agent Workflow</a></td><td>✅</td><td>多 Worker 编排 / 上下文隔离 / 规模扫描</td></tr></tbody></table>
 <p>状态：✅ 内容已就绪 · ✅ 代码已落地（<code>src/agent/</code>）· ✅ 测试全绿（244 passed）· ✅ 已配真实运行截图</p>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <p><strong>10 / 10 个 Milestone 文档 + <code>src/agent/</code>（11 个模块 + <code>mcp/</code> 子包）+ 离线与真实双链路 + 28 张真实运行截图</strong> 全部完成，v1.0 收官。</p>
 <p>核心卖点「<strong>检索即工具</strong>」已落地：RAG 里的检索从 pipeline 的固定步骤，变成摆在模型面前的一个 <code>rag_search</code> 工具——用不用、什么时候用、查几条，由模型自己决定。真实链路上模型自主选了 <code>rag_search</code> 并<strong>自己加了 <code>k: 2</code> 参数</strong>，这是「控制权从代码转到模型」的具体证据。</p>
 <p>零第三方依赖的离线链路（不联网、不烧 token）与真实 DeepSeek 链路双路跑通，<code>python -m agent.cli</code> 可直接在命令行提问。</p>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p><strong>v1.0 —— Project 05 收官</strong>：<code>src/agent/</code> 共 11 个模块 + <code>agent/mcp/</code> 子包，244 项 pytest 全绿。 工具可以从本地类换成<strong>跨进程的 MCP 服务</strong>，任务可以拆给多个 Worker 各自完成。</p>
 <ul class="lvl"><li><code>src/agent/tools.py</code> —— Tool 三件套（name / description / <code>run(**kwargs) -&gt; str</code>）；<code>ToolCall</code> 与 <code>ToolResult</code> 分离；工具异常<strong>永不抛出</strong>，一律转成 <code>ToolResult.error</code> 文本回灌；<code>calculator</code> 用 <code>ast</code> 白名单求值，<strong>不用 <code>eval</code></strong></li><li>「检索即工具」：<code>rag_search</code> 走本地关键词检索，也可换 HTTP 后端接上 Project 04 的服务</li><li><code>src/agent/registry.py</code> —— <code>register</code> / <code>schema_of</code> / <code>schemas</code> / <code>call</code> / <code>call_many</code> / <code>dispatch</code> / 参数纠偏（<code>&quot;3&quot;</code> → 3，<strong>布尔不是整数</strong>）</li><li><code>src/agent/llm.py</code> —— <code>LLM</code> 抽象 + <code>FakeLLM</code> / <code>ScriptedLLM</code> / <code>RecordingLLM</code> + <code>DeepSeekLLM</code></li><li><code>src/agent/agent.py</code> —— ReAct 循环 + <code>Step</code> / <code>AgentResult</code> / <code>trace()</code> + <code>mkstemp + fsync + os.replace</code> 原子落盘</li><li>三道闸门：<code>max_steps=8</code>（成本天花板）、<code>max_tool_failures=3</code>（报错型空转，成功一次清零）、<code>max_repeats=2</code>（<strong>成功但原地打转</strong>，signature 计数）</li><li><code>src/agent/memory.py</code> —— 工作记忆：<code>trim_history</code> 按 token 预算压缩历史（<strong>assistant 与 tool 消息必须配对裁剪</strong>）、<code>Scratchpad</code> 草稿纸（写在循环之外，不随历史被裁）</li><li><code>write_note</code> / <code>read_notes</code> 两个工具让模型自己决定记什么，笔记常驻 system 省掉一轮往返</li><li><code>src/agent/plan.py</code> —— 显式计划：<code>Plan</code> / <code>SubTask</code>（id + depends_on + status）、<code>batches()</code> 拓扑分层求可并行批次、<code>skip_downstream()</code> 沿依赖边传播失败、成环检测</li><li><code>plan_set</code> / <code>plan_update</code> / <code>plan_view</code> 三个工具让<strong>模型自己拆并自己推进</strong>；计划每轮重渲染进 system</li><li><code>src/agent/mcp/</code> —— MCP 三件套：<code>protocol.py</code>（JSON-RPC 2.0 消息层）、<code>server.py</code>（stdio 服务端，<code>python -m agent.mcp.server</code>）、<code>client.py</code>（拉子进程 + 把 MCP 工具桥接进 <code>ToolRegistry</code>）</li><li><code>src/agent/workflow.py</code> —— 按 <code>Plan</code> 把子任务派给<strong>独立 Worker</strong>，各自一份上下文；汇总者只读结论</li></ul>
 <p>拆分的收益是量出来的（不是估的）：单 Agent 的第 N 轮要带着前 N-1 轮原文，单轮体量随步数<strong>线性增长</strong>（2 步 234 → 8 步 654 token）；Worker 每个请求只带自己那一点，<strong>基本恒定</strong>（260 → 353）。8 个子任务时峰值低 46% —— 峰值低意味着不容易撞上下文窗口这个硬上限。</p>
@@ -110,7 +189,7 @@ DEEPSEEK_API_KEY=xxx .venv/bin/python -m agent.cli --notes &quot;对比 Project 
 .venv/bin/python demos/demo_07_mcp.py --real       # MCP 协议 / Server / Client
 .venv/bin/python demos/demo_10_workflow.py --real  # 多 Worker 编排（走 MCP 子进程）</code></pre>
 <p>没有 <code>DEEPSEEK_API_KEY</code> 也不会崩——自动降级到离线剧本，并在 stderr 打印 <code>[warn]</code>。</p>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code>projects/05-agent-mcp/
 ├── demos/                  # 7 个真实运行 demo（demo_01～07、10）+ 输出落盘 demos/out/
 ├── src/agent/
@@ -131,11 +210,54 @@ DEEPSEEK_API_KEY=xxx .venv/bin/python -m agent.cli --notes &quot;对比 Project 
 │       └── client.py       # 客户端与工具桥接（09 章）
 ├── tests/                  # 全部离线（FakeLLM / 真 MCP 子进程），244 passed
 └── assets/                 # 28 张真实运行截图</code></pre>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-04 的所有能力（Python 工程化、pytest、Prompt / 流式 / 工具调用、RAG 全链路）</li><li>Tool 设计：接口契约、ToolResult 错误回灌、函数即工具、签名推导</li><li>检索即工具：把 RAG 的检索从固定步骤变成模型可调的工具</li><li>Tool Schema：JSON Schema 装配与校验、参数类型纠偏、中英文检索的坑</li><li>Function Calling：message 顺序、<code>tool</code> 消息三字段、真实链路的三个坑（鉴权头 / tools 外层 / schemas 结构）</li><li>Agent：ReAct 循环、多工具并行、三道闸门、轨迹原子落盘、命令行入口</li><li>Agent Loop：工作记忆的 token 预算管理、协议配对的裁剪规则、草稿纸做跨步骤状态</li><li>Multi-Step Task：把计划从「模型的临时想法」变成可计算的数据结构（并行度 / 环 / 失败传播）</li><li>MCP：JSON-RPC 2.0 消息层、stdio 传输、两类错误的区分、Schema 形状的跨系统转换</li><li>Agent Workflow：多 Worker 编排、上下文隔离、以及「什么时候拆才划算」的量化判断</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>Project 05 已收官（v1.0）。下一个项目是 <a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer LLM</a>： 从零实现 Tokenizer → Embedding → Transformer → 训练 → 推理， 把「会用大模型」推进到「知道它怎么造出来的」。</p>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/04-rag">Project 04 — AI Knowledge Base / RAG Assistant</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

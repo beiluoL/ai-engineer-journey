@@ -52,23 +52,102 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-what-why为什么必须手写并校验-autograd" class="lvl2">1. What / Why：为什么必须手写并校验 autograd</a><a href="#2-designautograd-引擎-训练循环" class="lvl2">2. Design：autograd 引擎 + 训练循环</a><a href="#3-realrun-evidence来自-demosoutdemo09trainingtxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_09_training.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-09-training-loop从零-autograd-反传loss-肉眼可见地下降">Milestone 09 — Training Loop：从零 autograd 反传，loss 肉眼可见地下降</h1>
 <p>Milestone 07 的整机能从 id 吐 logits，Milestone 08 备好了 <code>(X, Y, mask)</code> 批次。这一层把二者连起来跑训练：<strong>前向 → 带 mask 的交叉熵 → 反向 → 优化器 step</strong>，把梯度一路回写进 Embedding 和 Block 的参数。这是 Milestone 01 点名的「整张图里唯一一条从后往前的箭头」。</p>
 <p>最关键的是：<strong>本项目自动微分完全是手写的</strong>（不用 PyTorch）。我必须自己证明 <code>loss.backward()</code> 求出的梯度和有限差分对得上 —— 否则前面所有层的反向都是错的，loss 下降也只是假象。</p>
 <hr/>
-<h2 id="1-what-why为什么必须手写并校验-autograd">1. What / Why：为什么必须手写并校验 autograd</h2>
+<h2 id="1-what-why为什么必须手写并校验-autograd">1. What / Why：为什么必须手写并校验 autograd</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-designautograd-引擎-训练循环"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：autograd 引擎 + 训练循环</span></a></nav>
 <p>Project 05 里我只会 <code>optimizer.step()</code>；这里要真的懂训练，就得自己写反向传播。手写 <code>Tensor</code> 的风险是：<strong>反向写错不会报错，loss 照样下降</strong>（尤其是玩具规模），但学到的权重是错的。唯一能抓这类错误的，是<strong>梯度校验（gradient check）</strong>—— 用有限差分数值求导，和 autograd 的解析梯度比相对误差。</p>
-<h2 id="2-designautograd-引擎-训练循环">2. Design：autograd 引擎 + 训练循环</h2>
+<h2 id="2-designautograd-引擎-训练循环">2. Design：autograd 引擎 + 训练循环</h2><nav class="sec-nav"><a class="sn prev" href="#1-what-why为什么必须手写并校验-autograd"><span class="sn-label">← 上一节</span><span class="sn-name">1. What / Why：为什么必须手写并校验 autograd</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo09trainingtxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_training.txt）</span></a></nav>
 <p><strong><code>src/model/autograd.py</code>（从零自动微分）：</strong></p>
 <ul class="lvl"><li><code>Tensor</code>：包一块 numpy 数组，记 <code>_prev</code>（父节点）和 <code>_backward</code>（反向闭包）。<code>backward()</code> 做<strong>拓扑排序</strong>，从标量损失出发逆序调用每个节点的 <code>_backward</code>，把梯度沿 <code>_set_grad</code> 累加 —— 这就是链式法则具象化。</li><li><code>Parameter</code>：永远是叶子、<code>requires_grad=True</code>，优化器只更新它。</li><li><code>Module</code>：<code>parameters()</code> 递归收集所有 Parameter，<code>zero_grad()</code> 清零。</li><li>算子（<code>matmul/add/mul/softmax/layernorm/transpose/reshape/cross_entropy/...</code>）每个都「前向算 numpy + 闭包里写反向」。<strong>广播梯度用 <code>_unbroadcast</code> 还原</strong>（和对 PyTorch 行为一致）。</li><li><code>grad_check(func, inputs, eps, tol)</code>：<strong>中心差分</strong>扰动每个参数元素，得数值梯度，和 <code>backward()</code> 的解析梯度比相对误差；对近零梯度改用绝对误差，避免浮点噪声假阳性。</li></ul>
 <p><strong><code>src/model/training.py</code>（训练循环）：</strong></p>
 <ul class="lvl"><li><code>SGD</code>：<code>w -= lr * g</code>；<code>Adam</code>：带一/二阶动量 + 偏置修正。</li><li><code>Trainer.train_step</code>：<code>logits = model(x)</code> → <code>loss = cross_entropy(logits, y, mask)</code> → <code>zero_grad</code> → <code>loss.backward()</code> → <code>optimizer.step()</code>。mask 让 pad 位权重为 0，不计入。</li><li><code>Trainer.run</code>：跑 <code>n_steps</code> 步，记录 loss 曲线。</li></ul>
 <figure class="figure"><img alt="训练循环：前向 → 交叉熵 → 反向 → 优化器 step，并附梯度校验" src="../../../../../../projects/06-mini-transformer-llm/assets/training.svg" loading="lazy"/><figcaption>训练循环：前向 → 交叉熵 → 反向 → 优化器 step，并附梯度校验</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo09trainingtxt">3. Real-run evidence（来自 <code>demos/out/demo_09_training.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo09trainingtxt">3. Real-run evidence（来自 <code>demos/out/demo_09_training.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-designautograd-引擎-训练循环"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：autograd 引擎 + 训练循环</span></a><a class="sn next" href="#4-bugs-lessons"><span class="sn-label">下一节 →</span><span class="sn-name">4. Bugs / lessons</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。玩具模型：<code>d_model=24, n_heads=4, d_ff=64, n_layers=2</code>，<strong>参数量 23,168（27 个 Parameter 张量）</strong>，训练样本 280、约 18 个 batch。</p>
 <p><strong>loss 必须肉眼可见地下降 —— 实测做到了：</strong></p>
 <pre><code>step   25/150  loss = 4.8810
@@ -99,16 +178,59 @@ loss 是否下降        : True
 <pre><code>梯度校验最大相对误差 : 2.60e-05  (&lt; 1e-3 即正确)</code></pre>
 <p><code>2.60e-05</code> 远小于阈值 <code>1e-3</code>，说明手写的 <code>matmul/softmax/layernorm/cross_entropy/reshape/transpose</code> 等全部反向正确 —— 前面 M03–M07 所有层的梯度都能可靠回传，loss 下降是<strong>真</strong>学会、不是假象。</p>
 <figure class="figure"><img alt="Training demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-09-training.png" loading="lazy"/><figcaption>Training demo 真实运行输出</figcaption></figure>
-<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo09trainingtxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_training.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <p>本 milestone demo 没有暴露真实运行 bug。两条<strong>从源码提炼的硬规则</strong>值得记：</p>
 <ul class="lvl"><li><strong><code>backward()</code> 清零所有节点梯度</strong>（<code>for v in topo: v.grad = zeros</code>），避免多次反向累加 —— 这是手写 autograd 最容易漏、漏了就训练崩的一点。</li><li><strong>梯度校验对近零梯度改用绝对误差</strong>（<code>denom &lt; 1e-6</code> 时不除），否则深层网络里很多本就≈0 的梯度会被浮点噪声放大成假阳性。这条让 <code>grad_check</code> 在深网络上依然可靠（本例 2.60e-05 即通过）。</li></ul>
 <p>另外：loss 曲线并非单调下降（step 100/125 有回弹），这正是<strong>小玩具 + Adam 噪声</strong>的真实表现，不是 bug。记录真实曲线比粉饰成直线更诚实。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-bugs-lessons"><span class="sn-label">← 上一节</span><span class="sn-name">4. Bugs / lessons</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>训练是整张图里<strong>唯一一条反向箭头</strong>：<code>loss.backward()</code> 把梯度写回 Embedding 和 Block 的所有 Parameter。</li><li><strong>手写 autograd 必须过梯度校验</strong>：中心差分 vs 解析梯度相对误差 <code>2.60e-05</code> ≪ <code>1e-3</code>，反向全对。</li><li>初始 loss <code>6.2100 ≈ log(500)=6.2146</code>，证明前向与交叉熵公式正确。</li><li>玩具规模下 loss <strong>整体下行但非单调</strong>（最终 <code>4.7472</code>，降 <code>1.4628</code>），抖动来自小数据 + Adam 噪声，非 bug。</li><li><code>mask</code> 让 pad 位不计入损失；<code>zero_grad</code> 是每个 step 必须的。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/autograd.py</code></td><td><code>Tensor</code>（拓扑排序+链式求导）、<code>Parameter</code>、<code>Module</code>、<code>grad_check</code>（中心差分对拍）、所有带反向的算子</td></tr><tr><td><code>src/model/training.py</code></td><td><code>SGD</code> / <code>Adam</code>（带偏置修正）、<code>Trainer</code>（前向→交叉熵→反传→step，mask 排除 pad）</td></tr><tr><td><code>src/model/decoder.py</code></td><td>复用的 <code>TransformerLM</code>（被训练的主体）</td></tr><tr><td><code>demos/demo_09_training.py</code></td><td>5 节演示：数据 / 模型 / 150 步训练 / 曲线 / 梯度校验，输出落 <code>demos/out/demo_09_training.txt</code></td></tr><tr><td><code>assets/training.svg</code></td><td>本章训练 + 梯度校验图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.7 → <strong>v0.8</strong>，训练循环 + 从零 autograd 落地。玩具模型 150 步 loss <code>6.2100→4.7472</code>，梯度校验 <code>2.60e-05</code> 通过；纯 numpy、无 torch。演示真实跑通并核对 loss 与梯度校验，配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

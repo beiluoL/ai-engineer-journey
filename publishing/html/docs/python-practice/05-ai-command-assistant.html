@@ -52,33 +52,155 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#这一页是指路牌不是教程" class="lvl2">这一页是「指路牌」，不是教程</a><a href="#要做的东西" class="lvl2">要做的东西</a><a href="#为什么它排在挑战难度" class="lvl2">为什么它排在「挑战」难度</a><a href="#顺着走" class="lvl2">顺着走</a><a href="#如果你想自己从零再写一遍推荐" class="lvl2">如果你想自己从零再写一遍（推荐）</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="05-ai-命令助手">05 AI 命令助手</h1>
 <blockquote><p><strong>难度</strong> ●●● 挑战 ｜ <strong>预计</strong> 1–2 周 ｜ <strong>依赖</strong> <code>requests</code>（或官方 SDK） 上级目录：<a href="README.html">练手项目总览</a></p></blockquote>
-<h2 id="这一页是指路牌不是教程">这一页是「指路牌」，不是教程</h2>
+<h2 id="这一页是指路牌不是教程">这一页是「指路牌」，不是教程</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#要做的东西"><span class="sn-label">下一节 →</span><span class="sn-name">要做的东西</span></a></nav>
 <p>这个项目<strong>本仓库已经完整做过了</strong>，就在 <a href="../projects/01-python-ai-cli/README.html"><code>projects/01-python-ai-cli/</code></a>。</p>
 <p>之所以在这里再列一次：它是前四个练手项目之后<strong>自然的下一个台阶</strong>——前面四个都在跟「确定的东西」打交道（文件、表格、HTML、数据库），而这一个第一次要跟<strong>不确定的模型输出</strong>打交道。这个转折值得单独标出来。</p>
-<h2 id="要做的东西">要做的东西</h2>
+<h2 id="要做的东西">要做的东西</h2><nav class="sec-nav"><a class="sn prev" href="#这一页是指路牌不是教程"><span class="sn-label">← 上一节</span><span class="sn-name">这一页是「指路牌」，不是教程</span></a><a class="sn next" href="#为什么它排在挑战难度"><span class="sn-label">下一节 →</span><span class="sn-name">为什么它排在「挑战」难度</span></a></nav>
 <p>一个命令行里的 AI 助手，分三步递进：</p>
 <table><thead><tr><th>步骤</th><th>目标</th><th>难点</th></tr></thead><tbody><tr><td>① <strong>单轮问答</strong></td><td><code>ai &quot;用一句话解释什么是注意力机制&quot;</code> → 打印回答</td><td>发 HTTP 请求、处理 API Key、读懂返回的 JSON 结构</td></tr><tr><td>② <strong>多轮对话</strong></td><td>记住上下文，能追问</td><td>消息列表的拼接与截断（token 上限）</td></tr><tr><td>③ <strong>流式输出</strong></td><td>回答一个字一个字蹦出来</td><td>SSE / <code>stream=True</code>、逐块解码、<code>flush=True</code></td></tr></tbody></table>
 <p>第 ③ 步是分水岭：做完之后你会突然明白 ChatGPT 网页上那个「打字机效果」到底是怎么实现的——<strong>它不是什么动画，就是边收边打印。</strong></p>
 <p>第 ① 步做完的样子（下图来自本仓库 <code>projects/01</code> 的真实运行，不是示意图）：</p>
 <figure class="figure"><img alt="AI 命令助手真实调用 LLM" src="../../../../projects/01-python-ai-cli/assets/term-real-llm-call.png" loading="lazy"/><figcaption>AI 命令助手真实调用 LLM</figcaption></figure>
 <p>一行命令进、一段回答出——中间是真实的 HTTP 请求、真实的计费、真实的 1~3 秒等待。这跟前面四个项目最大的差别是：<strong>你无法预知它下一秒会输出什么。</strong></p>
-<h2 id="为什么它排在挑战难度">为什么它排在「挑战」难度</h2>
+<h2 id="为什么它排在挑战难度">为什么它排在「挑战」难度</h2><nav class="sec-nav"><a class="sn prev" href="#要做的东西"><span class="sn-label">← 上一节</span><span class="sn-name">要做的东西</span></a><a class="sn next" href="#顺着走"><span class="sn-label">下一节 →</span><span class="sn-name">顺着走</span></a></nav>
 <p>不是因为代码难，而是因为<strong>没有标准答案</strong>：</p>
 <ul class="lvl"><li>模型返回的是一段自由文本，你得决定怎么解析、怎么兜底</li><li>它可能超时、可能限流、可能因为余额不足直接 400</li><li>同样的输入，两次输出不一样——<strong>你的测试不能再断言「等于什么」</strong></li></ul>
 <p>前四个项目里，<code>python3 -m pytest</code> 说绿就是绿。这里你需要换一套判断标准（见 <a href="../projects/08-fine-tuning/README.html"><code>projects/08-fine-tuning/</code></a> 里关于评估的思路）。</p>
-<h2 id="顺着走">顺着走</h2>
+<h2 id="顺着走">顺着走</h2><nav class="sec-nav"><a class="sn prev" href="#为什么它排在挑战难度"><span class="sn-label">← 上一节</span><span class="sn-name">为什么它排在「挑战」难度</span></a><a class="sn next" href="#如果你想自己从零再写一遍推荐"><span class="sn-label">下一节 →</span><span class="sn-name">如果你想自己从零再写一遍（推荐）</span></a></nav>
 <ul class="lvl"><li>项目主页：<a href="../projects/01-python-ai-cli/README.html"><code>projects/01-python-ai-cli/README.md</code></a></li><li>关键里程碑：<ul class="lvl"><li><a href="../projects/01-python-ai-cli/milestones/09-http-api.html">09-http-api.md</a> —— 先用标准库把 HTTP 请求打通（不急着上 SDK）</li><li><a href="../projects/01-python-ai-cli/milestones/10-real-llm-api.html">10-real-llm-api.md</a> —— 接真实大模型 API</li></ul></li><li>代码在 <a href="../../../../projects/01-python-ai-cli/src"><code>projects/01-python-ai-cli/src/</code></a></li></ul>
-<h2 id="如果你想自己从零再写一遍推荐">如果你想自己从零再写一遍（推荐）</h2>
+<h2 id="如果你想自己从零再写一遍推荐">如果你想自己从零再写一遍（推荐）</h2><nav class="sec-nav"><a class="sn prev" href="#顺着走"><span class="sn-label">← 上一节</span><span class="sn-name">顺着走</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>参照实现摆在旁边最容易变成「抄」。建议的练法：</p>
 <ul class="lvl"><li><strong>先不看 <code>src/</code></strong>，只照 09/10 两个里程碑的要求，自己写一个能跑通单轮问答的版本（30 行就够）。</li><li>跑通了再打开 <code>src/</code> 对照——重点看差异：别人的错误处理、超时设置、Key 的读取方式和你有什么不同。</li><li><strong>加一个 <code>projects/01</code> 里没有的功能</strong>，比如：<ol class="lvl"><li><code>--json</code> 输出模式，方便被别的脚本消费</li><li>本地缓存同一个问题（同一天问同样的问题不重复花钱）</li><li><code>--system</code> 参数自定义系统提示词</li><li>把对话历史存进 SQLite，支持 <code>ai --continue</code> 继续上次的话题</li></ol></li></ul>
 <p>第 3 步才是真正把你和「跟着教程走过一遍」区分开的地方。</p>
 <blockquote><p><strong>凭据提醒</strong>：Key 只走环境变量，不要写进代码或提交到 Git。本仓库的 <code>projects/01-python-ai-cli/src/.env.example</code> 是模板。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

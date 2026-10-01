@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么是这五项权重为什么这么分" class="lvl2">1. Why：为什么是这五项，权重为什么这么分</a><a href="#2-design五个纯函数-一个加权" class="lvl2">2. Design：五个纯函数 + 一个加权</a><a href="#3-realrun-evidence来自-demosoutdemo04automaticevalterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_04_automatic_eval_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-没有单项能防住刷分-防得住的是加权组合" class="lvl3">4.1 没有单项能防住刷分 —— 防得住的是加权组合</a><a href="#42-短文本在去重复上天然满分源码级陷阱" class="lvl3">4.2 短文本在&amp;quot;去重复&amp;quot;上天然满分（源码级陷阱）</a><a href="#43-忠实度对复读完全失灵这是它的定义决定的" class="lvl3">4.3 忠实度对&amp;quot;复读&amp;quot;完全失灵，这是它的定义决定的</a><a href="#44-参考答案的去重复只有-0874-真实的中文文本本来就有重复" class="lvl3">4.4 参考答案的&amp;quot;去重复&amp;quot;只有 0.874 —— 真实的中文文本本来就有重复</a><a href="#45-边界这套规则测不了事实正确性" class="lvl3">4.5 边界：这套规则测不了&amp;quot;事实正确性&amp;quot;</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-04-automatic-evaluation零-llm-的规则化评分">Milestone 04 — Automatic Evaluation：零 LLM 的规则化评分</h1>
 <p>M02 搭好了 benchmark 的骨架（任务集 + 排行），但打分函数是借来的。这一层把它做实：<strong>一个完全离线、确定性、零 LLM 调用的自动评分器</strong>。</p>
@@ -62,12 +141,12 @@ li{margin:.3em 0;}
 <ul class="lvl"><li><strong>不确定</strong> —— 同一个输入两次调用可能给不同分，排行榜不可复现；</li><li><strong>贵且慢</strong> —— 5 题 × 4 个候选 × 多次调用，成本和时间都不适合放在开发循环里；</li><li><strong>不可解释</strong> —— 拿到一个&quot;78 分&quot;，你不知道是哪一项丢的。</li></ul>
 <p>本项目选另一条路：<strong>规则化评分</strong>。五个维度加权求和，每个维度都是一段几行的纯 Python。代价是它只能测&quot;表面质量&quot;，测不了事实正确性 —— 这条边界后面会明确写出来。</p>
 <hr/>
-<h2 id="1-why为什么是这五项权重为什么这么分">1. Why：为什么是这五项，权重为什么这么分</h2>
+<h2 id="1-why为什么是这五项权重为什么这么分">1. Why：为什么是这五项，权重为什么这么分</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design五个纯函数-一个加权"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：五个纯函数 + 一个加权</span></a></nav>
 <pre><code>total = 100 × (0.40·关键词 + 0.15·格式 + 0.15·长度 + 0.20·忠实度 + 0.10·去重复)</code></pre>
 <table><thead><tr><th>维度</th><th>权重</th><th>回答什么</th><th>为什么是这个权重</th></tr></thead><tbody><tr><td><strong>关键词覆盖</strong></td><td>40%</td><td>该说的点说到了吗</td><td>最高 —— 内容是第一位</td></tr><tr><td><strong>忠实度</strong></td><td>20%</td><td>说的东西有依据吗</td><td>次高 —— 惩罚&quot;胡说&quot;</td></tr><tr><td><strong>格式</strong></td><td>15%</td><td>像个&quot;回答&quot;吗</td><td>弱约束，只做加分</td></tr><tr><td><strong>长度</strong></td><td>15%</td><td>说够了吗 / 啰嗦吗</td><td>双向惩罚过短和过长</td></tr><tr><td><strong>去重复</strong></td><td>10%</td><td>在复读吗</td><td>权重最小但<strong>不可省</strong>（见 4.1）</td></tr></tbody></table>
 <p>五项分三类：<strong>内容</strong>（关键词 + 忠实度，60%）、<strong>形式</strong>（格式 + 长度，30%）、<strong>退化检测</strong>（去重复，10%）。</p>
 <p>为什么&quot;去重复&quot;权重最小却不可省：它是一个<strong>否决项</strong>。前 60% 的内容分可以通过&quot;反复复读同一句话&quot;部分刷到（复读确实包含关键词、也确实忠实），只有去重复能识别出&quot;这个回答的信息量远小于它的字数&quot;。10% 的权重足以让&quot;复读型答案&quot;上不了榜，又不会过度惩罚正常的术语重复。</p>
-<h2 id="2-design五个纯函数-一个加权">2. Design：五个纯函数 + 一个加权</h2>
+<h2 id="2-design五个纯函数-一个加权">2. Design：五个纯函数 + 一个加权</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么是这五项权重为什么这么分"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么是这五项，权重为什么这么分</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo04automaticevalterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_automatic_eval_terminal.txt）</span></a></nav>
 <pre><code>keyword_coverage(answer, keywords)   # keywords 里出现了几个（子串匹配）
 format_compliance(answer)            # 0.35 起 + 有句号 +0.25 + 有列表/编号 +0.25 + 有冒号分号 +0.15
 length_reasonableness(a, reference)  # ratio=n/ref；[0.6,1.6] 满分，过短 ratio/0.6，过长 1-(r-1.6)/2.4
@@ -76,7 +155,7 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
 <p>三个实现细节值得单独说：</p>
 <ul class="lvl"><li><strong><code>_terms</code> 的中英混排处理</strong>（<code>src/ie/autoeval.py:24</code>）：ASCII 词用正则 <code>[a-z][a-z0-9_+.-]{1,}</code> 抽（至少 2 字符，避免把单个字母当词）；中文没有空格，用<strong>滑动 2-gram</strong>：<code>&quot;线程安全&quot;</code> → <code>{&quot;线程&quot;,&quot;程安&quot;,&quot;安全&quot;}</code>。<strong>中文是 2-gram 而不是分词</strong> —— 不引入 jieba，靠 2-gram 的重叠度做集合运算，对&quot;是否用了同样的术语&quot;足够用。</li><li><strong><code>format_compliance</code> 是加分制不是扣分制</strong>：空回答直接 0，非空起 0.35，然后逐项加分、上限 1.0。这样&quot;格式&quot;永远是个温和的加成，不会让一个内容正确的朴素段落被判死。</li><li><strong><code>length_reasonableness</code> 以参考答案为标尺</strong>（<code>src/ie/autoeval.py:67</code>）：<code>target = len(reference)</code>，<code>ratio = n / target</code>。<strong>没有 reference 时退化到绝对字数区间 [20, 500]</strong> —— 所有 demo 都传了 reference，走的是相对分支。</li></ul>
 <figure class="figure"><img alt="M04 自动评分打分卡：五维加权，空回答全线归零" src="../../../../../../projects/09-evaluation-inference/assets/autoeval.svg" loading="lazy"/><figcaption>M04 自动评分打分卡：五维加权，空回答全线归零</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo04automaticevalterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_automatic_eval_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo04automaticevalterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_automatic_eval_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design五个纯函数-一个加权"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：五个纯函数 + 一个加权</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>5 道评估题（M03 的 held-out 前 5 条），四个候选答案：</p>
 <table><thead><tr><th>候选</th><th>构造方式</th></tr></thead><tbody><tr><td>参考答案</td><td>原样返回 <code>record[&quot;output&quot;]</code></td></tr><tr><td>首句摘要</td><td>参考答案的第一句</td></tr><tr><td><strong>重复回答</strong></td><td><code>(reference[:20] + &quot;。&quot;) × 6</code> —— 把参考答案前 20 字复读 6 遍</td></tr><tr><td>空回答</td><td>空字符串</td></tr></tbody></table>
 <pre><code>── 自动评分排行 ───────────────────────────────────────────────────
@@ -93,7 +172,7 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
 <ul class="lvl"><li><strong>长度 0.988 —— 几乎满分。</strong> 它把前 20 字复读 6 遍，总长约 126 字符，和参考答案长度几乎一致，<strong>长度项被成功刷到了</strong>。</li><li><strong>忠实度 0.921 —— 也很高。</strong> 复读的词全部来自参考答案，<code>|A∩R|/|A|</code> 自然接近 1。<strong>忠实度项对&quot;复读&quot;是瞎的。</strong></li><li><strong>去重复 0.168 —— 崩了。</strong> 126 个字符产生 124 个 3-gram，其中不同的只有约 21 个（一个周期的量），<code>21/124 ≈ 0.169</code>。</li><li><strong>关键词 0.267 —— 也崩了。</strong> 复读前 20 字只能覆盖 6 个关键词里的约 1.6 个。</li><li><strong>总分 55.02</strong>。按权重还原：<code>0.40×0.267 + 0.15×0.630 + 0.15×0.988 + 0.20×0.921 + 0.10×0.168 = 55.05</code>（分项显示值四舍五入后的误差内）。</li></ul>
 <p><strong>空回答 0.00</strong>：五个分项<strong>每一个</strong>都有&quot;空输入直接返回 0&quot;的短路分支，所以总分严格为 0，不是&quot;某项接近 0&quot;。</p>
 <figure class="figure"><img alt="M04 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-04-automatic-eval.png" loading="lazy"/><figcaption>M04 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo04automaticevalterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_automatic_eval_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-没有单项能防住刷分-防得住的是加权组合">4.1 没有单项能防住刷分 —— 防得住的是加权组合</h3>
 <p>这一条值得说三遍，因为它推翻了&quot;加个重复度检测就安全了&quot;的直觉：</p>
 <ul class="lvl"><li><strong>长度项确实被刷到了</strong>（0.988）。如果只看长度，复读答案和参考答案没区别。</li><li><strong>忠实度项也确实被刷到了</strong>（0.921）。复读出来的词当然全部&quot;忠实&quot;。</li><li>真正拉住它的是<strong>关键词</strong>（0.267，权重最大 40%，一项就丢 29.3 分）和<strong>去重复</strong>（0.168，权重 10%，丢 8.3 分）。</li></ul>
@@ -121,12 +200,55 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
 <ul class="lvl"><li>一个答案把&quot;volatile 保证原子性&quot;说成&quot;volatile 不保证原子性&quot;，词面重叠度几乎一样，<strong>评分器给同样的分</strong>；</li><li>一个用词完全不同但完全正确的答案，会被判低分。</li></ul>
 <p>所以这套评分器适用于：<strong>同一批任务上、候选答案之间的横向比较</strong>（M02 的排行、M05 的模型对比）。它不适用于判断&quot;这个答案对不对&quot;。</p>
 <p>真正要测事实正确性，得用 LLM-as-judge 或人工 —— 而那正是本章开头说的&quot;不确定、贵、不可解释&quot;的方案。<strong>评估没有免费的午餐，只有明确取舍。</strong></p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>规则化评分 = <strong>五个纯函数加权</strong>：关键词 40% / 忠实度 20% / 格式 15% / 长度 15% / 去重复 10%。零 LLM、确定性、可解释。</li><li>实测排行：<strong>参考答案 94.09 &gt; 首句摘要 86.03 &gt; 重复回答 55.02 &gt; 空回答 0.00</strong>（5 题）。</li><li><strong>重复回答是本章的核心案例</strong>：长度 0.988（刷到了）、忠实度 0.921（也刷到了），但关键词 0.267、去重复 0.168 把它拉到 55.02 —— <strong>重复度 0.168 由 124 个 3-gram 里仅约 21 个不同得出</strong>。</li><li><strong>没有单项能防住刷分，防得住的是加权组合。</strong> 任何一维单独看都能被绕过（长度可被复读刷、忠实度可被复读刷、去重复对短文本白送 1.0）。</li><li><strong>忠实度只抓&quot;胡说&quot;</strong>，抓不住&quot;少说&quot;（M02：分母是答案自身）也抓不住&quot;复读&quot;（本章）。</li><li><code>repetition_score</code> 的实用上界约 <strong>0.95</strong>（参考答案实测 0.874），它是相对量不是绝对量。</li><li><strong>空回答严格 0.00</strong> —— 五个分项都有空输入短路，不是&quot;接近 0&quot;。</li><li>边界：词面重叠 ≠ 事实正确。这套评分器适合<strong>横向比较候选</strong>，不适合判定对错。</li><li>手写实现的意义：因为每个维度都是几行自己写的 Python，我能精确说出&quot;55.02 是怎么来的&quot;（逐项还原到 55.05）；用现成 judge 只能拿到一个分数和一个&quot;理由&quot;，而那个理由本身不可验证。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/autoeval.py</code></td><td><code>_terms</code>（ASCII 正则 + 中文 2-gram）/ <code>derive_keywords</code>（按标点切分，上限 8）/ <code>keyword_coverage</code> / <code>format_compliance</code>（加分制，0.35 起）/ <code>length_reasonableness</code>（相对 reference，过短 <code>ratio/0.6</code>）/ <code>faithfulness_proxy</code>（`\</td><td>A∩R\</td><td>/\</td><td>A\</td><td><code>）/ </code>repetition_score<code>（3-gram 唯一率，短文本返回 1.0）/ </code>evaluate_answer<code>（五维加权）/ </code>aggregate_scores<code> / </code>rank_answers`</td></tr><tr><td><code>src/ie/autoeval.py:83-84</code></td><td><code>if len(compact) &lt; ngram: return 1.0</code> —— 短文本白送满分，靠长度项兜底</td></tr><tr><td><code>src/ie/benchmark.py</code></td><td>复用 <code>evaluate_answer</code> + <code>aggregate_scores</code> 作为 M02 的打分与汇总口径</td></tr><tr><td><code>demos/demo_04_automatic_eval.py</code></td><td>3 节：候选构造 / 自动评分排行 / 最高最低分</td></tr><tr><td><code>demos/out/demo_04_automatic_eval_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/autoeval.svg</code></td><td>本章自动评分打分卡图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，M04 零 LLM 规则化自动评分落地。实测（5 题）：<strong>参考答案 94.09 &gt; 首句摘要 86.03 &gt; 重复回答 55.02 &gt; 空回答 0.00</strong>；重复回答分项 关键词 0.267 / 格式 0.630 / 长度 0.988 / 忠实度 0.921 / <strong>去重复 0.168</strong>（124 个 3-gram 中约 21 个不同），逐项还原总分 55.05。并诚实记录「长度 0.988 与忠实度 0.921 均被复读刷到 → 无单项能防刷分，防得住的是加权组合」「<code>repetition_score</code> 对 &lt;3 字符文本返回 1.0」「忠实度抓不住少说与复读」「词面重叠 ≠ 事实正确」。纯 numpy + 标准库，无 LLM 调用。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

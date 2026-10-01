@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#小型企业-demo-环境" class="lvl2">小型企业 Demo 环境</a><a href="#推荐平台" class="lvl2">推荐平台</a><a href="#gpu" class="lvl2">GPU</a><a href="#rtx4090" class="lvl3">RTX4090</a><a href="#cpu" class="lvl2">CPU</a><a href="#内存" class="lvl2">内存</a><a href="#硬盘" class="lvl2">硬盘</a><a href="#1-查看系统" class="lvl2">1. 查看系统</a><a href="#2-更新系统" class="lvl2">2. 更新系统</a><a href="#1-查看gpu" class="lvl2">1. 查看GPU</a><a href="#安装" class="lvl2">安装</a><a href="#方法1huggingface" class="lvl2">方法1：HuggingFace</a><a href="#方法2modelscope" class="lvl2">方法2：ModelScope</a><a href="#1-docker化" class="lvl2">1. Docker化</a><a href="#2-nginx代理" class="lvl2">2. Nginx代理</a><a href="#3-https" class="lvl2">3. HTTPS</a><a href="#4-用户鉴权" class="lvl2">4. 用户鉴权</a><a href="#5-限流" class="lvl2">5. 限流</a><a href="#6-日志" class="lvl2">6. 日志</a><a href="#7-prometheus监控" class="lvl2">7. Prometheus监控</a><a href="#8-gpu利用率监控" class="lvl2">8. GPU利用率监控</a><a href="#9-多模型路由" class="lvl2">9. 多模型路由</a><a href="#10-自动扩容" class="lvl2">10. 自动扩容</a><a href="#企业级部署升级docker-compose-vllm-nginx-https-api鉴权-监控" class="lvl2">《企业级部署升级：Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控》</a><a href="#day13企业级-lora-微调部署" class="lvl2">Day13：企业级 LoRA 微调部署</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day11-实战">Day11 实战</h1>
 <h1 id="从-0-租-gpu-服务器-ubuntu-初始化-docker-nvidia-环境-下载-qwen-vllm-部署-spring-boot-调用">从 0 租 GPU 服务器 → Ubuntu 初始化 → Docker → NVIDIA 环境 → 下载 Qwen → vLLM 部署 → Spring Boot 调用</h1>
@@ -106,7 +185,7 @@ Java AI Agent</code></pre>
 <h1 id="一先确定第一次部署方案">一、先确定第一次部署方案</h1>
 <p>我们不要一上来搞企业生产。</p>
 <p>第一次目标：</p>
-<h2 id="小型企业-demo-环境">小型企业 Demo 环境</h2>
+<h2 id="小型企业-demo-环境">小型企业 Demo 环境</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#推荐平台"><span class="sn-label">下一节 →</span><span class="sn-name">推荐平台</span></a></nav>
 <p>选择：</p>
 <pre><code>模型：
 
@@ -138,7 +217,7 @@ OpenAI API
 Spring Boot调用</code></pre>
 <hr/>
 <h1 id="二租-gpu-服务器">二、租 GPU 服务器</h1>
-<h2 id="推荐平台">推荐平台</h2>
+<h2 id="推荐平台">推荐平台</h2><nav class="sec-nav"><a class="sn prev" href="#小型企业-demo-环境"><span class="sn-label">← 上一节</span><span class="sn-name">小型企业 Demo 环境</span></a><a class="sn next" href="#gpu"><span class="sn-label">下一节 →</span><span class="sn-name">GPU</span></a></nav>
 <p>国内：</p>
 <ul class="lvl"><li>AutoDL</li></ul>
 <ul class="lvl"><li>阿里云 GPU</li></ul>
@@ -158,7 +237,7 @@ Spring Boot调用</code></pre>
 <h1 id="三服务器配置选择">三、服务器配置选择</h1>
 <p>创建实例：</p>
 <p>选择：</p>
-<h2 id="gpu">GPU</h2>
+<h2 id="gpu">GPU</h2><nav class="sec-nav"><a class="sn prev" href="#推荐平台"><span class="sn-label">← 上一节</span><span class="sn-name">推荐平台</span></a><a class="sn next" href="#cpu"><span class="sn-label">下一节 →</span><span class="sn-name">CPU</span></a></nav>
 <p>推荐：</p>
 <h3 id="rtx4090">RTX4090</h3>
 <p>参数：</p>
@@ -179,17 +258,17 @@ CUDA：
 <p>A10：</p>
 <pre><code>24GB显存</code></pre>
 <hr/>
-<h2 id="cpu">CPU</h2>
+<h2 id="cpu">CPU</h2><nav class="sec-nav"><a class="sn prev" href="#gpu"><span class="sn-label">← 上一节</span><span class="sn-name">GPU</span></a><a class="sn next" href="#内存"><span class="sn-label">下一节 →</span><span class="sn-name">内存</span></a></nav>
 <p>选择：</p>
 <pre><code>8核</code></pre>
 <hr/>
-<h2 id="内存">内存</h2>
+<h2 id="内存">内存</h2><nav class="sec-nav"><a class="sn prev" href="#cpu"><span class="sn-label">← 上一节</span><span class="sn-name">CPU</span></a><a class="sn next" href="#硬盘"><span class="sn-label">下一节 →</span><span class="sn-name">硬盘</span></a></nav>
 <p>最低：</p>
 <pre><code>32GB</code></pre>
 <p>推荐：</p>
 <pre><code>64GB</code></pre>
 <hr/>
-<h2 id="硬盘">硬盘</h2>
+<h2 id="硬盘">硬盘</h2><nav class="sec-nav"><a class="sn prev" href="#内存"><span class="sn-label">← 上一节</span><span class="sn-name">内存</span></a><a class="sn next" href="#1-查看系统"><span class="sn-label">下一节 →</span><span class="sn-name">1. 查看系统</span></a></nav>
 <p>模型：</p>
 <p>Qwen7B：</p>
 <p>约15GB</p>
@@ -244,18 +323,18 @@ xxxx</code></pre>
 <p>你已经进入云GPU。</p>
 <hr/>
 <h1 id="六服务器基础初始化">六、服务器基础初始化</h1>
-<h2 id="1-查看系统">1. 查看系统</h2>
+<h2 id="1-查看系统">1. 查看系统</h2><nav class="sec-nav"><a class="sn prev" href="#硬盘"><span class="sn-label">← 上一节</span><span class="sn-name">硬盘</span></a><a class="sn next" href="#2-更新系统"><span class="sn-label">下一节 →</span><span class="sn-name">2. 更新系统</span></a></nav>
 <pre><code>cat /etc/os-release</code></pre>
 <p>应该：</p>
 <pre><code>Ubuntu 22.04</code></pre>
 <hr/>
-<h2 id="2-更新系统">2. 更新系统</h2>
+<h2 id="2-更新系统">2. 更新系统</h2><nav class="sec-nav"><a class="sn prev" href="#1-查看系统"><span class="sn-label">← 上一节</span><span class="sn-name">1. 查看系统</span></a><a class="sn next" href="#1-查看gpu"><span class="sn-label">下一节 →</span><span class="sn-name">1. 查看GPU</span></a></nav>
 <pre><code>apt update
 
 apt upgrade -y</code></pre>
 <hr/>
 <h1 id="七安装-nvidia-环境">七、安装 NVIDIA 环境</h1>
-<h2 id="1-查看gpu">1. 查看GPU</h2>
+<h2 id="1-查看gpu">1. 查看GPU</h2><nav class="sec-nav"><a class="sn prev" href="#2-更新系统"><span class="sn-label">← 上一节</span><span class="sn-name">2. 更新系统</span></a><a class="sn next" href="#安装"><span class="sn-label">下一节 →</span><span class="sn-name">安装</span></a></nav>
 <p>执行：</p>
 <pre><code>nvidia-smi</code></pre>
 <p>正常：</p>
@@ -277,7 +356,7 @@ CUDA Version: 12.x
 <p>驱动已经安装。</p>
 <hr/>
 <h1 id="八安装-docker">八、安装 Docker</h1>
-<h2 id="安装">安装</h2>
+<h2 id="安装">安装</h2><nav class="sec-nav"><a class="sn prev" href="#1-查看gpu"><span class="sn-label">← 上一节</span><span class="sn-name">1. 查看GPU</span></a><a class="sn next" href="#方法1huggingface"><span class="sn-label">下一节 →</span><span class="sn-name">方法1：HuggingFace</span></a></nav>
 <pre><code>curl -fsSL https://get.docker.com | bash</code></pre>
 <p>启动：</p>
 <pre><code>systemctl start docker
@@ -322,7 +401,7 @@ nvidia-smi</code></pre>
 <h1 id="十二下载-qwen-模型">十二、下载 Qwen 模型</h1>
 <p>这里有两种方式。</p>
 <hr/>
-<h2 id="方法1huggingface">方法1：HuggingFace</h2>
+<h2 id="方法1huggingface">方法1：HuggingFace</h2><nav class="sec-nav"><a class="sn prev" href="#安装"><span class="sn-label">← 上一节</span><span class="sn-name">安装</span></a><a class="sn next" href="#方法2modelscope"><span class="sn-label">下一节 →</span><span class="sn-name">方法2：ModelScope</span></a></nav>
 <p>安装：</p>
 <pre><code>pip install huggingface_hub</code></pre>
 <p>登录：</p>
@@ -344,7 +423,7 @@ Qwen/Qwen2.5-7B-Instruct \
 
     └── tokenizer</code></pre>
 <hr/>
-<h2 id="方法2modelscope">方法2：ModelScope</h2>
+<h2 id="方法2modelscope">方法2：ModelScope</h2><nav class="sec-nav"><a class="sn prev" href="#方法1huggingface"><span class="sn-label">← 上一节</span><span class="sn-name">方法1：HuggingFace</span></a><a class="sn next" href="#1-docker化"><span class="sn-label">下一节 →</span><span class="sn-name">1. Docker化</span></a></nav>
 <p>国内更快。</p>
 <p>安装：</p>
 <pre><code>pip install modelscope</code></pre>
@@ -524,16 +603,16 @@ GPU计算
 <p>现在只是：</p>
 <p>“能跑”。</p>
 <p>企业需要：</p>
-<h2 id="1-docker化">1. Docker化</h2>
-<h2 id="2-nginx代理">2. Nginx代理</h2>
-<h2 id="3-https">3. HTTPS</h2>
-<h2 id="4-用户鉴权">4. 用户鉴权</h2>
-<h2 id="5-限流">5. 限流</h2>
-<h2 id="6-日志">6. 日志</h2>
-<h2 id="7-prometheus监控">7. Prometheus监控</h2>
-<h2 id="8-gpu利用率监控">8. GPU利用率监控</h2>
-<h2 id="9-多模型路由">9. 多模型路由</h2>
-<h2 id="10-自动扩容">10. 自动扩容</h2>
+<h2 id="1-docker化">1. Docker化</h2><nav class="sec-nav"><a class="sn prev" href="#方法2modelscope"><span class="sn-label">← 上一节</span><span class="sn-name">方法2：ModelScope</span></a><a class="sn next" href="#2-nginx代理"><span class="sn-label">下一节 →</span><span class="sn-name">2. Nginx代理</span></a></nav>
+<h2 id="2-nginx代理">2. Nginx代理</h2><nav class="sec-nav"><a class="sn prev" href="#1-docker化"><span class="sn-label">← 上一节</span><span class="sn-name">1. Docker化</span></a><a class="sn next" href="#3-https"><span class="sn-label">下一节 →</span><span class="sn-name">3. HTTPS</span></a></nav>
+<h2 id="3-https">3. HTTPS</h2><nav class="sec-nav"><a class="sn prev" href="#2-nginx代理"><span class="sn-label">← 上一节</span><span class="sn-name">2. Nginx代理</span></a><a class="sn next" href="#4-用户鉴权"><span class="sn-label">下一节 →</span><span class="sn-name">4. 用户鉴权</span></a></nav>
+<h2 id="4-用户鉴权">4. 用户鉴权</h2><nav class="sec-nav"><a class="sn prev" href="#3-https"><span class="sn-label">← 上一节</span><span class="sn-name">3. HTTPS</span></a><a class="sn next" href="#5-限流"><span class="sn-label">下一节 →</span><span class="sn-name">5. 限流</span></a></nav>
+<h2 id="5-限流">5. 限流</h2><nav class="sec-nav"><a class="sn prev" href="#4-用户鉴权"><span class="sn-label">← 上一节</span><span class="sn-name">4. 用户鉴权</span></a><a class="sn next" href="#6-日志"><span class="sn-label">下一节 →</span><span class="sn-name">6. 日志</span></a></nav>
+<h2 id="6-日志">6. 日志</h2><nav class="sec-nav"><a class="sn prev" href="#5-限流"><span class="sn-label">← 上一节</span><span class="sn-name">5. 限流</span></a><a class="sn next" href="#7-prometheus监控"><span class="sn-label">下一节 →</span><span class="sn-name">7. Prometheus监控</span></a></nav>
+<h2 id="7-prometheus监控">7. Prometheus监控</h2><nav class="sec-nav"><a class="sn prev" href="#6-日志"><span class="sn-label">← 上一节</span><span class="sn-name">6. 日志</span></a><a class="sn next" href="#8-gpu利用率监控"><span class="sn-label">下一节 →</span><span class="sn-name">8. GPU利用率监控</span></a></nav>
+<h2 id="8-gpu利用率监控">8. GPU利用率监控</h2><nav class="sec-nav"><a class="sn prev" href="#7-prometheus监控"><span class="sn-label">← 上一节</span><span class="sn-name">7. Prometheus监控</span></a><a class="sn next" href="#9-多模型路由"><span class="sn-label">下一节 →</span><span class="sn-name">9. 多模型路由</span></a></nav>
+<h2 id="9-多模型路由">9. 多模型路由</h2><nav class="sec-nav"><a class="sn prev" href="#8-gpu利用率监控"><span class="sn-label">← 上一节</span><span class="sn-name">8. GPU利用率监控</span></a><a class="sn next" href="#10-自动扩容"><span class="sn-label">下一节 →</span><span class="sn-name">10. 自动扩容</span></a></nav>
+<h2 id="10-自动扩容">10. 自动扩容</h2><nav class="sec-nav"><a class="sn prev" href="#9-多模型路由"><span class="sn-label">← 上一节</span><span class="sn-name">9. 多模型路由</span></a><a class="sn next" href="#企业级部署升级docker-compose-vllm-nginx-https-api鉴权-监控"><span class="sn-label">下一节 →</span><span class="sn-name">《企业级部署升级：Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控》</span></a></nav>
 <hr/>
 <h1 id="二十一今天完成能力">二十一、今天完成能力</h1>
 <p>完成：</p>
@@ -549,13 +628,13 @@ GPU计算
 <p><strong>AI Application Engineer 和普通调用API开发者的区别。</strong></p>
 <hr/>
 <h1 id="下一节-day12">下一节 Day12</h1>
-<h2 id="企业级部署升级docker-compose-vllm-nginx-https-api鉴权-监控">《企业级部署升级：Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控》</h2>
+<h2 id="企业级部署升级docker-compose-vllm-nginx-https-api鉴权-监控">《企业级部署升级：Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控》</h2><nav class="sec-nav"><a class="sn prev" href="#10-自动扩容"><span class="sn-label">← 上一节</span><span class="sn-name">10. 自动扩容</span></a><a class="sn next" href="#day13企业级-lora-微调部署"><span class="sn-label">下一节 →</span><span class="sn-name">Day13：企业级 LoRA 微调部署</span></a></nav>
 <p>我们会把现在：</p>
 <pre><code>一台能跑的GPU机器</code></pre>
 <p>升级成：</p>
 <pre><code>接近生产环境的大模型服务平台</code></pre>
 <p>然后再进入：</p>
-<h2 id="day13企业级-lora-微调部署">Day13：企业级 LoRA 微调部署</h2>
+<h2 id="day13企业级-lora-微调部署">Day13：企业级 LoRA 微调部署</h2><nav class="sec-nav"><a class="sn prev" href="#企业级部署升级docker-compose-vllm-nginx-https-api鉴权-监控"><span class="sn-label">← 上一节</span><span class="sn-name">《企业级部署升级：Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控》</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>包括：</p>
 <ul class="lvl"><li>数据准备</li></ul>
 <ul class="lvl"><li>GPU训练服务器</li></ul>
@@ -566,5 +645,48 @@ GPU计算
 <ul class="lvl"><li>A/B测试</li></ul>
 <p>这才是完整的大模型工程闭环。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

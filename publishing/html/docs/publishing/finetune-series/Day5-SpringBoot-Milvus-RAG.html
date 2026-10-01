@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#后端" class="lvl2">后端</a><a href="#ai框架" class="lvl2">AI框架</a><a href="#向量数据库" class="lvl2">向量数据库</a><a href="#embedding模型" class="lvl2">Embedding模型</a><a href="#大模型" class="lvl2">大模型</a><a href="#day6实现完整-agent" class="lvl2">Day6：实现完整 Agent</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="大模型微调实战-day5spring-boot-langchain4j-milvus-实现-rag-pipeline">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</h1>
 <h1 id="spring-boot-langchain4j-milvus-实现-rag-pipeline">Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</h1>
@@ -148,19 +227,19 @@ Qwen+LoRA回答</code></pre>
               Answer</code></pre>
 <hr/>
 <h1 id="二技术选型">二、技术选型</h1>
-<h2 id="后端">后端</h2>
+<h2 id="后端">后端</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#ai框架"><span class="sn-label">下一节 →</span><span class="sn-name">AI框架</span></a></nav>
 <pre><code>Spring Boot 3</code></pre>
-<h2 id="ai框架">AI框架</h2>
+<h2 id="ai框架">AI框架</h2><nav class="sec-nav"><a class="sn prev" href="#后端"><span class="sn-label">← 上一节</span><span class="sn-name">后端</span></a><a class="sn next" href="#向量数据库"><span class="sn-label">下一节 →</span><span class="sn-name">向量数据库</span></a></nav>
 <pre><code>LangChain4j</code></pre>
-<h2 id="向量数据库">向量数据库</h2>
+<h2 id="向量数据库">向量数据库</h2><nav class="sec-nav"><a class="sn prev" href="#ai框架"><span class="sn-label">← 上一节</span><span class="sn-name">AI框架</span></a><a class="sn next" href="#embedding模型"><span class="sn-label">下一节 →</span><span class="sn-name">Embedding模型</span></a></nav>
 <pre><code>Milvus</code></pre>
-<h2 id="embedding模型">Embedding模型</h2>
+<h2 id="embedding模型">Embedding模型</h2><nav class="sec-nav"><a class="sn prev" href="#向量数据库"><span class="sn-label">← 上一节</span><span class="sn-name">向量数据库</span></a><a class="sn next" href="#大模型"><span class="sn-label">下一节 →</span><span class="sn-name">大模型</span></a></nav>
 <p>推荐：</p>
 <p>你已经有：</p>
 <pre><code>nomic-embed-text</code></pre>
 <p>Ollama运行：</p>
 <pre><code>ollama pull nomic-embed-text</code></pre>
-<h2 id="大模型">大模型</h2>
+<h2 id="大模型">大模型</h2><nav class="sec-nav"><a class="sn prev" href="#embedding模型"><span class="sn-label">← 上一节</span><span class="sn-name">Embedding模型</span></a><a class="sn next" href="#day6实现完整-agent"><span class="sn-label">下一节 →</span><span class="sn-name">Day6：实现完整 Agent</span></a></nav>
 <p>你的：</p>
 <pre><code>Qwen + Java LoRA</code></pre>
 <p>通过 Ollama 暴露。</p>
@@ -575,7 +654,7 @@ Answer</code></pre>
 <p>✅ RAG链路理解</p>
 <hr/>
 <h1 id="下一步-day6">下一步 Day6</h1>
-<h2 id="day6实现完整-agent">Day6：实现完整 Agent</h2>
+<h2 id="day6实现完整-agent">Day6：实现完整 Agent</h2><nav class="sec-nav"><a class="sn prev" href="#大模型"><span class="sn-label">← 上一节</span><span class="sn-name">大模型</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>把你的系统升级：</p>
 <p>从：</p>
 <pre><code>RAG问答</code></pre>
@@ -616,5 +695,48 @@ LLM
 Answer</code></pre>
 <p>这一步会把你之前学习的 <strong>Tool Calling + MCP + Agent</strong> 全部串起来。你现在这条路线已经接近一个完整 AI Engineer 项目闭环。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

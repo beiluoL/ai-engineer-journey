@@ -52,16 +52,95 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-先看清成本每一轮都在重发历史" class="lvl2">1. 先看清成本：每一轮都在重发历史</a><a href="#2-trimhistory压缩历史但不能破坏协议" class="lvl2">2. trim_history：压缩历史，但不能破坏协议</a><a href="#3-scratchpad历史会被裁纸上的结论不会" class="lvl2">3. Scratchpad：历史会被裁，纸上的结论不会</a><a href="#4-第三道闸门它没报错只是在原地打转" class="lvl2">4. 第三道闸门：它没报错，只是在原地打转</a><a href="#5-一个真的跑完的多步骤任务" class="lvl2">5. 一个真的跑完的多步骤任务</a><a href="#6-这一章踩到的坑与结论" class="lvl2">6. 这一章踩到的坑与结论</a><a href="#7-代码位置" class="lvl2">7. 代码位置</a><a href="#8-下一步" class="lvl2">8. 下一步</a><a href="#9-版本" class="lvl2">9. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-05-agent-loop循环之外的状态管理">Milestone 05 — Agent Loop：循环之外的状态管理</h1>
 <p>Milestone 04 把 ReAct 循环写出来了：想一步、调一次工具、把结果塞回对话、再想一步。它跑得通单步任务，也跑得通「问一句答一句」的简单多轮。但真把它拿去做<strong>多步骤任务</strong>的时候，三个问题立刻浮出水面：</p>
 <ul class="lvl"><li><strong>上下文在膨胀</strong> —— 每一步的工具结果都堆进同一个 messages 列表，而每一轮都要把整段历史<strong>重发一遍</strong></li><li><strong>中间结论没地方放</strong> —— 模型第 2 步查到的事实只活在 assistant 的 content 里，一旦为了省 token 把历史裁掉，结论跟着没了</li><li><strong>多出的空转形态拦不住</strong> —— 反复用同样的参数调同一个工具，每次都成功，失败闸门一次都没涨</li></ul>
 <p>这一章就是补这三件事：<code>memory.py</code>（工作记忆 + 草稿纸）、第三道闸门（<code>max_repeats</code>）、以及一个真的跑完的多步骤任务。</p>
 <hr/>
-<h2 id="1-先看清成本每一轮都在重发历史">1. 先看清成本：每一轮都在重发历史</h2>
+<h2 id="1-先看清成本每一轮都在重发历史">1. 先看清成本：每一轮都在重发历史</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-trimhistory压缩历史但不能破坏协议"><span class="sn-label">下一节 →</span><span class="sn-name">2. trim_history：压缩历史，但不能破坏协议</span></a></nav>
 <p>真实一次多步骤任务跑下来，每一轮<strong>发出去的体量</strong>是这样（用 <code>estimate_messages_tokens</code> 量的）：</p>
 <pre><code>轮      token     消息数      其中占位
 1        244       2         0
@@ -76,7 +155,7 @@ li{margin:.3em 0;}
 <p>关键不是「峰值 951」而是「<strong>累计 5131</strong>」。多步骤任务的账单按累计算：第 N 轮要把前 N-1 轮的全部历史再付一遍钱。所以降成本的杠杆有两个：少走几步、把历史压薄。这一章管第二个。</p>
 <figure class="figure"><img alt="真实运行：工作记忆裁剪与草稿纸" src="../../../../../../projects/05-agent-mcp/assets/term-05-working-memory.png" loading="lazy"/><figcaption>真实运行：工作记忆裁剪与草稿纸</figcaption></figure>
 <hr/>
-<h2 id="2-trimhistory压缩历史但不能破坏协议">2. trim_history：压缩历史，但不能破坏协议</h2>
+<h2 id="2-trimhistory压缩历史但不能破坏协议">2. trim_history：压缩历史，但不能破坏协议</h2><nav class="sec-nav"><a class="sn prev" href="#1-先看清成本每一轮都在重发历史"><span class="sn-label">← 上一节</span><span class="sn-name">1. 先看清成本：每一轮都在重发历史</span></a><a class="sn next" href="#3-scratchpad历史会被裁纸上的结论不会"><span class="sn-label">下一节 →</span><span class="sn-name">3. Scratchpad：历史会被裁，纸上的结论不会</span></a></nav>
 <p>裁剪规则（优先级从高到低）：</p>
 <table><thead><tr><th>优先级</th><th>内容</th><th>理由</th></tr></thead><tbody><tr><td>1</td><td><code>system</code> 永不裁剪</td><td>工作规则丢了，Agent 就退化成裸模型</td></tr><tr><td>2</td><td>第一条 <code>user</code> 问题永不裁剪</td><td>模型不知道自己在回答什么</td></tr><tr><td>3</td><td>最近 <code>keep_recent_steps</code> 轮保留原文</td><td>那几步是它马上要引用的内容</td></tr><tr><td>4</td><td>更早的工具结果替换成占位行</td><td>模型知道「有过但读不到」，不会以为没查过</td></tr><tr><td>5</td><td><strong>assistant(tool_calls) 与它的 tool 消息同进同出</strong></td><td>协议要求的是<strong>配对</strong>，不是先后</td></tr></tbody></table>
 <p>第 5 条是最容易写错、而且<strong>只有真发请求才会暴露</strong>的一类 bug：只砍掉 assistant、留下它的 tool 消息，服务端直接打回来；本地 mock 一句怨言都没有。这和 Milestone 03 讲的顺序坑是同一个根因。</p>
@@ -92,7 +171,7 @@ li{margin:.3em 0;}
 <p>另外两个实现细节值得记：</p>
 <ul class="lvl"><li><strong>trim 返回新列表，不原地改</strong>。<code>RecordingLLM.transcript</code> 存的是同一批对象的引用，原地改写会让「日志里看到的历史」和「实际发出去的历史」对不上，排查时看到的就不是真相</li><li><strong>token 估算只用来做决策，不用来做计费</strong>。中文是这条铁律最容易被忽略的地方：1 个汉字接近 1 个 token，按「字符数 // 4」的英文经验公式会严重低估</li></ul>
 <hr/>
-<h2 id="3-scratchpad历史会被裁纸上的结论不会">3. Scratchpad：历史会被裁，纸上的结论不会</h2>
+<h2 id="3-scratchpad历史会被裁纸上的结论不会">3. Scratchpad：历史会被裁，纸上的结论不会</h2><nav class="sec-nav"><a class="sn prev" href="#2-trimhistory压缩历史但不能破坏协议"><span class="sn-label">← 上一节</span><span class="sn-name">2. trim_history：压缩历史，但不能破坏协议</span></a><a class="sn next" href="#4-第三道闸门它没报错只是在原地打转"><span class="sn-label">下一节 →</span><span class="sn-name">4. 第三道闸门：它没报错，只是在原地打转</span></a></nav>
 <p>这是整章的立论。做一次实验：</p>
 <pre><code>历史被裁：1287 → 431 token
   被压掉的工具结果：2 条，内容变成占位符
@@ -108,7 +187,7 @@ assert bool(pad) is False   # ← 因为 __len__ == 0</code></pre>
 <p>于是 <code>build_agent</code> 里那句 <code>if scratchpad:</code> 把刚建好的空纸当成「没传」，草稿纸工具一个都没注册上。这个 bug 离线测试看不出来（测试都是直接传 Registry，从没走过空纸这条分支），是给 CLI 加 <code>--notes</code> 入口时才暴露的。修法是调用点一律写 <code>is not None</code>，并用 <code>test_empty_pad_is_falsy</code> 把这条约定钉住。</p>
 <p>同一张纸必须被两个工具共享，所以纸在 <code>cli.py</code> / <code>build_agent</code> 里建一次再往下分发 —— 让两个工具各 <code>new</code> 一张，就变成两张互不相通的纸。</p>
 <hr/>
-<h2 id="4-第三道闸门它没报错只是在原地打转">4. 第三道闸门：它没报错，只是在原地打转</h2>
+<h2 id="4-第三道闸门它没报错只是在原地打转">4. 第三道闸门：它没报错，只是在原地打转</h2><nav class="sec-nav"><a class="sn prev" href="#3-scratchpad历史会被裁纸上的结论不会"><span class="sn-label">← 上一节</span><span class="sn-name">3. Scratchpad：历史会被裁，纸上的结论不会</span></a><a class="sn next" href="#5-一个真的跑完的多步骤任务"><span class="sn-label">下一节 →</span><span class="sn-name">5. 一个真的跑完的多步骤任务</span></a></nav>
 <p>Milestone 04 有两道闸门：<code>max_steps</code>（成本）和 <code>max_tool_failures</code>（连续失败）。多步骤任务补上第三种失效形态：</p>
 <pre><code>剧本：连续三次用完全相同的参数调 rag_search
 
@@ -123,7 +202,7 @@ assert bool(pad) is False   # ← 因为 __len__ == 0</code></pre>
 <p>三道闸门对照：</p>
 <table><thead><tr><th>闸门</th><th>拦什么</th><th>触发信号</th></tr></thead><tbody><tr><td><code>max_steps=8</code></td><td>兜底的成本天花板</td><td>轮数用尽</td></tr><tr><td><code>max_tool_failures=3</code></td><td>报错型空转</td><td>连续 <code>ToolResult.error</code>（成功一次清零）</td></tr><tr><td><code>max_repeats=2</code></td><td><strong>成功型空转</strong></td><td>同一「工具名 + 参数」被调用太多次</td></tr></tbody></table>
 <hr/>
-<h2 id="5-一个真的跑完的多步骤任务">5. 一个真的跑完的多步骤任务</h2>
+<h2 id="5-一个真的跑完的多步骤任务">5. 一个真的跑完的多步骤任务</h2><nav class="sec-nav"><a class="sn prev" href="#4-第三道闸门它没报错只是在原地打转"><span class="sn-label">← 上一节</span><span class="sn-name">4. 第三道闸门：它没报错，只是在原地打转</span></a><a class="sn next" href="#6-这一章踩到的坑与结论"><span class="sn-label">下一节 →</span><span class="sn-name">6. 这一章踩到的坑与结论</span></a></nav>
 <p>离线剧本（确定性，截图对得上）：查 P01 → 记笔记 → 查 P04 → 记笔记 → 汇总。</p>
 <pre><code>问题：对比 Project 01 与 Project 04 各自怎么处理状态持久化
   [1] thought：我分两步查，每查完一个就记到草稿纸上。
@@ -143,20 +222,63 @@ assert bool(pad) is False   # ← 因为 __len__ == 0</code></pre>
 <ul class="lvl"><li>它自己决定<strong>分两次检索</strong>（第 1 轮查 P01，第 2 轮一轮里并行发两个 <code>rag_search</code>）</li><li>第 4 轮才写笔记，而且<strong>写在比较之后</strong> —— 「先记下来」和「先比对再挑重点记」是两种策略，模型选了后者</li><li>最后一步直接给答案，没有再调 <code>read_notes</code>（笔记常驻在 system 里，省掉了这一轮）</li><li>12 步 / 7 次工具调用 / 草稿纸 2 条，答案里同时用上了两条笔记的内容</li></ul>
 <p>这就是 Plan → Act → Observe 的完整闭环：<strong> Observe 的结果落在草稿纸上，而不是留在随时会被裁的对话流里。</strong></p>
 <hr/>
-<h2 id="6-这一章踩到的坑与结论">6. 这一章踩到的坑与结论</h2>
+<h2 id="6-这一章踩到的坑与结论">6. 这一章踩到的坑与结论</h2><nav class="sec-nav"><a class="sn prev" href="#5-一个真的跑完的多步骤任务"><span class="sn-label">← 上一节</span><span class="sn-name">5. 一个真的跑完的多步骤任务</span></a><a class="sn next" href="#7-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">7. 代码位置</span></a></nav>
 <table><thead><tr><th>#</th><th>坑</th><th>怎么发现的</th><th>修法</th></tr></thead><tbody><tr><td>1</td><td>空 <code>Scratchpad</code> 在布尔判断里是假值（<code>__len__</code> 导致）</td><td>跑 <code>build_agent(scratchpad=True)</code> 发现工具没注册</td><td>调用点一律 <code>is not None</code> + 钉测试</td></tr><tr><td>2</td><td><code>build_agent()</code> 的默认分支 <code>FakeLLM</code> 没 import</td><td>第一次真的调用 <code>build_agent()</code></td><td>补导入 + 加测试覆盖默认值分支</td></tr><tr><td>3</td><td>剧本里给了 content 却没给 tool_calls</td><td>demo 第 1 步就被当成最终答案结束了</td><td>思考与调用要写在同一条 assistant 消息里</td></tr><tr><td>4</td><td>加了重复闸门后，老的 <code>max_steps</code> 测试语义变了</td><td><code>test_max_steps_exceeded</code> 开始抛 <code>RepeatedToolCall</code></td><td>测试里每步参数改成不一样 —— 新闸门不是 bug，是它拦住了原本要靠烧满步数才停的空转</td></tr></tbody></table>
 <p>结论：</p>
 <ul class="lvl"><li>多步骤任务的成本 = <strong>每轮重发历史的累加</strong>，不是最后一轮那个数字。</li><li>裁剪必须<strong>整轮配对</strong>地裁，留下孤儿 tool 消息会被服务端打回。</li><li>中间结论必须写在<strong>循环之外</strong>（草稿纸），写在历史里迟早被裁掉。</li><li>空转分两种：报错的（失败闸门管）和<strong>成功但原地打转的</strong>（重复闸门管）。</li><li>改结构要数调用点 —— 这一章新加的东西，每个入口（CLI / build_agent / 测试）都要跑到。</li></ul>
-<h2 id="7-代码位置">7. 代码位置</h2>
+<h2 id="7-代码位置">7. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#6-这一章踩到的坑与结论"><span class="sn-label">← 上一节</span><span class="sn-name">6. 这一章踩到的坑与结论</span></a><a class="sn next" href="#8-下一步"><span class="sn-label">下一节 →</span><span class="sn-name">8. 下一步</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/memory.py</code></td><td><code>estimate_tokens</code> / <code>estimate_messages_tokens</code> / <code>trim_history</code> / <code>Scratchpad</code></td></tr><tr><td><code>src/agent/tools.py</code></td><td><code>WriteNoteTool</code> / <code>ReadNotesTool</code> / <code>default_tools(pad)</code></td></tr><tr><td><code>src/agent/agent.py</code></td><td>循环里的三处新增：重复计数、工作记忆裁剪、system 注入笔记</td></tr><tr><td><code>src/agent/errors.py</code></td><td><code>RepeatedToolCall</code></td></tr><tr><td><code>src/agent/settings.py</code></td><td><code>max_repeats</code> / <code>context_budget</code> / <code>keep_recent_steps</code></td></tr><tr><td><code>src/agent/cli.py</code></td><td><code>--notes</code> 开关（挂载草稿纸工具并在末尾打印笔记）</td></tr><tr><td><code>tests/test_memory.py</code></td><td>23 项：估算 / 裁剪 / 孤儿消息 / 草稿纸</td></tr><tr><td><code>tests/test_agent_loop.py</code></td><td>19 项：重复闸门 / 循环内裁剪 / 多步骤组合</td></tr><tr><td><code>demos/demo_05_agent_loop.py</code></td><td>6 节真实演示，支持 <code>--real</code></td></tr></tbody></table>
 <pre><code>cd projects/05-agent-mcp
 .venv/bin/python demos/demo_05_agent_loop.py
 DEEPSEEK_API_KEY=xxx .venv/bin/python demos/demo_05_agent_loop.py --real
 .venv/bin/python -m agent.cli --notes --real &quot;对比 Project 01 与 Project 04 的持久化方式&quot;</code></pre>
-<h2 id="8-下一步">8. 下一步</h2>
+<h2 id="8-下一步">8. 下一步</h2><nav class="sec-nav"><a class="sn prev" href="#7-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">7. 代码位置</span></a><a class="sn next" href="#9-版本"><span class="sn-label">下一节 →</span><span class="sn-name">9. 版本</span></a></nav>
 <p>Milestone 06 做<strong>任务分解</strong>：这一章的拆解是模型在 thought 里自己想出来的，下一步要把它变成结构化的东西 —— 一个显式的 <code>Plan</code>（子任务 + 依赖 + 完成状态），让多个 Agent 能各自领走一部分，也就是 Multi-Step Task 到 Agent Workflow 的那一步。</p>
-<h2 id="9-版本">9. 版本</h2>
+<h2 id="9-版本">9. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#8-下一步"><span class="sn-label">← 上一节</span><span class="sn-name">8. 下一步</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.5 → <strong>v0.6</strong>，工作记忆 + 草稿纸 + 第三道闸门落地，离线真实双路跑通，<code>python -m agent.cli --notes</code> 可用，测试 103 → <strong>146 passed</strong>，截图 12 → <strong>15 张</strong>。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

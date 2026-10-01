@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#能力递进" class="lvl2">能力递进</a><a href="#project-01-python-ai-cli-assistant-能力" class="lvl2">Project 01 — Python AI CLI Assistant → 能力</a><a href="#project-02-engineering-ai-assistant-能力" class="lvl2">Project 02 — Engineering AI Assistant → 能力</a><a href="#project-03-ai-application-能力" class="lvl2">Project 03 — AI Application → 能力</a><a href="#project-04-ai-knowledge-base-rag-能力" class="lvl2">Project 04 — AI Knowledge Base / RAG → 能力</a><a href="#project-05-research-agent-mcp-能力" class="lvl2">Project 05 — Research Agent / MCP → 能力</a><a href="#project-06-mini-transformer-llm-能力" class="lvl2">Project 06 — Mini Transformer / LLM → 能力</a><a href="#project-07-open-source-llm-能力" class="lvl2">Project 07 — Open Source LLM → 能力</a><a href="#project-08-lora-qlora-finetuning-能力" class="lvl2">Project 08 — LoRA / QLoRA Fine-Tuning → 能力</a><a href="#project-09-llm-evaluation-inference-能力" class="lvl2">Project 09 — LLM Evaluation / Inference → 能力</a><a href="#project-10-tiny-llm-capstone-能力" class="lvl2">Project 10 — Tiny LLM Capstone → 能力</a><a href="#基础知识层-llmfundamentals-能力" class="lvl2">基础知识层 — llm-fundamentals → 能力</a><a href="#练手层-能力" class="lvl2">练手层 → 能力</a><a href="#为什么-knowledge-map-不复制正文" class="lvl2">为什么 Knowledge Map 不复制正文</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="ai-engineer-journey-knowledge-map">AI Engineer Journey — Knowledge Map</h1>
 <blockquote><p>项目 → 知识 → 能力的关系网。只展示关联，不复制 Milestone 正文。 想了解具体知识？打开对应项目的 <code>milestones/</code> 目录。</p></blockquote>
-<h2 id="能力递进">能力递进</h2>
+<h2 id="能力递进">能力递进</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#project-01-python-ai-cli-assistant-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 01 — Python AI CLI Assistant → 能力</span></a></nav>
 <pre><code>Python
   ↓
 Python Engineering（async / FastAPI / testing）
@@ -79,59 +158,102 @@ Evaluation + Inference（Benchmark / Quantization / vLLM）
   ↓
 Mini LLM（Tokenizer → Transformer → Training → Inference → Deploy）</code></pre>
 <hr/>
-<h2 id="project-01-python-ai-cli-assistant-能力">Project 01 — Python AI CLI Assistant → 能力</h2>
+<h2 id="project-01-python-ai-cli-assistant-能力">Project 01 — Python AI CLI Assistant → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#能力递进"><span class="sn-label">← 上一节</span><span class="sn-name">能力递进</span></a><a class="sn next" href="#project-02-engineering-ai-assistant-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 02 — Engineering AI Assistant → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>对应 Milestone</th><th>获得能力</th></tr></thead><tbody><tr><td>Variables / Types / I/O</td><td>01-variables</td><td>Python 基础语法</td></tr><tr><td>List / Dict / JSON</td><td>02-list-dict-json</td><td>AI 项目数据结构</td></tr><tr><td>Condition / Loop</td><td>03-condition-loop</td><td>逻辑控制</td></tr><tr><td>Function</td><td>04-function</td><td>代码复用</td></tr><tr><td>Module / Package</td><td>05-module-package</td><td>项目结构</td></tr><tr><td>Exception</td><td>06-exception</td><td>错误处理</td></tr><tr><td>File / JSON Persistence</td><td>07-file-json</td><td>数据持久化</td></tr><tr><td>venv / pip</td><td>08-venv-pip</td><td>依赖管理</td></tr><tr><td>HTTP / API</td><td>09-http-api</td><td>网络通信</td></tr><tr><td>Real LLM API</td><td>10-real-llm-api</td><td>AI API 集成</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能构建 Python AI CLI 项目并真实调用 LLM API</p>
 <hr/>
-<h2 id="project-02-engineering-ai-assistant-能力">Project 02 — Engineering AI Assistant → 能力</h2>
+<h2 id="project-02-engineering-ai-assistant-能力">Project 02 — Engineering AI Assistant → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-01-python-ai-cli-assistant-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 01 — Python AI CLI Assistant → 能力</span></a><a class="sn next" href="#project-03-ai-application-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 03 — AI Application → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>对应 Milestone</th><th>获得能力</th></tr></thead><tbody><tr><td>Classes and OOP</td><td>00-classes-and-oop</td><td>数据 + 行为封装</td></tr><tr><td>Async / Await</td><td>01-async-await</td><td>并发基础</td></tr><tr><td>Async HTTP Client</td><td>02-async-http-client</td><td>异步请求</td></tr><tr><td>Type Hints</td><td>03-type-hints</td><td>类型安全</td></tr><tr><td>Dataclass</td><td>04-dataclass</td><td>数据类</td></tr><tr><td>Config / Environment</td><td>05-config-and-environment</td><td>配置管理</td></tr><tr><td>Logging</td><td>（待创建）</td><td>可观测性</td></tr><tr><td>Testing / Debugging</td><td>07-testing-and-debugging</td><td>质量保证</td></tr><tr><td>Packaging</td><td>（待创建）</td><td>发布 / 安装</td></tr><tr><td>FastAPI</td><td>（待创建）</td><td>服务化</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能把脚本升级为可维护的 HTTP 服务</p>
 <hr/>
-<h2 id="project-03-ai-application-能力">Project 03 — AI Application → 能力</h2>
+<h2 id="project-03-ai-application-能力">Project 03 — AI Application → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-02-engineering-ai-assistant-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 02 — Engineering AI Assistant → 能力</span></a><a class="sn next" href="#project-04-ai-knowledge-base-rag-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 04 — AI Knowledge Base / RAG → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>Prompt Engineering</td><td>引导模型稳定输出</td></tr><tr><td>Streaming / SSE</td><td>流式输出 / 打字机效果</td></tr><tr><td>Function Calling</td><td>结构化交互</td></tr><tr><td>Structured Output</td><td>JSON Mode / Schema</td></tr><tr><td>Conversation Memory</td><td>多轮对话管理</td></tr><tr><td>Token / Context Window</td><td>上下文限制管理</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能构建真实可用的 AI 应用前端</p>
 <hr/>
-<h2 id="project-04-ai-knowledge-base-rag-能力">Project 04 — AI Knowledge Base / RAG → 能力</h2>
+<h2 id="project-04-ai-knowledge-base-rag-能力">Project 04 — AI Knowledge Base / RAG → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-03-ai-application-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 03 — AI Application → 能力</span></a><a class="sn next" href="#project-05-research-agent-mcp-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 05 — Research Agent / MCP → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>Embedding</td><td>文本向量化</td></tr><tr><td>Chunking</td><td>文档切分</td></tr><tr><td>Vector Database</td><td>向量存储</td></tr><tr><td>Retrieval</td><td>检索</td></tr><tr><td>Rerank</td><td>重排序</td></tr><tr><td>RAG Pipeline</td><td>完整链路整合</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能给模型加上外部知识</p>
 <hr/>
-<h2 id="project-05-research-agent-mcp-能力">Project 05 — Research Agent / MCP → 能力</h2>
+<h2 id="project-05-research-agent-mcp-能力">Project 05 — Research Agent / MCP → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-04-ai-knowledge-base-rag-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 04 — AI Knowledge Base / RAG → 能力</span></a><a class="sn next" href="#project-06-mini-transformer-llm-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 06 — Mini Transformer / LLM → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>Tool / Tool Schema</td><td>外部能力定义</td></tr><tr><td>Function Calling</td><td>外部能力调用</td></tr><tr><td>Agent Loop</td><td>自主规划（Plan → Act → Observe）</td></tr><tr><td>MCP Protocol</td><td>标准化工具接入</td></tr><tr><td>Agent Workflow</td><td>完整 Agent 系统</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能构建自主 Agent</p>
 <hr/>
-<h2 id="project-06-mini-transformer-llm-能力">Project 06 — Mini Transformer / LLM → 能力</h2>
+<h2 id="project-06-mini-transformer-llm-能力">Project 06 — Mini Transformer / LLM → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-05-research-agent-mcp-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 05 — Research Agent / MCP → 能力</span></a><a class="sn next" href="#project-07-open-source-llm-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 07 — Open Source LLM → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>PyTorch Tensor</td><td>计算基础</td></tr><tr><td>Autograd</td><td>自动求导 / 反向传播</td></tr><tr><td>DataLoader</td><td>数据 Pipeline</td></tr><tr><td>Self-Attention</td><td>Transformer 核心</td></tr><tr><td>Multi-Head + FFN + LN</td><td>完整 Decoder Block</td></tr><tr><td>Decoder-Only LLM</td><td>完整语言模型</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能从零构建 Transformer Decoder</p>
 <hr/>
-<h2 id="project-07-open-source-llm-能力">Project 07 — Open Source LLM → 能力</h2>
+<h2 id="project-07-open-source-llm-能力">Project 07 — Open Source LLM → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-06-mini-transformer-llm-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 06 — Mini Transformer / LLM → 能力</span></a><a class="sn next" href="#project-08-lora-qlora-finetuning-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 08 — LoRA / QLoRA Fine-Tuning → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>Hugging Face</td><td>模型生态导航</td></tr><tr><td>Tokenizer</td><td>BPE / 文本编码</td></tr><tr><td>Model Loading</td><td>device / dtype / 推理</td></tr><tr><td>Model Memory / VRAM</td><td>显存管理</td></tr><tr><td>Quantization</td><td>INT8 / INT4</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能在本地跑通开源 LLM 并优化</p>
 <hr/>
-<h2 id="project-08-lora-qlora-finetuning-能力">Project 08 — LoRA / QLoRA Fine-Tuning → 能力</h2>
+<h2 id="project-08-lora-qlora-finetuning-能力">Project 08 — LoRA / QLoRA Fine-Tuning → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-07-open-source-llm-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 07 — Open Source LLM → 能力</span></a><a class="sn next" href="#project-09-llm-evaluation-inference-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 09 — LLM Evaluation / Inference → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>Fine-Tuning / SFT</td><td>监督微调基础</td></tr><tr><td>Dataset Preparation</td><td>训练数据处理</td></tr><tr><td>LoRA</td><td>参数高效微调</td></tr><tr><td>QLoRA</td><td>显存优化微调</td></tr><tr><td>Checkpoint / Merge</td><td>模型保存 / 加载</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能微调自己的领域模型</p>
 <hr/>
-<h2 id="project-09-llm-evaluation-inference-能力">Project 09 — LLM Evaluation / Inference → 能力</h2>
+<h2 id="project-09-llm-evaluation-inference-能力">Project 09 — LLM Evaluation / Inference → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-08-lora-qlora-finetuning-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 08 — LoRA / QLoRA Fine-Tuning → 能力</span></a><a class="sn next" href="#project-10-tiny-llm-capstone-能力"><span class="sn-label">下一节 →</span><span class="sn-name">Project 10 — Tiny LLM Capstone → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>获得能力</th></tr></thead><tbody><tr><td>Benchmark</td><td>MMLU / HumanEval</td></tr><tr><td>Evaluation Dataset</td><td>评估集构建</td></tr><tr><td>Automatic Evaluation</td><td>自动评估指标</td></tr><tr><td>Quantization</td><td>模型压缩</td></tr><tr><td>vLLM / PagedAttention</td><td>高性能推理</td></tr><tr><td>Batching / KV Cache</td><td>并发 / 显存管理</td></tr><tr><td>Model Serving</td><td>生产级部署</td></tr></tbody></table>
 <p><strong>整体能力</strong>：能把模型评估、优化、服务化上线</p>
 <hr/>
-<h2 id="project-10-tiny-llm-capstone-能力">Project 10 — Tiny LLM Capstone → 能力</h2>
+<h2 id="project-10-tiny-llm-capstone-能力">Project 10 — Tiny LLM Capstone → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-09-llm-evaluation-inference-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 09 — LLM Evaluation / Inference → 能力</span></a><a class="sn next" href="#基础知识层-llmfundamentals-能力"><span class="sn-label">下一节 →</span><span class="sn-name">基础知识层 — llm-fundamentals → 能力</span></a></nav>
 <pre><code>Data → Tokenizer → Embedding → Transformer → Training → Evaluation → Inference → Optimization → Serving → Application</code></pre>
 <p><strong>整体能力</strong>：能从零实现小型 LLM（综合运用前面所有能力）</p>
 <hr/>
-<h2 id="基础知识层-llmfundamentals-能力">基础知识层 — llm-fundamentals → 能力</h2>
+<h2 id="基础知识层-llmfundamentals-能力">基础知识层 — llm-fundamentals → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#project-10-tiny-llm-capstone-能力"><span class="sn-label">← 上一节</span><span class="sn-name">Project 10 — Tiny LLM Capstone → 能力</span></a><a class="sn next" href="#练手层-能力"><span class="sn-label">下一节 →</span><span class="sn-name">练手层 → 能力</span></a></nav>
 <table><thead><tr><th>知识</th><th>对应章节</th><th>获得能力</th></tr></thead><tbody><tr><td>语言模型建模</td><td><a href="llm-fundamentals/01-basics-language-model.html">01-basics-language-model</a></td><td>看懂 token→logits→交叉熵 全链路</td></tr><tr><td>Self-Attention / 多头 / GQA</td><td><a href="llm-fundamentals/02-attention.html">02-attention</a></td><td>理解注意力为什么这么算</td></tr><tr><td>Transformer Block / 归一化 / FFN</td><td><a href="llm-fundamentals/03-transformer.html">03-transformer</a></td><td>读得懂模型结构图与参数量</td></tr><tr><td>预训练目标 / 数据 / 并行</td><td><a href="llm-fundamentals/04-pretraining.html">04-pretraining</a></td><td>能估算训练算力与成本</td></tr><tr><td>SFT / LoRA / QLoRA</td><td><a href="llm-fundamentals/05-finetuning.html">05-finetuning</a></td><td>知道微调在改什么</td></tr><tr><td>缩放定律 / 涌现</td><td><a href="llm-fundamentals/06-scaling-and-emergence.html">06-scaling-and-emergence</a></td><td>判断「该加参数还是加数据」</td></tr><tr><td>解码 / KV Cache / 量化</td><td><a href="llm-fundamentals/07-decoding-and-inference.html">07-decoding-and-inference</a></td><td>理解推理慢在哪、贵在哪</td></tr><tr><td>RLHF / DPO / 对齐</td><td><a href="llm-fundamentals/08-alignment-rlhf.html">08-alignment-rlhf</a></td><td>理解模型为何「听话」</td></tr><tr><td>关键公式推导</td><td><a href="llm-fundamentals/09-math-foundations.html">09-math-foundations</a></td><td>能自己推 √d_k、softmax 梯度</td></tr><tr><td>中英术语对照</td><td><a href="llm-fundamentals/10-glossary.html">10-glossary</a></td><td>读论文不卡名词</td></tr><tr><td>从零实现类开源项目</td><td><a href="llm-fundamentals/11-open-source-projects.html">11-open-source-projects</a></td><td>找到对应章节的练手项目</td></tr><tr><td>教程 / 微调 / Agent 选型</td><td><a href="llm-fundamentals/12-tutorials-and-agent.html">12-tutorials-and-agent</a></td><td>知道该学哪个、该用哪个，并能自己验证资源是否还活着</td></tr></tbody></table>
 <p><strong>整体能力</strong>：从「会调 API」进阶到「讲得清原理、算得出账」——为 P06 / P08 / P10 的手写实现提供理论底座。 <strong>说明</strong>：图片全部可复现（真实运行截图 + 公式现场计算图），demo 为纯 numpy，无需 GPU。</p>
 <hr/>
-<h2 id="练手层-能力">练手层 → 能力</h2>
+<h2 id="练手层-能力">练手层 → 能力</h2><nav class="sec-nav"><a class="sn prev" href="#基础知识层-llmfundamentals-能力"><span class="sn-label">← 上一节</span><span class="sn-name">基础知识层 — llm-fundamentals → 能力</span></a><a class="sn next" href="#为什么-knowledge-map-不复制正文"><span class="sn-label">下一节 →</span><span class="sn-name">为什么 Knowledge Map 不复制正文</span></a></nav>
 <p><a href="python-practice/README.html"><code>python-practice/</code></a> 的 6 个练习，每一个对应一组<strong>具体到能写出来</strong>的能力：</p>
 <table><thead><tr><th>练习</th><th>难度</th><th>获得能力</th></tr></thead><tbody><tr><td><a href="python-practice/01-todo-cli/README.html">01 命令行待办清单</a></td><td>●○○</td><td>会用 argparse 做子命令、用 dataclass 建模、把对象序列化成 JSON 落盘、把用户错误映射成退出码</td></tr><tr><td><a href="python-practice/02-excel-automation/README.html">02 Excel 报表自动化</a></td><td>●●○</td><td>会用 pandas 合并/清洗/分组/透视，用 openpyxl 做格式，用 matplotlib 出中文图表</td></tr><tr><td><a href="python-practice/03-web-crawler/README.html">03 网站内容爬虫</a></td><td>●●○</td><td>会写带超时/重试/退避的 HTTP 采集，用 CSS 选择器解析 HTML，做 URL 白名单与去重</td></tr><tr><td><a href="python-practice/04-fastapi-blog/README.html">04 FastAPI 博客 API</a></td><td>●●○</td><td>会写 REST 接口、用类型注解声明校验、正确使用 201/204/404/422、用 pytest 测接口</td></tr><tr><td><a href="python-practice/05-ai-command-assistant.html">05 AI 命令助手</a></td><td>●●●</td><td>会调用 LLM API、维护多轮消息上下文、实现 SSE 流式输出</td></tr><tr><td><a href="python-practice/06-rag-qa.html">06 RAG 知识库问答</a></td><td>●●●</td><td>理解并能实现「切块 → 向量化 → 检索 → 重排 → 生成 → 评测」全链路</td></tr></tbody></table>
 <p><strong>延伸阅读（不属于练习）</strong>：<a href="python-practice/07-延伸阅读.html">07 延伸阅读</a> —— 从「会写 Python」到「读得懂生产代码」。 补系统性（<code>dabeaz-course/python-mastery</code> 等，挑 1–2 个）+ 读生产代码四阶梯，并附 Java 经验对照表与脚本实测的仓库腐烂清单。</p>
 <p><strong>与理论层 / 实践层的衔接</strong>：练手层解决「<strong>手会不会</strong>」，理论层解决「<strong>想不想得通</strong>」，实践层解决「<strong>能不能交付</strong>」。前四个练习做完即可无痛进入 <code>projects/</code> 的正式项目；05 / 06 直接落在 <code>projects/01</code>、<code>projects/04</code> 上。</p>
 <hr/>
-<h2 id="为什么-knowledge-map-不复制正文">为什么 Knowledge Map 不复制正文</h2>
+<h2 id="为什么-knowledge-map-不复制正文">为什么 Knowledge Map 不复制正文</h2><nav class="sec-nav"><a class="sn prev" href="#练手层-能力"><span class="sn-label">← 上一节</span><span class="sn-name">练手层 → 能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p><strong>Milestone 是单一事实源。</strong> Knowledge Map 只负责展示关联，不重复写同样的内容。</p></blockquote>
 <p>想了解具体知识？打开对应项目的 <code>milestones/</code> 目录。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

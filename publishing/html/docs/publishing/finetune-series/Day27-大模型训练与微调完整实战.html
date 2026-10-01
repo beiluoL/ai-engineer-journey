@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#什么是预训练" class="lvl2">什么是预训练？</a><a href="#预训练目标" class="lvl2">预训练目标</a><a href="#sft" class="lvl2">SFT</a><a href="#lowrank-adaptation" class="lvl2">Low-Rank Adaptation</a><a href="#显存低" class="lvl2">显存低</a><a href="#速度快" class="lvl2">速度快</a><a href="#多任务" class="lvl2">多任务</a><a href="#quantized-lora" class="lvl2">Quantized LoRA</a><a href="#llamafactory" class="lvl2">LLaMA-Factory</a><a href="#step1-数据" class="lvl2">Step1 数据</a><a href="#step2-基础模型" class="lvl2">Step2 基础模型</a><a href="#step3-配置" class="lvl2">Step3 配置</a><a href="#step4-训练" class="lvl2">Step4 训练</a><a href="#step5-输出" class="lvl2">Step5 输出</a><a href="#q1" class="lvl2">Q1：</a><a href="#q2" class="lvl2">Q2：</a><a href="#q3" class="lvl2">Q3：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day27大模型训练与微调完整实战">Day27：大模型训练与微调完整实战</h1>
 <h1 id="transformer-sft-lora-qlora-llamafactory">Transformer → SFT → LoRA → QLoRA → LLaMA-Factory</h1>
@@ -141,7 +220,7 @@ RLHF/DPO【偏好优化】
 Chat Model【聊天模型】</code></pre>
 <hr/>
 <h1 id="三pretraining预训练">三、Pre-training【预训练】</h1>
-<h2 id="什么是预训练">什么是预训练？</h2>
+<h2 id="什么是预训练">什么是预训练？</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#预训练目标"><span class="sn-label">下一节 →</span><span class="sn-name">预训练目标</span></a></nav>
 <p>让模型学习：</p>
 <p>语言规律。</p>
 <p>例如：</p>
@@ -160,7 +239,7 @@ Chat Model【聊天模型】</code></pre>
 <p>规模：</p>
 <p>TB级。</p>
 <hr/>
-<h2 id="预训练目标">预训练目标</h2>
+<h2 id="预训练目标">预训练目标</h2><nav class="sec-nav"><a class="sn prev" href="#什么是预训练"><span class="sn-label">← 上一节</span><span class="sn-name">什么是预训练？</span></a><a class="sn next" href="#sft"><span class="sn-label">下一节 →</span><span class="sn-name">SFT</span></a></nav>
 <p>本质：</p>
 <p>预测下一个Token。</p>
 <p>例如：</p>
@@ -280,7 +359,7 @@ Normalization</code></pre>
 <h1 id="finetuning微调">Fine-tuning【微调】</h1>
 <hr/>
 <h1 id="八sft是什么">八、SFT是什么？</h1>
-<h2 id="sft">SFT</h2>
+<h2 id="sft">SFT</h2><nav class="sec-nav"><a class="sn prev" href="#预训练目标"><span class="sn-label">← 上一节</span><span class="sn-name">预训练目标</span></a><a class="sn next" href="#lowrank-adaptation"><span class="sn-label">下一节 →</span><span class="sn-name">Low-Rank Adaptation</span></a></nav>
 <p>英文：</p>
 <p>Supervised Fine-Tuning</p>
 <p>中文：</p>
@@ -331,7 +410,7 @@ Normalization</code></pre>
 <pre><code>java_interview.json</code></pre>
 <hr/>
 <h1 id="十lora是什么">十、LoRA是什么？</h1>
-<h2 id="lowrank-adaptation">Low-Rank Adaptation</h2>
+<h2 id="lowrank-adaptation">Low-Rank Adaptation</h2><nav class="sec-nav"><a class="sn prev" href="#sft"><span class="sn-label">← 上一节</span><span class="sn-name">SFT</span></a><a class="sn next" href="#显存低"><span class="sn-label">下一节 →</span><span class="sn-name">显存低</span></a></nav>
 <p>中文：</p>
 <p>低秩适配。</p>
 <hr/>
@@ -385,16 +464,16 @@ LoRA(A,B)
 <p>不用修改全部。</p>
 <hr/>
 <p>优势：</p>
-<h2 id="显存低">显存低</h2>
+<h2 id="显存低">显存低</h2><nav class="sec-nav"><a class="sn prev" href="#lowrank-adaptation"><span class="sn-label">← 上一节</span><span class="sn-name">Low-Rank Adaptation</span></a><a class="sn next" href="#速度快"><span class="sn-label">下一节 →</span><span class="sn-name">速度快</span></a></nav>
 <p>全量训练：</p>
 <p>几十GB显存。</p>
 <p>LoRA：</p>
 <p>几GB～几十GB。</p>
 <hr/>
-<h2 id="速度快">速度快</h2>
+<h2 id="速度快">速度快</h2><nav class="sec-nav"><a class="sn prev" href="#显存低"><span class="sn-label">← 上一节</span><span class="sn-name">显存低</span></a><a class="sn next" href="#多任务"><span class="sn-label">下一节 →</span><span class="sn-name">多任务</span></a></nav>
 <p>训练参数少。</p>
 <hr/>
-<h2 id="多任务">多任务</h2>
+<h2 id="多任务">多任务</h2><nav class="sec-nav"><a class="sn prev" href="#速度快"><span class="sn-label">← 上一节</span><span class="sn-name">速度快</span></a><a class="sn next" href="#quantized-lora"><span class="sn-label">下一节 →</span><span class="sn-name">Quantized LoRA</span></a></nav>
 <p>一个模型：</p>
 <p>多个Adapter。</p>
 <p>例如：</p>
@@ -417,7 +496,7 @@ Java LoRA
 法律 LoRA</code></pre>
 <hr/>
 <h1 id="十二qlora是什么">十二、QLoRA是什么？</h1>
-<h2 id="quantized-lora">Quantized LoRA</h2>
+<h2 id="quantized-lora">Quantized LoRA</h2><nav class="sec-nav"><a class="sn prev" href="#多任务"><span class="sn-label">← 上一节</span><span class="sn-name">多任务</span></a><a class="sn next" href="#llamafactory"><span class="sn-label">下一节 →</span><span class="sn-name">LLaMA-Factory</span></a></nav>
 <p>中文：</p>
 <p>量化低秩适配。</p>
 <hr/>
@@ -464,7 +543,7 @@ LoRA</code></pre>
 <p>QLoRA。</p>
 <hr/>
 <h1 id="十四llamafactory是什么">十四、LLaMA-Factory是什么？</h1>
-<h2 id="llamafactory">LLaMA-Factory</h2>
+<h2 id="llamafactory">LLaMA-Factory</h2><nav class="sec-nav"><a class="sn prev" href="#quantized-lora"><span class="sn-label">← 上一节</span><span class="sn-name">Quantized LoRA</span></a><a class="sn next" href="#step1-数据"><span class="sn-label">下一节 →</span><span class="sn-name">Step1 数据</span></a></nav>
 <p>一个开源微调框架。</p>
 <p>作用：</p>
 <p>简化：</p>
@@ -529,7 +608,7 @@ LoRA</code></pre>
 <p>目标：</p>
 <p>Java Interview Model。</p>
 <hr/>
-<h2 id="step1-数据">Step1 数据</h2>
+<h2 id="step1-数据">Step1 数据</h2><nav class="sec-nav"><a class="sn prev" href="#llamafactory"><span class="sn-label">← 上一节</span><span class="sn-name">LLaMA-Factory</span></a><a class="sn next" href="#step2-基础模型"><span class="sn-label">下一节 →</span><span class="sn-name">Step2 基础模型</span></a></nav>
 <p>准备：</p>
 <p>5000条：</p>
 <pre><code>{
@@ -540,11 +619,11 @@ answer:
 &quot;...&quot;
 }</code></pre>
 <hr/>
-<h2 id="step2-基础模型">Step2 基础模型</h2>
+<h2 id="step2-基础模型">Step2 基础模型</h2><nav class="sec-nav"><a class="sn prev" href="#step1-数据"><span class="sn-label">← 上一节</span><span class="sn-name">Step1 数据</span></a><a class="sn next" href="#step3-配置"><span class="sn-label">下一节 →</span><span class="sn-name">Step3 配置</span></a></nav>
 <p>下载：</p>
 <pre><code>Qwen2.5-7B-Instruct</code></pre>
 <hr/>
-<h2 id="step3-配置">Step3 配置</h2>
+<h2 id="step3-配置">Step3 配置</h2><nav class="sec-nav"><a class="sn prev" href="#step2-基础模型"><span class="sn-label">← 上一节</span><span class="sn-name">Step2 基础模型</span></a><a class="sn next" href="#step4-训练"><span class="sn-label">下一节 →</span><span class="sn-name">Step4 训练</span></a></nav>
 <p>yaml：</p>
 <pre><code>model_name_or_path:
 Qwen2.5-7B
@@ -565,11 +644,11 @@ quantization_bit:
 lora_rank:
 16</code></pre>
 <hr/>
-<h2 id="step4-训练">Step4 训练</h2>
+<h2 id="step4-训练">Step4 训练</h2><nav class="sec-nav"><a class="sn prev" href="#step3-配置"><span class="sn-label">← 上一节</span><span class="sn-name">Step3 配置</span></a><a class="sn next" href="#step5-输出"><span class="sn-label">下一节 →</span><span class="sn-name">Step5 输出</span></a></nav>
 <p>执行：</p>
 <pre><code>llamafactory-cli train</code></pre>
 <hr/>
-<h2 id="step5-输出">Step5 输出</h2>
+<h2 id="step5-输出">Step5 输出</h2><nav class="sec-nav"><a class="sn prev" href="#step4-训练"><span class="sn-label">← 上一节</span><span class="sn-name">Step4 训练</span></a><a class="sn next" href="#q1"><span class="sn-label">下一节 →</span><span class="sn-name">Q1：</span></a></nav>
 <p>得到：</p>
 <pre><code>java-lora/
 
@@ -738,17 +817,17 @@ RAG
 Agent</code></pre>
 <hr/>
 <h1 id="二十三面试回答">二十三、面试回答</h1>
-<h2 id="q1">Q1：</h2>
+<h2 id="q1">Q1：</h2><nav class="sec-nav"><a class="sn prev" href="#step5-输出"><span class="sn-label">← 上一节</span><span class="sn-name">Step5 输出</span></a><a class="sn next" href="#q2"><span class="sn-label">下一节 →</span><span class="sn-name">Q2：</span></a></nav>
 <blockquote><p>为什么不用从零训练模型？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>从零训练大模型需要大量数据、GPU资源和训练成本，企业更多采用基于开源基础模型进行领域微调，通过SFT和LoRA/QLoRA降低成本，同时结合RAG解决实时知识问题。</p></blockquote>
 <hr/>
-<h2 id="q2">Q2：</h2>
+<h2 id="q2">Q2：</h2><nav class="sec-nav"><a class="sn prev" href="#q1"><span class="sn-label">← 上一节</span><span class="sn-name">Q1：</span></a><a class="sn next" href="#q3"><span class="sn-label">下一节 →</span><span class="sn-name">Q3：</span></a></nav>
 <blockquote><p>LoRA为什么能降低训练成本？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>LoRA冻结基础模型参数，只训练新增的低秩矩阵参数，大幅减少需要更新的参数数量，因此降低显存占用和训练时间。</p></blockquote>
 <hr/>
-<h2 id="q3">Q3：</h2>
+<h2 id="q3">Q3：</h2><nav class="sec-nav"><a class="sn prev" href="#q2"><span class="sn-label">← 上一节</span><span class="sn-name">Q2：</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>RAG和微调怎么选择？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>如果问题主要是知识更新，例如企业文档、产品资料，优先使用RAG；如果需要改变模型行为、表达风格或领域能力，则考虑微调。实际企业通常结合RAG和LoRA。</p></blockquote>
@@ -814,5 +893,48 @@ Production</code></pre>
 <p>完成：</p>
 <blockquote><p>你的第一个真正微调出来的 AI 模型。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

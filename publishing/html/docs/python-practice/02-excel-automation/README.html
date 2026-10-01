@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#你要做的东西" class="lvl2">你要做的东西</a><a href="#先看结果" class="lvl2">先看结果</a><a href="#你要学到的-python-pandas" class="lvl2">你要学到的 Python / pandas</a><a href="#怎么跑起来" class="lvl2">怎么跑起来</a><a href="#代码结构" class="lvl2">代码结构</a><a href="#关键代码拆解" class="lvl2">关键代码拆解</a><a href="#常见坑" class="lvl2">常见坑</a><a href="#验收标准做完自检" class="lvl2">验收标准（做完自检）</a><a href="#进阶挑战" class="lvl2">进阶挑战</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="02-excel-报表自动化">02 Excel 报表自动化</h1>
 <blockquote><p><strong>难度</strong> ●●○ 进阶 ｜ <strong>预计</strong> 2–3 天 ｜ <strong>依赖</strong> pandas、openpyxl、matplotlib 上级目录：<a href="../README.html">练手项目总览</a></p></blockquote>
-<h2 id="你要做的东西">你要做的东西</h2>
+<h2 id="你要做的东西">你要做的东西</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#先看结果"><span class="sn-label">下一节 →</span><span class="sn-name">先看结果</span></a></nav>
 <p>三家门店各自导出一份 CSV，你要把它们变成<strong>一份可以直接发出去的多 sheet 报表</strong>：</p>
 <pre><code>data/sales-beijing.csv  ┐
 data/sales-shanghai.csv ├─→ 合并 → 清洗 → 统计 → assets/sales-report.xlsx（6 个 sheet）
 data/sales-shenzhen.csv ┘                              └→ 两张图（折线 + 条形）</code></pre>
 <p>这就是「每周一手工复制粘贴两小时」这件事的标准解法。它的价值不在技术难度，而在于<strong>从此以后这个活不需要人</strong>——这才是自动化。</p>
-<h2 id="先看结果">先看结果</h2>
+<h2 id="先看结果">先看结果</h2><nav class="sec-nav"><a class="sn prev" href="#你要做的东西"><span class="sn-label">← 上一节</span><span class="sn-name">你要做的东西</span></a><a class="sn next" href="#你要学到的-python-pandas"><span class="sn-label">下一节 →</span><span class="sn-name">你要学到的 Python / pandas</span></a></nav>
 <p><strong>第一步：造数据</strong>（顺手埋了三处真实的脏数据，见下）</p>
 <figure class="figure"><img alt="生成样本数据" src="../../../../../python-practice/02-excel-automation/assets/term-02-data.png" loading="lazy"/><figcaption>生成样本数据</figcaption></figure>
 <p><strong>第二步：报表流水线</strong>（合并 → 清洗 → 统计 → 写 Excel → 画图）</p>
@@ -76,9 +155,9 @@ data/sales-shenzhen.csv ┘                              └→ 两张图（折�
 <p>两张图（也都是脚本现场画出来的，不是手绘）：</p>
 <figure class="figure"><img alt="各门店月度销售额" src="../../../../../python-practice/02-excel-automation/assets/chart-monthly-revenue.png" loading="lazy"/><figcaption>各门店月度销售额</figcaption></figure>
 <figure class="figure"><img alt="品类销售额占比" src="../../../../../python-practice/02-excel-automation/assets/chart-category-share.png" loading="lazy"/><figcaption>品类销售额占比</figcaption></figure>
-<h2 id="你要学到的-python-pandas">你要学到的 Python / pandas</h2>
+<h2 id="你要学到的-python-pandas">你要学到的 Python / pandas</h2><nav class="sec-nav"><a class="sn prev" href="#先看结果"><span class="sn-label">← 上一节</span><span class="sn-name">先看结果</span></a><a class="sn next" href="#怎么跑起来"><span class="sn-label">下一节 →</span><span class="sn-name">怎么跑起来</span></a></nav>
 <table><thead><tr><th>知识点</th><th>在本项目里落在哪</th></tr></thead><tbody><tr><td><code>pd.read_csv</code></td><td>读三个 CSV，注意 <code>encoding=&quot;utf-8-sig&quot;</code>（带 BOM）</td></tr><tr><td><code>pd.concat</code></td><td>把三张结构相同的表纵向拼成一张</td></tr><tr><td><code>pd.to_datetime(..., format=&quot;mixed&quot;)</code></td><td>处理混排日期格式（真实数据的头号坑）</td></tr><tr><td><code>drop_duplicates</code> / <code>dropna</code> / <code>to_numeric(errors=&quot;coerce&quot;)</code></td><td>清洗三件套</td></tr><tr><td>派生列</td><td><code>df[&quot;revenue&quot;] = df[&quot;qty&quot;] * df[&quot;unit_price&quot;]</code>、<code>dt.to_period(&quot;M&quot;)</code></td></tr><tr><td><code>groupby().agg(命名聚合)</code></td><td>一次算出订单数/销售额/销量/客单价</td></tr><tr><td><code>pivot_table(margins=True)</code></td><td>二维透视 + 自动小计</td></tr><tr><td><code>ExcelWriter</code> 多 sheet</td><td>一个文件写 6 个表</td></tr><tr><td>openpyxl 二次加工</td><td>冻结首行、表头配色、列宽自适应、数字格式、色阶</td></tr><tr><td>matplotlib 中文字体</td><td>不设字体就全是「豆腐块」方框</td></tr><tr><td>固定随机种子</td><td><code>random.Random(42)</code> 让数据可复现</td></tr></tbody></table>
-<h2 id="怎么跑起来">怎么跑起来</h2>
+<h2 id="怎么跑起来">怎么跑起来</h2><nav class="sec-nav"><a class="sn prev" href="#你要学到的-python-pandas"><span class="sn-label">← 上一节</span><span class="sn-name">你要学到的 Python / pandas</span></a><a class="sn next" href="#代码结构"><span class="sn-label">下一节 →</span><span class="sn-name">代码结构</span></a></nav>
 <pre><code>cd python-practice/02-excel-automation
 
 # 装依赖（第一次）
@@ -89,7 +168,7 @@ python3 make_sample_data.py    # 生成 data/*.csv
 python3 report.py              # 生成 assets/sales-report.xlsx 与两张图
 
 bash demo.sh                   # 或者一次跑完上面两步，输出就是截图里的内容</code></pre>
-<h2 id="代码结构">代码结构</h2>
+<h2 id="代码结构">代码结构</h2><nav class="sec-nav"><a class="sn prev" href="#怎么跑起来"><span class="sn-label">← 上一节</span><span class="sn-name">怎么跑起来</span></a><a class="sn next" href="#关键代码拆解"><span class="sn-label">下一节 →</span><span class="sn-name">关键代码拆解</span></a></nav>
 <pre><code>02-excel-automation/
 ├── make_sample_data.py   # 造数据（固定 seed=42，可复现）+ 注入三类脏数据
 ├── report.py             # 主流程：合并→清洗→统计→写 Excel→画图
@@ -97,7 +176,7 @@ bash demo.sh                   # 或者一次跑完上面两步，输出就是�
 ├── data/                 # 三份样本 CSV（入库，作为证据）
 ├── assets/               # 报表 xlsx、两张图、终端截图、原始运行输出 run.txt
 └── README.md</code></pre>
-<h2 id="关键代码拆解">关键代码拆解</h2>
+<h2 id="关键代码拆解">关键代码拆解</h2><nav class="sec-nav"><a class="sn prev" href="#代码结构"><span class="sn-label">← 上一节</span><span class="sn-name">代码结构</span></a><a class="sn next" href="#常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">常见坑</span></a></nav>
 <p><strong>① 为什么脏数据要「故意埋」</strong></p>
 <p>真实项目里，<code>df.drop_duplicates()</code> 这行代码你写完不知道对不对——因为真实数据可能本来就没重复。所以这里<strong>主动注入</strong>了 5 行完全重复、8 行数量为空、430 行斜杠日期：</p>
 <pre><code>for r in rng.sample(rows, 8):
@@ -132,12 +211,55 @@ wb = load_workbook(XLSX)     # 重新打开
 ws.freeze_panes = &quot;A2&quot;       # 冻结首行
 ...
 wb.save(XLSX)</code></pre>
-<h2 id="常见坑">常见坑</h2>
+<h2 id="常见坑">常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#关键代码拆解"><span class="sn-label">← 上一节</span><span class="sn-name">关键代码拆解</span></a><a class="sn next" href="#验收标准做完自检"><span class="sn-label">下一节 →</span><span class="sn-name">验收标准（做完自检）</span></a></nav>
 <table><thead><tr><th>坑</th><th>现象</th><th>怎么破</th></tr></thead><tbody><tr><td>读带 BOM 的 CSV 没指定编码</td><td>第一列列名变成 <code>\ufeffdate</code>，<code>df[&quot;date&quot;]</code> 报 KeyError</td><td><code>encoding=&quot;utf-8-sig&quot;</code></td></tr><tr><td>日期格式混排</td><td><code>to_datetime</code> 抛 <code>ValueError</code> 或整列变 NaT</td><td><code>format=&quot;mixed&quot;</code> 或先 <code>str.replace(&quot;/&quot;, &quot;-&quot;)</code></td></tr><tr><td><code>dropna</code> 把整个数据集清空</td><td>有一列全空，<code>dropna()</code> 不传 subset 会删掉所有行</td><td>永远写 <code>dropna(subset=[...])</code></td></tr><tr><td>在循环里 <code>df.append(row)</code></td><td>pandas 3.x 已删除该方法，直接 AttributeError</td><td>先收集到 list，最后 <code>pd.concat</code> 一次</td></tr><tr><td><code>pivot_table</code> 默认 <code>aggfunc=&quot;mean&quot;</code></td><td>销售额算成了平均值（少了一个数量级）</td><td>显式写 <code>aggfunc=&quot;sum&quot;</code></td></tr><tr><td>matplotlib 中文乱码</td><td>标题全是 □□□</td><td>设置 <code>font.sans-serif</code></td></tr><tr><td>图表纵轴刻度写成 <code>.0f</code></td><td>1.5 万显示成「2万」，刻度全一样</td><td>保留一位小数</td></tr></tbody></table>
-<h2 id="验收标准做完自检">验收标准（做完自检）</h2>
+<h2 id="验收标准做完自检">验收标准（做完自检）</h2><nav class="sec-nav"><a class="sn prev" href="#常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">常见坑</span></a><a class="sn next" href="#进阶挑战"><span class="sn-label">下一节 →</span><span class="sn-name">进阶挑战</span></a></nav>
 <ul class="lvl"><li>[ ] <code>report.py</code> 打印的「丢弃 重复行 / 数量为空」与 <code>make_sample_data.py</code> 报告的注入数量对得上</li><li>[ ] <code>assets/sales-report.xlsx</code> 有 6 个 sheet，每个 sheet 首行冻结、表头是深蓝底白字</li><li>[ ] 三个门店的销售额相加（<code>114960 + 111703 + 91118 = 317781</code>）= 透视表里 <code>All</code> 行的总计</li><li>[ ] 两张图里的中文正常显示，没有方块</li><li>[ ] 删掉 <code>data/</code> 目录重跑 <code>demo.sh</code>，输出与截图完全一致（可复现性）</li></ul>
-<h2 id="进阶挑战">进阶挑战</h2>
+<h2 id="进阶挑战">进阶挑战</h2><nav class="sec-nav"><a class="sn prev" href="#验收标准做完自检"><span class="sn-label">← 上一节</span><span class="sn-name">验收标准（做完自检）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li><strong>加一列「环比」</strong> —— 每个门店当月销售额相对上月的增长百分比，正增长标红、负增长标绿（中国习惯）。</li><li><strong>换成从 Excel 读</strong> —— 把输入从 CSV 换成 <code>.xlsx</code>（<code>pd.read_excel</code>），并处理「一份文件里多个 sheet」的情况。</li><li><strong>加自动邮件</strong> —— 报表生成后用 <code>smtplib</code> 发出去（练习异常处理与超时重试）。<strong>注意</strong>：不要把邮箱密码写进代码，用环境变量。</li><li><strong>性能对比</strong> —— 把样本量放大到 100 万行，对比 <code>iterrows()</code> 逐行处理与向量化操作的耗时差（提示：会差几个数量级）。</li><li><strong>写测试</strong> —— 给 <code>load_and_clean()</code> 写 <code>pytest</code>：构造一小段已知数据，断言清洗后的行数与销售额。这也是 <code>04-fastapi-blog</code> 里要用的技能。</li></ul>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

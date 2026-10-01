@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么只报域内指标是自欺欺人" class="lvl2">1. Why：为什么只报域内指标是自欺欺人</a><a href="#2-design三套评估集-一个对照组" class="lvl2">2. Design：三套评估集 + 一个对照组</a><a href="#3-realrun-evidence来自-demosoutdemo09evaluationterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_09_evaluation_terminal.txt）</a><a href="#31-微调前的基线实测" class="lvl3">3.1 微调前的基线（实测）</a><a href="#32-lora-微调-150-步实测" class="lvl3">3.2 LoRA 微调 150 步（实测）</a><a href="#33-对照组全量微调-150-步实测" class="lvl3">3.3 对照组：全量微调 150 步（实测）</a><a href="#34-三种状态的对比实测" class="lvl3">3.4 三种状态的对比（实测）</a><a href="#35-定性对比实测生成同一-prompt" class="lvl3">3.5 定性对比（实测生成，同一 prompt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-lora-更抗遗忘在本项目被推翻实测" class="lvl3">4.1 「LoRA 更抗遗忘」在本项目被推翻（实测）</a><a href="#42-严格口径下的判定被记忆主导了必须换判据实测" class="lvl3">4.2 严格口径下的判定被&amp;quot;记忆&amp;quot;主导了，必须换判据（实测）</a><a href="#43-困惑度下降-可用实测生成仍是乱码" class="lvl3">4.3 困惑度下降 ≠ 可用（实测：生成仍是乱码）</a><a href="#44-全量微调的域内困惑度更低2081-vs-4211但不代表它更好实测" class="lvl3">4.4 全量微调的域内困惑度更低（208.1 vs 421.1），但不代表它更好（实测）</a><a href="#45-跨进程不可复现的根因与修法m04-埋的伏笔在这里兑现" class="lvl3">4.5 跨进程不可复现的根因与修法（M04 埋的伏笔在这里兑现）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-09-finetuned-model-evaluation学会了但忘了吗">Milestone 09 — Fine-Tuned Model Evaluation：学会了，但忘了吗</h1>
 <p>主线最后一站。前面八层把「通用基座 → 冻结 → 注入 LoRA → Java 面试领域 SFT → 存盘 → 合并」全跑通了，现在要回答唯一真正重要的问题：<strong>这样训出来的模型，到底有没有变好？</strong></p>
@@ -62,15 +141,15 @@ li{margin:.3em 0;}
 <ul class="lvl"><li><strong>定量</strong>：困惑度 —— 域内必须降、通用不能涨，<strong>两条要同时看</strong>。</li><li><strong>定性</strong>：同一道题，微调前后各生成一段 —— 本项目如实呈现：<strong>两段都是乱码</strong>。</li></ul>
 <p><strong>纯 numpy 手写</strong>：评估不走 autograd 的 <code>cross_entropy</code>，直接 numpy 算 log-softmax（<code>src/ft/eval.py:52</code>）—— 评估不需要建图，也避免和训练时的实现互相干扰。</p>
 <hr/>
-<h2 id="1-why为什么只报域内指标是自欺欺人">1. Why：为什么只报域内指标是自欺欺人</h2>
+<h2 id="1-why为什么只报域内指标是自欺欺人">1. Why：为什么只报域内指标是自欺欺人</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design三套评估集-一个对照组"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：三套评估集 + 一个对照组</span></a></nav>
 <p>把模型训成只会背 59 条答案的复读机，<strong>域内指标也会很好看</strong>。所以必须同时看通用语料：域内困惑度下降 = 学会了；通用困惑度不暴涨 = 没忘。<strong>只报第一条等于自欺欺人。</strong></p>
 <p>困惑度的定义：<code>ppl = exp(平均交叉熵)</code>，等价于&quot;模型在每个位置上平均有多不确定&quot;，越低越好。注意<strong>不同分词器之间的困惑度不可比</strong>（字符级天然比 BPE 低），本项目只在同一个分词器内部做前后对比。</p>
-<h2 id="2-design三套评估集-一个对照组">2. Design：三套评估集 + 一个对照组</h2>
+<h2 id="2-design三套评估集-一个对照组">2. Design：三套评估集 + 一个对照组</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么只报域内指标是自欺欺人"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么只报域内指标是自欺欺人</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo09evaluationterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_evaluation_terminal.txt）</span></a></nav>
 <table><thead><tr><th>评估集</th><th>样本数</th><th>计入 loss 的 token</th><th>用途</th></tr></thead><tbody><tr><td>域内：Java 面试（答案区）</td><td>59</td><td>8,752</td><td>有没有学会</td></tr><tr><td>通用：预训练<strong>见过</strong>的语料</td><td>4</td><td>845</td><td>有没有遗忘</td></tr><tr><td>通用：预训练<strong>没见过</strong>的语料</td><td>1</td><td>174</td><td>泛化参考</td></tr></tbody></table>
 <p><strong>为什么要分&quot;见过 / 没见过&quot;</strong>：P06 的通用语料被切成 <code>[:-4]</code> 训练 + <code>[-4:]</code> 评估（<code>src/ft/base.py:82</code>），评估行<strong>不参与预训练</strong>。这样&quot;通用困惑度是否暴涨&quot;才真的在测泛化，而不是测记忆 —— 这个区分在本章救了整个结论（见 4.1）。</p>
 <p><strong>对照组</strong>：LoRA r=8 训 150 步 vs <strong>全量微调</strong>训 150 步，其余完全相同。</p>
 <figure class="figure"><img alt="M09 评估流程与三组对比" src="../../../../../../projects/08-fine-tuning/assets/evaluation.svg" loading="lazy"/><figcaption>M09 评估流程与三组对比</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo09evaluationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_evaluation_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo09evaluationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_evaluation_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design三套评估集-一个对照组"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：三套评估集 + 一个对照组</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <h3 id="31-微调前的基线实测">3.1 微调前的基线（实测）</h3>
 <table><thead><tr><th>指标</th><th>困惑度</th><th>CE</th></tr></thead><tbody><tr><td>域内（Java 面试）</td><td><strong>3,649.91</strong></td><td>8.2025</td></tr><tr><td>通用（见过）</td><td><strong>148.23</strong></td><td>4.9988</td></tr><tr><td>通用（没见过）</td><td><strong>742.62</strong></td><td>6.6102</td></tr></tbody></table>
 <p>基座在<strong>见过</strong>的通用语料上 CE=5.00，但在 Java 领域上 CE=8.20 —— 这个差距就是「领域不适配」。</p>
@@ -92,7 +171,7 @@ step  60  6.1882</code></pre>
 【LoRA 微调后】     &#x27;…相与  ，变量步选新数组，&#x27;
 【参考答案】        JDK 8 的 HashMap 底层是「数组 + 链表 + 红黑树」。数组的每个槽位称为桶（bucket），…</code></pre>
 <figure class="figure"><img alt="M09 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-09-evaluation.png" loading="lazy"/><figcaption>M09 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo09evaluationterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_09_evaluation_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-lora-更抗遗忘在本项目被推翻实测">4.1 「LoRA 更抗遗忘」在本项目被推翻（实测）</h3>
 <p>教科书常说「LoRA 比全量微调更抗遗忘」。<strong>本次实测相反</strong>：在预训练语料上，LoRA 涨 <strong>+240.71%</strong>，全量只涨 <strong>+118.83%</strong>。</p>
 <p>原因不是 LoRA 本身有问题，而是两条：</p>
@@ -116,12 +195,55 @@ step  60  6.1882</code></pre>
 <p><code>Tensor._prev</code> 在 P06 里是 Python <strong><code>set</code></strong>，<code>backward()</code> 遍历它做拓扑排序，而 set 的迭代顺序由<strong>对象地址</strong>决定 —— 每次进程启动都不一样。这不影响数学（任何顺序都是合法拓扑序），但会改变梯度累加的浮点求和顺序。</p>
 <p>训练动力学是混沌的：实测 300 步 × lr=3e-3 时，这点差异被放大成<strong>完全不同的基座权重</strong>（两次重建最大差 0.48）。150 步 SFT 的困惑度能从 406 甩到 428。</p>
 <p>本项目用 <code>enable_deterministic_autograd()</code>（<code>src/ft/paths.py:92</code>）在不改 P06 的前提下包一层：给每个 Tensor 记自增序号 <code>_seq</code>，把 <code>_prev</code> 换成按创建顺序排序的 list。<strong>开启后三个独立进程的 150 步困惑度逐位相同。</strong></p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>域内困惑度 3,649.9 → 421.1（↓88.46%）</strong> —— 领域适配成立；全量对照组 208.1（↓94.30%）。</li><li><strong>通用（见过）148.2 → 505.0（+240.71%）</strong>；全量 324.4（+118.83%）。严格口径下两者都判为&quot;存在灾难性遗忘&quot;。</li><li><strong>换用未见语料判据：两者都变好</strong>（LoRA −21.08% / 全量 −27.88%）—— 因为 Java 答案本身也是中文技术文本。</li><li><strong>⚠「LoRA 更抗遗忘」被推翻</strong>：实测 LoRA 涨得更多（+240.71% vs +118.83%），原因是基座欠训练 + LoRA 等效 <code>mean|ΔW|/mean|W| = 104.1%</code>。该说法的前提是<strong>基座泛化良好</strong>。</li><li><strong>⚠ 困惑度下降 ≠ 可用</strong>：88.46% 的下降是真的，但定性生成仍是乱码。困惑度是必要条件不是充分条件。</li><li><strong>判据的形式比结论重要</strong>：域内必须降、通用不能涨、两者同时看，且要区分&quot;见过 / 没见过&quot;。</li><li>跨进程可复现靠 <code>enable_deterministic_autograd()</code>（把 <code>_prev</code> 从 set 换成有序 list），<strong>不改 P06 任何文件</strong>。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/eval.py</code></td><td><code>evaluate()</code>（numpy 直算 log-softmax，只统计 mask=1）/ <code>perplexity()</code> / <code>compare()</code> / <code>forgetting_report()</code>（容忍度 ±10% 的遗忘判定）/ <code>generate_text()</code>（定性生成）</td></tr><tr><td><code>src/ft/base.py</code></td><td><code>general_corpus()</code>：把 P06 通用语料切成「预训练行 / 评估行」，<strong>评估行不参与预训练</strong> —— 4.2 那个判据成立的前提</td></tr><tr><td><code>src/ft/sft_data.py</code></td><td><code>build_sft_examples</code>（域内评估集）/ <code>build_lm_examples</code>（通用评估集，mask 全 1）</td></tr><tr><td><code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code> / <code>ordered_prev()</code>：把 <code>Tensor._prev</code> 从 set 换成有序 list，解决跨进程不可复现</td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer.run()</code>：150 步训练；全量对照组直接复用 P08 的 <code>named_parameters</code></td></tr><tr><td><code>demos/demo_09_evaluation.py</code></td><td>8 节：三套评估集 / 基线 / LoRA 150 步 / 全量对照 / 三状态对比 / 遗忘判定 / 定性生成 / 关键数字</td></tr><tr><td><code>demos/out/demo_09_evaluation_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/evaluation.svg</code></td><td>本章评估流程与三组对比图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.8 → <strong>v0.9</strong>，M09 评估与灾难性遗忘检查落地。实测：域内困惑度 <strong>3,649.9 → 421.1（↓88.46%）</strong>；通用（见过）<strong>148.2 → 505.0（+240.71%）</strong>；通用（没见过）<strong>742.6 → 586.1（−21.08%）</strong>；全量对照组域内 208.1 / 通用见过 +118.83% / 未见 −27.88%。<strong>推翻「LoRA 更抗遗忘」</strong>（实测 <code>mean|ΔW|/mean|W| = 104.1%</code>），并诚实标注「困惑度下降 ≠ 可用：定性生成仍是乱码」。纯 numpy、无 torch/transformers。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

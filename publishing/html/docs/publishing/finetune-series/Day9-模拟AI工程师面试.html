@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#面试官-q1" class="lvl2">面试官 Q1</a><a href="#你回答前思考框架" class="lvl2">你回答前思考框架</a><a href="#面试官-q2" class="lvl2">面试官 Q2</a><a href="#面试官-q3" class="lvl2">面试官 Q3</a><a href="#面试官-q4" class="lvl2">面试官 Q4</a><a href="#面试官-q5" class="lvl2">面试官 Q5</a><a href="#那-chunk-多大" class="lvl2">那 Chunk 多大？</a><a href="#面试官-q6" class="lvl2">面试官 Q6</a><a href="#面试官-q7" class="lvl2">面试官 Q7</a><a href="#面试官-q8" class="lvl2">面试官 Q8</a><a href="#面试官-q9" class="lvl2">面试官 Q9</a><a href="#面试官-q10" class="lvl2">面试官 Q10</a><a href="#面试官-q11" class="lvl2">面试官 Q11</a><a href="#难点1rag效果优化" class="lvl2">难点1：RAG效果优化</a><a href="#难点2agent稳定性" class="lvl2">难点2：Agent稳定性</a><a href="#难点3模型输出控制" class="lvl2">难点3：模型输出控制</a><a href="#q12" class="lvl2">Q12</a><a href="#day10ai工程师面试100问-项目答辩模拟" class="lvl2">《Day10：AI工程师面试100问 + 项目答辩模拟》</a><a href="#java-ai方向" class="lvl3">Java AI方向：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="大模型微调实战-day9模拟真实-ai-工程师面试">大模型微调实战 Day9：模拟真实 AI 工程师面试</h1>
 <h1 id="模拟真实-ai-工程师面试">模拟真实 AI 工程师面试</h1>
@@ -81,7 +160,7 @@ li{margin:.3em 0;}
 <ul class="lvl"><li>重点发现知识漏洞</li></ul>
 <hr/>
 <h1 id="第一轮项目介绍必问">第一轮：项目介绍（必问）</h1>
-<h2 id="面试官-q1">面试官 Q1</h2>
+<h2 id="面试官-q1">面试官 Q1</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#你回答前思考框架"><span class="sn-label">下一节 →</span><span class="sn-name">你回答前思考框架</span></a></nav>
 <p>请你介绍一下你做的 <strong>Java AI Interview Agent 项目</strong>。</p>
 <p>要求：</p>
 <p>不要背技术列表。</p>
@@ -99,7 +178,7 @@ li{margin:.3em 0;}
 结果</code></pre>
 <p>回答。</p>
 <hr/>
-<h2 id="你回答前思考框架">你回答前思考框架</h2>
+<h2 id="你回答前思考框架">你回答前思考框架</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q1"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q1</span></a><a class="sn next" href="#面试官-q2"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q2</span></a></nav>
 <p>不要这样：</p>
 <p>❌</p>
 <blockquote><p>我用了Spring Boot、LangChain4j、Milvus、Qwen、LoRA。</p></blockquote>
@@ -110,7 +189,7 @@ li{margin:.3em 0;}
 <blockquote><p>我做的是一个面向 Java 工程师面试训练场景的 AI Agent 系统。主要解决传统面试准备过程中知识分散、无法个性化训练的问题。系统基于 Spring Boot 作为后端服务，通过 LangChain4j 构建 Agent，通过 Tool Calling 调用知识库检索、简历分析和评分工具。知识部分采用 RAG，将 Java 源码和项目文档经过 Chunk、Embedding 后存入 Milvus。模型层使用 Qwen，并通过 QLoRA 微调优化 Java 面试回答风格，最终实现模拟面试、知识问答和回答评分。</p></blockquote>
 <hr/>
 <h1 id="第二轮架构设计">第二轮：架构设计</h1>
-<h2 id="面试官-q2">面试官 Q2</h2>
+<h2 id="面试官-q2">面试官 Q2</h2><nav class="sec-nav"><a class="sn prev" href="#你回答前思考框架"><span class="sn-label">← 上一节</span><span class="sn-name">你回答前思考框架</span></a><a class="sn next" href="#面试官-q3"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q3</span></a></nav>
 <p>请你画一下整个系统架构，并说明一次用户请求的完整链路。</p>
 <p>你需要讲：</p>
 <pre><code>用户
@@ -135,7 +214,7 @@ Qwen LoRA
 <blockquote><p>用户请求首先进入 Spring Boot 接口层，接口将请求交给 LangChain4j Agent。Agent 根据用户意图判断是否需要调用工具，如果涉及技术知识查询，则调用知识库检索 Tool。Retriever 将用户问题转换成 Embedding，在 Milvus 中进行向量搜索，返回相关文档片段。系统将用户问题、历史上下文以及检索结果组合成 Prompt，然后发送给 Qwen 模型。Qwen 结合 LoRA 微调后的面试回答能力生成最终结果，通过 SSE 流式返回给前端。</p></blockquote>
 <hr/>
 <h1 id="第三轮rag-深挖">第三轮：RAG 深挖</h1>
-<h2 id="面试官-q3">面试官 Q3</h2>
+<h2 id="面试官-q3">面试官 Q3</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q2"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q2</span></a><a class="sn next" href="#面试官-q4"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q4</span></a></nav>
 <p>为什么你的项目需要 RAG？</p>
 <p>为什么不能直接把 Java 知识全部微调进去？</p>
 <hr/>
@@ -146,7 +225,7 @@ Qwen LoRA
 <blockquote><p>因为两者解决的问题不同。微调主要用于改变模型行为，例如让模型按照 Java 高级面试方式回答；RAG主要解决外部知识注入问题，例如公司内部文档、源码分析和项目资料。如果把所有知识通过微调注入，会存在训练成本高、知识更新困难以及模型遗忘问题，所以企业应用通常采用 RAG 管理动态知识。</p></blockquote>
 <hr/>
 <h1 id="第四轮rag链路追问">第四轮：RAG链路追问</h1>
-<h2 id="面试官-q4">面试官 Q4</h2>
+<h2 id="面试官-q4">面试官 Q4</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q3"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q3</span></a><a class="sn next" href="#面试官-q5"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q5</span></a></nav>
 <p>你的 RAG 从上传文档到回答，中间经历哪些步骤？</p>
 <p>必须说：</p>
 <pre><code>Document Loader
@@ -166,31 +245,31 @@ LLM</code></pre>
 <blockquote><p>用户上传文档后，系统首先通过 Document Loader 解析文件，然后使用 Text Splitter 进行 Chunk 切分。每个 Chunk 通过 Embedding 模型转换成向量，并存储到 Milvus 向量数据库。当用户提问时，系统将问题向量化，通过相似度搜索召回 TopK 文档片段，再将这些上下文和用户问题组合成 Prompt，发送给大模型生成答案。</p></blockquote>
 <hr/>
 <h1 id="第五轮chunk追问高频">第五轮：Chunk追问（高频）</h1>
-<h2 id="面试官-q5">面试官 Q5</h2>
+<h2 id="面试官-q5">面试官 Q5</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q4"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q4</span></a><a class="sn next" href="#那-chunk-多大"><span class="sn-label">下一节 →</span><span class="sn-name">那 Chunk 多大？</span></a></nav>
 <p>为什么 RAG 需要 Chunk？</p>
 <p>为什么不能直接把整个 PDF 放进去？</p>
 <p>标准：</p>
 <blockquote><p>大模型存在上下文窗口限制，同时长文本直接输入会导致重要信息被稀释。因此需要将文档切分成合理大小的 Chunk，使每个片段语义完整，并通过向量检索快速定位相关内容。</p></blockquote>
 <p>继续追问：</p>
-<h2 id="那-chunk-多大">那 Chunk 多大？</h2>
+<h2 id="那-chunk-多大">那 Chunk 多大？</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q5"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q5</span></a><a class="sn next" href="#面试官-q6"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q6</span></a></nav>
 <p>回答：</p>
 <blockquote><p>没有固定值，需要根据场景调整。通常会结合模型上下文长度、文档类型和检索效果测试，例如几百到上千 Token，并设置一定 overlap 保证上下文连续性。</p></blockquote>
 <hr/>
 <h1 id="第六轮embedding追问">第六轮：Embedding追问</h1>
-<h2 id="面试官-q6">面试官 Q6</h2>
+<h2 id="面试官-q6">面试官 Q6</h2><nav class="sec-nav"><a class="sn prev" href="#那-chunk-多大"><span class="sn-label">← 上一节</span><span class="sn-name">那 Chunk 多大？</span></a><a class="sn next" href="#面试官-q7"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q7</span></a></nav>
 <p>Embedding到底是什么？</p>
 <p>为什么文本可以搜索？</p>
 <p>标准：</p>
 <blockquote><p>Embedding 是将文本转换为高维向量表示的过程。语义相近的文本在向量空间距离更近，因此可以通过向量相似度计算找到相关内容。例如用户问“HashMap线程安全吗”，系统可以检索到“ConcurrentHashMap并发控制机制”等语义相关文档。</p></blockquote>
 <hr/>
 <h1 id="第七轮lora深挖">第七轮：LoRA深挖</h1>
-<h2 id="面试官-q7">面试官 Q7</h2>
+<h2 id="面试官-q7">面试官 Q7</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q6"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q6</span></a><a class="sn next" href="#面试官-q8"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q8</span></a></nav>
 <p>为什么你的项目需要 LoRA 微调？</p>
 <p>标准：</p>
 <blockquote><p>我的场景不是让模型学习全部 Java 知识，而是希望模型形成稳定的面试回答风格，例如先给结论，再分析源码，再结合项目。因此使用 LoRA 对模型行为进行领域适配，同时知识内容通过 RAG 动态提供。</p></blockquote>
 <hr/>
 <h1 id="第八轮lora原理">第八轮：LoRA原理</h1>
-<h2 id="面试官-q8">面试官 Q8</h2>
+<h2 id="面试官-q8">面试官 Q8</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q7"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q7</span></a><a class="sn next" href="#面试官-q9"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q9</span></a></nav>
 <p>LoRA具体怎么实现？</p>
 <p>不要只说：</p>
 <p>❌</p>
@@ -199,13 +278,13 @@ LLM</code></pre>
 <blockquote><p>LoRA是一种参数高效微调方法。传统微调需要更新模型大量参数，而LoRA冻结原模型参数，在部分 Transformer 权重旁增加低秩矩阵，只训练这些新增参数。训练完成后可以将 Adapter 和基础模型合并，或者推理时动态加载。</p></blockquote>
 <hr/>
 <h1 id="第九轮agent追问">第九轮：Agent追问</h1>
-<h2 id="面试官-q9">面试官 Q9</h2>
+<h2 id="面试官-q9">面试官 Q9</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q8"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q8</span></a><a class="sn next" href="#面试官-q10"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q10</span></a></nav>
 <p>你的 Agent 和普通 Chat 有什么区别？</p>
 <p>标准：</p>
 <blockquote><p>普通 Chat 主要是用户输入后模型直接生成回答，而 Agent 增加了任务规划和工具调用能力。Agent 会根据用户意图判断是否需要调用外部工具，例如查询知识库、分析简历，然后根据工具结果继续推理生成答案。</p></blockquote>
 <hr/>
 <h1 id="第十轮tool-calling追问">第十轮：Tool Calling追问</h1>
-<h2 id="面试官-q10">面试官 Q10</h2>
+<h2 id="面试官-q10">面试官 Q10</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q9"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q9</span></a><a class="sn next" href="#面试官-q11"><span class="sn-label">下一节 →</span><span class="sn-name">面试官 Q11</span></a></nav>
 <p>Tool Calling整个流程是什么？</p>
 <p>这是你的重点。</p>
 <p>标准：</p>
@@ -242,7 +321,7 @@ LLM
 Answer</code></pre>
 <hr/>
 <h1 id="第十一轮项目难点">第十一轮：项目难点</h1>
-<h2 id="面试官-q11">面试官 Q11</h2>
+<h2 id="面试官-q11">面试官 Q11</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q10"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q10</span></a><a class="sn next" href="#难点1rag效果优化"><span class="sn-label">下一节 →</span><span class="sn-name">难点1：RAG效果优化</span></a></nav>
 <p>你项目中最大的技术难点是什么？</p>
 <p>不要回答：</p>
 <p>❌</p>
@@ -250,20 +329,20 @@ Answer</code></pre>
 <p>推荐：</p>
 <p>三个：</p>
 <hr/>
-<h2 id="难点1rag效果优化">难点1：RAG效果优化</h2>
+<h2 id="难点1rag效果优化">难点1：RAG效果优化</h2><nav class="sec-nav"><a class="sn prev" href="#面试官-q11"><span class="sn-label">← 上一节</span><span class="sn-name">面试官 Q11</span></a><a class="sn next" href="#难点2agent稳定性"><span class="sn-label">下一节 →</span><span class="sn-name">难点2：Agent稳定性</span></a></nav>
 <p>回答：</p>
 <blockquote><p>初期检索存在召回不准确的问题，通过优化 Chunk 策略、调整 Embedding 模型、增加 Metadata过滤提升效果。</p></blockquote>
 <hr/>
-<h2 id="难点2agent稳定性">难点2：Agent稳定性</h2>
+<h2 id="难点2agent稳定性">难点2：Agent稳定性</h2><nav class="sec-nav"><a class="sn prev" href="#难点1rag效果优化"><span class="sn-label">← 上一节</span><span class="sn-name">难点1：RAG效果优化</span></a><a class="sn next" href="#难点3模型输出控制"><span class="sn-label">下一节 →</span><span class="sn-name">难点3：模型输出控制</span></a></nav>
 <p>回答：</p>
 <blockquote><p>Agent存在工具选择错误问题，通过明确 Tool 描述、限制工具权限以及增加参数校验提升稳定性。</p></blockquote>
 <hr/>
-<h2 id="难点3模型输出控制">难点3：模型输出控制</h2>
+<h2 id="难点3模型输出控制">难点3：模型输出控制</h2><nav class="sec-nav"><a class="sn prev" href="#难点2agent稳定性"><span class="sn-label">← 上一节</span><span class="sn-name">难点2：Agent稳定性</span></a><a class="sn next" href="#q12"><span class="sn-label">下一节 →</span><span class="sn-name">Q12</span></a></nav>
 <p>回答：</p>
 <blockquote><p>通过 Prompt 约束、LoRA 微调和 Evaluation 数据集持续优化回答质量。</p></blockquote>
 <hr/>
 <h1 id="第十二轮面试官终极追问">第十二轮：面试官终极追问</h1>
-<h2 id="q12">Q12</h2>
+<h2 id="q12">Q12</h2><nav class="sec-nav"><a class="sn prev" href="#难点3模型输出控制"><span class="sn-label">← 上一节</span><span class="sn-name">难点3：模型输出控制</span></a><a class="sn next" href="#day10ai工程师面试100问-项目答辩模拟"><span class="sn-label">下一节 →</span><span class="sn-name">《Day10：AI工程师面试100问 + 项目答辩模拟》</span></a></nav>
 <p>如果用户问的问题知识库没有怎么办？</p>
 <p>标准：</p>
 <blockquote><p>首先通过检索结果置信度判断，如果没有达到阈值，则降低知识库内容权重，并提示模型基于已有能力回答，同时明确说明不确定性。生产环境可以增加拒答机制，减少幻觉。</p></blockquote>
@@ -273,7 +352,7 @@ Answer</code></pre>
 <table><thead><tr><th>问题</th><th>掌握</th></tr></thead><tbody><tr><td>项目介绍</td><td>✅</td></tr><tr><td>架构链路</td><td>✅</td></tr><tr><td>RAG原理</td><td>✅</td></tr><tr><td>Embedding</td><td>✅</td></tr><tr><td>Chunk</td><td>✅</td></tr><tr><td>LoRA</td><td>✅</td></tr><tr><td>Agent</td><td>✅</td></tr><tr><td>Tool Calling</td><td>✅</td></tr><tr><td>工程化</td><td>✅</td></tr></tbody></table>
 <hr/>
 <h1 id="下一步-day10最终版">下一步 Day10（最终版）</h1>
-<h2 id="day10ai工程师面试100问-项目答辩模拟">《Day10：AI工程师面试100问 + 项目答辩模拟》</h2>
+<h2 id="day10ai工程师面试100问-项目答辩模拟">《Day10：AI工程师面试100问 + 项目答辩模拟》</h2><nav class="sec-nav"><a class="sn prev" href="#q12"><span class="sn-label">← 上一节</span><span class="sn-name">Q12</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>内容：</p>
 <h3 id="java-ai方向">Java AI方向：</h3>
 <ul class="lvl"><li>RAG 30问</li></ul>
@@ -285,5 +364,48 @@ Answer</code></pre>
 <blockquote><p>面试官连续追问，你现场回答，我按 30K Java + AI 岗标准纠正。</p></blockquote>
 <p>这一步会把项目真正转化成求职竞争力。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

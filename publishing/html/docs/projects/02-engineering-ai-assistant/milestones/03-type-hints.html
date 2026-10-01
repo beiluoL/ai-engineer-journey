@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目问题" class="lvl2">1. 项目问题</a><a href="#task-1message-类型化" class="lvl2">Task 1：Message 类型化</a><a href="#task-2配置类型化" class="lvl2">Task 2：配置类型化</a><a href="#task-3llmclient-类型化" class="lvl2">Task 3：LLMClient 类型化</a><a href="#task-4增加-protocol" class="lvl2">Task 4：增加 Protocol</a><a href="#task-5类型检查" class="lvl2">Task 5：类型检查</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#q8" class="lvl3">Q8</a><a href="#q9" class="lvl3">Q9</a><a href="#q10" class="lvl3">Q10</a><a href="#问python-为什么需要-type-hint" class="lvl3">问：Python 为什么需要 Type Hint？</a><a href="#问typeddict-是什么" class="lvl3">问：TypedDict 是什么？</a><a href="#问protocol-是什么" class="lvl3">问：Protocol 是什么？</a><a href="#坑-1认为写了类型提示就不会出错" class="lvl2">坑 1：认为写了类型提示就不会出错</a><a href="#坑-2为了类型而类型" class="lvl2">坑 2：为了类型而类型</a><a href="#坑-3所有东西都写-dict" class="lvl2">坑 3：所有东西都写 dict</a><a href="#坑-4把第三方-api-的真实-schema-想当然地固定下来" class="lvl2">坑 4：把第三方 API 的真实 Schema 想当然地固定下来</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-03type-hints类型提示">Project 02 — Chapter 03：Type Hints【类型提示】</h1>
 <blockquote><p><strong>本章 ↔ <code>src/</code> 对照</strong>（校对时补：本章概念在真实代码里的落点） - <code>src/assistant/settings.py: Settings</code> — 每个字段都有类型注解，<code>from_env()</code> 负责 <code>str → float/int</code> 转换 - <code>src/assistant/client.py: BaseLLMClient</code> — 抽象基类 + 完整签名类型；<code>DeepSeekClient</code> / <code>FakeClient</code> 都实现它 - <code>src/assistant/conversation.py</code> — 历史统一为 <code>list[dict[str, str]]</code>，与 OpenAI 的 messages 契约对齐 - <code>src/assistant/api.py</code> — FastAPI 用 Pydantic <code>BaseModel</code> 做<strong>运行时</strong>校验（类型提示只管静态，边界还得靠它）</p></blockquote>
-<h2 id="1-项目问题">1. 项目问题</h2>
+<h2 id="1-项目问题">1. 项目问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#task-1message-类型化"><span class="sn-label">下一节 →</span><span class="sn-name">Task 1：Message 类型化</span></a></nav>
 <p>上一章我们已经把 AI Assistant 的网络层升级成：</p>
 <pre><code>AI Application
     ↓
@@ -638,7 +717,7 @@ HTTP</code></pre>
 └───────────────┘</code></pre>
 <hr/>
 <h1 id="25-实战任务">25. 实战任务</h1>
-<h2 id="task-1message-类型化">Task 1：Message 类型化</h2>
+<h2 id="task-1message-类型化">Task 1：Message 类型化</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目问题</span></a><a class="sn next" href="#task-2配置类型化"><span class="sn-label">下一节 →</span><span class="sn-name">Task 2：配置类型化</span></a></nav>
 <p>创建：</p>
 <pre><code>class Message(TypedDict):
     role: str
@@ -648,7 +727,7 @@ HTTP</code></pre>
 <p>全部改成：</p>
 <pre><code>list[Message]</code></pre>
 <hr/>
-<h2 id="task-2配置类型化">Task 2：配置类型化</h2>
+<h2 id="task-2配置类型化">Task 2：配置类型化</h2><nav class="sec-nav"><a class="sn prev" href="#task-1message-类型化"><span class="sn-label">← 上一节</span><span class="sn-name">Task 1：Message 类型化</span></a><a class="sn next" href="#task-3llmclient-类型化"><span class="sn-label">下一节 →</span><span class="sn-name">Task 3：LLMClient 类型化</span></a></nav>
 <p>给：</p>
 <pre><code>model_name
 temperature
@@ -656,20 +735,20 @@ max_tokens
 base_url</code></pre>
 <p>添加类型提示。</p>
 <hr/>
-<h2 id="task-3llmclient-类型化">Task 3：LLMClient 类型化</h2>
+<h2 id="task-3llmclient-类型化">Task 3：LLMClient 类型化</h2><nav class="sec-nav"><a class="sn prev" href="#task-2配置类型化"><span class="sn-label">← 上一节</span><span class="sn-name">Task 2：配置类型化</span></a><a class="sn next" href="#task-4增加-protocol"><span class="sn-label">下一节 →</span><span class="sn-name">Task 4：增加 Protocol</span></a></nav>
 <p>至少明确：</p>
 <pre><code>async def chat(
     messages: list[Message],
 ) -&gt; ...</code></pre>
 <p>的参数类型和返回类型。</p>
 <hr/>
-<h2 id="task-4增加-protocol">Task 4：增加 Protocol</h2>
+<h2 id="task-4增加-protocol">Task 4：增加 Protocol</h2><nav class="sec-nav"><a class="sn prev" href="#task-3llmclient-类型化"><span class="sn-label">← 上一节</span><span class="sn-name">Task 3：LLMClient 类型化</span></a><a class="sn next" href="#task-5类型检查"><span class="sn-label">下一节 →</span><span class="sn-name">Task 5：类型检查</span></a></nav>
 <p>定义：</p>
 <pre><code>class LLMClientProtocol(Protocol):
     ...</code></pre>
 <p>尝试让 <code>Assistant</code> 不依赖具体 Provider。</p>
 <hr/>
-<h2 id="task-5类型检查">Task 5：类型检查</h2>
+<h2 id="task-5类型检查">Task 5：类型检查</h2><nav class="sec-nav"><a class="sn prev" href="#task-4增加-protocol"><span class="sn-label">← 上一节</span><span class="sn-name">Task 4：增加 Protocol</span></a><a class="sn next" href="#坑-1认为写了类型提示就不会出错"><span class="sn-label">下一节 →</span><span class="sn-name">坑 1：认为写了类型提示就不会出错</span></a></nav>
 <p>使用 Mypy 或 Pyright 对项目进行一次类型检查。</p>
 <p>目标不是：</p>
 <blockquote><p>让整个仓库一次性 0 error。</p></blockquote>
@@ -725,7 +804,7 @@ base_url</code></pre>
 <blockquote><p><code>Protocol</code> 用于定义一种结构化接口。只要对象具有符合协议要求的方法和属性，就可以被视为满足这个协议，而不要求显式继承它。它适合做依赖抽象，例如让 Assistant 依赖统一的 LLM Client 接口，从而方便替换不同模型供应商。</p></blockquote>
 <hr/>
 <h1 id="29-常见坑">29. 常见坑</h1>
-<h2 id="坑-1认为写了类型提示就不会出错">坑 1：认为写了类型提示就不会出错</h2>
+<h2 id="坑-1认为写了类型提示就不会出错">坑 1：认为写了类型提示就不会出错</h2><nav class="sec-nav"><a class="sn prev" href="#task-5类型检查"><span class="sn-label">← 上一节</span><span class="sn-name">Task 5：类型检查</span></a><a class="sn next" href="#坑-2为了类型而类型"><span class="sn-label">下一节 →</span><span class="sn-name">坑 2：为了类型而类型</span></a></nav>
 <p>错误。</p>
 <pre><code>age: int = &quot;hello&quot;</code></pre>
 <p>类型提示本身并不会自动阻止所有错误。</p>
@@ -735,19 +814,19 @@ base_url</code></pre>
 Type Checker</code></pre>
 <p>才能发挥静态检查价值。</p>
 <hr/>
-<h2 id="坑-2为了类型而类型">坑 2：为了类型而类型</h2>
+<h2 id="坑-2为了类型而类型">坑 2：为了类型而类型</h2><nav class="sec-nav"><a class="sn prev" href="#坑-1认为写了类型提示就不会出错"><span class="sn-label">← 上一节</span><span class="sn-name">坑 1：认为写了类型提示就不会出错</span></a><a class="sn next" href="#坑-3所有东西都写-dict"><span class="sn-label">下一节 →</span><span class="sn-name">坑 3：所有东西都写 dict</span></a></nav>
 <p>不要把每一行代码都写成复杂泛型。</p>
 <p>目标是：</p>
 <blockquote><p>提高理解和维护能力。</p></blockquote>
 <p>而不是制造类型噪音。</p>
 <hr/>
-<h2 id="坑-3所有东西都写-dict">坑 3：所有东西都写 dict</h2>
+<h2 id="坑-3所有东西都写-dict">坑 3：所有东西都写 dict</h2><nav class="sec-nav"><a class="sn prev" href="#坑-2为了类型而类型"><span class="sn-label">← 上一节</span><span class="sn-name">坑 2：为了类型而类型</span></a><a class="sn next" href="#坑-4把第三方-api-的真实-schema-想当然地固定下来"><span class="sn-label">下一节 →</span><span class="sn-name">坑 4：把第三方 API 的真实 Schema 想当然地固定下来</span></a></nav>
 <p>例如：</p>
 <pre><code>response: dict</code></pre>
 <p>这几乎没有提供什么有效信息。</p>
 <p>能描述具体结构时，应尽可能明确。</p>
 <hr/>
-<h2 id="坑-4把第三方-api-的真实-schema-想当然地固定下来">坑 4：把第三方 API 的真实 Schema 想当然地固定下来</h2>
+<h2 id="坑-4把第三方-api-的真实-schema-想当然地固定下来">坑 4：把第三方 API 的真实 Schema 想当然地固定下来</h2><nav class="sec-nav"><a class="sn prev" href="#坑-3所有东西都写-dict"><span class="sn-label">← 上一节</span><span class="sn-name">坑 3：所有东西都写 dict</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>不同模型供应商的请求和响应结构可能不同。</p>
 <p>应该区分：</p>
 <pre><code>Provider API Schema</code></pre>
@@ -872,5 +951,48 @@ LLM API</code></pre>
 怎么办？</code></pre>
 <p>下一步会把 Project 02 中的配置、请求对象、响应对象逐步从“裸字典”升级成更加明确的 Python 数据对象。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

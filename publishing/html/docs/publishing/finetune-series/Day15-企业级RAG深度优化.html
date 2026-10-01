@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#问题1为什么搜不到" class="lvl2">问题1：为什么搜不到？</a><a href="#问题2为什么找到很多垃圾内容" class="lvl2">问题2：为什么找到很多垃圾内容？</a><a href="#问题3为什么模型还是胡说" class="lvl2">问题3：为什么模型还是胡说？</a><a href="#什么是-hybrid-search" class="lvl2">什么是 Hybrid Search？</a><a href="#向量搜索" class="lvl2">向量搜索</a><a href="#关键词搜索" class="lvl2">关键词搜索</a><a href="#方案1milvus-bm25" class="lvl2">方案1：Milvus + BM25</a><a href="#bm25是什么" class="lvl2">BM25是什么？</a><a href="#bge-reranker" class="lvl2">BGE Reranker</a><a href="#cohere-rerank" class="lvl2">Cohere Rerank</a><a href="#jina-reranker" class="lvl2">Jina Reranker</a><a href="#普通rag" class="lvl2">普通RAG</a><a href="#企业rag" class="lvl2">企业RAG</a><a href="#retrieval-recall召回率" class="lvl2">Retrieval Recall【召回率】</a><a href="#precision准确率" class="lvl2">Precision【准确率】</a><a href="#faithfulness忠实度" class="lvl2">Faithfulness【忠实度】</a><a href="#answer-relevance答案相关性" class="lvl2">Answer Relevance【答案相关性】</a><a href="#检索" class="lvl2">检索</a><a href="#模型" class="lvl2">模型</a><a href="#用户" class="lvl2">用户</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day15-企业级-rag-深度优化">Day15 企业级 RAG 深度优化</h1>
 <h1 id="hybrid-search-rerank-agentic-rag-evaluation">Hybrid Search + Rerank + Agentic RAG + Evaluation</h1>
@@ -89,7 +168,7 @@ LLM
 <p>这已经可以跑 Demo。</p>
 <p>但是企业上线后，会遇到大量问题：</p>
 <hr/>
-<h2 id="问题1为什么搜不到">问题1：为什么搜不到？</h2>
+<h2 id="问题1为什么搜不到">问题1：为什么搜不到？</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#问题2为什么找到很多垃圾内容"><span class="sn-label">下一节 →</span><span class="sn-name">问题2：为什么找到很多垃圾内容？</span></a></nav>
 <p>用户：</p>
 <blockquote><p>ConcurrentHashMap 为什么线程安全？</p></blockquote>
 <p>知识库：</p>
@@ -103,7 +182,7 @@ Map接口介绍</code></pre>
 <p>原因：</p>
 <p>语义相似，但是不够精准。</p>
 <hr/>
-<h2 id="问题2为什么找到很多垃圾内容">问题2：为什么找到很多垃圾内容？</h2>
+<h2 id="问题2为什么找到很多垃圾内容">问题2：为什么找到很多垃圾内容？</h2><nav class="sec-nav"><a class="sn prev" href="#问题1为什么搜不到"><span class="sn-label">← 上一节</span><span class="sn-name">问题1：为什么搜不到？</span></a><a class="sn next" href="#问题3为什么模型还是胡说"><span class="sn-label">下一节 →</span><span class="sn-name">问题3：为什么模型还是胡说？</span></a></nav>
 <p>例如：</p>
 <p>TopK=10：</p>
 <p>返回：</p>
@@ -119,7 +198,7 @@ Map接口介绍</code></pre>
 <p>真正需要：</p>
 <p>只有第1个。</p>
 <hr/>
-<h2 id="问题3为什么模型还是胡说">问题3：为什么模型还是胡说？</h2>
+<h2 id="问题3为什么模型还是胡说">问题3：为什么模型还是胡说？</h2><nav class="sec-nav"><a class="sn prev" href="#问题2为什么找到很多垃圾内容"><span class="sn-label">← 上一节</span><span class="sn-name">问题2：为什么找到很多垃圾内容？</span></a><a class="sn next" href="#什么是-hybrid-search"><span class="sn-label">下一节 →</span><span class="sn-name">什么是 Hybrid Search？</span></a></nav>
 <p>因为：</p>
 <p>检索质量不好。</p>
 <p>LLM再强也无法弥补错误上下文。</p>
@@ -224,7 +303,7 @@ Evaluation</code></pre>
 </code></pre>
 <hr/>
 <h1 id="二hybrid-search混合搜索">二、Hybrid Search【混合搜索】</h1>
-<h2 id="什么是-hybrid-search">什么是 Hybrid Search？</h2>
+<h2 id="什么是-hybrid-search">什么是 Hybrid Search？</h2><nav class="sec-nav"><a class="sn prev" href="#问题3为什么模型还是胡说"><span class="sn-label">← 上一节</span><span class="sn-name">问题3：为什么模型还是胡说？</span></a><a class="sn next" href="#向量搜索"><span class="sn-label">下一节 →</span><span class="sn-name">向量搜索</span></a></nav>
 <p>Hybrid：</p>
 <p>混合。</p>
 <p>结合：</p>
@@ -232,7 +311,7 @@ Evaluation</code></pre>
 <ul class="lvl"><li>Sparse Retrieval【稀疏检索】</li></ul>
 <hr/>
 <p>简单理解：</p>
-<h2 id="向量搜索">向量搜索</h2>
+<h2 id="向量搜索">向量搜索</h2><nav class="sec-nav"><a class="sn prev" href="#什么是-hybrid-search"><span class="sn-label">← 上一节</span><span class="sn-name">什么是 Hybrid Search？</span></a><a class="sn next" href="#关键词搜索"><span class="sn-label">下一节 →</span><span class="sn-name">关键词搜索</span></a></nav>
 <p>擅长：</p>
 <p>语义。</p>
 <p>例如：</p>
@@ -253,7 +332,7 @@ Evaluation</code></pre>
 <p>可能找不到：</p>
 <p><code>acquireQueued</code>。</p>
 <hr/>
-<h2 id="关键词搜索">关键词搜索</h2>
+<h2 id="关键词搜索">关键词搜索</h2><nav class="sec-nav"><a class="sn prev" href="#向量搜索"><span class="sn-label">← 上一节</span><span class="sn-name">向量搜索</span></a><a class="sn next" href="#方案1milvus-bm25"><span class="sn-label">下一节 →</span><span class="sn-name">方案1：Milvus + BM25</span></a></nav>
 <p>擅长：</p>
 <p>精确匹配。</p>
 <p>例如：</p>
@@ -274,7 +353,7 @@ Evaluation</code></pre>
 更全面</code></pre>
 <hr/>
 <h1 id="三hybrid-search实现">三、Hybrid Search实现</h1>
-<h2 id="方案1milvus-bm25">方案1：Milvus + BM25</h2>
+<h2 id="方案1milvus-bm25">方案1：Milvus + BM25</h2><nav class="sec-nav"><a class="sn prev" href="#关键词搜索"><span class="sn-label">← 上一节</span><span class="sn-name">关键词搜索</span></a><a class="sn next" href="#bm25是什么"><span class="sn-label">下一节 →</span><span class="sn-name">BM25是什么？</span></a></nav>
 <p>架构：</p>
 <pre><code>用户问题
 
@@ -305,7 +384,7 @@ BM25        Embedding
 
 结果融合</code></pre>
 <hr/>
-<h2 id="bm25是什么">BM25是什么？</h2>
+<h2 id="bm25是什么">BM25是什么？</h2><nav class="sec-nav"><a class="sn prev" href="#方案1milvus-bm25"><span class="sn-label">← 上一节</span><span class="sn-name">方案1：Milvus + BM25</span></a><a class="sn next" href="#bge-reranker"><span class="sn-label">下一节 →</span><span class="sn-name">BGE Reranker</span></a></nav>
 <p>BM25：</p>
 <p><strong>Best Matching 25【最佳匹配算法】</strong></p>
 <p>传统搜索算法。</p>
@@ -385,18 +464,18 @@ JDK8扩容通过transfer方法...</code></pre>
 <hr/>
 <h1 id="六常见rerank模型">六、常见Rerank模型</h1>
 <p>开源：</p>
-<h2 id="bge-reranker">BGE Reranker</h2>
+<h2 id="bge-reranker">BGE Reranker</h2><nav class="sec-nav"><a class="sn prev" href="#bm25是什么"><span class="sn-label">← 上一节</span><span class="sn-name">BM25是什么？</span></a><a class="sn next" href="#cohere-rerank"><span class="sn-label">下一节 →</span><span class="sn-name">Cohere Rerank</span></a></nav>
 <p>例如：</p>
 <pre><code>BAAI/bge-reranker</code></pre>
 <hr/>
-<h2 id="cohere-rerank">Cohere Rerank</h2>
+<h2 id="cohere-rerank">Cohere Rerank</h2><nav class="sec-nav"><a class="sn prev" href="#bge-reranker"><span class="sn-label">← 上一节</span><span class="sn-name">BGE Reranker</span></a><a class="sn next" href="#jina-reranker"><span class="sn-label">下一节 →</span><span class="sn-name">Jina Reranker</span></a></nav>
 <p>商业。</p>
 <hr/>
-<h2 id="jina-reranker">Jina Reranker</h2>
+<h2 id="jina-reranker">Jina Reranker</h2><nav class="sec-nav"><a class="sn prev" href="#cohere-rerank"><span class="sn-label">← 上一节</span><span class="sn-name">Cohere Rerank</span></a><a class="sn next" href="#普通rag"><span class="sn-label">下一节 →</span><span class="sn-name">普通RAG</span></a></nav>
 <p>商业+开源。</p>
 <hr/>
 <h1 id="七rag优化前后区别">七、RAG优化前后区别</h1>
-<h2 id="普通rag">普通RAG</h2>
+<h2 id="普通rag">普通RAG</h2><nav class="sec-nav"><a class="sn prev" href="#jina-reranker"><span class="sn-label">← 上一节</span><span class="sn-name">Jina Reranker</span></a><a class="sn next" href="#企业rag"><span class="sn-label">下一节 →</span><span class="sn-name">企业RAG</span></a></nav>
 <pre><code>问题
 
 ↓
@@ -413,7 +492,7 @@ LLM</code></pre>
 <p>问题：</p>
 <p>召回不稳定。</p>
 <hr/>
-<h2 id="企业rag">企业RAG</h2>
+<h2 id="企业rag">企业RAG</h2><nav class="sec-nav"><a class="sn prev" href="#普通rag"><span class="sn-label">← 上一节</span><span class="sn-name">普通RAG</span></a><a class="sn next" href="#retrieval-recall召回率"><span class="sn-label">下一节 →</span><span class="sn-name">Retrieval Recall【召回率】</span></a></nav>
 <pre><code>问题
 
 ↓
@@ -592,7 +671,7 @@ Tool3:
 }</code></pre>
 <hr/>
 <h1 id="2-rag评测指标">2. RAG评测指标</h1>
-<h2 id="retrieval-recall召回率">Retrieval Recall【召回率】</h2>
+<h2 id="retrieval-recall召回率">Retrieval Recall【召回率】</h2><nav class="sec-nav"><a class="sn prev" href="#企业rag"><span class="sn-label">← 上一节</span><span class="sn-name">企业RAG</span></a><a class="sn next" href="#precision准确率"><span class="sn-label">下一节 →</span><span class="sn-name">Precision【准确率】</span></a></nav>
 <p>问题：</p>
 <p>正确答案有没有被找到。</p>
 <p>例如：</p>
@@ -601,14 +680,14 @@ Tool3:
 <p>Recall：</p>
 <p>90%。</p>
 <hr/>
-<h2 id="precision准确率">Precision【准确率】</h2>
+<h2 id="precision准确率">Precision【准确率】</h2><nav class="sec-nav"><a class="sn prev" href="#retrieval-recall召回率"><span class="sn-label">← 上一节</span><span class="sn-name">Retrieval Recall【召回率】</span></a><a class="sn next" href="#faithfulness忠实度"><span class="sn-label">下一节 →</span><span class="sn-name">Faithfulness【忠实度】</span></a></nav>
 <p>找到的内容：</p>
 <p>多少相关。</p>
 <hr/>
-<h2 id="faithfulness忠实度">Faithfulness【忠实度】</h2>
+<h2 id="faithfulness忠实度">Faithfulness【忠实度】</h2><nav class="sec-nav"><a class="sn prev" href="#precision准确率"><span class="sn-label">← 上一节</span><span class="sn-name">Precision【准确率】</span></a><a class="sn next" href="#answer-relevance答案相关性"><span class="sn-label">下一节 →</span><span class="sn-name">Answer Relevance【答案相关性】</span></a></nav>
 <p>答案是否来自知识库。</p>
 <hr/>
-<h2 id="answer-relevance答案相关性">Answer Relevance【答案相关性】</h2>
+<h2 id="answer-relevance答案相关性">Answer Relevance【答案相关性】</h2><nav class="sec-nav"><a class="sn prev" href="#faithfulness忠实度"><span class="sn-label">← 上一节</span><span class="sn-name">Faithfulness【忠实度】</span></a><a class="sn next" href="#检索"><span class="sn-label">下一节 →</span><span class="sn-name">检索</span></a></nav>
 <p>回答是否解决问题。</p>
 <hr/>
 <h1 id="十二自动评测流程">十二、自动评测流程</h1>
@@ -648,19 +727,19 @@ Evaluator模型
 <h1 id="十三rag生产监控">十三、RAG生产监控</h1>
 <p>上线后监控：</p>
 <hr/>
-<h2 id="检索">检索</h2>
+<h2 id="检索">检索</h2><nav class="sec-nav"><a class="sn prev" href="#answer-relevance答案相关性"><span class="sn-label">← 上一节</span><span class="sn-name">Answer Relevance【答案相关性】</span></a><a class="sn next" href="#模型"><span class="sn-label">下一节 →</span><span class="sn-name">模型</span></a></nav>
 <p>指标：</p>
 <ul class="lvl"><li>Recall</li></ul>
 <ul class="lvl"><li>TopK命中率</li></ul>
 <ul class="lvl"><li>Rerank分数</li></ul>
 <hr/>
-<h2 id="模型">模型</h2>
+<h2 id="模型">模型</h2><nav class="sec-nav"><a class="sn prev" href="#检索"><span class="sn-label">← 上一节</span><span class="sn-name">检索</span></a><a class="sn next" href="#用户"><span class="sn-label">下一节 →</span><span class="sn-name">用户</span></a></nav>
 <p>指标：</p>
 <ul class="lvl"><li>Token</li></ul>
 <ul class="lvl"><li>延迟</li></ul>
 <ul class="lvl"><li>错误率</li></ul>
 <hr/>
-<h2 id="用户">用户</h2>
+<h2 id="用户">用户</h2><nav class="sec-nav"><a class="sn prev" href="#模型"><span class="sn-label">← 上一节</span><span class="sn-name">模型</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>指标：</p>
 <ul class="lvl"><li>满意度</li></ul>
 <ul class="lvl"><li>反馈</li></ul>
@@ -794,5 +873,48 @@ Production RAG</code></pre>
 <p>升级到：</p>
 <blockquote><p>企业敢上线。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

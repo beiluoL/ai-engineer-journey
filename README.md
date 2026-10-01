@@ -98,8 +98,8 @@ ai-engineer-journey/
 | `render_terminal.py` | 把真实 stdout 渲染成终端风格 PNG（截图有据可依） |
 | `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版 |
 | `build_docs_html.py` | **批量渲染**：把全部（或指定子集）Markdown 转成 `publishing/html/docs/` 下的 HTML 树，并自校验链接 |
-| `gen_doc_index.py` | 扫描全部文档生成 `publishing/html/index.html` 索引，条目默认指向渲染页 |
-| `md_to_book_html.py` | 单篇「自包含」HTML：图片 base64 内嵌，单文件拷走也能看（重点文档用） |
+| `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航 |
+| `md_to_book_html.py` | 单篇渲染器：自动抽取 h2/h3 生成侧边目录大纲、顶部阅读进度条、每章末尾「上一节 / 下一节」链式导航、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
 
 **本地阅读**：`publishing/html/index.html` 是入口，209 篇文档全部以渲染后的页面打开
 （`publishing/html/docs/…`，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。

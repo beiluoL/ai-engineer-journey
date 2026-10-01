@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#怎么用" class="lvl2">怎么用</a><a href="#总览表" class="lvl2">总览表</a><a href="#m01-prompt" class="lvl2">M01 Prompt</a><a href="#m02-messages" class="lvl2">M02 Messages</a><a href="#m03-结构化输出" class="lvl2">M03 结构化输出</a><a href="#m04-流式输出" class="lvl2">M04 流式输出</a><a href="#m05-会话记忆" class="lvl2">M05 会话记忆</a><a href="#m06-模型参数" class="lvl2">M06 模型参数</a><a href="#m07-token-上下文窗口" class="lvl2">M07 Token / 上下文窗口</a><a href="#m08-function-calling" class="lvl2">M08 Function Calling</a><a href="#m09-应用架构" class="lvl2">M09 应用架构</a><a href="#自测完成度自查" class="lvl2">自测完成度自查</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="learning-project-03-ai-application">LEARNING — Project 03 AI Application</h1>
 <blockquote><p>这份文件只记录<strong>「我是否真的掌握」</strong>，仓库里写了什么请去看 <code>README.md</code> / <code>PROGRESS.md</code>。</p><p>铁律：<strong>文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。</strong></p><p>生成这份清单的人（AI）<strong>不会替你打任何勾</strong>。下面每一个框起点都是 ⬜， 只有你本人做完题、能讲清楚「为什么」之后，<strong>由你</strong>把它填成 ✅。</p></blockquote>
-<h2 id="怎么用">怎么用</h2>
+<h2 id="怎么用">怎么用</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#总览表"><span class="sn-label">下一节 →</span><span class="sn-name">总览表</span></a></nav>
 <p>三条线同时过才算掌握一章：</p>
 <ul class="lvl"><li><strong>自测题</strong> —— 每章 4–5 道问答题，考的是「为什么」，不是「用没用过」。答完再展开 <code>&lt;details&gt;</code> 对照判分要点</li><li><strong>动手验证</strong> —— 去 <code>exercises/</code> 独立写代码，再跑 <code>exercises/grade.py</code>；卡住了只看 <code>answers.py</code> 中对应的一个函数</li><li><strong>自评</strong> —— 诚实判断自己处在哪一档，不能用参考答案的运行结果代替自己的掌握程度</li></ul>
-<h2 id="总览表">总览表</h2>
+<h2 id="总览表">总览表</h2><nav class="sec-nav"><a class="sn prev" href="#怎么用"><span class="sn-label">← 上一节</span><span class="sn-name">怎么用</span></a><a class="sn next" href="#m01-prompt"><span class="sn-label">下一节 →</span><span class="sn-name">M01 Prompt</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>自测题</th><th>动手验证</th><th>我掌握了</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-prompt.html">Prompt</a></td><td>⬜</td><td>⬜ <code>01-prompt-and-messages</code> A1–A5</td><td>⬜</td></tr><tr><td>02</td><td><a href="milestones/02-messages.html">Messages</a></td><td>⬜</td><td>⬜ <code>01-prompt-and-messages</code> B1–B5</td><td>⬜</td></tr><tr><td>03</td><td><a href="milestones/03-structured-output.html">结构化输出</a></td><td>⬜</td><td>⬜ <code>02-structured-and-streaming</code> A1–A4</td><td>⬜</td></tr><tr><td>04</td><td><a href="milestones/04-streaming.html">流式输出</a></td><td>⬜</td><td>⬜ <code>02-structured-and-streaming</code> B1–B3</td><td>⬜</td></tr><tr><td>05</td><td><a href="milestones/05-conversation-memory.html">会话记忆</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> A1–A3</td><td>⬜</td></tr><tr><td>06</td><td><a href="milestones/06-model-parameters.html">模型参数</a></td><td>⬜</td><td>⬜ <code>02-structured-and-streaming</code> C1–C3</td><td>⬜</td></tr><tr><td>07</td><td><a href="milestones/07-token-context-window.html">Token / 上下文窗口</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> B1–B3</td><td>⬜</td></tr><tr><td>08</td><td><a href="milestones/08-function-calling.html">Function Calling</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> C1–C4</td><td>⬜</td></tr><tr><td>09</td><td><a href="milestones/09-application-architecture.html">应用架构</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> D1–D2</td><td>⬜</td></tr></tbody></table>
 <hr/>
-<h2 id="m01-prompt">M01 Prompt</h2>
+<h2 id="m01-prompt">M01 Prompt</h2><nav class="sec-nav"><a class="sn prev" href="#总览表"><span class="sn-label">← 上一节</span><span class="sn-name">总览表</span></a><a class="sn next" href="#m02-messages"><span class="sn-label">下一节 →</span><span class="sn-name">M02 Messages</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/01-prompt-and-messages</code> A1–A5</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么说 Prompt 是 AI 应用的业务逻辑，而不应该作为长字符串散落在 CLI、API 和 service 中？</li><li>⬜ Q2 system 与 user 消息为什么要按「不变规则 / 本轮输入」拆分？把所有内容都塞进 user 会带来什么成本与维护问题？</li><li>⬜ Q3 为什么 <code>PromptTemplate</code> 要在 <code>render()</code> 时替换变量，而不是用 f-string 在定义模板时求值？</li><li>⬜ Q4 为什么缺少变量和传入未知变量都应立即报错？只检查缺变量会漏掉哪类真实故障？</li><li>⬜ Q5 用标签包住用户输入为什么只能缓解 Prompt 注入，不能成为高风险操作的最终安全边界？</li></ul>
@@ -73,7 +152,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m02-messages">M02 Messages</h2>
+<h2 id="m02-messages">M02 Messages</h2><nav class="sec-nav"><a class="sn prev" href="#m01-prompt"><span class="sn-label">← 上一节</span><span class="sn-name">M01 Prompt</span></a><a class="sn next" href="#m03-结构化输出"><span class="sn-label">下一节 →</span><span class="sn-name">M03 结构化输出</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/01-prompt-and-messages</code> B1–B5</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 LLM API 为什么说是无状态的？多轮对话为什么必须把 user 与 assistant 的历史都重新发送？</li><li>⬜ Q2 system、user、assistant、tool 四种角色各由谁产生？assistant 的 <code>tool_calls</code> 与 tool 的 <code>tool_call_id</code> 如何对应？</li><li>⬜ Q3 <code>Conversation.to_messages()</code> 为什么要复制列表中的每个字典，而不只是复制最外层 list？</li><li>⬜ Q4 为什么 <code>validate_messages()</code> 应在发送请求前运行？它至少应该拦住哪三类协议错误？</li><li>⬜ Q5 裁剪历史为什么不能从任意一条消息切开，尤其不能留下孤立的 tool 消息？</li></ul>
@@ -82,7 +161,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m03-结构化输出">M03 结构化输出</h2>
+<h2 id="m03-结构化输出">M03 结构化输出</h2><nav class="sec-nav"><a class="sn prev" href="#m02-messages"><span class="sn-label">← 上一节</span><span class="sn-name">M02 Messages</span></a><a class="sn next" href="#m04-流式输出"><span class="sn-label">下一节 →</span><span class="sn-name">M04 流式输出</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/02-structured-and-streaming</code> A1–A4</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 Prompt 约定、JSON Mode、工具/函数调用三种结构化手段分别保证什么，又分别不能保证什么？</li><li>⬜ Q2 Pydantic 模型为什么同时服务于“给模型看的契约”和“程序运行时的边界校验”？</li><li>⬜ Q3 为什么 <code>json.loads()</code> 成功仍不代表结果可安全进入业务逻辑？</li><li>⬜ Q4 结构化校验失败后为什么要把精简后的具体错误回灌，并且必须限制重试次数？</li><li>⬜ Q5 <code>max_tokens</code> 太小时为什么常被误判为模型不遵守 JSON 格式？应该观察哪个响应字段？</li></ul>
@@ -91,7 +170,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m04-流式输出">M04 流式输出</h2>
+<h2 id="m04-流式输出">M04 流式输出</h2><nav class="sec-nav"><a class="sn prev" href="#m03-结构化输出"><span class="sn-label">← 上一节</span><span class="sn-name">M03 结构化输出</span></a><a class="sn next" href="#m05-会话记忆"><span class="sn-label">下一节 →</span><span class="sn-name">M05 会话记忆</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/02-structured-and-streaming</code> B1–B3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么流式输出能显著改善感知性能，却不一定缩短模型完成整段回答的总耗时？</li><li>⬜ Q2 SSE 的 <code>data:</code>、空行分隔与 <code>[DONE]</code> 各承担什么协议职责？为什么每个 data 事件仍要可独立解析？</li><li>⬜ Q3 <code>ChatService.astream()</code> 为什么必须缓冲全部 delta，并在结束后回灌一条完整 assistant 消息？</li><li>⬜ Q4 为什么流已经开始后不能再把 HTTP 状态改成 500？上游中途失败应该怎样表达？</li><li>⬜ Q5 流式展示与结构化解析为什么天然冲突？两者并存时应该怎样分工？</li></ul>
@@ -100,7 +179,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m05-会话记忆">M05 会话记忆</h2>
+<h2 id="m05-会话记忆">M05 会话记忆</h2><nav class="sec-nav"><a class="sn prev" href="#m04-流式输出"><span class="sn-label">← 上一节</span><span class="sn-name">M04 流式输出</span></a><a class="sn next" href="#m06-模型参数"><span class="sn-label">下一节 →</span><span class="sn-name">M06 模型参数</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> A1–A3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么全量携带历史时，第 n 轮的累计 token 成本接近 O(n²)，而不是 O(n)？</li><li>⬜ Q2 按预算裁剪时为什么 system、当前用户输入和完整工具调用轮次需要特殊保护？</li><li>⬜ Q3 裁剪与摘要各损失什么、消耗什么？什么内容适合摘要，什么内容更适合保留原文？</li><li>⬜ Q4 多用户共享同一个 <code>Conversation</code> 为什么不是普通逻辑 bug，而是数据泄漏问题？</li><li>⬜ Q5 开发环境用内存 <code>SessionStore</code> 足够时，生产环境为什么仍要把会话外部化？</li></ul>
@@ -109,7 +188,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m06-模型参数">M06 模型参数</h2>
+<h2 id="m06-模型参数">M06 模型参数</h2><nav class="sec-nav"><a class="sn prev" href="#m05-会话记忆"><span class="sn-label">← 上一节</span><span class="sn-name">M05 会话记忆</span></a><a class="sn next" href="#m07-token-上下文窗口"><span class="sn-label">下一节 →</span><span class="sn-name">M07 Token / 上下文窗口</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/02-structured-and-streaming</code> C1–C3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 temperature 改变的是采样分布的什么性质？为什么提高 temperature 不等于让模型更聪明？</li><li>⬜ Q2 为什么通常不建议同时大幅调整 temperature 与 top_p？</li><li>⬜ Q3 结构化抽取与创意写作为什么需要不同 Profile？请分别解释稳定性与发散性的取舍。</li><li>⬜ Q4 <code>max_tokens</code>、上下文窗口和 <code>finish_reason</code> 三者如何共同解释“合法 JSON 只返回了一半”？</li><li>⬜ Q5 <code>Settings.for_profile()</code> 为什么返回新的 frozen 配置，而不是原地修改共享 Settings？</li></ul>
@@ -118,7 +197,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m07-token-上下文窗口">M07 Token / 上下文窗口</h2>
+<h2 id="m07-token-上下文窗口">M07 Token / 上下文窗口</h2><nav class="sec-nav"><a class="sn prev" href="#m06-模型参数"><span class="sn-label">← 上一节</span><span class="sn-name">M06 模型参数</span></a><a class="sn next" href="#m08-function-calling"><span class="sn-label">下一节 →</span><span class="sn-name">M08 Function Calling</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> B1–B3</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么字符数、UTF-8 字节数和 token 数不能互相替代？中文场景为什么更容易估错？</li><li>⬜ Q2 <code>estimate_tokens()</code> 与响应 <code>usage</code> 应分别用于什么决策？为什么不能拿估算值做账单对账？</li><li>⬜ Q3 上下文窗口为什么是输入与输出共享，而不是只限制历史消息？</li><li>⬜ Q4 <code>Budget.history_budget</code> 为什么先减去 <code>reserved_output</code>，再乘历史比例？</li><li>⬜ Q5 发送前发现 overflow 时，为什么正确流程是裁剪、复查、明确报错，而不是静默截断或无限重试？</li></ul>
@@ -127,7 +206,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m08-function-calling">M08 Function Calling</h2>
+<h2 id="m08-function-calling">M08 Function Calling</h2><nav class="sec-nav"><a class="sn prev" href="#m07-token-上下文窗口"><span class="sn-label">← 上一节</span><span class="sn-name">M07 Token / 上下文窗口</span></a><a class="sn next" href="#m09-应用架构"><span class="sn-label">下一节 →</span><span class="sn-name">M09 应用架构</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> C1–C4</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 为什么说模型只“请求调用”工具而不执行函数？这条边界对权限设计意味着什么？</li><li>⬜ Q2 工具 schema 中 name、description、parameters、required 为什么都影响调用可靠性？</li><li>⬜ Q3 完整工具循环的六步是什么？为什么执行结果必须作为带 <code>tool_call_id</code> 的 tool 消息回灌后再请求模型？</li><li>⬜ Q4 为什么未知工具、坏 JSON 和参数不匹配适合作为错误结果回灌，而工具循环本身仍必须有 <code>max_iterations</code>？</li><li>⬜ Q5 哪些工具可以直接暴露，哪些必须二次确认，哪些不该暴露？为什么不能让模型自己决定权限？</li></ul>
@@ -136,7 +215,7 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="m09-应用架构">M09 应用架构</h2>
+<h2 id="m09-应用架构">M09 应用架构</h2><nav class="sec-nav"><a class="sn prev" href="#m08-function-calling"><span class="sn-label">← 上一节</span><span class="sn-name">M08 Function Calling</span></a><a class="sn next" href="#自测完成度自查"><span class="sn-label">下一节 →</span><span class="sn-name">自测完成度自查</span></a></nav>
 <p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> D1–D2</p>
 <p><strong>自测题</strong></p>
 <ul class="lvl"><li>⬜ Q1 接入层、编排层、能力层、模型层、支撑层各负责什么？为什么只有模型层应该知道上游 API 的形状？</li><li>⬜ Q2 如果 service 直接使用 httpx、拼 API URL，会怎样破坏替换模型与离线测试？</li><li>⬜ Q3 “无状态服务 + 外部化会话”为什么有利于水平扩展？它又引入了哪些并发与生命周期问题？</li><li>⬜ Q4 延迟、token/费用、分类失败率为什么是 AI 应用最低限度的三类可观测指标？</li><li>⬜ Q5 为什么生成文本可以谨慎重试，而写数据库、下单、发邮件等工具调用不能照搬同一重试策略？</li></ul>
@@ -145,10 +224,53 @@ li{margin:.3em 0;}
 <p>&lt;/details&gt;</p>
 <p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
 <hr/>
-<h2 id="自测完成度自查">自测完成度自查</h2>
+<h2 id="自测完成度自查">自测完成度自查</h2><nav class="sec-nav"><a class="sn prev" href="#m09-应用架构"><span class="sn-label">← 上一节</span><span class="sn-name">M09 应用架构</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>全部 ⬜ 是起点。这里记录的是你自己的掌握证据，不是文档或参考答案的完成情况。</p></blockquote>
 <table><thead><tr><th>环节</th><th>状态</th></tr></thead><tbody><tr><td>9 章 milestone 都独立读过</td><td>⬜</td></tr><tr><td>32 道动手题未对照答案独立完成</td><td>⬜</td></tr><tr><td><code>exercises/grade.py</code> 跑过自己实现的版本</td><td>⬜</td></tr><tr><td>9 章自测题都能不看材料答出“为什么”</td><td>⬜</td></tr><tr><td>能用自己的例子讲清完整 AI 应用调用链与安全边界</td><td>⬜</td></tr></tbody></table>
 <p><strong>只有最后三项都能打 ✅ 时，这个 Project 才算「已学习」。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

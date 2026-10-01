@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目问题" class="lvl2">1. 项目问题</a><a href="#typeddict" class="lvl2">TypedDict</a><a href="#dataclass" class="lvl2">Dataclass</a><a href="#modelspy" class="lvl3">models.py</a><a href="#task-1创建-modelspy" class="lvl2">Task 1：创建 models.py</a><a href="#task-2创建-llmconfig" class="lvl2">Task 2：创建 LLMConfig</a><a href="#task-3session" class="lvl2">Task 3：Session</a><a href="#task-4api-转换" class="lvl2">Task 4：API 转换</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#q8" class="lvl3">Q8</a><a href="#q9" class="lvl3">Q9</a><a href="#q10" class="lvl3">Q10</a><a href="#问python-dataclass-是什么" class="lvl3">问：Python Dataclass 是什么？</a><a href="#问typeddict-和-dataclass-有什么区别" class="lvl3">问：TypedDict 和 Dataclass 有什么区别？</a><a href="#问为什么-ai-项目需要数据模型" class="lvl3">问：为什么 AI 项目需要数据模型？</a><a href="#坑-1把-dataclass-当数据库实体" class="lvl2">坑 1：把 Dataclass 当数据库实体</a><a href="#坑-2默认列表直接写" class="lvl2">坑 2：默认列表直接写 []</a><a href="#坑-3所有-dict-都转换成-dataclass" class="lvl2">坑 3：所有 dict 都转换成 Dataclass</a><a href="#坑-4dataclass-承担太多职责" class="lvl2">坑 4：Dataclass 承担太多职责</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-02-chapter-04dataclass数据类">Project 02 — Chapter 04：Dataclass【数据类】</h1>
 <blockquote><p><strong>本章 ↔ <code>src/</code> 对照</strong>（校对时补：本章练习里的类名与真实代码的对应关系）</p><p>本章 Task 里让你造的三个类，在真实代码里<strong>换了名字</strong>（练习名更直白，真实名更贴合职责）：</p><p>| 本章练习 | 真实代码 | 位置 | |---|---|---| | <code>LLMConfig</code> | <code>Settings</code> | <code>src/assistant/settings.py</code> | | <code>ChatSession</code> | <code>Conversation</code> | <code>src/assistant/conversation.py</code> | | <code>Message</code>（dataclass） | <code>dict[str, str]</code> | 沿用 OpenAI 的 messages 契约，未单独建模 |</p><p>两处做得比本章练习更进一步： - <code>Settings</code> 用 <code>@dataclass(frozen=True)</code>，且 <code>api_key</code> 设 <code>Field(repr=False)</code> —— <strong>打印对象不会泄露 Key</strong> - <code>Conversation</code> 没有直接暴露 <code>messages</code> 字段，而是用 <code>@property</code> 返回<strong>副本</strong> —— 外部拿到也改不动内部历史</p></blockquote>
-<h2 id="1-项目问题">1. 项目问题</h2>
+<h2 id="1-项目问题">1. 项目问题</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#typeddict"><span class="sn-label">下一节 →</span><span class="sn-name">TypedDict</span></a></nav>
 <p>上一章我们已经把 AI Assistant 的类型边界逐渐建立起来：</p>
 <pre><code>User Input
     ↓
@@ -164,7 +243,7 @@ class LLMConfig:
 <hr/>
 <h1 id="4-typeddict-和-dataclass-的区别">4. TypedDict 和 Dataclass 的区别</h1>
 <p>这是本章最重要的知识点之一。</p>
-<h2 id="typeddict">TypedDict</h2>
+<h2 id="typeddict">TypedDict</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目问题"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目问题</span></a><a class="sn next" href="#dataclass"><span class="sn-label">下一节 →</span><span class="sn-name">Dataclass</span></a></nav>
 <pre><code>class Message(TypedDict):
     role: str
     content: str</code></pre>
@@ -174,7 +253,7 @@ class LLMConfig:
 <pre><code>message[&quot;role&quot;]</code></pre>
 <p>仍然是核心访问方式。</p>
 <hr/>
-<h2 id="dataclass">Dataclass</h2>
+<h2 id="dataclass">Dataclass</h2><nav class="sec-nav"><a class="sn prev" href="#typeddict"><span class="sn-label">← 上一节</span><span class="sn-name">TypedDict</span></a><a class="sn next" href="#task-1创建-modelspy"><span class="sn-label">下一节 →</span><span class="sn-name">Task 1：创建 models.py</span></a></nav>
 <pre><code>@dataclass
 class Message:
     role: str
@@ -716,14 +795,14 @@ External API Schema</code></pre>
 <p>上一章 Type Hint 解决的是“数据类型如何表达”；这一章 Dataclass 进一步解决“业务数据如何组织成对象”。内部使用 Dataclass 建立稳定模型，跨越应用边界时再转换为供应商要求的 JSON/API Schema。这样 Project 02 开始真正具备清晰的数据边界。</p>
 <hr/>
 <h1 id="28-实战任务">28. 实战任务</h1>
-<h2 id="task-1创建-modelspy">Task 1：创建 models.py</h2>
+<h2 id="task-1创建-modelspy">Task 1：创建 models.py</h2><nav class="sec-nav"><a class="sn prev" href="#dataclass"><span class="sn-label">← 上一节</span><span class="sn-name">Dataclass</span></a><a class="sn next" href="#task-2创建-llmconfig"><span class="sn-label">下一节 →</span><span class="sn-name">Task 2：创建 LLMConfig</span></a></nav>
 <p>建立：</p>
 <pre><code>@dataclass
 class Message:
     role: str
     content: str</code></pre>
 <hr/>
-<h2 id="task-2创建-llmconfig">Task 2：创建 LLMConfig</h2>
+<h2 id="task-2创建-llmconfig">Task 2：创建 LLMConfig</h2><nav class="sec-nav"><a class="sn prev" href="#task-1创建-modelspy"><span class="sn-label">← 上一节</span><span class="sn-name">Task 1：创建 models.py</span></a><a class="sn next" href="#task-3session"><span class="sn-label">下一节 →</span><span class="sn-name">Task 3：Session</span></a></nav>
 <p>要求：</p>
 <pre><code>@dataclass(frozen=True)
 class LLMConfig:
@@ -734,7 +813,7 @@ class LLMConfig:
     max_tokens: int = 1024
     timeout: float = 60.0</code></pre>
 <hr/>
-<h2 id="task-3session">Task 3：Session</h2>
+<h2 id="task-3session">Task 3：Session</h2><nav class="sec-nav"><a class="sn prev" href="#task-2创建-llmconfig"><span class="sn-label">← 上一节</span><span class="sn-name">Task 2：创建 LLMConfig</span></a><a class="sn next" href="#task-4api-转换"><span class="sn-label">下一节 →</span><span class="sn-name">Task 4：API 转换</span></a></nav>
 <p>创建：</p>
 <pre><code>@dataclass
 class ChatSession:
@@ -744,7 +823,7 @@ class ChatSession:
 Session B</code></pre>
 <p>确认它们的 messages 不会共享。</p>
 <hr/>
-<h2 id="task-4api-转换">Task 4：API 转换</h2>
+<h2 id="task-4api-转换">Task 4：API 转换</h2><nav class="sec-nav"><a class="sn prev" href="#task-3session"><span class="sn-label">← 上一节</span><span class="sn-name">Task 3：Session</span></a><a class="sn next" href="#坑-1把-dataclass-当数据库实体"><span class="sn-label">下一节 →</span><span class="sn-name">坑 1：把 Dataclass 当数据库实体</span></a></nav>
 <p>实现：</p>
 <pre><code>Message
 ↓
@@ -815,7 +894,7 @@ def total_tokens(self) -&gt; int:
 <blockquote><p>AI 应用的数据结构非常多，例如 Message、LLM Request、LLM Response、Tool Call、Agent State 等。如果全部使用裸字典，随着项目复杂度提高，很容易出现字段拼写错误和结构理解混乱。使用 TypedDict、Dataclass 等数据模型可以明确边界，提高可读性、IDE 支持和静态检查能力，也方便与外部 API 做转换。</p></blockquote>
 <hr/>
 <h1 id="32-常见坑">32. 常见坑</h1>
-<h2 id="坑-1把-dataclass-当数据库实体">坑 1：把 Dataclass 当数据库实体</h2>
+<h2 id="坑-1把-dataclass-当数据库实体">坑 1：把 Dataclass 当数据库实体</h2><nav class="sec-nav"><a class="sn prev" href="#task-4api-转换"><span class="sn-label">← 上一节</span><span class="sn-name">Task 4：API 转换</span></a><a class="sn next" href="#坑-2默认列表直接写"><span class="sn-label">下一节 →</span><span class="sn-name">坑 2：默认列表直接写 []</span></a></nav>
 <p>Dataclass 只是 Python 数据对象工具。</p>
 <p>它不自动意味着：</p>
 <pre><code>数据库表
@@ -823,7 +902,7 @@ ORM Entity
 Persistence Model</code></pre>
 <p>不要混淆。</p>
 <hr/>
-<h2 id="坑-2默认列表直接写">坑 2：默认列表直接写 <code>[]</code></h2>
+<h2 id="坑-2默认列表直接写">坑 2：默认列表直接写 <code>[]</code></h2><nav class="sec-nav"><a class="sn prev" href="#坑-1把-dataclass-当数据库实体"><span class="sn-label">← 上一节</span><span class="sn-name">坑 1：把 Dataclass 当数据库实体</span></a><a class="sn next" href="#坑-3所有-dict-都转换成-dataclass"><span class="sn-label">下一节 →</span><span class="sn-name">坑 3：所有 dict 都转换成 Dataclass</span></a></nav>
 <p>不要：</p>
 <pre><code>@dataclass
 class Session:
@@ -831,7 +910,7 @@ class Session:
 <p>使用：</p>
 <pre><code>messages: list[Message] = field(default_factory=list)</code></pre>
 <hr/>
-<h2 id="坑-3所有-dict-都转换成-dataclass">坑 3：所有 dict 都转换成 Dataclass</h2>
+<h2 id="坑-3所有-dict-都转换成-dataclass">坑 3：所有 dict 都转换成 Dataclass</h2><nav class="sec-nav"><a class="sn prev" href="#坑-2默认列表直接写"><span class="sn-label">← 上一节</span><span class="sn-name">坑 2：默认列表直接写 []</span></a><a class="sn next" href="#坑-4dataclass-承担太多职责"><span class="sn-label">下一节 →</span><span class="sn-name">坑 4：Dataclass 承担太多职责</span></a></nav>
 <p>没有必要。</p>
 <p>例如：</p>
 <pre><code>一次性的临时 JSON
@@ -839,7 +918,7 @@ class Session:
 不稳定结构</code></pre>
 <p>仍然可能继续使用字典。</p>
 <hr/>
-<h2 id="坑-4dataclass-承担太多职责">坑 4：Dataclass 承担太多职责</h2>
+<h2 id="坑-4dataclass-承担太多职责">坑 4：Dataclass 承担太多职责</h2><nav class="sec-nav"><a class="sn prev" href="#坑-3所有-dict-都转换成-dataclass"><span class="sn-label">← 上一节</span><span class="sn-name">坑 3：所有 dict 都转换成 Dataclass</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>不要让：</p>
 <pre><code>Message</code></pre>
 <p>负责：</p>
@@ -967,5 +1046,48 @@ Temperature</code></pre>
 <p>同时真正解决一个企业开发中非常重要的问题：</p>
 <blockquote><p><strong>配置与代码分离，以及 Secret【密钥】如何安全管理。</strong></p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

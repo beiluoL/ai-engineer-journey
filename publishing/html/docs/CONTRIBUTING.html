@@ -52,28 +52,150 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-单一事实源" class="lvl2">1. 单一事实源</a><a href="#2-文件命名" class="lvl2">2. 文件命名</a><a href="#3-内容分级防假装学会" class="lvl2">3. 内容分级（防「假装学会」）</a><a href="#4-代码规范" class="lvl2">4. 代码规范</a><a href="#5-文档同步规矩防漂移" class="lvl2">5. 文档同步规矩（防漂移）</a><a href="#6-git-约定" class="lvl2">6. Git 约定</a><a href="#7-安全" class="lvl2">7. 安全</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="contributing-仓库维护规范">Contributing — 仓库维护规范</h1>
 <blockquote><p>本仓库是个人学习系统 + 开源项目。所有改动（包括 AI 协助生成）都遵守本规范。</p></blockquote>
-<h2 id="1-单一事实源">1. 单一事实源</h2>
+<h2 id="1-单一事实源">1. 单一事实源</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-文件命名"><span class="sn-label">下一节 →</span><span class="sn-name">2. 文件命名</span></a></nav>
 <ul class="lvl"><li><strong>知识只维护在 <code>projects/*/milestones/</code></strong>。<code>publishing/</code> 只是派生输出，禁止在两处平行维护同一知识。</li><li>禁止出现平行知识体系：<code>curriculum/</code>、<code>labs/</code>、<code>knowledge/</code>、<code>assessments/</code>。</li></ul>
-<h2 id="2-文件命名">2. 文件命名</h2>
+<h2 id="2-文件命名">2. 文件命名</h2><nav class="sec-nav"><a class="sn prev" href="#1-单一事实源"><span class="sn-label">← 上一节</span><span class="sn-name">1. 单一事实源</span></a><a class="sn next" href="#3-内容分级防假装学会"><span class="sn-label">下一节 →</span><span class="sn-name">3. 内容分级（防「假装学会」）</span></a></nav>
 <table><thead><tr><th>内容</th><th>规则</th><th>示例</th></tr></thead><tbody><tr><td>milestone</td><td><code>NN-english-slug.md</code>（两位序号 + 英文短横线）</td><td><code>04-dataclass.md</code></td></tr><tr><td>tutorial</td><td><code>NN-english-slug.md/.html</code></td><td><code>04-enterprise-llm-deploy-gpu-vllm-springboot.md</code></td></tr><tr><td>错误记录</td><td><code>YYYY-MM-DD-slug.md</code></td><td><code>2026-09-15-package-init-export-miss.md</code></td></tr><tr><td>配图</td><td><code>site-*</code> / <code>term-*</code> / <code>colab-*</code> / <code>diagram-*</code> 前缀</td><td><code>colab-nvidia-smi-t4.png</code></td></tr></tbody></table>
 <p>中文标题写在文档 H1 / 副标题里，不进文件名。</p>
-<h2 id="3-内容分级防假装学会">3. 内容分级（防「假装学会」）</h2>
+<h2 id="3-内容分级防假装学会">3. 内容分级（防「假装学会」）</h2><nav class="sec-nav"><a class="sn prev" href="#2-文件命名"><span class="sn-label">← 上一节</span><span class="sn-name">2. 文件命名</span></a><a class="sn next" href="#4-代码规范"><span class="sn-label">下一节 →</span><span class="sn-name">4. 代码规范</span></a></nav>
 <table><thead><tr><th>标记</th><th>含义</th></tr></thead><tbody><tr><td>📝 草稿</td><td>AI 生成或笔记原始态，未核实</td></tr><tr><td>✅ 已校对</td><td>人工核实事实与代码（价格/版本/API 必须联网核实）</td></tr><tr><td>🎓 已学习</td><td>亲手跑通 + 能复述，计入 PROGRESS 学习进度轨</td></tr></tbody></table>
 <p>只有 🎓 才能写进 PROGRESS 的学习轨；publishing/finetune-series 等草稿库的头部 README 负责维护分级。</p>
-<h2 id="4-代码规范">4. 代码规范</h2>
+<h2 id="4-代码规范">4. 代码规范</h2><nav class="sec-nav"><a class="sn prev" href="#3-内容分级防假装学会"><span class="sn-label">← 上一节</span><span class="sn-name">3. 内容分级（防「假装学会」）</span></a><a class="sn next" href="#5-文档同步规矩防漂移"><span class="sn-label">下一节 →</span><span class="sn-name">5. 文档同步规矩（防漂移）</span></a></nav>
 <ul class="lvl"><li>类型注解齐全；模块 docstring 说明「对应哪个 milestone」且<strong>引用路径必须真实存在</strong></li><li>异常不允许静默吞掉；对外行为（HTTP 状态、退出码）有明确映射</li><li>每个项目的核心逻辑有单元测试（unittest 起步，Project 02 起切 pytest）</li><li>v0.1 项目允许零依赖标准库实现；引入第三方库时同步给 <code>requirements.txt</code>（版本用 <code>==</code> 锚定）+ <code>.env.example</code></li></ul>
-<h2 id="5-文档同步规矩防漂移">5. 文档同步规矩（防漂移）</h2>
+<h2 id="5-文档同步规矩防漂移">5. 文档同步规矩（防漂移）</h2><nav class="sec-nav"><a class="sn prev" href="#4-代码规范"><span class="sn-label">← 上一节</span><span class="sn-name">4. 代码规范</span></a><a class="sn next" href="#6-git-约定"><span class="sn-label">下一节 →</span><span class="sn-name">6. Git 约定</span></a></nav>
 <ul class="lvl"><li><strong>结构性重构（移动/删除目录）的 commit，必须同步修复所有引用旧路径的文件</strong>，commit message 附「受影响引用清单」</li><li>README / PROGRESS / ROADMAP 与仓库现实不一致，视为 bug</li><li>提交前跑一遍：<code>grep -rnE &quot;已删除目录名&quot; --include=&quot;*.py&quot; --include=&quot;*.md&quot; projects/ README.md</code></li></ul>
-<h2 id="6-git-约定">6. Git 约定</h2>
+<h2 id="6-git-约定">6. Git 约定</h2><nav class="sec-nav"><a class="sn prev" href="#5-文档同步规矩防漂移"><span class="sn-label">← 上一节</span><span class="sn-name">5. 文档同步规矩（防漂移）</span></a><a class="sn next" href="#7-安全"><span class="sn-label">下一节 →</span><span class="sn-name">7. 安全</span></a></nav>
 <ul class="lvl"><li>Commit message 用约定式前缀：<code>feat:</code> / <code>fix:</code> / <code>docs:</code> / <code>refactor:</code> / <code>test:</code> / <code>chore:</code> / <code>experiment:</code></li><li>双远程：origin（GitHub）+ gitee（Gitee）。<strong>是否推送、推送到哪，由维护者当场决定</strong>；未明确授权时不推送</li><li>每个完整学习/开发任务一个 commit；里程碑打 tag</li></ul>
-<h2 id="7-安全">7. 安全</h2>
+<h2 id="7-安全">7. 安全</h2><nav class="sec-nav"><a class="sn prev" href="#6-git-约定"><span class="sn-label">← 上一节</span><span class="sn-name">6. Git 约定</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>API Key / Token / 密码只走环境变量或本地 <code>.env</code>（已 gitignore），仓库只有 <code>.env.example</code></li><li>严禁在任何文件、日志、截图里出现真实凭证</li></ul>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

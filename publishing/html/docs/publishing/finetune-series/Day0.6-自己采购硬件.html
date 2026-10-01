@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#可以做到" class="lvl2">可以做到：</a><a href="#做不到" class="lvl2">做不到：</a><a href="#目标" class="lvl2">目标</a><a href="#60009000元" class="lvl2">6000～9000元</a><a href="#配置" class="lvl2">配置：</a><a href="#gpu核心" class="lvl2">GPU（核心）</a><a href="#rtx-4090-4090d-24gb" class="lvl3">RTX 4090 / 4090D 24GB</a><a href="#cpu" class="lvl2">CPU</a><a href="#amd-ryzen-9-7950x" class="lvl3">AMD Ryzen 9 7950X</a><a href="#9950x" class="lvl3">9950X</a><a href="#主板" class="lvl2">主板</a><a href="#内存" class="lvl2">内存</a><a href="#硬盘" class="lvl2">硬盘</a><a href="#ssd-方案" class="lvl3">SSD 方案</a><a href="#电源" class="lvl2">电源</a><a href="#散热" class="lvl2">散热</a><a href="#3万元左右" class="lvl2">3万元左右</a><a href="#推理" class="lvl2">推理</a><a href="#rag" class="lvl2">RAG</a><a href="#lora微调" class="lvl2">LoRA微调</a><a href="#qlora" class="lvl3">QLoRA</a><a href="#普通云服务器" class="lvl2">❌ 普通云服务器</a><a href="#xeon老服务器" class="lvl2">❌ Xeon老服务器</a><a href="#买a100自己家用" class="lvl2">❌ 买A100自己家用</a><a href="#第一阶段" class="lvl2">第一阶段</a><a href="#第二阶段" class="lvl2">第二阶段</a><a href="#现在" class="lvl2">现在</a><a href="#3个月后" class="lvl2">3个月后</a><a href="#1年后" class="lvl2">1年后</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <p>这个问题非常关键。</p>
 <p>前面讲的是：</p>
@@ -75,7 +154,7 @@ li{margin:.3em 0;}
 <blockquote><p>拥有一台真正属于自己的 AI 开发服务器。</p></blockquote>
 <hr/>
 <h1 id="一先明确个人买服务器能做到什么">一、先明确：个人买服务器能做到什么？</h1>
-<h2 id="可以做到">可以做到：</h2>
+<h2 id="可以做到">可以做到：</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#做不到"><span class="sn-label">下一节 →</span><span class="sn-name">做不到：</span></a></nav>
 <p>✅ 本地运行大模型</p>
 <p>✅ Qwen / DeepSeek / Llama</p>
 <p>✅ RAG知识库</p>
@@ -85,7 +164,7 @@ li{margin:.3em 0;}
 <p>✅ 视频AI工具</p>
 <p>✅ 图片生成部分任务</p>
 <hr/>
-<h2 id="做不到">做不到：</h2>
+<h2 id="做不到">做不到：</h2><nav class="sec-nav"><a class="sn prev" href="#可以做到"><span class="sn-label">← 上一节</span><span class="sn-name">可以做到：</span></a><a class="sn next" href="#目标"><span class="sn-label">下一节 →</span><span class="sn-name">目标</span></a></nav>
 <p>❌ 训练70B模型</p>
 <p>❌ 训练GPT级模型</p>
 <p>❌ 企业千万人并发</p>
@@ -144,7 +223,7 @@ SSD
 <p>GPU决定90%的能力。</p>
 <hr/>
 <h1 id="四方案1最低成本-ai-学习机">四、方案1：最低成本 AI 学习机</h1>
-<h2 id="目标">目标</h2>
+<h2 id="目标">目标</h2><nav class="sec-nav"><a class="sn prev" href="#做不到"><span class="sn-label">← 上一节</span><span class="sn-name">做不到：</span></a><a class="sn next" href="#60009000元"><span class="sn-label">下一节 →</span><span class="sn-name">6000～9000元</span></a></nav>
 <p>学习：</p>
 <ul class="lvl"><li>Ollama</li></ul>
 <ul class="lvl"><li>RAG</li></ul>
@@ -154,7 +233,7 @@ SSD
 <table><thead><tr><th>硬件</th><th>选择</th></tr></thead><tbody><tr><td>GPU</td><td>RTX 4060 Ti 16GB</td></tr><tr><td>CPU</td><td>AMD Ryzen 7</td></tr><tr><td>内存</td><td>32GB</td></tr><tr><td>SSD</td><td>1TB</td></tr><tr><td>电源</td><td>750W</td></tr></tbody></table>
 <p>价格：</p>
 <p>大约：</p>
-<h2 id="60009000元">6000～9000元</h2>
+<h2 id="60009000元">6000～9000元</h2><nav class="sec-nav"><a class="sn prev" href="#目标"><span class="sn-label">← 上一节</span><span class="sn-name">目标</span></a><a class="sn next" href="#配置"><span class="sn-label">下一节 →</span><span class="sn-name">配置：</span></a></nav>
 <p>能跑：</p>
 <pre><code>Qwen2.5-7B
 
@@ -170,9 +249,9 @@ Llama 8B</code></pre>
 <p>这是我认为最适合你的。</p>
 <p>目标：</p>
 <p>Java + AI 工程师个人实验室。</p>
-<h2 id="配置">配置：</h2>
+<h2 id="配置">配置：</h2><nav class="sec-nav"><a class="sn prev" href="#60009000元"><span class="sn-label">← 上一节</span><span class="sn-name">6000～9000元</span></a><a class="sn next" href="#gpu核心"><span class="sn-label">下一节 →</span><span class="sn-name">GPU（核心）</span></a></nav>
 <hr/>
-<h2 id="gpu核心">GPU（核心）</h2>
+<h2 id="gpu核心">GPU（核心）</h2><nav class="sec-nav"><a class="sn prev" href="#配置"><span class="sn-label">← 上一节</span><span class="sn-name">配置：</span></a><a class="sn next" href="#cpu"><span class="sn-label">下一节 →</span><span class="sn-name">CPU</span></a></nav>
 <h3 id="rtx-4090-4090d-24gb">RTX 4090 / 4090D 24GB</h3>
 <p>显存：</p>
 <p>24GB。</p>
@@ -181,7 +260,7 @@ Llama 8B</code></pre>
 <p>约：</p>
 <p>13000～25000元浮动。市场价格受供应影响较大。(<a href="https://wwwdev.nvidia.cn/geforce/graphics-cards/40-series/rtx-4090-d/?utm_source=chatgpt.com &quot;GeForce RTX 4090 D 显卡 | NVIDIA&quot;" target="_blank" rel="noopener">NVIDIA</a>)</p>
 <hr/>
-<h2 id="cpu">CPU</h2>
+<h2 id="cpu">CPU</h2><nav class="sec-nav"><a class="sn prev" href="#gpu核心"><span class="sn-label">← 上一节</span><span class="sn-name">GPU（核心）</span></a><a class="sn next" href="#主板"><span class="sn-label">下一节 →</span><span class="sn-name">主板</span></a></nav>
 <p>推荐：</p>
 <h3 id="amd-ryzen-9-7950x">AMD Ryzen 9 7950X</h3>
 <p>或者：</p>
@@ -189,13 +268,13 @@ Llama 8B</code></pre>
 <p>价格：</p>
 <p>4000～6000</p>
 <hr/>
-<h2 id="主板">主板</h2>
+<h2 id="主板">主板</h2><nav class="sec-nav"><a class="sn prev" href="#cpu"><span class="sn-label">← 上一节</span><span class="sn-name">CPU</span></a><a class="sn next" href="#内存"><span class="sn-label">下一节 →</span><span class="sn-name">内存</span></a></nav>
 <p>推荐：</p>
 <p>X670E</p>
 <p>价格：</p>
 <p>1500～3000</p>
 <hr/>
-<h2 id="内存">内存</h2>
+<h2 id="内存">内存</h2><nav class="sec-nav"><a class="sn prev" href="#主板"><span class="sn-label">← 上一节</span><span class="sn-name">主板</span></a><a class="sn next" href="#硬盘"><span class="sn-label">下一节 →</span><span class="sn-name">硬盘</span></a></nav>
 <p>最低：</p>
 <p>64GB</p>
 <p>推荐：</p>
@@ -212,7 +291,7 @@ Llama 8B</code></pre>
 <p>128GB：</p>
 <p>2000～3000</p>
 <hr/>
-<h2 id="硬盘">硬盘</h2>
+<h2 id="硬盘">硬盘</h2><nav class="sec-nav"><a class="sn prev" href="#内存"><span class="sn-label">← 上一节</span><span class="sn-name">内存</span></a><a class="sn next" href="#电源"><span class="sn-label">下一节 →</span><span class="sn-name">电源</span></a></nav>
 <p>不要省。</p>
 <p>推荐：</p>
 <h3 id="ssd-方案">SSD 方案</h3>
@@ -230,7 +309,7 @@ Llama 8B</code></pre>
 <p>价格：</p>
 <p>2000左右。</p>
 <hr/>
-<h2 id="电源">电源</h2>
+<h2 id="电源">电源</h2><nav class="sec-nav"><a class="sn prev" href="#硬盘"><span class="sn-label">← 上一节</span><span class="sn-name">硬盘</span></a><a class="sn next" href="#散热"><span class="sn-label">下一节 →</span><span class="sn-name">散热</span></a></nav>
 <p>4090：</p>
 <p>功耗高。</p>
 <p>推荐：</p>
@@ -238,7 +317,7 @@ Llama 8B</code></pre>
 <p>价格：</p>
 <p>1000～2000。</p>
 <hr/>
-<h2 id="散热">散热</h2>
+<h2 id="散热">散热</h2><nav class="sec-nav"><a class="sn prev" href="#电源"><span class="sn-label">← 上一节</span><span class="sn-name">电源</span></a><a class="sn next" href="#3万元左右"><span class="sn-label">下一节 →</span><span class="sn-name">3万元左右</span></a></nav>
 <p>推荐：</p>
 <p>360水冷。</p>
 <p>价格：</p>
@@ -249,11 +328,11 @@ Llama 8B</code></pre>
 <table><thead><tr><th>组件</th><th>价格</th></tr></thead><tbody><tr><td>RTX4090</td><td>15000</td></tr><tr><td>CPU</td><td>5000</td></tr><tr><td>主板</td><td>2500</td></tr><tr><td>内存128G</td><td>2500</td></tr><tr><td>SSD3TB</td><td>2000</td></tr><tr><td>电源1200W</td><td>1500</td></tr><tr><td>机箱散热</td><td>1500</td></tr><tr><td>合计</td><td>约30000元</td></tr></tbody></table>
 <hr/>
 <h1 id="结论">结论：</h1>
-<h2 id="3万元左右">3万元左右</h2>
+<h2 id="3万元左右">3万元左右</h2><nav class="sec-nav"><a class="sn prev" href="#散热"><span class="sn-label">← 上一节</span><span class="sn-name">散热</span></a><a class="sn next" href="#推理"><span class="sn-label">下一节 →</span><span class="sn-name">推理</span></a></nav>
 <p>可以买一台非常强的个人 AI 工作站。</p>
 <hr/>
 <h1 id="七这台机器能干什么">七、这台机器能干什么？</h1>
-<h2 id="推理">推理</h2>
+<h2 id="推理">推理</h2><nav class="sec-nav"><a class="sn prev" href="#3万元左右"><span class="sn-label">← 上一节</span><span class="sn-name">3万元左右</span></a><a class="sn next" href="#rag"><span class="sn-label">下一节 →</span><span class="sn-name">RAG</span></a></nav>
 <p>可以：</p>
 <p>Qwen：</p>
 <p>7B</p>
@@ -261,7 +340,7 @@ Llama 8B</code></pre>
 <p>甚至：</p>
 <p>32B量化。</p>
 <hr/>
-<h2 id="rag">RAG</h2>
+<h2 id="rag">RAG</h2><nav class="sec-nav"><a class="sn prev" href="#推理"><span class="sn-label">← 上一节</span><span class="sn-name">推理</span></a><a class="sn next" href="#lora微调"><span class="sn-label">下一节 →</span><span class="sn-name">LoRA微调</span></a></nav>
 <p>非常舒服：</p>
 <pre><code>Spring Boot
 
@@ -276,7 +355,7 @@ Ollama/vLLM
 +
 Qwen</code></pre>
 <hr/>
-<h2 id="lora微调">LoRA微调</h2>
+<h2 id="lora微调">LoRA微调</h2><nav class="sec-nav"><a class="sn prev" href="#rag"><span class="sn-label">← 上一节</span><span class="sn-name">RAG</span></a><a class="sn next" href="#普通云服务器"><span class="sn-label">下一节 →</span><span class="sn-name">❌ 普通云服务器</span></a></nav>
 <p>可以：</p>
 <h3 id="qlora">QLoRA</h3>
 <p>7B：</p>
@@ -336,19 +415,19 @@ SSD:
 <ul class="lvl"><li>多人使用</li></ul>
 <hr/>
 <h1 id="十不要买什么">十、不要买什么？</h1>
-<h2 id="普通云服务器">❌ 普通云服务器</h2>
+<h2 id="普通云服务器">❌ 普通云服务器</h2><nav class="sec-nav"><a class="sn prev" href="#lora微调"><span class="sn-label">← 上一节</span><span class="sn-name">LoRA微调</span></a><a class="sn next" href="#xeon老服务器"><span class="sn-label">下一节 →</span><span class="sn-name">❌ Xeon老服务器</span></a></nav>
 <p>比如：</p>
 <p>8核16G。</p>
 <p>没GPU。</p>
 <p>没意义。</p>
 <hr/>
-<h2 id="xeon老服务器">❌ Xeon老服务器</h2>
+<h2 id="xeon老服务器">❌ Xeon老服务器</h2><nav class="sec-nav"><a class="sn prev" href="#普通云服务器"><span class="sn-label">← 上一节</span><span class="sn-name">❌ 普通云服务器</span></a><a class="sn next" href="#买a100自己家用"><span class="sn-label">下一节 →</span><span class="sn-name">❌ 买A100自己家用</span></a></nav>
 <p>很多二手：</p>
 <p>便宜。</p>
 <p>但是：</p>
 <p>GPU插槽少。</p>
 <hr/>
-<h2 id="买a100自己家用">❌ 买A100自己家用</h2>
+<h2 id="买a100自己家用">❌ 买A100自己家用</h2><nav class="sec-nav"><a class="sn prev" href="#xeon老服务器"><span class="sn-label">← 上一节</span><span class="sn-name">❌ Xeon老服务器</span></a><a class="sn next" href="#第一阶段"><span class="sn-label">下一节 →</span><span class="sn-name">第一阶段</span></a></nav>
 <p>原因：</p>
 <p>贵。</p>
 <p>A100属于企业级GPU，租赁和采购成本明显更高。市场上A100 80G等资源价格通常远高于4090级方案。(<a href="https://suanli.mysteel.com/m/26092016/5C95389D859FF9AB.html?utm_source=chatgpt.com &quot;长三角、京津冀、粤港澳、成渝算力 价格、市场租赁行情、 (2026年09月20日" target="_blank" rel="noopener">算力</a>‑我的钢铁网 (Mysteel)&quot;))</p>
@@ -356,7 +435,7 @@ SSD:
 <h1 id="十一你的最佳方案">十一、你的最佳方案</h1>
 <p>结合你的目标：</p>
 <p>我建议：</p>
-<h2 id="第一阶段">第一阶段</h2>
+<h2 id="第一阶段">第一阶段</h2><nav class="sec-nav"><a class="sn prev" href="#买a100自己家用"><span class="sn-label">← 上一节</span><span class="sn-name">❌ 买A100自己家用</span></a><a class="sn next" href="#第二阶段"><span class="sn-label">下一节 →</span><span class="sn-name">第二阶段</span></a></nav>
 <p>不要买。</p>
 <p>先：</p>
 <p>租GPU。</p>
@@ -366,7 +445,7 @@ SSD:
 <ul class="lvl"><li>学微调</li></ul>
 <ul class="lvl"><li>做项目</li></ul>
 <hr/>
-<h2 id="第二阶段">第二阶段</h2>
+<h2 id="第二阶段">第二阶段</h2><nav class="sec-nav"><a class="sn prev" href="#第一阶段"><span class="sn-label">← 上一节</span><span class="sn-name">第一阶段</span></a><a class="sn next" href="#现在"><span class="sn-label">下一节 →</span><span class="sn-name">现在</span></a></nav>
 <p>如果：</p>
 <p>3个月后：</p>
 <p>你确定长期AI开发。</p>
@@ -421,7 +500,7 @@ SSD:
 <p>按照你的情况：</p>
 <p>6年Java → AI Engineer。</p>
 <p>我会这样：</p>
-<h2 id="现在">现在</h2>
+<h2 id="现在">现在</h2><nav class="sec-nav"><a class="sn prev" href="#第二阶段"><span class="sn-label">← 上一节</span><span class="sn-name">第二阶段</span></a><a class="sn next" href="#3个月后"><span class="sn-label">下一节 →</span><span class="sn-name">3个月后</span></a></nav>
 <p>0～3个月：</p>
 <p>租GPU</p>
 <p>投入：</p>
@@ -432,7 +511,7 @@ SSD:
 <ul class="lvl"><li>RAG</li></ul>
 <ul class="lvl"><li>Agent</li></ul>
 <hr/>
-<h2 id="3个月后">3个月后</h2>
+<h2 id="3个月后">3个月后</h2><nav class="sec-nav"><a class="sn prev" href="#现在"><span class="sn-label">← 上一节</span><span class="sn-name">现在</span></a><a class="sn next" href="#1年后"><span class="sn-label">下一节 →</span><span class="sn-name">1年后</span></a></nav>
 <p>购买：</p>
 <p>RTX4090工作站：</p>
 <p>约3万元。</p>
@@ -440,7 +519,7 @@ SSD:
 <p>每天学习：</p>
 <p>8小时。</p>
 <hr/>
-<h2 id="1年后">1年后</h2>
+<h2 id="1年后">1年后</h2><nav class="sec-nav"><a class="sn prev" href="#3个月后"><span class="sn-label">← 上一节</span><span class="sn-name">3个月后</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>如果做：</p>
 <p>AI产品。</p>
 <p>再升级：</p>
@@ -456,5 +535,48 @@ SSD:
 <p>这会更贴近你未来：</p>
 <p><strong>Java + AI 工程师 + 独立开发者路线。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

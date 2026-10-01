@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#evaluation" class="lvl2">Evaluation</a><a href="#1-自动评测" class="lvl2">1. 自动评测</a><a href="#2-人工评测" class="lvl2">2. 人工评测</a><a href="#3-线上反馈" class="lvl2">3. 线上反馈</a><a href="#1-accuracy准确率" class="lvl2">1. Accuracy【准确率】</a><a href="#2-relevance相关性" class="lvl2">2. Relevance【相关性】</a><a href="#3-faithfulness忠实性" class="lvl2">3. Faithfulness【忠实性】</a><a href="#4-latency延迟" class="lvl2">4. Latency【延迟】</a><a href="#5-cost成本" class="lvl2">5. Cost【成本】</a><a href="#1-recallk" class="lvl2">1. Recall@K</a><a href="#2-precision" class="lvl2">2. Precision</a><a href="#3-answer-quality" class="lvl2">3. Answer Quality</a><a href="#1-ragas" class="lvl2">1. RAGAS</a><a href="#2-langsmith" class="lvl2">2. LangSmith</a><a href="#3-openai-evals" class="lvl2">3. OpenAI Evals</a><a href="#mlflow" class="lvl2">MLflow</a><a href="#系统层" class="lvl2">系统层</a><a href="#模型层" class="lvl2">模型层</a><a href="#业务层" class="lvl2">业务层</a><a href="#模型版本" class="lvl2">模型版本：</a><a href="#测试集" class="lvl2">测试集：</a><a href="#上线" class="lvl2">上线：</a><a href="#q1" class="lvl2">Q1：</a><a href="#q2" class="lvl2">Q2：</a><a href="#q3" class="lvl2">Q3：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day29模型评测与生产上线">Day29：模型评测与生产上线</h1>
 <h1 id="evaluation-model-registry-vllm-灰度发布">Evaluation → Model Registry → vLLM → 灰度发布</h1>
@@ -156,7 +235,7 @@ LoRA Adapter</code></pre>
 <p>系统评估。</p>
 <hr/>
 <h1 id="三evaluation是什么">三、Evaluation是什么？</h1>
-<h2 id="evaluation">Evaluation</h2>
+<h2 id="evaluation">Evaluation</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#1-自动评测"><span class="sn-label">下一节 →</span><span class="sn-name">1. 自动评测</span></a></nav>
 <p>中文：</p>
 <p>评测。</p>
 <p>作用：</p>
@@ -164,11 +243,11 @@ LoRA Adapter</code></pre>
 <p>模型质量。</p>
 <hr/>
 <p>包括：</p>
-<h2 id="1-自动评测">1. 自动评测</h2>
+<h2 id="1-自动评测">1. 自动评测</h2><nav class="sec-nav"><a class="sn prev" href="#evaluation"><span class="sn-label">← 上一节</span><span class="sn-name">Evaluation</span></a><a class="sn next" href="#2-人工评测"><span class="sn-label">下一节 →</span><span class="sn-name">2. 人工评测</span></a></nav>
 <p>机器评分。</p>
-<h2 id="2-人工评测">2. 人工评测</h2>
+<h2 id="2-人工评测">2. 人工评测</h2><nav class="sec-nav"><a class="sn prev" href="#1-自动评测"><span class="sn-label">← 上一节</span><span class="sn-name">1. 自动评测</span></a><a class="sn next" href="#3-线上反馈"><span class="sn-label">下一节 →</span><span class="sn-name">3. 线上反馈</span></a></nav>
 <p>专家评分。</p>
-<h2 id="3-线上反馈">3. 线上反馈</h2>
+<h2 id="3-线上反馈">3. 线上反馈</h2><nav class="sec-nav"><a class="sn prev" href="#2-人工评测"><span class="sn-label">← 上一节</span><span class="sn-name">2. 人工评测</span></a><a class="sn next" href="#1-accuracy准确率"><span class="sn-label">下一节 →</span><span class="sn-name">1. Accuracy【准确率】</span></a></nav>
 <p>用户真实使用。</p>
 <hr/>
 <h1 id="四golden-dataset黄金测试集">四、Golden Dataset【黄金测试集】</h1>
@@ -224,14 +303,14 @@ LoRA Adapter</code></pre>
 决定是否上线</code></pre>
 <hr/>
 <h1 id="五企业评测指标">五、企业评测指标</h1>
-<h2 id="1-accuracy准确率">1. Accuracy【准确率】</h2>
+<h2 id="1-accuracy准确率">1. Accuracy【准确率】</h2><nav class="sec-nav"><a class="sn prev" href="#3-线上反馈"><span class="sn-label">← 上一节</span><span class="sn-name">3. 线上反馈</span></a><a class="sn next" href="#2-relevance相关性"><span class="sn-label">下一节 →</span><span class="sn-name">2. Relevance【相关性】</span></a></nav>
 <p>回答是否正确。</p>
 <p>例如：</p>
 <p>100题：</p>
 <p>90正确。</p>
 <p>90%。</p>
 <hr/>
-<h2 id="2-relevance相关性">2. Relevance【相关性】</h2>
+<h2 id="2-relevance相关性">2. Relevance【相关性】</h2><nav class="sec-nav"><a class="sn prev" href="#1-accuracy准确率"><span class="sn-label">← 上一节</span><span class="sn-name">1. Accuracy【准确率】</span></a><a class="sn next" href="#3-faithfulness忠实性"><span class="sn-label">下一节 →</span><span class="sn-name">3. Faithfulness【忠实性】</span></a></nav>
 <p>回答是否相关。</p>
 <p>例如：</p>
 <p>问：</p>
@@ -240,20 +319,20 @@ LoRA Adapter</code></pre>
 <p>Python。</p>
 <p>低。</p>
 <hr/>
-<h2 id="3-faithfulness忠实性">3. Faithfulness【忠实性】</h2>
+<h2 id="3-faithfulness忠实性">3. Faithfulness【忠实性】</h2><nav class="sec-nav"><a class="sn prev" href="#2-relevance相关性"><span class="sn-label">← 上一节</span><span class="sn-name">2. Relevance【相关性】</span></a><a class="sn next" href="#4-latency延迟"><span class="sn-label">下一节 →</span><span class="sn-name">4. Latency【延迟】</span></a></nav>
 <p>中文：</p>
 <p>真实性。</p>
 <p>RAG特别重要。</p>
 <p>判断：</p>
 <p>有没有胡编。</p>
 <hr/>
-<h2 id="4-latency延迟">4. Latency【延迟】</h2>
+<h2 id="4-latency延迟">4. Latency【延迟】</h2><nav class="sec-nav"><a class="sn prev" href="#3-faithfulness忠实性"><span class="sn-label">← 上一节</span><span class="sn-name">3. Faithfulness【忠实性】</span></a><a class="sn next" href="#5-cost成本"><span class="sn-label">下一节 →</span><span class="sn-name">5. Cost【成本】</span></a></nav>
 <p>响应速度。</p>
 <p>例如：</p>
 <p>P95：</p>
 <p>2秒。</p>
 <hr/>
-<h2 id="5-cost成本">5. Cost【成本】</h2>
+<h2 id="5-cost成本">5. Cost【成本】</h2><nav class="sec-nav"><a class="sn prev" href="#4-latency延迟"><span class="sn-label">← 上一节</span><span class="sn-name">4. Latency【延迟】</span></a><a class="sn next" href="#1-recallk"><span class="sn-label">下一节 →</span><span class="sn-name">1. Recall@K</span></a></nav>
 <p>Token消耗。</p>
 <hr/>
 <h1 id="六rag专项评测">六、RAG专项评测</h1>
@@ -281,13 +360,13 @@ LLM
 <hr/>
 <p>需要评估：</p>
 <hr/>
-<h2 id="1-recallk">1. Recall@K</h2>
+<h2 id="1-recallk">1. Recall@K</h2><nav class="sec-nav"><a class="sn prev" href="#5-cost成本"><span class="sn-label">← 上一节</span><span class="sn-name">5. Cost【成本】</span></a><a class="sn next" href="#2-precision"><span class="sn-label">下一节 →</span><span class="sn-name">2. Precision</span></a></nav>
 <p>召回率。</p>
 <p>例如：</p>
 <p>Top5：</p>
 <p>有没有找到正确资料。</p>
 <hr/>
-<h2 id="2-precision">2. Precision</h2>
+<h2 id="2-precision">2. Precision</h2><nav class="sec-nav"><a class="sn prev" href="#1-recallk"><span class="sn-label">← 上一节</span><span class="sn-name">1. Recall@K</span></a><a class="sn next" href="#3-answer-quality"><span class="sn-label">下一节 →</span><span class="sn-name">3. Answer Quality</span></a></nav>
 <p>准确率。</p>
 <p>召回：</p>
 <p>10个。</p>
@@ -295,12 +374,12 @@ LLM
 <p>8个。</p>
 <p>80%。</p>
 <hr/>
-<h2 id="3-answer-quality">3. Answer Quality</h2>
+<h2 id="3-answer-quality">3. Answer Quality</h2><nav class="sec-nav"><a class="sn prev" href="#2-precision"><span class="sn-label">← 上一节</span><span class="sn-name">2. Precision</span></a><a class="sn next" href="#1-ragas"><span class="sn-label">下一节 →</span><span class="sn-name">1. RAGAS</span></a></nav>
 <p>最终回答质量。</p>
 <hr/>
 <h1 id="七自动评测框架">七、自动评测框架</h1>
 <p>常见：</p>
-<h2 id="1-ragas">1. RAGAS</h2>
+<h2 id="1-ragas">1. RAGAS</h2><nav class="sec-nav"><a class="sn prev" href="#3-answer-quality"><span class="sn-label">← 上一节</span><span class="sn-name">3. Answer Quality</span></a><a class="sn next" href="#2-langsmith"><span class="sn-label">下一节 →</span><span class="sn-name">2. LangSmith</span></a></nav>
 <p>用于：</p>
 <p>RAG评测。</p>
 <p>指标：</p>
@@ -308,14 +387,14 @@ LLM
 <ul class="lvl"><li>Answer relevance</li></ul>
 <ul class="lvl"><li>Context precision</li></ul>
 <hr/>
-<h2 id="2-langsmith">2. LangSmith</h2>
+<h2 id="2-langsmith">2. LangSmith</h2><nav class="sec-nav"><a class="sn prev" href="#1-ragas"><span class="sn-label">← 上一节</span><span class="sn-name">1. RAGAS</span></a><a class="sn next" href="#3-openai-evals"><span class="sn-label">下一节 →</span><span class="sn-name">3. OpenAI Evals</span></a></nav>
 <p>LangChain生态。</p>
 <p>功能：</p>
 <ul class="lvl"><li>Trace</li></ul>
 <ul class="lvl"><li>Evaluation</li></ul>
 <ul class="lvl"><li>Debug</li></ul>
 <hr/>
-<h2 id="3-openai-evals">3. OpenAI Evals</h2>
+<h2 id="3-openai-evals">3. OpenAI Evals</h2><nav class="sec-nav"><a class="sn prev" href="#2-langsmith"><span class="sn-label">← 上一节</span><span class="sn-name">2. LangSmith</span></a><a class="sn next" href="#mlflow"><span class="sn-label">下一节 →</span><span class="sn-name">MLflow</span></a></nav>
 <p>模型评测框架。</p>
 <hr/>
 <h1 id="八模型版本管理">八、模型版本管理</h1>
@@ -373,7 +452,7 @@ registry</code></pre>
 负责人</code></pre>
 <hr/>
 <p>常见工具：</p>
-<h2 id="mlflow">MLflow</h2>
+<h2 id="mlflow">MLflow</h2><nav class="sec-nav"><a class="sn prev" href="#3-openai-evals"><span class="sn-label">← 上一节</span><span class="sn-name">3. OpenAI Evals</span></a><a class="sn next" href="#系统层"><span class="sn-label">下一节 →</span><span class="sn-name">系统层</span></a></nav>
 <p>非常流行。</p>
 <p>架构：</p>
 <pre><code>
@@ -597,7 +676,7 @@ Java专家模型
 <p>上线以后：</p>
 <p>必须监控。</p>
 <hr/>
-<h2 id="系统层">系统层</h2>
+<h2 id="系统层">系统层</h2><nav class="sec-nav"><a class="sn prev" href="#mlflow"><span class="sn-label">← 上一节</span><span class="sn-name">MLflow</span></a><a class="sn next" href="#模型层"><span class="sn-label">下一节 →</span><span class="sn-name">模型层</span></a></nav>
 <p>Prometheus。</p>
 <p>监控：</p>
 <ul class="lvl"><li>CPU</li></ul>
@@ -605,14 +684,14 @@ Java专家模型
 <ul class="lvl"><li>内存</li></ul>
 <ul class="lvl"><li>网络</li></ul>
 <hr/>
-<h2 id="模型层">模型层</h2>
+<h2 id="模型层">模型层</h2><nav class="sec-nav"><a class="sn prev" href="#系统层"><span class="sn-label">← 上一节</span><span class="sn-name">系统层</span></a><a class="sn next" href="#业务层"><span class="sn-label">下一节 →</span><span class="sn-name">业务层</span></a></nav>
 <p>监控：</p>
 <ul class="lvl"><li>请求数量</li></ul>
 <ul class="lvl"><li>Token</li></ul>
 <ul class="lvl"><li>延迟</li></ul>
 <ul class="lvl"><li>错误率</li></ul>
 <hr/>
-<h2 id="业务层">业务层</h2>
+<h2 id="业务层">业务层</h2><nav class="sec-nav"><a class="sn prev" href="#模型层"><span class="sn-label">← 上一节</span><span class="sn-name">模型层</span></a><a class="sn next" href="#模型版本"><span class="sn-label">下一节 →</span><span class="sn-name">模型版本：</span></a></nav>
 <p>例如：</p>
 <p>客服：</p>
 <ul class="lvl"><li>问题解决率</li></ul>
@@ -667,7 +746,7 @@ Java专家模型
 <p>你的：</p>
 <p>AI Interview Agent。</p>
 <p>生产升级：</p>
-<h2 id="模型版本">模型版本：</h2>
+<h2 id="模型版本">模型版本：</h2><nav class="sec-nav"><a class="sn prev" href="#业务层"><span class="sn-label">← 上一节</span><span class="sn-name">业务层</span></a><a class="sn next" href="#测试集"><span class="sn-label">下一节 →</span><span class="sn-name">测试集：</span></a></nav>
 <pre><code>
 java-interview-qwen-v1
 
@@ -679,7 +758,7 @@ java-interview-qwen-v2
 
 java-interview-qwen-v3</code></pre>
 <hr/>
-<h2 id="测试集">测试集：</h2>
+<h2 id="测试集">测试集：</h2><nav class="sec-nav"><a class="sn prev" href="#模型版本"><span class="sn-label">← 上一节</span><span class="sn-name">模型版本：</span></a><a class="sn next" href="#上线"><span class="sn-label">下一节 →</span><span class="sn-name">上线：</span></a></nav>
 <p>1000题。</p>
 <p>分类：</p>
 <pre><code>Java基础
@@ -696,7 +775,7 @@ RAG
 
 Agent</code></pre>
 <hr/>
-<h2 id="上线">上线：</h2>
+<h2 id="上线">上线：</h2><nav class="sec-nav"><a class="sn prev" href="#测试集"><span class="sn-label">← 上一节</span><span class="sn-name">测试集：</span></a><a class="sn next" href="#q1"><span class="sn-label">下一节 →</span><span class="sn-name">Q1：</span></a></nav>
 <pre><code>
 v1:
 
@@ -708,17 +787,17 @@ v2:
 10%</code></pre>
 <hr/>
 <h1 id="二十一面试回答">二十一、面试回答</h1>
-<h2 id="q1">Q1：</h2>
+<h2 id="q1">Q1：</h2><nav class="sec-nav"><a class="sn prev" href="#上线"><span class="sn-label">← 上一节</span><span class="sn-name">上线：</span></a><a class="sn next" href="#q2"><span class="sn-label">下一节 →</span><span class="sn-name">Q2：</span></a></nav>
 <blockquote><p>微调后的模型如何上线？</p></blockquote>
 <p>标准回答：</p>
 <blockquote><p>微调完成后不会直接上线，需要先通过Golden Dataset进行评测，验证效果和性能。然后通过Model Registry管理版本，将模型部署到vLLM推理服务，通过灰度发布观察线上指标，确认稳定后逐步扩大流量。</p></blockquote>
 <hr/>
-<h2 id="q2">Q2：</h2>
+<h2 id="q2">Q2：</h2><nav class="sec-nav"><a class="sn prev" href="#q1"><span class="sn-label">← 上一节</span><span class="sn-name">Q1：</span></a><a class="sn next" href="#q3"><span class="sn-label">下一节 →</span><span class="sn-name">Q3：</span></a></nav>
 <blockquote><p>如何判断一个RAG系统效果好？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>我会从检索和生成两个阶段评估。检索阶段关注Recall、Precision和Context相关性，生成阶段关注答案准确性、忠实性和用户反馈，同时通过Golden Dataset持续回归测试。</p></blockquote>
 <hr/>
-<h2 id="q3">Q3：</h2>
+<h2 id="q3">Q3：</h2><nav class="sec-nav"><a class="sn prev" href="#q2"><span class="sn-label">← 上一节</span><span class="sn-name">Q2：</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>为什么需要模型版本管理？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>企业模型会持续迭代，不同版本可能影响效果、成本和稳定性，因此需要类似代码版本管理的机制记录模型、数据、参数和评测结果，支持回滚和持续优化。</p></blockquote>
@@ -825,5 +904,48 @@ MLOps
 <p>完成：</p>
 <blockquote><p>从 Java 后端工程师 → Java AI 应用工程师 的完整升级路线。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

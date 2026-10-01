@@ -52,25 +52,104 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#一先把结论说在前面" class="lvl2">一、先把结论说在前面</a><a href="#二怎么选三个问题就能定下来" class="lvl2">二、怎么选：三个问题就能定下来</a><a href="#三方案-ahttp推荐覆盖大多数场景" class="lvl2">三、方案 A：HTTP（推荐，覆盖大多数场景）</a><a href="#31-python-侧把函数变成服务" class="lvl3">3.1 Python 侧：把函数变成服务</a><a href="#32-先不用-spring验证一遍链路" class="lvl3">3.2 先不用 Spring，验证一遍链路</a><a href="#33-java-侧spring-boot-客户端restclient" class="lvl3">3.3 Java 侧：Spring Boot 客户端（RestClient）</a><a href="#34-下游挂了会怎样一次真实的故障演练" class="lvl3">3.4 下游挂了会怎样：一次真实的故障演练</a><a href="#35-生产化清单" class="lvl3">3.5 生产化清单</a><a href="#四方案-b子进程processbuilder" class="lvl2">四、方案 B：子进程（ProcessBuilder）</a><a href="#41-python-侧stdin-进stdout-出" class="lvl3">4.1 Python 侧：stdin 进，stdout 出</a><a href="#42-java-侧把管道管好" class="lvl3">4.2 Java 侧：把管道管好</a><a href="#43-什么时候该放弃子进程" class="lvl3">4.3 什么时候该放弃子进程</a><a href="#五方案-c-d消息队列与-grpc什么时候才轮到它们" class="lvl2">五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们</a><a href="#消息队列方案-c" class="lvl3">消息队列（方案 C）</a><a href="#grpc方案-d" class="lvl3">gRPC（方案 D）</a><a href="#六部署baseurl-在三套环境里怎么变" class="lvl2">六、部署：base-url 在三套环境里怎么变</a><a href="#七避坑清单按踩坑频率排序" class="lvl2">七、避坑清单（按踩坑频率排序）</a><a href="#八10-分钟自测" class="lvl2">八、10 分钟自测</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="spring-boot-怎么调-python五种方案两条真实跑通的链路一份避坑清单">Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单</h1>
 <blockquote><p>写给有 Java / Spring Boot 基础、想把 Python（AI 算法、模型推理、数据处理）接进 Java 系统的开发者。 你不需要先成为 Python 工程师，才能开始集成 —— 但你需要知道<strong>进程之间到底怎么传数据、出错时谁负责</strong>。 文中架构图与流程图为本教程自制示意框图；所有终端截图均来自本机真实运行，命令与输出可在仓库 <a href="../../../../tutorials/demos/08-springboot-python">demos/08-springboot-python/</a> 目录复现。</p></blockquote>
-<h2 id="一先把结论说在前面">一、先把结论说在前面</h2>
+<h2 id="一先把结论说在前面">一、先把结论说在前面</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#二怎么选三个问题就能定下来"><span class="sn-label">下一节 →</span><span class="sn-name">二、怎么选：三个问题就能定下来</span></a></nav>
 <p>Java 调 Python 的本质是<strong>两个进程之间的通信问题</strong>，不是语言问题。两个进程之间只有三种东西能传：字节流、消息、共享协议 —— 所谓跨语言调用，就是从中挑一种，并把它守好。</p>
 <figure class="figure"><img alt="Java 调 Python 的五条路" src="../../../../tutorials/assets/diagram8-options.png" loading="lazy"/><figcaption>Java 调 Python 的五条路</figcaption></figure>
 <table><thead><tr><th>方案</th><th>Java 侧</th><th>Python 侧</th><th>延迟</th><th>适用</th></tr></thead><tbody><tr><td>① HTTP / REST</td><td>RestClient / WebClient</td><td>FastAPI / Flask</td><td>1–50 ms</td><td>常驻服务、要复用、要独立扩容</td></tr><tr><td>② 子进程 CLI</td><td>ProcessBuilder</td><td>一次性脚本</td><td>＋100–800 ms 启动</td><td>离线批处理、定时任务</td></tr><tr><td>③ 消息队列</td><td>生产者 + 回调</td><td>常驻 worker</td><td>秒~分钟</td><td>分钟级长任务、削峰</td></tr><tr><td>④ gRPC</td><td>生成的 stub</td><td>grpc server</td><td>亚毫秒</td><td>高频、低延迟、字段稳定</td></tr><tr><td>⑤ 嵌入式解释器</td><td>JVM 内调用</td><td>无独立进程</td><td>最低</td><td><strong>别选</strong>（见下）</td></tr></tbody></table>
 <p>三条结论，先记下来，全文都在论证它们：</p>
 <ul class="lvl"><li><strong>默认选 HTTP</strong>。它是唯一一条让 Java 和 Python 独立发版、独立扩容、独立排查的路，成本也最低。</li><li><strong>只有「一个任务跑几分钟、结果不需要同步返回」才值得引入消息队列</strong>；gRPC 是 HTTP 扛不住之后的性能优化，不是起点。</li><li><strong>看到「用 Jython 在 JVM 里跑 Python」的旧文章直接跳过</strong>：Jython 只支持 Python 2.7，numpy / torch 基本装不上，而且解释器崩溃会带走整个 JVM。</li></ul>
 <blockquote><p>[!NOTE] 本文所有代码都真实跑通过：Python 3.13 + FastAPI + uvicorn，Java 17 + Spring Boot 3.3.4（RestClient）。完整工程在本仓库 <code>publishing/tutorials/demos/08-springboot-python/</code>，你可以直接复现文中的每一段输出。</p></blockquote>
-<h2 id="二怎么选三个问题就能定下来">二、怎么选：三个问题就能定下来</h2>
+<h2 id="二怎么选三个问题就能定下来">二、怎么选：三个问题就能定下来</h2><nav class="sec-nav"><a class="sn prev" href="#一先把结论说在前面"><span class="sn-label">← 上一节</span><span class="sn-name">一、先把结论说在前面</span></a><a class="sn next" href="#三方案-ahttp推荐覆盖大多数场景"><span class="sn-label">下一节 →</span><span class="sn-name">三、方案 A：HTTP（推荐，覆盖大多数场景）</span></a></nav>
 <p>选型不需要背对比表，问三个问题就够了：</p>
 <figure class="figure"><img alt="选型决策树" src="../../../../tutorials/assets/diagram8-decision.png" loading="lazy"/><figcaption>选型决策树</figcaption></figure>
 <ul class="lvl"><li><strong>一次性脚本还是在线服务？</strong> 定时跑、一天几次的 → 子进程；用户等着结果的 → 继续往下。</li><li><strong>这个任务要跑多久？</strong> 秒级内同步返回 → HTTP；分钟级、允许异步 → 消息队列。</li><li><strong>压测之后 HTTP 真的是瓶颈吗？</strong> 大多数系统在这一步就结束了 —— 先加连接池、超时、重试、缓存，九成问题就解决了。真的测出协议开销才换 gRPC。</li></ul>
 <p>顺序反了的代价很具体：先上了 gRPC，就多维护一份 <code>.proto</code>、一套代码生成流水线，而真正拖慢你的可能是 Python 侧那 3 秒的模型推理。</p>
-<h2 id="三方案-ahttp推荐覆盖大多数场景">三、方案 A：HTTP（推荐，覆盖大多数场景）</h2>
+<h2 id="三方案-ahttp推荐覆盖大多数场景">三、方案 A：HTTP（推荐，覆盖大多数场景）</h2><nav class="sec-nav"><a class="sn prev" href="#二怎么选三个问题就能定下来"><span class="sn-label">← 上一节</span><span class="sn-name">二、怎么选：三个问题就能定下来</span></a><a class="sn next" href="#四方案-b子进程processbuilder"><span class="sn-label">下一节 →</span><span class="sn-name">四、方案 B：子进程（ProcessBuilder）</span></a></nav>
 <h3 id="31-python-侧把函数变成服务">3.1 Python 侧：把函数变成服务</h3>
 <p>用 FastAPI 把 Python 能力暴露成 HTTP 接口。下面的 demo 刻意只用标准库做文本统计，不依赖任何模型 —— 目的是让「Java → HTTP → Python」这条链路本身可跑、可观测；真实场景里把 <code>analyze_text()</code> 换成你的 embedding / 推理 / 数据处理函数即可。</p>
 <pre><code># python/text_service.py
@@ -237,7 +316,7 @@ public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; onPythonError(PythonServi
 <p>跑通只是第一步，上生产前对照这份清单：</p>
 <table><thead><tr><th>项</th><th>做法</th><th>不做的后果</th></tr></thead><tbody><tr><td>超时</td><td>connect 1s / read 按 P99×2 设置，全部配置化</td><td>Python 卡住 → Tomcat 线程池耗尽 → 整个 Java 服务假死</td></tr><tr><td>重试</td><td>只重试 5xx / 超时，2 次 + 退避</td><td>4xx 也重试会把错误放大十倍</td></tr><tr><td>熔断</td><td>Resilience4j：错误率超阈值直接快速失败</td><td>Python 挂了，Java 还在傻等每次 10s 超时</td></tr><tr><td>连接池</td><td><code>ClientHttpRequestFactory</code> 调大 <code>maxConnTotal</code></td><td>高并发下建连排队，表现为「莫名其妙变慢」</td></tr><tr><td>健康检查</td><td>Java 定期打 Python <code>/health</code>，失败告警</td><td>半小时前挂的 Python，半小时后才有人发现</td></tr><tr><td>traceId</td><td>Java 把 MDC 里的 traceId 塞进 <code>X-Trace-Id</code> 头</td><td>一次请求跨两个进程，日志对不上，排查靠猜</td></tr><tr><td>模型冷启动</td><td>启动后预热一次请求；read-timeout 按首请求放宽</td><td>第一个用户请求必然超时，之后恢复正常</td></tr><tr><td>监控</td><td>记录每次调用的耗时与结果分布，按 <code>engine</code>/端点打点</td><td>没有基线，性能退化无人知晓</td></tr></tbody></table>
 <blockquote><p>[!WARN] 最常被硬编码的是 <code>base-url</code>。本地写 <code>http://localhost:8000</code>，上容器环境Python 在另一个容器里，localhost 就永远指向 Java 自己 —— 你会花两小时找一个「本地明明能跑」的 bug。<strong>从第一行代码起就把它放进配置文件。</strong></p></blockquote>
-<h2 id="四方案-b子进程processbuilder">四、方案 B：子进程（ProcessBuilder）</h2>
+<h2 id="四方案-b子进程processbuilder">四、方案 B：子进程（ProcessBuilder）</h2><nav class="sec-nav"><a class="sn prev" href="#三方案-ahttp推荐覆盖大多数场景"><span class="sn-label">← 上一节</span><span class="sn-name">三、方案 A：HTTP（推荐，覆盖大多数场景）</span></a><a class="sn next" href="#五方案-c-d消息队列与-grpc什么时候才轮到它们"><span class="sn-label">下一节 →</span><span class="sn-name">五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们</span></a></nav>
 <p>Python 不是所有能力都值得做成常驻服务。定时任务、离线批处理、一天跑几次的脚本，用 <code>ProcessBuilder</code> 起子进程就够了：Java 写 stdin、读 stdout，用 JSON 交换数据。</p>
 <figure class="figure"><img alt="ProcessBuilder 子进程链路" src="../../../../tutorials/assets/diagram8-process.png" loading="lazy"/><figcaption>ProcessBuilder 子进程链路</figcaption></figure>
 <h3 id="41-python-侧stdin-进stdout-出">4.1 Python 侧：stdin 进，stdout 出</h3>
@@ -291,7 +370,7 @@ if (!finished) process.destroyForcibly();</code></pre>
 <p>✅ 适合：定时任务、离线批处理、一天几次的数据脚本、本机小工具 —— 频率低，起进程的开销（100–800ms，import torch 更慢）可以接受。</p>
 <p>❌ 不适合：在线请求链路。每秒起一次 Python 进程，光解释器启动就能把 QPS 打回个位数，CPU 和内存也会被反复 fork 吃满。</p>
 <p>判断标准很简单：<strong>如果 QPS 上到个位数以上，或者单次调用要在 1 秒内返回，就把它改成常驻的 HTTP 服务。</strong></p>
-<h2 id="五方案-c-d消息队列与-grpc什么时候才轮到它们">五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们</h2>
+<h2 id="五方案-c-d消息队列与-grpc什么时候才轮到它们">五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们</h2><nav class="sec-nav"><a class="sn prev" href="#四方案-b子进程processbuilder"><span class="sn-label">← 上一节</span><span class="sn-name">四、方案 B：子进程（ProcessBuilder）</span></a><a class="sn next" href="#六部署baseurl-在三套环境里怎么变"><span class="sn-label">下一节 →</span><span class="sn-name">六、部署：base-url 在三套环境里怎么变</span></a></nav>
 <h3 id="消息队列方案-c">消息队列（方案 C）</h3>
 <p>当调用从「一问一答」变成「扔个任务就走」，HTTP 就不合适了：任务要跑几分钟，HTTP 连接撑不住，重试还可能造成重复执行。这时候引入 MQ（RabbitMQ / Kafka / Redis Stream 都行）：</p>
 <ul class="lvl"><li>Java 侧：<code>spring-boot-starter-amqp</code>，投递任务消息后立即返回任务 ID；</li><li>Python 侧：常驻 worker 消费队列，跑完把结果写回数据库或回调接口；</li><li>前端拿任务 ID 轮询或走 WebSocket —— <strong>「提交」和「取结果」是两个接口，不是一个请求</strong>。</li></ul>
@@ -305,7 +384,7 @@ service TextService {
 message AnalyzeRequest { string text = 1; int32 top_k = 2; }
 message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount top_words = 3; }</code></pre>
 <p>代价是每次改字段都要重新生成两侧代码、走一遍发版流程。<strong>它是 HTTP 扛不住之后的优化，不是起点。</strong></p>
-<h2 id="六部署baseurl-在三套环境里怎么变">六、部署：base-url 在三套环境里怎么变</h2>
+<h2 id="六部署baseurl-在三套环境里怎么变">六、部署：base-url 在三套环境里怎么变</h2><nav class="sec-nav"><a class="sn prev" href="#五方案-c-d消息队列与-grpc什么时候才轮到它们"><span class="sn-label">← 上一节</span><span class="sn-name">五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们</span></a><a class="sn next" href="#七避坑清单按踩坑频率排序"><span class="sn-label">下一节 →</span><span class="sn-name">七、避坑清单（按踩坑频率排序）</span></a></nav>
 <table><thead><tr><th>环境</th><th>Python 在哪</th><th>Java 的 <code>base-url</code></th><th>注意</th></tr></thead><tbody><tr><td>本地开发</td><td>本机 8000 端口</td><td><code>http://127.0.0.1:8000</code></td><td>两个终端分别起服务</td></tr><tr><td>Docker Compose</td><td>同一网络里的 <code>text-service</code> 容器</td><td><code>http://text-service:8000</code></td><td>用服务名，不用 localhost</td></tr><tr><td>K8s</td><td>独立 Deployment + Service</td><td><code>http://text-service.prod.svc:8000</code></td><td>配 liveness/readiness 探针指向 <code>/health</code></td></tr></tbody></table>
 <p>Docker Compose 的最小形态：</p>
 <pre><code>services:
@@ -322,9 +401,9 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
       text-service:
         condition: service_healthy</code></pre>
 <p>Python 的依赖必须锁定（<code>requirements.txt</code> 写死版本），Java 镜像里<strong>不装 Python</strong>——两个世界只在网络上握手，这是整个方案能长期维护的前提。</p>
-<h2 id="七避坑清单按踩坑频率排序">七、避坑清单（按踩坑频率排序）</h2>
+<h2 id="七避坑清单按踩坑频率排序">七、避坑清单（按踩坑频率排序）</h2><nav class="sec-nav"><a class="sn prev" href="#六部署baseurl-在三套环境里怎么变"><span class="sn-label">← 上一节</span><span class="sn-name">六、部署：base-url 在三套环境里怎么变</span></a><a class="sn next" href="#八10-分钟自测"><span class="sn-label">下一节 →</span><span class="sn-name">八、10 分钟自测</span></a></nav>
 <ul class="lvl"><li><strong>超时不设</strong>：RestClient 默认无读超时，Python 一卡，Java 线程池被慢慢吃光。</li><li><strong><code>base-url</code> 硬编码</strong>：换环境必炸，写进 <code>application.yml</code>。</li><li><strong>snake_case 静默 null</strong>：Python 返回 <code>top_words</code>，Java record 叫 <code>topWords</code>，不加 <code>@JsonNaming</code> 就是 null，不报错。</li><li><strong>4xx 也重试</strong>：请求本身错了，重试只会放大错误。</li><li><strong>stdout 混入 <code>print</code></strong>：子进程方案里一句 debug 输出就能让 <code>json.loads</code> 在半夜炸掉，调试日志一律走 stderr。</li><li><strong>stderr 无人读</strong>：管道缓冲区几十 KB，写满即假死。</li><li><strong>相对路径陷阱</strong>：<code>pb.directory()</code> 会改变相对路径基准，脚本一律转绝对路径。</li><li><strong>解释器路径写死</strong>：开发机 <code>/usr/bin/python3</code>、服务器 venv、容器 <code>/opt/venv/bin/python</code> 各不相同，做成配置项。</li><li><strong>依赖漂移</strong>：Python 侧不锁版本，某天 <code>pip install</code> 拉到新版，行为悄悄变了。写死 <code>requirements.txt</code>。</li><li><strong>模型冷启动</strong>：加载模型的首个请求可能要几十秒，预热 + 单独放宽首请求超时，否则每天早上的第一个用户永远超时。</li></ul>
-<h2 id="八10-分钟自测">八、10 分钟自测</h2>
+<h2 id="八10-分钟自测">八、10 分钟自测</h2><nav class="sec-nav"><a class="sn prev" href="#七避坑清单按踩坑频率排序"><span class="sn-label">← 上一节</span><span class="sn-name">七、避坑清单（按踩坑频率排序）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>拿本文的 demo 自查，全部通过再谈生产：</p>
 <pre><code>[ ] uvicorn 起服务，curl /health 返回 ok
 [ ] curl -X POST /v1/analyze，非法入参返回 422
@@ -345,5 +424,48 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
 │   └── springboot-text-client/      # Spring Boot 3.3 完整工程（RestClient + 重试 + 503）
 └── out/                             # 文中终端截图的原始命令与输出</code></pre>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

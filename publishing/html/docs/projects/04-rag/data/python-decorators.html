@@ -52,12 +52,91 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#闭包装饰器的人力基础" class="lvl2">闭包：装饰器的人力基础</a><a href="#装饰器就是闭包-高阶函数" class="lvl2">装饰器就是闭包 + 高阶函数</a><a href="#带参数的装饰器三层嵌套" class="lvl2">带参数的装饰器：三层嵌套</a><a href="#类装饰器与带状态的装饰器" class="lvl2">类装饰器与带状态的装饰器</a><a href="#常见坑" class="lvl2">常见坑</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="python-装饰器与闭包">Python 装饰器与闭包</h1>
-<h2 id="闭包装饰器的人力基础">闭包：装饰器的人力基础</h2>
+<h2 id="闭包装饰器的人力基础">闭包：装饰器的人力基础</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#装饰器就是闭包-高阶函数"><span class="sn-label">下一节 →</span><span class="sn-name">装饰器就是闭包 + 高阶函数</span></a></nav>
 <p>闭包（closure）指的是「函数 + 它定义时捕获的外层变量」组成的整体。 关键是<strong>变量捕获的是变量本身，不是值的快照</strong>：</p>
 <pre><code>def make_counter():
     count = 0
@@ -70,7 +149,7 @@ li{margin:.3em 0;}
 c = make_counter()
 print(c(), c(), c())        # 1 2 3</code></pre>
 <p><code>count</code> 是 <code>make_counter</code> 的局部变量，按理说函数返回就该被回收； 但 <code>counter</code> 引用了它，Python 的引用计数会把这段环境一起留住。 Java 里对应的是「匿名内部类 / lambda 捕获的 effectively final 局部变量」。</p>
-<h2 id="装饰器就是闭包-高阶函数">装饰器就是闭包 + 高阶函数</h2>
+<h2 id="装饰器就是闭包-高阶函数">装饰器就是闭包 + 高阶函数</h2><nav class="sec-nav"><a class="sn prev" href="#闭包装饰器的人力基础"><span class="sn-label">← 上一节</span><span class="sn-name">闭包：装饰器的人力基础</span></a><a class="sn next" href="#带参数的装饰器三层嵌套"><span class="sn-label">下一节 →</span><span class="sn-name">带参数的装饰器：三层嵌套</span></a></nav>
 <p>装饰器的本质：接受一个函数，返回一个替代它的函数。</p>
 <pre><code>import time
 
@@ -88,7 +167,7 @@ def slow_add(a, b):
     return a + b</code></pre>
 <p>写装饰器的三条纪律：</p>
 <ul class="lvl"><li><strong>用 <code>*args, **kwargs</code> 转发</strong>：否则只能装饰签名完全匹配的函数。</li><li><strong><code>functools.wraps</code> 保留元信息</strong>：被装饰的函数会丢掉 <code>__name__</code>、<code>__doc__</code>， <code>functools.wraps(func)</code> 把它们的引用原样拷到 wrapper 上，文档和 IDE 才不迷路。</li><li><strong>别在装饰器里吞异常</strong>：应该 <code>try/except</code> 后记录、再重新抛出。</li></ul>
-<h2 id="带参数的装饰器三层嵌套">带参数的装饰器：三层嵌套</h2>
+<h2 id="带参数的装饰器三层嵌套">带参数的装饰器：三层嵌套</h2><nav class="sec-nav"><a class="sn prev" href="#装饰器就是闭包-高阶函数"><span class="sn-label">← 上一节</span><span class="sn-name">装饰器就是闭包 + 高阶函数</span></a><a class="sn next" href="#类装饰器与带状态的装饰器"><span class="sn-label">下一节 →</span><span class="sn-name">类装饰器与带状态的装饰器</span></a></nav>
 <pre><code>import functools
 
 def retry(times=3, delay=0.5):
@@ -109,7 +188,7 @@ def retry(times=3, delay=0.5):
 @retry(times=3)
 def call_api(): ...</code></pre>
 <p>三层嵌套的原因一句话：<code>@retry(times=3)</code> 先被求值出 <code>decorator</code>， 再被套到函数上。缺任何一层都拿不到「参数」这一步。</p>
-<h2 id="类装饰器与带状态的装饰器">类装饰器与带状态的装饰器</h2>
+<h2 id="类装饰器与带状态的装饰器">类装饰器与带状态的装饰器</h2><nav class="sec-nav"><a class="sn prev" href="#带参数的装饰器三层嵌套"><span class="sn-label">← 上一节</span><span class="sn-name">带参数的装饰器：三层嵌套</span></a><a class="sn next" href="#常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">常见坑</span></a></nav>
 <p>函数也能当装饰器用，需要保存状态时换类更清楚：</p>
 <pre><code>class CallCount:
     def __init__(self, func):
@@ -121,8 +200,51 @@ def call_api(): ...</code></pre>
         self.calls += 1
         print(f&quot;调用第 {self.calls} 次&quot;)
         return self.func(*args, **kwargs)</code></pre>
-<h2 id="常见坑">常见坑</h2>
+<h2 id="常见坑">常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#类装饰器与带状态的装饰器"><span class="sn-label">← 上一节</span><span class="sn-name">类装饰器与带状态的装饰器</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li><strong>装饰顺序</strong>：<code>@a</code> 在最上面、<code>@b</code> 在下面时，实际生效是 b(a(func))， 也就是先被 b 包裹。调试日志时要留意。</li><li><strong>给函数加参数导致签名变化</strong>：用 <code>functools.wraps</code> 只是复制元信息， 参数校验仍要靠 <code>*args, **kwargs</code> 转发。</li><li><strong>装饰器在 import 时执行</strong>：模块级被装饰的函数在 import 阶段就完成包裹， 所以装饰器里的副作用（建连接、写文件）会随 import 发生。</li></ul>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

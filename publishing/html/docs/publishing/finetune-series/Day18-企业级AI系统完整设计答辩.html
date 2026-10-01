@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#业务目标" class="lvl2">业务目标</a><a href="#1-企业知识问答" class="lvl3">1. 企业知识问答</a><a href="#2-智能办公" class="lvl3">2. 智能办公</a><a href="#3-代码助手" class="lvl3">3. 代码助手</a><a href="#4-agent自动处理" class="lvl3">4. Agent自动处理</a><a href="#1-性能" class="lvl2">1. 性能</a><a href="#2-延迟" class="lvl2">2. 延迟</a><a href="#3-安全" class="lvl2">3. 安全</a><a href="#4-成本" class="lvl2">4. 成本</a><a href="#1-chat-service" class="lvl2">1. Chat Service</a><a href="#2-rag-service" class="lvl2">2. RAG Service</a><a href="#3-agent-service" class="lvl2">3. Agent Service</a><a href="#通用模型" class="lvl2">通用模型</a><a href="#小模型" class="lvl2">小模型</a><a href="#专业模型" class="lvl2">专业模型</a><a href="#简单问题" class="lvl2">简单问题</a><a href="#复杂推理" class="lvl2">复杂推理</a><a href="#代码分析" class="lvl2">代码分析</a><a href="#向量数据库" class="lvl2">向量数据库</a><a href="#关键词搜索" class="lvl2">关键词搜索</a><a href="#数据隔离" class="lvl2">数据隔离</a><a href="#数据脱敏" class="lvl2">数据脱敏</a><a href="#1-kv-cache" class="lvl2">1. KV Cache</a><a href="#2-continuous-batching" class="lvl2">2. Continuous Batching</a><a href="#3-prompt-cache" class="lvl2">3. Prompt Cache</a><a href="#4-小模型路由" class="lvl2">4. 小模型路由</a><a href="#应用监控" class="lvl2">应用监控</a><a href="#ai监控" class="lvl2">AI监控</a><a href="#gpu监控" class="lvl2">GPU监控</a><a href="#1-模型分级" class="lvl2">1. 模型分级</a><a href="#2-cache" class="lvl2">2. Cache</a><a href="#3-token限制" class="lvl2">3. Token限制</a><a href="#4-rag优化" class="lvl2">4. RAG优化</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day18-企业级-ai-系统完整设计答辩">Day18 企业级 AI 系统完整设计答辩</h1>
 <h1 id="从需求分析-架构设计-技术选型-上线运维">从需求分析 → 架构设计 → 技术选型 → 上线运维</h1>
@@ -143,7 +222,7 @@ MLOps</code></pre>
 <p>不要直接选技术。</p>
 <p>先分析业务。</p>
 <hr/>
-<h2 id="业务目标">业务目标</h2>
+<h2 id="业务目标">业务目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#1-性能"><span class="sn-label">下一节 →</span><span class="sn-name">1. 性能</span></a></nav>
 <p>建设：</p>
 <h1 id="enterprise-ai-assistant企业智能助手">Enterprise AI Assistant【企业智能助手】</h1>
 <p>能力：</p>
@@ -182,26 +261,26 @@ MLOps</code></pre>
 <h1 id="三非功能需求">三、非功能需求</h1>
 <p>企业一定关注：</p>
 <hr/>
-<h2 id="1-性能">1. 性能</h2>
+<h2 id="1-性能">1. 性能</h2><nav class="sec-nav"><a class="sn prev" href="#业务目标"><span class="sn-label">← 上一节</span><span class="sn-name">业务目标</span></a><a class="sn next" href="#2-延迟"><span class="sn-label">下一节 →</span><span class="sn-name">2. 延迟</span></a></nav>
 <p>例如：</p>
 <p>10万用户。</p>
 <p>同时在线：</p>
 <p>5000。</p>
 <hr/>
-<h2 id="2-延迟">2. 延迟</h2>
+<h2 id="2-延迟">2. 延迟</h2><nav class="sec-nav"><a class="sn prev" href="#1-性能"><span class="sn-label">← 上一节</span><span class="sn-name">1. 性能</span></a><a class="sn next" href="#3-安全"><span class="sn-label">下一节 →</span><span class="sn-name">3. 安全</span></a></nav>
 <p>目标：</p>
 <p>普通问答：</p>
 <p>&lt;3秒。</p>
 <p>复杂Agent：</p>
 <p>&lt;10秒。</p>
 <hr/>
-<h2 id="3-安全">3. 安全</h2>
+<h2 id="3-安全">3. 安全</h2><nav class="sec-nav"><a class="sn prev" href="#2-延迟"><span class="sn-label">← 上一节</span><span class="sn-name">2. 延迟</span></a><a class="sn next" href="#4-成本"><span class="sn-label">下一节 →</span><span class="sn-name">4. 成本</span></a></nav>
 <p>要求：</p>
 <ul class="lvl"><li>权限隔离</li></ul>
 <ul class="lvl"><li>数据不泄露</li></ul>
 <ul class="lvl"><li>操作审计</li></ul>
 <hr/>
-<h2 id="4-成本">4. 成本</h2>
+<h2 id="4-成本">4. 成本</h2><nav class="sec-nav"><a class="sn prev" href="#3-安全"><span class="sn-label">← 上一节</span><span class="sn-name">3. 安全</span></a><a class="sn next" href="#1-chat-service"><span class="sn-label">下一节 →</span><span class="sn-name">1. Chat Service</span></a></nav>
 <p>不能：</p>
 <p>每次调用GPT。</p>
 <hr/>
@@ -285,7 +364,7 @@ MLOps</code></pre>
 </code></pre>
 <hr/>
 <h1 id="五ai应用层设计">五、AI应用层设计</h1>
-<h2 id="1-chat-service">1. Chat Service</h2>
+<h2 id="1-chat-service">1. Chat Service</h2><nav class="sec-nav"><a class="sn prev" href="#4-成本"><span class="sn-label">← 上一节</span><span class="sn-name">4. 成本</span></a><a class="sn next" href="#2-rag-service"><span class="sn-label">下一节 →</span><span class="sn-name">2. RAG Service</span></a></nav>
 <p>普通问答。</p>
 <p>流程：</p>
 <pre><code>用户问题
@@ -298,7 +377,7 @@ LLM
 
 回答</code></pre>
 <hr/>
-<h2 id="2-rag-service">2. RAG Service</h2>
+<h2 id="2-rag-service">2. RAG Service</h2><nav class="sec-nav"><a class="sn prev" href="#1-chat-service"><span class="sn-label">← 上一节</span><span class="sn-name">1. Chat Service</span></a><a class="sn next" href="#3-agent-service"><span class="sn-label">下一节 →</span><span class="sn-name">3. Agent Service</span></a></nav>
 <p>企业知识。</p>
 <p>流程：</p>
 <pre><code>文档
@@ -327,7 +406,7 @@ Retriever
 
 LLM</code></pre>
 <hr/>
-<h2 id="3-agent-service">3. Agent Service</h2>
+<h2 id="3-agent-service">3. Agent Service</h2><nav class="sec-nav"><a class="sn prev" href="#2-rag-service"><span class="sn-label">← 上一节</span><span class="sn-name">2. RAG Service</span></a><a class="sn next" href="#通用模型"><span class="sn-label">下一节 →</span><span class="sn-name">通用模型</span></a></nav>
 <p>复杂任务。</p>
 <p>例如：</p>
 <p>查询：</p>
@@ -354,19 +433,19 @@ Tool选择
 <h1 id="六模型层设计">六、模型层设计</h1>
 <p>企业不会只有一个模型。</p>
 <p>设计：</p>
-<h2 id="通用模型">通用模型</h2>
+<h2 id="通用模型">通用模型</h2><nav class="sec-nav"><a class="sn prev" href="#3-agent-service"><span class="sn-label">← 上一节</span><span class="sn-name">3. Agent Service</span></a><a class="sn next" href="#小模型"><span class="sn-label">下一节 →</span><span class="sn-name">小模型</span></a></nav>
 <p>例如：</p>
 <p>Qwen2.5-72B</p>
 <p>处理：</p>
 <p>复杂任务。</p>
 <hr/>
-<h2 id="小模型">小模型</h2>
+<h2 id="小模型">小模型</h2><nav class="sec-nav"><a class="sn prev" href="#通用模型"><span class="sn-label">← 上一节</span><span class="sn-name">通用模型</span></a><a class="sn next" href="#专业模型"><span class="sn-label">下一节 →</span><span class="sn-name">专业模型</span></a></nav>
 <p>例如：</p>
 <p>Qwen2.5-7B</p>
 <p>处理：</p>
 <p>简单问答。</p>
 <hr/>
-<h2 id="专业模型">专业模型</h2>
+<h2 id="专业模型">专业模型</h2><nav class="sec-nav"><a class="sn prev" href="#小模型"><span class="sn-label">← 上一节</span><span class="sn-name">小模型</span></a><a class="sn next" href="#简单问题"><span class="sn-label">下一节 →</span><span class="sn-name">简单问题</span></a></nav>
 <p>例如：</p>
 <p>代码模型：</p>
 <p>DeepSeek-Coder。</p>
@@ -389,19 +468,19 @@ Tool选择
 <p>哪个模型。</p>
 <hr/>
 <h1 id="八模型路由策略">八、模型路由策略</h1>
-<h2 id="简单问题">简单问题</h2>
+<h2 id="简单问题">简单问题</h2><nav class="sec-nav"><a class="sn prev" href="#专业模型"><span class="sn-label">← 上一节</span><span class="sn-name">专业模型</span></a><a class="sn next" href="#复杂推理"><span class="sn-label">下一节 →</span><span class="sn-name">复杂推理</span></a></nav>
 <p>例如：</p>
 <blockquote><p>公司假期多少天？</p></blockquote>
 <p>选择：</p>
 <pre><code>Qwen7B</code></pre>
 <hr/>
-<h2 id="复杂推理">复杂推理</h2>
+<h2 id="复杂推理">复杂推理</h2><nav class="sec-nav"><a class="sn prev" href="#简单问题"><span class="sn-label">← 上一节</span><span class="sn-name">简单问题</span></a><a class="sn next" href="#代码分析"><span class="sn-label">下一节 →</span><span class="sn-name">代码分析</span></a></nav>
 <p>例如：</p>
 <blockquote><p>分析年度经营数据。</p></blockquote>
 <p>选择：</p>
 <pre><code>DeepSeek-R1</code></pre>
 <hr/>
-<h2 id="代码分析">代码分析</h2>
+<h2 id="代码分析">代码分析</h2><nav class="sec-nav"><a class="sn prev" href="#复杂推理"><span class="sn-label">← 上一节</span><span class="sn-name">复杂推理</span></a><a class="sn next" href="#向量数据库"><span class="sn-label">下一节 →</span><span class="sn-name">向量数据库</span></a></nav>
 <p>选择：</p>
 <pre><code>Code Model</code></pre>
 <hr/>
@@ -435,10 +514,10 @@ Vector DB
 </code></pre>
 <hr/>
 <p>数据库选择：</p>
-<h2 id="向量数据库">向量数据库</h2>
+<h2 id="向量数据库">向量数据库</h2><nav class="sec-nav"><a class="sn prev" href="#代码分析"><span class="sn-label">← 上一节</span><span class="sn-name">代码分析</span></a><a class="sn next" href="#关键词搜索"><span class="sn-label">下一节 →</span><span class="sn-name">关键词搜索</span></a></nav>
 <p>Milvus。</p>
 <hr/>
-<h2 id="关键词搜索">关键词搜索</h2>
+<h2 id="关键词搜索">关键词搜索</h2><nav class="sec-nav"><a class="sn prev" href="#向量数据库"><span class="sn-label">← 上一节</span><span class="sn-name">向量数据库</span></a><a class="sn next" href="#数据隔离"><span class="sn-label">下一节 →</span><span class="sn-name">数据隔离</span></a></nav>
 <p>Elasticsearch。</p>
 <hr/>
 <p>最终：</p>
@@ -497,7 +576,7 @@ Tool
 Data Filter</code></pre>
 <hr/>
 <h1 id="十二数据安全设计">十二、数据安全设计</h1>
-<h2 id="数据隔离">数据隔离</h2>
+<h2 id="数据隔离">数据隔离</h2><nav class="sec-nav"><a class="sn prev" href="#关键词搜索"><span class="sn-label">← 上一节</span><span class="sn-name">关键词搜索</span></a><a class="sn next" href="#数据脱敏"><span class="sn-label">下一节 →</span><span class="sn-name">数据脱敏</span></a></nav>
 <p>多租户：</p>
 <pre><code>tenant_id
 
@@ -505,7 +584,7 @@ department_id
 
 user_id</code></pre>
 <hr/>
-<h2 id="数据脱敏">数据脱敏</h2>
+<h2 id="数据脱敏">数据脱敏</h2><nav class="sec-nav"><a class="sn prev" href="#数据隔离"><span class="sn-label">← 上一节</span><span class="sn-name">数据隔离</span></a><a class="sn next" href="#1-kv-cache"><span class="sn-label">下一节 →</span><span class="sn-name">1. KV Cache</span></a></nav>
 <p>例如：</p>
 <p>身份证：</p>
 <pre><code>430123199xxxxxxx</code></pre>
@@ -563,35 +642,35 @@ vLLM Cluster
 负载均衡</code></pre>
 <hr/>
 <h1 id="十五性能优化">十五、性能优化</h1>
-<h2 id="1-kv-cache">1. KV Cache</h2>
+<h2 id="1-kv-cache">1. KV Cache</h2><nav class="sec-nav"><a class="sn prev" href="#数据脱敏"><span class="sn-label">← 上一节</span><span class="sn-name">数据脱敏</span></a><a class="sn next" href="#2-continuous-batching"><span class="sn-label">下一节 →</span><span class="sn-name">2. Continuous Batching</span></a></nav>
 <p>vLLM：</p>
 <p>减少重复计算。</p>
 <hr/>
-<h2 id="2-continuous-batching">2. Continuous Batching</h2>
+<h2 id="2-continuous-batching">2. Continuous Batching</h2><nav class="sec-nav"><a class="sn prev" href="#1-kv-cache"><span class="sn-label">← 上一节</span><span class="sn-name">1. KV Cache</span></a><a class="sn next" href="#3-prompt-cache"><span class="sn-label">下一节 →</span><span class="sn-name">3. Prompt Cache</span></a></nav>
 <p>多个请求一起计算。</p>
 <hr/>
-<h2 id="3-prompt-cache">3. Prompt Cache</h2>
+<h2 id="3-prompt-cache">3. Prompt Cache</h2><nav class="sec-nav"><a class="sn prev" href="#2-continuous-batching"><span class="sn-label">← 上一节</span><span class="sn-name">2. Continuous Batching</span></a><a class="sn next" href="#4-小模型路由"><span class="sn-label">下一节 →</span><span class="sn-name">4. 小模型路由</span></a></nav>
 <p>重复Prompt复用。</p>
 <hr/>
-<h2 id="4-小模型路由">4. 小模型路由</h2>
+<h2 id="4-小模型路由">4. 小模型路由</h2><nav class="sec-nav"><a class="sn prev" href="#3-prompt-cache"><span class="sn-label">← 上一节</span><span class="sn-name">3. Prompt Cache</span></a><a class="sn next" href="#应用监控"><span class="sn-label">下一节 →</span><span class="sn-name">应用监控</span></a></nav>
 <p>简单任务不用大模型。</p>
 <hr/>
 <h1 id="十六监控体系">十六、监控体系</h1>
 <p>三层：</p>
 <hr/>
-<h2 id="应用监控">应用监控</h2>
+<h2 id="应用监控">应用监控</h2><nav class="sec-nav"><a class="sn prev" href="#4-小模型路由"><span class="sn-label">← 上一节</span><span class="sn-name">4. 小模型路由</span></a><a class="sn next" href="#ai监控"><span class="sn-label">下一节 →</span><span class="sn-name">AI监控</span></a></nav>
 <p>Spring Boot：</p>
 <ul class="lvl"><li>QPS</li></ul>
 <ul class="lvl"><li>延迟</li></ul>
 <ul class="lvl"><li>错误</li></ul>
 <hr/>
-<h2 id="ai监控">AI监控</h2>
+<h2 id="ai监控">AI监控</h2><nav class="sec-nav"><a class="sn prev" href="#应用监控"><span class="sn-label">← 上一节</span><span class="sn-name">应用监控</span></a><a class="sn next" href="#gpu监控"><span class="sn-label">下一节 →</span><span class="sn-name">GPU监控</span></a></nav>
 <p>模型：</p>
 <ul class="lvl"><li>Token</li></ul>
 <ul class="lvl"><li>Cost</li></ul>
 <ul class="lvl"><li>Quality</li></ul>
 <hr/>
-<h2 id="gpu监控">GPU监控</h2>
+<h2 id="gpu监控">GPU监控</h2><nav class="sec-nav"><a class="sn prev" href="#ai监控"><span class="sn-label">← 上一节</span><span class="sn-name">AI监控</span></a><a class="sn next" href="#1-模型分级"><span class="sn-label">下一节 →</span><span class="sn-name">1. 模型分级</span></a></nav>
 <p>GPU：</p>
 <ul class="lvl"><li>显存</li></ul>
 <ul class="lvl"><li>利用率</li></ul>
@@ -657,21 +736,21 @@ LoRA训练
 <p>企业最关心。</p>
 <p>措施：</p>
 <hr/>
-<h2 id="1-模型分级">1. 模型分级</h2>
+<h2 id="1-模型分级">1. 模型分级</h2><nav class="sec-nav"><a class="sn prev" href="#gpu监控"><span class="sn-label">← 上一节</span><span class="sn-name">GPU监控</span></a><a class="sn next" href="#2-cache"><span class="sn-label">下一节 →</span><span class="sn-name">2. Cache</span></a></nav>
 <p>简单：</p>
 <p>7B。</p>
 <p>复杂：</p>
 <p>70B。</p>
 <hr/>
-<h2 id="2-cache">2. Cache</h2>
+<h2 id="2-cache">2. Cache</h2><nav class="sec-nav"><a class="sn prev" href="#1-模型分级"><span class="sn-label">← 上一节</span><span class="sn-name">1. 模型分级</span></a><a class="sn next" href="#3-token限制"><span class="sn-label">下一节 →</span><span class="sn-name">3. Token限制</span></a></nav>
 <p>重复问题：</p>
 <p>Redis。</p>
 <hr/>
-<h2 id="3-token限制">3. Token限制</h2>
+<h2 id="3-token限制">3. Token限制</h2><nav class="sec-nav"><a class="sn prev" href="#2-cache"><span class="sn-label">← 上一节</span><span class="sn-name">2. Cache</span></a><a class="sn next" href="#4-rag优化"><span class="sn-label">下一节 →</span><span class="sn-name">4. RAG优化</span></a></nav>
 <p>控制：</p>
 <p>最大输出。</p>
 <hr/>
-<h2 id="4-rag优化">4. RAG优化</h2>
+<h2 id="4-rag优化">4. RAG优化</h2><nav class="sec-nav"><a class="sn prev" href="#3-token限制"><span class="sn-label">← 上一节</span><span class="sn-name">3. Token限制</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>减少Prompt长度。</p>
 <hr/>
 <h1 id="二十完整面试回答">二十、完整面试回答</h1>
@@ -721,5 +800,48 @@ AI Application Engineer</code></pre>
 <p>因为对于你现在的背景（6年 Java + AI 转型），除了求职，也可以探索：</p>
 <blockquote><p>AI工具产品 / 独立开发 / 创业验证。</p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

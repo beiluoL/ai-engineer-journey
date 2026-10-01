@@ -52,21 +52,100 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么不-mask-就会学坏" class="lvl2">1. Why：为什么不 mask 就会学坏</a><a href="#2-design模板边界-mask-边界" class="lvl2">2. Design：模板边界 = mask 边界</a><a href="#3-realrun-evidence来自-demosoutdemo03instructiontuningterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_03_instruction_tuning_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-训练-loss-更低的那组实际效果更差实测" class="lvl3">4.1 训练 loss 更低的那组，实际效果更差（实测）</a><a href="#42-更会背问题不是能力实测-8988" class="lvl3">4.2 &amp;quot;更会背问题&amp;quot;不是能力（实测 −89.88%）</a><a href="#43-mask-覆盖率-8141-意味着什么" class="lvl3">4.3 mask 覆盖率 81.41% 意味着什么</a><a href="#44-收益在-60-步尺度下不算夸张但方向稳定诚实标注" class="lvl3">4.4 收益在 60 步尺度下不算夸张，但方向稳定（诚实标注）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-03-instruction-tuningmask-落在哪模型就学什么">Milestone 03 — Instruction Tuning：mask 落在哪，模型就学什么</h1>
 <p>M02 把 59 条问答切成了 <code>(x, y, mask)</code>，但&quot;为什么要 mask&quot;还没证明。这一层把它讲透并<strong>用对照实验量化收益</strong>：同样训 60 步，A 组只在答案区算 loss，B 组全序列都算，看两组的答案区困惑度和 prompt 区困惑度各怎么动。</p>
 <p>结论先行：<strong>B 组的训练 loss 更低，但答案区困惑度更差</strong>。这是一个典型的&quot;指标选错就全盘皆错&quot;的案例 —— 如果只看 loss 曲线，你会选错方案。</p>
 <p><strong>纯 numpy 手写</strong>：<code>mask</code> 是一个 <code>float64</code> 数组，交叉熵里按位相乘，被 mask 掉的位置梯度恒为 0。没有 <code>DataCollatorForCompletionOnlyLM</code> 帮你做，得自己把边界对齐。</p>
 <hr/>
-<h2 id="1-why为什么不-mask-就会学坏">1. Why：为什么不 mask 就会学坏</h2>
+<h2 id="1-why为什么不-mask-就会学坏">1. Why：为什么不 mask 就会学坏</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design模板边界-mask-边界"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：模板边界 = mask 边界</span></a></nav>
 <p>预训练的目标是&quot;学语言本身&quot;，所以每个 token 都算 loss。SFT 的目标是&quot;<strong>听懂指令并作答</strong>&quot;，两者不是一回事。</p>
 <p>不 mask 会怎样：</p>
 <ul class="lvl"><li><strong>一半的梯度浪费在复述问题上。</strong> prompt 是我们给的，模型不需要学会生成它。</li><li><strong>把&quot;问答格式&quot;和&quot;领域知识&quot;混在一起学。</strong> 既浪费参数，又容易让模型学会复读 prompt。</li><li><strong>指标会被污染。</strong> 模型把 prompt 背熟了，loss 照样降，但答案一个字没变好 —— 下面 B 组就是这个下场。</li></ul>
 <p>Alpaca / ShareGPT 系数据集的默认做法就是 <strong>completion-only loss</strong>（只算回答），本项目照做，并把它量化出来。</p>
-<h2 id="2-design模板边界-mask-边界">2. Design：模板边界 = mask 边界</h2>
+<h2 id="2-design模板边界-mask-边界">2. Design：模板边界 = mask 边界</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么不-mask-就会学坏"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么不 mask 就会学坏</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo03instructiontuningterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_03_instruction_tuning_terminal.txt）</span></a></nav>
 <pre><code>### 指令:
 {instruction}
 ### 输入:
@@ -81,7 +160,7 @@ mask = (pos &gt;= n_prompt).astype(np.float64)</code></pre>
 <p>写成了 <code>pos &gt;= n_prompt - 1</code> 的话，模型会在 prompt 的<strong>最后一个 token</strong> 上就开始算 loss —— 不会报错，只是悄悄变差。</p>
 <p><strong>对照实验的设计</strong>：A / B 两组唯一差别就是喂给 <code>cross_entropy</code> 的 <code>mask</code>（A 用答案区 mask，B 用全 1），其余（基座、数据、60 步、lr、seed、batch 顺序）<strong>完全相同</strong>。训完分别算两组在<strong>答案区</strong>和 <strong>prompt 区</strong>的困惑度 —— 注意评估时是拿同一套 mask 分区去测的，所以两组可比。</p>
 <figure class="figure"><img alt="M03 mask 边界与 A/B 对照" src="../../../../../../projects/08-fine-tuning/assets/instruction-tuning.svg" loading="lazy"/><figcaption>M03 mask 边界与 A/B 对照</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo03instructiontuningterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_03_instruction_tuning_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo03instructiontuningterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_03_instruction_tuning_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design模板边界-mask-边界"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：模板边界 = mask 边界</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p><strong>mask 可视化（真实输出，三条样本）：</strong></p>
 <pre><code>【样本 1】样本长度 204 个 token（prompt 41 / answer 164）  答案区占比 164/204 = 80.4%
   y     : ## 指令:\n请解释 Java 中 HashMap 的底层原理（以 JDK 8 为例）\n\n### 回答:\nJDK 8 的 HashMap 底层是…
@@ -96,7 +175,7 @@ mask 覆盖的 token 占比              81.41%   （单条平均覆盖率 81.31
 <pre><code>答案区困惑度：B 相对 A          +6.64%   正数 = B 更差
 prompt 区困惑度：B 相对 A      -89.88%   负数 = B 更会背问题</code></pre>
 <figure class="figure"><img alt="M03 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-03-instruction-tuning.png" loading="lazy"/><figcaption>M03 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo03instructiontuningterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_03_instruction_tuning_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-训练-loss-更低的那组实际效果更差实测">4.1 训练 loss 更低的那组，实际效果更差（实测）</h3>
 <p>这是本章最有价值的一条：</p>
 <ul class="lvl"><li>B 组末步 loss <strong>6.1210</strong>，低于 A 组的 <strong>6.1882</strong> —— 看 loss 曲线，B 赢了。</li><li>但 B 组答案区困惑度 <strong>454.5</strong>，比 A 组的 <strong>426.2</strong> 差 <strong>+6.64%</strong> —— 看真实目标，A 赢了。</li></ul>
@@ -111,12 +190,55 @@ prompt 区困惑度：B 相对 A      -89.88%   负数 = B 更会背问题</code
 <p>demo 输出原话：</p>
 <blockquote><p>59 条数据、60 步的规模下差距不算夸张，但方向稳定，且步数越多差距越明显。</p></blockquote>
 <p>6.64% 是<strong>本次实测</strong>，不是理论上限。它证明的是<strong>方向</strong>（只算答案区更好），不是<strong>幅度</strong>（不要拿 6.64% 去预测你的任务）。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>mask 边界 = 模板边界</strong>：<code>mask[i] = 1</code> 当且仅当 <code>i + 1 &gt;= n_prompt</code>，这个 off-by-one 写错不会报错，只会悄悄变差。</li><li>实测 mask 覆盖 <strong>81.41%</strong>（8,752 / 10,750），被 mask 掉的 <strong>1,998</strong> 个 prompt token 梯度恒为 0。</li><li>答案区困惑度 <strong>3,649.9 → 426.2（A）/ 454.5（B）</strong>；只算答案区<strong>再降 6.64%</strong>。</li><li><strong>训练 loss 会骗人</strong>：B 组 loss 更低（6.1210）但答案区更差（454.5）。评估必须按子集单独算。</li><li>completion-only loss 是 Alpaca/ShareGPT 系数据集的默认做法，本项目的实测支持了它，但幅度只有个位数百分比。</li><li>手写实现的意义：<code>mask</code> 就是一个乘进交叉熵的 float 数组 —— 你清楚地看见梯度在哪一段被置零，也就能自己定义&quot;学什么&quot;。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/sft_data.py</code></td><td><code>PROMPT_TEMPLATE</code>（<code>### 指令:</code> / <code>### 回答:</code>）、<code>render_example</code>、<code>build_sft_examples</code>（mask 的 off-by-one 就在这里）、<code>visualize_example</code>（把 mask 打成人能看懂的 <code>·</code>/<code>1</code>）</td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer.train_step</code>：<code>cross_entropy(logits, y, mask=mask)</code> —— mask 是这里生效的</td></tr><tr><td><code>src/ft/eval.py</code></td><td><code>evaluate()</code>：按 mask=1 的位置累计 NLL，本章 A/B 两组的分区困惑度都由它算</td></tr><tr><td><code>demos/demo_03_instruction_tuning.py</code></td><td>5 节：模板 / mask 可视化 / A·B 对照训练 / 结果对比 / 关键数字</td></tr><tr><td><code>demos/out/demo_03_instruction_tuning_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/instruction-tuning.svg</code></td><td>本章 mask 序列示意 + A/B 对照图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.2 → <strong>v0.3</strong>，M03 指令格式与 completion-only loss 落地。实测：mask 覆盖 81.41%，答案区困惑度 3,649.9 → 426.2（只算答案）/ 454.5（全序列），只算答案区再降 6.64%；对照组 prompt 区 1,184.9 vs 119.9（−89.88%，但那是&quot;背问题&quot;）。发现&quot;B 组训练 loss 更低而答案区更差&quot;这一指标陷阱。纯 numpy、无 torch/transformers。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

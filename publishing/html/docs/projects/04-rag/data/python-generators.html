@@ -52,12 +52,91 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#生成器是什么" class="lvl2">生成器是什么</a><a href="#为什么能省内存" class="lvl2">为什么能省内存</a><a href="#yield-from-与生成器嵌套" class="lvl2">yield from 与生成器嵌套</a><a href="#生成器表达式" class="lvl2">生成器表达式</a><a href="#常见坑" class="lvl2">常见坑</a><a href="#和-java-的类比" class="lvl2">和 Java 的类比</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="python-生成器惰性计算与内存">Python 生成器：惰性计算与内存</h1>
-<h2 id="生成器是什么">生成器是什么</h2>
+<h2 id="生成器是什么">生成器是什么</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么能省内存"><span class="sn-label">下一节 →</span><span class="sn-name">为什么能省内存</span></a></nav>
 <p>生成器（generator）是一种「边算边吐」的迭代器。它和普通函数的区别只有两个关键字： 函数体里出现 <code>yield</code>，这个函数就不再是普通函数，而是返回一个生成器对象。</p>
 <pre><code>def gen():
     for i in range(1000000):
@@ -67,12 +146,12 @@ g = gen()          # 注意：这里函数体一行都没执行
 print(next(g))     # 0
 print(next(g))     # 2</code></pre>
 <p>调用 <code>gen()</code> 不会执行函数体，只会造出一个生成器对象；第一次 <code>next(g)</code> 才开始跑， 一直跑到 <code>yield</code> 就停下，把 <code>yield</code> 后面的值交出去，等下一次 <code>next</code> 再从那里继续。 这种「执行到一半挂起、再次被唤醒」的能力叫协同程序（coroutine）的雏形。</p>
-<h2 id="为什么能省内存">为什么能省内存</h2>
+<h2 id="为什么能省内存">为什么能省内存</h2><nav class="sec-nav"><a class="sn prev" href="#生成器是什么"><span class="sn-label">← 上一节</span><span class="sn-name">生成器是什么</span></a><a class="sn next" href="#yield-from-与生成器嵌套"><span class="sn-label">下一节 →</span><span class="sn-name">yield from 与生成器嵌套</span></a></nav>
 <p><code>range(1000000)</code> 和 <code>[i * 2 for i in range(1000000)]</code> 差得不是一点点： 列表推导式会<strong>一次性把 100 万个整数全部造出来</strong>放在内存里，占用几十 MB； 生成器只在被调用的那一刻算出一个值，算完就丢，内存占用是常量级。</p>
 <pre><code>列表推导式：  内存里同时存在 100 万个对象        时间换空间里的「空间」那一项很贵
 生成器表达式：任何时刻内存里只有 1 个对象        代价是只能遍历一次</code></pre>
 <p>所以判断标准很简单：<strong>你要的是「一整份结果」还是「一次一个的结果」</strong>。 要排序、要 <code>len()</code>、要切片、要反复遍历 → 用列表； 只是一次流过来、算完就用 → 用生成器。</p>
-<h2 id="yield-from-与生成器嵌套">yield from 与生成器嵌套</h2>
+<h2 id="yield-from-与生成器嵌套">yield from 与生成器嵌套</h2><nav class="sec-nav"><a class="sn prev" href="#为什么能省内存"><span class="sn-label">← 上一节</span><span class="sn-name">为什么能省内存</span></a><a class="sn next" href="#生成器表达式"><span class="sn-label">下一节 →</span><span class="sn-name">生成器表达式</span></a></nav>
 <p>生成器可以互相委托，<code>yield from</code> 会把内层生成器的每一个值原样转发出来：</p>
 <pre><code>def flat(nested):
     for item in nested:
@@ -80,14 +159,57 @@ print(next(g))     # 2</code></pre>
             yield from flat(item)     # 递归展开
         else:
             yield item</code></pre>
-<h2 id="生成器表达式">生成器表达式</h2>
+<h2 id="生成器表达式">生成器表达式</h2><nav class="sec-nav"><a class="sn prev" href="#yield-from-与生成器嵌套"><span class="sn-label">← 上一节</span><span class="sn-name">yield from 与生成器嵌套</span></a><a class="sn next" href="#常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">常见坑</span></a></nav>
 <p>和列表推导式只差一对圆括号，其余语义完全一致：</p>
 <pre><code>total = sum(x * x for x in range(10))     # 生成器表达式
 pairs = ((a, b) for a in &quot;ab&quot; for b in &quot;12&quot;)</code></pre>
-<h2 id="常见坑">常见坑</h2>
+<h2 id="常见坑">常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#生成器表达式"><span class="sn-label">← 上一节</span><span class="sn-name">生成器表达式</span></a><a class="sn next" href="#和-java-的类比"><span class="sn-label">下一节 →</span><span class="sn-name">和 Java 的类比</span></a></nav>
 <ul class="lvl"><li><strong>生成器只能遍历一次</strong>：遍历完后想重新用，得重新调用生成它的函数。 需要反复遍历就自己 <code>list(g)</code> 缓存一份。</li><li><strong><code>yield</code> 里的异常不会凭空消失</strong>：在生成器内部 <code>try/except</code> 能捕获， 但生成器被 <code>close()</code> 时会抛 <code>GeneratorExit</code>。</li><li><strong>不要在生成器里做有副作用的重活</strong>：它可能在任何一行被暂停， 调试时「执行到哪了」会变得不直观。</li></ul>
-<h2 id="和-java-的类比">和 Java 的类比</h2>
+<h2 id="和-java-的类比">和 Java 的类比</h2><nav class="sec-nav"><a class="sn prev" href="#常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">常见坑</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>Java 里对应的是 <code>Stream</code>（<code>Stream.generate</code> / <code>Iterable</code> 的惰性求值）与 <code>Iterator</code> 的 <code>next()</code> 协议：两者都是「消费者拉一个、生产者造一个」。 区别是 Java 的 Stream 更强调声明式管道，而 Python 生成器就是普通的迭代器实现。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

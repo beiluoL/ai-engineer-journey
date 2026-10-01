@@ -52,14 +52,93 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-四种角色" class="lvl3">3.1 四种角色</a><a href="#32-一次多轮对话的真实报文" class="lvl3">3.2 一次多轮对话的真实报文</a><a href="#33-代码里怎么累积" class="lvl3">3.3 代码里怎么累积</a><a href="#34-一条消息该不该被信任" class="lvl3">3.4 一条消息该不该被信任</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1忘了回灌-assistant-消息" class="lvl3">坑 1：忘了回灌 assistant 消息</a><a href="#坑-2每一轮都重复插入-system" class="lvl3">坑 2：每一轮都重复插入 system</a><a href="#坑-3role-拼错" class="lvl3">坑 3：role 拼错</a><a href="#坑-4tool-消息的-toolcallid-对不上" class="lvl3">坑 4：tool 消息的 tool_call_id 对不上</a><a href="#坑-5裁剪历史时切在工具调用中间" class="lvl3">坑 5：裁剪历史时切在工具调用中间</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-03-chapter-02system-user-assistant-messages消息结构">Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/memory.py</code>（<code>Conversation</code>）</p></blockquote>
 <hr/>
-<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-为什么需要这个知识"><span class="sn-label">下一节 →</span><span class="sn-name">2. 为什么需要这个知识</span></a></nav>
 <p>Chapter 01 解决了「提示词怎么写」，这一章解决「提示词怎么送过去」。</p>
 <p>Project 02 里已经有消息结构了，但只用到两种角色：</p>
 <pre><code># P02 conversation.py
@@ -71,7 +150,7 @@ if system_prompt:
 <p>本章目标：</p>
 <blockquote><p><strong>正确地构造、累积、校验 messages，让多轮对话和工具调用都能正常工作。</strong></p></blockquote>
 <hr/>
-<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2><nav class="sec-nav"><a class="sn prev" href="#1-项目要增加什么能力"><span class="sn-label">← 上一节</span><span class="sn-name">1. 项目要增加什么能力</span></a><a class="sn next" href="#3-核心概念"><span class="sn-label">下一节 →</span><span class="sn-name">3. 核心概念</span></a></nav>
 <p>大模型 API 是<strong>无状态</strong>的。这一点怎么强调都不过分：</p>
 <pre><code>你以为：  模型记得上一轮聊了什么
 实际上：  模型每次只看到你这次发过来的 messages 数组</code></pre>
@@ -80,7 +159,7 @@ if system_prompt:
 <pre><code>messages 拼错了 → 模型表现诡异，而且很难定位
                   （因为错误不在代码里，在数据里）</code></pre>
 <hr/>
-<h2 id="3-核心概念">3. 核心概念</h2>
+<h2 id="3-核心概念">3. 核心概念</h2><nav class="sec-nav"><a class="sn prev" href="#2-为什么需要这个知识"><span class="sn-label">← 上一节</span><span class="sn-name">2. 为什么需要这个知识</span></a><a class="sn next" href="#4-项目代码"><span class="sn-label">下一节 →</span><span class="sn-name">4. 项目代码</span></a></nav>
 <h3 id="31-四种角色">3.1 四种角色</h3>
 <table><thead><tr><th>role</th><th>谁产生的</th><th>作用</th></tr></thead><tbody><tr><td><code>system</code></td><td>你</td><td>全局人设与规则，一般只在开头出现一次</td></tr><tr><td><code>user</code></td><td>你（用户）</td><td>这一轮的输入</td></tr><tr><td><code>assistant</code></td><td>模型</td><td>模型上一轮的回答；<strong>工具调用时承载 <code>tool_calls</code></strong></td></tr><tr><td><code>tool</code></td><td>你（执行工具后）</td><td>把工具执行结果回灌给模型，靠 <code>tool_call_id</code> 对应</td></tr></tbody></table>
 <h3 id="32-一次多轮对话的真实报文">3.2 一次多轮对话的真实报文</h3>
@@ -134,7 +213,7 @@ class Conversation:
             raise ValueError(f&quot;第 {i} 条消息既没有 content 也没有 tool_calls&quot;)</code></pre>
 <p>在<strong>发送请求前</strong>调用它，能省掉大量「模型为什么答非所问」的排查时间。</p>
 <hr/>
-<h2 id="4-项目代码">4. 项目代码</h2>
+<h2 id="4-项目代码">4. 项目代码</h2><nav class="sec-nav"><a class="sn prev" href="#3-核心概念"><span class="sn-label">← 上一节</span><span class="sn-name">3. 核心概念</span></a><a class="sn next" href="#5-java-python-对比"><span class="sn-label">下一节 →</span><span class="sn-name">5. Java ↔ Python 对比</span></a></nav>
 <pre><code>src/assistant/
 ├── memory.py      # Conversation：add_user / add_assistant / add_tool / to_messages
 ├── schema.py      # Message 类型别名（Chapter 03 用）
@@ -148,12 +227,12 @@ client.chat(messages)            ← 模型
   ↓ 拿到 assistant 消息
 Conversation.add_assistant()     ← 回灌，下一轮才能带上</code></pre>
 <hr/>
-<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
 <table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>List&lt;Map&lt;String,String&gt;&gt;</code></td><td><code>list[dict[str, str]]</code></td><td>同（Python 更常用 TypedDict 约束）</td></tr><tr><td>DTO / <code>record Message(String role, String content)</code></td><td><code>@dataclass</code> 或 <code>TypedDict</code></td><td>Python 里 dict 更贴合 JSON 契约</td></tr><tr><td>HTTP 是无状态的（靠 Cookie/Session）</td><td>LLM API 无状态（靠 messages）</td><td><strong>完全同构</strong></td></tr><tr><td><code>Bean Validation @NotNull</code></td><td><code>validate_messages()</code></td><td>同样的前置校验思路</td></tr><tr><td>Jackson 序列化顺序</td><td><code>json.dumps(ensure_ascii=False)</code></td><td>Python 默认转义中文，要关掉</td></tr></tbody></table>
 <p>最贴切的类比：</p>
 <blockquote><p><strong>messages ≈ HTTP 请求体 + Session。</strong> 模型没有服务端状态，每次请求必须自带全部上下文，就像 JWT 无状态鉴权每次都要带上完整的 token。</p></blockquote>
 <hr/>
-<h2 id="6-常见坑">6. 常见坑</h2>
+<h2 id="6-常见坑">6. 常见坑</h2><nav class="sec-nav"><a class="sn prev" href="#5-java-python-对比"><span class="sn-label">← 上一节</span><span class="sn-name">5. Java ↔ Python 对比</span></a><a class="sn next" href="#7-实战挑战"><span class="sn-label">下一节 →</span><span class="sn-name">7. 实战挑战</span></a></nav>
 <h3 id="坑-1忘了回灌-assistant-消息">坑 1：忘了回灌 assistant 消息</h3>
 <pre><code>conv.add_user(&quot;我叫小明&quot;)
 reply = await client.chat(conv.to_messages())
@@ -175,17 +254,60 @@ conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧
 <p>规则：</p>
 <blockquote><p><strong>裁剪以「一轮完整交互」为单位，不要以「单条消息」为单位。</strong></p></blockquote>
 <hr/>
-<h2 id="7-实战挑战">7. 实战挑战</h2>
+<h2 id="7-实战挑战">7. 实战挑战</h2><nav class="sec-nav"><a class="sn prev" href="#6-常见坑"><span class="sn-label">← 上一节</span><span class="sn-name">6. 常见坑</span></a><a class="sn next" href="#8-主动回忆"><span class="sn-label">下一节 →</span><span class="sn-name">8. 主动回忆</span></a></nav>
 <p><strong>挑战 1</strong>：实现 <code>validate_messages()</code>，并在 <code>client.chat()</code> 里调用——让非法消息在发送前就失败。</p>
 <p><strong>挑战 2</strong>：给 <code>Conversation</code> 加 <code>last_n_turns(n)</code>，只保留最近 n 轮（system 始终保留）。</p>
 <p><strong>挑战 3（进阶）</strong>：支持 <code>tool_calls</code> 结构（Chapter 08 会用到），让 <code>add_assistant()</code> 既能存纯文本也能存工具调用。</p>
 <hr/>
-<h2 id="8-主动回忆">8. 主动回忆</h2>
+<h2 id="8-主动回忆">8. 主动回忆</h2><nav class="sec-nav"><a class="sn prev" href="#7-实战挑战"><span class="sn-label">← 上一节</span><span class="sn-name">7. 实战挑战</span></a><a class="sn next" href="#9-本节完成标准"><span class="sn-label">下一节 →</span><span class="sn-name">9. 本节完成标准</span></a></nav>
 <ul class="lvl"><li>为什么多轮对话必须把 assistant 的历史回复再发一遍？</li><li>四种 role 分别由谁产生、作用是什么？</li><li><code>to_messages()</code> 为什么要返回副本？</li><li>system 消息应该出现几次？放在数组的什么位置？</li><li>tool 消息靠什么字段与工具调用对应？</li><li>裁剪历史时，为什么不能以单条消息为单位？</li></ul>
 <hr/>
-<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 多轮对话能稳定记住上一轮的内容（有真实调用验证）</li><li>[ ] <code>to_messages()</code> 返回副本，外部修改不影响内部</li><li>[ ] 发送前有消息校验，非法 role 会直接报错</li><li>[ ] system 消息全会话只存在一份</li><li>[ ] 已支持 <code>tool</code> 角色与 <code>tool_call_id</code>（为 Chapter 08 做准备）</li></ul>
 <p>下一章：<a href="03-structured-output.html">03-structured-output.md</a> —— 让模型的输出能被程序直接消费。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

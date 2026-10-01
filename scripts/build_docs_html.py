@@ -103,6 +103,34 @@ def convert_one(src, force=False):
     return "ok"
 
 
+def build_portable():
+    """用 base64 内嵌模式重建 *.portable.html，让便携版也带目录 / 进度条 / 上下章。
+
+    为什么不复用 convert_one：那条路强制 RELATIVE_IMAGES=True（339 张图 56.7 MB
+    全走相对路径），而便携版存在的全部意义就是图片内嵌、拷走断网也能双击看。
+    PORTABLE 映射直接 import gen_doc_index，避免两处各维护一份清单。
+    """
+    import gen_doc_index as idx
+    n = 0
+    for rel, port in idx.PORTABLE.items():
+        src = os.path.join(ROOT, rel)
+        if not os.path.exists(src):
+            print(f"  跳过便携版（源文档不存在）: {rel}")
+            continue
+        dst = os.path.join(OUT_ROOT, port)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        conv.RELATIVE_IMAGES = False
+        conv.REWRITE_MD_LINKS = False
+        md_text = open(src, encoding="utf-8").read()
+        body = conv.md_to_html(md_text, os.path.dirname(os.path.abspath(src)))
+        m = re.search(r"^#\s+(.*)$", md_text, re.M)
+        page = conv.build_page(m.group(1).strip() if m else port, body)
+        with open(dst, "w", encoding="utf-8") as f:
+            f.write(page)
+        n += 1
+    return n
+
+
 def fix_portable():
     """把 docs 树里 *.portable.html 的「源树资源」链接重新算一遍相对路径。
 
@@ -180,8 +208,9 @@ def main():
         st = convert_one(src, force=force)
         stats[st] += 1
 
+    built = build_portable()
     fixed = fix_portable()
-    print(f"便携版链接重算：修正 {fixed} 个文件")
+    print(f"便携版重建：{built} 个（base64 内嵌），链接重算：修正 {fixed} 个文件")
     checked, bad = verify()
     print(f"转换完成：新生成 {stats['ok']} 篇，跳过（已是最新）{stats['skip']} 篇"
           f"，耗时 {round(time.time() - t0, 1)}s")

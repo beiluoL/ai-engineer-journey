@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#写在前面" class="lvl2">写在前面</a><a href="#java-开发者的第一感觉" class="lvl2">Java 开发者的第一感觉</a><a href="#input-的坑" class="lvl2">input() 的坑</a><a href="#fstring比-stringformat-直观" class="lvl2">f-string：比 String.format 直观</a><a href="#第一个项目" class="lvl2">第一个项目</a><a href="#最大的认知转变" class="lvl2">最大的认知转变</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="从-java-到-python我的第一行-ai-工程代码">从 Java 到 Python：我的第一行 AI 工程代码</h1>
 <blockquote><p>AI Engineer Journey / Phase 0 / Lesson 01 学习笔记 面向和我一样有 Java 基础、但 Python 零基础的开发者。</p></blockquote>
-<h2 id="写在前面">写在前面</h2>
+<h2 id="写在前面">写在前面</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#java-开发者的第一感觉"><span class="sn-label">下一节 →</span><span class="sn-name">Java 开发者的第一感觉</span></a></nav>
 <p>我写了 6 年 Java，最近决定学 AI 工程。</p>
 <p>第一步不是 Transformer，不是 PyTorch，而是——Python 基础。</p>
 <p>但我不想学传统 Python 教材。我想直接在 AI 场景里学。</p>
 <p>所以我的第一行代码，是做一个「AI Engineer 学习档案生成器」：用户输入信息，Python 接收、保存、输出。</p>
 <p>听起来很简单，但这正是后面所有 AI 项目的地基。</p>
-<h2 id="java-开发者的第一感觉">Java 开发者的第一感觉</h2>
+<h2 id="java-开发者的第一感觉">Java 开发者的第一感觉</h2><nav class="sec-nav"><a class="sn prev" href="#写在前面"><span class="sn-label">← 上一节</span><span class="sn-name">写在前面</span></a><a class="sn next" href="#input-的坑"><span class="sn-label">下一节 →</span><span class="sn-name">input() 的坑</span></a></nav>
 <p>Java 里写变量：</p>
 <pre><code>String name = &quot;Beiluo&quot;;
 int age = 29;
@@ -79,7 +158,7 @@ learning_ai = True</code></pre>
 False   # 不是 false
 None    # 不是 null</code></pre>
 <p>这是我从 Java 过来第一个踩的坑。</p>
-<h2 id="input-的坑">input() 的坑</h2>
+<h2 id="input-的坑">input() 的坑</h2><nav class="sec-nav"><a class="sn prev" href="#java-开发者的第一感觉"><span class="sn-label">← 上一节</span><span class="sn-name">Java 开发者的第一感觉</span></a><a class="sn next" href="#fstring比-stringformat-直观"><span class="sn-label">下一节 →</span><span class="sn-name">f-string：比 String.format 直观</span></a></nav>
 <pre><code>age = input(&quot;年龄：&quot;)</code></pre>
 <p>我输入 <code>29</code>，以为 age 是 int。结果：</p>
 <pre><code>print(type(age))  # &lt;class &#x27;str&#x27;&gt;</code></pre>
@@ -87,13 +166,13 @@ None    # 不是 null</code></pre>
 <p>需要整数时：</p>
 <pre><code>age = int(input(&quot;年龄：&quot;))</code></pre>
 <p>这个坑 Java 里没有，因为 Java 的 Scanner 有 nextInt()。</p>
-<h2 id="fstring比-stringformat-直观">f-string：比 String.format 直观</h2>
+<h2 id="fstring比-stringformat-直观">f-string：比 String.format 直观</h2><nav class="sec-nav"><a class="sn prev" href="#input-的坑"><span class="sn-label">← 上一节</span><span class="sn-name">input() 的坑</span></a><a class="sn next" href="#第一个项目"><span class="sn-label">下一节 →</span><span class="sn-name">第一个项目</span></a></nav>
 <p>Java：</p>
 <pre><code>String.format(&quot;你好，%s&quot;, name)</code></pre>
 <p>Python：</p>
 <pre><code>f&quot;你好，{name}&quot;</code></pre>
 <p>直接在字符串里插变量，前面加个 <code>f</code>。简单、直观、常用。</p>
-<h2 id="第一个项目">第一个项目</h2>
+<h2 id="第一个项目">第一个项目</h2><nav class="sec-nav"><a class="sn prev" href="#fstring比-stringformat-直观"><span class="sn-label">← 上一节</span><span class="sn-name">f-string：比 String.format 直观</span></a><a class="sn next" href="#最大的认知转变"><span class="sn-label">下一节 →</span><span class="sn-name">最大的认知转变</span></a></nav>
 <p>把变量、类型、input、print、f-string 组合起来：</p>
 <pre><code>name = input(&quot;你的名字：&quot;)
 age = int(input(&quot;你的年龄：&quot;))
@@ -117,16 +196,59 @@ print(&quot;==============================&quot;)</code></pre>
 目标：AI Engineer
 ==============================</code></pre>
 <p>这就是 Project 01 的起点。</p>
-<h2 id="最大的认知转变">最大的认知转变</h2>
+<h2 id="最大的认知转变">最大的认知转变</h2><nav class="sec-nav"><a class="sn prev" href="#第一个项目"><span class="sn-label">← 上一节</span><span class="sn-name">第一个项目</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <p>Java 里变量是「一个固定类型的盒子」。</p>
 <p>Python 里变量是「一个名字 → 指向一个对象」：</p>
 <pre><code>name = &quot;Beiluo&quot;   # name 指向字符串
 name = 29         # name 重新指向整数</code></pre>
 <p>合法。因为 Python 是动态类型。</p>
 <p>但<strong>动态类型 ≠ 没有类型</strong>。<code>29</code> 依然是 <code>int</code>。</p>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#最大的认知转变"><span class="sn-label">← 上一节</span><span class="sn-name">最大的认知转变</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>变量和类型只是地基。下一步学 list / dict / JSON， 然后就会看到 LLM API 的 messages 结构——那就是 list + dict 的嵌套。</p>
 <p>Python 学习开始和真正的大模型项目接上。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

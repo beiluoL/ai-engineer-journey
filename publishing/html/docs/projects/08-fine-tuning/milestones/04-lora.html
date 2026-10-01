@@ -52,19 +52,98 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么必须做等价性证明" class="lvl2">1. Why：为什么必须做&amp;quot;等价性证明&amp;quot;</a><a href="#2-design合成权重-拆梯度" class="lvl2">2. Design：合成权重 + 拆梯度</a><a href="#3-realrun-evidence来自-demosoutdemo04loraterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_04_lora_terminal.txt）</a><a href="#31-b0-等价性实测逐位相同" class="lvl3">3.1 B=0 等价性（实测：逐位相同）</a><a href="#32-alphar-缩放真的被乘进前向实测" class="lvl3">3.2 alpha/r 缩放真的被乘进前向（实测）</a><a href="#33-梯度对拍autograd-vs-中心差分实测" class="lvl3">3.3 梯度对拍：autograd vs 中心差分（实测）</a><a href="#34-参数账实测" class="lvl3">3.4 参数账（实测）</a><a href="#35-真训-120-步实测基座-0-个张量被动过" class="lvl3">3.5 真训 120 步（实测：基座 0 个张量被动过）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-tensorinit-把-backward-设成实例属性-静默失败实测踩过" class="lvl3">4.1 Tensor.__init__ 把 _backward 设成实例属性 → 静默失败（实测踩过）</a><a href="#42-冻结要能被证明不能只是不传参实测-028" class="lvl3">4.2 &amp;quot;冻结&amp;quot;要能被证明，不能只是不传参（实测 0/28）</a><a href="#43-alphar-和-lr-是乘性关系不是两个独立旋钮实测" class="lvl3">4.3 alpha/r 和 lr 是乘性关系，不是两个独立旋钮（实测）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-04-loraw-w-δw以及证明它真的没动基座">Milestone 04 — LoRA：<code>W&#x27; = W + ΔW</code>，以及证明它真的没动基座</h1>
 <p>M01 说&quot;LoRA 只动 1/8.5 的参数&quot;，但没证明它<strong>真的只动了那些参数</strong>。M03 定好了只在答案区算 loss。这一层把 LoRA 本身彻底解剖：结构、初始化、梯度、以及<strong>冻结是否真的生效</strong>。</p>
 <p>这一章的方法论是本项目后面所有章节的模板：<strong>先证明等价性，再证明梯度对，最后才真训</strong>。顺序不能反 —— 如果反向写错了，loss 照样会降，你根本看不出来。</p>
 <p><strong>纯 numpy 手写</strong>：<code>LoRALinear</code> 同时继承 P06 的 <code>Tensor</code> 与 <code>Module</code>，<code>.data</code> 是一个<strong>即时合成</strong>的属性（<code>W.data + scaling·A@B</code>），反向靠覆写 <code>_backward</code> 把梯度拆回 A/B。这样 P06 一行都不用改。</p>
 <hr/>
-<h2 id="1-why为什么必须做等价性证明">1. Why：为什么必须做&quot;等价性证明&quot;</h2>
+<h2 id="1-why为什么必须做等价性证明">1. Why：为什么必须做&quot;等价性证明&quot;</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design合成权重-拆梯度"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：合成权重 + 拆梯度</span></a></nav>
 <p>LoRA 要成立，必须满足三件事，缺一件就是自欺欺人：</p>
 <ul class="lvl"><li><strong>B=0 初始化 ⇒ 注入瞬间与基座完全等价。</strong> 否则&quot;LoRA 是基座的增量&quot;这个前提就是假的，你没法把训练结果归因于 adapter。</li><li><strong>反向必须真的流回 A/B。</strong> 手写 autograd 最容易在这里静默失败：梯度不回流 → A/B 恒为初值 → loss 死活不降，<strong>而且不报错</strong>。</li><li><strong>基座必须一动不动。</strong> &quot;冻结&quot;在本项目里不是一句口号，是字节级比对（<code>0 / 28</code> 个张量变化）。</li></ul>
-<h2 id="2-design合成权重-拆梯度">2. Design：合成权重 + 拆梯度</h2>
+<h2 id="2-design合成权重-拆梯度">2. Design：合成权重 + 拆梯度</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么必须做等价性证明"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么必须做&amp;quot;等价性证明&amp;quot;</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo04loraterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_lora_terminal.txt）</span></a></nav>
 <p><strong>前向（<code>src/ft/lora.py:150</code>）：</strong></p>
 <pre><code>@property
 def data(self):                      # 每次访问重新合成
@@ -75,7 +154,7 @@ def data(self):                      # 每次访问重新合成
 ∂L/∂B = (alpha/r) · Aᵀ @ G</code></pre>
 <p><strong>初始化：</strong> A 取 <code>U(-1/√in, 1/√in)</code> 小随机值，B <strong>全零</strong> —— 这保证第一步的 <code>ΔW ≡ 0</code>。</p>
 <figure class="figure"><img alt="M04 LoRA 结构：冻结基座 + 旁路" src="../../../../../../projects/08-fine-tuning/assets/lora.svg" loading="lazy"/><figcaption>M04 LoRA 结构：冻结基座 + 旁路</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo04loraterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_lora_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo04loraterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_lora_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design合成权重-拆梯度"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：合成权重 + 拆梯度</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>真实环境：Python 3.13 | numpy 2.5，基座 230,656 参数，注入 13 个线性层。</p>
 <h3 id="31-b0-等价性实测逐位相同">3.1 B=0 等价性（实测：逐位相同）</h3>
 <pre><code>delta_weight() 全零                      True   max|ΔW| = 0
@@ -104,7 +183,7 @@ step 17  6.5853      step 120 6.1644
 step 21  6.4202</code></pre>
 <ul class="lvl"><li>首步 <strong>8.2909</strong> → 末步 <strong>6.1644</strong>；前 10 步均值 → 后 10 步均值 <strong>7.3978 → 6.0596</strong>（↓1.3383，18.1%）；耗时 6.96 s。</li><li><strong>训练后基座权重发生变化的张量：0 / 28</strong>（字节级 <code>.tobytes()</code> 比对）—— 冻结生效。</li><li><strong>训练后 adapter 发生变化的张量：26 / 26</strong> —— 全部是 <code>*.A</code> / <code>*.B</code>，说明真的在学。</li></ul>
 <figure class="figure"><img alt="M04 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-04-lora.png" loading="lazy"/><figcaption>M04 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo04loraterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_04_lora_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-tensorinit-把-backward-设成实例属性-静默失败实测踩过">4.1 <code>Tensor.__init__</code> 把 <code>_backward</code> 设成实例属性 → 静默失败（实测踩过）</h3>
 <p>这是本项目最危险的一个坑，写在 <code>src/ft/lora.py:140</code> 的注释里：</p>
 <pre><code># ⚠ Tensor.__init__ 会把 ``_backward`` 设成一个实例属性（noop lambda），
@@ -120,12 +199,55 @@ self._backward = self._lora_backward</code></pre>
 <p>这两行同时出现才有说服力：0/28 证明没被误改，26/26 证明 adapter 真的在学（如果两行都是 0，那说明压根没训起来）。</p>
 <h3 id="43-alphar-和-lr-是乘性关系不是两个独立旋钮实测">4.3 <code>alpha/r</code> 和 lr 是乘性关系，不是两个独立旋钮（实测）</h3>
 <p>从 3.2 的表看，<code>alpha</code> 越大偏移越大，几乎严格线性。这意味着调 <code>alpha</code> 和调 <code>lr</code> 在<strong>第一步</strong>是同一件事（都缩放步长）。M06 的扫描会证实：alpha 的最优值（16，即 <code>alpha/r = 2</code>）与 lr 高度耦合，两个一起调只会互相掩盖。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>LoRA 一行公式：<code>W&#x27; = W + (alpha/r)·A@B</code>；<strong>A 小随机、B 全零</strong> ⇒ 注入瞬间 <code>ΔW ≡ 0</code>。</li><li><strong>B=0 等价性实测 <code>0.000e+00</code></strong>：整机 13 层、262,144 个输出逐位相同。</li><li><strong>梯度对拍 <code>6.585e-05</code></strong>（注入整机后），证明反向真的流回了 A/B；独立层是 <code>1.213e-05</code>。</li><li>可训练 <strong>27,136 / 257,792 = 10.53%</strong>；进优化器 26 个张量，冻结 28 个。</li><li>真训 120 步：loss <strong>8.2909 → 6.1644</strong>，<strong>基座 0/28 个张量变化</strong>、<strong>adapter 26/26 变化</strong> —— 冻结与学习同时被证明。</li><li><strong>最危险的坑</strong>：<code>Tensor.__init__</code> 的实例属性 <code>_backward</code> 会遮蔽子类方法，导致梯度不回流、loss 不降且不报错。</li><li>手写实现的意义：因为 <code>.data</code> 是自己合成的，P06 一行都不用改就拿到了完整 LoRA 前向 + 反向 —— 这是&quot;理解机制&quot;带来的自由度，框架用户拿不到。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/lora.py</code></td><td><code>LoRAConfig</code>（r/alpha/dropout/scaling）、<code>LoRALinear</code>（即时合成 <code>.data</code> + <code>_lora_backward</code> 拆梯度 + <code>delta_weight</code>/<code>merged_weight</code>）</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>walk_parameters</code> / <code>inject_lora</code>（把 target 位置的 Parameter <strong>换成</strong> LoRALinear）/ <code>freeze_base</code> / <code>lora_layers</code> / <code>count_parameters</code></td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer</code>：只把 A/B 交给 Adam，其余同普通训练循环</td></tr><tr><td><code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>：把 P06 的 <code>Tensor._prev</code> 从 set 换成有序 list（见 M07/M09 的可复现性）</td></tr><tr><td><code>demos/demo_04_lora.py</code></td><td>7 节：结构解剖 / B=0 等价性 / alpha 缩放 / 梯度对拍 / 参数账 / 真训 120 步 / 关键数字</td></tr><tr><td><code>demos/out/demo_04_lora_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/lora.svg</code></td><td>本章 LoRA 结构图（冻结基座 + 旁路）</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，M04 LoRA 落地并被证明。实测：B=0 等价性最大绝对误差 <code>0.000e+00</code>（整机 262,144 个输出逐位相同）；<code>grad_check</code> 最大相对误差 <code>6.585e-05</code>；120 步 loss <code>8.2909 → 6.1644</code>；基座被改动张量 <strong>0/28</strong>、adapter <strong>26/26</strong>。并定位 <code>Tensor.__init__</code> 实例属性遮蔽 <code>_backward</code> 导致的静默失败。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

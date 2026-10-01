@@ -52,32 +52,154 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#a-日志milestone-06" class="lvl2">A. 日志（Milestone 06）</a><a href="#b-测试与调试milestone-07" class="lvl2">B. 测试与调试（Milestone 07）</a><a href="#c-打包milestone-08" class="lvl2">C. 打包（Milestone 08）</a><a href="#d-fastapimilestone-09" class="lvl2">D. FastAPI（Milestone 09）</a><a href="#验收标准" class="lvl2">验收标准</a><a href="#参考答案与判卷" class="lvl2">参考答案与判卷</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="exercises-03serviceandops-m06-m07-m08-m09-配套练习">Exercises 03-service-and-ops — M06 / M07 / M08 / M09 配套练习</h1>
 <blockquote><p>对应：<code>milestones/06-logging.md</code>（⬜ 未学习）、<code>milestones/07-testing-and-debugging.md</code>（⬜ 未学习）、<code>milestones/08-packaging.md</code>（⬜ 未学习）、<code>milestones/09-fastapi.md</code>（⬜ 未学习） 规则：<strong>亲手敲，不复制粘贴</strong>。每题先自己写、跑通，再对照 milestone 里的示例。 勾选权在你手里：本文件所有复选框一律 ⬜，跑通的是「参考答案」，不是「你学会了」。</p></blockquote>
-<h2 id="a-日志milestone-06">A. 日志（Milestone 06）</h2>
+<h2 id="a-日志milestone-06">A. 日志（Milestone 06）</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#b-测试与调试milestone-07"><span class="sn-label">下一节 →</span><span class="sn-name">B. 测试与调试（Milestone 07）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>A1</strong> 解析日志行。<code>setup_logging()</code> 用的格式串是 <code>&quot;%(asctime)s %(levelname)-7s %(name)-22s %(message)s&quot;</code>（<code>datefmt=&quot;%H:%M:%S&quot;</code>）。 写正则把一行日志拆成 <code>{时间, 级别, logger 名, 消息}</code>，并断言拆出来的级别真的是 <code>INFO</code>。 验证：拿一行真实日志去拆；再用一行格式不对的日志验证「匹配失败时你该怎么办」（不要静默返回空字典）。</li></ul>
 <ul class="lvl"><li>[ ] <strong>A2</strong> 脱敏。读 <code>src/assistant/logging_setup.py</code> 里的 <code>redact_headers()</code>，自己做一遍： <code>{&quot;Authorization&quot;: &quot;Bearer sk-xxx&quot;, &quot;X-Api-Key&quot;: &quot;abc&quot;, &quot;Content-Type&quot;: &quot;application/json&quot;}</code> 断言 <code>Authorization</code> / <code>X-Api-Key</code> 被打成 <code>***</code>，其它原样，且<strong>原字典没被改</strong>（它返回的是新字典）。 再验证：这个函数会匹配哪些 key（大小写、连字符），列出来。</li></ul>
 <ul class="lvl"><li>[ ] <strong>A3</strong> 结构化日志。用 <code>JsonFormatter</code> 写一个 logger，挂 <code>StringIO</code> handler，<code>logger.info(&quot;LLM 调用完成&quot;, extra={&quot;extra_fields&quot;: {...}})</code>， 把输出行 <code>json.loads</code> 回来，断言里面有 <code>ts / level / logger / msg</code> 和你塞进去的自定义字段。 验证：故意塞一个「没有 extra_fields」的日志行，看它是否被跳过（而不是变成 <code>null</code>）。</li></ul>
-<h2 id="b-测试与调试milestone-07">B. 测试与调试（Milestone 07）</h2>
+<h2 id="b-测试与调试milestone-07">B. 测试与调试（Milestone 07）</h2><nav class="sec-nav"><a class="sn prev" href="#a-日志milestone-06"><span class="sn-label">← 上一节</span><span class="sn-name">A. 日志（Milestone 06）</span></a><a class="sn next" href="#c-打包milestone-08"><span class="sn-label">下一节 →</span><span class="sn-name">C. 打包（Milestone 08）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>B1</strong> 写一个<strong>真的用 pytest 跑绿</strong>的用例：用 <code>FakeClient</code> + <code>AssistantService</code>，断言「问一句 → 拿到固定回答 → 历史里多了两条消息」。 Requirements：把用例写进临时目录的 <code>test_xxx.py</code>，用 <code>sys.executable -m pytest</code> 真跑一遍，断言退出码为 0 且输出里出现了 <code>passed</code>。 验证：故意把断言写反，确认它真的会 fail（这一步是体会「测试为什么有价值」）。</li></ul>
 <ul class="lvl"><li>[ ] <strong>B2</strong> 异常链。写一个 <code>parse_answer()</code>：里面先访问 <code>data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code>，捕获 <code>(KeyError, IndexError, TypeError)</code> 后 <code>raise ValueError(&quot;响应格式不对&quot;) from e</code>。 断言：<code>ValueError.__cause__</code> 就是那个原始异常，<code>__suppress_context__</code> 为 <code>False</code>； 再对比「不写 <code>from</code> 的写法」，指出那种写法丢掉了什么。</li></ul>
 <ul class="lvl"><li>[ ] <strong>B3</strong> 失败路径也要断言：<ul class="lvl"><li><code>service.ask(&quot;   &quot;)</code>（纯空白）应抛 <code>ValueError</code>；</li><li>用 <code>FakeClient(fail_times=99)</code> 时，<code>service.ask(&quot;xxx&quot;)</code> 抛的应是 <code>LLMRateLimitError</code>，并且它是 <code>LLMError</code> 的子类。 验证：两条都真的抛，且异常类型逐级对得上。</li></ul></li></ul>
-<h2 id="c-打包milestone-08">C. 打包（Milestone 08）</h2>
+<h2 id="c-打包milestone-08">C. 打包（Milestone 08）</h2><nav class="sec-nav"><a class="sn prev" href="#b-测试与调试milestone-07"><span class="sn-label">← 上一节</span><span class="sn-name">B. 测试与调试（Milestone 07）</span></a><a class="sn next" href="#d-fastapimilestone-09"><span class="sn-label">下一节 →</span><span class="sn-name">D. FastAPI（Milestone 09）</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>C1</strong> 用 <code>tomllib</code> 读 <code>pyproject.toml</code>，断言：<code>name</code> / <code>version</code> / <code>requires-python</code> / <code>dependencies</code> 都在， <code>[project.scripts]</code> 里的入口点 <code>ai-assistant</code> 指向的 <code>assistant.cli:main</code> <strong>这个文件存在且真的定义了 <code>main</code></strong>。 验证：入口点这件事不靠读文档，靠反射验证。</li></ul>
 <ul class="lvl"><li>[ ] <strong>C2</strong> 反射包结构：<code>assistant.__all__</code> 里的每个名字都能 <code>getattr</code> 到；再用 <code>importlib.metadata.version(&lt;包名&gt;)</code> 验证这个包真的被安装过了。 验证：数一数 <code>__all__</code> 里有几个名字，全部可导出。</li></ul>
-<h2 id="d-fastapimilestone-09">D. FastAPI（Milestone 09）</h2>
+<h2 id="d-fastapimilestone-09">D. FastAPI（Milestone 09）</h2><nav class="sec-nav"><a class="sn prev" href="#c-打包milestone-08"><span class="sn-label">← 上一节</span><span class="sn-name">C. 打包（Milestone 08）</span></a><a class="sn next" href="#验收标准"><span class="sn-label">下一节 →</span><span class="sn-name">验收标准</span></a></nav>
 <ul class="lvl"><li>[ ] <strong>D1</strong> 用 <code>TestClient</code> 打 <code>/health</code> 和 <code>/chat</code>：把 <code>get_service</code> 依赖 <code>override</code> 成「<code>FakeClient</code> 驱动的 service」，<strong>不启真实端口、不触发 lifespan</strong>。 验证：<code>/health</code> 返回 <code>{&quot;status&quot;: &quot;ok&quot;}</code>；<code>/chat</code> 返回 200 且 <code>reply</code> 就是 <code>FakeClient</code> 的固定回答。</li></ul>
 <ul class="lvl"><li>[ ] <strong>D2</strong> 入参校验：POST <code>/chat</code> 传 <code>{&quot;message&quot;: &quot;&quot;}</code>。 验证：返回 422，且 <code>detail[0][&quot;loc&quot;] == [&quot;body&quot;, &quot;message&quot;]</code> —— 这是 Pydantic 给的，不是你写的。</li></ul>
 <ul class="lvl"><li>[ ] <strong>D3</strong> 错误映射：让依赖返回的是一个「一问就抛 <code>LLMRateLimitError</code>」的 service。 验证：<code>/chat</code> 返回 <strong>502</strong>，且 <code>detail</code> 里带着错误原因（<code>api.py</code> 里把 <code>LLMError</code> 映射到 502 的那一层）。</li></ul>
-<h2 id="验收标准">验收标准</h2>
+<h2 id="验收标准">验收标准</h2><nav class="sec-nav"><a class="sn prev" href="#d-fastapimilestone-09"><span class="sn-label">← 上一节</span><span class="sn-name">D. FastAPI（Milestone 09）</span></a><a class="sn next" href="#参考答案与判卷"><span class="sn-label">下一节 →</span><span class="sn-name">参考答案与判卷</span></a></nav>
 <p>A1-A3 + B1-B3 + C1-C2 + D1-D3 全部自己写得出来并跑通 = 这组对应章节进入「能写代码」档。 特别要求：B1 必须是<strong>你自己写的用例</strong>跑出来的绿，看参考答案不算。</p>
-<h2 id="参考答案与判卷">参考答案与判卷</h2>
+<h2 id="参考答案与判卷">参考答案与判卷</h2><nav class="sec-nav"><a class="sn prev" href="#验收标准"><span class="sn-label">← 上一节</span><span class="sn-name">验收标准</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>参考答案：<code>answers.py</code>（每题一个函数，纯离线，FastAPI 那几题一律走 <code>TestClient</code>）</li><li>怎么跑： ``<code>bash .venv/bin/python exercises/03-service-and-ops/answers.py </code>``</li><li>怎么判卷（全仓库一起判）： ``<code>bash .venv/bin/python exercises/grade.py </code>``</li></ul>
 <blockquote><p><strong>重要</strong>：<code>answers.py</code> 跑通只代表「参考答案跑通」。是否学会由你自己勾选，参考：<a href="../README.html"><code>../README.md</code></a></p></blockquote>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

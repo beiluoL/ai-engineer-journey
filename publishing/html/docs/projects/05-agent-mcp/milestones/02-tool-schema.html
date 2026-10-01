@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-模型真正看到的东西" class="lvl2">1. 模型真正看到的东西</a><a href="#2-两种手写错误框架直接拦" class="lvl2">2. 两种手写错误，框架直接拦</a><a href="#3-签名推导消灭改了代码忘了改-schema" class="lvl2">3. 签名推导：消灭「改了代码忘了改 schema」</a><a href="#4-参数纠偏小模型的高频失误" class="lvl2">4. 参数纠偏：小模型的高频失误</a><a href="#5-真实派发纠偏发生在-run-之前" class="lvl2">5. 真实派发：纠偏发生在 run() 之前</a><a href="#6-坑与结论" class="lvl2">6. 坑与结论</a><a href="#7-代码位置" class="lvl2">7. 代码位置</a><a href="#8-版本" class="lvl2">8. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-02-tool-schema模型看到的函数说明书">Milestone 02 — Tool Schema：模型看到的「函数说明书」</h1>
 <blockquote><p>Milestone 01 把工具建出来了。但<strong>模型不知道这些工具长什么样</strong>，它只看到一组 JSON。这一章讲清三件事：一段合格的 schema 长什么样、模型给错参数时怎么办、以及「声明」和「代码」怎么保持一致。</p></blockquote>
-<h2 id="1-模型真正看到的东西">1. 模型真正看到的东西</h2>
+<h2 id="1-模型真正看到的东西">1. 模型真正看到的东西</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-两种手写错误框架直接拦"><span class="sn-label">下一节 →</span><span class="sn-name">2. 两种手写错误，框架直接拦</span></a></nav>
 <pre><code>{
   &quot;type&quot;: &quot;function&quot;,
   &quot;function&quot;: {
@@ -75,7 +154,7 @@ li{margin:.3em 0;}
 }</code></pre>
 <p>四层结构，一层都不能少：工具对象 → <code>type: &quot;function&quot;</code> → <code>function</code> 对象 → <code>parameters</code>。</p>
 <p><code>description</code> 不是装饰。它直接决定模型会不会用这个工具——写成「算数」的工具，模型问「今天几号」时也可能去调它；写成「返回当前 UTC 时间」的精确描述，误调用会明显下降。<strong>工具描述是提示词的一部分。</strong></p>
-<h2 id="2-两种手写错误框架直接拦">2. 两种手写错误，框架直接拦</h2>
+<h2 id="2-两种手写错误框架直接拦">2. 两种手写错误，框架直接拦</h2><nav class="sec-nav"><a class="sn prev" href="#1-模型真正看到的东西"><span class="sn-label">← 上一节</span><span class="sn-name">1. 模型真正看到的东西</span></a><a class="sn next" href="#3-签名推导消灭改了代码忘了改-schema"><span class="sn-label">下一节 →</span><span class="sn-name">3. 签名推导：消灭「改了代码忘了改 schema」</span></a></nav>
 <pre><code>function_schema(&quot;broken1&quot;, &quot;描述&quot;, {&quot;type&quot;: &quot;string&quot;})
 # → ToolSchemaError: parameters.type 必须是 object
 
@@ -83,13 +162,13 @@ function_schema(&quot;broken2&quot;, &quot;描述&quot;, {&quot;type&quot;: &quo
 # → ToolSchemaError: required 里的「nope」没有对应的 property</code></pre>
 <p>第二条尤其关键：<code>required</code> 里写了一个不存在的字段，在离线测试里<strong>永远测不出来</strong>，只有真调服务时才会 400。放在构造阶段拦，是最便宜的位置。</p>
 <figure class="figure"><img alt="真实运行：两种非法声明在构造阶段被拒" src="../../../../../../projects/05-agent-mcp/assets/term-02-schema-validation.png" loading="lazy"/><figcaption>真实运行：两种非法声明在构造阶段被拒</figcaption></figure>
-<h2 id="3-签名推导消灭改了代码忘了改-schema">3. 签名推导：消灭「改了代码忘了改 schema」</h2>
+<h2 id="3-签名推导消灭改了代码忘了改-schema">3. 签名推导：消灭「改了代码忘了改 schema」</h2><nav class="sec-nav"><a class="sn prev" href="#2-两种手写错误框架直接拦"><span class="sn-label">← 上一节</span><span class="sn-name">2. 两种手写错误，框架直接拦</span></a><a class="sn next" href="#4-参数纠偏小模型的高频失误"><span class="sn-label">下一节 →</span><span class="sn-name">4. 参数纠偏：小模型的高频失误</span></a></nav>
 <pre><code>def search_old(k: int) -&gt; str: ...          # required = [&#x27;k&#x27;]
 def search_new(k: int, mode: str = &quot;fast&quot;) -&gt; str: ...   # required = [&#x27;k&#x27;]，新增 mode 且非必填</code></pre>
 <p><code>function_to_schema()</code> 用 <code>inspect.signature</code> 读注解，映射规则：</p>
 <table><thead><tr><th>Python 注解</th><th>JSON type</th></tr></thead><tbody><tr><td><code>str</code></td><td><code>string</code></td></tr><tr><td><code>int</code></td><td><code>integer</code></td></tr><tr><td><code>float</code></td><td><code>number</code></td></tr><tr><td><code>bool</code></td><td><code>boolean</code></td></tr><tr><td><code>list</code> / <code>list[str]</code></td><td><code>array</code></td></tr></tbody></table>
 <p><strong>有默认值的参数自动不进 <code>required</code>。</strong> 手写 schema 时最常见的疏漏就是把所有参数都写进 <code>required</code>，导致模型被要求填一个明明有默认值的字段。</p>
-<h2 id="4-参数纠偏小模型的高频失误">4. 参数纠偏：小模型的高频失误</h2>
+<h2 id="4-参数纠偏小模型的高频失误">4. 参数纠偏：小模型的高频失误</h2><nav class="sec-nav"><a class="sn prev" href="#3-签名推导消灭改了代码忘了改-schema"><span class="sn-label">← 上一节</span><span class="sn-name">3. 签名推导：消灭「改了代码忘了改 schema」</span></a><a class="sn next" href="#5-真实派发纠偏发生在-run-之前"><span class="sn-label">下一节 →</span><span class="sn-name">5. 真实派发：纠偏发生在 run() 之前</span></a></nav>
 <p>模型给的参数不总是对的。真实项目里最常见的修法是<strong>自动纠偏</strong>，而不是报错：</p>
 <pre><code>[✓]     &#x27;3&#x27; + type=integer  → 3
 [✓]     3.0 + type=integer  → 3
@@ -101,7 +180,7 @@ def search_new(k: int, mode: str = &quot;fast&quot;) -&gt; str: ...   # required
 <p>两个必须注意的边界：</p>
 <ul class="lvl"><li><strong>布尔不是整数。</strong> <code>True</code> 是 <code>int</code> 的子类，不拦的话 <code>True</code> 会被纠偏成 <code>1</code>。</li><li><strong>纠不动就报类型错误</strong>，不要猜。猜错的参数比不猜更糟。</li></ul>
 <figure class="figure"><img alt="真实运行：参数纠偏对照表" src="../../../../../../projects/05-agent-mcp/assets/term-02-argument-coercion.png" loading="lazy"/><figcaption>真实运行：参数纠偏对照表</figcaption></figure>
-<h2 id="5-真实派发纠偏发生在-run-之前">5. 真实派发：纠偏发生在 run() 之前</h2>
+<h2 id="5-真实派发纠偏发生在-run-之前">5. 真实派发：纠偏发生在 run() 之前</h2><nav class="sec-nav"><a class="sn prev" href="#4-参数纠偏小模型的高频失误"><span class="sn-label">← 上一节</span><span class="sn-name">4. 参数纠偏：小模型的高频失误</span></a><a class="sn next" href="#6-坑与结论"><span class="sn-label">下一节 →</span><span class="sn-name">6. 坑与结论</span></a></nav>
 <pre><code>result = reg.call(ToolCall(id=&quot;c&quot;, name=&quot;add&quot;, arguments={&quot;a&quot;: &quot;4&quot;, &quot;b&quot;: 6}))
 #   ↳ run() 拿到的类型：a=int, b=int
 #   [✓] {&quot;a&quot;: &quot;4&quot;, &quot;b&quot;: 6}          → ok=True  10
@@ -110,7 +189,7 @@ def search_new(k: int, mode: str = &quot;fast&quot;) -&gt; str: ...   # required
 <p>三类失败各有各的回灌文案，因为它们对模型的含义不同：</p>
 <table><thead><tr><th>情况</th><th>回灌文案</th><th>模型该怎么做</th></tr></thead><tbody><tr><td>未知工具</td><td><code>未知工具「x」。当前可用：…</code></td><td>换成真实工具名</td></tr><tr><td>缺必填</td><td><code>缺少必填参数「b」</code></td><td>补上</td></tr><tr><td>参数不存在</td><td><code>参数「c」不存在于 add 的声明中</code></td><td>删掉，别编</td></tr></tbody></table>
 <p><strong>文案里带上「当前可用工具列表」是关键</strong>——否则模型只能瞎猜。</p>
-<h2 id="6-坑与结论">6. 坑与结论</h2>
+<h2 id="6-坑与结论">6. 坑与结论</h2><nav class="sec-nav"><a class="sn prev" href="#5-真实派发纠偏发生在-run-之前"><span class="sn-label">← 上一节</span><span class="sn-name">5. 真实派发：纠偏发生在 run() 之前</span></a><a class="sn next" href="#7-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">7. 代码位置</span></a></nav>
 <p><strong>坑 1：<code>schemas()</code> 返回的是工具对象，不是内层 function。</strong> 早期实现里 <code>schema_of()</code> 返回的是内层 <code>{name, description, parameters}</code>，<code>schemas()</code> 直接把它当数组发出去。服务端一直回 <code>422 missing field &#x27;type&#x27;</code>，而且<strong>离线 mock 完全复现不出来</strong>。修法：</p>
 <pre><code>def schemas(self):
     return [{&quot;type&quot;: &quot;function&quot;, &quot;function&quot;: self.schema_of(n)} for n in self.names()]</code></pre>
@@ -118,10 +197,53 @@ def search_new(k: int, mode: str = &quot;fast&quot;) -&gt; str: ...   # required
 <p><strong>坑 3：英文词要做前缀匹配，但不能子串匹配。</strong> 输入 <code>project</code> 要能命中 <code>project01</code> 这类标记；但查询里的 <code>in</code> 绝不能被 <code>em**bedding**</code> 命中——否则任何噪声查询都永远有结果，检索工具就废了。</p>
 <p><strong>结论：</strong></p>
 <ul class="lvl"><li>schema 是给模型看的说明书，<code>description</code> 属于提示词的一部分。</li><li>参数纠偏优先于报错，但布尔 ≠ 整数。</li><li>自动推导 schema 让「代码和声明不一致」从根上消失。</li></ul>
-<h2 id="7-代码位置">7. 代码位置</h2>
+<h2 id="7-代码位置">7. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#6-坑与结论"><span class="sn-label">← 上一节</span><span class="sn-name">6. 坑与结论</span></a><a class="sn next" href="#8-版本"><span class="sn-label">下一节 →</span><span class="sn-name">8. 版本</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/tools.py</code></td><td><code>function_schema()</code> / <code>function_to_schema()</code></td></tr><tr><td><code>src/agent/registry.py</code></td><td><code>_coerce()</code> / <code>_prepare_kwargs()</code> / <code>assert_valid_schema()</code></td></tr></tbody></table>
-<h2 id="8-版本">8. 版本</h2>
+<h2 id="8-版本">8. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#7-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">7. 代码位置</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.2 → <strong>v0.3</strong>，新增 12 项 schema 与纠偏相关测试，截图 2 张。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

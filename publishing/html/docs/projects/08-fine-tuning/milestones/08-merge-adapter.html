@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-why为什么合并必须被证明而不是被相信" class="lvl2">1. Why：为什么&amp;quot;合并&amp;quot;必须被证明，而不是被相信</a><a href="#2-design两个方向都要能走" class="lvl2">2. Design：两个方向都要能走</a><a href="#3-realrun-evidence来自-demosoutdemo08mergeterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_08_merge_terminal.txt）</a><a href="#31-数值证明合并后-分离状态实测逐位相同" class="lvl3">3.1 数值证明：合并后 == 分离状态（实测逐位相同）</a><a href="#32-推理耗时对比真实计时分离-合并交替各测-7-轮取中位数" class="lvl3">3.2 推理耗时对比（真实计时：分离 / 合并交替各测 7 轮，取中位数）</a><a href="#33-另一种部署不合并只加载-adapter实测" class="lvl3">3.3 另一种部署：不合并，只加载 adapter（实测）</a><a href="#34-两种方式的取舍实测" class="lvl3">3.4 两种方式的取舍（实测）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-合并的性能收益在这个规模测不出来实测-522-vs-184-噪声" class="lvl3">4.1 合并的性能收益在这个规模测不出来（实测 +5.22% vs ±18.4% 噪声）</a><a href="#42-合并后参数量变少不是省了显存实测-230656-vs-257792" class="lvl3">4.2 &amp;quot;合并后参数量变少&amp;quot;不是省了显存（实测 230,656 vs 257,792）</a><a href="#43-合并必须可逆转否则-debug-无从下手实现设计" class="lvl3">4.3 合并必须可逆转，否则 debug 无从下手（实现设计）</a><a href="#44-等价性是-0000e00不是很小实测" class="lvl3">4.4 等价性是 0.000e+00，不是&amp;quot;很小&amp;quot;（实测）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-08-merge-load-adapter合并是免费的但收益测不出来">Milestone 08 — Merge / Load Adapter：合并是免费的，但收益测不出来</h1>
 <p>M07 把 adapter 存成了一百多 KB 的文件。最后一个部署问题：<strong>上线时要不要把它&quot;融化&quot;回基座？</strong></p>
@@ -66,14 +145,14 @@ li{margin:.3em 0;}
                    代价是每次前向多两次小矩阵乘（r 很小时约几个百分点）</code></pre>
 <p>本项目两种都实现，<strong>用数值证明它们等价</strong>，再用真实计时给出两者的推理耗时差 —— 然后诚实地告诉你：<strong>这个耗时差在这个规模下测不出来</strong>。</p>
 <hr/>
-<h2 id="1-why为什么合并必须被证明而不是被相信">1. Why：为什么&quot;合并&quot;必须被证明，而不是被相信</h2>
+<h2 id="1-why为什么合并必须被证明而不是被相信">1. Why：为什么&quot;合并&quot;必须被证明，而不是被相信</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-design两个方向都要能走"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：两个方向都要能走</span></a></nav>
 <p><code>merge</code> 之所以能用，全靠那个等式成立。如果 <code>ΔW</code> 的合成方式（scaling、A/B 的乘法顺序、浮点累加顺序）有任何一处与训练时不一致，合并后的模型就会<strong>悄悄变差</strong> —— 而且不会报错，因为前向照样跑得通。</p>
 <p>所以本章第一节不是&quot;怎么合并&quot;，而是&quot;<strong>合并前后是否逐位相同</strong>&quot;。这和 M04 先证 B=0 等价性、再真训是同一套方法论。</p>
-<h2 id="2-design两个方向都要能走">2. Design：两个方向都要能走</h2>
+<h2 id="2-design两个方向都要能走">2. Design：两个方向都要能走</h2><nav class="sec-nav"><a class="sn prev" href="#1-why为什么合并必须被证明而不是被相信"><span class="sn-label">← 上一节</span><span class="sn-name">1. Why：为什么&amp;quot;合并&amp;quot;必须被证明，而不是被相信</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo08mergeterminaltxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_08_merge_terminal.txt）</span></a></nav>
 <ul class="lvl"><li><strong><code>merge_lora(model)</code></strong>：把 <code>W + ΔW</code> 写回成一个普通 <code>Parameter</code>，原地替换所有 LoRA 层，并返回一份<strong>备份</strong>（<code>W</code>/<code>A</code>/<code>B</code>/<code>r</code>/<code>alpha</code>/<code>block_size</code>/<code>double_quant</code>）—— 有了它才能还原。</li><li><strong><code>unmerge_lora(model, backup)</code></strong>：把合并后的权重还原成&quot;基座 + LoRA 分离&quot;结构（A/B 取备份值）。</li><li><strong><code>load_adapter(model, path)</code></strong>：不合并，只把 npz 里的 A/B 就地装回去（M07 已实现）。</li></ul>
 <p><strong>理论开销</strong>：<code>lora_overhead_report()</code> 按 MACs 算 —— 每层额外 <code>r×(in+out)</code>，相对于基座 <code>in×out</code>。</p>
 <figure class="figure"><img alt="M08 合并前后对比" src="../../../../../../projects/08-fine-tuning/assets/merge.svg" loading="lazy"/><figcaption>M08 合并前后对比</figcaption></figure>
-<h2 id="3-realrun-evidence来自-demosoutdemo08mergeterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_08_merge_terminal.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo08mergeterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_08_merge_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design两个方向都要能走"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：两个方向都要能走</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
 <p>先训出一个 adapter（40 步，r=8）：loss <strong>8.2909 → 6.2130</strong>；注入后参数量 <code>230,656 + 27,136 = 257,792</code>；LoRA 层数 <strong>13</strong>。</p>
 <h3 id="31-数值证明合并后-分离状态实测逐位相同">3.1 数值证明：合并后 == 分离状态（实测逐位相同）</h3>
 <table><thead><tr><th>探针输入</th><th>输出元素数</th><th>合并前 vs 合并后 最大绝对误差</th></tr></thead><tbody><tr><td>shape (2, 32)</td><td>65,536</td><td><strong>0.000e+00</strong></td></tr><tr><td>shape (4, 64)</td><td>262,144</td><td><strong>0.000e+00</strong></td></tr><tr><td>shape (1, 128)</td><td>131,072</td><td><strong>0.000e+00</strong></td></tr></tbody></table>
@@ -95,7 +174,7 @@ LoRA 分支理论额外 MACs 占比  16.56%</code></pre>
 <h3 id="34-两种方式的取舍实测">3.4 两种方式的取舍（实测）</h3>
 <table><thead><tr><th></th><th>合并（merge）</th><th>只加载 adapter（load）</th></tr></thead><tbody><tr><td>推理速度</td><td>与基座完全相同</td><td>理论 +16.6% MACs（实测 +5.2%，见上）</td></tr><tr><td>磁盘 / 显存</td><td>每任务一份 901.00 KB</td><td>每任务 <strong>113.22 KB</strong></td></tr><tr><td>切任务</td><td>重新加载整个模型</td><td>换一个 adapter 文件（毫秒级）</td></tr><tr><td>多任务同时服务</td><td>每任务一份完整副本</td><td>一份基座 + N 个 adapter 共享</td></tr><tr><td>适合场景</td><td>单任务、极致延迟</td><td>多任务、频繁切换、显存紧张</td></tr></tbody></table>
 <figure class="figure"><img alt="M08 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-08-merge.png" loading="lazy"/><figcaption>M08 真实运行输出</figcaption></figure>
-<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo08mergeterminaltxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_08_merge_terminal.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <h3 id="41-合并的性能收益在这个规模测不出来实测-522-vs-184-噪声">4.1 合并的性能收益在这个规模测不出来（实测 +5.22% vs ±18.4% 噪声）</h3>
 <p>理论上 LoRA 分支带来 <strong>16.56%</strong> 的额外 MACs，合并应该省下这笔钱。实测只省了 <strong>5.22%</strong>，而同一状态的轮间波动标准差就有 <strong>18.4%</strong>。</p>
 <p><strong>这不是实验失败，是这个规模下的真实结论</strong>：<code>d_model=64、seq=64</code> 的前向耗时被 <strong>Python 层构建计算图的对象开销主导</strong>（每步几百个小 Tensor 分配），真正的矩阵乘占比很小，所以理论上的 16.6% 被淹没了。</p>
@@ -109,12 +188,55 @@ LoRA 分支理论额外 MACs 占比  16.56%</code></pre>
 <h3 id="44-等价性是-0000e00不是很小实测">4.4 等价性是 <code>0.000e+00</code>，不是&quot;很小&quot;（实测）</h3>
 <p>三个探针都是<strong>严格的零误差</strong>，不是 1e-15 量级。原因是合并走的正是 <code>.data</code> 里那条<strong>同一条</strong>合成路径（<code>layer.merged_weight()</code> 与前向的 <code>W.data + scaling·(A@B)</code> 是同一个表达式），浮点运算顺序完全一致。</p>
 <p>这反过来说明一件事：<strong>如果你在合并时&quot;优化&quot;了一下运算顺序（比如先算 <code>scaling·A</code> 再乘 <code>B</code>），误差就不再是 0 了</strong>。等价性是脆弱的，必须每次验证。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li><strong>合并前后最大绝对误差 <code>0.000e+00</code></strong>（三个探针，共 458,752 个输出元素）—— 数学上完全等价。</li><li>合并后 LoRA 层数 <strong>0</strong>、参数量回到 <strong>230,656</strong>；<code>ΔW/W = 31.55%</code>。</li><li>推理耗时 <strong>3.190 → 3.023 ms（+5.22%）</strong>，但轮间波动 <strong>±18.4%</strong> —— <strong>这个规模下测不出来</strong>；理论额外 MACs 是 <strong>16.56%</strong>。</li><li>只加载 adapter：文件 <strong>113.22 KB</strong>，与训练完的分离状态一致（<strong>1.031e-07</strong>，fp32 精度量级）。</li><li><strong>合并换推理速度，不合并换部署灵活性。</strong> 生产里常见做法：开发时不合并（方便换任务）+ 上线前合并（省延迟）。</li><li><code>merge</code> 能成立的前提，正是本章第一节证明的那个等式 —— 所以<strong>先证明，再上线</strong>。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/merge.py</code></td><td><code>merge_lora</code>（写回 <code>W+ΔW</code> 并返回备份）/ <code>unmerge_lora</code>（还原分离结构）/ <code>max_abs_diff</code>（等价性证明）/ <code>time_forward</code>（真实计时）/ <code>lora_overhead_report</code>（理论 MACs 开销）</td></tr><tr><td><code>src/ft/checkpoint.py</code></td><td><code>load_adapter</code>：不合并那条路的入口（就地写回 A/B）</td></tr><tr><td><code>src/ft/lora.py</code></td><td><code>delta_weight()</code> / <code>merged_weight()</code>：合并用的就是训练时那条合成路径（等价性为 0 的原因）</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>lora_layers()</code> / <code>set_param()</code>：按 path 定位并原地替换层</td></tr><tr><td><code>demos/demo_08_merge.py</code></td><td>6 节：训 adapter / 等价性证明 / 交替计时 / 只加载 adapter / 取舍表 / 关键数字</td></tr><tr><td><code>demos/out/demo_08_merge_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>models/adapters/demo08_adapter.npz</code></td><td>真实产物（113.22 KB）</td></tr><tr><td><code>assets/merge.svg</code></td><td>本章 merge 前后对比图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.7 → <strong>v0.8</strong>，M08 merge / load adapter 落地。实测：合并前后最大绝对误差 <strong>0.000e+00</strong>（3 个探针共 458,752 个输出元素）；合并后 LoRA 层数 0、参数量回到 <strong>230,656</strong>；推理耗时 <strong>3.190 → 3.023 ms（+5.22%）</strong>，但轮间波动 <strong>±18.4%</strong> → 这个规模下<strong>测不出来</strong>；adapter 文件 <strong>113.22 KB</strong>。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

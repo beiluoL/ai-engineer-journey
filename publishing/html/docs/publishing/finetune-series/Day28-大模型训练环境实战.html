@@ -52,9 +52,88 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#入门推荐" class="lvl2">入门推荐</a><a href="#rtx4090" class="lvl3">RTX4090</a><a href="#1-autodl" class="lvl2">1. AutoDL</a><a href="#2-阿里云pai" class="lvl2">2. 阿里云PAI</a><a href="#3-腾讯云gpu" class="lvl2">3. 腾讯云GPU</a><a href="#lambda-cloud" class="lvl2">Lambda Cloud</a><a href="#runpod" class="lvl2">RunPod</a><a href="#aws" class="lvl2">AWS</a><a href="#gpu-name" class="lvl2">GPU Name</a><a href="#memory" class="lvl2">Memory</a><a href="#cuda-version" class="lvl2">CUDA Version</a><a href="#quantizationbit" class="lvl2">quantization_bit</a><a href="#lora" class="lvl2">lora</a><a href="#batchsize" class="lvl2">batch_size</a><a href="#gradientaccumulation" class="lvl2">gradient_accumulation</a><a href="#错误1" class="lvl2">错误1：</a><a href="#错误2" class="lvl2">错误2：</a><a href="#错误3" class="lvl2">错误3：</a><a href="#模型1" class="lvl2">模型1：</a><a href="#模型2" class="lvl2">模型2：</a><a href="#模型3" class="lvl2">模型3：</a><a href="#q" class="lvl2">Q：</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="day28大模型训练环境实战">Day28：大模型训练环境实战</h1>
 <h1 id="gpu服务器-cuda-pytorch-llamafactory-qlora第一次训练">GPU服务器 → CUDA → PyTorch → LLaMA-Factory → QLoRA第一次训练</h1>
@@ -173,7 +252,7 @@ LoRA Adapter
 <p>需要：</p>
 <p>GPU显存。</p>
 <hr/>
-<h2 id="入门推荐">入门推荐</h2>
+<h2 id="入门推荐">入门推荐</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#1-autodl"><span class="sn-label">下一节 →</span><span class="sn-name">1. AutoDL</span></a></nav>
 <h3 id="rtx4090">RTX4090</h3>
 <p>配置：</p>
 <pre><code>
@@ -207,7 +286,7 @@ SSD:
 <hr/>
 <h1 id="三云gpu平台选择">三、云GPU平台选择</h1>
 <p>国内：</p>
-<h2 id="1-autodl">1. AutoDL</h2>
+<h2 id="1-autodl">1. AutoDL</h2><nav class="sec-nav"><a class="sn prev" href="#入门推荐"><span class="sn-label">← 上一节</span><span class="sn-name">入门推荐</span></a><a class="sn next" href="#2-阿里云pai"><span class="sn-label">下一节 →</span><span class="sn-name">2. 阿里云PAI</span></a></nav>
 <p>适合：</p>
 <p>个人学习。</p>
 <p>优点：</p>
@@ -215,16 +294,16 @@ SSD:
 <ul class="lvl"><li>镜像多</li></ul>
 <ul class="lvl"><li>CUDA环境方便</li></ul>
 <hr/>
-<h2 id="2-阿里云pai">2. 阿里云PAI</h2>
+<h2 id="2-阿里云pai">2. 阿里云PAI</h2><nav class="sec-nav"><a class="sn prev" href="#1-autodl"><span class="sn-label">← 上一节</span><span class="sn-name">1. AutoDL</span></a><a class="sn next" href="#3-腾讯云gpu"><span class="sn-label">下一节 →</span><span class="sn-name">3. 腾讯云GPU</span></a></nav>
 <p>企业常用。</p>
 <hr/>
-<h2 id="3-腾讯云gpu">3. 腾讯云GPU</h2>
+<h2 id="3-腾讯云gpu">3. 腾讯云GPU</h2><nav class="sec-nav"><a class="sn prev" href="#2-阿里云pai"><span class="sn-label">← 上一节</span><span class="sn-name">2. 阿里云PAI</span></a><a class="sn next" href="#lambda-cloud"><span class="sn-label">下一节 →</span><span class="sn-name">Lambda Cloud</span></a></nav>
 <p>企业常用。</p>
 <hr/>
 <p>国外：</p>
-<h2 id="lambda-cloud">Lambda Cloud</h2>
-<h2 id="runpod">RunPod</h2>
-<h2 id="aws">AWS</h2>
+<h2 id="lambda-cloud">Lambda Cloud</h2><nav class="sec-nav"><a class="sn prev" href="#3-腾讯云gpu"><span class="sn-label">← 上一节</span><span class="sn-name">3. 腾讯云GPU</span></a><a class="sn next" href="#runpod"><span class="sn-label">下一节 →</span><span class="sn-name">RunPod</span></a></nav>
+<h2 id="runpod">RunPod</h2><nav class="sec-nav"><a class="sn prev" href="#lambda-cloud"><span class="sn-label">← 上一节</span><span class="sn-name">Lambda Cloud</span></a><a class="sn next" href="#aws"><span class="sn-label">下一节 →</span><span class="sn-name">AWS</span></a></nav>
+<h2 id="aws">AWS</h2><nav class="sec-nav"><a class="sn prev" href="#runpod"><span class="sn-label">← 上一节</span><span class="sn-name">RunPod</span></a><a class="sn next" href="#gpu-name"><span class="sn-label">下一节 →</span><span class="sn-name">GPU Name</span></a></nav>
 <hr/>
 <p>第一次：</p>
 <p>推荐：</p>
@@ -300,14 +379,14 @@ CUDA Version:
 12.4</code></pre>
 <p>解释：</p>
 <hr/>
-<h2 id="gpu-name">GPU Name</h2>
+<h2 id="gpu-name">GPU Name</h2><nav class="sec-nav"><a class="sn prev" href="#aws"><span class="sn-label">← 上一节</span><span class="sn-name">AWS</span></a><a class="sn next" href="#memory"><span class="sn-label">下一节 →</span><span class="sn-name">Memory</span></a></nav>
 <p>显卡型号。</p>
 <hr/>
-<h2 id="memory">Memory</h2>
+<h2 id="memory">Memory</h2><nav class="sec-nav"><a class="sn prev" href="#gpu-name"><span class="sn-label">← 上一节</span><span class="sn-name">GPU Name</span></a><a class="sn next" href="#cuda-version"><span class="sn-label">下一节 →</span><span class="sn-name">CUDA Version</span></a></nav>
 <p>显存。</p>
 <p>24GB。</p>
 <hr/>
-<h2 id="cuda-version">CUDA Version</h2>
+<h2 id="cuda-version">CUDA Version</h2><nav class="sec-nav"><a class="sn prev" href="#memory"><span class="sn-label">← 上一节</span><span class="sn-name">Memory</span></a><a class="sn next" href="#quantizationbit"><span class="sn-label">下一节 →</span><span class="sn-name">quantization_bit</span></a></nav>
 <p>支持CUDA版本。</p>
 <hr/>
 <h1 id="八cuda是什么">八、CUDA是什么？</h1>
@@ -535,23 +614,23 @@ gradient_accumulation_steps:
 <hr/>
 <p>解释：</p>
 <hr/>
-<h2 id="quantizationbit">quantization_bit</h2>
+<h2 id="quantizationbit">quantization_bit</h2><nav class="sec-nav"><a class="sn prev" href="#cuda-version"><span class="sn-label">← 上一节</span><span class="sn-name">CUDA Version</span></a><a class="sn next" href="#lora"><span class="sn-label">下一节 →</span><span class="sn-name">lora</span></a></nav>
 <pre><code>4</code></pre>
 <p>表示：</p>
 <p>4bit量化。</p>
 <p>就是：</p>
 <p>QLoRA。</p>
 <hr/>
-<h2 id="lora">lora</h2>
+<h2 id="lora">lora</h2><nav class="sec-nav"><a class="sn prev" href="#quantizationbit"><span class="sn-label">← 上一节</span><span class="sn-name">quantization_bit</span></a><a class="sn next" href="#batchsize"><span class="sn-label">下一节 →</span><span class="sn-name">batch_size</span></a></nav>
 <p>只训练：</p>
 <p>Adapter。</p>
 <hr/>
-<h2 id="batchsize">batch_size</h2>
+<h2 id="batchsize">batch_size</h2><nav class="sec-nav"><a class="sn prev" href="#lora"><span class="sn-label">← 上一节</span><span class="sn-name">lora</span></a><a class="sn next" href="#gradientaccumulation"><span class="sn-label">下一节 →</span><span class="sn-name">gradient_accumulation</span></a></nav>
 <p>一次训练多少数据。</p>
 <p>显存小：</p>
 <p>设置1。</p>
 <hr/>
-<h2 id="gradientaccumulation">gradient_accumulation</h2>
+<h2 id="gradientaccumulation">gradient_accumulation</h2><nav class="sec-nav"><a class="sn prev" href="#batchsize"><span class="sn-label">← 上一节</span><span class="sn-name">batch_size</span></a><a class="sn next" href="#错误1"><span class="sn-label">下一节 →</span><span class="sn-name">错误1：</span></a></nav>
 <p>模拟大Batch。</p>
 <hr/>
 <h1 id="十六开始训练">十六、开始训练</h1>
@@ -685,7 +764,7 @@ Gray Release
 Production</code></pre>
 <hr/>
 <h1 id="二十二常见错误">二十二、常见错误</h1>
-<h2 id="错误1">错误1：</h2>
+<h2 id="错误1">错误1：</h2><nav class="sec-nav"><a class="sn prev" href="#gradientaccumulation"><span class="sn-label">← 上一节</span><span class="sn-name">gradient_accumulation</span></a><a class="sn next" href="#错误2"><span class="sn-label">下一节 →</span><span class="sn-name">错误2：</span></a></nav>
 <p>显存不足</p>
 <p>解决：</p>
 <p>降低：</p>
@@ -693,14 +772,14 @@ Production</code></pre>
 <ul class="lvl"><li>rank</li></ul>
 <ul class="lvl"><li>seq length</li></ul>
 <hr/>
-<h2 id="错误2">错误2：</h2>
+<h2 id="错误2">错误2：</h2><nav class="sec-nav"><a class="sn prev" href="#错误1"><span class="sn-label">← 上一节</span><span class="sn-name">错误1：</span></a><a class="sn next" href="#错误3"><span class="sn-label">下一节 →</span><span class="sn-name">错误3：</span></a></nav>
 <p>CUDA不匹配</p>
 <p>检查：</p>
 <pre><code>nvidia-smi</code></pre>
 <p>和：</p>
 <p>PyTorch CUDA版本。</p>
 <hr/>
-<h2 id="错误3">错误3：</h2>
+<h2 id="错误3">错误3：</h2><nav class="sec-nav"><a class="sn prev" href="#错误2"><span class="sn-label">← 上一节</span><span class="sn-name">错误2：</span></a><a class="sn next" href="#模型1"><span class="sn-label">下一节 →</span><span class="sn-name">模型1：</span></a></nav>
 <p>数据质量差</p>
 <p>大模型微调：</p>
 <p>数据 &gt; 参数。</p>
@@ -711,17 +790,17 @@ Production</code></pre>
 <p>建议训练：</p>
 <p>三个LoRA。</p>
 <hr/>
-<h2 id="模型1">模型1：</h2>
+<h2 id="模型1">模型1：</h2><nav class="sec-nav"><a class="sn prev" href="#错误3"><span class="sn-label">← 上一节</span><span class="sn-name">错误3：</span></a><a class="sn next" href="#模型2"><span class="sn-label">下一节 →</span><span class="sn-name">模型2：</span></a></nav>
 <p>Java Interview LoRA</p>
 <p>数据：</p>
 <p>1000～5000题。</p>
 <hr/>
-<h2 id="模型2">模型2：</h2>
+<h2 id="模型2">模型2：</h2><nav class="sec-nav"><a class="sn prev" href="#模型1"><span class="sn-label">← 上一节</span><span class="sn-name">模型1：</span></a><a class="sn next" href="#模型3"><span class="sn-label">下一节 →</span><span class="sn-name">模型3：</span></a></nav>
 <p>AI Engineer Interview LoRA</p>
 <p>数据：</p>
 <p>RAG/Agent/MCP。</p>
 <hr/>
-<h2 id="模型3">模型3：</h2>
+<h2 id="模型3">模型3：</h2><nav class="sec-nav"><a class="sn prev" href="#模型2"><span class="sn-label">← 上一节</span><span class="sn-name">模型2：</span></a><a class="sn next" href="#q"><span class="sn-label">下一节 →</span><span class="sn-name">Q：</span></a></nav>
 <p>你的个人知识助手</p>
 <p>数据：</p>
 <p>你的：</p>
@@ -730,7 +809,7 @@ Production</code></pre>
 <ul class="lvl"><li>学习笔记</li></ul>
 <hr/>
 <h1 id="二十四面试回答">二十四、面试回答</h1>
-<h2 id="q">Q：</h2>
+<h2 id="q">Q：</h2><nav class="sec-nav"><a class="sn prev" href="#模型3"><span class="sn-label">← 上一节</span><span class="sn-name">模型3：</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <blockquote><p>你有没有做过模型微调？</p></blockquote>
 <p>回答：</p>
 <blockquote><p>我使用Qwen2.5-7B作为基础模型，通过LLaMA-Factory完成SFT训练，采用QLoRA方式降低显存占用。训练数据采用JSON指令格式，通过LoRA Adapter学习Java技术面试场景，训练完成后通过vLLM加载模型，并结合Spring Boot和LangChain4j提供业务接口。</p></blockquote>
@@ -804,5 +883,48 @@ Spring Boot</code></pre>
 <p>这一步就是从：</p>
 <p><strong>会微调模型 → 会管理企业模型生命周期。</strong></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

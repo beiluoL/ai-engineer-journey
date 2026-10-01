@@ -52,13 +52,92 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-tool-的最小接口" class="lvl2">1. Tool 的最小接口</a><a href="#2-检索即工具" class="lvl2">2. 检索即工具</a><a href="#3-执行结果永远是-toolresult不是抛异常-返回值" class="lvl2">3. 执行结果永远是 ToolResult，不是「抛异常 / 返回值」</a><a href="#4-计算工具给模型算数不给它代码执行权" class="lvl2">4. 计算工具：给模型算数，不给它代码执行权</a><a href="#5-普通-python-函数就是工具" class="lvl2">5. 普通 Python 函数就是工具</a><a href="#6-坑与结论" class="lvl2">6. 坑与结论</a><a href="#7-代码位置" class="lvl2">7. 代码位置</a><a href="#8-版本" class="lvl2">8. 版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-01-tool工具就是能被模型调用的-python-函数">Milestone 01 — Tool：工具就是能被模型调用的 Python 函数</h1>
 <blockquote><p>Project 04 的 RAG 解决了「模型不知道答案时去查资料」。但查资料这件事，在那个版本里是<strong>写在 pipeline 里的固定步骤</strong>——用户问什么都会走一遍检索，不需要检索也得走。</p><p>这一章做一件事：把检索从「pipeline 的固定步骤」改造成「摆在模型面前的工具」。区别听上去细，实际是「问答系统」和「Agent」的分界线。</p></blockquote>
-<h2 id="1-tool-的最小接口">1. Tool 的最小接口</h2>
+<h2 id="1-tool-的最小接口">1. Tool 的最小接口</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-检索即工具"><span class="sn-label">下一节 →</span><span class="sn-name">2. 检索即工具</span></a></nav>
 <p>一个工具只需要三样东西：名字、描述、一个 <code>run</code> 方法。</p>
 <pre><code>class Tool(ABC):
     name: ClassVar[str]        # 模型靠它调用
@@ -70,7 +149,7 @@ li{margin:.3em 0;}
 <p>本项目目前有三个内置工具：</p>
 <table><thead><tr><th>工具</th><th>作用</th><th>为什么必须存在</th></tr></thead><tbody><tr><td><code>rag_search(query, k)</code></td><td>在知识库里检索</td><td>事实性问题的唯一事实来源</td></tr><tr><td><code>calculator(expression)</code></td><td>算算术表达式</td><td>模型算数不可靠，交给工具</td></tr><tr><td><code>now()</code></td><td>当前 UTC 时间</td><td>问「今天几号」这类问题</td></tr></tbody></table>
 <figure class="figure"><img alt="真实运行：三个内置工具用的是同一套接口" src="../../../../../../projects/05-agent-mcp/assets/term-01-tool-interface.png" loading="lazy"/><figcaption>真实运行：三个内置工具用的是同一套接口</figcaption></figure>
-<h2 id="2-检索即工具">2. 检索即工具</h2>
+<h2 id="2-检索即工具">2. 检索即工具</h2><nav class="sec-nav"><a class="sn prev" href="#1-tool-的最小接口"><span class="sn-label">← 上一节</span><span class="sn-name">1. Tool 的最小接口</span></a><a class="sn next" href="#3-执行结果永远是-toolresult不是抛异常-返回值"><span class="sn-label">下一节 →</span><span class="sn-name">3. 执行结果永远是 ToolResult，不是「抛异常 / 返回值」</span></a></nav>
 <p>Milestone 01 真正要讲的是这一个变化。</p>
 <p>Project 04 的调用链是死的：<code>ask()</code> → 检索 → 拼 prompt → 生成。<strong>检索一定发生。</strong></p>
 <p>这一版把它包成工具：</p>
@@ -83,7 +162,7 @@ li{margin:.3em 0;}
 <pre><code>ToolRegistry()                                  # → 本地语料
 make_http_search_tool(&quot;http://127.0.0.1:8000&quot;)  # → Project 04 的 RAG 服务</code></pre>
 <figure class="figure"><img alt="真实运行：检索以工具形式被调用并返回结果" src="../../../../../../projects/05-agent-mcp/assets/term-01-search-as-tool.png" loading="lazy"/><figcaption>真实运行：检索以工具形式被调用并返回结果</figcaption></figure>
-<h2 id="3-执行结果永远是-toolresult不是抛异常-返回值">3. 执行结果永远是 ToolResult，不是「抛异常 / 返回值」</h2>
+<h2 id="3-执行结果永远是-toolresult不是抛异常-返回值">3. 执行结果永远是 ToolResult，不是「抛异常 / 返回值」</h2><nav class="sec-nav"><a class="sn prev" href="#2-检索即工具"><span class="sn-label">← 上一节</span><span class="sn-name">2. 检索即工具</span></a><a class="sn next" href="#4-计算工具给模型算数不给它代码执行权"><span class="sn-label">下一节 →</span><span class="sn-name">4. 计算工具：给模型算数，不给它代码执行权</span></a></nav>
 <p>这是工业界和玩具代码最大的差别。</p>
 <pre><code>@dataclass(frozen=True)
 class ToolResult:
@@ -96,7 +175,7 @@ class ToolResult:
         return self.output if self.error is None else f&quot;[工具执行失败] {self.name}: {self.error}&quot;</code></pre>
 <p><code>ToolRegistry.call()</code> <strong>永不抛异常</strong>。原因很实际：一次工具失败不代表整轮任务失败。把 <code>[工具执行失败] …</code> 当普通文本回灌给模型，它大概率会换个参数重试；直接把异常抛出去，等于一次抖动打死整条链路。</p>
 <figure class="figure"><img alt="真实运行：一次成功 + 一次失败，两者都回灌为文本" src="../../../../../../projects/05-agent-mcp/assets/term-01-tool-interface.png" loading="lazy"/><figcaption>真实运行：一次成功 + 一次失败，两者都回灌为文本</figcaption></figure>
-<h2 id="4-计算工具给模型算数不给它代码执行权">4. 计算工具：给模型算数，不给它代码执行权</h2>
+<h2 id="4-计算工具给模型算数不给它代码执行权">4. 计算工具：给模型算数，不给它代码执行权</h2><nav class="sec-nav"><a class="sn prev" href="#3-执行结果永远是-toolresult不是抛异常-返回值"><span class="sn-label">← 上一节</span><span class="sn-name">3. 执行结果永远是 ToolResult，不是「抛异常 / 返回值」</span></a><a class="sn next" href="#5-普通-python-函数就是工具"><span class="sn-label">下一节 →</span><span class="sn-name">5. 普通 Python 函数就是工具</span></a></nav>
 <p><code>calculator</code> 用 <code>ast</code> 解析 + <strong>白名单节点</strong>求值，任何不在白名单里的节点直接拒绝：</p>
 <pre><code>_ALLOWED = {ast.Constant, ast.BinOp, ast.UnaryOp}   # 只有字面量和四则运算</code></pre>
 <p>这不是过度设计。<code>eval</code> 会把 <code>__import__</code> 也一起执行，等于把代码执行权交给模型输出的一段字符串：</p>
@@ -104,21 +183,64 @@ class ToolResult:
 同一串输入交给 calculator → 直接拒绝：不允许的表达式成分：Call</code></pre>
 <p><code>eval</code> 那一行是 demo 里故意写的危险写法，只为说明「这样就能执行任意代码」——<strong>真实项目里绝不能出现</strong>。</p>
 <figure class="figure"><img alt="真实运行：eval 与 calculator 的对比" src="../../../../../../projects/05-agent-mcp/assets/term-01-tool-sandbox.png" loading="lazy"/><figcaption>真实运行：eval 与 calculator 的对比</figcaption></figure>
-<h2 id="5-普通-python-函数就是工具">5. 普通 Python 函数就是工具</h2>
+<h2 id="5-普通-python-函数就是工具">5. 普通 Python 函数就是工具</h2><nav class="sec-nav"><a class="sn prev" href="#4-计算工具给模型算数不给它代码执行权"><span class="sn-label">← 上一节</span><span class="sn-name">4. 计算工具：给模型算数，不给它代码执行权</span></a><a class="sn next" href="#6-坑与结论"><span class="sn-label">下一节 →</span><span class="sn-name">6. 坑与结论</span></a></nav>
 <pre><code>def recall(user_id: int, limit: int = 5) -&gt; str:
     &quot;&quot;&quot;按 id 查这个人最近的备忘，最多返回 limit 条。&quot;&quot;&quot;
     return f&quot;user#{user_id} 最近 {limit} 条&quot;</code></pre>
 <p><code>function_to_schema()</code> 用 <code>inspect</code> 读签名反推 JSON Schema，<strong>有默认值的参数不进 <code>required</code></strong>。这样「改了代码忘了改 schema」这类事故从根上不存在——schema 和代码永远同一个来源。</p>
 <figure class="figure"><img alt="真实运行：签名推导 + 注册进注册表" src="../../../../../../projects/05-agent-mcp/assets/term-01-function-as-tool.png" loading="lazy"/><figcaption>真实运行：签名推导 + 注册进注册表</figcaption></figure>
-<h2 id="6-坑与结论">6. 坑与结论</h2>
+<h2 id="6-坑与结论">6. 坑与结论</h2><nav class="sec-nav"><a class="sn prev" href="#5-普通-python-函数就是工具"><span class="sn-label">← 上一节</span><span class="sn-name">5. 普通 Python 函数就是工具</span></a><a class="sn next" href="#7-代码位置"><span class="sn-label">下一节 →</span><span class="sn-name">7. 代码位置</span></a></nav>
 <p><strong>坑 1：自定义工具不写 schema，参数会被全部拒绝。</strong> <code>Tool</code> 基类的默认 <code>schema()</code> 返回空 <code>properties</code>。自定义工具如果只是重写 <code>run</code> 而不重写 <code>schema()</code>，模型传什么都会被判成「参数不存在」。这条在 Milestone 02 会展开。</p>
 <p><strong>坑 2：<code>eval</code> 的诱惑。</strong> 「模型要算数，直接 <code>eval(expression)</code> 不就行了」——这个决定等价于把服务器执行权交给模型输出。用 <code>ast</code> 白名单。</p>
 <p><strong>结论：</strong></p>
 <ul class="lvl"><li>Tool 三件套（name / description / run→str）足够撑起一个真实 Agent。</li><li>工具失败必须回灌成文本，不能抛异常打断链路。</li><li>「检索即工具」不是名词升级，是<strong>控制权从代码转移到模型</strong>。</li></ul>
-<h2 id="7-代码位置">7. 代码位置</h2>
+<h2 id="7-代码位置">7. 代码位置</h2><nav class="sec-nav"><a class="sn prev" href="#6-坑与结论"><span class="sn-label">← 上一节</span><span class="sn-name">6. 坑与结论</span></a><a class="sn next" href="#8-版本"><span class="sn-label">下一节 →</span><span class="sn-name">8. 版本</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/tools.py</code></td><td><code>Tool</code> / <code>FunctionTool</code> / <code>ToolCall</code> / <code>ToolResult</code> / 三个内置工具</td></tr><tr><td><code>src/agent/registry.py</code></td><td>注册、汇总 schema、参数纠偏、派发</td></tr><tr><td><code>src/agent/errors.py</code></td><td><code>ToolError</code> / <code>ToolNotFoundError</code> / <code>ToolSchemaError</code></td></tr></tbody></table>
-<h2 id="8-版本">8. 版本</h2>
+<h2 id="8-版本">8. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#7-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">7. 代码位置</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 → <strong>v0.2</strong>，新增 <code>src/agent/tools.py</code> 与 <code>registry.py</code>，测试 0 → 34 passed，截图 3 张。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

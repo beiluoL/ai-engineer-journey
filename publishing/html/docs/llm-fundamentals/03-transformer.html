@@ -52,21 +52,100 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#31-三种形态先认清你看的是哪一台机器" class="lvl2">3.1 三种形态：先认清你看的是哪一台机器</a><a href="#32-骨架残差-归一化" class="lvl2">3.2 骨架：残差 + 归一化</a><a href="#321-为什么需要残差连接" class="lvl3">3.2.1 为什么需要残差连接</a><a href="#322-layernorm把数值拉回可控范围" class="lvl3">3.2.2 LayerNorm：把数值拉回可控范围</a><a href="#323-preln-vs-postln一个必须记住的工程结论" class="lvl3">3.2.3 Pre-LN vs Post-LN：一个必须记住的工程结论</a><a href="#33-前馈网络ffn被低估的三分之二" class="lvl2">3.3 前馈网络（FFN）：被低估的三分之二</a><a href="#34-位置编码把顺序写进向量" class="lvl2">3.4 位置编码：把顺序写进向量</a><a href="#341-正弦位置编码原论文方案" class="lvl3">3.4.1 正弦位置编码（原论文方案）</a><a href="#342-三种方案的对比与演进" class="lvl3">3.4.2 三种方案的对比与演进</a><a href="#35-一个-decoder-block-的完整数据流" class="lvl2">3.5 一个 decoder block 的完整数据流</a><a href="#端到端的张量形状batch1序列长-t" class="lvl3">端到端的张量形状（batch=1，序列长 T）</a><a href="#36-参数量估算自己算一遍" class="lvl2">3.6 参数量估算：自己算一遍</a><a href="#37-架构演化从-gpt1-到现代-llm" class="lvl2">3.7 架构演化：从 GPT-1 到现代 LLM</a><a href="#38-常被误解的点" class="lvl2">3.8 常被误解的点</a><a href="#39-动手" class="lvl2">3.9 动手</a><a href="#310-自查问题" class="lvl2">3.10 自查问题</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="03-transformer-架构一个-decoder-block-里到底有什么">03 · Transformer 架构：一个 decoder block 里到底有什么</h1>
 <blockquote><p><strong>一句话结论</strong>：现代 LLM = <strong>N 个结构完全相同的 decoder block 堆叠</strong>。 每个 block 只有两个子层——注意力（负责&quot;从上下文取信息&quot;）和前馈网络（负责&quot;加工信息&quot;）——外面包上残差和归一化，让几十上百层能稳定地叠起来。</p></blockquote>
 <p><a href="02-attention.html">第 02 章</a>讲了注意力这一个零件，本章把它组装成机器。</p>
 <hr/>
-<h2 id="31-三种形态先认清你看的是哪一台机器">3.1 三种形态：先认清你看的是哪一台机器</h2>
+<h2 id="31-三种形态先认清你看的是哪一台机器">3.1 三种形态：先认清你看的是哪一台机器</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#32-骨架残差-归一化"><span class="sn-label">下一节 →</span><span class="sn-name">3.2 骨架：残差 + 归一化</span></a></nav>
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>EO</code> — Encoder-only（BERT 系）</li><li><code>E1</code> — 双向注意力 看全句</li><li><code>E2</code> — 每个位置一个向量 适合理解类任务</li><li><code>DO</code> — Decoder-only（GPT / LLaMA / Qwen 系）</li><li><code>D1</code> — 因果注意力 只看左边</li><li><code>D2</code> — 下一 token 预测 适合生成</li><li><code>ED</code> — Encoder-Decoder（T5 / 翻译系）</li><li><code>F1</code> — 编码器双向读源文</li><li><code>F2</code> — 解码器因果生成目标文</li></ul></div>
 <table><thead><tr><th>形态</th><th>代表</th><th>注意力</th><th>预训练目标</th><th>现状</th></tr></thead><tbody><tr><td>Encoder-only</td><td>BERT、RoBERTa、BGE</td><td>双向</td><td>掩码语言建模（MLM）</td><td>作为<strong>文本嵌入模型</strong>仍是主力（RAG 检索就用它）</td></tr><tr><td>Decoder-only</td><td>GPT 全系、LLaMA、Qwen、DeepSeek</td><td>因果</td><td>下一 token 预测（CLM）</td><td><strong>当前 LLM 唯一主流</strong></td></tr><tr><td>Encoder-Decoder</td><td>T5、BART、原始 Transformer</td><td>编码器双向 + 解码器因果</td><td>Span corruption 等</td><td>翻译/摘要仍有市场，通用 LLM 已让位</td></tr></tbody></table>
 <p><strong>为什么 Decoder-only 赢了</strong>：一个目标（预测下一个 token）+ 一套结构，就能同时表达理解与生成；训练信号最密集（每个位置都是监督）；且天然支持 in-context learning 与任意长度的续写。</p>
 <p>本章接下来讲的都是 <strong>decoder block</strong>。</p>
 <hr/>
-<h2 id="32-骨架残差-归一化">3.2 骨架：残差 + 归一化</h2>
+<h2 id="32-骨架残差-归一化">3.2 骨架：残差 + 归一化</h2><nav class="sec-nav"><a class="sn prev" href="#31-三种形态先认清你看的是哪一台机器"><span class="sn-label">← 上一节</span><span class="sn-name">3.1 三种形态：先认清你看的是哪一台机器</span></a><a class="sn next" href="#33-前馈网络ffn被低估的三分之二"><span class="sn-label">下一节 →</span><span class="sn-name">3.3 前馈网络（FFN）：被低估的三分之二</span></a></nav>
 <h3 id="321-为什么需要残差连接">3.2.1 为什么需要残差连接</h3>
 <p>$$ x&#x27; = x + \operatorname{Sublayer}(x) $$</p>
 <table><thead><tr><th>作用</th><th>说明</th></tr></thead><tbody><tr><td>梯度高速公路</td><td>反向传播时 <code>∂x&#x27;/∂x = I + ∂Sublayer/∂x</code>，恒等项保证梯度至少能原样流回底层，缓解深层网络梯度消失</td></tr><tr><td>恒等初始化友好</td><td>子层初始输出很小，网络初始近似恒等映射，&quot;先能训得动，再慢慢学&quot;</td></tr><tr><td>不增加参数量</td><td>只做加法</td></tr></tbody></table>
@@ -82,7 +161,7 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <table><thead><tr><th>方案</th><th>深层训练稳定性</th><th>是否要 warmup</th><th>代表</th></tr></thead><tbody><tr><td>Post-LN</td><td>差，需要精心调 warmup，层数一多就发散</td><td>必须</td><td>原始 Transformer</td></tr><tr><td><strong>Pre-LN</strong></td><td>好，能直接堆几百层</td><td>宽松得多</td><td>GPT-2 之后几乎所有 LLM</td></tr></tbody></table>
 <p><strong>记忆点</strong>：看到&quot;模型层数上不去 / 训练初期 loss 爆炸&quot;，第一反应就是检查用的哪种 LN 布局。</p>
 <hr/>
-<h2 id="33-前馈网络ffn被低估的三分之二">3.3 前馈网络（FFN）：被低估的三分之二</h2>
+<h2 id="33-前馈网络ffn被低估的三分之二">3.3 前馈网络（FFN）：被低估的三分之二</h2><nav class="sec-nav"><a class="sn prev" href="#32-骨架残差-归一化"><span class="sn-label">← 上一节</span><span class="sn-name">3.2 骨架：残差 + 归一化</span></a><a class="sn next" href="#34-位置编码把顺序写进向量"><span class="sn-label">下一节 →</span><span class="sn-name">3.4 位置编码：把顺序写进向量</span></a></nav>
 <p>注意力负责&quot;跨 token 通信&quot;，但<strong>每个 token 内部的信息加工</strong>由 FFN 完成。</p>
 <p>$$ \operatorname{FFN}(x) = W_2 \cdot \sigma(W_1 x + b_1) + b_2 $$</p>
 <p>标准配置把维度先放大 4 倍：</p>
@@ -91,7 +170,7 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <table><thead><tr><th>变体</th><th>公式</th><th>特点</th></tr></thead><tbody><tr><td>标准 ReLU FFN</td><td>$\max(0, xW_1)W_2$</td><td>原版</td></tr><tr><td>GELU FFN</td><td>$\operatorname{GELU}(xW_1)W_2$</td><td>GPT-2/BERT</td></tr><tr><td><strong>SwiGLU</strong></td><td>$(\operatorname{Swish}(xW_g) \odot xW_1)W_2$</td><td>LLaMA 系主流；三个矩阵但把隐藏维降到 8/3 d，总参数持平，效果更好</td></tr></tbody></table>
 <blockquote><p><strong>&quot;FFN 是键值记忆&quot;</strong> 这个解释很流行（Geva et al. 2021）：把 W₁ 的每行看成&quot;模式检测器&quot;，W₂ 的列看成&quot;对应输出内容&quot;。这解释了为什么对 FFN 做知识编辑（ROME 一类方法）能改掉模型的具体事实记忆。</p></blockquote>
 <hr/>
-<h2 id="34-位置编码把顺序写进向量">3.4 位置编码：把顺序写进向量</h2>
+<h2 id="34-位置编码把顺序写进向量">3.4 位置编码：把顺序写进向量</h2><nav class="sec-nav"><a class="sn prev" href="#33-前馈网络ffn被低估的三分之二"><span class="sn-label">← 上一节</span><span class="sn-name">3.3 前馈网络（FFN）：被低估的三分之二</span></a><a class="sn next" href="#35-一个-decoder-block-的完整数据流"><span class="sn-label">下一节 →</span><span class="sn-name">3.5 一个 decoder block 的完整数据流</span></a></nav>
 <p><a href="02-attention.html">第 02 章</a>说过注意力是置换等变的——不注入位置信息，模型看&quot;我打你&quot;和&quot;你打我&quot;一样。位置编码就是补上这一课。</p>
 <h3 id="341-正弦位置编码原论文方案">3.4.1 正弦位置编码（原论文方案）</h3>
 <p>$$ \begin{aligned} PE_{(pos,\,2i)} &amp;= \sin\!\left(\frac{pos}{10000^{2i/d_{model}}}\right) \\[4pt] PE_{(pos,\,2i+1)} &amp;= \cos\!\left(\frac{pos}{10000^{2i/d_{model}}}\right) \end{aligned} $$</p>
@@ -111,7 +190,7 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <p>旋转后的内积<strong>天然只依赖相对位置 m−n</strong>，与绝对位置无关。相比正弦编码（加在输入上，之后还要经过多层投影会被&quot;稀释&quot;），RoPE 直接作用在注意力的打分里，而且不增加参数量——这是它成为主流的原因。</p>
 <table><thead><tr><th>长上下文扩展技巧</th><th>做法</th></tr></thead><tbody><tr><td>位置插值（PI）</td><td>把超长位置压缩回训练范围</td></tr><tr><td>NTK-aware / YaRN</td><td>改变旋转频率基底，按维度分频缩放</td></tr><tr><td>继续预训练</td><td>直接用长文本再训一段（最可靠，也最贵）</td></tr></tbody></table>
 <hr/>
-<h2 id="35-一个-decoder-block-的完整数据流">3.5 一个 decoder block 的完整数据流</h2>
+<h2 id="35-一个-decoder-block-的完整数据流">3.5 一个 decoder block 的完整数据流</h2><nav class="sec-nav"><a class="sn prev" href="#34-位置编码把顺序写进向量"><span class="sn-label">← 上一节</span><span class="sn-name">3.4 位置编码：把顺序写进向量</span></a><a class="sn next" href="#36-参数量估算自己算一遍"><span class="sn-label">下一节 →</span><span class="sn-name">3.6 参数量估算：自己算一遍</span></a></nav>
 <p>把上面的零件拼起来，一层 decoder（Pre-LN 布局）：</p>
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>IN</code> — 输入 x (n × d)</li><li><code>N1</code> — RMSNorm</li><li><code>ATT</code> — 多头因果自注意力 Q/K/V + RoPE + causal mask</li><li><code>ADD1</code> — + 残差</li><li><code>N2</code> — RMSNorm</li><li><code>FFN</code> — FFN / SwiGLU d → 8/3·d → d</li><li><code>ADD2</code> — + 残差</li><li><code>OUT</code> — 输出 x (n × d) → 交给下一层</li></ul></div>
 <p>一个 7B 级模型的超参（LLaMA-7B 量级）：</p>
@@ -120,7 +199,7 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <table><thead><tr><th>阶段</th><th>形状</th><th>说明</th></tr></thead><tbody><tr><td>token ids</td><td><code>(1, T)</code></td><td>—</td></tr><tr><td>embedding</td><td><code>(1, T, 4096)</code></td><td>查表</td></tr><tr><td>× 32 层</td><td><code>(1, T, 4096)</code></td><td>形状全程不变（这是残差能用的前提）</td></tr><tr><td>final norm</td><td><code>(1, T, 4096)</code></td><td>—</td></tr><tr><td>lm_head</td><td><code>(1, T, V)</code></td><td>V = 词表大小，<strong>这一层 logits 是显存杀手</strong>（T=2048、V=128k 时约 500 MB/序列，fp16）</td></tr><tr><td>softmax + 采样</td><td><code>(1,)</code></td><td>只取最后一个位置</td></tr></tbody></table>
 <blockquote><p><strong>工程提示</strong>：推理时一般只需要最后一个位置的 logits，但很多实现会把整个 <code>(T, V)</code> 算出来，白白浪费算力与显存——这也是为什么&quot;只取最后位置&quot;是一种常见的推理优化。</p></blockquote>
 <hr/>
-<h2 id="36-参数量估算自己算一遍">3.6 参数量估算：自己算一遍</h2>
+<h2 id="36-参数量估算自己算一遍">3.6 参数量估算：自己算一遍</h2><nav class="sec-nav"><a class="sn prev" href="#35-一个-decoder-block-的完整数据流"><span class="sn-label">← 上一节</span><span class="sn-name">3.5 一个 decoder block 的完整数据流</span></a><a class="sn next" href="#37-架构演化从-gpt1-到现代-llm"><span class="sn-label">下一节 →</span><span class="sn-name">3.7 架构演化：从 GPT-1 到现代 LLM</span></a></nav>
 <p>单层参数（忽略 bias）：</p>
 <p>$$ \underbrace{4 d^2}_{\text{注意力 QKVO}} + \underbrace{3 \cdot d \cdot d_{ff}}_{\text{SwiGLU 三个矩阵}} $$</p>
 <p>加上词表（含输出层共享时为一份）：</p>
@@ -129,24 +208,67 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <table><thead><tr><th>模型</th><th>L</th><th>d</th><th>12·L·d²</th><th>官方参数量</th><th>误差来源</th></tr></thead><tbody><tr><td>GPT-2 small</td><td>12</td><td>768</td><td>85 M</td><td>124 M（含 50k 词表 embedding 39 M）</td><td>词表未计入</td></tr><tr><td>GPT-3</td><td>96</td><td>12288</td><td>173 B</td><td>175 B</td><td>接近</td></tr><tr><td>LLaMA-7B</td><td>32</td><td>4096</td><td>6.4 B</td><td>6.7 B</td><td>SwiGLU 的 d_ff=11008 &lt; 4d</td></tr></tbody></table>
 <p><strong>结论</strong>：免词表时，参数量 ≈ <code>12 · L · d²</code>；实际再加 <code>V · d</code> 的 embedding（若共享则只算一次）。</p>
 <hr/>
-<h2 id="37-架构演化从-gpt1-到现代-llm">3.7 架构演化：从 GPT-1 到现代 LLM</h2>
+<h2 id="37-架构演化从-gpt1-到现代-llm">3.7 架构演化：从 GPT-1 到现代 LLM</h2><nav class="sec-nav"><a class="sn prev" href="#36-参数量估算自己算一遍"><span class="sn-label">← 上一节</span><span class="sn-name">3.6 参数量估算：自己算一遍</span></a><a class="sn next" href="#38-常被误解的点"><span class="sn-label">下一节 →</span><span class="sn-name">3.8 常被误解的点</span></a></nav>
 <table><thead><tr><th>代际</th><th>代表</th><th>关键变化</th><th>解决的问题</th></tr></thead><tbody><tr><td>原始（2017）</td><td>Transformer</td><td>提出注意力、位置编码、Post-LN</td><td>取代 RNN</td></tr><tr><td>规模化（2018-2020）</td><td>GPT-2 / GPT-3</td><td>Pre-LN、更大词表、层数堆深</td><td>训练稳定性、规模扩展</td></tr><tr><td>开源对齐（2023）</td><td>LLaMA-1</td><td>RMSNorm + SwiGLU + RoPE</td><td>同规模下更强、更省显存</td></tr><tr><td>推理友好（2023-2024）</td><td>LLaMA-2/3、Qwen</td><td>GQA、更长上下文、更大词表</td><td>推理成本、长文能力</td></tr><tr><td>效率结构（2024-）</td><td>Mixtral、DeepSeek-V2/V3</td><td>MoE（稀疏专家）、MLA、FP8、MTP</td><td>用更少的激活参数换更大容量</td></tr></tbody></table>
 <p><strong>MoE 一句话</strong>：把 FFN 换成 N 个&quot;专家&quot;，每个 token 只激活其中 1–2 个。总参数很大（容量大），但每次前向只算一小部分（推理便宜）。Mixtral 8×7B 总参数 46.7B，激活只有 12.9B。</p>
 <table><thead><tr><th>概念</th><th>含义</th><th>注意</th></tr></thead><tbody><tr><td>总参数（total）</td><td>模型文件大小、显存占用</td><td>决定&quot;装得下吗&quot;</td></tr><tr><td>激活参数（active）</td><td>每个 token 实际参与计算的参数</td><td>决定&quot;跑得快吗&quot;</td></tr></tbody></table>
 <hr/>
-<h2 id="38-常被误解的点">3.8 常被误解的点</h2>
+<h2 id="38-常被误解的点">3.8 常被误解的点</h2><nav class="sec-nav"><a class="sn prev" href="#37-架构演化从-gpt1-到现代-llm"><span class="sn-label">← 上一节</span><span class="sn-name">3.7 架构演化：从 GPT-1 到现代 LLM</span></a><a class="sn next" href="#39-动手"><span class="sn-label">下一节 →</span><span class="sn-name">3.9 动手</span></a></nav>
 <table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;Transformer 就是注意力&quot;</td><td>注意力只占参数 1/3；FFN 占 2/3，且是知识与事实的主要存储地</td></tr><tr><td>&quot;位置编码只是个细节&quot;</td><td>没有它模型完全无法理解语序；方案选择直接决定外推能力上限</td></tr><tr><td>&quot;层数越多越强&quot;</td><td>在同等参数预算下，宽/深存在最优比；堆深主要考验训练稳定性（Pre-LN 才敢堆）</td></tr><tr><td>&quot;Pre-LN 和 Post-LN 差不多&quot;</td><td>差很多，Post-LN 在深层必须靠 warmup 救，Pre-LN 是能堆 100+ 层的前提</td></tr><tr><td>&quot;d_ff 一定是 4d&quot;</td><td>LLaMA 用 SwiGLU 时取 8/3·d，为的是保持总参数不变</td></tr><tr><td>&quot;MoE 一定更省钱&quot;</td><td>只在<strong>推理</strong>上省算力；显存要装下全部专家，训练也更复杂</td></tr></tbody></table>
 <hr/>
-<h2 id="39-动手">3.9 动手</h2>
+<h2 id="39-动手">3.9 动手</h2><nav class="sec-nav"><a class="sn prev" href="#38-常被误解的点"><span class="sn-label">← 上一节</span><span class="sn-name">3.8 常被误解的点</span></a><a class="sn next" href="#310-自查问题"><span class="sn-label">下一节 →</span><span class="sn-name">3.10 自查问题</span></a></nav>
 <pre><code>python3 demos/04_positional_encoding.py     # 位置编码的四个性质都是真实算出来的
 python3 demos/make_figures.py               # 重画 positional-encoding.png</code></pre>
 <p><strong>建议改的三处</strong>：</p>
 <ul class="lvl"><li>把 <code>D_MODEL</code> 从 64 改成 8，观察&quot;性质 1&quot;那张表是否还那么整齐（提示：维度太少，频率分辨率不够）。</li><li>把 <code>10000</code> 改成 <code>100</code>，观察热力图的频率分布如何变化。</li><li>自己加一段：实现 RoPE 的二维旋转矩阵，验证 $q_m&#x27;^\top k_n&#x27;$ 只依赖 m−n。</li></ul>
 <hr/>
-<h2 id="310-自查问题">3.10 自查问题</h2>
+<h2 id="310-自查问题">3.10 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#39-动手"><span class="sn-label">← 上一节</span><span class="sn-name">3.9 动手</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>一个 decoder block 里有哪些子层？各占多少参数？</li><li>残差连接为什么能缓解梯度消失？（写出 ∂x&#x27;/∂x）</li><li>Pre-LN 和 Post-LN 的公式分别是什么？为什么现代模型都用 Pre-LN？</li><li>位置编码为什么必需？RoPE 相比正弦编码好在哪两个点？</li><li>用 <code>12·L·d²</code> 估算一个 L=80、d=8192 的模型参数量，再想想词表占多少。</li><li>Encoder-only / Decoder-only / Encoder-Decoder 各自适合什么任务？为什么 LLM 是 Decoder-only？</li><li>MoE 的&quot;总参数&quot;和&quot;激活参数&quot;分别影响什么？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="02-attention.html">← 上一章：注意力机制</a> · <a href="README.html">返回总览</a> · <a href="04-pretraining.html">下一章：预训练 →</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

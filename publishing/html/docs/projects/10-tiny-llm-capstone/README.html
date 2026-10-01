@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#项目目标" class="lvl2">项目目标</a><a href="#为什么做这个项目" class="lvl2">为什么做这个项目</a><a href="#解决什么问题" class="lvl2">解决什么问题</a><a href="#最终能力" class="lvl2">最终能力</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#项目演进" class="lvl2">项目演进</a><a href="#milestones" class="lvl2">Milestones</a><a href="#当前状态" class="lvl2">当前状态</a><a href="#关键实测数字" class="lvl3">关键实测数字</a><a href="#最值得记住的三条" class="lvl3">最值得记住的三条</a><a href="#其他反直觉发现" class="lvl3">其他反直觉发现</a><a href="#当前版本" class="lvl2">当前版本</a><a href="#项目结构" class="lvl2">项目结构</a><a href="#运行方式" class="lvl2">运行方式</a><a href="#已掌握能力" class="lvl2">已掌握能力</a><a href="#下一步" class="lvl2">下一步</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="project-10-tiny-llm-ai-engineer-capstone">Project 10 — Tiny LLM / AI Engineer Capstone</h1>
-<h2 id="项目目标">项目目标</h2>
+<h2 id="项目目标">项目目标</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#为什么做这个项目"><span class="sn-label">下一节 →</span><span class="sn-name">为什么做这个项目</span></a></nav>
 <p>把前面所有能力重新串起来，完成最终 AI Engineer Capstone【综合项目】——从零实现一个小型 LLM 工程。</p>
-<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<h2 id="为什么做这个项目">为什么做这个项目</h2><nav class="sec-nav"><a class="sn prev" href="#项目目标"><span class="sn-label">← 上一节</span><span class="sn-name">项目目标</span></a><a class="sn next" href="#解决什么问题"><span class="sn-label">下一节 →</span><span class="sn-name">解决什么问题</span></a></nav>
 <p>前面 9 个项目都是专项能力。这个项目把它们全部串起来：自己完整实现一个 LLM 从 Tokenizer → 训练 → 推理 → 部署的全链路，并且<strong>每个数字都来自一次真实运行</strong>。</p>
-<h2 id="解决什么问题">解决什么问题</h2>
+<h2 id="解决什么问题">解决什么问题</h2><nav class="sec-nav"><a class="sn prev" href="#为什么做这个项目"><span class="sn-label">← 上一节</span><span class="sn-name">为什么做这个项目</span></a><a class="sn next" href="#最终能力"><span class="sn-label">下一节 →</span><span class="sn-name">最终能力</span></a></nav>
 <ul class="lvl"><li>能不能从零实现一个完整的 LLM 工程？</li><li>能不能把前面学到的所有能力真正串起来（而不是十个互不相干的 demo）？</li><li>能不能作为 AI Engineer 独立交付完整项目？</li></ul>
-<h2 id="最终能力">最终能力</h2>
+<h2 id="最终能力">最终能力</h2><nav class="sec-nav"><a class="sn prev" href="#解决什么问题"><span class="sn-label">← 上一节</span><span class="sn-name">解决什么问题</span></a><a class="sn next" href="#技术栈"><span class="sn-label">下一节 →</span><span class="sn-name">技术栈</span></a></nav>
 <pre><code>Data
     ↓
 Tokenizer
@@ -81,9 +160,9 @@ Optimization
 Serving
     ↓
 Application</code></pre>
-<h2 id="技术栈">技术栈</h2>
+<h2 id="技术栈">技术栈</h2><nav class="sec-nav"><a class="sn prev" href="#最终能力"><span class="sn-label">← 上一节</span><span class="sn-name">最终能力</span></a><a class="sn next" href="#项目演进"><span class="sn-label">下一节 →</span><span class="sn-name">项目演进</span></a></nav>
 <ul class="lvl"><li><strong>纯 numpy + Python 标准库手写</strong>：BPE 分词器、Transformer Decoder、训练闭环、推理引擎、量化、HTTP 服务</li><li>不引入 torch / transformers / fastapi / vllm —— HTTP 服务直接用标准库 <code>http.server</code> + <code>urllib</code></li><li><strong>三层复用</strong>前面项目的已验真能力：<ul class="lvl"><li><strong>P06</strong>（<code>06-mini-transformer-llm/src</code>）：手写 Tensor / autograd、<code>TransformerLM</code>、<code>BPETokenizer</code>/<code>CharTokenizer</code></li><li><strong>P08</strong>（<code>08-fine-tuning/src/ft</code>）：<code>enable_deterministic_autograd()</code>（把 <code>Tensor._prev</code> 从无序 <code>set</code> 改成有序 list）</li><li><strong>P09</strong>（<code>09-evaluation-inference/src/ie</code>）：<code>metrics</code>（含 ECE 校准）、<code>quantize</code>、<code>kvbook</code>、<code>engine</code>、<code>serve</code>、<code>autoeval</code>、<code>compare</code></li></ul></li></ul>
-<h2 id="项目演进">项目演进</h2>
+<h2 id="项目演进">项目演进</h2><nav class="sec-nav"><a class="sn prev" href="#技术栈"><span class="sn-label">← 上一节</span><span class="sn-name">技术栈</span></a><a class="sn next" href="#milestones"><span class="sn-label">下一节 →</span><span class="sn-name">Milestones</span></a></nav>
 <pre><code>前面 9 个项目的所有能力
     ↓ 完整整合
 Tiny LLM v0.1（Tokenizer + Model）
@@ -91,9 +170,9 @@ Tiny LLM v0.1（Tokenizer + Model）
 Tiny LLM v0.2
     ↓ Inference + Optimization + Serving
 Tiny LLM v1.0   ✅</code></pre>
-<h2 id="milestones">Milestones</h2>
+<h2 id="milestones">Milestones</h2><nav class="sec-nav"><a class="sn prev" href="#项目演进"><span class="sn-label">← 上一节</span><span class="sn-name">项目演进</span></a><a class="sn next" href="#当前状态"><span class="sn-label">下一节 →</span><span class="sn-name">当前状态</span></a></nav>
 <table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Project Architecture</td><td>唯一配置入口（<code>TinyConfig</code> + <code>validate()</code>）/ 八段流水线</td><td>✅ 已落地</td></tr><tr><td>02</td><td>Tokenizer</td><td>BPE 手写 + <strong>带归因的 roundtrip 报告</strong></td><td>✅ 已落地</td></tr><tr><td>03</td><td>Dataset</td><td>清洗 / 切分 / <strong>泄漏检查</strong> / 滑动窗口打包</td><td>✅ 已落地</td></tr><tr><td>04</td><td>Embedding</td><td>查表 + 正弦位置编码（0 可训练参数）+ 参数占比</td><td>✅ 已落地</td></tr><tr><td>05</td><td>Transformer Block</td><td>Pre-LN + 残差 + FFN + <strong>因果性硬性自检</strong></td><td>✅ 已落地</td></tr><tr><td>06</td><td>Training</td><td>调度 / 裁剪 / 早停回滚 / 断点续训</td><td>✅ 已落地</td></tr><tr><td>07</td><td>Evaluation</td><td>语言层 / 校准层 / 生成层 + <strong>两组配对对照</strong></td><td>✅ 已落地</td></tr><tr><td>08</td><td>Inference</td><td>采样四旋钮 / KV Cache 等价性 / <strong>真·流式</strong></td><td>✅ 已落地</td></tr><tr><td>09</td><td>Optimization</td><td>量化（INT8/INT4/NF4）+ KV Cache 显存账本</td><td>✅ 已落地</td></tr><tr><td>10</td><td>Serving</td><td>OpenAI 兼容 HTTP + SSE + 冒烟 + 压测</td><td>✅ 已落地</td></tr><tr><td>11</td><td>Complete System</td><td>八段一条命令跑完，可缓存 / 可分段 / 报告可机读</td><td>✅ 已落地</td></tr></tbody></table>
-<h2 id="当前状态">当前状态</h2>
+<h2 id="当前状态">当前状态</h2><nav class="sec-nav"><a class="sn prev" href="#milestones"><span class="sn-label">← 上一节</span><span class="sn-name">Milestones</span></a><a class="sn next" href="#当前版本"><span class="sn-label">下一节 →</span><span class="sn-name">当前版本</span></a></nav>
 <p><strong>v1.0 —— 11/11 Milestone 全部落地，71 项 pytest 全绿，11 个真实 demo，11 张真实终端截图 + 11 张手写架构图。</strong></p>
 <p>主线叙事：<strong>把&quot;能不能跑通&quot;变成&quot;能不能证明它对&quot;。</strong> 从零到一的顺序：Tokenizer → Dataset → Embedding → Block → Training → Evaluation → Inference → Optimization → Serving → 一条命令串起来。</p>
 <h3 id="关键实测数字">关键实测数字</h3>
@@ -102,9 +181,9 @@ Tiny LLM v1.0   ✅</code></pre>
 <ul class="lvl"><li><strong>过拟合是被量出来的，不是猜的。</strong> train loss 7.1547 → 3.6882 看着很成功，但 val 在第 800 步触底后回升。<strong>早停真正干的事不是&quot;提前结束&quot;，而是&quot;结束并把权重退回到最好那一刻&quot;</strong> —— 只停不回滚，交出去的是 PPL 338.13 而不是 315.79。</li><li><strong>PPL 只是入场券，不是判决书。</strong> 相对随机下降 75.3%（看着不错）与关键词覆盖 <strong>0.000</strong>（完全答不了题）<strong>同时成立</strong>。三层评估（语言 / 校准 / 生成）+ 配对显著性，缺一层结论就不成立。<strong>这个 230K 参数的模型会拼词、不会答题——这里的价值是把这个真相量化出来，而不是让 loss 曲线替它遮羞。</strong></li><li><strong>优化必须同时报收益和代价。</strong> 量化是<strong>有损</strong>（代价是 ΔPPL）、KV Cache 是<strong>无损</strong>（代价是显存）。只报压缩比、不报 ΔPPL 的方案不可信；而且<strong>&quot;INT4 基本无损&quot;是小模型上的假命题</strong>——实测 ΔPPL <strong>+2.66%</strong>，是 INT8（+0.08%）的 33 倍。</li></ul>
 <h3 id="其他反直觉发现">其他反直觉发现</h3>
 <ul class="lvl"><li><strong>&quot;参数都在 FFN&quot;不是规律，是 <code>d_ff/d_model = 4</code> 的后果。</strong> 令 <code>2·d·d_ff = 4·d²</code> 得 <code>d_ff = 2d</code>；本项目 <code>d_ff = 2·d_model</code>，所以 FFN 与注意力<strong>平手</strong>（49.9% vs 49.3%）。</li><li><strong>argmax 相等 ≠ 模型没被污染。</strong> 去掉因果掩码后 logits 最大差 0.6892，但 argmax 依然是同一个 —— <strong>只比&quot;最终预测对不对&quot;的测试，在掩码这类结构错误面前是盲的。</strong></li><li><strong>&quot;假流式&quot;的现象是 TTFT == 总耗时。</strong> 先算完整段再逐 token <code>yield</code>，用户感知不到任何流式好处。改成直接消费解码生成器后，TTFT 从 4.25 ms 降到 <strong>0.20 ms</strong>。</li><li><strong>低温在欠训练模型上会退化成复读。</strong> T=0 重复率 <strong>0.887</strong>、T=0.3 是 0.714 —— &quot;降低温度提高质量&quot;这个直觉，在本来就没学会的模型上是反的。</li><li><strong>top_k 会降多样性，top_p 不会。</strong> top_k=5 把 distinct-1 从 0.941 砍到 0.500（砍掉了长尾），top_p=0.9 保留 0.941。</li><li><strong>MSE 最小 ≠ 端到端最优。</strong> NF4 的 MSE 比 INT4 还低，但 ΔPPL 反而更高（+4.01% vs +2.66%）。</li><li><strong>ECE 依赖分箱数，不是一个绝对量。</strong> M07 演示用 5 箱得 0.0662、流水线默认 10 箱得 0.0709 —— <strong>引用 ECE 必须带箱数，否则两个&quot;都对&quot;的数字看起来像矛盾。</strong></li><li><strong>复用检查点必须选 <code>best</code> 而不是 <code>last</code>。</strong> 选错会让全链路 PPL 变成 338.13，和 M06/M07 对不上 —— <strong>跨章节的一致性取决于一个&quot;选哪个检查点&quot;的细节。</strong></li></ul>
-<h2 id="当前版本">当前版本</h2>
+<h2 id="当前版本">当前版本</h2><nav class="sec-nav"><a class="sn prev" href="#当前状态"><span class="sn-label">← 上一节</span><span class="sn-name">当前状态</span></a><a class="sn next" href="#项目结构"><span class="sn-label">下一节 →</span><span class="sn-name">项目结构</span></a></nav>
 <p>v1.0</p>
-<h2 id="项目结构">项目结构</h2>
+<h2 id="项目结构">项目结构</h2><nav class="sec-nav"><a class="sn prev" href="#当前版本"><span class="sn-label">← 上一节</span><span class="sn-name">当前版本</span></a><a class="sn next" href="#运行方式"><span class="sn-label">下一节 →</span><span class="sn-name">运行方式</span></a></nav>
 <pre><code>projects/10-tiny-llm-capstone/
 ├── README.md                  # 本文件
 ├── pyproject.toml
@@ -128,7 +207,7 @@ Tiny LLM v1.0   ✅</code></pre>
 ├── assets/                    # 11 张真实终端截图 + 11 张手写架构图 SVG
 ├── milestones/                # 01-11 文档
 └── models/                    # 流水线产物（tokenizer.json / tiny_lm_best.npz / report.json）</code></pre>
-<h2 id="运行方式">运行方式</h2>
+<h2 id="运行方式">运行方式</h2><nav class="sec-nav"><a class="sn prev" href="#项目结构"><span class="sn-label">← 上一节</span><span class="sn-name">项目结构</span></a><a class="sn next" href="#已掌握能力"><span class="sn-label">下一节 →</span><span class="sn-name">已掌握能力</span></a></nav>
 <pre><code># 跑测试（71 passed）
 /Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python -m pytest -q
 
@@ -139,12 +218,55 @@ Tiny LLM v1.0   ✅</code></pre>
 /Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python -m tiny.pipeline
 # 可选：--force（忽略缓存）/ --steps N / --only config,tokenizer / --no-serve</code></pre>
 <blockquote><p>本项目刻意<strong>不建 venv</strong>：统一复用带 numpy 的托管解释器，省磁盘空间。</p></blockquote>
-<h2 id="已掌握能力">已掌握能力</h2>
+<h2 id="已掌握能力">已掌握能力</h2><nav class="sec-nav"><a class="sn prev" href="#运行方式"><span class="sn-label">← 上一节</span><span class="sn-name">运行方式</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <ul class="lvl"><li>Project 01-09 的所有能力</li><li>从零串起一条 LLM 全链路：手写 BPE 分词（含归因）、防泄漏数据集、Transformer Decoder、训练闭环（早停回滚 + 断点续训）</li><li><strong>把&quot;验证&quot;当成一等公民</strong>：因果性自检、确定性对拍、KV Cache 等价性、量化 ΔPPL、断言 argmax 之外的数值</li><li>三层评估（语言 / 校准 / 生成）+ 配对显著性，把&quot;模型到底能不能用&quot;量成数字</li><li>手写采样策略、KV Cache、量化（INT8/INT4/NF4）与显存账本</li><li>用标准库起 OpenAI 兼容服务（SSE 流式 + 冒烟 + 并发压测 + 分位延迟）</li><li>交付一条<strong>可缓存、可分段重跑、报告可机读</strong>的 ML 流水线</li></ul>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#已掌握能力"><span class="sn-label">← 上一节</span><span class="sn-name">已掌握能力</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>Project 10 已完成。后续可扩展方向：</p>
 <ul class="lvl"><li>把 <code>include_general=True</code> 的通用语料进一步扩充，观察生成层关键词覆盖能否从 0.000 提起（这是一个可量化的探索）</li><li>用 P07 的模型加载/量化线在 Colab GPU 上把同一套评估流程跑一遍，对比 CPU 版的小模型结论是否仍然成立</li><li>把 <code>pipeline.py</code> 接进 CI：报告可机读 ⇒ 可以直接做&quot;超参改动 → PPL 变化&quot;的自动回归</li></ul>
 <p><strong>前置项目</strong>：<a href="../../../../../projects/09-evaluation-inference">Project 09 — LLM Evaluation / Inference Platform</a> <strong>底座来源</strong>：<a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</a> · <a href="../../../../../projects/08-fine-tuning">Project 08 — LoRA / QLoRA Fine-Tuning</a></p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

@@ -52,18 +52,97 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#为什么单开这个目录" class="lvl2">为什么单开这个目录</a><a href="#目录契约" class="lvl2">目录契约</a><a href="#运行方式" class="lvl2">运行方式</a><a href="#m01-最小可用调用" class="lvl2">M01 最小可用调用</a><a href="#m02-流式输出把等待摊到用户眼前" class="lvl2">M02 流式输出：把等待摊到用户眼前</a><a href="#m03-生成参数对照" class="lvl2">M03 生成参数对照</a><a href="#m04-手算参数量把为什么叫-7b算出来" class="lvl2">M04 手算参数量：把「为什么叫 7B」算出来</a><a href="#m05-显存账本权重与-kv-cache" class="lvl2">M05 显存账本：权重与 KV Cache</a><a href="#m06-java-面试助手检索-生成" class="lvl2">M06 Java 面试助手：检索 + 生成</a><a href="#必须诚实标注的三件事" class="lvl2">必须诚实标注的三件事</a><a href="#数据可信度分级" class="lvl2">数据可信度分级</a><a href="#下一步" class="lvl2">下一步</a><a href="#版本" class="lvl2">版本</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="pipelines-本地驱动的开源-llm-调用管线">pipelines —— 本地驱动的开源 LLM 调用管线</h1>
 <blockquote><p>所属：<a href="../README.html">Project 07 · Open Source LLM</a></p><p><strong>与 <code>workflows/</code> 的分工</strong>：<code>workflows/</code> 回答「模型怎么训出来」，<code>pipelines/</code> 回答「模型怎么调起来、资源怎么算」。</p></blockquote>
-<h2 id="为什么单开这个目录">为什么单开这个目录</h2>
+<h2 id="为什么单开这个目录">为什么单开这个目录</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#目录契约"><span class="sn-label">下一节 →</span><span class="sn-name">目录契约</span></a></nav>
 <p>本机是 Mac M1 / 16GB 统一内存 / 磁盘余量约 15GB。跑 Qwen2.5-7B 的 bf16 权重需要 <strong>14.18 GiB</strong>（见 M05 实测表），本机内存扛得住但磁盘会被压到危险水位；更大的模型直接不可行。</p>
 <p>但<strong>「调用」不等于「加载」</strong>——推理在云端，本机只需要一个 HTTP 客户端。于是 P07 拆成互不干扰的两条线：</p>
 <table><thead><tr><th>目录</th><th>回答的问题</th><th>是否需要 GPU</th></tr></thead><tbody><tr><td><code>workflows/</code></td><td>模型/数据集怎么训出来（Colab / Pro / 云端 GPU）</td><td>是</td></tr><tr><td><strong><code>pipelines/</code></strong></td><td><strong>怎么调用、参数怎么调、资源怎么算</strong></td><td><strong>否</strong></td></tr></tbody></table>
 <p>附带好处：这条线的每个数字要么来自<strong>本次真实 API 调用</strong>，要么是<strong>本机可复现的算术</strong>， 没有从博客里抄来的二手结论（具体见文末「数据可信度分级」）。</p>
-<h2 id="目录契约">目录契约</h2>
+<h2 id="目录契约">目录契约</h2><nav class="sec-nav"><a class="sn prev" href="#为什么单开这个目录"><span class="sn-label">← 上一节</span><span class="sn-name">为什么单开这个目录</span></a><a class="sn next" href="#运行方式"><span class="sn-label">下一节 →</span><span class="sn-name">运行方式</span></a></nav>
 <pre><code>pipelines/
 ├── README.md                    # 本文件
 ├── data/
@@ -81,21 +160,21 @@ li{margin:.3em 0;}
 │   ├── demo_06_java_interview_app.py  # M06 Java 面试助手（检索+生成）
 │   └── out/                     # 每次运行的终端输出 + 结构化结果（截图的真实素材）
 └── assets/                      # 由 demos/out/*_terminal.txt 渲染的真实终端截图</code></pre>
-<h2 id="运行方式">运行方式</h2>
+<h2 id="运行方式">运行方式</h2><nav class="sec-nav"><a class="sn prev" href="#目录契约"><span class="sn-label">← 上一节</span><span class="sn-name">目录契约</span></a><a class="sn next" href="#m01-最小可用调用"><span class="sn-label">下一节 →</span><span class="sn-name">M01 最小可用调用</span></a></nav>
 <pre><code>cd projects/07-open-source-llm/pipelines
 source ~/.zshrc                      # DEEPSEEK_API_KEY 在这里导出
 python demos/demo_01_chat.py</code></pre>
 <blockquote><p><strong>必须 <code>source ~/.zshrc</code></strong>：非交互 shell 不会继承里面的导出变量， 不 source 会直接抛 <code>LLMError: 未找到 DEEPSEEK_API_KEY</code>。这是本机环境特有的坑， 别浪费时间怀疑代码。</p></blockquote>
 <p>demo 的输出会同步写入 <code>demos/out/&lt;name&gt;_terminal.txt</code> 与 <code>&lt;name&gt;_result.json</code>—— <strong>截图只能由这两份真实产物渲染而来</strong>，这是本项目对「配图」的硬约束。</p>
 <hr/>
-<h2 id="m01-最小可用调用">M01 最小可用调用</h2>
+<h2 id="m01-最小可用调用">M01 最小可用调用</h2><nav class="sec-nav"><a class="sn prev" href="#运行方式"><span class="sn-label">← 上一节</span><span class="sn-name">运行方式</span></a><a class="sn next" href="#m02-流式输出把等待摊到用户眼前"><span class="sn-label">下一节 →</span><span class="sn-name">M02 流式输出：把等待摊到用户眼前</span></a></nav>
 <p><code>demo_01_chat.py</code> 把一次调用在 HTTP 层面摊开：Bearer 鉴权、三种 role 的分工、 以及 usage 的守恒性质（<code>total == prompt + completion</code>）。</p>
 <figure class="figure"><img alt="demo_01 最小可用调用" src="../../../../../../projects/07-open-source-llm/pipelines/assets/term-01-chat.png" loading="lazy"/><figcaption>demo_01 最小可用调用</figcaption></figure>
 <p><strong>本次真实测量</strong></p>
 <table><thead><tr><th>指标</th><th>实测值</th></tr></thead><tbody><tr><td>prompt_tokens</td><td><strong>34</strong></td></tr><tr><td>completion_tokens</td><td><strong>31</strong></td></tr><tr><td>total_tokens</td><td><strong>65</strong></td></tr><tr><td>守恒校验 <code>total == prompt + completion</code></td><td><strong>True</strong></td></tr><tr><td>latency</td><td><strong>0.741 s</strong></td></tr><tr><td>本地粗估 vs 真实 prompt token</td><td>估算 40 / 真实 34，<strong>误差 6</strong></td></tr></tbody></table>
 <p>本地估算用「中文 1 字 ≈ 1 token、英文 4 字符 ≈ 1 token」的口径，误差 6 属正常—— 它证明了<strong>估算只能是估算</strong>，真正计费要以服务端 <code>usage</code> 为准。</p>
 <hr/>
-<h2 id="m02-流式输出把等待摊到用户眼前">M02 流式输出：把等待摊到用户眼前</h2>
+<h2 id="m02-流式输出把等待摊到用户眼前">M02 流式输出：把等待摊到用户眼前</h2><nav class="sec-nav"><a class="sn prev" href="#m01-最小可用调用"><span class="sn-label">← 上一节</span><span class="sn-name">M01 最小可用调用</span></a><a class="sn next" href="#m03-生成参数对照"><span class="sn-label">下一节 →</span><span class="sn-name">M03 生成参数对照</span></a></nav>
 <p><code>demo_02_stream.py</code> 的核心价值是把「总耗时」拆成 <strong>TTFT（首字延迟）</strong> 和「净生成」两段。 非流式下这两个数是同一个值，用户只能干等；流式把它们分开，<strong>体感完全不同，但模型并没有变快</strong>。</p>
 <figure class="figure"><img alt="demo_02 流式输出" src="../../../../../../projects/07-open-source-llm/pipelines/assets/term-02-stream.png" loading="lazy"/><figcaption>demo_02 流式输出</figcaption></figure>
 <table><thead><tr><th>指标</th><th>实测值</th></tr></thead><tbody><tr><td>SSE chunks</td><td><strong>397</strong></td></tr><tr><td>TTFT（首字延迟）</td><td><strong>0.9106 s</strong></td></tr><tr><td>端到端总耗时</td><td><strong>2.3152 s</strong></td></tr><tr><td>TTFT 占比</td><td><strong>39.33%</strong></td></tr><tr><td>净生成吞吐 gen_tps</td><td><strong>284.77 tok/s</strong></td></tr><tr><td>毛吞吐 gross_tps</td><td><strong>172.8 tok/s</strong></td></tr></tbody></table>
@@ -103,7 +182,7 @@ python demos/demo_01_chat.py</code></pre>
 <ul class="lvl"><li><strong>TTFT 占了近 40% 的总时间</strong>——用户有接近四成时长在「对着空白屏等」。这才是要优化的目标。</li><li><strong>gen_tps 284.77 vs gross_tps 172.8</strong>，差的正是被 TTFT 拖走的那部分。 只看「每秒多少 token」会被这个口径差误导。</li></ul>
 <p>另一个细节：397 个 chunk 对应 400 个 completion token，几乎 1:1—— 中文流式基本是「一个 token 一个包」。</p>
 <hr/>
-<h2 id="m03-生成参数对照">M03 生成参数对照</h2>
+<h2 id="m03-生成参数对照">M03 生成参数对照</h2><nav class="sec-nav"><a class="sn prev" href="#m02-流式输出把等待摊到用户眼前"><span class="sn-label">← 上一节</span><span class="sn-name">M02 流式输出：把等待摊到用户眼前</span></a><a class="sn next" href="#m04-手算参数量把为什么叫-7b算出来"><span class="sn-label">下一节 →</span><span class="sn-name">M04 手算参数量：把「为什么叫 7B」算出来</span></a></nav>
 <p><code>demo_03_params.py</code> 固定 prompt、只改 <code>temperature</code>，跑 4 组 （<code>0.0</code> 故意跑两次，用于检验贪婪解码是否真的一致）。</p>
 <figure class="figure"><img alt="demo_03 生成参数对照" src="../../../../../../projects/07-open-source-llm/pipelines/assets/term-03-params.png" loading="lazy"/><figcaption>demo_03 生成参数对照</figcaption></figure>
 <table><thead><tr><th>#</th><th>temperature</th><th>completion_tokens</th><th>latency(s)</th></tr></thead><tbody><tr><td>1</td><td>0.0</td><td>68</td><td>1.063</td></tr><tr><td>2</td><td>0.0</td><td>72</td><td>1.053</td></tr><tr><td>3</td><td>0.7</td><td>53</td><td>0.917</td></tr><tr><td>4</td><td>1.5</td><td>45</td><td>0.871</td></tr></tbody></table>
@@ -113,7 +192,7 @@ python demos/demo_01_chat.py</code></pre>
 <p>如果你的业务依赖「同输入必须同输出」，不要把宝押在 temperature=0 上—— 正确做法是加 <code>seed</code>（若服务端支持）+ 自己做输出缓存。</p>
 <p>另外，本组数据里 token 数随 temperature 升高而下降（68 → 53 → 45）， 这是<strong>这组样本的观察</strong>，不能当普遍规律——它取决于采样到停止符的时机。</p>
 <hr/>
-<h2 id="m04-手算参数量把为什么叫-7b算出来">M04 手算参数量：把「为什么叫 7B」算出来</h2>
+<h2 id="m04-手算参数量把为什么叫-7b算出来">M04 手算参数量：把「为什么叫 7B」算出来</h2><nav class="sec-nav"><a class="sn prev" href="#m03-生成参数对照"><span class="sn-label">← 上一节</span><span class="sn-name">M03 生成参数对照</span></a><a class="sn next" href="#m05-显存账本权重与-kv-cache"><span class="sn-label">下一节 →</span><span class="sn-name">M05 显存账本：权重与 KV Cache</span></a></nav>
 <p><code>demo_04_params_count.py</code> <strong>完全不联网</strong>，只用 <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Transformer 参数公式</a> 从真 config.json 的架构字段算出参数量，再跟标称规模对账。</p>
 <p>能算出来 = 你真的懂这个结构；只能背名字 = 之前是假的懂。</p>
 <figure class="figure"><img alt="demo_04 手算参数量" src="../../../../../../projects/07-open-source-llm/pipelines/assets/term-04-params-count.png" loading="lazy"/><figcaption>demo_04 手算参数量</figcaption></figure>
@@ -126,7 +205,7 @@ mlp/layer  = 3 × hidden × intermediate            （gate + up + down，SwiGLU
 每层再加 2 个 LayerNorm = 2×hidden；最后还有一个 final norm = hidden</code></pre>
 <p>值得一提：0.5B 与 1.5B 的 <code>tie_word_embeddings=true</code>（lm_head 复用嵌入表，直接省下一份 vocab×hidden），7B 为 <code>false</code>——所以 7B 单是这两个矩阵就占了 <code>544,997,376 × 2 ≈ 10.9 亿</code>参数， <strong>超过总量的 1/7</strong>。词表大小的代价在这里看得最清楚。</p>
 <hr/>
-<h2 id="m05-显存账本权重与-kv-cache">M05 显存账本：权重与 KV Cache</h2>
+<h2 id="m05-显存账本权重与-kv-cache">M05 显存账本：权重与 KV Cache</h2><nav class="sec-nav"><a class="sn prev" href="#m04-手算参数量把为什么叫-7b算出来"><span class="sn-label">← 上一节</span><span class="sn-name">M04 手算参数量：把「为什么叫 7B」算出来</span></a><a class="sn next" href="#m06-java-面试助手检索-生成"><span class="sn-label">下一节 →</span><span class="sn-name">M06 Java 面试助手：检索 + 生成</span></a></nav>
 <p><code>demo_05_memory_vram.py</code> 同样纯本地算术，回答两个决策问题：<strong>要不要量化？能不能跑长上下文？</strong></p>
 <figure class="figure"><img alt="demo_05 显存账本" src="../../../../../../projects/07-open-source-llm/pipelines/assets/term-05-memory-vram.png" loading="lazy"/><figcaption>demo_05 显存账本</figcaption></figure>
 <p><strong>Qwen2.5-7B 权重（GiB）</strong></p>
@@ -139,7 +218,7 @@ mlp/layer  = 3 × hidden × intermediate            （gate + up + down，SwiGLU
 <blockquote><p>长上下文下 KV Cache 会<strong>线性增长</strong>，但在这批 Qwen2.5 模型的官方窗口内还追不上权重。 真正让它爆掉的是 <strong>batch 数</strong>——上面全是 batch=1，乘以并发数才是线上真实水位。</p></blockquote>
 <p>另外务必记住：<strong>量化权重 ≠ 解决长上下文</strong>。KV Cache 是独立变量， 要压它得单独量化 KV 或依赖 GQA/MLA 这类架构改进。</p>
 <hr/>
-<h2 id="m06-java-面试助手检索-生成">M06 Java 面试助手：检索 + 生成</h2>
+<h2 id="m06-java-面试助手检索-生成">M06 Java 面试助手：检索 + 生成</h2><nav class="sec-nav"><a class="sn prev" href="#m05-显存账本权重与-kv-cache"><span class="sn-label">← 上一节</span><span class="sn-name">M05 显存账本：权重与 KV Cache</span></a><a class="sn next" href="#必须诚实标注的三件事"><span class="sn-label">下一节 →</span><span class="sn-name">必须诚实标注的三件事</span></a></nav>
 <p><code>demo_06_java_interview_app.py</code> 把前面的东西串成闭环，并且<strong>结果是可测量的</strong>： 使用上层 <code>data/java_interview.json</code>（<strong>59 条</strong>真实 Java 面试问答）作为知识库， 用字符二元组相似度做本地检索（无 embedding 依赖、不联网），再交给模型生成。</p>
 <figure class="figure"><img alt="demo_06 Java 面试助手" src="../../../../../../projects/07-open-source-llm/pipelines/assets/term-06-java-app.png" loading="lazy"/><figcaption>demo_06 Java 面试助手</figcaption></figure>
 <p><strong>检索质量（8 条转述 query 构成的 mini 评测集）</strong></p>
@@ -149,17 +228,60 @@ mlp/layer  = 3 × hidden × intermediate            （gate + up + down，SwiGLU
 <p><strong>端到端问答实测</strong>：prompt/completion = <strong>288/95</strong> tokens，latency <strong>0.9543 s</strong>。</p>
 <blockquote><p>11.59 ms 检索 vs 954 ms 生成——<strong>耗时几乎全在生成侧</strong>。 想提速别在检索上抠，优化 prompt 长度和生成长度才是大头。</p></blockquote>
 <hr/>
-<h2 id="必须诚实标注的三件事">必须诚实标注的三件事</h2>
+<h2 id="必须诚实标注的三件事">必须诚实标注的三件事</h2><nav class="sec-nav"><a class="sn prev" href="#m06-java-面试助手检索-生成"><span class="sn-label">← 上一节</span><span class="sn-name">M06 Java 面试助手：检索 + 生成</span></a><a class="sn next" href="#数据可信度分级"><span class="sn-label">下一节 →</span><span class="sn-name">数据可信度分级</span></a></nav>
 <p>写文档时若漏掉这三条，整份材料的可信度就归零：</p>
 <ul class="lvl"><li><strong>服务端返回的 model 是 <code>deepseek-flash</code>，不是我们请求的 <code>deepseek-chat</code>。</strong> 客户端请求体写的是 <code>deepseek-chat</code>，但实际由服务端决定落到哪个模型。 因此本文件所有延迟 / 吞吐 / 计费相关数字<strong>都是 deepseek-flash 的实测</strong>， 不能当作 deepseek-chat 的性能。</li></ul>
 <ul class="lvl"><li><strong>temperature=0 两次调用结果不一致</strong>（详见 M03）， 「贪婪解码 = 确定性」是近似而非保证。</li></ul>
 <ul class="lvl"><li><strong>recall@1 = 87.5% 是「零成本词面基线」的成绩</strong>，样本只有 8 条。 它用来作<strong>对照基准</strong>有意义，不足以单独支撑任何结论。</li></ul>
-<h2 id="数据可信度分级">数据可信度分级</h2>
+<h2 id="数据可信度分级">数据可信度分级</h2><nav class="sec-nav"><a class="sn prev" href="#必须诚实标注的三件事"><span class="sn-label">← 上一节</span><span class="sn-name">必须诚实标注的三件事</span></a><a class="sn next" href="#下一步"><span class="sn-label">下一节 →</span><span class="sn-name">下一步</span></a></nav>
 <table><thead><tr><th>类别</th><th>来源</th><th>可复现性</th></tr></thead><tbody><tr><td>usage tokens / latency / TTFT / tps</td><td>本次真实 API 调用</td><td>高（重跑可得同量级）</td></tr><tr><td>参数量 / 权重 GiB / KV Cache</td><td>本地算术 + 真实 config.json</td><td>高（不联网可复现）</td></tr><tr><td>config.json 架构字段</td><td>实时抓取 HF 镜像（<code>fetch_status: all_ok</code>）</td><td>高（原始数据），但以官方为准</td></tr><tr><td>recall@1 / recall@3</td><td>本地 8 条评测集</td><td>中（样本小）</td></tr></tbody></table>
-<h2 id="下一步">下一步</h2>
+<h2 id="下一步">下一步</h2><nav class="sec-nav"><a class="sn prev" href="#数据可信度分级"><span class="sn-label">← 上一节</span><span class="sn-name">数据可信度分级</span></a><a class="sn next" href="#版本"><span class="sn-label">下一节 →</span><span class="sn-name">版本</span></a></nav>
 <ul class="lvl"><li>增加 KServe/vLLM 本地部署对照（需要 GPU，走 <code>workflows/</code> 那条线的技术栈）</li><li>用 embedding 检索替换字符二元组，与 87.5% 这条基线做同口径对比</li><li>把 M05 的账本接上真实 GPU 显存读数，验证「估算 vs 实测」的偏差</li></ul>
-<h2 id="版本">版本</h2>
+<h2 id="版本">版本</h2><nav class="sec-nav"><a class="sn prev" href="#下一步"><span class="sn-label">← 上一节</span><span class="sn-name">下一步</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 —— 6 个模块全部真实跑通，产出 6 张真实终端截图 + 12 份运行产物。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>

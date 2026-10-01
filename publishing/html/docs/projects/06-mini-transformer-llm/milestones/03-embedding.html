@@ -52,24 +52,103 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}</style>
+.img-missing{color:#b35900; font-weight:600;}
+.book-side{display:none;}
+.book-scrim{display:none;}
+.book-fab, .book-top{display:none;}
+@media (min-width:1000px){
+  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    background:var(--bg); border-right:1px solid var(--border); z-index:40;
+  }
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:18px 18px 10px;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .book-toc{overflow:auto; padding:0 12px 30px; scrollbar-width:thin;}
+  .book-toc a{
+    display:block; padding:5px 9px; border-radius:6px; color:var(--muted);
+    font-size:13px; text-decoration:none; line-height:1.5;
+  }
+  .book-toc a:hover{background:var(--code-bg); color:var(--accent);}
+  .book-toc a.lvl3{padding-left:22px; font-size:12.5px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+}
+@media (max-width:999px){
+  .book-side{
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
+    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    transform:translateX(-102%); transition:transform .22s ease;
+  }
+  .book-side.open{transform:translateX(0);}
+  .book-side-head{
+    display:flex; align-items:center; gap:8px; padding:16px 18px 10px;
+    font-size:13px; font-weight:600; border-bottom:1px solid var(--border);
+  }
+  .book-side-head button{margin-left:auto; border:none; background:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);}
+  .book-toc{overflow:auto; padding:10px 12px 30px;}
+  .book-toc a{display:block; padding:8px 9px; border-radius:6px; color:var(--fg);
+    text-decoration:none; font-size:14px;}
+  .book-toc a.lvl3{padding-left:22px; font-size:13px;}
+  .book-toc a.active{background:var(--code-bg); color:var(--accent); font-weight:600;}
+  .book-scrim{display:block; position:fixed; inset:0; background:rgba(31,35,40,.3); z-index:55;}
+  .book-scrim.show{display:block;}
+  .book-fab{
+    display:flex; align-items:center; gap:6px; position:fixed; left:14px; bottom:18px; z-index:50;
+    border:1px solid var(--border); background:var(--bg); color:var(--fg);
+    border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(31,35,40,.16);
+  }
+}
+/* 章节链式导航（每个章节末尾自动插入） */
+.sec-nav{
+  display:flex; gap:10px; justify-content:space-between; align-items:stretch;
+  margin:1.8em 0 .2em; padding-top:1em; border-top:1px solid var(--border);
+}
+.sec-nav .sn{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:10px 13px; border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; color:var(--fg); background:var(--code-bg);
+}
+.sec-nav .sn:hover{border-color:var(--accent); text-decoration:none;}
+.sec-nav .sn.next{align-items:flex-end; text-align:right;}
+.sec-nav .sn-label{color:var(--muted); font-size:11.5px;}
+.sec-nav .sn-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.sec-nav .sn.empty{opacity:.4; pointer-events:none;}
+.book-progress{position:fixed; top:0; left:0; height:3px; width:0; z-index:70;}
+.book-top{
+  position:fixed; right:18px; bottom:18px; z-index:50; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:999px; padding:8px 14px;
+  font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
+}
+.book-top.show{display:block;}
+</style>
 </head>
 <body>
+<div class="book-progress"></div>
+<aside class="book-side">
+  <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
+  <nav class="book-toc"><a href="#1-what-whyid-为什么不能直接进-transformer" class="lvl2">1. What / Why：id 为什么不能直接进 Transformer</a><a href="#2-designonehot-查表-固定正弦位置编码" class="lvl2">2. Design：one-hot 查表 + 固定正弦位置编码</a><a href="#3-realrun-evidence来自-demosoutdemo03embeddingtxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_03_embedding.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
+</aside>
+<div class="book-scrim"></div>
+<button class="book-fab">☰ 目录</button>
 <main class="container">
 <h1 id="milestone-03-embedding把-id-变成带位置的向量">Milestone 03 — Embedding：把 id 变成「带位置的向量」</h1>
 <p>Milestone 02 把文本变成了 id 序列，<code>vocab_size = 500</code>。但 id 对模型来说还是一堆整数 —— 模型不会算 <code>334 &gt; 12</code>，它只懂向量。Embedding 这一层就是<strong>把每个 id 映射到一行 <code>d_model</code> 维的向量</strong>，再叠上一个让模型知道「这是第几个位置」的位置编码。</p>
 <p>在 Project 05 里，模型内部对我完全黑盒；到了这里，我第一次亲手把 <code>id → 向量</code> 这步写出来 —— 而且关键不是「查表」本身，而是<strong>查表也要能回传梯度</strong>，否则后面训练时 Embedding 这层永远学不动。</p>
 <hr/>
-<h2 id="1-what-whyid-为什么不能直接进-transformer">1. What / Why：id 为什么不能直接进 Transformer</h2>
+<h2 id="1-what-whyid-为什么不能直接进-transformer">1. What / Why：id 为什么不能直接进 Transformer</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-designonehot-查表-固定正弦位置编码"><span class="sn-label">下一节 →</span><span class="sn-name">2. Design：one-hot 查表 + 固定正弦位置编码</span></a></nav>
 <p>Transformer 里一切都是矩阵乘法。整数 id 没法参与 <code>QKᵀ</code>，它必须变成连续向量。两个必须回答的问题：</p>
 <ul class="lvl"><li><strong>怎么从 id 拿到向量？</strong> —— 一张 <code>(V, d_model)</code> 的查找表 <code>W_e</code>，按 id 取行。</li><li><strong>怎么让它知道位置？</strong> —— 自注意力本身对顺序无感（把输入打乱，注意力权重只跟着打乱，模型分不清「猫吃鱼」和「鱼吃猫」）。所以要给每个位置加一个唯一指纹。</li></ul>
 <p>本项目的项目规则是<strong>纯 numpy，不用 torch</strong>。所以这张查找表不是 <code>nn.Embedding</code>，而是手写 <code>one-hot(id) @ W_e</code>。</p>
-<h2 id="2-designonehot-查表-固定正弦位置编码">2. Design：one-hot 查表 + 固定正弦位置编码</h2>
+<h2 id="2-designonehot-查表-固定正弦位置编码">2. Design：one-hot 查表 + 固定正弦位置编码</h2><nav class="sec-nav"><a class="sn prev" href="#1-what-whyid-为什么不能直接进-transformer"><span class="sn-label">← 上一节</span><span class="sn-name">1. What / Why：id 为什么不能直接进 Transformer</span></a><a class="sn next" href="#3-realrun-evidence来自-demosoutdemo03embeddingtxt"><span class="sn-label">下一节 →</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_03_embedding.txt）</span></a></nav>
 <p><code>src/model/embedding.py</code> 里三样东西：</p>
 <ul class="lvl"><li><code>TokenEmbedding</code>：<code>W_e</code> 是 <code>Parameter(np.random.randn(V, d_model) * 0.02)</code>，<strong>小初始化</strong>避免一上来 softmax 就饱和。前向用 <code>one_hot(ids) @ W_e</code>，而不是 <code>W_e[id]</code> 花式索引 —— 因为 one-hot 是常量、<code>W_e</code> 是参数，反向时梯度自动「scatter 回那一行」，正是 Embedding 该有的行为，还不用手写 gather/scatter。</li><li><code>PositionalEncoding</code>：<code>pe[pos, 2i] = sin(pos/10000^(2i/d))</code>，<code>pe[pos, 2i+1] = cos(...)</code>。<strong>这是常量 Tensor，不进 <code>parameters()</code></strong> —— 它只是位置指纹，不该被训练改掉。整张表预计算好，用时切片。</li><li><code>combine</code>：<code>x = TokenEmb(ids) + PosEnc(len(ids))</code>。位置编码是 <code>(seq, d_model)</code>、token 嵌入是 <code>(B, seq, d_model)</code>，<code>add</code> 会自然把位置编码<strong>广播</strong>到整个 batch。</li></ul>
 <figure class="figure"><img alt="Embedding 数据流：id → one-hot → 查表 → 加位置编码" src="../../../../../../projects/06-mini-transformer-llm/assets/embedding.svg" loading="lazy"/><figcaption>Embedding 数据流：id → one-hot → 查表 → 加位置编码</figcaption></figure>
 <p>形状约定（和 Milestone 01 契约一致）：<code>(V, d_model)</code> 的 <code>W_e</code>，输出 <code>(n, d_model)</code>，批处理 <code>(B, T, d_model)</code>。</p>
-<h2 id="3-realrun-evidence来自-demosoutdemo03embeddingtxt">3. Real-run evidence（来自 <code>demos/out/demo_03_embedding.txt</code>）</h2>
+<h2 id="3-realrun-evidence来自-demosoutdemo03embeddingtxt">3. Real-run evidence（来自 <code>demos/out/demo_03_embedding.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-designonehot-查表-固定正弦位置编码"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：one-hot 查表 + 固定正弦位置编码</span></a><a class="sn next" href="#4-bugs-lessons"><span class="sn-label">下一节 →</span><span class="sn-name">4. Bugs / lessons</span></a></nav>
 <p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
 <pre><code>vocab_size = 500
 d_model    = 16
@@ -99,14 +178,57 @@ combine 后第 0 个位置向量（前 8 维）：
 combine 批处理输出形状          : (2, 1, 16)  (B, T, d_model)</code></pre>
 <p>可以核对：<code>-0.039 + 0.000 = -0.039</code>、<code>+0.006 + 1.000 = +1.006</code>、<code>+0.028 + 0.000 = +0.028</code>、<code>-0.007 + 1.000 = +0.993</code>，和打印的 combine 值逐位吻合 —— 加法没算错，广播也没错位。</p>
 <figure class="figure"><img alt="Embedding demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-03-embedding.png" loading="lazy"/><figcaption>Embedding demo 真实运行输出</figcaption></figure>
-<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2><nav class="sec-nav"><a class="sn prev" href="#3-realrun-evidence来自-demosoutdemo03embeddingtxt"><span class="sn-label">← 上一节</span><span class="sn-name">3. Real-run evidence（来自 demos/out/demo_03_embedding.txt）</span></a><a class="sn next" href="#5-conclusion"><span class="sn-label">下一节 →</span><span class="sn-name">5. Conclusion</span></a></nav>
 <p>这一版 demo 没有暴露真实 bug（查表、位置编码、combine 三项断言全绿，且数值可手算核对）。一个<strong>设计层面的注意点</strong>值得记下来：位置编码用 <code>requires_grad=False</code> 的常量 Tensor，否则它会被 <code>model.parameters()</code> 捞进优化器、被 Adam 改掉 —— 那模型就失去了「这是第几个位置」的锚点。代码里 <code>PositionalEncoding.forward</code> 显式传了 <code>requires_grad=False</code>，这条没漏。</p>
-<h2 id="5-conclusion">5. Conclusion</h2>
+<h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-bugs-lessons"><span class="sn-label">← 上一节</span><span class="sn-name">4. Bugs / lessons</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>id 必须变成向量才能进 Transformer；查表用 <code>one-hot @ W_e</code> 而不是 <code>W[id]</code>，是为了<strong>让梯度能 scatter 回 <code>W_e</code> 那一行</strong>。</li><li>位置编码是<strong>固定常量</strong>，不进参数表 —— 它只负责告诉模型「第几个位置」，不该被训练。</li><li><code>combine = token + pos</code> 用广播自然贴合 batch，无需手动循环。</li><li>小初始化（0.02）不是随便选的：避免 Embedding 一上来就进 softmax 饱和区，下游梯度才流得动。</li></ul>
-<h2 id="6-code-map">6. Code map</h2>
+<h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/embedding.py</code></td><td><code>TokenEmbedding</code>（查找表 + 梯度友好的查表）、<code>PositionalEncoding</code>（固定正弦）、<code>combine</code>（相加广播）</td></tr><tr><td><code>src/model/embedding.py::_one_hot</code></td><td>id → one-hot（保留 batch 维）</td></tr><tr><td><code>demos/demo_03_embedding.py</code></td><td>6 节演示：词表尺寸 / 查表 / 位置编码 / combine / 批处理，输出落 <code>demos/out/demo_03_embedding.txt</code></td></tr><tr><td><code>assets/embedding.svg</code></td><td>本章数据流图</td></tr></tbody></table>
-<h2 id="7-version-line">7. Version line</h2>
+<h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 → <strong>v0.2</strong>，Embedding 层落地（<code>TokenEmbedding</code> + <code>PositionalEncoding</code> + <code>combine</code>），纯 numpy，演示真实跑通并核对数值，配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
+<button class="book-top">↑ 顶部</button>
+<script>
+(function(){
+  var side = document.querySelector('.book-side');
+  var scrim = document.querySelector('.book-scrim');
+  var links = [].slice.call(document.querySelectorAll('.book-toc a'));
+  var bar = document.querySelector('.book-progress');
+  var topBtn = document.querySelector('.book-top');
+
+  function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  document.querySelector('.book-fab').addEventListener('click', function(){
+    side.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', close);
+  var cl = document.querySelector('.book-side-head button');
+  if(cl) cl.addEventListener('click', close);
+  links.forEach(function(a){ a.addEventListener('click', close); });
+
+  function active(){
+    var best = null;
+    links.forEach(function(a){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(!el) return;
+      var r = el.getBoundingClientRect();
+      if(r.top <= 140 && (!best || r.top < best.getBoundingClientRect().top)) best = el;
+    });
+    if(!best) return;
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
+    });
+  }
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? window.pageYOffset / h : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+    topBtn.classList.toggle('show', window.pageYOffset > 500);
+    active();
+  }, {passive:true});
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
 </body>
 </html>
