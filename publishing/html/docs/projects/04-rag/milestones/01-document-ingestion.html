@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 04 — Chapter 01：Document Ingestion【文档摄入】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-04-chapter-01document-ingestion文档摄入">Project 04 — Chapter 01：Document Ingestion【文档摄入】</h1>
+<blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/parsers.py</code>（BaseParser + 四个格式适配器）、<code>src/rag/document.py</code>（Document）</p></blockquote>
+<hr/>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<p>很多人以为 RAG 的第一步是「检索」，其实不是。RAG 的第一步是：<strong>把世界上乱七八糟的文档变成干净文本</strong>。</p>
+<p>你的知识库输入不会只有 <code>.txt</code>。真实场景里有 PDF、Word、Markdown、网页导出的 HTML……它们长这样：</p>
+<pre><code>你以为：  拿到文档 = 拿到一段干净的字符串
+实际上：  PDF 是排版指令（&quot;在第 3 页的 (x, y) 画这几个字&quot;）
+          docx 是压缩包（一坨 XML 打包成 zip）
+          Markdown 是带语法噪音的文本（##、```、[]()）</code></pre>
+<p>Garbage in, garbage out【垃圾进，垃圾出】——这句老话在 RAG 里格外贴切：解析阶段丢了一段、乱序了一栏、混进了一页页眉，后面的切分、向量化、检索全都是在放大这个错误，而且<strong>你几乎查不出来</strong>（检索结果&quot;差不多但不准&quot;，很难联想到是三个月前某个 PDF 解析坏了）。</p>
+<p>本章目标：</p>
+<blockquote><p><strong>设计一个格式适配器体系，把 .txt / .md / .pdf / .docx 统一解析成干净文本 + 元数据。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>RAG 流水线的第一环决定了整个系统的上限：</p>
+<pre><code>解析质量 → 切分质量 → 向量质量 → 检索质量 → 回答质量</code></pre>
+<p>每一环都只能继承上一环的垃圾，无法自救。所以摄入阶段要守住两条底线：</p>
+<ul class="lvl"><li><strong>不丢信息</strong>：正文、标题、页码都要留下（页码后面检索溯源要用）。</li><li><strong>不多噪音</strong>：页眉、页脚、乱码、控制字符要在源头清掉，不要留给下游。</li></ul>
+<p>同时，格式会不断增加（说不定哪天要支持 epub、HTML）。如果写成一坨 <code>if ext == &quot;.pdf&quot;: ... elif ext == &quot;.docx&quot;: ...</code>，每加一种格式就要改老代码。<strong>Java 里这叫开闭原则</strong>：对扩展开放、对修改关闭。用格式适配器（parser per format）来解决。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-统一的产物document-dataclass">3.1 统一的产物：Document dataclass</h3>
+<p>不管什么格式，解析器的输出都是同一个结构——这是整条流水线的&quot;通用货币&quot;：</p>
+<pre><code># src/rag/document.py
+from dataclasses import dataclass, field
+
+@dataclass
+class Document:
+    doc_id: str                  # 内容哈希，见 3.3
+    source: str                  # 文件路径 / 来源标识
+    text: str                    # 解析后的干净正文
+    metadata: dict = field(default_factory=dict)
+    # metadata 约定存：format / size_bytes / page_count / parsed_at</code></pre>
+<p><strong>metadata 不是可选项，是检索溯源的生命线。</strong> 检索命中一段文字后，用户会问&quot;这出自哪里？&quot;——没有 <code>source</code> 和页码，RAG 就成了无出处的一本正经胡说。</p>
+<h3 id="32-格式适配器baseparser-四个实现">3.2 格式适配器：BaseParser + 四个实现</h3>
+<p>Java 里你写过策略模式或 SPI（<code>java.nio.file.spi.FileSystemProvider</code> 就是这个味道）：定义接口，每种实现处理一种情况，运行时按 key 选择。<strong>Java 里叫 Parser 接口 + 一组 <code>@Component</code> 实现，Python 里用 <code>ABC</code> + 注册表字典，思路完全一样：</strong></p>
+<pre><code># src/rag/parsers.py
+from abc import ABC, abstractmethod
+from pathlib import Path
+
+class BaseParser(ABC):
+    &quot;&quot;&quot;所有格式解析器的抽象基类：输入文件路径，输出 Document。&quot;&quot;&quot;
+
+    supported_extensions: tuple[str, ...] = ()
+
+    @abstractmethod
+    def parse(self, path: Path) -&gt; Document:
+        ...
+
+    @classmethod
+    def supports(cls, path: Path) -&gt; bool:
+        return path.suffix.lower() in cls.supported_extensions</code></pre>
+<p>四个实现各管一种格式，各自封装该格式的&quot;脏活&quot;：</p>
+<pre><code>import hashlib
+import re
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from pypdf import PdfReader
+from docx import Document as DocxDocument   # python-docx
+
+
+def _make_doc(path: Path, text: str, extra: dict) -&gt; Document:
+    clean = text.replace(&quot;\x00&quot;, &quot;&quot;).strip()
+    return Document(
+        doc_id=hashlib.sha256(clean.encode(&quot;utf-8&quot;)).hexdigest()[:16],
+        source=str(path),
+        text=clean,
+        metadata={
+            &quot;format&quot;: path.suffix.lower().lstrip(&quot;.&quot;),
+            &quot;size_bytes&quot;: path.stat().st_size,
+            &quot;parsed_at&quot;: time.strftime(&quot;%Y-%m-%d %H:%M:%S&quot;),
+            **extra,
+        },
+    )
+
+
+class TxtParser(BaseParser):
+    supported_extensions = (&quot;.txt&quot;,)
+
+    def parse(self, path: Path) -&gt; Document:
+        text = path.read_text(encoding=&quot;utf-8&quot;, errors=&quot;strict&quot;)
+        return _make_doc(path, text, {})
+
+
+class MdParser(BaseParser):
+    supported_extensions = (&quot;.md&quot;, &quot;.markdown&quot;)
+
+    # Markdown 是纯文本的超集，但有两个必须做的预处理：
+    # 1) 保留代码围栏（后续切分时不能按句号切开代码块）
+    # 2) 标题层级是天然语义边界，保留到 metadata 供 02 章使用
+    _HEADING_RE = re.compile(r&quot;^(#{1,6})\s+(.*)$&quot;)
+
+    def parse(self, path: Path) -&gt; Document:
+        raw = path.read_text(encoding=&quot;utf-8&quot;, errors=&quot;strict&quot;)
+        headings: list[dict] = []
+        for lineno, line in enumerate(raw.splitlines(), start=1):
+            m = self._HEADING_RE.match(line)
+            if m:
+                headings.append({&quot;level&quot;: len(m.group(1)), &quot;title&quot;: m.group(2).strip(), &quot;line&quot;: lineno})
+        return _make_doc(path, raw, {&quot;headings&quot;: headings})
+
+
+class PdfParser(BaseParser):
+    supported_extensions = (&quot;.pdf&quot;,)
+
+    def parse(self, path: Path) -&gt; Document:
+        reader = PdfReader(str(path))
+        parts: list[str] = []
+        for i, page in enumerate(reader.pages, start=1):
+            page_text = (page.extract_text() or &quot;&quot;).replace(&quot;\x00&quot;, &quot;&quot;).strip()
+            parts.append(f&quot;[第 {i} 页]\n{page_text}&quot;)   # 页码内联，切分时可携带
+        full = &quot;\n\n&quot;.join(parts)
+        return _make_doc(path, full, {&quot;page_count&quot;: len(reader.pages)})
+
+
+class DocxParser(BaseParser):
+    supported_extensions = (&quot;.docx&quot;,)
+
+    def parse(self, path: Path) -&gt; Document:
+        doc = DocxDocument(str(path))
+        lines = [p.text for p in doc.paragraphs if p.text.strip()]
+        return _make_doc(path, &quot;\n\n&quot;.join(lines), {})</code></pre>
+<figure class="figure"><img alt="真实运行：md 解析器自动抽出 headings 元数据，txt 解析器没有" src="../../../../../../projects/04-rag/assets/term-ingest-headings.png" loading="lazy"/><figcaption>真实运行：md 解析器自动抽出 headings 元数据，txt 解析器没有</figcaption></figure>
+<h3 id="33-解析器注册表与入口">3.3 解析器注册表与入口</h3>
+<p>用注册表代替 if-elif，新增格式 = 新增一个类 + 注册一行，老代码零改动：</p>
+<pre><code>PARSERS: list[type[BaseParser]] = [MdParser, DocxParser, PdfParser, TxtParser]
+
+
+def ingest(path: str | Path) -&gt; Document:
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f&quot;文件不存在: {path}&quot;)
+    for parser_cls in PARSERS:
+        if parser_cls.supports(path):
+            return parser_cls().parse(path)
+    raise ValueError(f&quot;不支持的格式: {path.suffix!r}（支持 .txt/.md/.pdf/.docx）&quot;)</code></pre>
+<h3 id="34-docid-为什么用内容哈希">3.4 doc_id 为什么用内容哈希</h3>
+<p>Java 里你可能习惯用 UUID 或自增 ID。但知识库会<strong>重复摄入</strong>同一个文件（重建索引、增量更新），用文件名或 UUID 做主键会产生两条一样的记录。对内容做 SHA-256 后取前 16 位：</p>
+<ul class="lvl"><li>同一个文件重复摄入 → 同一个 <code>doc_id</code> → 天然幂等（upsert 覆盖）；</li><li>文件内容改了 → <code>doc_id</code> 变化 → 新旧版本可以区分。</li></ul>
+<p><strong>Java 里这类似数据库用 <code>ON DUPLICATE KEY UPDATE</code> 依赖业务唯一键，Python 里直接让 ID 从内容派生，更省心。</strong></p>
+<hr/>
+<figure class="figure"><img alt="真实运行：6 个文件解析成 Document，doc_id 是内容哈希，md 文档还带 headings 元数据" src="../../../../../../projects/04-rag/assets/term-ingest.png" loading="lazy"/><figcaption>真实运行：6 个文件解析成 Document，doc_id 是内容哈希，md 文档还带 headings 元数据</figcaption></figure>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<p>以下代码将在 <code>src/rag/</code> 落地时实现，现在当设计稿读。目标文件结构：</p>
+<pre><code>src/rag/
+├── document.py    # Document dataclass
+├── parsers.py     # BaseParser + Txt/Md/Pdf/Docx + ingest() 入口
+└── __init__.py</code></pre>
+<p>关键实现思路（补全上面的骨架）：</p>
+<ul class="lvl"><li><strong>TxtParser 的 encoding 兜底</strong>：先尝试 utf-8，捕获 <code>UnicodeDecodeError</code> 后回退 <code>gbk</code>，再不行回退 <code>latin-1</code>（保证永远能读出来，宁可出噪音也别崩）。<code>errors=&quot;strict&quot;</code> 的版本是教学简化，落地版写成三层回退：</li></ul>
+<pre><code>def _read_text_fallback(path: Path) -&gt; str:
+    for enc in (&quot;utf-8&quot;, &quot;gbk&quot;, &quot;latin-1&quot;):
+        try:
+            return path.read_text(encoding=enc)
+        except UnicodeDecodeError:
+            continue
+    raise ValueError(f&quot;无法解码文件（尝试过 utf-8/gbk/latin-1）: {path}&quot;)</code></pre>
+<ul class="lvl"><li><strong>PDF 页眉页脚清洗</strong>：解析完所有页后做一次统计——出现在超过 60% 页面开头/结尾且长度 &lt; 40 字符的行，判定为页眉页脚，整批删掉。这是&quot;用统计对抗噪音&quot;，比硬编码页码可靠。</li></ul>
+<ul class="lvl"><li><strong>docx 表格</strong>：<code>python-docx</code> 的 <code>doc.paragraphs</code> 不含表格内容，落地版要遍历 <code>doc.tables</code>，把每个单元格用 <code> | </code> 拼接成行文本，否则表格信息全部丢失。</li></ul>
+<ul class="lvl"><li><strong>Markdown 代码围栏标记</strong>：<code>MdParser</code> 在 ``` 围栏前后插入哨兵注释，供 02 章的切分器识别&quot;这段是代码，不许按句号拆&quot;。</li></ul>
+<ul class="lvl"><li><strong>依赖安装</strong>：</li></ul>
+<pre><code>pip install pypdf python-docx</code></pre>
+<hr/>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h3 id="坑-1windows-产出的-txt-用-utf8-读直接炸">坑 1：Windows 产出的 txt 用 utf-8 读直接炸</h3>
+<ul class="lvl"><li><strong>现象</strong>：<code>UnicodeDecodeError: &#x27;gbk&#x27; codec can&#x27;t decode</code>（或反过来 utf-8 报错），文件明明是正常中文文档。</li><li><strong>原因</strong>：Windows 记事本/某些老系统默认编码是 gbk，macOS/Linux 默认 utf-8。文本文件<strong>没有自我声明的编码</strong>，扩展名 .txt 不代表 utf-8。</li><li><strong>正确做法</strong>：永远显式传 <code>encoding=</code>，并做三层回退（utf-8 → gbk → latin-1）或用 <code>chardet</code> 探测。<strong>Java 里 <code>new FileReader(file)</code> 也踩同一个坑（依赖平台默认编码），所以 Java 17 引入了 <code>Files.readString(path, Charset)</code> 强制显式传参——Python 同理，<code>open()</code> 不传 encoding 是欠账。</strong></li></ul>
+<h3 id="坑-2pdf-提取出-x00后续-embedding-api-直接-400">坑 2：PDF 提取出 <code>\x00</code>，后续 embedding API 直接 400</h3>
+<ul class="lvl"><li><strong>现象</strong>：本地解析正常，调 embedding 接口时报 <code>invalid request</code>，错误信息完全没提哪个字符有问题。</li><li><strong>原因</strong>：某些 PDF 的字体编码表异常，<code>pypdf</code> 提取出的文本里混入 null 字符 <code>\x00</code>，部分 API 侧校验会拒绝。</li><li><strong>正确做法</strong>：在 <code>_make_doc</code> 的统一出口处 <code>text.replace(&quot;\x00&quot;, &quot;&quot;)</code>，并且可以做一层更狠的清洗：删掉所有 C0 控制字符（保留 <code>\n</code> 和 <code>\t</code>）。<strong>清洗逻辑放在统一出口，而不是各 parser 里各写一遍——入口多个、出口只有一个，这是防漏的关键。</strong></li></ul>
+<h3 id="坑-3用文件名当-docid同名的两个文件互相覆盖">坑 3：用文件名当 doc_id，同名的两个文件互相覆盖</h3>
+<ul class="lvl"><li><strong>现象</strong>：<code>notes/README.md</code> 和 <code>project-b/README.md</code> 都叫 README，入库后只剩一条；或者文件改了名，同一段内容被存了两份。</li><li><strong>原因</strong>：文件名是&quot;位置信息&quot;不是&quot;内容身份&quot;，重命名、同名目录都会让它失效。</li><li><strong>正确做法</strong>：<code>doc_id = sha256(清洗后的正文)[:16]</code>，文件名只放进 <code>metadata[&quot;source&quot;]</code> 做展示。</li></ul>
+<h3 id="坑-4pypdf-把双栏-pdf-拆成左右交错的乱序文本">坑 4：pypdf 把双栏 PDF 拆成&quot;左右交错&quot;的乱序文本</h3>
+<ul class="lvl"><li><strong>现象</strong>：解析出的文字内容是对的，但读起来像这样：第一行是左栏前半句，第二行是右栏前半句……检索命中后给模型看，模型的理解完全错乱。</li><li><strong>原因</strong>：<code>extract_text()</code> 按几何坐标的行序输出，双栏排版在同一行高度上有左右两段文字。</li><li><strong>正确做法</strong>：先用 <code>page.extract_text(extraction_mode=&quot;layout&quot;)</code> 尝试保布局模式；仍然乱序就换 <code>pdfplumber</code> 按 x 坐标分栏；实在不行只对纯文本型文档做 RAG，扫描件交给 OCR 流水线（超出本章范围，先知道有这条路）。</li></ul>
+<hr/>
+<h2 id="6-自检清单">6. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能说清 RAG 第一步为什么是摄入而不是检索（垃圾进 = 垃圾出）</li><li>[ ] 能写出 <code>BaseParser</code> ABC 并解释它对应 Java 的哪种模式（策略 / SPI）</li><li>[ ] 四种格式各说出一个解析层面的坑（md 代码围栏 / pdf 双栏 / docx 表格 / txt 编码）</li><li>[ ] <code>Document</code> 的 metadata 里存了什么，检索溯源时分别用在哪里</li><li>[ ] 能解释 doc_id 用内容哈希而不是文件名/UUID 的理由</li><li>[ ] 清洗逻辑（控制字符、编码回退）放在统一出口而不是各 parser 内</li></ul>
+<hr/>
+<p>回到项目主页：<a href="../README.html">../README.md</a></p>
+<p>下一章：<a href="02-chunking.html">02-chunking.md</a> —— 拿到了整篇干净文本，为什么还要把它切碎？</p>
+</main>
+</body>
+</html>

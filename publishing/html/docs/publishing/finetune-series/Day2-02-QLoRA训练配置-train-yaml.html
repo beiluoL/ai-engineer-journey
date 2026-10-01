@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day2-02：创建 QLoRA 训练配置 train.yaml</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day202创建-qlora-训练配置-trainyaml">大模型微调实战 Day2-02：创建 QLoRA 训练配置 train.yaml</h1>
+<h1 id="创建-qlora-训练配置文件-trainyaml">创建 QLoRA 训练配置文件 <code>train.yaml</code></h1>
+<p>今天目标：</p>
+<blockquote><p>告诉 LLaMA-Factory：我要用哪个模型、哪个数据、用什么方式训练、训练结果保存哪里。</p></blockquote>
+<p>完成后链路：</p>
+<pre><code> id=&quot;5e4r9h&quot;
+java_interview.json
+        |
+        ↓
+dataset_info.json
+        |
+        ↓
+train.yaml
+        |
+        ↓
+LLaMA-Factory
+        |
+        ↓
+Qwen2.5-3B + QLoRA训练</code></pre>
+<hr/>
+<h1 id="一先理解-trainyaml-是什么">一、先理解 train.yaml 是什么</h1>
+<p>如果说：</p>
+<p><code>dataset_info.json</code></p>
+<p>是：</p>
+<blockquote><p>数据说明书</p></blockquote>
+<p>那么：</p>
+<p><code>train.yaml</code></p>
+<p>就是：</p>
+<blockquote><p>训练计划书</p></blockquote>
+<p>它告诉训练程序：</p>
+<p>例如：</p>
+<pre><code>我要训练：
+
+模型：
+Qwen2.5-3B-Instruct
+
+数据：
+java_interview
+
+方法：
+LoRA
+
+训练：
+3轮
+
+保存：
+java-lora</code></pre>
+<hr/>
+<h1 id="二进入-llamafactory">二、进入 LLaMA-Factory</h1>
+<p>Colab执行：</p>
+<pre><code>%cd /content/LLaMA-Factory</code></pre>
+<p>确认：</p>
+<pre><code>!pwd</code></pre>
+<p>应该：</p>
+<pre><code>/content/LLaMA-Factory</code></pre>
+<hr/>
+<h1 id="三查看官方训练模板">三、查看官方训练模板</h1>
+<p>LLaMA-Factory 已经准备好了很多例子。</p>
+<p>查看：</p>
+<pre><code>!ls examples/train_lora</code></pre>
+<p>你会看到：</p>
+<p>类似：</p>
+<pre><code>qwen2_lora_sft.yaml
+llama3_lora_sft.yaml</code></pre>
+<p>我们参考它。</p>
+<hr/>
+<p>查看 Qwen 示例：</p>
+<pre><code>!cat examples/train_lora/qwen2_lora_sft.yaml</code></pre>
+<p>里面很多参数。</p>
+<p>第一次不用全部理解。</p>
+<hr/>
+<h1 id="四创建自己的配置文件">四、创建自己的配置文件</h1>
+<p>创建：</p>
+<pre><code>train_java.yaml</code></pre>
+<p>位置：</p>
+<pre><code>/content/LLaMA-Factory/train_java.yaml</code></pre>
+<hr/>
+<p>Colab里面创建：</p>
+<pre><code>%%writefile train_java.yaml
+
+
+### 模型
+model_name_or_path: Qwen/Qwen2.5-3B-Instruct
+
+
+### 数据
+dataset: java_interview
+
+template: qwen
+
+
+### 训练阶段
+stage: sft
+
+do_train: true
+
+
+### 微调方式
+finetuning_type: lora
+
+
+### LoRA参数
+lora_rank: 8
+
+lora_alpha: 16
+
+lora_dropout: 0.05
+
+
+### 训练参数
+learning_rate: 2.0e-4
+
+num_train_epochs: 3
+
+cutoff_len: 1024
+
+
+### batch
+per_device_train_batch_size: 2
+
+gradient_accumulation_steps: 4
+
+
+### 保存
+output_dir: ./output/java-interview-lora
+
+
+### 日志
+logging_steps: 10
+
+save_steps: 100
+
+
+### GPU优化
+fp16: true</code></pre>
+<p>运行后：</p>
+<p>看到：</p>
+<pre><code>Writing train_java.yaml</code></pre>
+<hr/>
+<h1 id="五逐个解释关键参数">五、逐个解释关键参数</h1>
+<h2 id="1-modelnameorpath">1. model_name_or_path</h2>
+<pre><code>model_name_or_path:
+ Qwen/Qwen2.5-3B-Instruct</code></pre>
+<p>意思：</p>
+<p>基础模型。</p>
+<p>现在：</p>
+<pre><code>Qwen
++
+你的数据
+=
+新的能力</code></pre>
+<hr/>
+<h1 id="2-dataset">2. dataset</h1>
+<pre><code>dataset:
+ java_interview</code></pre>
+<p>对应：</p>
+<p>刚才注册：</p>
+<pre><code>&quot;java_interview&quot;</code></pre>
+<p>也就是：</p>
+<pre><code>dataset_info.json
+
+        ↓
+
+找到
+
+java_interview.json</code></pre>
+<hr/>
+<h1 id="3-template">3. template</h1>
+<pre><code>template:
+ qwen</code></pre>
+<p>非常重要。</p>
+<p>不同模型聊天格式不同。</p>
+<p>例如：</p>
+<p>Qwen：</p>
+<pre><code>&lt;|im_start|&gt;system
+
+&lt;|im_start|&gt;user
+
+&lt;|im_start|&gt;assistant</code></pre>
+<p>Llama：</p>
+<p>格式不同。</p>
+<p>所以告诉框架：</p>
+<blockquote><p>使用 Qwen 对话模板。</p></blockquote>
+<hr/>
+<h1 id="4-stage">4. stage</h1>
+<pre><code>stage:
+ sft</code></pre>
+<p>SFT：</p>
+<p><strong>Supervised Fine-Tuning【监督微调】</strong></p>
+<p>目前你的训练：</p>
+<p>就是：</p>
+<p>输入：</p>
+<pre><code>HashMap为什么线程不安全？</code></pre>
+<p>输出：</p>
+<pre><code>标准面试答案</code></pre>
+<hr/>
+<h1 id="5-finetuningtype">5. finetuning_type</h1>
+<pre><code>finetuning_type:
+ lora</code></pre>
+<p>表示：</p>
+<p>不要改整个模型。</p>
+<p>原模型：</p>
+<pre><code>Qwen
+
+30亿参数
+
+冻结</code></pre>
+<p>新增：</p>
+<pre><code>LoRA参数
+
+训练</code></pre>
+<hr/>
+<h1 id="6-lora参数">6. LoRA参数</h1>
+<h2 id="lorarank">lora_rank</h2>
+<pre><code>lora_rank:8</code></pre>
+<p>理解：</p>
+<p>LoRA容量。</p>
+<p>越大：</p>
+<p>能力可能越强。</p>
+<p>但是：</p>
+<p>显存增加。</p>
+<p>第一次：</p>
+<p>8即可。</p>
+<hr/>
+<h2 id="learningrate">learning_rate</h2>
+<pre><code>learning_rate:2e-4</code></pre>
+<p>学习速度。</p>
+<p>太大：</p>
+<p>容易学坏。</p>
+<p>太小：</p>
+<p>学不动。</p>
+<hr/>
+<h2 id="numtrainepochs">num_train_epochs</h2>
+<pre><code>num_train_epochs:3</code></pre>
+<p>训练轮数。</p>
+<p>你的数据：</p>
+<p>500-1000条。</p>
+<p>3轮够。</p>
+<hr/>
+<h1 id="六检查配置文件">六、检查配置文件</h1>
+<p>运行：</p>
+<pre><code>!cat train_java.yaml</code></pre>
+<p>应该看到完整配置。</p>
+<hr/>
+<h1 id="七检查数据路径">七、检查数据路径</h1>
+<p>非常重要。</p>
+<p>执行：</p>
+<pre><code>!ls data | grep java</code></pre>
+<p>应该：</p>
+<pre><code>java_interview.json</code></pre>
+<p>如果没有：</p>
+<p>复制：</p>
+<pre><code>!cp /content/data/java_interview.json /content/LLaMA-Factory/data/</code></pre>
+<hr/>
+<h1 id="八检查-llamafactory-是否认识数据">八、检查 LLaMA-Factory 是否认识数据</h1>
+<p>运行：</p>
+<pre><code>!python src/train.py train_java.yaml --help</code></pre>
+<p>如果没有报错：</p>
+<p>说明 YAML 基本正确。</p>
+<hr/>
+<h1 id="九第一次训练前理解显存">九、第一次训练前，理解显存</h1>
+<p>你的配置：</p>
+<pre><code>Qwen2.5-3B
+
++
+
+LoRA
+
++
+
+fp16</code></pre>
+<p>大概：</p>
+<pre><code>模型:
+6GB左右
+
+训练:
+额外几个GB
+
+T4:
+15GB</code></pre>
+<p>可以跑。</p>
+<hr/>
+<h1 id="十今天完成状态">十、今天完成状态</h1>
+<p>你现在已经完成：</p>
+<p>✅ Colab GPU</p>
+<p>✅ LLaMA-Factory</p>
+<p>✅ Qwen模型</p>
+<p>✅ Java训练数据</p>
+<p>✅ 数据注册</p>
+<p>✅ QLoRA配置</p>
+<p>完整链路：</p>
+<pre><code> id=&quot;8l5p8a&quot;
+Java面试数据
+
+        ↓
+
+dataset_info.json
+
+        ↓
+
+train_java.yaml
+
+        ↓
+
+LLaMA-Factory
+
+        ↓
+
+Qwen2.5-3B
+
+        ↓
+
+LoRA Adapter</code></pre>
+<hr/>
+<h1 id="下一节-day203">下一节 Day2-03</h1>
+<p>正式开始：</p>
+<h1 id="第一次-qlora-训练启动">第一次 QLoRA 训练启动</h1>
+<p>内容：</p>
+<ul class="lvl"><li>执行训练命令</li></ul>
+<ul class="lvl"><li>查看 GPU 占用</li></ul>
+<ul class="lvl"><li>看 Loss 下降</li></ul>
+<ul class="lvl"><li>训练完成后的文件</li></ul>
+<ul class="lvl"><li>测试模型是否学会你的 Java 面试风格</li></ul>
+<p>下一步就是最激动的部分：</p>
+<pre><code>llamafactory-cli train train_java.yaml</code></pre>
+<p>第一次让你的数据改变模型。</p>
+</main>
+</body>
+</html>

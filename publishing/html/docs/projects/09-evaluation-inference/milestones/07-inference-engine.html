@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 07 — Inference Engine：KV Cache 到底快多少</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-07-inference-enginekv-cache-到底快多少">Milestone 07 — Inference Engine：KV Cache 到底快多少</h1>
+<p>前六层把&quot;模型好不好&quot;回答完了。后半段主线转向第二个问题：<strong>怎么让它跑得快？</strong></p>
+<p>自回归生成最蠢的做法是：每生成 1 个 token，就把<strong>整个前缀（prompt + 已生成部分）重新前向一遍</strong>。第 16 个 token 生成时，前 41 个 prompt token 已经被算了 16 遍。</p>
+<p>KV Cache 的解法：<strong>把每层 attention 的 K / V 存下来，下一步只算新 token 的 Q，然后和缓存的 K/V 做注意力。</strong></p>
+<p>正确性上这是恒等变换（注意力对历史部分的计算不依赖未来 token），但<strong>性能上必须实测</strong> —— 尤其在 <code>d_model=64</code>、只有 2 层的玩具模型上，省下的矩阵乘法可能还抵不过缓存管理的开销。</p>
+<p><strong>纯 numpy 手写</strong>：<code>CausalLMWithKVCache</code> 直接读 P06 模型的参数，用 numpy 重写完整前向与增量前向（<code>src/ie/engine.py</code>）。不走 autograd —— 推理不需要建图。</p>
+<hr/>
+<h2 id="1-why为什么必须实测而不是相信理论上快">1. Why：为什么必须实测，而不是相信&quot;理论上快&quot;</h2>
+<p>教科书会说 KV Cache 把复杂度从 <code>O(T²)</code> 降到 <code>O(T)</code>。<strong>这个说法只在&quot;计算是唯一成本&quot;时成立。</strong></p>
+<p>真实成本 = 每步的固定开销 + 随序列长度增长的计算：</p>
+<pre><code>无 KV：16 步 × 完整前向（长度 41 → 56）
+有 KV：1 次 prefill（41） + 16 步 × 单 token 解码</code></pre>
+<p>固定开销包括：Python 函数调用、numpy 数组分配、每层 4 次 <code>matmul</code> 之外的 <code>transpose</code> / <code>reshape</code> / <code>split</code> / <code>merge</code>、LayerNorm、FFN、以及<strong>每步把新 K/V <code>concatenate</code> 进缓存的 O(T) 拷贝</strong>。</p>
+<p><strong>当 <code>d_model=64</code>、<code>n_layers=2</code> 时，矩阵小到固定开销占主导</strong> —— 这时候&quot;少算了多少 token&quot;和&quot;快了多少&quot;之间的比例会被严重稀释。所以本章的数字必须自己测，不能照搬业界&quot;KV Cache 加速 10×&quot;的说法。</p>
+<h2 id="2-design两阶段-一个一致性对拍">2. Design：两阶段 + 一个一致性对拍</h2>
+<pre><code>class CausalLMWithKVCache:
+    prefill(ids)                -&gt; (last_logits, KVCacheState)   # 一次性算完 prompt
+    decode_step(token, state)   -&gt; (last_logits, new_state)      # 只算 1 个新 token
+    generate_ids(...)                                            # use_kv_cache=True/False 可切换
+    benchmark(...)                                               # 两路径对拍计时
+    cache_consistency_error(prompt_ids)                          # 增量 vs 全量 logits 误差</code></pre>
+<p>四个关键点：</p>
+<ul class="lvl"><li><strong>两阶段分离</strong>：<code>prefill</code> 处理整个 prompt 并产出缓存；<code>decode_step</code> 只吃 1 个 token。<strong>两者的代码路径不同</strong>（prefill 需要 causal mask，decode 不需要 —— 单 token 的 Q 天然能看到全部历史），但产出必须一致。</li><li><strong>位置编码靠 <code>start_pos</code></strong>（<code>src/ie/engine.py:101</code>）：<code>self.model.pos_enc.pe[start_pos : start_pos + 1]</code>。增量解码时位置索引必须接着缓存长度走，否则位置编码全错 —— 这是 KV Cache 最容易写错的地方之一，<strong>而且写错了不会报错，只会让生成质量变差</strong>。</li><li><strong><code>decode_step</code> 里没有 causal mask</strong>：单 token 的 query 对 <code>k</code> 做注意力时，历史全部可见，天然满足因果性。</li><li><strong>一致性对拍 <code>cache_consistency_error</code></strong>（<code>src/ie/engine.py:198</code>）：对比 <code>decode_step</code> 产出的 logits 与&quot;把 <code>prompt + [token]</code> 整体前向&quot;的 logits。<strong>这比&quot;生成的 token 序列相同&quot;强得多</strong> —— 后者完全可能只是 <code>argmax</code> 恰好一致。</li></ul>
+<figure class="figure"><img alt="M07 自回归引擎：无 KV 全量重算 vs 有 KV 增量解码" src="../../../../../../projects/09-evaluation-inference/assets/inference-engine.svg" loading="lazy"/><figcaption>M07 自回归引擎：无 KV 全量重算 vs 有 KV 增量解码</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo07inferenceengineterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_inference_engine_terminal.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。模型 <code>d_model=64 / n_heads=4 / head_dim=16 / n_layers=2 / max_len=256</code>。prompt 41 token，生成 16 token，<strong>7 轮计时取中位数</strong>。</p>
+<pre><code>  Prompt tokens                      41
+  生成 tokens                          16
+  无 KV Cache 中位耗时                    6.155 ms
+  有 KV Cache 中位耗时                    2.794 ms
+  真实加速比                              2.20×
+  生成 token 完全一致                      True
+  单步 logits 最大误差                     4.441e-15   要求 &lt; 1e-8</code></pre>
+<p><strong>7 轮原始计时（实测全量）：</strong></p>
+<pre><code>  轮次  无缓存 ms  有缓存 ms  单轮加速
+  --  ------  ------  -----
+   1   5.741   3.013  1.91×
+   2   6.198   2.794  2.22×
+   3   6.438   2.885  2.23×
+   4   5.787   2.563  2.26×
+   5   6.155   2.799  2.20×
+   6   5.978   2.716  2.20×
+   7   6.353   2.472  2.57×</code></pre>
+<p>四个读数：</p>
+<ul class="lvl"><li><strong>2.20× 是真实测到的加速</strong>，中位数 6.155 ms → 2.794 ms。两路生成出的 <strong>16 个 token id 完全一致</strong>。</li><li><strong>单步 logits 最大误差 4.441e-15</strong>，比要求的 <code>1e-8</code> 小 7 个数量级。这是 <strong>fp64 的舍入级别</strong> —— 说明增量解码与全量重算在数学上严格等价，<strong>KV Cache 实现正确</strong>，不是&quot;碰巧生成了同样的 token&quot;。</li><li><strong>单轮加速在 1.91× ~ 2.57× 之间抖动</strong>（第 7 轮 2.57× 明显偏高）。这就是为什么要取<strong>中位数</strong>而不是均值或最小值。</li><li>有缓存一侧的绝对耗时只有 <strong>2.794 ms / 16 token ≈ 0.175 ms/token</strong> —— 这个数在 M09 会被直接拿去当离散事件仿真的 <code>step_ms</code> 基准。</li></ul>
+<figure class="figure"><img alt="M07 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-07-inference-engine.png" loading="lazy"/><figcaption>M07 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-小模型上-kv-cache-只有-220-别拿这个数去推大模型">4.1 ⚠ 小模型上 KV Cache 只有 2.20× —— 别拿这个数去推大模型</h3>
+<p>这是本章最重要的负结果，也是<strong>为什么&quot;实测&quot;比&quot;理论上 O(T²)→O(T)&quot;更可信</strong>的理由。</p>
+<p>先算理论上省了多少：无 KV 时 16 步分别前向了长度 41…56 的序列，累计处理了</p>
+<pre><code>Σ(41…56) = 16×41 + (0+1+…+15) = 656 + 120 = 776 个 token 位置</code></pre>
+<p>有 KV 时只处理了 <code>41（prefill） + 16（decode） = 57</code> 个。<strong>处理的 token 位置少了 <code>776/57 = 13.6 倍</code></strong>，但实测只快 <strong>2.20 倍</strong>。</p>
+<p>差额去哪了？把每次前向的固定开销记作 <code>O</code>、每 token 位置的计算记作 <code>c</code>，用实测的 2.20× 反解（<strong>推算，非直接实测</strong>）：</p>
+<pre><code>(16·O + 776·c) / (17·O + 57·c) = 2.20   →   O ≈ 30·c</code></pre>
+<p><strong>即：每次前向的固定开销大约等于&quot;处理 30 个 token 位&quot;的计算量。</strong> 在 <code>d_model=64</code>、2 层的规模下，一次前向的固定开销（Python 调用 + numpy 分配 + split/merge/transpose + LayerNorm/FFN）几乎和算 30 个位置一样贵。</p>
+<blockquote><p><strong>可迁移的经验：这 2.20× 是&quot;玩具模型 + Python&quot;的数字，不是大模型上的数字。</strong> 真实 7B 上矩阵大、计算占比高、且有 CUDA kernel 抹平固定开销，KV Cache 的收益通常高得多（业界常见 5~20× —— <strong>这是业界经验值，不是本机实测</strong>）。反过来也成立：<strong>别用本项目的 2.20× 去论证&quot;KV Cache 收益有限&quot;。</strong></p></blockquote>
+<h3 id="42-生成的-token-一样不是正确性证明-要看-logits">4.2 &quot;生成的 token 一样&quot;不是正确性证明 —— 要看 logits</h3>
+<p>如果只检查 <code>outputs[False] == outputs[True]</code>（两个 16 token 的 id 列表相等），这个检查是<strong>很弱的</strong>：logits 可能差了一大截，但只要 <code>argmax</code> 的<strong>顺序</strong>没变，输出就完全相同。一个偏移量级的 bug（比如位置编码错位）在某些 prompt 上恰好不改变 argmax 排序，就会被这个检查放过。</p>
+<p>所以 <code>benchmark</code> 里额外算了 <code>cache_consistency_error</code>：直接对比两个路径的 <strong>logits 向量</strong>：</p>
+<pre><code>cached, _ = self.decode_step(np.array([token]), state)
+full     = self.forward(np.asarray([prompt_ids + [token]]))[0, -1]
+return float(np.max(np.abs(cached[0] - full)))</code></pre>
+<p>实测 <strong>4.441e-15</strong>（fp64 舍入级别，阈值 <code>1e-8</code>）。这个数证明了三件事同时正确：位置编码的 <code>start_pos</code>、K/V 的拼接顺序、以及 decode 路径省略 causal mask 的合法性。</p>
+<blockquote><p>可迁移的经验：<strong>验证等价性要比对连续量（logits），不要比对离散量（argmax）。</strong> 离散量会在真正的 bug 上静默通过。</p></blockquote>
+<h3 id="43-必须先-warmup否则第一轮慢到不可信">4.3 必须先 warmup，否则第一轮慢到不可信</h3>
+<p><code>benchmark</code> 在正式计时前先跑了两轮 <code>max_new_tokens=2</code>：</p>
+<pre><code>for cached in (False, True):
+    self.generate_ids(prompt_ids, 2, use_kv_cache=cached, stop_id=None)</code></pre>
+<p>原因很实际：<strong>首次调用会触发 numpy 的内存分配、CPU 缓存冷启动、可能的频率爬升</strong>。不 warmup 的话第一轮通常慢 20~50%，而如果两路的 warmup 程度不同（比如只 warmup 了一路），加速比会直接失真。</p>
+<p><strong>两路都要 warmup</strong> —— 只 warmup 有缓存那路，会让加速比虚高。</p>
+<h3 id="44-取中位数不取均值">4.4 取中位数，不取均值</h3>
+<p>7 轮的加速比是 <code>1.91 / 2.22 / 2.23 / 2.26 / 2.20 / 2.20 / 2.57</code>。第 7 轮的 2.57× 明显是个离群值（大概率是 OS 调度或 GC 抖动）。</p>
+<ul class="lvl"><li>均值会被 1.91 和 2.57 两个方向拉扯，得到一个&quot;没人跑到过&quot;的数；</li><li><strong>中位数（2.20×）是第 5 轮那个真实出现过的轮次</strong>，且它和众数一致（2.20 出现 2 次）。</li></ul>
+<p>本项目在 M09 的 <code>step_ms</code>（101 次实测）也用中位数 —— 同一个决定。</p>
+<h3 id="45-concatenate-每步都把整个-kv-拷一遍-这是实现债不是设计">4.5 <code>concatenate</code> 每步都把整个 KV 拷一遍 —— 这是实现债，不是设计</h3>
+<pre><code>k = np.concatenate([state.keys[index], current_k], axis=2)   # src/ie/engine.py:109</code></pre>
+<p>每生成一个 token，就把<strong>整个历史 K/V 复制一遍</strong>。所以增量解码并不是真的 <code>O(1)</code>，而是 <code>O(T)</code> 的拷贝 —— 只是它省掉了 <code>O(T)</code> 的<strong>矩阵计算</strong>（后者更贵）。</p>
+<p>真实引擎（vLLM / TensorRT-LLM）的做法是<strong>预分配一块连续 buffer，按 <code>length</code> 追加写入</strong>，避免每步拷贝。本项目用 <code>concatenate</code> 是因为：</p>
+<ul class="lvl"><li>numpy 没有&quot;可增长的数组&quot;这种原生结构；</li><li>玩具规模下拷贝的绝对成本很低（整个 KV 只有 <code>2 层 × 41 token × 64 维</code> 的量级）；</li><li>代码更短、更不容易写错 —— 而本章的首要目标是<strong>证明正确性</strong>。</li></ul>
+<p>诚实地标注：这让 2.20× 是一个<strong>偏保守的下界</strong>。预分配 buffer 能再往上抬一点，但幅度有限（真正的大头是 4.1 里的固定开销）。</p>
+<h3 id="46-maxlen-边界必须在-decodestep-里检查">4.6 <code>max_len</code> 边界必须在 <code>decode_step</code> 里检查</h3>
+<pre><code>if state.length &gt;= self.max_len:
+    raise ValueError(&quot;KV Cache 已达到模型最大上下文长度&quot;)</code></pre>
+<p class="nav-footer">P06 的位置编码表只有 <code>max_len=256</code> 行。如果不在 decode 时拦截，<code>pos_enc.pe[start_pos:start_pos+1]</code> 会<strong>静默返回空数组</strong>，然后广播出一个形状错误的 hidden state —— numpy 有时不报错，直接给出垃圾输出。</p>
+<p>同理 <code>generate_ids</code> 开头也检查 <code>len(prompt_ids) + max_new_tokens &gt; self.max_len</code>。<strong>边界检查要放在&quot;会静默产生错误结果&quot;的地方，而不只是&quot;会崩溃&quot;的地方。</strong></p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>KV Cache = <strong>prefill（一次算完 prompt）+ decode_step（每次 1 token）</strong>；位置编码靠 <code>start_pos</code> 接续。</li><li>实测（41 token prompt → 生成 16）：无 KV <strong>6.155 ms</strong>、有 KV <strong>2.794 ms</strong>，<strong>真实加速 2.20×</strong>，生成的 16 个 token <strong>完全一致</strong>。</li><li><strong>单步 logits 最大误差 4.441e-15</strong>（阈值 1e-8）—— fp64 舍入级别，证明实现严格等价；<strong>比对 logits 而不是 argmax</strong> 才能抓到真正的 bug。</li><li>⚠ <strong>小模型上只有 2.20×</strong>：理论省了 13.6 倍 token 重算，反解出&quot;每次前向固定开销 ≈ 30 个 token 位的计算量&quot;（<strong>推算</strong>）。<strong>别拿 2.20× 推大模型</strong>（业界 7B 常见 5~20×，非本机实测），也别用它论证 KV Cache 收益有限。</li><li><strong>两路都要 warmup</strong>（各跑 2 token），否则加速比失真；<strong>取中位数不取均值</strong>（7 轮抖动 1.91×~2.57×）。</li><li><code>concatenate</code> 每步拷贝整个 KV 是实现债（真实引擎用预分配 buffer 追加），因此 2.20× 是<strong>偏保守的下界</strong>。</li><li><code>max_len</code> 必须在 decode 时检查 —— 越界会让 <code>pos_enc</code> 切片为空，静默产生垃圾输出。</li><li>手写实现的意义：因为增量解码和全量前向都是自己写的 numpy，我才能把两者的 <strong>logits 逐元素对比</strong>并拿到 4.441e-15 —— 用 <code>transformers</code> 的 <code>use_cache=True</code> 只能选择&quot;信或不信&quot;。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/engine.py</code></td><td><code>KVCacheState</code>（keys/values/length）/ <code>CausalLMWithKVCache._embed</code>（<code>start_pos</code> 位置编码）/ <code>forward</code>（全量，带 causal mask）/ <code>prefill</code> / <code>decode_step</code>（增量，无 mask）/ <code>generate_ids</code>（<code>use_kv_cache</code> 可切换）/ <code>benchmark</code>（两路 warmup + 7 轮计时 + 中位数）/ <code>cache_consistency_error</code>（增量 vs 全量 logits 误差）</td></tr><tr><td><code>src/ie/engine.py:101</code></td><td><code>self.model.pos_enc.pe[start_pos : start_pos + ids.shape[-1]]</code> —— 增量解码的位置编码接续点</td></tr><tr><td><code>src/ie/engine.py:109</code></td><td><code>np.concatenate([state.keys[index], current_k], axis=2)</code> —— 每步 O(T) 拷贝（实现债）</td></tr><tr><td><code>src/ie/engine.py:198</code></td><td><code>cache_consistency_error</code>：比对 logits 而非 argmax</td></tr><tr><td><code>demos/demo_07_inference_engine.py</code></td><td>3 节：benchmark / 7 轮原始计时 / 结论</td></tr><tr><td><code>demos/out/demo_07_inference_engine_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/inference-engine.svg</code></td><td>本章自回归引擎有无 KV Cache 对比图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.6 → <strong>v0.7</strong>，M07 推理引擎与真实 KV Cache 落地。实测（41 token prompt → 生成 16，7 轮取中位数）：无 KV <strong>6.155 ms</strong>、有 KV <strong>2.794 ms</strong>，<strong>真实加速 2.20×</strong>；生成 token 完全一致 <code>True</code>；<strong>单步 logits 最大误差 4.441e-15</strong>（阈值 1e-8，fp64 舍入级别）；单轮加速分布在 1.91×~2.57×。并诚实记录「⚠ 理论上省了 13.6 倍 token 重算却只快 2.20×，反解出每次前向固定开销 ≈ 30 个 token 位计算量（推算），<strong>别拿 2.20× 推大模型</strong>」「比对 logits 而非 argmax 才能证明等价」「两路都需 warmup、取中位数不取均值」「<code>concatenate</code> 每步拷贝使 2.20× 偏保守（下界）」。纯 numpy、无 torch。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

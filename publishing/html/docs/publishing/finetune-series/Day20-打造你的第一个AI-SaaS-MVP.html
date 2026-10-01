@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day20：打造你的第一个 AI SaaS MVP</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day20打造你的第一个-ai-saas-mvp">Day20：打造你的第一个 AI SaaS MVP</h1>
+<h1 id="从-prd-架构-数据库-api-开发计划">从 PRD → 架构 → 数据库 → API → 开发计划</h1>
+<p>前面 Day1～Day19：</p>
+<p>你已经完成：</p>
+<pre><code>Java工程能力
+
+↓
+
+LLM基础
+
+↓
+
+RAG
+
+↓
+
+Agent
+
+↓
+
+Tool Calling
+
+↓
+
+模型部署
+
+↓
+
+LoRA微调
+
+↓
+
+MLOps
+
+↓
+
+AI产品设计</code></pre>
+<p>今天开始进入真正 Builder 阶段：</p>
+<blockquote><p><strong>设计一个可以开发、上线、获得用户反馈的 AI SaaS 产品。</strong></p></blockquote>
+<p>项目：</p>
+<h1 id="ai-interview-coach">AI Interview Coach</h1>
+<h2 id="ai-技术面试教练平台">AI 技术面试教练平台</h2>
+<p>目标：</p>
+<p>30天完成 MVP。</p>
+<hr/>
+<h1 id="一产品定位prd第一部分">一、产品定位（PRD第一部分）</h1>
+<h2 id="产品名称">产品名称</h2>
+<p>暂定：</p>
+<pre><code>InterviewAI</code></pre>
+<p>中文：</p>
+<pre><code>AI技术面试教练</code></pre>
+<hr/>
+<h1 id="二产品一句话介绍">二、产品一句话介绍</h1>
+<blockquote><p>面向 Java / AI 工程师的智能面试训练平台，通过 AI Agent 模拟真实面试、分析回答质量、生成个性化学习计划。</p></blockquote>
+<hr/>
+<h1 id="三目标用户">三、目标用户</h1>
+<h2 id="用户1java开发者">用户1：Java开发者</h2>
+<p>年龄：</p>
+<p>2～8年。</p>
+<p>痛点：</p>
+<ul class="lvl"><li>不知道面试重点</li></ul>
+<ul class="lvl"><li>技术会但是不会表达</li></ul>
+<ul class="lvl"><li>缺少高级面试训练</li></ul>
+<hr/>
+<h2 id="用户2ai转型开发者">用户2：AI转型开发者</h2>
+<p>痛点：</p>
+<ul class="lvl"><li>不知道RAG/Agent怎么学</li></ul>
+<ul class="lvl"><li>不知道企业面试要求</li></ul>
+<hr/>
+<h2 id="用户3培训机构">用户3：培训机构</h2>
+<p>需求：</p>
+<ul class="lvl"><li>批量训练学生</li></ul>
+<ul class="lvl"><li>自动评分</li></ul>
+<hr/>
+<h1 id="四mvp核心功能">四、MVP核心功能</h1>
+<p>不要一开始做复杂。</p>
+<p>第一版只做：</p>
+<h1 id="核心闭环">核心闭环</h1>
+<pre><code>注册
+
+↓
+
+选择目标岗位
+
+↓
+
+AI生成面试
+
+↓
+
+用户回答
+
+↓
+
+AI评分
+
+↓
+
+生成报告
+
+↓
+
+学习建议
+
+↓
+
+再次训练</code></pre>
+<hr/>
+<h1 id="五功能模块设计">五、功能模块设计</h1>
+<h2 id="module-1用户系统">Module 1：用户系统</h2>
+<p>功能：</p>
+<ul class="lvl"><li>注册</li></ul>
+<ul class="lvl"><li>登录</li></ul>
+<ul class="lvl"><li>用户资料</li></ul>
+<ul class="lvl"><li>技术方向</li></ul>
+<p>保存：</p>
+<pre><code>Java
+Spring
+AI</code></pre>
+<hr/>
+<h2 id="module-2岗位画像">Module 2：岗位画像</h2>
+<p>用户选择：</p>
+<p>例如：</p>
+<pre><code>Java高级工程师</code></pre>
+<p>系统生成：</p>
+<p>能力模型：</p>
+<pre><code>{
+&quot;Java基础&quot;:90,
+
+&quot;JVM&quot;:80,
+
+&quot;Spring&quot;:70,
+
+&quot;AI&quot;:50
+}</code></pre>
+<hr/>
+<h2 id="module-3ai模拟面试">Module 3：AI模拟面试</h2>
+<p>流程：</p>
+<p>用户：</p>
+<p>点击：</p>
+<p>开始面试</p>
+<p>AI：</p>
+<pre><code>你好，现在开始Java高级工程师面试。
+
+问题1：
+
+ConcurrentHashMap为什么线程安全？</code></pre>
+<hr/>
+<h2 id="module-4回答分析">Module 4：回答分析</h2>
+<p>用户回答：</p>
+<p>文本/语音。</p>
+<p>AI输出：</p>
+<pre><code>{
+score:85,
+
+correct:true,
+
+weakness:[
+&quot;AQS源码不足&quot;
+],
+
+suggestion:
+&quot;学习CLH队列&quot;
+}</code></pre>
+<hr/>
+<h2 id="module-5学习计划">Module 5：学习计划</h2>
+<p>根据历史：</p>
+<p>生成：</p>
+<pre><code>Day1:
+
+复习HashMap
+
+
+Day2:
+
+学习AQS
+
+
+Day3:
+
+练习RAG</code></pre>
+<hr/>
+<h1 id="六整体系统架构">六、整体系统架构</h1>
+<p>MVP架构：</p>
+<pre><code>                         用户
+
+                          |
+
+                          ↓
+
+
+                       Vue3
+
+
+                          |
+
+                          ↓
+
+
+                  Spring Boot API
+
+
+                          |
+
+        +-----------------+----------------+
+
+        |                 |                |
+
+
+        ↓                 ↓                ↓
+
+
+ Interview          User Service       Report
+
+
+ Service
+
+
+        |
+
+        ↓
+
+
+ LangChain4j Agent
+
+
+        |
+
+ +------+------+
+
+
+ |             |
+
+
+RAG          LLM
+
+
+ |             |
+
+
+Milvus       Qwen
+</code></pre>
+<hr/>
+<h1 id="七技术选型">七、技术选型</h1>
+<h2 id="前端">前端</h2>
+<p>选择：</p>
+<pre><code>Vue3
++
+TypeScript
++
+Element Plus</code></pre>
+<p>原因：</p>
+<p>快速开发。</p>
+<hr/>
+<h2 id="后端">后端</h2>
+<pre><code>Spring Boot 3
+
+Java 17+
+
+MySQL
+
+Redis</code></pre>
+<hr/>
+<h2 id="ai层">AI层</h2>
+<pre><code>LangChain4j
+
+Qwen
+
+vLLM
+
+Milvus</code></pre>
+<hr/>
+<h2 id="部署">部署</h2>
+<p>开发：</p>
+<p>Docker Compose。</p>
+<p>生产：</p>
+<p>Kubernetes。</p>
+<hr/>
+<h1 id="八数据库设计">八、数据库设计</h1>
+<p>核心：</p>
+<p>6张表。</p>
+<hr/>
+<h1 id="1-用户表">1. 用户表</h1>
+<p>user</p>
+<pre><code>CREATE TABLE user
+(
+ id bigint,
+
+ username varchar(50),
+
+ password varchar(255),
+
+ target_job varchar(100),
+
+ created_time datetime
+);</code></pre>
+<hr/>
+<h1 id="2-面试记录表">2. 面试记录表</h1>
+<p>interview_session</p>
+<pre><code>CREATE TABLE interview_session
+(
+ id bigint,
+
+ user_id bigint,
+
+ job varchar(100),
+
+ status varchar(20),
+
+ score int,
+
+ created_time datetime
+);</code></pre>
+<hr/>
+<h1 id="3-面试问题表">3. 面试问题表</h1>
+<p>question</p>
+<pre><code>CREATE TABLE question
+(
+ id bigint,
+
+ session_id bigint,
+
+ content text,
+
+ category varchar(50)
+);</code></pre>
+<hr/>
+<h1 id="4-用户回答表">4. 用户回答表</h1>
+<p>answer</p>
+<pre><code>CREATE TABLE answer
+(
+ id bigint,
+
+ question_id bigint,
+
+ content text,
+
+ score int,
+
+ feedback text
+);</code></pre>
+<hr/>
+<h1 id="5-知识薄弱点">5. 知识薄弱点</h1>
+<p>weak_point</p>
+<pre><code>CREATE TABLE weak_point
+(
+ id bigint,
+
+ user_id bigint,
+
+ knowledge varchar(100),
+
+ level int
+);</code></pre>
+<hr/>
+<h1 id="6-学习计划">6. 学习计划</h1>
+<p>learning_plan</p>
+<pre><code>CREATE TABLE learning_plan
+(
+ id bigint,
+
+ user_id bigint,
+
+ content text,
+
+ status varchar(20)
+);</code></pre>
+<hr/>
+<h1 id="九ai-agent设计">九、AI Agent设计</h1>
+<p>核心：</p>
+<p>Interview Agent。</p>
+<hr/>
+<h2 id="agent能力">Agent能力</h2>
+<p>Tools：</p>
+<hr/>
+<h3 id="tool1generatequestion">Tool1：GenerateQuestion</h3>
+<p>生成面试题。</p>
+<p>输入：</p>
+<pre><code>{
+job:&quot;Java高级&quot;
+}</code></pre>
+<p>输出：</p>
+<p>问题。</p>
+<hr/>
+<h3 id="tool2evaluateanswer">Tool2：EvaluateAnswer</h3>
+<p>分析回答。</p>
+<p>输入：</p>
+<pre><code>{
+question:&quot;&quot;,
+answer:&quot;&quot;
+}</code></pre>
+<p>输出：</p>
+<p>评分。</p>
+<hr/>
+<h3 id="tool3searchknowledge">Tool3：SearchKnowledge</h3>
+<p>RAG。</p>
+<p>查询：</p>
+<ul class="lvl"><li>Java源码</li></ul>
+<ul class="lvl"><li>AI知识</li></ul>
+<hr/>
+<h3 id="tool4generateplan">Tool4：GeneratePlan</h3>
+<p>生成学习计划。</p>
+<hr/>
+<p>完整流程：</p>
+<pre><code>用户
+
+↓
+
+Interview Agent
+
+↓
+
+判断任务
+
+
+       |
+
+ +-----+------+
+
+
+ |            |
+
+
+生成问题     评分
+
+
+ |            |
+
+
+Question    Evaluation
+</code></pre>
+<hr/>
+<h1 id="十api设计">十、API设计</h1>
+<h2 id="用户">用户</h2>
+<h3 id="注册">注册</h3>
+<pre><code>POST
+
+/api/user/register</code></pre>
+<hr/>
+<h3 id="登录">登录</h3>
+<pre><code>POST
+
+/api/user/login</code></pre>
+<hr/>
+<h1 id="面试">面试</h1>
+<h2 id="创建面试">创建面试</h2>
+<pre><code>POST
+
+/api/interview/start</code></pre>
+<p>请求：</p>
+<pre><code>{
+&quot;job&quot;:
+&quot;Java高级工程师&quot;
+}</code></pre>
+<p>返回：</p>
+<pre><code>{
+sessionId:10001
+}</code></pre>
+<hr/>
+<h2 id="获取问题">获取问题</h2>
+<pre><code>GET
+
+/api/interview/{id}/question</code></pre>
+<hr/>
+<h2 id="提交回答">提交回答</h2>
+<pre><code>POST
+
+/api/interview/answer</code></pre>
+<p>请求：</p>
+<pre><code>{
+questionId:1,
+
+answer:
+&quot;ConcurrentHashMap...&quot;
+}</code></pre>
+<hr/>
+<p>返回：</p>
+<pre><code>{
+score:85,
+
+feedback:
+&quot;缺少扩容分析&quot;
+}</code></pre>
+<hr/>
+<h1 id="十一ai调用流程">十一、AI调用流程</h1>
+<p>一次回答：</p>
+<pre><code>用户提交答案
+
+↓
+
+Spring Boot
+
+↓
+
+Interview Service
+
+↓
+
+LangChain4j
+
+↓
+
+Agent判断
+
+
+↓
+
+Evaluate Tool
+
+
+↓
+
+RAG查询
+
+
+↓
+
+Prompt组装
+
+
+↓
+
+Qwen
+
+
+↓
+
+JSON评分
+
+
+↓
+
+保存MySQL
+
+↓
+
+返回用户</code></pre>
+<hr/>
+<h1 id="十二项目目录设计">十二、项目目录设计</h1>
+<p>后端：</p>
+<pre><code>ai-interview-agent
+
+├── user
+
+├── interview
+
+├── agent
+
+├── rag
+
+├── model
+
+├── evaluation
+
+├── common
+
+└── infrastructure</code></pre>
+<hr/>
+<p>AI Prompt：</p>
+<pre><code>prompts/
+
+├── interviewer.txt
+
+├── evaluator.txt
+
+├── planner.txt</code></pre>
+<hr/>
+<h1 id="十三30天开发计划">十三、30天开发计划</h1>
+<h2 id="week1基础系统">Week1：基础系统</h2>
+<p>完成：</p>
+<p>✅ 用户系统</p>
+<p>✅ 登录</p>
+<p>✅ 面试流程</p>
+<p>✅ 基础聊天</p>
+<hr/>
+<h2 id="week2ai能力">Week2：AI能力</h2>
+<p>完成：</p>
+<p>✅ LangChain4j</p>
+<p>✅ Agent</p>
+<p>✅ Tool Calling</p>
+<p>✅ Prompt</p>
+<hr/>
+<h2 id="week3rag">Week3：RAG</h2>
+<p>完成：</p>
+<p>✅ 文档上传</p>
+<p>✅ Chunk</p>
+<p>✅ Embedding</p>
+<p>✅ Milvus</p>
+<p>✅ 检索</p>
+<hr/>
+<h2 id="week4产品化">Week4：产品化</h2>
+<p>完成：</p>
+<p>✅ 评分报告</p>
+<p>✅ 数据分析</p>
+<p>✅ Docker部署</p>
+<p>✅ 域名HTTPS</p>
+<hr/>
+<h1 id="十四mvp成本">十四、MVP成本</h1>
+<p>开发阶段：</p>
+<p>最低：</p>
+<pre><code>0～300元/月</code></pre>
+<p>方案：</p>
+<ul class="lvl"><li>本地 Ollama</li></ul>
+<ul class="lvl"><li>免费额度API</li></ul>
+<ul class="lvl"><li>按小时GPU</li></ul>
+<hr/>
+<p>上线：</p>
+<p>小规模：</p>
+<pre><code>500～2000元/月</code></pre>
+<p>包括：</p>
+<ul class="lvl"><li>GPU</li></ul>
+<ul class="lvl"><li>数据库</li></ul>
+<ul class="lvl"><li>服务器</li></ul>
+<ul class="lvl"><li>域名</li></ul>
+<hr/>
+<h1 id="十五面试项目包装">十五、面试项目包装</h1>
+<p>简历：</p>
+<p>不要：</p>
+<p>❌</p>
+<blockquote><p>做了一个AI聊天机器人</p></blockquote>
+<p>改：</p>
+<p>✅</p>
+<blockquote><p>设计并开发一套 AI 技术面试训练 SaaS 平台，通过 Agent 模拟真实面试流程，结合 RAG 私有知识库和大模型能力，实现自动出题、回答评估、能力画像和个性化学习路径推荐。</p></blockquote>
+<hr/>
+<h1 id="十六下一阶段开发顺序">十六、下一阶段开发顺序</h1>
+<p>接下来不要继续学概念。</p>
+<p>开始 Coding。</p>
+<p>推荐：</p>
+<h1 id="day21ai-saas-项目初始化">Day21：AI SaaS 项目初始化</h1>
+<p>内容：</p>
+<h2 id="后端">后端</h2>
+<ul class="lvl"><li>Spring Boot 3 项目创建</li></ul>
+<ul class="lvl"><li>Maven模块设计</li></ul>
+<ul class="lvl"><li>MySQL设计</li></ul>
+<ul class="lvl"><li>Redis配置</li></ul>
+<ul class="lvl"><li>LangChain4j接入</li></ul>
+<h2 id="前端">前端</h2>
+<ul class="lvl"><li>Vue3初始化</li></ul>
+<ul class="lvl"><li>登录页面</li></ul>
+<ul class="lvl"><li>面试页面</li></ul>
+<h2 id="ai">AI</h2>
+<ul class="lvl"><li>第一个 Agent</li></ul>
+<ul class="lvl"><li>第一个 Tool</li></ul>
+<ul class="lvl"><li>第一个 Prompt</li></ul>
+<p>目标：</p>
+<blockquote><p>7天内跑起来一个真实 AI SaaS MVP。</p></blockquote>
+<p>下一节进入：</p>
+<h1 id="day21从0搭建-ai-saas-工程spring-boot-vue3-langchain4j-docker-项目初始化">Day21：《从0搭建 AI SaaS 工程：Spring Boot + Vue3 + LangChain4j + Docker 项目初始化》</h1>
+</main>
+</body>
+</html>

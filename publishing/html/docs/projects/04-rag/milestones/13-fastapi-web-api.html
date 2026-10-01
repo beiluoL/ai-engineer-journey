@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 13：给 RAG 加上 FastAPI Web API（复用 P03 的 SSE 模式）</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-13给-rag-加上-fastapi-web-api复用-p03-的-sse-模式">Milestone 13：给 RAG 加上 FastAPI Web API（复用 P03 的 SSE 模式）</h1>
+<p>到 12 章为止，RAG 链路还只能在命令行 / demo 里跑。真正的应用形态是一个可被前端调用的 Web 服务。这一章把 Pipeline 封装成 HTTP API，并重点解决「同步链路被硬塞进 async 框架」时会炸出来的那一整类问题。</p>
+<h2 id="1-目标与接口契约">1. 目标与接口契约</h2>
+<p>新增 <code>src/rag/api.py</code>，职责边界与 P03 的 <code>assistant/api.py</code> 完全一致：<strong>零业务逻辑</strong>。只做三件事：校验入参 → 调 <code>RAGService</code> → 包装响应。</p>
+<p>对外暴露五个端点：</p>
+<table><thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead><tbody><tr><td>GET</td><td><code>/health</code></td><td>存活探针</td></tr><tr><td>GET</td><td><code>/stats</code></td><td>当前索引规模、embedding 模型、top_k</td></tr><tr><td>POST</td><td><code>/ask</code></td><td>一次性返回 JSON（answer + citations + sources + refused）</td></tr><tr><td>POST</td><td><code>/ask/stream</code></td><td>SSE 流式推送，前端打字机效果</td></tr><tr><td>POST</td><td><code>/index</code></td><td>重新建索引（内存向量库每次进程冷启动都为空）</td></tr></tbody></table>
+<p>环境变量决定链路：</p>
+<ul class="lvl"><li><code>RAG_FAKE=1</code>（默认）：全离线，FakeEmbeddingClient + FakeLLMClient</li><li><code>RAG_FAKE=0</code>：真实 embedding + 真实 DeepSeek LLM</li></ul>
+<h2 id="2-代码骨架">2. 代码骨架</h2>
+<h3 id="21-ragservice-加流式接口">2.1 <code>RAGService</code> 加流式接口</h3>
+<p>一次性答案和流式答案必须<strong>共用同一段检索 + 组装逻辑</strong>。否则同一个问题，/ask 和 /ask/stream 会给出两份参考资料，前端会疯掉。</p>
+<pre><code>@dataclass(frozen=True)
+class AnswerEvent:
+    kind: str                       # &quot;retrieved&quot; | &quot;delta&quot; | &quot;done&quot; | &quot;error&quot;
+    payload: dict = field(default_factory=dict)
+
+
+class RAGService:
+    def _prepare(self, query, budget=None) -&gt; _PreparedQuery:
+        # 检索、rerank、组装 prompt
+
+    def ask(self, query, budget=None) -&gt; RAGAnswer:
+        # 失败语义 2（检索为空直接拒答） + 失败语义 3（LLM 失败重试一次）
+
+    def stream_answer(self, query, budget=None) -&gt; Iterator[AnswerEvent]:
+        # 先 yield &quot;retrieved&quot;（前端可立刻展示「已找到资料」）
+        # 再逐 token yield &quot;delta&quot;
+        # 最后 yield &quot;done&quot;（完整答案 + 引用）</code></pre>
+<h3 id="22-llm-层暴露-itertokens">2.2 LLM 层暴露 <code>iter_tokens</code></h3>
+<pre><code>class BaseLLMClient(ABC):
+    @abstractmethod
+    def chat(self, messages) -&gt; str: ...
+
+    def iter_tokens(self, messages):
+        &quot;&quot;&quot;默认整段一次性返回；真实客户端 override 成逐 token yield。&quot;&quot;&quot;
+        yield self.chat(messages)</code></pre>
+<p><code>OpenAICompatibleLLMClient.iter_tokens()</code> 用 <code>httpx.Client.stream()</code> 边收边推；<code>FakeLLMClient.iter_tokens()</code> 按句切分，保证离线也能演示增量效果。</p>
+<h3 id="23-api-层">2.3 API 层</h3>
+<pre><code>def create_app(index_paths=None) -&gt; FastAPI:
+    app = FastAPI(lifespan=_make_lifespan(paths))
+
+    @app.post(&quot;/ask&quot;)
+    async def ask(req: AskRequest, service=Depends(get_service)):
+        answer = await asyncio.to_thread(service.ask, req.query, req.budget)
+        return AskResponse(...)
+
+    @app.post(&quot;/ask/stream&quot;)
+    async def ask_stream(req: AskRequest, service=Depends(get_service)):
+        async def gen():
+            async for event in _to_async(service.stream_answer(...)):
+                yield f&quot;data: {json.dumps(event.as_dict())}\n\n&quot;
+        return StreamingResponse(gen(), media_type=&quot;text/event-stream&quot;)</code></pre>
+<p>SSE 信封沿用 P03 的格式：<code>data: {json}\n\n</code>，json 内用 <code>kind</code> 字段区分事件类型。</p>
+<h2 id="3-真实踩坑清单">3. 真实踩坑清单</h2>
+<p>下面每一条都是跑真实 demo 时才炸出来的，不是读文档能脑补的。</p>
+<h3 id="坑-1asynciorun-不能从已有事件循环里调用">坑 1：<code>asyncio.run()</code> 不能从已有事件循环里调用</h3>
+<p>真实 embedding 客户端内部是 async httpx，<code>run_sync()</code> 用 <code>asyncio.run()</code> 收口。CLI / demo / pytest 里没有 running loop，一切正常。但 uvicorn 的 <code>lifespan</code> 本身就跑在事件循环里，启动时直接调用 <code>build_components()</code> 会报：</p>
+<pre><code>RuntimeError: asyncio.run() cannot be called from a running event loop</code></pre>
+<p><strong>正确做法</strong>：把整段同步装配丢进线程池。</p>
+<pre><code>settings, embedding_client, store, retriever, service = await asyncio.to_thread(
+    build_components, profile=&quot;dev&quot;, fake=False,
+    index_paths=paths, quiet=True, llm=_build_llm(False)
+)</code></pre>
+<p>线程里没有 running loop，<code>asyncio.run()</code> 就合法了；同时建索引这种重 I/O 也不会堵住事件循环。</p>
+<h3 id="坑-2request-参数没写-request-注解">坑 2：<code>request</code> 参数没写 <code>Request</code> 注解</h3>
+<p>依赖函数写成：</p>
+<pre><code>def get_service(request) -&gt; RAGService: ...</code></pre>
+<p>FastAPI 把 <code>request</code> 当成一个<strong>必需的 query 参数</strong>，每个端点都开始要求 <code>?request=xxx</code>。<code>GET /stats</code> 直接 422，报错是 <code>Field required</code>。</p>
+<p><strong>正确做法</strong>：</p>
+<pre><code>from fastapi import Request
+
+def get_service(request: Request) -&gt; RAGService: ...</code></pre>
+<h3 id="坑-3同步-llm-embedding-在-async-端点里会堵死事件循环">坑 3：同步 LLM / embedding 在 async 端点里会堵死事件循环</h3>
+<p>即使避开了 <code>asyncio.run()</code>，如果直接在 <code>async def ask()</code> 里 <code>for token in service.stream_answer(...)</code>，整个事件循环会被同步 HTTP 请求卡住，别的请求的 <code>/health</code> 都会超时。</p>
+<p><strong>正确做法</strong>：</p>
+<ul class="lvl"><li><code>/ask</code>：整段 <code>service.ask()</code> 丢 <code>asyncio.to_thread</code></li><li><code>/ask/stream</code>：每个 <code>next()</code> 都丢线程池，让事件循环继续转</li></ul>
+<pre><code>async def _to_async(sync_gen):
+    loop = asyncio.get_running_loop()
+    sentinel = object()
+    while True:
+        item = await loop.run_in_executor(None, lambda: next(sync_gen, sentinel))
+        if item is sentinel:
+            break
+        yield item</code></pre>
+<p>代价是一次一个 token 一次线程切换；token 特别碎时（真实模型）可以改成「整段丢一个工作线程 + 队列」的版本。</p>
+<h3 id="坑-4fake-的流式必须发增量不能发累积前缀">坑 4：Fake 的流式必须发增量，不能发累积前缀</h3>
+<p>早期 <code>FakeLLMClient.iter_tokens()</code> 每句 yield 一次「从开头到当前句」的完整前缀。前端按「追加」消费，结果会把同一段话重复显示 N 遍。</p>
+<p><strong>正确做法</strong>：</p>
+<pre><code>pos = 0
+for sent in _split_sentences(text):
+    yield text[pos:pos + len(sent)]
+    pos += len(sent)</code></pre>
+<p>逐帧增量累加必须<strong>严格等于</strong>最终答案 —— 这是流式接口正确性的底线。</p>
+<h3 id="坑-5fake-embedding-下拒答根本测不出来">坑 5：Fake embedding 下「拒答」根本测不出来</h3>
+<p>FakeEmbeddingClient 是 char-ngram 哈希：任何查询都会和任何 chunk 算出一个非零相似度。于是 <code>min_score=0.2</code> 的闸门在离线模式下形同虚设，问一个语料里完全没有的问题也会召回 5 条。</p>
+<figure class="figure"><img alt="全离线模式：POST /ask 也能返回答案" src="../../../../../../projects/04-rag/assets/api-offline.png" loading="lazy"/><figcaption>全离线模式：POST /ask 也能返回答案</figcaption></figure>
+<p>这不是 bug，是离线替身的固有特性。它意味着：<strong>拒答能力只能用真实 embedding 来验证</strong>。</p>
+<h3 id="坑-6真实模型会改写拒答话术">坑 6：真实模型会改写拒答话术</h3>
+<p>之前 <code>RAGAnswer.refused</code> 用精确字符串匹配：</p>
+<pre><code>return NO_RESULT_ANSWER in self.answer
+# NO_RESULT_ANSWER = &quot;知识库中没有相关资料，无法回答这个问题。&quot;</code></pre>
+<p>真实 DeepSeek 在拒答时回了一句：</p>
+<pre><code>知识库中没有相关资料。</code></pre>
+<p>只有半句。结果 <code>refused=False</code>，前端把「我不知道」当成正常答案展示出去。</p>
+<p><strong>正确做法</strong>：关键词命中。</p>
+<pre><code>REFUSAL_MARKERS = (&quot;无法回答&quot;, &quot;知识库中没有相关资料&quot;, &quot;没有相关资料&quot;,
+                   &quot;没有找到相关资料&quot;, &quot;资料中没有&quot;)
+
+def looks_refused(text: str) -&gt; bool:
+    return any(marker in (text or &quot;&quot;) for marker in REFUSAL_MARKERS)</code></pre>
+<p>宁可放宽匹配，也不要漏判。</p>
+<figure class="figure"><img alt="真实 embedding 下，同一问题成功拒答" src="../../../../../../projects/04-rag/assets/api-refuse.png" loading="lazy"/><figcaption>真实 embedding 下，同一问题成功拒答</figcaption></figure>
+<h3 id="坑-7流式路径一旦发了-delta就无法回滚重试">坑 7：流式路径一旦发了 delta，就无法回滚重试</h3>
+<p>同步路径的 <code>ask()</code> 遵循失败语义 3：LLM 失败 → 重试一次。但流式路径不同 —— 你已经把部分 delta 推给前端，再重试就会拿到两段拼起来的怪话。</p>
+<p>所以 <code>stream_answer()</code> 只在<strong>一个字都没吐出去</strong>时重试；一旦开始流式，遇到错误只能发 <code>error</code> 事件。</p>
+<pre><code>buf = []
+sent_any = False
+try:
+    for tok in self._llm.iter_tokens(prepared.messages):
+        sent_any = True
+        yield AnswerEvent(&quot;delta&quot;, {&quot;text&quot;: tok})
+except Exception as e:
+    if sent_any:
+        yield AnswerEvent(&quot;error&quot;, {&quot;message&quot;: ...})
+        return
+    # 还没发任何 delta，重试一次</code></pre>
+<h2 id="4-真实运行截图">4. 真实运行截图</h2>
+<h3 id="一次性接口-ask">一次性接口 <code>/ask</code></h3>
+<figure class="figure"><img alt="POST /ask 真实返回" src="../../../../../../projects/04-rag/assets/api-ask.png" loading="lazy"/><figcaption>POST /ask 真实返回</figcaption></figure>
+<p>真实 embedding + DeepSeek，耗时约 1.7s，答案带 <code>[n]</code> 编号引用。</p>
+<h3 id="流式接口-askstream">流式接口 <code>/ask/stream</code></h3>
+<figure class="figure"><img alt="POST /ask/stream SSE 帧" src="../../../../../../projects/04-rag/assets/api-stream.png" loading="lazy"/><figcaption>POST /ask/stream SSE 帧</figcaption></figure>
+<p>关键指标：</p>
+<ul class="lvl"><li><strong>首帧延迟 TTFT ≈ 361 ms</strong>：用户在这个时间点已经看到第一个字。</li><li><strong>最后一帧 ≈ 1741 ms</strong>：完整答案交付时间。</li><li><strong>事件序列</strong>：<code>retrieved → delta×187 → done</code></li></ul>
+<p>如果没有 SSE，用户要瞪着空白屏等 1.7s；有了 SSE，361ms 后就有反馈。流式<strong>不改变答案质量，只改变等待感</strong>。</p>
+<h2 id="5-自检清单">5. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能解释为什么 <code>/ask</code> 和 <code>/ask/stream</code> 必须共用 <code>_prepare()</code></li><li>[ ] 能说明 <code>asyncio.run()</code> 在 uvicorn lifespan 里为什么会炸</li><li>[ ] 能写出把同步生成器桥成 async 生成器的最小代码</li><li>[ ] 知道 SSE 每帧增量累加必须等于最终答案</li><li>[ ] 知道拒答判据为什么不能用精确字符串匹配</li><li>[ ] 知道流式路径的失败重试和同步路径有何不同</li></ul>
+<hr/>
+<p>上一章：<a href="12-real-llm-integration.html">12-real-llm-integration.md</a> —— 真实 LLM 接入与忠实度审计</p>
+<p>下一章：<a href="14-real-rag-evaluation.html">14-real-rag-evaluation.md</a> —— 真实 RAG 评估：Hit Rate / MRR / 忠实度</p>
+<p>回到项目主页：<a href="../README.html">../README.md</a></p>
+</main>
+</body>
+</html>

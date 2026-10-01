@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 02 — Chapter 07：Testing / Debugging【测试与调试】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-02-chapter-07testing-debugging测试与调试">Project 02 — Chapter 07：Testing / Debugging【测试与调试】</h1>
+<blockquote><p>状态：✅ 已校对 对应代码：<code>tests/</code></p></blockquote>
+<hr/>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<p>Project 01 有 6 个 <code>unittest</code>，但只覆盖了「纯函数」：</p>
+<pre><code>def test_build_messages(self): ...
+def test_parse_answer(self): ...</code></pre>
+<p>真正有风险的地方<strong>一行没测</strong>：</p>
+<pre><code>风险 1：网络请求（超时、限流、401）—— 因为它真的要联网
+风险 2：多轮对话历史是否正确累积
+风险 3：重试逻辑到底重试了几次
+风险 4：换一个 client 实现，上层还能不能跑</code></pre>
+<p>为什么没测？因为代码<strong>写成了没法测的样子</strong>——<code>LLMClient.ask()</code> 里直接 <code>urllib.request.urlopen</code>，业务逻辑和网络调用焊死了。</p>
+<p>本章目标：</p>
+<blockquote><p><strong>用依赖注入 + Fake 对象，在不联网、不花一分钱的前提下，把上面四个风险全部测掉。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>对 AI 应用来说，测试不只是「防 bug」，还有三个更现实的理由：</p>
+<pre><code>1. 省钱 —— 每次跑测试都真调 API，一个月几百块打不住
+2. 快   —— 真实调用 3-10 秒，Fake 是 0.001 秒；测试慢就没人跑
+3. 确定性 —— 模型输出不固定，真调的测试会「偶发失败」，这种测试等于没有</code></pre>
+<p>结论：<strong>AI 应用的测试必须能在完全离线的情况下验证业务逻辑。</strong></p>
+<p>这恰好是 Chapter 00 分层设计的回报——因为 <code>AssistantService</code> 只依赖 <code>BaseLLMClient</code> 抽象，我们就能塞一个假的进去。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-pytest-基础">3.1 pytest 基础</h3>
+<pre><code># tests/test_conversation.py
+from assistant.conversation import Conversation
+
+def test_add_user_appends_message():
+    conv = Conversation(system_prompt=&quot;你是助手&quot;)
+    conv.add_user(&quot;你好&quot;)
+    assert conv.messages == [
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;你是助手&quot;},
+        {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;你好&quot;},
+    ]</code></pre>
+<p>和 Java 的对比：</p>
+<pre><code>@Test
+void addUserAppendsMessage() {
+    Conversation conv = new Conversation(&quot;你是助手&quot;);
+    conv.addUser(&quot;你好&quot;);
+    assertEquals(List.of(...), conv.getMessages());
+}</code></pre>
+<p>关键差异：</p>
+<blockquote><p><strong>pytest 用的是 Python 原生的 <code>assert</code>，不是 <code>assertEquals</code>。</strong> 失败时 pytest 会展开表达式的每一步值，比 JUnit 的断言信息详细得多。</p></blockquote>
+<h3 id="32-fixture可复用的测试脚手架">3.2 fixture：可复用的测试脚手架</h3>
+<pre><code>import pytest
+
+@pytest.fixture
+def settings():
+    return Settings(api_key=&quot;test-key&quot;, base_url=&quot;http://localhost&quot;, model=&quot;test-model&quot;)
+
+@pytest.fixture
+def fake_client():
+    return FakeClient(reply=&quot;固定回答&quot;)
+
+def test_service_ask(fake_client):        # 参数名 = fixture 名
+    service = AssistantService(fake_client)
+    assert service.ask_sync(&quot;问题&quot;) == &quot;固定回答&quot;</code></pre>
+<p>对应 JUnit 的 <code>@BeforeEach</code>，但更灵活：fixture 可以<strong>互相依赖</strong>、有作用域（<code>function</code> / <code>module</code> / <code>session</code>）。</p>
+<h3 id="33-fake-vs-mock">3.3 Fake vs Mock</h3>
+<table><thead><tr><th></th><th>做法</th><th>适用场景</th></tr></thead><tbody><tr><td><strong>Fake</strong></td><td>写一个真的能用的简化实现（如 <code>FakeClient</code> 返回固定字符串）</td><td>本项目首选</td></tr><tr><td><strong>Mock</strong></td><td>用 <code>unittest.mock</code> 造一个「记录调用、返回预设值」的替身</td><td>需要验证「有没有被调用、调了几次」</td></tr></tbody></table>
+<p>Fake 示例（推荐，因为直观且可复用）：</p>
+<pre><code>class FakeClient(BaseLLMClient):
+    def __init__(self, reply: str = &quot;假回答&quot;, fail_times: int = 0) -&gt; None:
+        self.reply = reply
+        self.fail_times = fail_times
+        self.calls: list[list[dict[str, str]]] = []    # 记录每次收到的 messages
+
+    async def chat(self, messages: list[dict[str, str]]) -&gt; str:
+        self.calls.append(messages)
+        if len(self.calls) &lt;= self.fail_times:
+            raise LLMRateLimitError(&quot;模拟限流&quot;)
+        return self.reply</code></pre>
+<p>这一个 Fake 就能测三个东西：</p>
+<pre><code>def test_retry_on_rate_limit():
+    client = FakeClient(fail_times=2)     # 前两次失败
+    ...                                    # 验证第 3 次成功
+
+def test_history_accumulates():
+    client = FakeClient()
+    ...                                    # 验证 client.calls[1] 包含上一轮对话
+
+def test_passes_system_prompt():
+    client = FakeClient()
+    ...                                    # 验证 client.calls[0][0][&quot;role&quot;] == &quot;system&quot;</code></pre>
+<p>Mock 示例（需要验证「调用次数」时）：</p>
+<pre><code>from unittest.mock import AsyncMock
+
+async def test_service_calls_client_once():
+    client = AsyncMock()
+    client.chat.return_value = &quot;ok&quot;
+    await AssistantService(client).ask(&quot;hi&quot;)
+    client.chat.assert_awaited_once()</code></pre>
+<h3 id="34-测异步代码">3.4 测异步代码</h3>
+<p>pytest 默认不认识 <code>async def</code> 测试。两种方案：</p>
+<p><strong>方案 A：pytest-asyncio</strong>（需要装依赖）</p>
+<pre><code>@pytest.mark.asyncio
+async def test_async_ask():
+    result = await service.ask(&quot;hi&quot;)
+    assert result == &quot;ok&quot;</code></pre>
+<p><strong>方案 B：<code>asyncio.run</code> 包一层</strong>（零依赖，本项目可用）</p>
+<pre><code>def test_async_ask():
+    result = asyncio.run(service.ask(&quot;hi&quot;))
+    assert result == &quot;ok&quot;</code></pre>
+<p>还有一个好用的办法：<strong>给 service 同时提供 <code>ask</code>（async）和 <code>ask_sync</code>（同步包装）</strong>，测试里一律用同步版：</p>
+<pre><code>def ask_sync(self, text: str) -&gt; str:
+    return asyncio.run(self.ask(text))</code></pre>
+<h3 id="35-测试分层金字塔">3.5 测试分层（金字塔）</h3>
+<pre><code>         ╱╲           E2E：真的调一次 API（慢、花钱、少）
+        ╱  ╲          集成：FastAPI TestClient 打完整链路（中）
+       ╱────╲         单元：纯函数 + Fake 对象（快、多、离钱）
+      ╱______╲</code></pre>
+<p>比例建议：<strong>单元 70% / 集成 25% / E2E 5%</strong>。</p>
+<p>E2E 要能被跳过（否则没网就跑不了 CI）：</p>
+<pre><code>@pytest.mark.skipif(not os.getenv(&quot;DEEPSEEK_API_KEY&quot;), reason=&quot;需要真实 Key&quot;)
+async def test_real_api():
+    ...</code></pre>
+<p>这个 <code>skipif</code> 很关键：CI 没有 Key 也能全绿，本地有 Key 就顺带验证真实链路。</p>
+<h3 id="36-调试pdb-与-ide">3.6 调试：pdb 与 IDE</h3>
+<p>命令行断点：</p>
+<pre><code>def some_func():
+    breakpoint()      # Python 3.7+，等价于 import pdb; pdb.set_trace()
+    ...</code></pre>
+<p>常用命令：<code>n</code>(下一行) / <code>s</code>(进入函数) / <code>c</code>(继续) / <code>p 变量名</code>(打印) / <code>l</code>(看代码) / <code>q</code>(退出)。</p>
+<p>调试 async 代码时，<code>await</code> 处会在事件循环里跳来跳去，建议：</p>
+<pre><code>1. 先写一个同步的最小复现（把 async 函数用 asyncio.run 包起来）
+2. 在纯逻辑部分加断点，而不是在 await 那一行</code></pre>
+<hr/>
+<h2 id="4-项目代码">4. 项目代码</h2>
+<pre><code>tests/
+├── conftest.py              # 共享 fixture：settings / fake_client / service
+├── test_conversation.py     # 对话历史累积、裁剪
+├── test_service.py          # 业务逻辑（用 FakeClient，不联网）
+├── test_settings.py         # 配置解析、缺失 Key 报错
+└── test_api.py              # FastAPI TestClient（Chapter 09）</code></pre>
+<p>运行：</p>
+<pre><code>pip install pytest pytest-asyncio
+pytest -v                          # 全部
+pytest tests/test_service.py -v    # 单个文件
+pytest -k &quot;retry&quot; -v               # 按名字筛
+pytest --cov=assistant             # 覆盖率（需 pytest-cov）</code></pre>
+<hr/>
+<figure class="figure"><img alt="真实运行：7 个用例里故意写错一个断言，看到 pytest 展开的断言细节与 FAIL，改完代码后 7 passed" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-pytest-ch07.png" loading="lazy"/><figcaption>真实运行：7 个用例里故意写错一个断言，看到 pytest 展开的断言细节与 FAIL，改完代码后 7 passed</figcaption></figure>
+<figure class="figure"><img alt="真实运行：本项目全量测试 33 passed（离线 Fake，不联网）" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-pytest-suite.png" loading="lazy"/><figcaption>真实运行：本项目全量测试 33 passed（离线 Fake，不联网）</figcaption></figure>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td>JUnit 5 <code>@Test</code></td><td><code>def test_xxx()</code></td><td>pytest 靠命名约定</td></tr><tr><td><code>@BeforeEach</code></td><td><code>@pytest.fixture</code></td><td>fixture 更灵活，可组合</td></tr><tr><td><code>assertEquals(a, b)</code></td><td><code>assert a == b</code></td><td>pytest 失败信息更详细</td></tr><tr><td><code>assertThrows</code></td><td><code>pytest.raises(...)</code></td><td>见下</td></tr><tr><td><code>@ParameterizedTest</code></td><td><code>@pytest.mark.parametrize</code></td><td>同</td></tr><tr><td>Mockito <code>mock()</code></td><td><code>unittest.mock.Mock</code> / Fake 类</td><td>Python 更常用手写 Fake</td></tr><tr><td><code>@MockBean</code></td><td>构造函数注入 Fake</td><td>没有容器，手动传</td></tr><tr><td>无</td><td><code>monkeypatch</code> fixture</td><td>临时替换环境变量/函数</td></tr></tbody></table>
+<p><code>pytest.raises</code> 用法：</p>
+<pre><code>import pytest
+
+def test_missing_key():
+    with pytest.raises(LLMConfigError, match=&quot;DEEPSEEK_API_KEY&quot;):
+        Settings.from_env()</code></pre>
+<p><code>monkeypatch</code> 用法（测配置时不用真改环境变量）：</p>
+<pre><code>def test_reads_env(monkeypatch):
+    monkeypatch.setenv(&quot;DEEPSEEK_API_KEY&quot;, &quot;sk-test&quot;)
+    settings = Settings.from_env()
+    assert settings.api_key == &quot;sk-test&quot;</code></pre>
+<hr/>
+<h2 id="6-常见坑">6. 常见坑</h2>
+<h3 id="坑-1测试文件不叫-testpy">坑 1：测试文件不叫 <code>test_*.py</code></h3>
+<p>pytest 只收集 <code>test_*.py</code> 或 <code>*_test.py</code>。写成 <code>tests.py</code> 会被静默忽略——<strong>没有任何报错，只是「0 tests collected」</strong>。</p>
+<h3 id="坑-2测试之间互相污染">坑 2：测试之间互相污染</h3>
+<pre><code>conversation_history = []      # ❌ 模块级可变状态，被所有测试共享</code></pre>
+<p>用 fixture 保证每个测试拿到新的：</p>
+<pre><code>@pytest.fixture
+def conv():
+    return Conversation(system_prompt=&quot;test&quot;)</code></pre>
+<h3 id="坑-3真的在测试里调-api">坑 3：真的在测试里调 API</h3>
+<pre><code>def test_ask():
+    assert client.chat([...]) == &quot;...&quot;     # 模型输出每次都不一样，必然偶发失败</code></pre>
+<p>改成断言「结构性」而非「内容」：</p>
+<pre><code>def test_ask():
+    result = client.chat([...])
+    assert isinstance(result, str)
+    assert len(result) &gt; 0</code></pre>
+<h3 id="坑-4async-测试忘了-await">坑 4：async 测试忘了 await</h3>
+<pre><code>async def test_ask():
+    result = service.ask(&quot;hi&quot;)     # ❌ 没 await，result 是 coroutine 对象
+    assert result == &quot;ok&quot;          # 失败，而且不报错只说 !=</code></pre>
+<p>Python 会警告 <code>coroutine was never awaited</code>。看到这个警告就要检查。</p>
+<h3 id="坑-5asynciorun-在已有事件循环里调用会报错">坑 5：<code>asyncio.run</code> 在已有事件循环里调用会报错</h3>
+<pre><code>RuntimeError: asyncio.run() cannot be called from a running event loop</code></pre>
+<p>发生在：在 async 测试里又调了 <code>ask_sync</code>。解决：测试全程用 async 版本。</p>
+<hr/>
+<h2 id="7-实战挑战">7. 实战挑战</h2>
+<p><strong>挑战 1</strong>：写 <code>test_retry.py</code>，用 <code>FakeClient(fail_times=2)</code> 验证「限流时重试 2 次后成功」，并断言总共调用了 3 次。</p>
+<p><strong>挑战 2</strong>：写 <code>test_history.py</code>，连续问两轮，断言第二轮发给 client 的 messages 包含第一轮的问答。</p>
+<p><strong>挑战 3（进阶）</strong>：给 FastAPI 应用写集成测试（<code>TestClient</code>），验证 <code>POST /chat</code> 返回 200 且包含预期字段——<strong>不联网</strong>。</p>
+<hr/>
+<h2 id="8-主动回忆">8. 主动回忆</h2>
+<ul class="lvl"><li>Fake 和 Mock 的区别？本项目为什么优先用 Fake？</li><li>为什么 AI 应用的测试不能真调 API？</li><li><code>pytest.raises</code> 对应 Java 的什么？</li><li>怎么让「需要真实 Key」的测试在无 Key 环境下自动跳过？</li><li><code>monkeypatch</code> 解决了什么问题？</li><li>测试金字塔的三层比例大概是多少？</li></ul>
+<hr/>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<ul class="lvl"><li>[ ] <code>tests/</code> 下所有文件以 <code>test_</code> 开头</li><li>[ ] 业务逻辑测试<strong>完全离线</strong>（用 FakeClient，不需要 Key）</li><li>[ ] 覆盖：对话历史累积、重试、配置缺失报错、依赖注入替换实现</li><li>[ ] 真实 API 的测试用 <code>skipif</code> 保护，无 Key 时自动跳过</li><li>[ ] <code>pytest -v</code> 全绿，且总耗时 &lt; 2 秒</li></ul>
+<p>下一章：<a href="08-packaging.html">08-packaging.md</a> —— 让它能被别人 <code>pip install</code>。</p>
+</main>
+</body>
+</html>

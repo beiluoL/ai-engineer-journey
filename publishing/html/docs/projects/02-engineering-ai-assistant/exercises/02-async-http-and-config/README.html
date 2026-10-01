@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Exercises 02-async-http-and-config — M01 / M02 / M05 配套练习</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="exercises-02asynchttpandconfig-m01-m02-m05-配套练习">Exercises 02-async-http-and-config — M01 / M02 / M05 配套练习</h1>
+<blockquote><p>对应：<code>milestones/01-async-await.md</code>（⬜ 未学习）、<code>milestones/02-async-http-client.md</code>（⬜ 未学习）、<code>milestones/05-config-and-environment.md</code>（⬜ 未学习） 规则：<strong>亲手敲，不复制粘贴</strong>。每题先自己写、跑通，再对照 milestone 里的示例。 勾选权在你手里：本文件所有复选框一律 ⬜，跑通的是「参考答案」，不是「你学会了」。</p></blockquote>
+<h2 id="a-async-awaitmilestone-01">A. async / await（Milestone 01）</h2>
+<ul class="lvl"><li>[ ] <strong>A1</strong> 写 <code>async def greet(name: str) -&gt; str</code>(内部 <code>await asyncio.sleep(0)</code>)，再用 <code>asyncio.run</code> 跑它。 验证：函数体里<strong>一次同步阻塞调用都没有</strong>；<code>greet(&quot;x&quot;)</code> 不调用时返回的是协程对象（打印 <code>type()</code> 看一眼）。</li></ul>
+<ul class="lvl"><li>[ ] <strong>A2</strong> 写 <code>async def chat_all(prompts, client) -&gt; list[str]</code>，内部用 <code>asyncio.gather(*(... for p in prompts))</code> 并发发出。 验证：把 <code>prompts</code> 换成 5 条，<code>client.chat</code> 被调用 5 次、返回结果顺序与输入顺序一致。</li></ul>
+<ul class="lvl"><li>[ ] <strong>A3（核心）</strong> 证明并发真的省时间 —— 定义一个「替身客户端」（<code>async def chat</code> 里只 <code>await asyncio.sleep(0.15)</code>，<strong>不联网</strong>），分别测：<ul class="lvl"><li>串行：一个 <code>async def</code> 里 <code>await</code> 三次；</li><li>并发：<code>asyncio.gather</code> 同样的三次。 打印两次真实墙钟耗时和 <code>并发耗时 / 串行耗时</code> 的比值，并断言这个比值 <strong>&gt; 1</strong>（比值必须是这次跑出来的，不许写死）。</li></ul></li></ul>
+<h2 id="b-异步-http-与测试替身milestone-02">B. 异步 HTTP 与测试替身（Milestone 02）</h2>
+<ul class="lvl"><li>[ ] <strong>B1</strong> 用仓库里现成的 <code>FakeClient</code>（<code>src/assistant/client.py</code>，不联网、可预设失败次数）跑 4 个并发 <code>chat</code>，断言 <code>fake.calls</code> 里记到了 4 条消息、返回列表顺序不变。 验证：调用次数就是 4，<code>FakeClient</code> 上没有真的 socket。</li></ul>
+<ul class="lvl"><li>[ ] <strong>B2</strong> 用 <code>asyncio.wait_for(client.chat(...), timeout=0.05)</code> 给一次「慢请求」设超时。 验证：抛出 <code>asyncio.TimeoutError</code>，且被取消的那一次<strong>已经把消息记进了 <code>fake.calls</code></strong>（取消不等于没发请求）。</li></ul>
+<ul class="lvl"><li>[ ] <strong>B3</strong> 用 <code>FakeClient(fail_times=2)</code> 模拟「前两次限流、第三次成功」，自己写一个退避重试循环（退避用 <code>asyncio.sleep(0)</code>，不要真等）。 验证：总共尝试 3 次、第 3 次拿到回复；再验证「超过重试次数后抛的是 <code>LLMRateLimitError</code>，且它能被 <code>LLMError</code> 基类捕获」。</li></ul>
+<h2 id="c-frozen-配置与环境milestone-05">C. frozen 配置与环境（Milestone 05）</h2>
+<ul class="lvl"><li>[ ] <strong>C1</strong> 验证优先级 <strong>真实环境变量 &gt; .env 文件 &gt; 代码默认值</strong>： 临时写一个 .env（内容自己编，注意别把自己的真实 Key 写进去），再在 <code>os.environ</code> 里预设一个<strong>同名不同值</strong>的变量，用 <code>Settings.from_env(dotenv_path=&lt;临时路径&gt;)</code> 读出来比对。 验证：三个来源各取到该取的那一档；跑完把临时环境变量清理掉（<code>del os.environ[...]</code>，别污染后续命令）。</li></ul>
+<ul class="lvl"><li>[ ] <strong>C2</strong> 验证「frozen 配置在并发里也是安全的」：用 <code>asyncio.gather</code> 并发地对同一个 <code>Settings</code> 对象做 4 次 <code>dataclasses.replace(...)</code>（改 <code>log_level</code>），断言原对象一个字段都没变、4 个变体互不相同。</li></ul>
+<ul class="lvl"><li>[ ] <strong>C3</strong> 踩一遍校验失败：把 <code>DEEPSEEK_TIMEOUT</code> 设成非数字，调 <code>Settings.from_env(dotenv_path=&quot;&quot;)</code> 看抛什么；再用 <code>Settings(...).validate()</code> 验证 base_url 非法时也会抛 <code>LLMConfigError</code>。 验证：两类错误都是 <code>LLMConfigError</code>，且错误信息里带上了当前值。</li></ul>
+<h2 id="验收标准">验收标准</h2>
+<p>A3 的比值必须真的 &gt; 1（这是「异步到底省不省时间」的唯一硬证据）、B2 的超时真抛、C1 三档优先级逐一成立 = 这组对应章节过关。 看参考答案不算通过 —— 参考答案里的数字是它自己跑出来的，你得跑出你自己的数字。</p>
+<h2 id="参考答案与判卷">参考答案与判卷</h2>
+<ul class="lvl"><li>参考答案：<code>answers.py</code>（每题一个函数，纯离线）</li><li>怎么跑： ``<code>bash .venv/bin/python exercises/02-async-http-and-config/answers.py </code>``</li><li>怎么判卷（全仓库一起判）： ``<code>bash .venv/bin/python exercises/grade.py </code>``</li></ul>
+<blockquote><p><strong>重要</strong>：<code>answers.py</code> 跑通只代表「参考答案跑通」。是否学会由你自己勾选，参考：<a href="../README.html"><code>../README.md</code></a></p></blockquote>
+</main>
+</body>
+</html>

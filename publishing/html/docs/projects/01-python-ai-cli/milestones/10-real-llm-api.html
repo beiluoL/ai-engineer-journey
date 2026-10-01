@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lesson 10 — Real LLM API：让 Python AI CLI Assistant 真正成为 AI Assistant</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="lesson-10-real-llm-api让-python-ai-cli-assistant-真正成为-ai-assistant">Lesson 10 — Real LLM API：让 Python AI CLI Assistant 真正成为 AI Assistant</h1>
+<blockquote><p>项目：Python AI CLI Assistant   版本：v1.0   核心主题：LLM【大语言模型】、LLM API【大模型接口】、API Key【接口密钥】、Model【模型】、Messages【消息列表】、System/User/Assistant、Request/Response、Token【词元】、Context【上下文】</p></blockquote>
+<hr/>
+<h1 id="一这一章我们终于要做什么">一、这一章，我们终于要做什么？</h1>
+<p>前 9 章，我们一直在给这个项目修地基。</p>
+<p>现在：</p>
+<pre><code>v0.1
+变量
+ ↓
+v0.2
+List / Dict / JSON
+ ↓
+v0.3
+控制流程
+ ↓
+v0.4
+Function
+ ↓
+v0.5
+Module
+ ↓
+v0.6
+Exception
+ ↓
+v0.7
+Persistence
+ ↓
+v0.8
+Environment
+ ↓
+v0.9
+HTTP / API</code></pre>
+<p>现在终于来到：</p>
+<h1 id="v10-real-llm-api真实大模型接口">v1.0 —— Real LLM API【真实大模型接口】</h1>
+<p>项目从：</p>
+<pre><code>用户
+ ↓
+Python
+ ↓
+Mock Response【模拟响应】</code></pre>
+<p>升级成：</p>
+<pre><code>用户
+ ↓
+Python AI CLI
+ ↓
+LLM API
+ ↓
+真实大语言模型
+ ↓
+AI Response
+ ↓
+Python
+ ↓
+用户</code></pre>
+<p>这意味着：</p>
+<blockquote><p><strong>你的第一个真正 AI 应用诞生了。</strong></p></blockquote>
+<p>这不是效果图，是本项目真实跑出来的一次调用：</p>
+<figure class="figure"><img alt="真实调用 DeepSeek API 的输出" src="../../../../../../projects/01-python-ai-cli/assets/term-real-llm-call.png" loading="lazy"/><figcaption>真实调用 DeepSeek API 的输出</figcaption></figure>
+<hr/>
+<h1 id="二先不要急着写代码">二、先不要急着写代码</h1>
+<p>这一章最重要的不是 SDK。</p>
+<p>先回答：</p>
+<blockquote><p><strong>大模型到底在哪里？</strong></p></blockquote>
+<p>你的电脑：</p>
+<pre><code>Mac
+ ↓
+Python
+ ↓
+AI CLI Assistant</code></pre>
+<p>如果使用云端模型，那么模型实际上运行在：</p>
+<pre><code>远程服务器</code></pre>
+<p>所以：</p>
+<pre><code>你的 Mac
+   │
+   │ HTTP Request
+   ↓
+LLM API Server
+   │
+   │ Model Inference【模型推理】
+   ↓
+LLM
+   │
+   │ HTTP Response
+   ↓
+你的 Mac</code></pre>
+<p>你的 Python 程序本身：</p>
+<blockquote><p><strong>不是大模型。</strong></p></blockquote>
+<p>它只是：</p>
+<blockquote><p><strong>大模型的客户端。</strong></p></blockquote>
+<p>这个区别非常重要。</p>
+<hr/>
+<h1 id="三llm-是什么">三、LLM 是什么？</h1>
+<p>LLM：</p>
+<h1 id="large-language-model大语言模型">Large Language Model【大语言模型】</h1>
+<p>简单理解：</p>
+<blockquote><p>能够处理和生成自然语言的大规模机器学习模型。</p></blockquote>
+<p>例如：</p>
+<pre><code>用户：
+什么是 HashMap？
+
+LLM：
+HashMap 是 Java 中基于哈希表实现的 Map...</code></pre>
+<p>但对于我们的 Python 程序来说：</p>
+<p>我们暂时不需要研究：</p>
+<pre><code>Transformer
+Attention
+Embedding
+训练
+反向传播</code></pre>
+<p>这些属于后面的：</p>
+<pre><code>06-transformer-llm</code></pre>
+<p>当前先解决一个工程问题：</p>
+<blockquote><p><strong>怎么调用已经训练好的模型？</strong></p></blockquote>
+<hr/>
+<h1 id="四llm-api-是什么">四、LLM API 是什么？</h1>
+<p>可以把：</p>
+<pre><code>LLM</code></pre>
+<p>理解成：</p>
+<pre><code>远程 AI 能力</code></pre>
+<p>把：</p>
+<pre><code>LLM API</code></pre>
+<p>理解成：</p>
+<pre><code>远程 AI 能力的程序化入口</code></pre>
+<p>例如：</p>
+<pre><code>你的 Python
+     ↓
+LLM API
+     ↓
+模型</code></pre>
+<p>所以：</p>
+<pre><code>API
+=
+程序访问模型能力的接口</code></pre>
+<hr/>
+<h1 id="五为什么前面一定要学习-http">五、为什么前面一定要学习 HTTP？</h1>
+<p>现在你会看到它们全部连接起来。</p>
+<p>之前：</p>
+<pre><code>Python
+ ↓
+httpx
+ ↓
+HTTP
+ ↓
+API</code></pre>
+<p>现在只是把 API 换成：</p>
+<pre><code>LLM API</code></pre>
+<p>于是：</p>
+<pre><code>Python
+ ↓
+httpx / SDK
+ ↓
+HTTP
+ ↓
+LLM API
+ ↓
+LLM</code></pre>
+<p>所以：</p>
+<blockquote><p>LLM API 并没有推翻前面的 HTTP 知识。</p></blockquote>
+<p>恰恰相反：</p>
+<blockquote><p><strong>它把前面的 HTTP 知识真正用起来了。</strong></p></blockquote>
+<hr/>
+<h1 id="六第一件事情api-key">六、第一件事情：API Key</h1>
+<p>访问很多云端 AI 服务时，需要：</p>
+<h1 id="api-key接口密钥">API Key【接口密钥】</h1>
+<p>它的作用可以简单理解为：</p>
+<blockquote><p><strong>告诉 API 服务：“我是一个经过认证的调用方。”</strong></p></blockquote>
+<p>调用链：</p>
+<pre><code>Python
+ ↓
+API Key
+ ↓
+LLM API
+ ↓
+认证
+ ↓
+允许调用</code></pre>
+<p>但要特别注意：</p>
+<pre><code>API Key
+≠
+Model</code></pre>
+<p>API Key 是：</p>
+<pre><code>身份 / 凭证</code></pre>
+<p>Model 是：</p>
+<pre><code>你要调用的模型</code></pre>
+<hr/>
+<h1 id="七api-key-千万不要写进代码">七、API Key 千万不要写进代码</h1>
+<p>错误方式：</p>
+<pre><code>API_KEY = &quot;真实密钥&quot;</code></pre>
+<p>更加不要：</p>
+<pre><code>git add .
+git commit
+git push</code></pre>
+<p>把它上传到公开仓库。</p>
+<p>正确方式：</p>
+<pre><code>.env</code></pre>
+<p>例如：</p>
+<pre><code>API_KEY=你的本地密钥
+MODEL_NAME=你的模型名称
+BASE_URL=你的服务地址</code></pre>
+<p>而：</p>
+<pre><code>.env</code></pre>
+<p>已经在：</p>
+<pre><code>.gitignore</code></pre>
+<p>中忽略。</p>
+<p>这就是为什么项目在「缺 Key」时不会崩溃，而是给出带修复指引的提示 —— 这是 <code>config.py</code> 抛出的 <code>LLMConfigError</code>：</p>
+<figure class="figure"><img alt="缺 Key 时的友好报错" src="../../../../../../projects/01-python-ai-cli/assets/term-config-error.png" loading="lazy"/><figcaption>缺 Key 时的友好报错</figcaption></figure>
+<hr/>
+<h1 id="八配置层已经提前为今天做好准备">八、配置层已经提前为今天做好准备</h1>
+<p>还记得 Lesson 08 的：</p>
+<pre><code>config.py</code></pre>
+<p>现在终于有用了。</p>
+<p>例如：</p>
+<pre><code>import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv(&quot;API_KEY&quot;)
+MODEL_NAME = os.getenv(&quot;MODEL_NAME&quot;)
+BASE_URL = os.getenv(&quot;BASE_URL&quot;)</code></pre>
+<p>现在：</p>
+<pre><code>.env
+ ↓
+python-dotenv
+ ↓
+环境变量
+ ↓
+config.py
+ ↓
+LLM Client</code></pre>
+<p>整个设计已经形成闭环。</p>
+<hr/>
+<h1 id="九这一章为什么不强制你把真实-key-发给我">九、这一章为什么不强制你把真实 Key 发给我？</h1>
+<p>因为：</p>
+<blockquote><p><strong>API Key 是秘密凭证。</strong></p></blockquote>
+<p>你应该只在自己的本地环境配置。</p>
+<p>例如：</p>
+<pre><code>API_KEY=真实密钥</code></pre>
+<p>而聊天里只展示：</p>
+<pre><code>API_KEY=</code></pre>
+<p>或者：</p>
+<pre><code>API_KEY=YOUR_API_KEY</code></pre>
+<p>永远不要把真实 Key 粘贴进聊天、代码仓库或截图。</p>
+<hr/>
+<h1 id="十model模型又是什么">十、Model【模型】又是什么？</h1>
+<p>假设一个 AI 平台提供多个模型：</p>
+<pre><code>Model A
+Model B
+Model C</code></pre>
+<p>你调用 API 时需要告诉服务器：</p>
+<blockquote><p>我要哪个模型？</p></blockquote>
+<p>因此请求中通常会出现：</p>
+<pre><code>{
+  &quot;model&quot;: &quot;model-name&quot;
+}</code></pre>
+<p>所以：</p>
+<pre><code>API Key
+→ 我是谁
+
+Model
+→ 我要调用谁</code></pre>
+<p>这是非常重要的区分。</p>
+<hr/>
+<h1 id="十一最重要的数据结构messages">十一、最重要的数据结构：Messages</h1>
+<p>前面 Lesson 02 我们已经学习过：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    }
+]</code></pre>
+<p>当时看起来只是：</p>
+<blockquote><p>一个 Python List。</p></blockquote>
+<p>现在你会发现：</p>
+<blockquote><p><strong>它其实就是 LLM 对话 API 的核心数据结构之一。</strong></p></blockquote>
+<hr/>
+<h1 id="十二为什么不是直接传一个字符串">十二、为什么不是直接传一个字符串？</h1>
+<p>当然有些 API 可以：</p>
+<pre><code>{
+  &quot;prompt&quot;: &quot;你好&quot;
+}</code></pre>
+<p>但现代聊天模型接口经常使用：</p>
+<pre><code>Messages【消息列表】</code></pre>
+<p>例如：</p>
+<pre><code>{
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;你好&quot;
+    }
+  ]
+}</code></pre>
+<p>因为模型不仅需要知道：</p>
+<pre><code>内容是什么</code></pre>
+<p>还需要知道：</p>
+<pre><code>是谁说的</code></pre>
+<hr/>
+<h1 id="十三role角色">十三、Role【角色】</h1>
+<p>常见角色：</p>
+<pre><code>system
+user
+assistant</code></pre>
+<hr/>
+<h2 id="system系统消息">System【系统消息】</h2>
+<p>用于告诉模型：</p>
+<blockquote><p>你应该扮演什么角色、遵循什么规则。</p></blockquote>
+<p>例如：</p>
+<pre><code>你是一名专业的 Java 教师。
+回答问题时优先给出原理和实际案例。</code></pre>
+<hr/>
+<h2 id="user用户消息">User【用户消息】</h2>
+<p>用户真正提出的问题。</p>
+<p>例如：</p>
+<pre><code>什么是 HashMap？</code></pre>
+<hr/>
+<h2 id="assistant助手消息">Assistant【助手消息】</h2>
+<p>模型之前已经产生的回答。</p>
+<p>例如：</p>
+<pre><code>HashMap 是 Java 中的一种 Map 实现...</code></pre>
+<hr/>
+<h1 id="十四为什么需要-assistant-消息">十四、为什么需要 Assistant 消息？</h1>
+<p>因为对话是连续的。</p>
+<p>第一次：</p>
+<pre><code>User：
+什么是 HashMap？</code></pre>
+<p>模型：</p>
+<pre><code>Assistant：
+HashMap 是...</code></pre>
+<p>第二次：</p>
+<pre><code>User：
+那它为什么查询快？</code></pre>
+<p>如果模型只收到：</p>
+<pre><code>那它为什么查询快？</code></pre>
+<p>它可能不知道：</p>
+<blockquote><p>“它”到底指什么。</p></blockquote>
+<p>所以我们把历史一起发送：</p>
+<pre><code>{
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;什么是 HashMap？&quot;
+    },
+    {
+      &quot;role&quot;: &quot;assistant&quot;,
+      &quot;content&quot;: &quot;HashMap 是...&quot;
+    },
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;那它为什么查询快？&quot;
+    }
+  ]
+}</code></pre>
+<p>模型就获得了：</p>
+<h1 id="context上下文">Context【上下文】</h1>
+<hr/>
+<h1 id="十五这里出现一个极其重要的认知">十五、这里出现一个极其重要的认知</h1>
+<p>很多初学者会认为：</p>
+<blockquote><p>“ChatGPT 记住了我刚才说的话。”</p></blockquote>
+<p>从 API 的角度看，更准确的理解通常是：</p>
+<pre><code>你的程序
+ ↓
+保存历史消息
+ ↓
+下一次请求
+ ↓
+把相关历史消息重新发送给模型
+ ↓
+模型根据上下文生成回答</code></pre>
+<p>所以我们的：</p>
+<pre><code>messages.json</code></pre>
+<p>现在开始变得非常重要。</p>
+<hr/>
+<h1 id="十六我们的项目终于闭环了">十六、我们的项目终于闭环了</h1>
+<p>现在：</p>
+<pre><code>用户输入
+ ↓
+messages
+ ↓
+保存历史
+ ↓
+调用 LLM
+ ↓
+Assistant Response
+ ↓
+加入 messages
+ ↓
+再次保存</code></pre>
+<p>也就是：</p>
+<pre><code>Conversation State【对话状态】</code></pre>
+<p>开始真正参与 AI。</p>
+<hr/>
+<h1 id="十七先看真实-api-的抽象结构">十七、先看真实 API 的抽象结构</h1>
+<p>不同厂商的 API 细节会不同。</p>
+<p>但很多聊天接口在概念上类似：</p>
+<pre><code>{
+  &quot;model&quot;: &quot;model-name&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;system&quot;,
+      &quot;content&quot;: &quot;你是一名 Python 教师。&quot;
+    },
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;什么是 List？&quot;
+    }
+  ]
+}</code></pre>
+<p>服务器返回类似：</p>
+<pre><code>{
+  &quot;choices&quot;: [
+    {
+      &quot;message&quot;: {
+        &quot;role&quot;: &quot;assistant&quot;,
+        &quot;content&quot;: &quot;List 是一种...&quot;
+      }
+    }
+  ]
+}</code></pre>
+<p>注意：</p>
+<blockquote><p>这里展示的是通用结构示意，不代表所有厂商的字段完全相同。</p></blockquote>
+<p>实际项目必须按照具体服务的 API 文档来构造请求和解析响应。</p>
+<hr/>
+<h1 id="十八为什么我们先理解原始-http再学习-sdk">十八、为什么我们先理解原始 HTTP，再学习 SDK？</h1>
+<p>因为 SDK：</p>
+<h1 id="sdk-software-development-kit软件开发工具包">SDK = Software Development Kit【软件开发工具包】</h1>
+<p>它通常帮你封装：</p>
+<pre><code>HTTP
+认证
+JSON
+Request
+Response
+异常</code></pre>
+<p>例如原始 HTTP：</p>
+<pre><code>Python
+ ↓
+httpx
+ ↓
+HTTP POST
+ ↓
+JSON
+ ↓
+LLM API</code></pre>
+<p>使用 SDK 后：</p>
+<pre><code>Python
+ ↓
+LLM SDK
+ ↓
+LLM API</code></pre>
+<p>看起来简单很多。</p>
+<p>但如果你不懂底层：</p>
+<blockquote><p>SDK 出问题时你就不知道问题发生在哪里。</p></blockquote>
+<hr/>
+<h1 id="十九java-开发者类比">十九、Java 开发者类比</h1>
+<p>你可以把：</p>
+<pre><code>LLM SDK</code></pre>
+<p>类比成：</p>
+<pre><code>Java SDK / Client</code></pre>
+<p>例如你调用某个远程服务：</p>
+<pre><code>Java
+ ↓
+HTTP Client
+ ↓
+REST API</code></pre>
+<p>LLM 也是一样：</p>
+<pre><code>Python
+ ↓
+LLM SDK / HTTP Client
+ ↓
+LLM API</code></pre>
+<p>所以不要把：</p>
+<blockquote><p>“调用大模型”</p></blockquote>
+<p>想象成什么神秘操作。</p>
+<p>本质上仍然是：</p>
+<blockquote><p><strong>调用一个远程服务。</strong></p></blockquote>
+<hr/>
+<h1 id="二十开始改造项目">二十、开始改造项目</h1>
+<p>现在：</p>
+<pre><code>assistant.py</code></pre>
+<p>原来：</p>
+<pre><code>def generate_mock_response(user_input):
+    return f&quot;我收到你的问题了：{user_input}&quot;</code></pre>
+<p>我们要把：</p>
+<pre><code>Mock Response</code></pre>
+<p>替换成：</p>
+<pre><code>LLM Response</code></pre>
+<hr/>
+<h1 id="二十一推荐的结构">二十一、推荐的结构</h1>
+<p>项目：</p>
+<pre><code>projects/01-python-ai-cli/
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── requirements.txt
+├── messages.json
+│
+└── src/
+    └── ai_cli/
+        ├── __init__.py
+        ├── main.py
+        ├── config.py
+        ├── conversation.py
+        ├── assistant.py
+        ├── formatter.py
+        ├── storage.py
+        └── api_client.py</code></pre>
+<p>职责：</p>
+<pre><code>main.py
+    ↓
+程序流程
+
+assistant.py
+    ↓
+Assistant 业务逻辑
+
+api_client.py
+    ↓
+LLM API 通信
+
+config.py
+    ↓
+模型 / API Key / Base URL
+
+conversation.py
+    ↓
+消息管理
+
+storage.py
+    ↓
+持久化</code></pre>
+<hr/>
+<h1 id="二十二api-client-的核心职责">二十二、API Client 的核心职责</h1>
+<p><code>api_client.py</code> 不应该负责：</p>
+<pre><code>命令解析
+聊天历史
+CLI UI</code></pre>
+<p>它只关心：</p>
+<blockquote><p><strong>怎么调用 LLM API。</strong></p></blockquote>
+<p>可以先设计成：</p>
+<pre><code>def chat(messages):
+    ...</code></pre>
+<p>输入：</p>
+<pre><code>messages</code></pre>
+<p>输出：</p>
+<pre><code>assistant_content</code></pre>
+<p>这样 Assistant 层就不需要关心 HTTP 细节。</p>
+<hr/>
+<h1 id="二十三通用-api-client-结构">二十三、通用 API Client 结构</h1>
+<p>概念代码：</p>
+<pre><code>import httpx
+
+from .config import API_KEY, BASE_URL, MODEL_NAME
+
+
+def chat(messages):
+    headers = {
+        &quot;Authorization&quot;: f&quot;Bearer {API_KEY}&quot;,
+        &quot;Content-Type&quot;: &quot;application/json&quot;,
+    }
+
+    payload = {
+        &quot;model&quot;: MODEL_NAME,
+        &quot;messages&quot;: messages,
+    }
+
+    response = httpx.post(
+        BASE_URL,
+        headers=headers,
+        json=payload,
+        timeout=60,
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    return data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code></pre>
+<p>再次强调：</p>
+<blockquote><p>这里是为了学习“调用结构”。</p></blockquote>
+<p>不同 AI 服务的：</p>
+<pre><code>BASE_URL
+Authorization
+请求字段
+响应字段</code></pre>
+<p>可能不同。</p>
+<p>实际接入时必须按照目标服务的官方 API 契约调整。</p>
+<hr/>
+<h1 id="二十四这段代码到底发生了什么">二十四、这段代码到底发生了什么？</h1>
+<p>第一步：</p>
+<pre><code>headers = {
+    &quot;Authorization&quot;: f&quot;Bearer {API_KEY}&quot;,
+}</code></pre>
+<p>告诉服务：</p>
+<blockquote><p>我带着认证凭证来调用。</p></blockquote>
+<hr/>
+<p>第二步：</p>
+<pre><code>payload = {
+    &quot;model&quot;: MODEL_NAME,
+    &quot;messages&quot;: messages,
+}</code></pre>
+<p>告诉服务：</p>
+<blockquote><p>我要调用这个模型，并把这组对话消息交给它。</p></blockquote>
+<hr/>
+<p>第三步：</p>
+<pre><code>httpx.post(...)</code></pre>
+<p>发送：</p>
+<pre><code>HTTP POST</code></pre>
+<hr/>
+<p>第四步：</p>
+<pre><code>response.raise_for_status()</code></pre>
+<p>检查：</p>
+<pre><code>HTTP 层是否成功</code></pre>
+<hr/>
+<p>第五步：</p>
+<pre><code>data = response.json()</code></pre>
+<p>把：</p>
+<pre><code>JSON Response</code></pre>
+<p>转换为：</p>
+<pre><code>Python Dict</code></pre>
+<hr/>
+<p>第六步：</p>
+<pre><code>data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code></pre>
+<p>取出：</p>
+<pre><code>Assistant 最终文本</code></pre>
+<hr/>
+<h1 id="二十五这里一定要理解解析响应">二十五、这里一定要理解“解析响应”</h1>
+<p>很多初学者看到：</p>
+<pre><code>data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code></pre>
+<p>就开始死记。</p>
+<p>不要死记。</p>
+<p>应该理解成：</p>
+<p>服务器返回：</p>
+<pre><code>Response
+ ↓
+JSON
+ ↓
+Python Dict
+ ↓
+choices
+ ↓
+第一个结果
+ ↓
+message
+ ↓
+content
+ ↓
+模型生成的文本</code></pre>
+<p>所以：</p>
+<pre><code>data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code></pre>
+<p>只是：</p>
+<blockquote><p><strong>沿着 JSON 数据结构把最终文本取出来。</strong></p></blockquote>
+<p>不同服务的响应结构可能不同。</p>
+<hr/>
+<h1 id="二十六assistantpy">二十六、assistant.py</h1>
+<p>现在：</p>
+<pre><code>from .api_client import chat
+
+
+def generate_response(messages):
+    return chat(messages)</code></pre>
+<p>是不是比之前简单很多？</p>
+<p>因为：</p>
+<pre><code>assistant.py</code></pre>
+<p>不需要知道：</p>
+<pre><code>HTTP
+Header
+POST
+JSON
+API Key</code></pre>
+<p>它只关心：</p>
+<blockquote><p>给我消息，我获得 Assistant 回答。</p></blockquote>
+<hr/>
+<h1 id="二十七mainpy-的核心流程">二十七、main.py 的核心流程</h1>
+<p>概念上：</p>
+<pre><code>messages = load_messages()
+
+while True:
+    user_input = input(&quot;你：&quot;)
+
+    if user_input == &quot;/exit&quot;:
+        save_messages(messages)
+        break
+
+    messages.append({
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: user_input,
+    })
+
+    assistant_content = generate_response(messages)
+
+    messages.append({
+        &quot;role&quot;: &quot;assistant&quot;,
+        &quot;content&quot;: assistant_content,
+    })
+
+    print(f&quot;AI：{assistant_content}&quot;)
+
+    save_messages(messages)</code></pre>
+<p>现在项目真正开始成为：</p>
+<h1 id="ai-conversation-applicationai-对话应用">AI Conversation Application【AI 对话应用】</h1>
+<hr/>
+<h1 id="二十八完整运行链">二十八、完整运行链</h1>
+<p>用户：</p>
+<pre><code>你好</code></pre>
+<p>↓</p>
+<p>Python：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;你好&quot;
+}</code></pre>
+<p>↓</p>
+<p>加入：</p>
+<pre><code>messages</code></pre>
+<p>↓</p>
+<p>发送：</p>
+<pre><code>HTTP POST</code></pre>
+<p>↓</p>
+<p>LLM API：</p>
+<pre><code>认证
+ ↓
+找到 Model
+ ↓
+处理 Messages
+ ↓
+模型推理</code></pre>
+<p>↓</p>
+<p>返回：</p>
+<pre><code>HTTP Response</code></pre>
+<p>↓</p>
+<p>JSON：</p>
+<pre><code>choices
+ ↓
+message
+ ↓
+content</code></pre>
+<p>↓</p>
+<p>Python：</p>
+<pre><code>assistant_content</code></pre>
+<p>↓</p>
+<p>加入：</p>
+<pre><code>messages</code></pre>
+<p>↓</p>
+<p>保存：</p>
+<pre><code>messages.json</code></pre>
+<p>↓</p>
+<p>终端：</p>
+<pre><code>AI：你好！有什么可以帮助你的？</code></pre>
+<hr/>
+<h1 id="二十九联系描述完整-ai-调用链">二十九、联系描述：完整 AI 调用链</h1>
+<p>这是目前整个 Python 学习项目最重要的一条链：</p>
+<pre><code>用户输入
+   ↓
+main.py
+   ↓
+Python Dict
+   ↓
+messages List
+   ↓
+assistant.py
+   ↓
+api_client.py
+   ↓
+构造 JSON Request
+   ↓
+HTTP POST
+   ↓
+LLM API Server
+   ↓
+API Key 认证
+   ↓
+选择 Model
+   ↓
+处理 Messages
+   ↓
+LLM 推理
+   ↓
+HTTP Response
+   ↓
+JSON Response
+   ↓
+Python Dict
+   ↓
+提取 Assistant Content
+   ↓
+assistant.py
+   ↓
+main.py
+   ↓
+messages
+   ↓
+messages.json
+   ↓
+用户</code></pre>
+<h3 id="路线描述">路线描述</h3>
+<p>用户输入首先进入 CLI 程序，被转换成一个带有 <code>role</code> 和 <code>content</code> 的 Python 字典，再加入整个 <code>messages</code> 列表。<code>assistant.py</code> 负责调用 AI 能力，而真正的网络通信由 <code>api_client.py</code> 完成。</p>
+<p><code>api_client.py</code> 把模型名称和消息列表构造成 JSON 请求，通过 HTTP POST 发送给 LLM API，同时通过 API Key 完成认证。</p>
+<p>服务器收到请求后，根据指定的模型处理 Messages【消息列表】，执行模型推理，并通过 HTTP Response 返回 JSON 数据。</p>
+<p>Python 程序解析 JSON，找到模型生成的 Assistant 消息，把它重新加入 <code>messages</code>。随后保存到 <code>messages.json</code>，这样下一轮请求就可以携带之前的对话历史。</p>
+<p>因此：</p>
+<blockquote><p><strong><code>messages</code> 是对话状态，HTTP 是传输方式，LLM API 是模型能力入口，Model 是实际执行推理的模型。</strong></p></blockquote>
+<hr/>
+<h1 id="三十为什么-messagesjson-现在突然变得非常重要">三十、为什么 messages.json 现在突然变得非常重要？</h1>
+<p>之前它只是：</p>
+<pre><code>聊天记录文件</code></pre>
+<p>现在它开始承担：</p>
+<pre><code>Conversation History【对话历史】</code></pre>
+<p>例如：</p>
+<pre><code>[
+  {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 JVM？&quot;
+  },
+  {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;JVM 是 Java 虚拟机...&quot;
+  },
+  {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;那 GC 呢？&quot;
+  }
+]</code></pre>
+<p>下一次调用模型：</p>
+<pre><code>messages
+ ↓
+LLM API</code></pre>
+<p>模型就能够利用之前的上下文。</p>
+<hr/>
+<h1 id="三十一这里第一次遇到-token">三十一、这里第一次遇到 Token</h1>
+<p>现在可以开始认识：</p>
+<h1 id="token词元">Token【词元】</h1>
+<p>不要把 Token 直接理解成：</p>
+<blockquote><p>一个汉字。</p></blockquote>
+<p>也不要理解成：</p>
+<blockquote><p>一个单词。</p></blockquote>
+<p>Token 是：</p>
+<blockquote><p><strong>模型进行文本处理时使用的离散文本单元。</strong></p></blockquote>
+<p>具体怎么切分，由模型使用的 Tokenizer【分词器】决定。</p>
+<p>例如：</p>
+<pre><code>文本
+ ↓
+Tokenizer
+ ↓
+Tokens
+ ↓
+Token IDs</code></pre>
+<p>这个概念后面会详细学习。</p>
+<p>现在只需要知道：</p>
+<pre><code>用户输入越长
++
+历史消息越多
+        ↓
+上下文中的 Token 越多</code></pre>
+<hr/>
+<h1 id="三十二context上下文是什么">三十二、Context【上下文】是什么？</h1>
+<p>当前模型一次处理的：</p>
+<pre><code>System
++
+历史 User
++
+历史 Assistant
++
+当前 User</code></pre>
+<p>共同组成模型当前看到的上下文。</p>
+<p>例如：</p>
+<pre><code>System
+ ↓
+你是一名 Java 教师
+
+User
+ ↓
+什么是 JVM？
+
+Assistant
+ ↓
+JVM 是...
+
+User
+ ↓
+那 GC 是什么？</code></pre>
+<p>这些内容一起构成：</p>
+<h1 id="context上下文">Context【上下文】</h1>
+<hr/>
+<h1 id="三十三为什么上下文不能无限增长">三十三、为什么上下文不能无限增长？</h1>
+<p>因为模型通常存在：</p>
+<h1 id="context-window上下文窗口">Context Window【上下文窗口】</h1>
+<p>可以理解成：</p>
+<blockquote><p><strong>一次请求中模型能够处理的上下文容量上限。</strong></p></blockquote>
+<p>因此：</p>
+<pre><code>messages
+越来越长
+ ↓
+Token 数量越来越多
+ ↓
+上下文越来越大
+ ↓
+可能达到 Context Window</code></pre>
+<p>以后你学习：</p>
+<pre><code>RAG
+Memory
+Conversation Compression
+Chunking</code></pre>
+<p>都会重新遇到这个问题。</p>
+<hr/>
+<h1 id="三十四现在先不要深入-token">三十四、现在先不要深入 Token</h1>
+<p>当前只建立：</p>
+<pre><code>文本
+ ↓
+Tokenizer
+ ↓
+Token
+ ↓
+Model</code></pre>
+<p>后面的：</p>
+<pre><code>Token ID
+Embedding
+Attention
+Position
+Transformer</code></pre>
+<p>会在后面的 LLM 基础章节系统展开。</p>
+<p>不要在这里提前把整个 Transformer 学完。</p>
+<hr/>
+<h1 id="三十五temperature-是什么">三十五、Temperature 是什么？</h1>
+<p>真实 LLM API 里你可能看到：</p>
+<pre><code>{
+  &quot;temperature&quot;: 0.7
+}</code></pre>
+<h1 id="temperature温度">Temperature【温度】</h1>
+<p>它是影响模型生成过程随机性的一个参数。</p>
+<p>粗略理解：</p>
+<pre><code>较低
+ ↓
+输出倾向更加稳定
+
+较高
+ ↓
+输出可能更加多样</code></pre>
+<p>但不要把：</p>
+<pre><code>Temperature = “创造力”</code></pre>
+<p>当成严格定义。</p>
+<p>它更准确地与：</p>
+<blockquote><p><strong>生成时对概率分布进行调节</strong></p></blockquote>
+<p>有关。</p>
+<p>这一章只需要知道它是一个：</p>
+<h1 id="generation-parameter生成参数">Generation Parameter【生成参数】</h1>
+<p>详细原理后面再讲。</p>
+<hr/>
+<h1 id="三十六max-tokens">三十六、Max Tokens</h1>
+<p>还可能看到：</p>
+<pre><code>max_tokens</code></pre>
+<p>它通常用于限制：</p>
+<blockquote><p>模型生成内容的 Token 数量。</p></blockquote>
+<p>注意：</p>
+<pre><code>输入 Token</code></pre>
+<p>和：</p>
+<pre><code>输出 Token</code></pre>
+<p>不是完全一回事。</p>
+<p>后面学习 Token / Context Window 时会详细拆。</p>
+<hr/>
+<h1 id="三十七第一版真实-llm-client-的设计原则">三十七、第一版真实 LLM Client 的设计原则</h1>
+<p>现在先不要追求复杂。</p>
+<p>我们的目标只有：</p>
+<pre><code>chat(messages)</code></pre>
+<p>输入：</p>
+<pre><code>messages</code></pre>
+<p>输出：</p>
+<pre><code>assistant_content</code></pre>
+<p>于是：</p>
+<pre><code>业务层
+ ↓
+chat(messages)
+ ↓
+API Client
+ ↓
+LLM API</code></pre>
+<p>这就是：</p>
+<h1 id="abstraction抽象">Abstraction【抽象】</h1>
+<p>业务层不需要关心：</p>
+<pre><code>HTTP 怎么发
+Header 怎么写
+JSON 怎么解析</code></pre>
+<hr/>
+<h1 id="三十八异常处理必须保留">三十八、异常处理必须保留</h1>
+<p>真实 API 和 Demo 最大的区别之一：</p>
+<blockquote><p><strong>真实世界会失败。</strong></p></blockquote>
+<p>可能发生：</p>
+<pre><code>API Key 错误
+ ↓
+401
+
+权限问题
+ ↓
+403
+
+请求过快
+ ↓
+429
+
+服务器错误
+ ↓
+500
+
+网络超时
+ ↓
+Timeout
+
+网络连接失败
+ ↓
+RequestError</code></pre>
+<p>所以：</p>
+<pre><code>try:
+    ...
+except ...</code></pre>
+<p>不能删除。</p>
+<hr/>
+<h1 id="三十九进一步思考429-为什么特别重要">三十九、进一步思考：429 为什么特别重要？</h1>
+<p>429：</p>
+<h1 id="too-many-requests请求过多">Too Many Requests【请求过多】</h1>
+<p>例如：</p>
+<pre><code>你的程序
+ ↓
+疯狂调用 API
+ ↓
+服务器限流
+ ↓
+429</code></pre>
+<p>以后学习 AI Agent【AI 智能体】时：</p>
+<pre><code>Agent
+ ↓
+Tool
+ ↓
+LLM
+ ↓
+Tool
+ ↓
+LLM
+ ↓
+Tool</code></pre>
+<p>可能产生大量调用。</p>
+<p>所以：</p>
+<pre><code>Rate Limit【速率限制】
+Retry【重试】
+Backoff【退避】</code></pre>
+<p>都会成为重要的工程问题。</p>
+<p>现在只需要认识它们。</p>
+<hr/>
+<h1 id="四十为什么不能无限-retry">四十、为什么不能无限 Retry？</h1>
+<p>假设：</p>
+<pre><code>API
+ ↓
+429
+ ↓
+立即重试
+ ↓
+429
+ ↓
+立即重试
+ ↓
+429</code></pre>
+<p>可能变成：</p>
+<pre><code>死循环</code></pre>
+<p>所以真正的生产系统通常需要：</p>
+<pre><code>Retry
++
+Backoff
++
+Max Retry</code></pre>
+<p>后面的 AI 工程章节再详细实现。</p>
+<hr/>
+<h1 id="四十一现在你的项目第一次真正具备-ai-能力">四十一、现在你的项目第一次真正具备 AI 能力</h1>
+<p>以前：</p>
+<pre><code>assistant.py
+ ↓
+字符串拼接</code></pre>
+<p>现在：</p>
+<pre><code>assistant.py
+ ↓
+LLM API
+ ↓
+Model
+ ↓
+生成</code></pre>
+<p>这就是一个非常重要的边界：</p>
+<pre><code>传统 Python CLI
+        ↓
+        ↓
+        ↓
+AI Application【AI 应用】</code></pre>
+<hr/>
+<h1 id="四十二但是不要产生一个误解">四十二、但是不要产生一个误解</h1>
+<p>现在项目：</p>
+<pre><code>Python AI CLI Assistant</code></pre>
+<p>已经是：</p>
+<blockquote><p>AI 应用。</p></blockquote>
+<p>但它还不是：</p>
+<blockquote><p>AI Engineer 完整能力。</p></blockquote>
+<p>后面还有：</p>
+<pre><code>LLM Fundamentals
+Embedding
+RAG
+Agent
+MCP
+PyTorch
+Transformer
+Hugging Face
+Fine-tuning
+Evaluation
+Quantization
+Inference
+Deployment</code></pre>
+<p>现在只是：</p>
+<blockquote><p><strong>完成了第一次 LLM API 接入。</strong></p></blockquote>
+<hr/>
+<h1 id="四十三java-ai-的能力地图开始出现">四十三、Java + AI 的能力地图开始出现</h1>
+<p>现在你的知识网络已经可以画成：</p>
+<pre><code>Python
+ │
+ ├── Web / HTTP
+ │       ↓
+ │     API
+ │       ↓
+ │     LLM API
+ │       ↓
+ │     LLM
+ │
+ ├── JSON
+ │       ↓
+ │    Messages
+ │       ↓
+ │    Context
+ │
+ └── Environment
+         ↓
+       API Key</code></pre>
+<p>这条路线未来继续扩展：</p>
+<pre><code>LLM
+ │
+ ├── Token
+ ├── Embedding
+ ├── Context
+ ├── Transformer
+ │
+ ├── RAG
+ │    ├── Chunk
+ │    ├── Embedding
+ │    ├── Vector DB
+ │    └── Rerank
+ │
+ └── Agent
+      ├── Tool
+      ├── Function Calling
+      └── MCP</code></pre>
+<p>这就是你后面的 AI Engineer 知识网络。</p>
+<hr/>
+<h1 id="四十四主动回忆训练">四十四、主动回忆训练</h1>
+<p>现在先不要看标准答案。</p>
+<h2 id="q1">Q1</h2>
+<p>LLM 和 LLM API 是什么关系？</p>
+<hr/>
+<h2 id="q2">Q2</h2>
+<p>API Key 和 Model 分别解决什么问题？</p>
+<hr/>
+<h2 id="q3">Q3</h2>
+<p>为什么 API Key 不能直接写在 Python 源码里？</p>
+<hr/>
+<h2 id="q4">Q4</h2>
+<p>为什么聊天模型通常需要 Messages，而不是只有一个字符串？</p>
+<hr/>
+<h2 id="q5">Q5</h2>
+<p>System、User、Assistant 分别是什么？</p>
+<hr/>
+<h2 id="q6">Q6</h2>
+<p>为什么下一轮用户问题需要携带历史消息？</p>
+<hr/>
+<h2 id="q7">Q7</h2>
+<p>什么是 Context【上下文】？</p>
+<hr/>
+<h2 id="q8">Q8</h2>
+<p>什么是 Context Window【上下文窗口】？</p>
+<hr/>
+<h2 id="q9">Q9</h2>
+<p><code>messages.json</code> 在现在的项目中有什么作用？</p>
+<hr/>
+<h2 id="q10">Q10</h2>
+<p>下面这段代码：</p>
+<pre><code>data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code></pre>
+<p>为什么能够拿到模型回答？</p>
+<hr/>
+<h2 id="q11">Q11</h2>
+<p>SDK 和直接使用 HTTP Client 有什么区别？</p>
+<hr/>
+<h2 id="q12">Q12</h2>
+<p>为什么我们把 LLM 网络调用放到 <code>api_client.py</code>？</p>
+<hr/>
+<h2 id="q13">Q13</h2>
+<p>如果 API 返回 401，首先应该从什么方向排查？</p>
+<hr/>
+<h2 id="q14">Q14</h2>
+<p>如果 API 返回 429，意味着什么？</p>
+<hr/>
+<h2 id="q15">Q15</h2>
+<p>完整讲一遍：</p>
+<pre><code>用户输入
+→
+messages
+→
+HTTP
+→
+LLM
+→
+Response
+→
+Assistant
+→
+messages.json</code></pre>
+<hr/>
+<h1 id="四十五面试标准话术">四十五、面试标准话术</h1>
+<h2 id="题目你是怎么在-python-项目中调用大模型的">题目：你是怎么在 Python 项目中调用大模型的？</h2>
+<h3 id="标准回答">标准回答</h3>
+<blockquote><p>我把大模型调用封装成独立的 API Client。用户输入首先会转换成带有 role 和 content 的消息对象，然后加入 messages 列表。API Client 根据配置读取模型名称、Base URL 和 API Key，构造 JSON 请求，通过 HTTP POST 调用 LLM API。收到响应后先检查 HTTP 状态，再解析 JSON，提取模型返回的 Assistant 内容，最后把 Assistant 消息加入对话历史并持久化。</p></blockquote>
+<hr/>
+<h2 id="题目为什么使用-messages而不是直接传字符串">题目：为什么使用 messages，而不是直接传字符串？</h2>
+<h3 id="标准回答">标准回答</h3>
+<blockquote><p>因为聊天模型需要区分不同消息的角色和上下文。Messages 通常由 system、user、assistant 等不同 role 的消息组成，可以把系统指令、历史对话和当前用户问题组织在一起，让模型获得完整的上下文。</p></blockquote>
+<hr/>
+<h2 id="题目api-key-为什么不能写在代码中">题目：API Key 为什么不能写在代码中？</h2>
+<h3 id="标准回答">标准回答</h3>
+<blockquote><p>API Key 属于敏感凭证，如果直接写在源码中，很容易被提交到 Git 仓库导致泄露。同时不同环境的凭证通常不同，所以更合理的方式是通过环境变量或者本地 <code>.env</code> 注入，代码只负责读取。</p></blockquote>
+<hr/>
+<h2 id="题目sdk-和-http-api-有什么关系">题目：SDK 和 HTTP API 有什么关系？</h2>
+<h3 id="标准回答">标准回答</h3>
+<blockquote><p>SDK 是对 API 调用过程的进一步封装。底层通常仍然涉及 HTTP 请求、认证、JSON 序列化和响应解析。使用 SDK 可以减少样板代码，但理解底层 HTTP API 有助于排查请求参数、认证、状态码和响应结构等问题。</p></blockquote>
+<hr/>
+<h1 id="四十六项目挑战">四十六、项目挑战</h1>
+<p>现在给你的 AI CLI Assistant 增加：</p>
+<pre><code>/system</code></pre>
+<p>命令。</p>
+<p>例如：</p>
+<pre><code>/system 你是一名严格的 Java 面试官</code></pre>
+<p>应该修改：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;system&quot;,
+    &quot;content&quot;: &quot;你是一名严格的 Java 面试官&quot;
+}</code></pre>
+<p>然后：</p>
+<pre><code>用户：
+什么是 HashMap？
+
+AI：
+...</code></pre>
+<p>模型应该按照新的 System 指令回答。</p>
+<hr/>
+<h1 id="四十七第二个挑战显示当前上下文长度">四十七、第二个挑战：显示当前上下文长度</h1>
+<p>增加：</p>
+<pre><code>/stats</code></pre>
+<p>输出：</p>
+<pre><code>消息数量：8
+用户消息：4
+AI 消息：3
+System 消息：1</code></pre>
+<p>这一阶段先不要计算真正 Token。</p>
+<p>先统计：</p>
+<pre><code>len(messages)</code></pre>
+<p>以及不同 role 的数量。</p>
+<p>以后进入 Token 章节，再把：</p>
+<pre><code>消息数量</code></pre>
+<p>升级成：</p>
+<pre><code>Token 数量</code></pre>
+<hr/>
+<h1 id="四十八第三个挑战限制历史消息">四十八、第三个挑战：限制历史消息</h1>
+<p>假设：</p>
+<pre><code>messages</code></pre>
+<p>越来越长。</p>
+<p>尝试增加：</p>
+<pre><code>/history 10</code></pre>
+<p>只展示最近 10 条。</p>
+<p>进一步：</p>
+<pre><code>/chat-context 10</code></pre>
+<p>只把最近 10 条消息发送给模型。</p>
+<p>这样你会第一次真正遇到：</p>
+<h1 id="context-management上下文管理">Context Management【上下文管理】</h1>
+<p>这会直接连接未来的：</p>
+<pre><code>RAG
+Memory
+Context Compression
+Long Context</code></pre>
+<hr/>
+<h1 id="四十九v10-完成标准">四十九、v1.0 完成标准</h1>
+<p>完成下面这些才算真正完成：</p>
+<pre><code>□ 我知道 LLM 是什么
+□ 我知道 LLM API 是什么
+□ 我知道 API Key 是什么
+□ 我知道 Model 是什么
+□ 我知道 Messages
+□ 我知道 System / User / Assistant
+□ 我理解为什么要携带历史消息
+□ 我知道 Context
+□ 我知道 Context Window
+□ 我知道 HTTP 与 LLM API 的关系
+□ 我知道 SDK 与 HTTP Client 的关系
+□ 我能构造一个 LLM Request
+□ 我能解析 LLM Response
+□ 我知道 401
+□ 我知道 403
+□ 我知道 429
+□ 我知道 Timeout
+□ 我能解释 api_client.py 的职责
+□ 我能完整讲出 LLM 调用链</code></pre>
+<hr/>
+<h1 id="五十现在-python-ai-cli-assistant-已经完成第一阶段">五十、现在 Python AI CLI Assistant 已经完成第一阶段</h1>
+<pre><code>Python 基础
+        ↓
+Python 工程
+        ↓
+HTTP
+        ↓
+LLM API
+        ↓
+真实 AI Assistant</code></pre>
+<p>这意味着：</p>
+<h1 id="第一阶段正式完成">第一阶段正式完成</h1>
+<pre><code>Project 01 — Python AI CLI Assistant</code></pre>
+<p>已经从：</p>
+<pre><code>Python 语法</code></pre>
+<p>走到了：</p>
+<pre><code>Python AI Application</code></pre>
+<hr/>
+<h1 id="五十一下一阶段开始python-engineering">五十一、下一阶段开始：Python Engineering</h1>
+<p>接下来不能马上跳 Transformer。</p>
+<p>先继续补齐真正 AI 工程开发需要的 Python 能力。</p>
+<p>下一阶段路线：</p>
+<pre><code>01-python-engineering
+│
+├── HTTP Client 深入
+├── Async / Await【异步】
+├── Type Hints【类型提示】
+├── Dataclass【数据类】
+├── Logging【日志】
+├── Testing【测试】
+├── Debugging【调试】
+├── Project Packaging【项目打包】
+└── FastAPI</code></pre>
+<p>然后：</p>
+<pre><code>02-ai-application</code></pre>
+<p>开始：</p>
+<pre><code>LLM Application
+Prompt
+Structured Output
+Streaming
+Function Calling</code></pre>
+<p>再进入：</p>
+<pre><code>03-embedding-rag</code></pre>
+<p>正式学习：</p>
+<pre><code>Embedding【嵌入】
+Vector【向量】
+Vector Database【向量数据库】
+Chunk【文本块】
+Retriever【检索器】
+Rerank【重排序】
+RAG</code></pre>
+<p>再之后：</p>
+<pre><code>04-agent-tool-mcp</code></pre>
+<p>学习：</p>
+<pre><code>Tool
+Function Calling
+Agent
+MCP</code></pre>
+<p>最后才进入：</p>
+<pre><code>PyTorch
+ ↓
+Transformer
+ ↓
+Hugging Face
+ ↓
+Fine-tuning
+ ↓
+Evaluation
+ ↓
+Quantization
+ ↓
+Inference
+ ↓
+Deployment</code></pre>
+<hr/>
+<h1 id="五十二整个-ai-engineer-journey-的主线">五十二、整个 AI Engineer Journey 的主线</h1>
+<p>到这里，你应该开始看到整个项目真正的主线：</p>
+<pre><code>Python
+  ↓
+Python Engineering
+  ↓
+HTTP / API
+  ↓
+LLM API
+  ↓
+LLM Application
+  ↓
+Embedding
+  ↓
+RAG
+  ↓
+Agent
+  ↓
+MCP
+  ↓
+PyTorch
+  ↓
+Transformer
+  ↓
+Open Source LLM
+  ↓
+Fine-tuning
+  ↓
+Evaluation
+  ↓
+Quantization
+  ↓
+Inference
+  ↓
+Deployment
+  ↓
+Build Tiny LLM</code></pre>
+<h3 id="路线描述">路线描述</h3>
+<p>前半段解决“<strong>我能不能写出 AI 应用</strong>”。</p>
+<p>中间解决“<strong>我能不能让 AI 应用拥有知识、工具和复杂任务能力</strong>”。</p>
+<p>后半段解决“<strong>我能不能真正理解、修改、微调、部署甚至自己实现模型</strong>”。</p>
+<p>因此现在不要急着跳到 Transformer。</p>
+<p>你刚刚完成的是整个路线中非常关键的第一座桥：</p>
+<blockquote><p><strong>从普通 Python 开发者 → 能够独立调用 LLM API 的 AI 应用开发者。</strong></p></blockquote>
+<p>下一步进入 <strong>Python Engineering【Python 工程化】</strong>，把异步、类型、日志、测试等真正补齐，然后再进入 LLM 应用工程。</p>
+</main>
+</body>
+</html>

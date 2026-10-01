@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day30：Java AI Engineer 完整能力闭环</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day30java-ai-engineer-完整能力闭环">Day30：Java AI Engineer 完整能力闭环</h1>
+<h1 id="从模型-应用-平台-企业架构">从模型 → 应用 → 平台 → 企业架构</h1>
+<p>经过 Day1～Day29：</p>
+<p>你已经完成了一套比较完整的：</p>
+<h1 id="java-ai-engineer-转型路线">Java → AI Engineer 转型路线</h1>
+<p>但是今天不是简单总结。</p>
+<p>真正目标：</p>
+<blockquote><p>把零散知识连接成一张“AI工程师能力地图”。</p></blockquote>
+<p>企业招聘 Java AI 工程师，本质不是要求你成为算法科学家，而是：</p>
+<blockquote><p>能把大模型能力稳定地集成到业务系统，并完成上线运营。</p></blockquote>
+<hr/>
+<h1 id="一java-ai-engineer-到底是什么">一、Java AI Engineer 到底是什么？</h1>
+<p>先纠正一个认知。</p>
+<p>很多人认为：</p>
+<p>AI工程师 = 训练大模型。</p>
+<p>实际上企业岗位大部分：</p>
+<p>不是训练模型。</p>
+<p>更接近：</p>
+<h1 id="llm-application-engineer">LLM Application Engineer</h1>
+<h1 id="大模型应用工程师">大模型应用工程师</h1>
+<p>核心：</p>
+<pre><code>业务问题
+
+↓
+
+AI能力设计
+
+↓
+
+模型选择
+
+↓
+
+RAG/Agent开发
+
+↓
+
+系统集成
+
+↓
+
+部署上线
+
+↓
+
+持续优化</code></pre>
+<hr/>
+<h1 id="二完整能力闭环">二、完整能力闭环</h1>
+<p>你的能力应该形成：</p>
+<pre><code>                    用户需求
+
+
+                       ↓
+
+
+                AI产品设计
+
+
+                       ↓
+
+
+                 应用开发层
+
+
+                       ↓
+
+
+        +--------------+--------------+
+
+        |                             |
+
+
+       RAG                         Agent
+
+
+        |                             |
+
+
+        ↓                             ↓
+
+
+    知识增强                    自动执行
+
+
+        |                             |
+
+
+        +--------------+--------------+
+
+                       ↓
+
+
+                 LLM模型层
+
+
+                       ↓
+
+
+              部署与工程化
+
+
+                       ↓
+
+
+                 企业平台
+</code></pre>
+<hr/>
+<h1 id="三第一层模型认知能力">三、第一层：模型认知能力</h1>
+<h2 id="目标">目标</h2>
+<p>不是训练GPT。</p>
+<p>而是：</p>
+<p>知道怎么选择模型。</p>
+<hr/>
+<p>你需要理解：</p>
+<h2 id="llm">LLM</h2>
+<p>Large Language Model</p>
+<p>大语言模型。</p>
+<p>例如：</p>
+<ul class="lvl"><li>GPT</li></ul>
+<ul class="lvl"><li>Claude</li></ul>
+<ul class="lvl"><li>Qwen</li></ul>
+<ul class="lvl"><li>DeepSeek</li></ul>
+<hr/>
+<h2 id="模型参数">模型参数</h2>
+<p>例如：</p>
+<p>Qwen2.5-7B</p>
+<p>含义：</p>
+<pre><code>Qwen
+
+↓
+
+2.5版本
+
+↓
+
+70亿参数</code></pre>
+<hr/>
+<h2 id="模型选择">模型选择</h2>
+<p>场景：</p>
+<table><thead><tr><th>需求</th><th>选择</th></tr></thead><tbody><tr><td>简单问答</td><td>小模型</td></tr><tr><td>复杂推理</td><td>大模型</td></tr><tr><td>代码</td><td>Code模型</td></tr><tr><td>企业私有</td><td>开源模型</td></tr></tbody></table>
+<hr/>
+<h1 id="四第二层模型运行能力">四、第二层：模型运行能力</h1>
+<p>你必须知道：</p>
+<p>一个模型如何运行。</p>
+<p>完整链路：</p>
+<pre><code>模型文件
+
+↓
+
+加载框架
+
+↓
+
+GPU计算
+
+↓
+
+推理服务
+
+↓
+
+API
+
+↓
+
+业务调用</code></pre>
+<hr/>
+<p>掌握：</p>
+<h2 id="hugging-face">Hugging Face</h2>
+<p>模型仓库。</p>
+<hr/>
+<h2 id="safetensors">Safetensors</h2>
+<p>模型权重格式。</p>
+<hr/>
+<h2 id="gguf">GGUF</h2>
+<p>本地模型格式。</p>
+<hr/>
+<h2 id="ollama">Ollama</h2>
+<p>个人运行。</p>
+<hr/>
+<h2 id="vllm">vLLM</h2>
+<p>企业部署。</p>
+<hr/>
+<h1 id="五第三层大模型应用开发">五、第三层：大模型应用开发</h1>
+<p>这是你的核心。</p>
+<h2 id="技术栈">技术栈</h2>
+<p>你的目标：</p>
+<pre><code>Spring Boot
+
++
+
+LangChain4j
+
++
+
+Qwen/DeepSeek
+
++
+
+Milvus
+
++
+
+Redis
+
++
+
+MySQL</code></pre>
+<hr/>
+<p>能力：</p>
+<h3 id="1-prompt-engineering">1. Prompt Engineering</h3>
+<p>提示词工程。</p>
+<p>设计：</p>
+<ul class="lvl"><li>System Prompt</li></ul>
+<ul class="lvl"><li>Few-shot</li></ul>
+<ul class="lvl"><li>输出格式</li></ul>
+<hr/>
+<h3 id="2-structured-output">2. Structured Output</h3>
+<p>结构化输出。</p>
+<p>例如：</p>
+<p>要求模型：</p>
+<p>返回JSON。</p>
+<hr/>
+<h3 id="3-streaming">3. Streaming</h3>
+<p>流式输出。</p>
+<p>例如：</p>
+<p>ChatGPT：</p>
+<p>文字一点点出现。</p>
+<hr/>
+<h1 id="六第四层rag能力">六、第四层：RAG能力</h1>
+<p>RAG：</p>
+<p>Retrieval-Augmented Generation</p>
+<p>检索增强生成。</p>
+<hr/>
+<p>企业最常见。</p>
+<p>完整链路：</p>
+<pre><code>企业文档
+
+↓
+
+解析
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Vector Database
+
+↓
+
+Retriever
+
+↓
+
+Rerank
+
+↓
+
+LLM
+
+↓
+
+回答</code></pre>
+<hr/>
+<p>你需要掌握：</p>
+<h2 id="文档解析">文档解析</h2>
+<p>PDF</p>
+<p>Word</p>
+<p>Markdown</p>
+<hr/>
+<h2 id="chunk">Chunk</h2>
+<p>文本切片。</p>
+<hr/>
+<h2 id="embedding">Embedding</h2>
+<p>文本向量化。</p>
+<hr/>
+<h2 id="vector-database">Vector Database</h2>
+<p>向量数据库。</p>
+<p>例如：</p>
+<p>Milvus。</p>
+<hr/>
+<h2 id="rerank">Rerank</h2>
+<p>重新排序。</p>
+<p>提升召回质量。</p>
+<hr/>
+<h1 id="七第五层agent能力">七、第五层：Agent能力</h1>
+<p>Agent：</p>
+<p>不是聊天。</p>
+<p>是：</p>
+<blockquote><p>AI自主完成任务。</p></blockquote>
+<hr/>
+<p>核心：</p>
+<pre><code>目标
+
+↓
+
+规划
+
+↓
+
+调用工具
+
+↓
+
+执行
+
+↓
+
+反馈
+
+↓
+
+完成任务</code></pre>
+<hr/>
+<p>你掌握：</p>
+<h2 id="tool-calling">Tool Calling</h2>
+<p>模型调用外部能力。</p>
+<p>例如：</p>
+<p>查询订单。</p>
+<hr/>
+<h2 id="memory">Memory</h2>
+<p>记忆。</p>
+<p>包括：</p>
+<ul class="lvl"><li>短期记忆</li></ul>
+<ul class="lvl"><li>长期记忆</li></ul>
+<hr/>
+<h2 id="planning">Planning</h2>
+<p>规划。</p>
+<hr/>
+<h2 id="reflection">Reflection</h2>
+<p>反思。</p>
+<hr/>
+<h2 id="mcp">MCP</h2>
+<p>Model Context Protocol。</p>
+<p>模型连接工具标准。</p>
+<hr/>
+<h1 id="八第六层模型微调能力">八、第六层：模型微调能力</h1>
+<p>你已经学习：</p>
+<pre><code>Transformer
+
+↓
+
+Pre-training
+
+↓
+
+SFT
+
+↓
+
+LoRA
+
+↓
+
+QLoRA</code></pre>
+<hr/>
+<p>重点：</p>
+<p>企业主要：</p>
+<p>不是重新训练。</p>
+<p>而是：</p>
+<h2 id="sft">SFT</h2>
+<p>监督微调。</p>
+<p>让模型学习：</p>
+<p>特定任务。</p>
+<hr/>
+<h2 id="lora">LoRA</h2>
+<p>低秩适配。</p>
+<p>降低训练成本。</p>
+<hr/>
+<h2 id="qlora">QLoRA</h2>
+<p>量化+LoRA。</p>
+<p>个人GPU也可以训练。</p>
+<hr/>
+<h1 id="九第七层模型部署能力">九、第七层：模型部署能力</h1>
+<p>企业工程师必须懂。</p>
+<hr/>
+<h2 id="gpu">GPU</h2>
+<p>负责AI计算。</p>
+<hr/>
+<h2 id="显存">显存</h2>
+<p>决定模型大小。</p>
+<hr/>
+<h2 id="cuda">CUDA</h2>
+<p>GPU计算平台。</p>
+<hr/>
+<h2 id="docker">Docker</h2>
+<p>环境封装。</p>
+<hr/>
+<h2 id="kubernetes">Kubernetes</h2>
+<p>服务管理。</p>
+<hr/>
+<h2 id="vllm">vLLM</h2>
+<p>模型推理服务。</p>
+<hr/>
+<p>完整：</p>
+<pre><code>GPU服务器
+
+↓
+
+CUDA
+
+↓
+
+Docker
+
+↓
+
+vLLM
+
+↓
+
+模型
+
+↓
+
+API</code></pre>
+<hr/>
+<h1 id="十第八层mlops能力">十、第八层：MLOps能力</h1>
+<p>模型不是部署完结束。</p>
+<p>需要：</p>
+<p>生命周期。</p>
+<hr/>
+<p>流程：</p>
+<pre><code>数据
+
+↓
+
+训练
+
+↓
+
+评测
+
+↓
+
+版本管理
+
+↓
+
+部署
+
+↓
+
+监控
+
+↓
+
+优化</code></pre>
+<hr/>
+<p>掌握：</p>
+<h2 id="evaluation">Evaluation</h2>
+<p>模型评测。</p>
+<hr/>
+<h2 id="golden-dataset">Golden Dataset</h2>
+<p>黄金测试集。</p>
+<hr/>
+<h2 id="model-registry">Model Registry</h2>
+<p>模型版本管理。</p>
+<hr/>
+<h2 id="灰度发布">灰度发布</h2>
+<p>小流量验证。</p>
+<hr/>
+<h1 id="十一第九层企业ai架构能力">十一、第九层：企业AI架构能力</h1>
+<p>高级岗位需要。</p>
+<hr/>
+<p>企业AI平台：</p>
+<pre><code>                 用户
+
+
+                  ↓
+
+
+             API Gateway
+
+
+                  ↓
+
+
+             AI Gateway
+
+
+                  ↓
+
+
+       +----------+----------+
+
+       |                     |
+
+
+      RAG                  Agent
+
+
+       |                     |
+
+
+       ↓                     ↓
+
+
+ Knowledge              Tools
+
+
+       |
+
+       ↓
+
+
+       LLM
+
+
+       |
+
+       ↓
+
+
+    GPU Cluster</code></pre>
+<hr/>
+<h1 id="十二你的项目体系">十二、你的项目体系</h1>
+<p>根据你的背景：</p>
+<p>6年Java。</p>
+<p>不要做简单Demo。</p>
+<p>应该打造：</p>
+<h2 id="项目1">项目1：</h2>
+<h1 id="ai知识库助手">AI知识库助手</h1>
+<p>技术：</p>
+<pre><code>Spring Boot
+
+LangChain4j
+
+Milvus
+
+Qwen
+
+RAG
+
+SSE</code></pre>
+<p>能力：</p>
+<p>企业知识问答。</p>
+<hr/>
+<h2 id="项目2">项目2：</h2>
+<h1 id="ai-interview-agent">AI Interview Agent</h1>
+<p>技术：</p>
+<pre><code>Agent
+
+Memory
+
+Tool Calling
+
+RAG
+
+LoRA</code></pre>
+<p>能力：</p>
+<p>模拟面试。</p>
+<hr/>
+<h2 id="项目3">项目3：</h2>
+<h1 id="blogagent">BlogAgent</h1>
+<p>你的优势项目。</p>
+<p>升级：</p>
+<p>AI内容数字员工。</p>
+<p>能力：</p>
+<pre><code>浏览器
+
+↓
+
+截图
+
+↓
+
+理解页面
+
+↓
+
+生成教程
+
+↓
+
+生成图片
+
+↓
+
+审核
+
+↓
+
+发布</code></pre>
+<hr/>
+<h1 id="十三简历应该怎么包装">十三、简历应该怎么包装？</h1>
+<p>不要写：</p>
+<p>❌</p>
+<blockquote><p>调用了ChatGPT API。</p></blockquote>
+<p>太普通。</p>
+<hr/>
+<p>写：</p>
+<p>✅</p>
+<h2 id="ai知识库助手">AI知识库助手</h2>
+<blockquote><p>基于Spring Boot、LangChain4j和Milvus构建企业级RAG知识库系统，实现文档解析、智能切片、Embedding向量检索、Rerank优化和大模型生成回答。</p></blockquote>
+<hr/>
+<h2 id="ai-interview-agent">AI Interview Agent</h2>
+<blockquote><p>设计并开发基于Multi-Agent架构的智能面试系统，通过Agent规划、Tool Calling、Memory和RAG技术实现自动出题、回答评估和个性化学习规划。</p></blockquote>
+<hr/>
+<h2 id="企业ai平台">企业AI平台</h2>
+<blockquote><p>构建私有大模型应用平台，通过vLLM部署Qwen模型，结合LLM Gateway实现模型路由、成本控制和服务监控。</p></blockquote>
+<hr/>
+<h1 id="十四面试能力地图">十四、面试能力地图</h1>
+<p>面试官可能问：</p>
+<hr/>
+<h2 id="java部分">Java部分</h2>
+<p>必须保持：</p>
+<p>⭐⭐⭐⭐⭐</p>
+<ul class="lvl"><li>HashMap</li></ul>
+<ul class="lvl"><li>ConcurrentHashMap</li></ul>
+<ul class="lvl"><li>JVM</li></ul>
+<ul class="lvl"><li>Spring</li></ul>
+<ul class="lvl"><li>MySQL</li></ul>
+<ul class="lvl"><li>Redis</li></ul>
+<ul class="lvl"><li>MQ</li></ul>
+<hr/>
+<h2 id="ai部分">AI部分</h2>
+<p>重点：</p>
+<p>⭐⭐⭐⭐⭐</p>
+<ul class="lvl"><li>LLM</li></ul>
+<ul class="lvl"><li>Token</li></ul>
+<ul class="lvl"><li>Embedding</li></ul>
+<ul class="lvl"><li>RAG</li></ul>
+<ul class="lvl"><li>Chunk</li></ul>
+<ul class="lvl"><li>Vector DB</li></ul>
+<ul class="lvl"><li>Tool Calling</li></ul>
+<ul class="lvl"><li>Agent</li></ul>
+<ul class="lvl"><li>MCP</li></ul>
+<hr/>
+<h2 id="工程部分">工程部分</h2>
+<p>高级：</p>
+<p>⭐⭐⭐⭐</p>
+<ul class="lvl"><li>Docker</li></ul>
+<ul class="lvl"><li>Kubernetes</li></ul>
+<ul class="lvl"><li>vLLM</li></ul>
+<ul class="lvl"><li>CUDA</li></ul>
+<ul class="lvl"><li>LoRA</li></ul>
+<ul class="lvl"><li>MLOps</li></ul>
+<hr/>
+<h1 id="十五未来6个月成长路线">十五、未来6个月成长路线</h1>
+<h2 id="第1个月">第1个月</h2>
+<p>目标：</p>
+<p>Java AI工程师入门。</p>
+<p>完成：</p>
+<ul class="lvl"><li>RAG项目</li></ul>
+<ul class="lvl"><li>LangChain4j</li></ul>
+<ul class="lvl"><li>Agent</li></ul>
+<hr/>
+<h2 id="第2个月">第2个月</h2>
+<p>模型能力：</p>
+<ul class="lvl"><li>Ollama</li></ul>
+<ul class="lvl"><li>vLLM</li></ul>
+<ul class="lvl"><li>QLoRA</li></ul>
+<hr/>
+<h2 id="第3个月">第3个月</h2>
+<p>企业能力：</p>
+<ul class="lvl"><li>Kubernetes</li></ul>
+<ul class="lvl"><li>MLOps</li></ul>
+<ul class="lvl"><li>Monitoring</li></ul>
+<hr/>
+<h2 id="第46个月">第4～6个月</h2>
+<p>打造：</p>
+<p>AI产品。</p>
+<p>方向：</p>
+<ul class="lvl"><li>AI SaaS</li></ul>
+<ul class="lvl"><li>Agent工具</li></ul>
+<ul class="lvl"><li>自动化平台</li></ul>
+<hr/>
+<h1 id="十六最终能力模型">十六、最终能力模型</h1>
+<p>你的目标：</p>
+<p>不是：</p>
+<p>普通Java。</p>
+<p>而是：</p>
+<h1 id="java-ai-engineer">Java AI Engineer</h1>
+<p>能力结构：</p>
+<pre><code>                 Java AI Engineer
+
+
+                        |
+
+        +---------------+---------------+
+
+        |                               |
+
+
+  Software Engineering          AI Engineering
+
+
+        |                               |
+
+
+Spring Boot                  LLM
+
+Distributed System           RAG
+
+Database                     Agent
+
+Microservice                 Fine-tuning
+
+                              Deployment
+
+
+                        |
+
+                        ↓
+
+
+                 AI Product Capability</code></pre>
+<hr/>
+<h1 id="十七30天学习路线最终闭环">十七、30天学习路线最终闭环</h1>
+<pre><code>Day1-5
+
+Java基础恢复
+
+
+↓
+
+Day6-10
+
+LLM/RAG/Agent基础
+
+
+↓
+
+Day11-18
+
+模型部署 + 企业架构
+
+
+↓
+
+Day19-23
+
+AI产品 + 数字员工
+
+
+↓
+
+Day24-27
+
+高级Agent + 微调
+
+
+↓
+
+Day28-29
+
+训练 + MLOps
+
+
+↓
+
+Day30
+
+完整AI工程体系</code></pre>
+<hr/>
+<h1 id="十八最后一个重要认知">十八、最后一个重要认知</h1>
+<p>你现在最大的变化不是：</p>
+<p>“会几个AI框架”。</p>
+<p>而是：</p>
+<p>从：</p>
+<blockquote><p>Java程序员调用AI接口</p></blockquote>
+<p>变成：</p>
+<blockquote><p>能设计、开发、部署、优化企业AI系统的工程师。</p></blockquote>
+<hr/>
+<p>下一阶段建议：</p>
+<h1 id="day31进入真实求职阶段">Day31：进入真实求职阶段</h1>
+<p>主题：</p>
+<h1 id="java-ai-engineer-求职冲刺岗位要求-简历重构-项目包装-100问面试">《Java AI Engineer 求职冲刺：岗位要求 → 简历重构 → 项目包装 → 100问面试》</h1>
+<p>结合你的实际情况：</p>
+<ul class="lvl"><li>6年Java</li></ul>
+<ul class="lvl"><li>深圳求职</li></ul>
+<ul class="lvl"><li>非全日制本科</li></ul>
+<ul class="lvl"><li>AI转型</li></ul>
+<ul class="lvl"><li>空窗期</li></ul>
+<p>开始把学习成果转换成：</p>
+<p><strong>可投递、可面试、可拿Offer的能力。</strong></p>
+</main>
+</body>
+</html>

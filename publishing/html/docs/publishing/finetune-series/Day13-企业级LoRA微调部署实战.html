@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day13 企业级 LoRA 微调部署实战</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day13-企业级-lora-微调部署实战">Day13 企业级 LoRA 微调部署实战</h1>
+<h1 id="数据-qlora训练-模型合并-vllm加载-灰度发布">数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布</h1>
+<p>今天进入真正企业级大模型流程：</p>
+<blockquote><p><strong>不是训练一个模型，而是把一个基础模型变成一个业务模型，并安全上线。</strong></p></blockquote>
+<p>完整链路：</p>
+<pre><code>业务需求
+
+↓
+
+数据采集
+
+↓
+
+数据清洗
+
+↓
+
+数据标注
+
+↓
+
+训练集构建
+
+↓
+
+QLoRA微调
+
+↓
+
+模型评测
+
+↓
+
+LoRA Adapter
+
+↓
+
+模型合并
+
+↓
+
+量化
+
+↓
+
+vLLM部署
+
+↓
+
+灰度发布
+
+↓
+
+线上监控
+
+↓
+
+持续迭代</code></pre>
+<hr/>
+<h1 id="一先理解企业为什么微调">一、先理解企业为什么微调</h1>
+<p>很多公司现在不是：</p>
+<blockquote><p>训练一个新模型</p></blockquote>
+<p>而是：</p>
+<blockquote><p>基于开源模型做领域适配。</p></blockquote>
+<p>例如：</p>
+<p>基础模型：</p>
+<pre><code>Qwen2.5-7B-Instruct</code></pre>
+<p>能力：</p>
+<ul class="lvl"><li>中文</li></ul>
+<ul class="lvl"><li>编程</li></ul>
+<ul class="lvl"><li>通用问答</li></ul>
+<p>企业希望：</p>
+<pre><code>金融客服模型
+
+医疗助手模型
+
+代码助手模型
+
+内部知识助手模型</code></pre>
+<p>所以：</p>
+<pre><code>基础模型
+
++
+
+企业数据
+
+↓
+
+领域模型</code></pre>
+<hr/>
+<h1 id="二你的实际项目目标">二、你的实际项目目标</h1>
+<p>继续我们的：</p>
+<h1 id="java-ai-interview-agent">Java AI Interview Agent</h1>
+<p>目标：</p>
+<p>训练：</p>
+<pre><code>Qwen2.5-7B-Instruct
+
+↓
+
+Java Interview Adapter
+
+↓
+
+Java面试专家模型</code></pre>
+<hr/>
+<p>模型能力变化：</p>
+<p>训练前：</p>
+<p>用户：</p>
+<blockquote><p>ConcurrentHashMap如何实现线程安全？</p></blockquote>
+<p>模型：</p>
+<p>普通解释。</p>
+<p>训练后：</p>
+<p>模型：</p>
+<pre><code>面试回答：
+
+1. 先讲设计思想
+
+2. JDK8源码
+
+3. CAS+synchronized
+
+4. 扩容机制
+
+5. 项目场景</code></pre>
+<hr/>
+<h1 id="三企业微调架构">三、企业微调架构</h1>
+<p>完整架构：</p>
+<pre><code>                    数据平台
+
+                       |
+
+                       ↓
+
+
+                 Training Dataset
+
+
+                       |
+
+                       ↓
+
+
+                 QLoRA Training
+
+
+                       |
+
+        +--------------+--------------+
+
+        |                             |
+
+
+        ↓                             ↓
+
+
+   Base Model                 LoRA Adapter
+
+
+        |                             |
+
+
+        +-------------+---------------+
+
+                      |
+
+                      ↓
+
+
+              Merged Model
+
+
+                      |
+
+                      ↓
+
+
+                vLLM Serving
+
+
+                      |
+
+                      ↓
+
+
+              Production API</code></pre>
+<hr/>
+<h1 id="四第一步数据工程">四、第一步：数据工程</h1>
+<p>企业里：</p>
+<p>数据比模型重要。</p>
+<hr/>
+<h2 id="1-数据来源">1. 数据来源</h2>
+<p>你的 Java 项目：</p>
+<p>可以来自：</p>
+<pre><code>data/
+
+├── java_core
+
+│   ├── hashmap.jsonl
+
+│   ├── concurrenthashmap.jsonl
+
+
+├── spring
+
+│   ├── springboot.jsonl
+
+
+├── ai
+
+│   ├── rag.jsonl
+
+│   ├── agent.jsonl
+
+
+└── project
+
+    └── interview.jsonl</code></pre>
+<hr/>
+<h1 id="五训练数据格式">五、训练数据格式</h1>
+<p>企业推荐：</p>
+<p>JSONL</p>
+<p>一个样本一行。</p>
+<p>例如：</p>
+<p><code>java_interview.jsonl</code></p>
+<pre><code>{
+&quot;instruction&quot;:
+&quot;你是一名Java高级工程师面试官&quot;,
+
+&quot;input&quot;:
+&quot;ConcurrentHashMap为什么线程安全？&quot;,
+
+&quot;output&quot;:
+&quot;JDK8 ConcurrentHashMap通过CAS+synchronized保证线程安全。空桶使用CAS插入，非空桶锁住头节点...&quot;
+}</code></pre>
+<hr/>
+<h1 id="六数据清洗">六、数据清洗</h1>
+<p>真实企业不会直接训练。</p>
+<p>需要：</p>
+<h2 id="1-去重">1. 去重</h2>
+<p>例如：</p>
+<p>10000条：</p>
+<p>重复：</p>
+<p>3000条。</p>
+<p>删除。</p>
+<hr/>
+<h2 id="2-去垃圾数据">2. 去垃圾数据</h2>
+<p>删除：</p>
+<pre><code>你好
+谢谢
+不知道</code></pre>
+<hr/>
+<h2 id="3-格式统一">3. 格式统一</h2>
+<p>统一：</p>
+<pre><code>instruction
+
+input
+
+output</code></pre>
+<hr/>
+<h2 id="4-数据质量评分">4. 数据质量评分</h2>
+<p>增加：</p>
+<pre><code>{
+&quot;quality_score&quot;:5
+}</code></pre>
+<hr/>
+<h1 id="七数据规模">七、数据规模</h1>
+<p>小模型：</p>
+<table><thead><tr><th>数据量</th><th>效果</th></tr></thead><tbody><tr><td>100条</td><td>实验</td></tr><tr><td>500-1000条</td><td>可以看到变化</td></tr><tr><td>5000-10000条</td><td>明显提升</td></tr><tr><td>10万+</td><td>企业级</td></tr></tbody></table>
+<hr/>
+<p>你的第一版：</p>
+<p>建议：</p>
+<pre><code>3000条Java AI面试数据</code></pre>
+<p>足够。</p>
+<hr/>
+<h1 id="八第二步准备训练服务器">八、第二步：准备训练服务器</h1>
+<p>微调比推理更吃资源。</p>
+<h2 id="qlora-7b">QLoRA 7B</h2>
+<p>推荐：</p>
+<h3 id="gpu">GPU</h3>
+<p>最低：</p>
+<pre><code>RTX4090 24GB</code></pre>
+<p>推荐：</p>
+<pre><code>A100 40GB</code></pre>
+<hr/>
+<h2 id="配置">配置：</h2>
+<pre><code>CPU:
+16核
+
+内存:
+64GB
+
+GPU:
+24GB+
+
+磁盘:
+300GB SSD</code></pre>
+<hr/>
+<h1 id="九安装训练环境">九、安装训练环境</h1>
+<p>服务器：</p>
+<p>Ubuntu 22.04</p>
+<p>创建环境：</p>
+<pre><code>conda create \
+-n finetune \
+python=3.10
+
+
+conda activate finetune</code></pre>
+<hr/>
+<p>安装：</p>
+<pre><code>pip install torch
+
+pip install transformers
+
+pip install accelerate
+
+pip install peft
+
+pip install bitsandbytes
+
+pip install datasets
+
+pip install trl</code></pre>
+<hr/>
+<h1 id="十使用-llamafactory">十、使用 LLaMA-Factory</h1>
+<p>安装：</p>
+<pre><code>git clone \
+https://github.com/hiyouga/LLaMA-Factory.git
+
+
+cd LLaMA-Factory
+
+
+pip install -e .</code></pre>
+<hr/>
+<h1 id="十一配置-qlora">十一、配置 QLoRA</h1>
+<p>创建：</p>
+<pre><code>train_qwen.yaml</code></pre>
+<p>内容：</p>
+<pre><code>model_name_or_path:
+ Qwen/Qwen2.5-7B-Instruct
+
+
+stage:
+ sft
+
+
+do_train:
+ true
+
+
+finetuning_type:
+ lora
+
+
+quantization_bit:
+ 4
+
+
+dataset:
+ java_interview
+
+
+template:
+ qwen
+
+
+lora_rank:
+ 16
+
+
+lora_alpha:
+ 32
+
+
+learning_rate:
+ 2e-4
+
+
+num_train_epochs:
+ 3
+
+
+output_dir:
+ ./java-lora</code></pre>
+<hr/>
+<h1 id="十二启动训练">十二、启动训练</h1>
+<p>执行：</p>
+<pre><code>llamafactory-cli train \
+train_qwen.yaml</code></pre>
+<p>训练过程：</p>
+<pre><code>Loading Qwen
+
+
+↓
+
+Loading dataset
+
+
+↓
+
+Inject LoRA
+
+
+↓
+
+Training
+
+
+Epoch 1
+
+loss 2.1
+
+
+Epoch 2
+
+loss 1.3
+
+
+Epoch 3
+
+loss 0.8</code></pre>
+<hr/>
+<h1 id="十三训练产物">十三、训练产物</h1>
+<p>完成：</p>
+<pre><code>java-lora
+
+├── adapter_model.safetensors
+
+├── adapter_config.json
+
+└── tokenizer</code></pre>
+<p>注意：</p>
+<p>这里不是完整模型。</p>
+<p>它是：</p>
+<pre><code>Qwen
+
++
+
+插件</code></pre>
+<hr/>
+<h1 id="十四模型评测">十四、模型评测</h1>
+<p>企业不会直接上线。</p>
+<p>需要 Evaluation。</p>
+<hr/>
+<h2 id="测试集">测试集</h2>
+<p>例如：</p>
+<pre><code>test.jsonl</code></pre>
+<p>100个问题。</p>
+<hr/>
+<p>测试：</p>
+<p>训练前：</p>
+<pre><code>HashMap回答</code></pre>
+<p>训练后：</p>
+<pre><code>HashMap回答</code></pre>
+<p>比较：</p>
+<hr/>
+<h2 id="指标">指标</h2>
+<h3 id="1-accuracy">1. Accuracy</h3>
+<p>是否回答正确。</p>
+<hr/>
+<h3 id="2-format">2. Format</h3>
+<p>是否符合面试格式。</p>
+<hr/>
+<h3 id="3-hallucination">3. Hallucination</h3>
+<p>是否乱编。</p>
+<hr/>
+<h3 id="4-human-evaluation">4. Human Evaluation</h3>
+<p>人工评分。</p>
+<hr/>
+<h1 id="十五模型合并">十五、模型合并</h1>
+<p>生产通常：</p>
+<p>Adapter:</p>
+<pre><code>Qwen
+
++
+
+LoRA</code></pre>
+<p>合并：</p>
+<pre><code>Merged Model</code></pre>
+<p>代码：</p>
+<pre><code>model.merge_and_unload()</code></pre>
+<p>得到：</p>
+<pre><code>java-qwen-7b</code></pre>
+<hr/>
+<h1 id="十六模型量化">十六、模型量化</h1>
+<p>生产：</p>
+<p>一般不会用FP16。</p>
+<p>因为：</p>
+<p>显存太大。</p>
+<p>转换：</p>
+<pre><code>FP16
+
+↓
+
+INT8
+
+↓
+
+INT4</code></pre>
+<p>例如：</p>
+<p>7B:</p>
+<p>FP16:</p>
+<p>14GB+</p>
+<p>INT4:</p>
+<p>4-6GB</p>
+<hr/>
+<h1 id="十七部署到-vllm">十七、部署到 vLLM</h1>
+<p>上传模型：</p>
+<p>服务器：</p>
+<pre><code>/models/java-qwen-7b</code></pre>
+<p>启动：</p>
+<pre><code>vllm serve \
+/models/java-qwen-7b \
+--host 0.0.0.0 \
+--port 8000</code></pre>
+<hr/>
+<p>现在：</p>
+<p>你的线上模型：</p>
+<pre><code>Spring Boot
+
+↓
+
+vLLM
+
+↓
+
+Java-Qwen-7B
+
+↓
+
+GPU</code></pre>
+<hr/>
+<h1 id="十八灰度发布">十八、灰度发布</h1>
+<p>企业不会：</p>
+<p>训练完：</p>
+<p>直接替换。</p>
+<p>流程：</p>
+<hr/>
+<h2 id="旧模型">旧模型</h2>
+<pre><code>qwen-v1</code></pre>
+<p>线上：</p>
+<p>100%</p>
+<hr/>
+<h2 id="新模型">新模型</h2>
+<pre><code>qwen-java-v2</code></pre>
+<p>先：</p>
+<p>10%流量。</p>
+<p>架构：</p>
+<pre><code>             Gateway
+
+                 |
+
+          +------+------+
+
+          |             |
+
+          ↓             ↓
+
+
+       v1模型       v2模型
+
+
+       90%          10%</code></pre>
+<hr/>
+<p>观察：</p>
+<ul class="lvl"><li>延迟</li></ul>
+<ul class="lvl"><li>错误率</li></ul>
+<ul class="lvl"><li>用户评分</li></ul>
+<hr/>
+<h1 id="十九模型版本管理">十九、模型版本管理</h1>
+<p>类似代码：</p>
+<pre><code>models/
+
+├── qwen-java-v1
+
+├── qwen-java-v2
+
+└── qwen-java-v3</code></pre>
+<p>记录：</p>
+<pre><code>模型版本
+
+训练数据版本
+
+参数
+
+评测结果
+
+发布时间</code></pre>
+<hr/>
+<h1 id="二十企业完整-cicd">二十、企业完整 CI/CD</h1>
+<p>最终：</p>
+<pre><code>Git
+
+↓
+
+数据仓库
+
+↓
+
+训练Pipeline
+
+↓
+
+Evaluation
+
+↓
+
+Model Registry
+
+↓
+
+Deployment
+
+↓
+
+Monitoring</code></pre>
+<p>类似：</p>
+<p>软件发布。</p>
+<hr/>
+<h1 id="二十一成本估算">二十一、成本估算</h1>
+<h2 id="微调一次-qlora-7b">微调一次 QLoRA 7B</h2>
+<p>RTX4090：</p>
+<p>3小时：</p>
+<pre><code>约5-10元</code></pre>
+<hr/>
+<p>A100：</p>
+<p>3小时：</p>
+<pre><code>几十元</code></pre>
+<hr/>
+<p>企业：</p>
+<p>长期训练：</p>
+<pre><code>几千～几万元/月</code></pre>
+<hr/>
+<h1 id="二十二你的最终能力闭环">二十二、你的最终能力闭环</h1>
+<p>现在你已经覆盖：</p>
+<pre><code>模型选择
+
+↓
+
+模型下载
+
+↓
+
+GPU环境
+
+↓
+
+推理部署
+
+↓
+
+vLLM
+
+↓
+
+RAG
+
+↓
+
+Agent
+
+↓
+
+LoRA微调
+
+↓
+
+模型评测
+
+↓
+
+灰度上线
+
+↓
+
+监控</code></pre>
+<p>这就是：</p>
+<h1 id="ai-application-engineer-完整能力链">AI Application Engineer 完整能力链</h1>
+<hr/>
+<h1 id="下一阶段-day14">下一阶段 Day14</h1>
+<p>下一步建议进入：</p>
+<h1 id="day14从单模型到企业-ai-平台llm-gateway多模型路由成本控制自动扩缩容">《Day14：从单模型到企业 AI 平台：LLM Gateway、多模型路由、成本控制、自动扩缩容》</h1>
+<p>学习企业真正的大模型平台架构：</p>
+<pre><code>          用户
+
+            ↓
+
+       AI Gateway
+
+            ↓
+
+ +----------+-----------+
+
+ |          |           |
+
+Qwen     DeepSeek    GPT
+
+
+ |          |           |
+
+成本/性能/质量自动路由</code></pre>
+<p>这一步会让你从：</p>
+<blockquote><p>会部署模型</p></blockquote>
+<p>升级到：</p>
+<blockquote><p>能设计企业 AI 平台架构。</p></blockquote>
+</main>
+</body>
+</html>

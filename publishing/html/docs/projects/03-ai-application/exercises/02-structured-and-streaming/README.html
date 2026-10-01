@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>02 结构化输出、流式与模型参数 — M03 / M04 / M06 配套练习</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="02-结构化输出流式与模型参数-m03-m04-m06-配套练习">02 结构化输出、流式与模型参数 — M03 / M04 / M06 配套练习</h1>
+<blockquote><p>先独立完成，再按题号查看 <code>answers.py</code> 中对应函数。所有状态从 ⬜ 开始；参考答案跑通不代表你已掌握。</p></blockquote>
+<h2 id="a-结构化输出m03">A. 结构化输出（M03）</h2>
+<ul class="lvl"><li>[ ] <strong>A1</strong> 把裸 JSON、带 <code>json</code> 围栏的 JSON、前后夹解释文字的 JSON 分别交给真实 <code>assistant.schema.extract_json</code>，断言三次都得到同一个 Python 对象，并让完全无 JSON 的文本抛 <code>JSONDecodeError</code>。</li><li>[ ] <strong>A2</strong> 用真实 <code>SkillExtraction.model_json_schema()</code> 检查 <code>name/skills/years/summary</code> 四个字段与 <code>years</code> 范围约束，再用 <code>parse_structured</code> 把合法 JSON 变成强类型对象并读取真实字段值。</li><li>[ ] <strong>A3</strong> 把 <code>years=&quot;三年&quot;</code> 的 JSON 交给真实 <code>parse_structured</code>，断言抛 <code>StructuredOutputError</code>、错误文本点名 <code>years</code>，且异常链 <code>__cause__</code> 保留 Pydantic 的 <code>ValidationError</code>。</li><li>[ ] <strong>A4</strong> 用真实 <code>FakeClient</code> 编排“第一次字段错误、第二次正确”，调用真实异步 <code>structured(max_retry=1)</code>，断言恰好调用两次、第二次 messages 回灌校验错误、两次都启用 JSON Mode。</li></ul>
+<h2 id="b-流式输出m04">B. 流式输出（M04）</h2>
+<ul class="lvl"><li>[ ] <strong>B1</strong> 用真实 <code>FakeClient.stream</code> 流出一段中英混排文本，逐块收集并断言拼接结果等于原回复、块数等于 Python 字符数，且调用记录标记了 <code>stream=True</code>。</li><li>[ ] <strong>B2</strong> 用真实 <code>ChatService.astream</code> 与 <code>FakeClient</code> 完成一次流式问答，断言每块拼接成完整答案，并检查会话末尾已经回灌完整 assistant 内容而不是半截 chunk。</li><li>[ ] <strong>B3</strong> 用 FastAPI <code>TestClient</code>、真实 <code>create_app()</code> 和依赖覆盖注入 <code>FakeClient</code>，离线 POST <code>/chat/stream</code>，断言 Content-Type 为 <code>text/event-stream</code>、每个 data JSON 可解析且最后出现 <code>data: [DONE]</code>。</li></ul>
+<h2 id="c-模型参数m06">C. 模型参数（M06）</h2>
+<ul class="lvl"><li>[ ] <strong>C1</strong> 从同一个真实 <code>Settings(api_key=&quot;offline-test&quot;)</code> 生成 <code>extract</code> 与 <code>creative</code> Profile，断言原对象不变、新对象不是原对象，并比较两个 Profile 的真实 temperature/max_tokens。</li><li>[ ] <strong>C2</strong> 只构造不请求真实 <code>DeepSeekClient</code>，调用 <code>build_payload</code> 检查 model/messages/stream/temperature/top_p/max_tokens/response_format/tools 全部进入请求体，再检查 <code>headers()</code> 不泄露测试 Key并关闭客户端。</li><li>[ ] <strong>C3</strong> 把 temperature 越界、top_p 为 0、max_tokens 为 0 三个真实 <code>Settings</code> 逐一调用 <code>validate()</code>，断言都抛 <code>LLMConfigError</code> 且错误文本点名对应参数；合法配置应返回 <code>None</code>。</li></ul>
+<h2 id="运行参考答案">运行参考答案</h2>
+<pre><code>.venv/bin/python exercises/02-structured-and-streaming/answers.py</code></pre>
+</main>
+</body>
+</html>

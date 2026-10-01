@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day24：AI Agent 工程化进阶</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day24ai-agent-工程化进阶">Day24：AI Agent 工程化进阶</h1>
+<h1 id="memory记忆planning规划reflection反思selfimprovement自我改进">Memory【记忆】、Planning【规划】、Reflection【反思】、Self-Improvement【自我改进】</h1>
+<p>前面 Day22～Day23：</p>
+<p>你已经掌握：</p>
+<pre><code>单Agent
+
+↓
+
+Multi-Agent
+
+↓
+
+Workflow
+
+↓
+
+MCP
+
+↓
+
+AI数字员工</code></pre>
+<p>但是企业真正落地 Agent，会遇到一个问题：</p>
+<blockquote><p>为什么很多 Agent Demo 看起来很聪明，真正上线却经常失败？</p></blockquote>
+<p>原因：</p>
+<p>缺少：</p>
+<ul class="lvl"><li>记忆</li></ul>
+<ul class="lvl"><li>规划</li></ul>
+<ul class="lvl"><li>纠错</li></ul>
+<ul class="lvl"><li>经验积累</li></ul>
+<p>今天进入：</p>
+<h1 id="advanced-agent-engineering高级智能体工程">Advanced Agent Engineering【高级智能体工程】</h1>
+<hr/>
+<h1 id="一普通-agent-的问题">一、普通 Agent 的问题</h1>
+<p>简单 Agent：</p>
+<pre><code>
+用户
+
+↓
+
+LLM
+
+↓
+
+Tool
+
+↓
+
+回答</code></pre>
+<p>问题：</p>
+<hr/>
+<h2 id="问题1没有记忆">问题1：没有记忆</h2>
+<p>昨天：</p>
+<p>用户说：</p>
+<blockquote><p>我的岗位是 Java 高级工程师。</p></blockquote>
+<p>今天：</p>
+<p>AI：</p>
+<p>不知道。</p>
+<hr/>
+<h2 id="问题2复杂任务容易乱">问题2：复杂任务容易乱</h2>
+<p>用户：</p>
+<blockquote><p>帮我开发一个AI知识库。</p></blockquote>
+<p>Agent：</p>
+<p>可能：</p>
+<pre><code>写代码
+
+↓
+
+忘记数据库
+
+↓
+
+忘记测试
+
+↓
+
+忘记部署</code></pre>
+<hr/>
+<h2 id="问题3错误不会自己发现">问题3：错误不会自己发现</h2>
+<p>生成：</p>
+<p>错误代码。</p>
+<p>直接返回。</p>
+<hr/>
+<p>企业 Agent：</p>
+<p>需要：</p>
+<pre><code>
+Memory
+
++
+
+Planning
+
++
+
+Reflection
+
++
+
+Learning</code></pre>
+<hr/>
+<h1 id="二agent完整认知架构">二、Agent完整认知架构</h1>
+<p>高级 Agent：</p>
+<pre><code>
+                 User
+
+
+                  |
+
+                  ↓
+
+
+              Agent Core
+
+
+                  |
+
+      +-----------+-----------+
+
+      |           |           |
+
+
+  Memory     Planning    Reflection
+
+
+      |           |           |
+
+
+      ↓           ↓           ↓
+
+
+  History      Task Plan    Critic
+
+
+                  |
+
+                  ↓
+
+
+              Tool Calling
+
+
+                  |
+
+                  ↓
+
+
+              Result
+</code></pre>
+<hr/>
+<h1 id="三memory记忆系统">三、Memory【记忆系统】</h1>
+<h2 id="什么是-memory">什么是 Memory？</h2>
+<p>让 Agent：</p>
+<p>记住过去。</p>
+<p>类似：</p>
+<p>人的：</p>
+<p>长期记忆。</p>
+<hr/>
+<h1 id="四memory分类">四、Memory分类</h1>
+<p>企业通常分4类。</p>
+<hr/>
+<h1 id="1-conversation-memory对话记忆">1. Conversation Memory【对话记忆】</h1>
+<p>保存：</p>
+<p>当前聊天。</p>
+<p>例如：</p>
+<p>用户：</p>
+<blockquote><p>我是Java开发。</p></blockquote>
+<p>后续：</p>
+<p>AI知道。</p>
+<hr/>
+<p>实现：</p>
+<p>Redis。</p>
+<p>结构：</p>
+<pre><code>{
+conversationId:&quot;10001&quot;,
+
+messages:[
+
+&quot;user:我是Java开发&quot;,
+
+&quot;assistant:你好&quot;
+
+]
+
+}</code></pre>
+<hr/>
+<h1 id="2-user-memory用户记忆">2. User Memory【用户记忆】</h1>
+<p>长期保存用户信息。</p>
+<p>例如：</p>
+<p>你的 AI Interview Agent：</p>
+<p>记录：</p>
+<pre><code>{
+userId:&quot;001&quot;,
+
+skills:[
+
+&quot;Java&quot;,
+
+&quot;Spring&quot;,
+
+&quot;RAG&quot;
+
+],
+
+weakness:[
+
+&quot;AQS&quot;,
+
+&quot;Agent&quot;
+
+]
+
+}</code></pre>
+<hr/>
+<p>数据库：</p>
+<p>MySQL。</p>
+<hr/>
+<h1 id="3-knowledge-memory知识记忆">3. Knowledge Memory【知识记忆】</h1>
+<p>企业知识。</p>
+<p>例如：</p>
+<pre><code>
+产品文档
+
+技术文档
+
+规范</code></pre>
+<p>存：</p>
+<p>Vector DB。</p>
+<hr/>
+<h1 id="4-episodic-memory经验记忆">4. Episodic Memory【经验记忆】</h1>
+<p>Agent自己的历史经验。</p>
+<p>例如：</p>
+<p>之前：</p>
+<p>任务失败。</p>
+<p>记录：</p>
+<pre><code>{
+task:
+
+&quot;生成报告&quot;,
+
+failure:
+
+&quot;数据缺失&quot;,
+
+solution:
+
+&quot;先检查数据库&quot;
+
+}</code></pre>
+<hr/>
+<h1 id="五memory架构">五、Memory架构</h1>
+<p>企业：</p>
+<pre><code>
+             Agent
+
+
+               |
+
+        +------+------+
+
+        |             |
+
+
+ Short Memory   Long Memory
+
+
+        |             |
+
+
+ Redis        MySQL/VectorDB
+</code></pre>
+<hr/>
+<h1 id="六你的-interview-agent-memory设计">六、你的 Interview Agent Memory设计</h1>
+<p>升级前：</p>
+<pre><code>用户
+
+↓
+
+问题
+
+↓
+
+回答
+
+↓
+
+评分</code></pre>
+<p>升级：</p>
+<pre><code>
+用户
+
+↓
+
+Agent
+
+
+↓
+
+读取用户画像
+
+
+↓
+
+生成针对性问题
+
+
+↓
+
+评分
+
+
+↓
+
+更新能力模型
+</code></pre>
+<hr/>
+<p>例如：</p>
+<p>第一次：</p>
+<p>用户：</p>
+<p>AQS：</p>
+<p>60分。</p>
+<p>保存。</p>
+<p>下一次：</p>
+<p>AI：</p>
+<blockquote><p>上次AQS理解不足，今天继续训练。</p></blockquote>
+<hr/>
+<h1 id="七planning规划能力">七、Planning【规划能力】</h1>
+<h2 id="为什么需要规划">为什么需要规划？</h2>
+<p>复杂任务：</p>
+<p>不能一步完成。</p>
+<p>例如：</p>
+<p>用户：</p>
+<blockquote><p>帮我做一个AI知识库系统。</p></blockquote>
+<p>需要：</p>
+<pre><code>
+1. 需求分析
+
+2. 架构设计
+
+3. 数据库
+
+4. 后端
+
+5. 前端
+
+6. 部署</code></pre>
+<hr/>
+<h1 id="八planning模式">八、Planning模式</h1>
+<h2 id="1-planandexecute">1. Plan-and-Execute</h2>
+<p>最经典。</p>
+<p>流程：</p>
+<pre><code>
+目标
+
+
+↓
+
+Planner
+
+
+↓
+
+生成计划
+
+
+↓
+
+Executor执行
+
+
+↓
+
+结果
+</code></pre>
+<hr/>
+<p>例如：</p>
+<p>输出：</p>
+<pre><code>{
+steps:[
+
+{
+id:1,
+
+task:&quot;设计数据库&quot;
+},
+
+{
+id:2,
+
+task:&quot;创建接口&quot;
+}
+
+]
+}</code></pre>
+<hr/>
+<h1 id="九react模式">九、ReAct模式</h1>
+<p>现在 Agent 常用。</p>
+<p>ReAct：</p>
+<h2 id="reasoning-acting">Reasoning + Acting</h2>
+<p>中文：</p>
+<p>推理 + 行动。</p>
+<p>流程：</p>
+<pre><code>
+Thought
+
+思考
+
+
+↓
+
+Action
+
+行动
+
+
+↓
+
+Observation
+
+观察结果
+
+
+↓
+
+Thought
+
+继续思考</code></pre>
+<hr/>
+<p>例子：</p>
+<p>用户：</p>
+<p>查询订单。</p>
+<p>Agent：</p>
+<p>Thought：</p>
+<p>需要订单信息。</p>
+<p>Action：</p>
+<p>调用：</p>
+<p>queryOrder。</p>
+<p>Observation：</p>
+<p>返回订单。</p>
+<p>Thought：</p>
+<p>生成回答。</p>
+<hr/>
+<h1 id="十reflection反思机制">十、Reflection【反思机制】</h1>
+<p>人：</p>
+<p>犯错后总结。</p>
+<p>Agent：</p>
+<p>也需要。</p>
+<hr/>
+<p>普通：</p>
+<pre><code>
+生成答案
+
+↓
+
+结束</code></pre>
+<p>Reflection：</p>
+<pre><code>
+生成答案
+
+↓
+
+Critic检查
+
+↓
+
+发现问题
+
+↓
+
+重新生成</code></pre>
+<hr/>
+<h1 id="十一reflection架构">十一、Reflection架构</h1>
+<pre><code>
+             Generator Agent
+
+
+                    |
+
+                    ↓
+
+
+                Draft Answer
+
+
+                    |
+
+                    ↓
+
+
+              Critic Agent
+
+
+                    |
+
+          +---------+---------+
+
+          |                   |
+
+
+        Pass               Fail
+
+
+          |                   |
+
+
+       Return          Improve
+</code></pre>
+<hr/>
+<h1 id="十二selfcorrection自我纠错">十二、Self-Correction【自我纠错】</h1>
+<p>例如：</p>
+<p>代码生成。</p>
+<p>第一次：</p>
+<pre><code>代码错误</code></pre>
+<p>Critic：</p>
+<p>发现：</p>
+<p>空指针。</p>
+<p>修改。</p>
+<p>第二次：</p>
+<p>正确。</p>
+<hr/>
+<p>流程：</p>
+<pre><code>
+生成
+
+↓
+
+测试
+
+↓
+
+发现错误
+
+↓
+
+修复
+
+↓
+
+重新测试</code></pre>
+<hr/>
+<h1 id="十三企业-agent-evaluation">十三、企业 Agent Evaluation</h1>
+<p>不能：</p>
+<p>感觉聪明。</p>
+<p>需要指标。</p>
+<hr/>
+<h2 id="task-success-rate">Task Success Rate</h2>
+<p>任务成功率。</p>
+<p>例如：</p>
+<p>100任务：</p>
+<p>成功85。</p>
+<p>85%。</p>
+<hr/>
+<h2 id="tool-success-rate">Tool Success Rate</h2>
+<p>工具调用成功率。</p>
+<hr/>
+<h2 id="cost">Cost</h2>
+<p>成本。</p>
+<hr/>
+<h2 id="latency">Latency</h2>
+<p>延迟。</p>
+<hr/>
+<h1 id="十四selfimprovement自我改进">十四、Self-Improvement【自我改进】</h1>
+<p>注意：</p>
+<p>不是模型自动训练。</p>
+<p>更多是：</p>
+<p>经验优化。</p>
+<hr/>
+<p>例如：</p>
+<p>Agent发现：</p>
+<p>经常搜索失败。</p>
+<p>记录：</p>
+<pre><code>
+失败原因：
+
+关键词太短
+
+
+优化：
+
+增加Query Rewrite</code></pre>
+<hr/>
+<p>形成：</p>
+<p>Agent Memory。</p>
+<hr/>
+<h1 id="十五agent长期运行架构">十五、Agent长期运行架构</h1>
+<p>企业数字员工：</p>
+<p>不是一次请求。</p>
+<p>而是：</p>
+<p>7×24小时运行。</p>
+<hr/>
+<p>架构：</p>
+<pre><code>
+             Scheduler
+
+
+                 |
+
+                 ↓
+
+
+              Agent
+
+
+                 |
+
+       +---------+---------+
+
+       |                   |
+
+
+     Memory            Workflow
+
+
+       |
+
+       ↓
+
+
+    Experience</code></pre>
+<hr/>
+<p>例如：</p>
+<p>每天：</p>
+<p>9点：</p>
+<p>销售Agent：</p>
+<p>自动生成日报。</p>
+<hr/>
+<h1 id="十六你的-blogagent升级">十六、你的 BlogAgent升级</h1>
+<p>你现在：</p>
+<p>浏览器截图</p>
+<p>↓</p>
+<p>文章生成</p>
+<p>↓</p>
+<p>AI审核</p>
+<p>升级：</p>
+<h2 id="content-agent-system">Content Agent System</h2>
+<pre><code>
+Content Supervisor
+
+
+        |
+
++-------+--------+--------+
+
+|       |        |        |
+
+
+Research Writer Image Reviewer
+
+
+Agent    Agent   Agent    Agent
+
+
+        |
+
+        ↓
+
+
+Memory
+</code></pre>
+<hr/>
+<p>它可以：</p>
+<p>记住：</p>
+<ul class="lvl"><li>你的写作风格</li></ul>
+<ul class="lvl"><li>常用结构</li></ul>
+<ul class="lvl"><li>喜欢的图片风格</li></ul>
+<ul class="lvl"><li>历史文章反馈</li></ul>
+<hr/>
+<h1 id="十七spring-boot实现架构">十七、Spring Boot实现架构</h1>
+<p>新增模块：</p>
+<pre><code>
+agent-platform
+
+
+├── agent-core
+
+
+├── memory
+
+
+├── planning
+
+
+├── reflection
+
+
+├── workflow
+
+
+├── tool
+
+
+├── evaluation
+
+
+└── mcp</code></pre>
+<hr/>
+<h1 id="十八面试回答">十八、面试回答</h1>
+<h2 id="q1">Q1：</h2>
+<blockquote><p>Agent为什么需要Memory？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>Memory用于保存用户上下文、历史任务和知识经验，使Agent能够进行连续交互和个性化服务。短期Memory通常保存当前会话，长期Memory可以结合数据库和向量数据库保存用户画像和历史经验。</p></blockquote>
+<hr/>
+<h2 id="q2">Q2：</h2>
+<blockquote><p>Agent如何提高任务成功率？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>可以通过Planning拆解复杂任务，通过Workflow控制执行过程，通过Reflection机制让Agent对结果进行检查和修正，同时结合Evaluation指标持续优化。</p></blockquote>
+<hr/>
+<h2 id="q3">Q3：</h2>
+<blockquote><p>Agent和普通LLM有什么区别？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>LLM主要负责语言理解和生成，而Agent增加了目标驱动、规划、工具调用、记忆和反馈闭环能力，可以自主完成复杂任务。</p></blockquote>
+<hr/>
+<h1 id="十九day24能力地图">十九、Day24能力地图</h1>
+<p>现在你的 Agent 理解：</p>
+<pre><code>
+LLM
+
+
+ ↓
+
+
+Tool Calling
+
+
+ ↓
+
+
+Agent
+
+
+ ↓
+
+
+Memory
+
+
+ ↓
+
+
+Planning
+
+
+ ↓
+
+
+Reflection
+
+
+ ↓
+
+
+Self Improvement
+
+
+ ↓
+
+
+Autonomous Agent</code></pre>
+<hr/>
+<h1 id="二十下一节-day25">二十、下一节 Day25</h1>
+<p>建议进入：</p>
+<h1 id="day25企业级-ai-agent-开发实战langgraph-langchain4j-构建可控-agent">《Day25：企业级 AI Agent 开发实战：LangGraph / LangChain4j 构建可控 Agent》</h1>
+<p>重点：</p>
+<p>从理论进入代码：</p>
+<p>实现：</p>
+<pre><code>Spring Boot
+
++
+
+LangChain4j
+
++
+
+Agent State
+
++
+
+Workflow
+
++
+
+Memory
+
++
+
+Tool
+
++
+
+MCP</code></pre>
+<p>完成一个真正企业级 Agent。</p>
+<p>目标：</p>
+<blockquote><p>不只是会调用 Agent，而是能设计和开发 Agent 平台。</p></blockquote>
+</main>
+</body>
+</html>

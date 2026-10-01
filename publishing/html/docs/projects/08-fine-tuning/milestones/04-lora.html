@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 04 — LoRA：`W&#x27; = W + ΔW`，以及证明它真的没动基座</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-04-loraw-w-δw以及证明它真的没动基座">Milestone 04 — LoRA：<code>W&#x27; = W + ΔW</code>，以及证明它真的没动基座</h1>
+<p>M01 说&quot;LoRA 只动 1/8.5 的参数&quot;，但没证明它<strong>真的只动了那些参数</strong>。M03 定好了只在答案区算 loss。这一层把 LoRA 本身彻底解剖：结构、初始化、梯度、以及<strong>冻结是否真的生效</strong>。</p>
+<p>这一章的方法论是本项目后面所有章节的模板：<strong>先证明等价性，再证明梯度对，最后才真训</strong>。顺序不能反 —— 如果反向写错了，loss 照样会降，你根本看不出来。</p>
+<p><strong>纯 numpy 手写</strong>：<code>LoRALinear</code> 同时继承 P06 的 <code>Tensor</code> 与 <code>Module</code>，<code>.data</code> 是一个<strong>即时合成</strong>的属性（<code>W.data + scaling·A@B</code>），反向靠覆写 <code>_backward</code> 把梯度拆回 A/B。这样 P06 一行都不用改。</p>
+<hr/>
+<h2 id="1-why为什么必须做等价性证明">1. Why：为什么必须做&quot;等价性证明&quot;</h2>
+<p>LoRA 要成立，必须满足三件事，缺一件就是自欺欺人：</p>
+<ul class="lvl"><li><strong>B=0 初始化 ⇒ 注入瞬间与基座完全等价。</strong> 否则&quot;LoRA 是基座的增量&quot;这个前提就是假的，你没法把训练结果归因于 adapter。</li><li><strong>反向必须真的流回 A/B。</strong> 手写 autograd 最容易在这里静默失败：梯度不回流 → A/B 恒为初值 → loss 死活不降，<strong>而且不报错</strong>。</li><li><strong>基座必须一动不动。</strong> &quot;冻结&quot;在本项目里不是一句口号，是字节级比对（<code>0 / 28</code> 个张量变化）。</li></ul>
+<h2 id="2-design合成权重-拆梯度">2. Design：合成权重 + 拆梯度</h2>
+<p><strong>前向（<code>src/ft/lora.py:150</code>）：</strong></p>
+<pre><code>@property
+def data(self):                      # 每次访问重新合成
+    return self.W.data + self.scaling * (self.A.data @ self.B.data)</code></pre>
+<p>因为 P06 的前向写死了 <code>linear(x, self.Wq)</code> 这种形态，而 <code>.data</code> 拿到的就是合并后的权重，<strong>P06 一行都不用改，前向就自动带上了 LoRA 分支</strong>。</p>
+<p><strong>反向（<code>:159</code>）：</strong> 落在合并权重上的梯度 <code>G = ∂L/∂(W+ΔW)</code>，按链式法则拆回：</p>
+<pre><code>∂L/∂A = (alpha/r) · G @ Bᵀ
+∂L/∂B = (alpha/r) · Aᵀ @ G</code></pre>
+<p><strong>初始化：</strong> A 取 <code>U(-1/√in, 1/√in)</code> 小随机值，B <strong>全零</strong> —— 这保证第一步的 <code>ΔW ≡ 0</code>。</p>
+<figure class="figure"><img alt="M04 LoRA 结构：冻结基座 + 旁路" src="../../../../../../projects/08-fine-tuning/assets/lora.svg" loading="lazy"/><figcaption>M04 LoRA 结构：冻结基座 + 旁路</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo04loraterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_lora_terminal.txt</code>）</h2>
+<p>真实环境：Python 3.13 | numpy 2.5，基座 230,656 参数，注入 13 个线性层。</p>
+<h3 id="31-b0-等价性实测逐位相同">3.1 B=0 等价性（实测：逐位相同）</h3>
+<pre><code>delta_weight() 全零                      True   max|ΔW| = 0
+单层：LoRA 输出 vs 纯基座输出            最大绝对误差 = 0.000e+00
+整机：注入前 vs 注入后（同一输入）         最大绝对误差 = 0.000e+00   13 层全部注入，模型输出 262,144 个数全部相同</code></pre>
+<p><strong>262,144 个输出逐位相同</strong>（4×64×1024）。这不是&quot;很接近&quot;，是<strong>完全相同</strong> —— B 全零使得 <code>ΔW</code> 严格为 0，浮点上没有任何舍入可谈。</p>
+<h3 id="32-alphar-缩放真的被乘进前向实测">3.2 <code>alpha/r</code> 缩放真的被乘进前向（实测）</h3>
+<pre><code>ΔW vs (alpha/r)·A@B          最大绝对误差 = 0.000e+00
+alpha   scaling   ‖Δy‖/‖y‖
+    4       0.5   0.498830
+   16         2   1.995321
+   32         4   3.990642</code></pre>
+<p>偏移与 alpha <strong>成正比</strong>（0.5 → 0.4988，2 → 1.9953，4 → 3.9906），证明缩放不是摆设。这一点很重要：很多人把 alpha 当成&quot;另一个要调的旋钮&quot;，实际上它和 lr 是<strong>乘性关系</strong>（M06 会量化这个耦合）。</p>
+<h3 id="33-梯度对拍autograd-vs-中心差分实测">3.3 梯度对拍：autograd vs 中心差分（实测）</h3>
+<pre><code>独立 LoRALinear 的 grad_check         最大相对误差 = 1.213e-05   （&lt; 1e-4 即通过）
+注入进 TransformerLM 后的 grad_check   最大相对误差 = 6.585e-05</code></pre>
+<p>第二行才是关键：它证明 <strong>P06 的原前向里梯度确实流回了 A/B</strong>（如果没流回，误差会是 100% 量级）。</p>
+<h3 id="34-参数账实测">3.4 参数账（实测）</h3>
+<table><thead><tr><th>项</th><th>数量</th><th>说明</th></tr></thead><tbody><tr><td>基座（冻结）</td><td>230,656</td><td>注入前后完全相同</td></tr><tr><td>adapter（r=8）</td><td><strong>27,136</strong></td><td>13 个线性层 × r×(in+out)</td></tr><tr><td>合计</td><td>257,792</td><td>可训练占比 <strong>10.53%</strong></td></tr><tr><td>进优化器的参数张量</td><td><strong>26</strong></td><td>13 层 × 2</td></tr><tr><td>被冻结的参数张量</td><td><strong>28</strong></td><td></td></tr></tbody></table>
+<h3 id="35-真训-120-步实测基座-0-个张量被动过">3.5 真训 120 步（实测：基座 0 个张量被动过）</h3>
+<pre><code>step 1   8.2909      step 41  6.1681
+step 5   7.4485      step 61  6.0874
+step 9   6.6515      step 81  6.1811
+step 13  6.6012      step 101 6.1183
+step 17  6.5853      step 120 6.1644
+step 21  6.4202</code></pre>
+<ul class="lvl"><li>首步 <strong>8.2909</strong> → 末步 <strong>6.1644</strong>；前 10 步均值 → 后 10 步均值 <strong>7.3978 → 6.0596</strong>（↓1.3383，18.1%）；耗时 6.96 s。</li><li><strong>训练后基座权重发生变化的张量：0 / 28</strong>（字节级 <code>.tobytes()</code> 比对）—— 冻结生效。</li><li><strong>训练后 adapter 发生变化的张量：26 / 26</strong> —— 全部是 <code>*.A</code> / <code>*.B</code>，说明真的在学。</li></ul>
+<figure class="figure"><img alt="M04 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-04-lora.png" loading="lazy"/><figcaption>M04 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-tensorinit-把-backward-设成实例属性-静默失败实测踩过">4.1 <code>Tensor.__init__</code> 把 <code>_backward</code> 设成实例属性 → 静默失败（实测踩过）</h3>
+<p>这是本项目最危险的一个坑，写在 <code>src/ft/lora.py:140</code> 的注释里：</p>
+<pre><code># ⚠ Tensor.__init__ 会把 ``_backward`` 设成一个实例属性（noop lambda），
+#   它会**遮蔽**类里定义的方法。所以必须在这里显式挂回真正的反向实现。
+self._backward = self._lora_backward</code></pre>
+<p>P06 的 <code>Tensor.__init__</code> 里有 <code>self._backward = lambda: None</code>。Python 的查找顺序是<strong>实例属性 &gt; 类方法</strong>，所以哪怕你在 <code>LoRALinear</code> 里定义了 <code>_lora_backward</code>，实例属性那个 noop 也会赢。</p>
+<p><strong>后果是静默的</strong>：梯度不流回 A/B → A/B 恒为初值 → 而 B 初值是 0，所以 <code>ΔW</code> 恒为 0 → <strong>loss 一步都不降，但没有任何报错</strong>。<code>grad_check</code> 会全程返回接近 1.0 的相对误差，如果你不看这个数，就会以为&quot;模型在训，只是慢&quot;。</p>
+<blockquote><p>可迁移的经验：<strong>手写 autograd 时，任何&quot;没报错但结果不对&quot;的迹象都要先怀疑反向挂上了没有</strong>。等价性证明（3.1）与梯度对拍（3.3）必须放在真训<strong>之前</strong>。</p></blockquote>
+<h3 id="42-冻结要能被证明不能只是不传参实测-028">4.2 &quot;冻结&quot;要能被证明，不能只是不传参（实测 0/28）</h3>
+<p><code>freeze_base()</code> 做两件事：把所有非 adapter 参数的 <code>requires_grad</code> 置 False（意图显式），以及<strong>不把它们交给优化器</strong>（真正的冻结）。但光这样还不够 —— 本章额外做了一次<strong>字节级比对</strong>（<code>.tobytes()</code>）：</p>
+<pre><code>训练后基座权重发生变化的张量     0 / 28
+训练后 adapter 发生变化的张量   26 / 26</code></pre>
+<p>这两行同时出现才有说服力：0/28 证明没被误改，26/26 证明 adapter 真的在学（如果两行都是 0，那说明压根没训起来）。</p>
+<h3 id="43-alphar-和-lr-是乘性关系不是两个独立旋钮实测">4.3 <code>alpha/r</code> 和 lr 是乘性关系，不是两个独立旋钮（实测）</h3>
+<p>从 3.2 的表看，<code>alpha</code> 越大偏移越大，几乎严格线性。这意味着调 <code>alpha</code> 和调 <code>lr</code> 在<strong>第一步</strong>是同一件事（都缩放步长）。M06 的扫描会证实：alpha 的最优值（16，即 <code>alpha/r = 2</code>）与 lr 高度耦合，两个一起调只会互相掩盖。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>LoRA 一行公式：<code>W&#x27; = W + (alpha/r)·A@B</code>；<strong>A 小随机、B 全零</strong> ⇒ 注入瞬间 <code>ΔW ≡ 0</code>。</li><li><strong>B=0 等价性实测 <code>0.000e+00</code></strong>：整机 13 层、262,144 个输出逐位相同。</li><li><strong>梯度对拍 <code>6.585e-05</code></strong>（注入整机后），证明反向真的流回了 A/B；独立层是 <code>1.213e-05</code>。</li><li>可训练 <strong>27,136 / 257,792 = 10.53%</strong>；进优化器 26 个张量，冻结 28 个。</li><li>真训 120 步：loss <strong>8.2909 → 6.1644</strong>，<strong>基座 0/28 个张量变化</strong>、<strong>adapter 26/26 变化</strong> —— 冻结与学习同时被证明。</li><li><strong>最危险的坑</strong>：<code>Tensor.__init__</code> 的实例属性 <code>_backward</code> 会遮蔽子类方法，导致梯度不回流、loss 不降且不报错。</li><li>手写实现的意义：因为 <code>.data</code> 是自己合成的，P06 一行都不用改就拿到了完整 LoRA 前向 + 反向 —— 这是&quot;理解机制&quot;带来的自由度，框架用户拿不到。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/lora.py</code></td><td><code>LoRAConfig</code>（r/alpha/dropout/scaling）、<code>LoRALinear</code>（即时合成 <code>.data</code> + <code>_lora_backward</code> 拆梯度 + <code>delta_weight</code>/<code>merged_weight</code>）</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>walk_parameters</code> / <code>inject_lora</code>（把 target 位置的 Parameter <strong>换成</strong> LoRALinear）/ <code>freeze_base</code> / <code>lora_layers</code> / <code>count_parameters</code></td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer</code>：只把 A/B 交给 Adam，其余同普通训练循环</td></tr><tr><td><code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>：把 P06 的 <code>Tensor._prev</code> 从 set 换成有序 list（见 M07/M09 的可复现性）</td></tr><tr><td><code>demos/demo_04_lora.py</code></td><td>7 节：结构解剖 / B=0 等价性 / alpha 缩放 / 梯度对拍 / 参数账 / 真训 120 步 / 关键数字</td></tr><tr><td><code>demos/out/demo_04_lora_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/lora.svg</code></td><td>本章 LoRA 结构图（冻结基座 + 旁路）</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.3 → <strong>v0.4</strong>，M04 LoRA 落地并被证明。实测：B=0 等价性最大绝对误差 <code>0.000e+00</code>（整机 262,144 个输出逐位相同）；<code>grad_check</code> 最大相对误差 <code>6.585e-05</code>；120 步 loss <code>8.2909 → 6.1644</code>；基座被改动张量 <strong>0/28</strong>、adapter <strong>26/26</strong>。并定位 <code>Tensor.__init__</code> 实例属性遮蔽 <code>_backward</code> 导致的静默失败。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

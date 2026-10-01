@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lesson 03 — Condition / Loop：让 AI CLI Assistant 开始运行起来</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="lesson-03-condition-loop让-ai-cli-assistant-开始运行起来">Lesson 03 — Condition / Loop：让 AI CLI Assistant 开始运行起来</h1>
+<blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   本章主线项目：Python AI CLI Assistant   本章目标：使用 <code>if / for / while</code> 让程序具备持续运行、判断命令和遍历消息的能力。</p></blockquote>
+<hr/>
+<h1 id="1-这一章我们要做什么">1. 这一章我们要做什么？</h1>
+<p>上一章我们已经可以创建：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;system&quot;,
+        &quot;content&quot;: &quot;你是一名 Python 教师&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;什么是 dict？&quot;
+    }
+]</code></pre>
+<p>我们已经解决了：</p>
+<pre><code>一条消息怎么保存？
+多条消息怎么保存？
+怎么保存聊天历史？
+怎么保存成 JSON？</code></pre>
+<p>但是现在这个程序还有一个非常明显的问题：</p>
+<blockquote><p><strong>它不会真正“运行起来”。</strong></p></blockquote>
+<p>例如：</p>
+<pre><code>You: 你好</code></pre>
+<p>程序处理一次之后就结束了。</p>
+<p>真正的聊天程序应该是：</p>
+<pre><code>启动
+ ↓
+等待用户输入
+ ↓
+判断用户做什么
+ ↓
+处理
+ ↓
+继续等待
+ ↓
+继续处理
+ ↓
+直到用户退出</code></pre>
+<p>所以这一章我们要解决：</p>
+<pre><code>程序什么时候执行？
+程序应该执行什么？
+程序什么时候重复？
+程序什么时候停止？</code></pre>
+<p>于是自然遇到：</p>
+<pre><code>if       → 判断
+for      → 遍历
+while    → 持续运行
+break    → 退出循环
+continue → 跳过本次循环</code></pre>
+<hr/>
+<h1 id="2-先看最终项目">2. 先看最终项目</h1>
+<p>本章完成后的：</p>
+<h1 id="python-ai-cli-assistant-v03">Python AI CLI Assistant v0.3</h1>
+<p>支持：</p>
+<pre><code>/help
+/history
+/clear
+/exit</code></pre>
+<p>例如：</p>
+<pre><code>$ python main.py
+
+====================================
+ AI Engineer CLI Assistant
+ 输入 /help 查看帮助
+====================================
+
+You: 你好
+AI: 我收到你的消息了。
+
+You: 我正在学习 Python
+AI: 已记录你的学习内容。
+
+You: /history
+
+========== Conversation ==========
+user: 你好
+assistant: 我收到你的消息了。
+user: 我正在学习 Python
+assistant: 已记录你的学习内容。
+===================================
+
+You: /clear
+AI: 聊天记录已清空。
+
+You: /exit
+AI: 再见！</code></pre>
+<p>注意：</p>
+<blockquote><p>这一章依然不连接真正的大模型。</p></blockquote>
+<p>我们先把 Python 程序的“控制能力”建立起来。</p>
+<p>下一阶段再把这个程序接到真正的 LLM API【大模型接口】。</p>
+<hr/>
+<h1 id="3-第一个问题程序为什么需要判断">3. 第一个问题：程序为什么需要判断？</h1>
+<p>假设：</p>
+<pre><code>You: /exit</code></pre>
+<p>程序应该：</p>
+<pre><code>退出</code></pre>
+<p>但如果：</p>
+<pre><code>You: 你好</code></pre>
+<p>程序应该：</p>
+<pre><code>继续聊天</code></pre>
+<p>也就是说：</p>
+<blockquote><p><strong>不同的输入，需要执行不同的代码。</strong></p></blockquote>
+<p>这就是：</p>
+<h1 id="condition条件判断">Condition【条件判断】</h1>
+<p>Python 使用：</p>
+<pre><code>if</code></pre>
+<hr/>
+<h1 id="4-最小的-if">4. 最小的 if</h1>
+<p>先做一个非常小的实验。</p>
+<pre><code>command = input(&quot;请输入命令：&quot;)
+
+if command == &quot;/exit&quot;:
+    print(&quot;程序准备退出&quot;)</code></pre>
+<p>输入：</p>
+<pre><code>请输入命令：/exit</code></pre>
+<p>输出：</p>
+<pre><code>程序准备退出</code></pre>
+<p>如果输入：</p>
+<pre><code>请输入命令：hello</code></pre>
+<p>什么都不会发生。</p>
+<p>因为条件：</p>
+<pre><code>command == &quot;/exit&quot;</code></pre>
+<p>不成立。</p>
+<hr/>
+<h1 id="5-和-不一样">5. <code>==</code> 和 <code>=</code> 不一样</h1>
+<p>这个是初学者必须掌握的区别。</p>
+<pre><code>x = 10</code></pre>
+<p>这是：</p>
+<blockquote><p>赋值</p></blockquote>
+<p>意思：</p>
+<pre><code>把 10 绑定给 x</code></pre>
+<p>而：</p>
+<pre><code>x == 10</code></pre>
+<p>这是：</p>
+<blockquote><p>比较</p></blockquote>
+<p>意思：</p>
+<pre><code>x 是否等于 10？</code></pre>
+<p>所以：</p>
+<pre><code>command = input(...)</code></pre>
+<p>是保存数据。</p>
+<p>而：</p>
+<pre><code>command == &quot;/exit&quot;</code></pre>
+<p>是在判断数据。</p>
+<hr/>
+<h1 id="6-项目需求开始变化">6. 项目需求开始变化</h1>
+<p>我们的程序现在有：</p>
+<pre><code>/exit
+/help
+/history
+/clear
+普通聊天</code></pre>
+<p>那么程序需要判断：</p>
+<pre><code>用户输入是不是 /exit？
+是不是 /help？
+是不是 /history？
+是不是 /clear？
+还是普通消息？</code></pre>
+<p>这就形成：</p>
+<pre><code>if
+elif
+else</code></pre>
+<hr/>
+<h1 id="7-if-elif-else">7. <code>if / elif / else</code></h1>
+<p>例如：</p>
+<pre><code>command = input(&quot;You: &quot;)
+
+if command == &quot;/exit&quot;:
+    print(&quot;再见！&quot;)
+
+elif command == &quot;/help&quot;:
+    print(&quot;可用命令：/help /history /clear /exit&quot;)
+
+else:
+    print(&quot;这是普通消息。&quot;)</code></pre>
+<p>这里：</p>
+<pre><code>if
+ ↓
+第一个条件
+
+elif
+ ↓
+其他条件
+
+else
+ ↓
+以上都不满足</code></pre>
+<hr/>
+<h1 id="8-项目第一次升级">8. 项目第一次升级</h1>
+<p>把它放进我们的 Assistant：</p>
+<pre><code>command = input(&quot;You: &quot;)
+
+if command == &quot;/exit&quot;:
+    print(&quot;AI: 再见！&quot;)
+
+elif command == &quot;/help&quot;:
+    print(&quot;AI: /help /history /clear /exit&quot;)
+
+elif command == &quot;/history&quot;:
+    print(&quot;AI: 正在显示历史记录...&quot;)
+
+elif command == &quot;/clear&quot;:
+    print(&quot;AI: 历史记录已清空。&quot;)
+
+else:
+    print(&quot;AI: 我收到你的消息了。&quot;)</code></pre>
+<p>现在程序已经有了：</p>
+<blockquote><p><strong>命令路由【Command Routing】</strong></p></blockquote>
+<p>也就是：</p>
+<pre><code>用户输入
+   ↓
+判断
+   ↓
+┌───────┬────────┬────────┬────────┐
+↓       ↓        ↓        ↓
+/help /history /clear   /exit
+                         ↓
+                       退出</code></pre>
+<p>但还有一个很严重的问题。</p>
+<hr/>
+<h1 id="9-程序只运行一次">9. 程序只运行一次</h1>
+<p>你运行：</p>
+<pre><code>You: 你好</code></pre>
+<p>输出：</p>
+<pre><code>AI: 我收到你的消息了。</code></pre>
+<p>程序结束。</p>
+<p>我们真正需要的是：</p>
+<pre><code>You: 你好
+AI: ...
+
+You: /history
+AI: ...
+
+You: /clear
+AI: ...
+
+You: /help
+AI: ...
+
+You: /exit
+AI: 再见！</code></pre>
+<p>这意味着：</p>
+<blockquote><p><strong>程序需要反复执行同一段逻辑。</strong></p></blockquote>
+<p>于是我们需要：</p>
+<h1 id="while条件循环">while【条件循环】</h1>
+<hr/>
+<h1 id="10-第一个-while">10. 第一个 while</h1>
+<p>最简单：</p>
+<pre><code>while True:
+    print(&quot;程序正在运行&quot;)</code></pre>
+<p>这会一直打印：</p>
+<pre><code>程序正在运行
+程序正在运行
+程序正在运行
+...</code></pre>
+<p>因为：</p>
+<pre><code>True</code></pre>
+<p>永远为真。</p>
+<p>这叫：</p>
+<blockquote><p><strong>无限循环【Infinite Loop】</strong></p></blockquote>
+<p>当然，我们不能让 AI CLI Assistant 永远跑下去。</p>
+<p>所以必须有：</p>
+<h1 id="break跳出循环">break【跳出循环】</h1>
+<hr/>
+<h1 id="11-while-break">11. while + break</h1>
+<pre><code>while True:
+    command = input(&quot;You: &quot;)
+
+    if command == &quot;/exit&quot;:
+        break
+
+    print(f&quot;你输入了：{command}&quot;)</code></pre>
+<p>运行：</p>
+<pre><code>You: 你好
+你输入了：你好
+
+You: Python
+你输入了：Python
+
+You: /exit</code></pre>
+<p>程序结束。</p>
+<p>整个流程：</p>
+<pre><code>while True
+ ↓
+输入
+ ↓
+判断
+ ↓
+不是 /exit
+ ↓
+继续循环
+ ↓
+输入
+ ↓
+判断
+ ↓
+/exit
+ ↓
+break
+ ↓
+结束</code></pre>
+<p>这已经是我们的 CLI Assistant 核心骨架了。</p>
+<hr/>
+<h1 id="12-联系上一章的-messages">12. 联系上一章的 messages</h1>
+<p>上一章我们有：</p>
+<pre><code>messages = []</code></pre>
+<p>现在：</p>
+<pre><code>while True:
+    user_input = input(&quot;You: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        break
+
+    message = {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: user_input
+    }
+
+    messages.append(message)</code></pre>
+<p>这样：</p>
+<pre><code>用户输入
+ ↓
+Dict
+ ↓
+append()
+ ↓
+messages</code></pre>
+<p>于是两章知识真正连接起来了：</p>
+<pre><code>Lesson 02
+List / Dict
+
+      +
+
+Lesson 03
+if / while</code></pre>
+<hr/>
+<h1 id="13-第一次形成真正的聊天循环">13. 第一次形成真正的聊天循环</h1>
+<p>完整代码：</p>
+<pre><code>messages = []
+
+while True:
+    user_input = input(&quot;You: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        break
+
+    message = {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: user_input
+    }
+
+    messages.append(message)
+
+print(&quot;\n========== Conversation ==========&quot;)
+
+for message in messages:
+    print(
+        f&quot;{message[&#x27;role&#x27;]}: &quot;
+        f&quot;{message[&#x27;content&#x27;]}&quot;
+    )
+
+print(&quot;===================================&quot;)</code></pre>
+<p>运行：</p>
+<pre><code>You: 你好
+You: 我正在学习 Python
+You: 什么是 while
+You: /exit</code></pre>
+<p>退出后：</p>
+<pre><code>========== Conversation ==========
+user: 你好
+user: 我正在学习 Python
+user: 什么是 while
+===================================</code></pre>
+<p>现在你已经真正写出了：</p>
+<h1 id="conversation-recorder-v02">Conversation Recorder v0.2</h1>
+<hr/>
+<h1 id="14-为什么这里同时需要-while-和-for">14. 为什么这里同时需要 <code>while</code> 和 <code>for</code>？</h1>
+<p>这是一个非常重要的理解。</p>
+<h2 id="while">while</h2>
+<p>负责：</p>
+<blockquote><p><strong>让程序持续运行。</strong></p></blockquote>
+<pre><code>while True:
+    ...</code></pre>
+<hr/>
+<h2 id="for">for</h2>
+<p>负责：</p>
+<blockquote><p><strong>遍历已经存在的数据。</strong></p></blockquote>
+<p>例如：</p>
+<pre><code>for message in messages:
+    ...</code></pre>
+<p>所以：</p>
+<pre><code>while
+ ↓
+控制程序运行多久
+
+for
+ ↓
+处理一组数据中的每一个元素</code></pre>
+<hr/>
+<h1 id="15-项目需求增加-history">15. 项目需求：增加 <code>/history</code></h1>
+<p>现在用户输入：</p>
+<pre><code>/history</code></pre>
+<p>程序应该马上打印历史。</p>
+<p>这就需要：</p>
+<pre><code>if user_input == &quot;/history&quot;:
+    ...</code></pre>
+<p>然后遍历：</p>
+<pre><code>for message in messages:
+    print(...)</code></pre>
+<p>组合：</p>
+<pre><code>if user_input == &quot;/history&quot;:
+    print(&quot;\n========== History ==========&quot;)
+
+    for message in messages:
+        print(
+            f&quot;{message[&#x27;role&#x27;]}: &quot;
+            f&quot;{message[&#x27;content&#x27;]}&quot;
+        )
+
+    print(&quot;=============================&quot;)</code></pre>
+<p>于是：</p>
+<pre><code>while
+ ↓
+if
+ ↓
+for</code></pre>
+<p>三个知识点第一次真正组合。</p>
+<hr/>
+<h1 id="16-完整加入-history">16. 完整加入 <code>/history</code></h1>
+<pre><code>messages = []
+
+while True:
+    user_input = input(&quot;You: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        print(&quot;AI: 再见！&quot;)
+        break
+
+    if user_input == &quot;/history&quot;:
+        print(&quot;\n========== History ==========&quot;)
+
+        for message in messages:
+            print(
+                f&quot;{message[&#x27;role&#x27;]}: &quot;
+                f&quot;{message[&#x27;content&#x27;]}&quot;
+            )
+
+        print(&quot;=============================&quot;)
+        continue
+
+    message = {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: user_input
+    }
+
+    messages.append(message)
+
+    print(&quot;AI: 我收到你的消息了。&quot;)</code></pre>
+<p>这里出现了：</p>
+<h1 id="continue继续下一轮循环">continue【继续下一轮循环】</h1>
+<hr/>
+<h1 id="17-为什么需要-continue">17. 为什么需要 <code>continue</code>？</h1>
+<p>看：</p>
+<pre><code>if user_input == &quot;/history&quot;:
+    ...
+    continue</code></pre>
+<p>意味着：</p>
+<blockquote><p><code>/history</code> 已经处理完了，不要再把 <code>/history</code> 当成普通聊天消息保存。</p></blockquote>
+<p>如果没有 <code>continue</code>：</p>
+<pre><code>/history
+ ↓
+打印历史
+ ↓
+继续向下执行
+ ↓
+被保存成 user message</code></pre>
+<p>那聊天历史里就会出现：</p>
+<pre><code>user: /history</code></pre>
+<p>这不是我们想要的。</p>
+<p>所以：</p>
+<pre><code>continue</code></pre>
+<p>就是：</p>
+<blockquote><p><strong>结束本次循环剩余代码，直接进入下一轮。</strong></p></blockquote>
+<hr/>
+<h1 id="18-clear-怎么实现">18. <code>/clear</code> 怎么实现？</h1>
+<p>需求：</p>
+<pre><code>You: /clear</code></pre>
+<p>清空历史。</p>
+<p>上一章我们已经知道：</p>
+<pre><code>messages = []</code></pre>
+<p>所以：</p>
+<pre><code>messages.clear()</code></pre>
+<p>然后：</p>
+<pre><code>if user_input == &quot;/clear&quot;:
+    messages.clear()
+    print(&quot;AI: 聊天记录已清空。&quot;)
+    continue</code></pre>
+<p>现在：</p>
+<pre><code>messages
+ ↓
+List
+ ↓
+clear()
+ ↓
+[]</code></pre>
+<hr/>
+<h1 id="19-help">19. <code>/help</code></h1>
+<p>非常简单：</p>
+<pre><code>if user_input == &quot;/help&quot;:
+    print(&quot;&quot;&quot;
+可用命令：
+/help     查看帮助
+/history  查看历史
+/clear    清空历史
+/exit     退出程序
+&quot;&quot;&quot;)
+    continue</code></pre>
+<p>这里我们又遇到一个 Python 写法：</p>
+<pre><code>&quot;&quot;&quot;
+多行字符串
+&quot;&quot;&quot;</code></pre>
+<p>暂时只知道它可以方便地写多行文本即可。</p>
+<hr/>
+<h1 id="20-最终-assistant-v03">20. 最终 Assistant v0.3</h1>
+<p>现在把所有功能组合：</p>
+<pre><code>messages = []
+
+print(&quot;====================================&quot;)
+print(&quot; AI Engineer CLI Assistant&quot;)
+print(&quot; 输入 /help 查看帮助&quot;)
+print(&quot;====================================&quot;)
+
+while True:
+    user_input = input(&quot;\nYou: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        print(&quot;AI: 再见！&quot;)
+        break
+
+    if user_input == &quot;/help&quot;:
+        print(&quot;&quot;&quot;
+AI: 可用命令：
+
+/help
+/history
+/clear
+/exit
+&quot;&quot;&quot;)
+        continue
+
+    if user_input == &quot;/history&quot;:
+        print(&quot;\n========== Conversation ==========&quot;)
+
+        for message in messages:
+            print(
+                f&quot;{message[&#x27;role&#x27;]}: &quot;
+                f&quot;{message[&#x27;content&#x27;]}&quot;
+            )
+
+        print(&quot;===================================&quot;)
+        continue
+
+    if user_input == &quot;/clear&quot;:
+        messages.clear()
+        print(&quot;AI: 聊天记录已清空。&quot;)
+        continue
+
+    message = {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: user_input
+    }
+
+    messages.append(message)
+
+    print(&quot;AI: 我收到你的消息了。&quot;)</code></pre>
+<hr/>
+<h1 id="21-现在运行一次">21. 现在运行一次</h1>
+<figure class="figure"><img alt="真实运行：if/elif、while+break 主循环与字符频率统计" src="../../../../../../projects/01-python-ai-cli/assets/term-condition-loop.png" loading="lazy"/><figcaption>真实运行：if/elif、while+break 主循环与字符频率统计</figcaption></figure>
+<figure class="figure"><img alt="真实运行：第 3-4 节——while + break + continue 的 CLI 主循环，以及字符频率统计小程序" src="../../../../../../projects/01-python-ai-cli/assets/term-loop-main.png" loading="lazy"/><figcaption>真实运行：第 3-4 节——while + break + continue 的 CLI 主循环，以及字符频率统计小程序</figcaption></figure>
+<p>输入：</p>
+<pre><code>You: 你好</code></pre>
+<p>得到：</p>
+<pre><code>AI: 我收到你的消息了。</code></pre>
+<p>输入：</p>
+<pre><code>You: 我正在学习 Python</code></pre>
+<p>然后：</p>
+<pre><code>You: /history</code></pre>
+<p>应该看到：</p>
+<pre><code>========== Conversation ==========
+user: 你好
+user: 我正在学习 Python
+===================================</code></pre>
+<p>然后：</p>
+<pre><code>You: /clear</code></pre>
+<p>得到：</p>
+<pre><code>AI: 聊天记录已清空。</code></pre>
+<p>再：</p>
+<pre><code>You: /history</code></pre>
+<p>结果：</p>
+<pre><code>========== Conversation ==========
+===================================</code></pre>
+<p>最后：</p>
+<pre><code>You: /exit
+AI: 再见！</code></pre>
+<p>到这里：</p>
+<h1 id="project-01-v03-完成">Project 01 v0.3 完成</h1>
+<hr/>
+<h1 id="22-现在回头看我们到底为什么学-if">22. 现在回头看：我们到底为什么学 <code>if</code></h1>
+<p>不是为了记：</p>
+<pre><code>if condition:</code></pre>
+<p>而是项目真的出现了：</p>
+<pre><code>用户输入不同命令
+ ↓
+需要不同处理</code></pre>
+<p>于是：</p>
+<pre><code>/exit
+↓
+退出
+
+/history
+↓
+显示历史
+
+/clear
+↓
+清空
+
+/help
+↓
+显示帮助
+
+其他
+↓
+保存消息</code></pre>
+<p>所以：</p>
+<blockquote><p><code>if</code> 是程序根据不同情况做不同事情的能力。</p></blockquote>
+<hr/>
+<h1 id="23-为什么需要-while">23. 为什么需要 <code>while</code></h1>
+<p>不是为了背：</p>
+<pre><code>while condition:</code></pre>
+<p>而是：</p>
+<blockquote><p><strong>聊天程序不能执行一次就结束。</strong></p></blockquote>
+<p>所以：</p>
+<pre><code>输入
+ ↓
+处理
+ ↓
+输入
+ ↓
+处理
+ ↓
+输入
+ ↓
+处理
+ ↓
+/exit
+ ↓
+结束</code></pre>
+<p>这就是 <code>while</code> 的实际意义。</p>
+<hr/>
+<h1 id="24-为什么需要-for">24. 为什么需要 <code>for</code></h1>
+<p>也不是为了背：</p>
+<pre><code>for item in list:</code></pre>
+<p>而是：</p>
+<blockquote><p><strong>我们需要逐条处理 messages。</strong></p></blockquote>
+<p>例如：</p>
+<pre><code>for message in messages:
+    print(message[&quot;content&quot;])</code></pre>
+<p>它的意思是：</p>
+<pre><code>messages
+ ↓
+第一条
+ ↓
+处理
+
+第二条
+ ↓
+处理
+
+第三条
+ ↓
+处理</code></pre>
+<hr/>
+<h1 id="25-break-continue-的位置">25. <code>break</code> / <code>continue</code> 的位置</h1>
+<p>现在建立一个非常重要的直觉：</p>
+<pre><code>while
+ │
+ ├── break
+ │      ↓
+ │    整个循环结束
+ │
+ └── continue
+        ↓
+      本轮结束
+      下一轮继续</code></pre>
+<h3 id="break"><code>break</code></h3>
+<pre><code>if command == &quot;/exit&quot;:
+    break</code></pre>
+<p>意思：</p>
+<blockquote><p>直接退出循环。</p></blockquote>
+<h3 id="continue"><code>continue</code></h3>
+<pre><code>if command == &quot;/history&quot;:
+    ...
+    continue</code></pre>
+<p>意思：</p>
+<blockquote><p>本次 <code>/history</code> 已经处理完，不再执行后面的普通消息逻辑，直接进入下一轮。</p></blockquote>
+<hr/>
+<h1 id="26-一个非常重要的坑死循环">26. 一个非常重要的坑：死循环</h1>
+<p>例如：</p>
+<pre><code>while True:
+    print(&quot;Hello&quot;)</code></pre>
+<p>这就是无限循环。</p>
+<p>如果没有退出条件：</p>
+<blockquote><p>程序就不会自己结束。</p></blockquote>
+<p>所以任何 CLI 程序使用循环时，都应该考虑：</p>
+<pre><code>什么时候继续？
+什么时候退出？</code></pre>
+<p>我们的 Assistant：</p>
+<pre><code>while True</code></pre>
+<p>是可以接受的，因为存在：</p>
+<pre><code>if user_input == &quot;/exit&quot;:
+    break</code></pre>
+<hr/>
+<h1 id="27-第二个坑缩进">27. 第二个坑：缩进</h1>
+<p>Python 非常重视：</p>
+<h1 id="indentation缩进">Indentation【缩进】</h1>
+<p>例如：</p>
+<pre><code>if command == &quot;/exit&quot;:
+    print(&quot;bye&quot;)</code></pre>
+<p><code>print()</code> 前面的缩进表示：</p>
+<blockquote><p>这段代码属于 <code>if</code>。</p></blockquote>
+<p>错误写法：</p>
+<pre><code>if command == &quot;/exit&quot;:
+print(&quot;bye&quot;)</code></pre>
+<p>会产生语法错误。</p>
+<p>所以你要逐渐建立：</p>
+<pre><code>if
+    ↓
+缩进代码块
+
+for
+    ↓
+缩进代码块
+
+while
+    ↓
+缩进代码块</code></pre>
+<hr/>
+<h1 id="28-java-开发者注意">28. Java 开发者注意</h1>
+<p>Java 用：</p>
+<pre><code>if (condition) {
+    ...
+}</code></pre>
+<p>Python：</p>
+<pre><code>if condition:
+    ...</code></pre>
+<p>Java 使用：</p>
+<pre><code>{}</code></pre>
+<p>Python 主要通过：</p>
+<pre><code>:
++ 缩进</code></pre>
+<p>表示代码块。</p>
+<p>例如：</p>
+<h3 id="java">Java</h3>
+<pre><code>while (true) {
+    if (command.equals(&quot;/exit&quot;)) {
+        break;
+    }
+}</code></pre>
+<h3 id="python">Python</h3>
+<pre><code>while True:
+    if command == &quot;/exit&quot;:
+        break</code></pre>
+<p>逻辑其实非常相似。</p>
+<hr/>
+<h1 id="29-本章知识地图">29. 本章知识地图</h1>
+<pre><code>                AI CLI Assistant
+                       │
+                       ↓
+                  用户输入
+                       │
+                       ↓
+                    while
+                       │
+                       ↓
+                    判断
+                       │
+          ┌────────────┼────────────┐
+          ↓            ↓            ↓
+        if /exit    if /history   if /clear
+          │            │            │
+          ↓            ↓            ↓
+        break         for         clear()
+                       │
+                       ↓
+                   messages
+                       │
+                       ↓
+                    continue</code></pre>
+<h3 id="联系描述">联系描述</h3>
+<p><code>while</code> 负责让 CLI Assistant 持续运行，每一轮循环读取用户输入；<code>if</code> 根据输入内容判断用户是在发送普通消息，还是执行 <code>/help</code>、<code>/history</code>、<code>/clear</code>、<code>/exit</code> 等命令。<code>/history</code> 需要使用 <code>for</code> 遍历 <code>messages</code>，<code>/clear</code> 修改消息列表，<code>/exit</code> 使用 <code>break</code> 结束整个循环，而已经处理完成的命令则使用 <code>continue</code> 跳过剩余逻辑，直接进入下一轮等待。</p>
+<p>因此，本章真正建立的是：</p>
+<blockquote><p><strong>“程序控制流【Control Flow】”能力。</strong></p></blockquote>
+<hr/>
+<h1 id="30-control-flow控制流-是什么">30. <code>Control Flow【控制流】</code> 是什么？</h1>
+<p>你现在正式接触一个很重要的编程概念：</p>
+<blockquote><p><strong>控制流 = 程序决定下一步执行什么的方式。</strong></p></blockquote>
+<p>本章：</p>
+<pre><code>if
+ ↓
+条件判断
+
+for
+ ↓
+遍历
+
+while
+ ↓
+循环
+
+break
+ ↓
+结束循环
+
+continue
+ ↓
+跳过本轮</code></pre>
+<p>以后你写 Agent【智能体】时仍然会不断遇到这些思想。</p>
+<p>只不过：</p>
+<pre><code>Python 程序</code></pre>
+<p>会逐渐变成：</p>
+<pre><code>AI Agent</code></pre>
+<hr/>
+<h1 id="31-主动回忆">31. 主动回忆</h1>
+<p>现在不要看正文回答。</p>
+<h3 id="q1">Q1</h3>
+<p>为什么我们的 AI CLI Assistant 需要 <code>while</code>，而不能只使用一次 <code>input()</code>？</p>
+<hr/>
+<h3 id="q2">Q2</h3>
+<p>解释：</p>
+<pre><code>if user_input == &quot;/exit&quot;:
+    break</code></pre>
+<p>这里 <code>if</code> 和 <code>break</code> 分别负责什么？</p>
+<hr/>
+<h3 id="q3">Q3</h3>
+<p>为什么 <code>/history</code> 需要：</p>
+<pre><code>for message in messages:</code></pre>
+<p>而不是 <code>while</code>？</p>
+<hr/>
+<h3 id="q4">Q4</h3>
+<p>为什么 <code>/history</code> 处理完后需要：</p>
+<pre><code>continue</code></pre>
+<hr/>
+<h3 id="q5">Q5</h3>
+<p>下面两者有什么本质区别？</p>
+<pre><code>break</code></pre>
+<p>和：</p>
+<pre><code>continue</code></pre>
+<hr/>
+<h3 id="q6">Q6</h3>
+<p>如果我们的程序没有：</p>
+<pre><code>if user_input == &quot;/exit&quot;:
+    break</code></pre>
+<p>会发生什么？</p>
+<hr/>
+<h3 id="q7">Q7</h3>
+<p>结合整个 AI CLI Assistant，解释：</p>
+<pre><code>while
+if
+for
+break
+continue</code></pre>
+<p>分别解决了什么项目问题。</p>
+<p>不要背定义，用项目来解释。</p>
+<hr/>
+<h1 id="32-本章-challenge">32. 本章 Challenge</h1>
+<p>现在不要复制上面的最终代码。</p>
+<p>从空文件开始自己写：</p>
+<h1 id="ai-cli-assistant-v03">AI CLI Assistant v0.3</h1>
+<p>要求：</p>
+<pre><code>启动
+ ↓
+显示欢迎信息
+ ↓
+while 循环
+ ↓
+等待用户输入</code></pre>
+<p>支持：</p>
+<pre><code>/help
+/history
+/clear
+/exit</code></pre>
+<p>普通文本：</p>
+<pre><code>保存为 user message</code></pre>
+<p><code>/history</code>：</p>
+<pre><code>遍历 messages</code></pre>
+<p><code>/clear</code>：</p>
+<pre><code>清空 messages</code></pre>
+<p><code>/exit</code>：</p>
+<pre><code>退出程序</code></pre>
+<hr/>
+<h1 id="33-challenge-进阶">33. Challenge 进阶</h1>
+<p>增加一个：</p>
+<pre><code>/size</code></pre>
+<p>例如：</p>
+<pre><code>You: /size
+AI: 当前共有 5 条消息。</code></pre>
+<p>提示：</p>
+<p>你需要思考：</p>
+<blockquote><p><strong>如何知道一个 List 里面有多少个元素？</strong></p></blockquote>
+<p>这一题先不要查。</p>
+<p>自己想办法。</p>
+<hr/>
+<h1 id="34-再做一个需求变化">34. 再做一个需求变化</h1>
+<p>增加：</p>
+<pre><code>/last</code></pre>
+<p>功能：</p>
+<pre><code>You: /last
+
+AI:
+最后一条消息：
+user: 我正在学习 Python</code></pre>
+<p>你需要自己思考：</p>
+<blockquote><p>如果 <code>messages</code> 是一个 List，怎么拿到最后一条？</p></blockquote>
+<p>这会自然引出下一步 Python 数据结构知识。</p>
+<hr/>
+<h1 id="35-项目版本升级">35. 项目版本升级</h1>
+<p>现在我们的主线项目形成：</p>
+<pre><code>Project 01
+Python AI CLI Assistant
+
+v0.1
+基础输入输出
+✅
+
+v0.2
+List / Dict / JSON / Messages
+✅
+
+v0.3
+Condition / Loop
+🔄
+
+v0.4
+Function
+⬜
+
+v0.5
+Module
+⬜
+
+v0.6
+Exception
+⬜
+
+v0.7
+File / JSON Persistence
+⬜
+
+v0.8
+HTTP / API
+⬜
+
+v0.9
+LLM Streaming
+⬜
+
+v1.0
+完整 AI CLI Assistant
+⬜</code></pre>
+<p>所以你会发现：</p>
+<blockquote><p><strong>我们不是学完 Python 再做项目。</strong></p></blockquote>
+<p>而是：</p>
+<pre><code>项目
+ ↓
+Python 基础
+ ↓
+项目升级
+ ↓
+更多 Python
+ ↓
+AI API
+ ↓
+真正的 AI Assistant</code></pre>
+<p>这就是这套课程和普通 Python 教程最大的区别。</p>
+<hr/>
+<h1 id="36-本章项目文件">36. 本章项目文件</h1>
+<p>本章建议保存：</p>
+<pre><code>projects/01-python-ai-cli/
+└── exercises/
+    └── 03-condition-loop/
+        ├── README.md
+        ├── lesson.md
+        ├── demo/
+        │   ├── 01-if-command.py
+        │   ├── 02-while-chat.py
+        │   ├── 03-for-history.py
+        │   ├── 04-break-continue.py
+        │   └── 05-cli-assistant.py
+        │
+        └── exercises/
+            └── README.md</code></pre>
+<p>完整主线项目：</p>
+<pre><code>projects/
+└── 01-python-ai-cli/</code></pre>
+<p>以后课程里的 Demo 可以越来越完善，但：</p>
+<blockquote><p><strong>真正的可运行项目代码只维护在 <code>projects/01-python-ai-cli/</code>。</strong></p></blockquote>
+<p>这样课程和项目不会混乱。</p>
+<hr/>
+<h1 id="37-本章完成标准">37. 本章完成标准</h1>
+<h3 id="level-1">Level 1</h3>
+<p>看懂：</p>
+<pre><code>if
+for
+while</code></pre>
+<h3 id="level-2">Level 2</h3>
+<p>自己写：</p>
+<pre><code>if command == &quot;/exit&quot;:
+    break</code></pre>
+<h3 id="level-3">Level 3</h3>
+<p>自己完成：</p>
+<pre><code>/help
+/history
+/clear
+/exit</code></pre>
+<h3 id="level-4">Level 4</h3>
+<p>能解释：</p>
+<pre><code>while 为什么存在？
+for 为什么存在？
+break 和 continue 什么区别？</code></pre>
+<h3 id="level-5">Level 5</h3>
+<p><strong>不看答案，从空文件重新实现 AI CLI Assistant v0.3。</strong></p>
+<h3 id="level-6">Level 6</h3>
+<p>能够自己增加：</p>
+<pre><code>/size
+/last</code></pre>
+<p>这时候才说明你真正开始掌握 Python 的控制流。</p>
+<hr/>
+<h1 id="38-与后面-ai-开发的连接">38. 与后面 AI 开发的连接</h1>
+<p>这一章看起来还是 Python。</p>
+<p>但实际上已经开始建立 AI 工程的程序骨架：</p>
+<pre><code>用户
+ ↓
+程序循环
+ ↓
+判断输入
+ ↓
+执行动作
+ ↓
+保存状态
+ ↓
+继续运行</code></pre>
+<p>以后：</p>
+<pre><code>用户
+ ↓
+Agent Loop【智能体循环】
+ ↓
+判断任务
+ ↓
+调用 Tool【工具】
+ ↓
+观察结果
+ ↓
+继续执行
+ ↓
+完成任务</code></pre>
+<p>两者其实有很强的思想连续性。</p>
+<p>所以你现在学的 <code>while + if</code>，未来会帮助理解：</p>
+<blockquote><p><strong>Agent 为什么本质上也是一个循环运行、根据状态不断决定下一步动作的程序。</strong></p></blockquote>
+<hr/>
+<h1 id="39-本章一句话总结">39. 本章一句话总结</h1>
+<blockquote><p><strong><code>if</code> 让程序能够根据情况做不同的事，<code>while</code> 让 AI CLI Assistant 持续运行，<code>for</code> 让程序能够遍历聊天记录，<code>break</code> 控制程序退出，<code>continue</code> 控制当前命令处理结束后进入下一轮。</strong></p></blockquote>
+<hr/>
+<h1 id="下一章">下一章</h1>
+<h1 id="lesson-04-function把-ai-cli-assistant-从能跑变成可维护">Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”</h1>
+<p>下一章我们继续沿着同一个项目，不换题：</p>
+<pre><code>现在：
+
+while
+ ├── if /help
+ ├── if /history
+ ├── if /clear
+ ├── if /exit
+ └── 普通消息</code></pre>
+<p>问题马上出现：</p>
+<blockquote><p><strong>代码越来越长，怎么办？</strong></p></blockquote>
+<p>于是我们自然需要：</p>
+<pre><code>Function【函数】</code></pre>
+<p>把：</p>
+<pre><code>显示帮助
+显示历史
+清空历史
+处理用户消息
+显示消息</code></pre>
+<p>分别拆成函数。</p>
+<p>这样我们会第一次真正进入：</p>
+<pre><code>函数
+ ↓
+参数
+ ↓
+返回值
+ ↓
+模块化
+ ↓
+AI Client 封装</code></pre>
+<p>然后继续向真正的 LLM API 迈进。</p>
+</main>
+</body>
+</html>

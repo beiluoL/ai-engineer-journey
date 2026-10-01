@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day12 企业级部署升级</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day12-企业级部署升级">Day12 企业级部署升级</h1>
+<h1 id="docker-compose-vllm-nginx-https-api鉴权-监控">Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控</h1>
+<p>昨天 Day11 我们完成了：</p>
+<blockquote><p><strong>单台 GPU 服务器运行 Qwen + vLLM + Spring Boot 调用</strong></p></blockquote>
+<p>但是那个版本更像：</p>
+<blockquote><p>“开发环境 Demo”</p></blockquote>
+<p>企业不会直接这样上线。</p>
+<p>今天升级目标：</p>
+<p>从：</p>
+<pre><code> id=&quot;a1lq7g&quot;
+Spring Boot
+
+↓
+
+vLLM
+
+↓
+
+Qwen
+
+↓
+
+GPU</code></pre>
+<p>升级为：</p>
+<pre><code> id=&quot;n3bq4j&quot;
+                 用户
+
+                  |
+
+                  ↓
+
+              HTTPS
+
+
+                  |
+
+                  ↓
+
+
+              Nginx
+
+
+                  |
+
+        +---------+----------+
+
+        |                    |
+
+
+        ↓                    ↓
+
+
+   Spring Boot          vLLM API
+
+
+        |                    |
+
+        ↓                    ↓
+
+
+    业务逻辑          Qwen模型
+
+
+                         |
+
+                         ↓
+
+
+                      GPU
+
+
+                         |
+
+                         ↓
+
+
+              Prometheus监控
+
+                         |
+
+                         ↓
+
+                    Grafana
+</code></pre>
+<hr/>
+<h1 id="一今天完成什么">一、今天完成什么？</h1>
+<p>今天完成：</p>
+<table><thead><tr><th>能力</th><th>状态</th></tr></thead><tbody><tr><td>Docker Compose部署</td><td>✅</td></tr><tr><td>vLLM容器化</td><td>✅</td></tr><tr><td>Nginx反向代理</td><td>✅</td></tr><tr><td>HTTPS证书</td><td>✅</td></tr><tr><td>API Key鉴权</td><td>✅</td></tr><tr><td>访问日志</td><td>✅</td></tr><tr><td>GPU监控</td><td>✅</td></tr><tr><td>模型服务监控</td><td>✅</td></tr></tbody></table>
+<hr/>
+<h1 id="二为什么企业不用直接运行-vllm">二、为什么企业不用直接运行 vLLM？</h1>
+<p>昨天：</p>
+<pre><code>vllm serve xxx</code></pre>
+<p>问题：</p>
+<h3 id="1-服务挂了怎么办">1. 服务挂了怎么办？</h3>
+<p>没有自动恢复。</p>
+<hr/>
+<h3 id="2-服务器重启怎么办">2. 服务器重启怎么办？</h3>
+<p>模型不会自动启动。</p>
+<hr/>
+<h3 id="3-如何管理多个服务">3. 如何管理多个服务？</h3>
+<p>例如：</p>
+<pre><code>Spring Boot
+
+Redis
+
+Milvus
+
+vLLM
+
+Nginx</code></pre>
+<p>手动启动很麻烦。</p>
+<hr/>
+<p>所以使用：</p>
+<h1 id="docker-compose">Docker Compose</h1>
+<hr/>
+<h1 id="三生产目录设计">三、生产目录设计</h1>
+<p>服务器：</p>
+<p>创建：</p>
+<pre><code>mkdir -p /opt/ai-platform
+
+cd /opt/ai-platform</code></pre>
+<p>目录：</p>
+<pre><code> id=&quot;7bzqwr&quot;
+/opt/ai-platform
+
+├── docker-compose.yml
+
+├── nginx
+
+│   └── nginx.conf
+
+
+├── models
+
+│   └── qwen2.5-7b
+
+
+├── prometheus
+
+│   └── prometheus.yml
+
+
+└── logs</code></pre>
+<hr/>
+<h1 id="四docker-compose是什么">四、Docker Compose是什么？</h1>
+<p>简单理解：</p>
+<p>以前：</p>
+<p>启动服务：</p>
+<pre><code>docker run xxx
+docker run xxx
+docker run xxx</code></pre>
+<p>现在：</p>
+<p>一个文件：</p>
+<pre><code>docker-compose.yml</code></pre>
+<p>定义：</p>
+<pre><code>有什么服务
+
+用什么镜像
+
+多少资源
+
+怎么连接</code></pre>
+<p>然后：</p>
+<p>一句：</p>
+<pre><code>docker compose up</code></pre>
+<p>全部启动。</p>
+<hr/>
+<h1 id="五部署-vllm-容器">五、部署 vLLM 容器</h1>
+<p>创建：</p>
+<pre><code>vim docker-compose.yml</code></pre>
+<p>第一版：</p>
+<pre><code>version: &quot;3.8&quot;
+
+
+services:
+
+  vllm:
+
+    image:
+      vllm/vllm-openai:latest
+
+
+    container_name:
+      qwen-vllm
+
+
+    restart:
+      always
+
+
+    runtime:
+      nvidia
+
+
+    ports:
+
+      - &quot;8000:8000&quot;
+
+
+    volumes:
+
+      - ./models:/models
+
+
+    command:
+
+      &gt;
+      --model /models/qwen2.5-7b
+
+      --host 0.0.0.0
+
+      --port 8000
+
+      --dtype auto</code></pre>
+<hr/>
+<p>解释：</p>
+<h2 id="image">image</h2>
+<pre><code>vllm/vllm-openai</code></pre>
+<p>官方 vLLM 镜像。</p>
+<hr/>
+<h2 id="runtime">runtime</h2>
+<pre><code>nvidia</code></pre>
+<p>允许：</p>
+<p>Docker使用GPU。</p>
+<hr/>
+<h2 id="volumes">volumes</h2>
+<pre><code>./models:/models</code></pre>
+<p>宿主机：</p>
+<pre><code>/models</code></pre>
+<p>映射：</p>
+<p>容器：</p>
+<pre><code>/models</code></pre>
+<hr/>
+<h1 id="六启动-vllm">六、启动 vLLM</h1>
+<p>执行：</p>
+<pre><code>docker compose up -d</code></pre>
+<p>查看：</p>
+<pre><code>docker ps</code></pre>
+<p>应该：</p>
+<pre><code>qwen-vllm
+
+Up</code></pre>
+<hr/>
+<p>日志：</p>
+<pre><code>docker logs -f qwen-vllm</code></pre>
+<p>看到：</p>
+<pre><code>Model loaded
+Application startup complete</code></pre>
+<p>成功。</p>
+<hr/>
+<h1 id="七增加-spring-boot-服务">七、增加 Spring Boot 服务</h1>
+<p>docker-compose：</p>
+<p>增加：</p>
+<pre><code>springboot:
+
+  image:
+    java-ai-agent:latest
+
+
+  container_name:
+    java-agent
+
+
+  ports:
+
+    - &quot;8080:8080&quot;
+
+
+  depends_on:
+
+    - vllm</code></pre>
+<p>现在：</p>
+<p>两个服务：</p>
+<pre><code> id=&quot;k5qzbh&quot;
+docker-compose
+
+├── vllm
+
+└── springboot</code></pre>
+<hr/>
+<h1 id="八nginx作为入口">八、Nginx作为入口</h1>
+<p>为什么需要？</p>
+<p>不要让用户直接访问：</p>
+<pre><code>服务器IP:8000</code></pre>
+<p>应该：</p>
+<pre><code>https://ai.xxx.com</code></pre>
+<hr/>
+<p>安装：</p>
+<pre><code>mkdir nginx</code></pre>
+<p>创建：</p>
+<pre><code>vim nginx/nginx.conf</code></pre>
+<hr/>
+<p>配置：</p>
+<pre><code>server {
+
+
+listen 80;
+
+
+server_name ai.example.com;
+
+
+
+location / {
+
+
+proxy_pass 
+http://vllm:8000;
+
+
+
+proxy_set_header Host $host;
+
+
+proxy_set_header X-Real-IP $remote_addr;
+
+
+}
+
+}</code></pre>
+<hr/>
+<p>现在：</p>
+<p>链路：</p>
+<pre><code>用户
+
+↓
+
+Nginx
+
+↓
+
+vLLM</code></pre>
+<hr/>
+<h1 id="九https">九、HTTPS</h1>
+<p>生产：</p>
+<p>必须 HTTPS。</p>
+<p>推荐：</p>
+<p>Let&#x27;s Encrypt 免费证书。</p>
+<p>安装：</p>
+<pre><code>apt install certbot</code></pre>
+<p>申请：</p>
+<pre><code>certbot --nginx</code></pre>
+<p>成功：</p>
+<p>得到：</p>
+<pre><code>https://ai.example.com</code></pre>
+<hr/>
+<h1 id="十api鉴权">十、API鉴权</h1>
+<p>现在：</p>
+<p>任何人：</p>
+<p>都可以调用模型。</p>
+<p>危险。</p>
+<p>需要：</p>
+<p>API Key。</p>
+<p>例如：</p>
+<p>请求：</p>
+<pre><code>Authorization:
+
+Bearer sk-java-ai-xxxx</code></pre>
+<hr/>
+<p>Nginx：</p>
+<p>增加：</p>
+<pre><code>location /v1 {
+
+
+if ($http_authorization = &quot;&quot;) {
+
+return 401;
+
+}
+
+
+proxy_pass
+http://vllm:8000;
+
+}</code></pre>
+<hr/>
+<p>更企业化：</p>
+<p>增加：</p>
+<p>Spring Boot Gateway。</p>
+<p>流程：</p>
+<pre><code>用户
+
+↓
+
+API Gateway
+
+↓
+
+验证Token
+
+↓
+
+调用vLLM</code></pre>
+<hr/>
+<h1 id="十一限流">十一、限流</h1>
+<p>为什么？</p>
+<p>防止：</p>
+<p>一个用户：</p>
+<p>无限请求。</p>
+<p>例如：</p>
+<p>1000个请求：</p>
+<p>瞬间打爆GPU。</p>
+<hr/>
+<p>Nginx：</p>
+<pre><code>limit_req_zone
+
+$binary_remote_addr
+
+zone=ai_limit:10m
+
+rate=5r/s;</code></pre>
+<p>表示：</p>
+<p>一个IP：</p>
+<p>每秒最多5次。</p>
+<hr/>
+<h1 id="十二监控系统">十二、监控系统</h1>
+<p>企业必须知道：</p>
+<p>模型状态。</p>
+<p>监控：</p>
+<h2 id="gpu">GPU</h2>
+<p>例如：</p>
+<p>显存：</p>
+<pre><code>20GB / 24GB</code></pre>
+<p>GPU利用率：</p>
+<pre><code>95%</code></pre>
+<hr/>
+<h2 id="vllm">vLLM</h2>
+<p>监控：</p>
+<ul class="lvl"><li>请求数</li></ul>
+<ul class="lvl"><li>延迟</li></ul>
+<ul class="lvl"><li>Token速度</li></ul>
+<ul class="lvl"><li>队列长度</li></ul>
+<hr/>
+<h2 id="prometheus">Prometheus</h2>
+<p>架构：</p>
+<pre><code> id=&quot;m6rj88&quot;
+vLLM
+
+↓
+
+Metrics接口
+
+↓
+
+Prometheus
+
+↓
+
+Grafana
+
+↓
+
+Dashboard</code></pre>
+<hr/>
+<h1 id="十三prometheus部署">十三、Prometheus部署</h1>
+<p>docker-compose增加：</p>
+<pre><code>prometheus:
+
+ image:
+  prom/prometheus
+
+
+ ports:
+
+  - &quot;9090:9090&quot;
+
+
+ volumes:
+
+  - ./prometheus:/etc/prometheus</code></pre>
+<hr/>
+<p>配置：</p>
+<p>prometheus.yml</p>
+<pre><code>scrape_configs:
+
+
+- job_name:
+  vllm
+
+
+  static_configs:
+
+
+  - targets:
+
+    - vllm:8000</code></pre>
+<hr/>
+<h1 id="十四grafana">十四、Grafana</h1>
+<p>增加：</p>
+<pre><code>grafana:
+
+ image:
+  grafana/grafana
+
+
+ ports:
+
+ - &quot;3000:3000&quot;</code></pre>
+<p>访问：</p>
+<pre><code>http://服务器:3000</code></pre>
+<p>添加：</p>
+<p>Prometheus数据源。</p>
+<hr/>
+<h1 id="十五生产级模型服务完整链路">十五、生产级模型服务完整链路</h1>
+<p>现在：</p>
+<pre><code> id=&quot;0p88aj&quot;
+用户
+
+↓
+
+HTTPS
+
+↓
+
+Nginx
+
+↓
+
+API鉴权
+
+↓
+
+Spring Boot
+
+↓
+
+LangChain4j
+
+↓
+
+vLLM API
+
+↓
+
+Qwen
+
+↓
+
+GPU
+
+↓
+
+返回</code></pre>
+<hr/>
+<h1 id="十六成本估算">十六、成本估算</h1>
+<h2 id="个人项目">个人项目</h2>
+<p>RTX4090：</p>
+<p>运行：</p>
+<p>8小时/天</p>
+<p>费用：</p>
+<pre><code>约500元/月</code></pre>
+<hr/>
+<h2 id="小团队">小团队</h2>
+<p>A10：</p>
+<p>24小时运行：</p>
+<pre><code>2000～5000元/月</code></pre>
+<hr/>
+<h2 id="企业生产">企业生产</h2>
+<p>A100：</p>
+<pre><code>10000元+/月</code></pre>
+<hr/>
+<h1 id="十七现在你的能力升级">十七、现在你的能力升级</h1>
+<p>之前：</p>
+<blockquote><p>我会调用大模型 API。</p></blockquote>
+<p>现在：</p>
+<p>你可以说：</p>
+<blockquote><p>我完成过开源大模型私有化部署，基于 vLLM 提供 OpenAI 兼容接口，通过 Docker Compose 管理服务，使用 Nginx 做 HTTPS 网关和鉴权，并通过 Prometheus/Grafana 对模型服务进行监控。</p></blockquote>
+<p>这就是：</p>
+<p><strong>AI Application Engineer【AI应用工程师】级别能力。</strong></p>
+<hr/>
+<h1 id="下一节-day13">下一节 Day13</h1>
+<h2 id="企业级-lora-微调部署数据-qlora训练-模型合并-vllm加载-灰度发布">《企业级 LoRA 微调部署：数据 → QLoRA训练 → 模型合并 → vLLM加载 → 灰度发布》</h2>
+<p>我们会完成：</p>
+<pre><code>业务数据
+
+↓
+
+LLaMA-Factory
+
+↓
+
+QLoRA
+
+↓
+
+LoRA Adapter
+
+↓
+
+合并模型
+
+↓
+
+vLLM部署
+
+↓
+
+线上A/B测试</code></pre>
+<p>这一步就是：</p>
+<p><strong>真正企业的大模型定制流程。</strong></p>
+</main>
+</body>
+</html>

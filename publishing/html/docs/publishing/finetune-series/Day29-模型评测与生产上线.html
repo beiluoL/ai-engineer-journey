@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day29：模型评测与生产上线</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day29模型评测与生产上线">Day29：模型评测与生产上线</h1>
+<h1 id="evaluation-model-registry-vllm-灰度发布">Evaluation → Model Registry → vLLM → 灰度发布</h1>
+<p>前面 Day28：</p>
+<p>你已经完成：</p>
+<pre><code>GPU服务器
+
+↓
+
+CUDA
+
+↓
+
+PyTorch
+
+↓
+
+LLaMA-Factory
+
+↓
+
+Qwen
+
+↓
+
+QLoRA
+
+↓
+
+LoRA Adapter</code></pre>
+<p>现在进入企业真正落地阶段。</p>
+<p>因为企业不会接受：</p>
+<blockquote><p>“我训练了一个模型，看起来效果不错。”</p></blockquote>
+<p>企业关心：</p>
+<ul class="lvl"><li><strong>效果怎么样？</strong></li></ul>
+<ul class="lvl"><li><strong>有没有变差？</strong></li></ul>
+<ul class="lvl"><li><strong>怎么上线？</strong></li></ul>
+<ul class="lvl"><li><strong>怎么回滚？</strong></li></ul>
+<ul class="lvl"><li><strong>怎么监控？</strong></li></ul>
+<p>所以今天学习：</p>
+<h1 id="model-lifecycle模型生命周期管理">Model Lifecycle【模型生命周期管理】</h1>
+<hr/>
+<h1 id="一企业模型完整生命周期">一、企业模型完整生命周期</h1>
+<p>一个模型从研发到上线：</p>
+<pre><code>
+数据准备 Dataset
+
+        ↓
+
+训练 Training
+
+        ↓
+
+评测 Evaluation
+
+        ↓
+
+模型管理 Model Registry
+
+        ↓
+
+部署 Serving
+
+        ↓
+
+灰度发布 Canary Release
+
+        ↓
+
+监控 Monitoring
+
+        ↓
+
+持续优化 Improvement</code></pre>
+<hr/>
+<h1 id="二为什么需要模型评测">二、为什么需要模型评测？</h1>
+<p>假设：</p>
+<p>你训练了：</p>
+<p>Java Interview Qwen。</p>
+<p>训练前：</p>
+<p>问题：</p>
+<blockquote><p>HashMap为什么线程不安全？</p></blockquote>
+<p>回答：</p>
+<p>70分。</p>
+<hr/>
+<p>微调后：</p>
+<p>可能：</p>
+<p>90分。</p>
+<p>很好。</p>
+<p>但是：</p>
+<p>另一个问题：</p>
+<blockquote><p>JVM G1垃圾回收流程？</p></blockquote>
+<p>可能：</p>
+<p>下降。</p>
+<hr/>
+<p>所以：</p>
+<p>不能只测试一个问题。</p>
+<p>需要：</p>
+<p>系统评估。</p>
+<hr/>
+<h1 id="三evaluation是什么">三、Evaluation是什么？</h1>
+<h2 id="evaluation">Evaluation</h2>
+<p>中文：</p>
+<p>评测。</p>
+<p>作用：</p>
+<p>判断：</p>
+<p>模型质量。</p>
+<hr/>
+<p>包括：</p>
+<h2 id="1-自动评测">1. 自动评测</h2>
+<p>机器评分。</p>
+<h2 id="2-人工评测">2. 人工评测</h2>
+<p>专家评分。</p>
+<h2 id="3-线上反馈">3. 线上反馈</h2>
+<p>用户真实使用。</p>
+<hr/>
+<h1 id="四golden-dataset黄金测试集">四、Golden Dataset【黄金测试集】</h1>
+<p>企业最重要。</p>
+<p>什么是：</p>
+<p>Golden Dataset？</p>
+<p>中文：</p>
+<p>黄金测试数据集。</p>
+<hr/>
+<p>简单：</p>
+<p>一套固定标准题。</p>
+<p>例如：</p>
+<p>Java面试模型：</p>
+<pre><code>[
+{
+&quot;question&quot;:
+&quot;HashMap为什么线程不安全?&quot;,
+
+&quot;expected&quot;:
+&quot;数组+链表+红黑树，JDK8...&quot;
+},
+
+{
+&quot;question&quot;:
+&quot;AQS是什么?&quot;,
+
+&quot;expected&quot;:
+&quot;同步器框架...&quot;
+}
+]</code></pre>
+<hr/>
+<p>每次模型升级：</p>
+<p>重新测试。</p>
+<hr/>
+<p>流程：</p>
+<pre><code>
+新模型
+
+↓
+
+回答1000道标准题
+
+↓
+
+自动评分
+
+↓
+
+比较旧模型
+
+↓
+
+决定是否上线</code></pre>
+<hr/>
+<h1 id="五企业评测指标">五、企业评测指标</h1>
+<h2 id="1-accuracy准确率">1. Accuracy【准确率】</h2>
+<p>回答是否正确。</p>
+<p>例如：</p>
+<p>100题：</p>
+<p>90正确。</p>
+<p>90%。</p>
+<hr/>
+<h2 id="2-relevance相关性">2. Relevance【相关性】</h2>
+<p>回答是否相关。</p>
+<p>例如：</p>
+<p>问：</p>
+<p>Java。</p>
+<p>回答：</p>
+<p>Python。</p>
+<p>低。</p>
+<hr/>
+<h2 id="3-faithfulness忠实性">3. Faithfulness【忠实性】</h2>
+<p>中文：</p>
+<p>真实性。</p>
+<p>RAG特别重要。</p>
+<p>判断：</p>
+<p>有没有胡编。</p>
+<hr/>
+<h2 id="4-latency延迟">4. Latency【延迟】</h2>
+<p>响应速度。</p>
+<p>例如：</p>
+<p>P95：</p>
+<p>2秒。</p>
+<hr/>
+<h2 id="5-cost成本">5. Cost【成本】</h2>
+<p>Token消耗。</p>
+<hr/>
+<h1 id="六rag专项评测">六、RAG专项评测</h1>
+<p>企业知识库：</p>
+<p>重点。</p>
+<p>链路：</p>
+<pre><code>
+问题
+
+↓
+
+Retriever
+
+↓
+
+召回文档
+
+↓
+
+LLM
+
+↓
+
+答案</code></pre>
+<hr/>
+<p>需要评估：</p>
+<hr/>
+<h2 id="1-recallk">1. Recall@K</h2>
+<p>召回率。</p>
+<p>例如：</p>
+<p>Top5：</p>
+<p>有没有找到正确资料。</p>
+<hr/>
+<h2 id="2-precision">2. Precision</h2>
+<p>准确率。</p>
+<p>召回：</p>
+<p>10个。</p>
+<p>真正有用：</p>
+<p>8个。</p>
+<p>80%。</p>
+<hr/>
+<h2 id="3-answer-quality">3. Answer Quality</h2>
+<p>最终回答质量。</p>
+<hr/>
+<h1 id="七自动评测框架">七、自动评测框架</h1>
+<p>常见：</p>
+<h2 id="1-ragas">1. RAGAS</h2>
+<p>用于：</p>
+<p>RAG评测。</p>
+<p>指标：</p>
+<ul class="lvl"><li>Faithfulness</li></ul>
+<ul class="lvl"><li>Answer relevance</li></ul>
+<ul class="lvl"><li>Context precision</li></ul>
+<hr/>
+<h2 id="2-langsmith">2. LangSmith</h2>
+<p>LangChain生态。</p>
+<p>功能：</p>
+<ul class="lvl"><li>Trace</li></ul>
+<ul class="lvl"><li>Evaluation</li></ul>
+<ul class="lvl"><li>Debug</li></ul>
+<hr/>
+<h2 id="3-openai-evals">3. OpenAI Evals</h2>
+<p>模型评测框架。</p>
+<hr/>
+<h1 id="八模型版本管理">八、模型版本管理</h1>
+<p>企业不会：</p>
+<p>覆盖模型。</p>
+<p>例如：</p>
+<p>现在：</p>
+<p>v1。</p>
+<p>训练新版本：</p>
+<p>v2。</p>
+<p>保存：</p>
+<pre><code>
+qwen-java-v1
+
+
+qwen-java-v2
+
+
+qwen-java-v3</code></pre>
+<hr/>
+<p>类似：</p>
+<p>Git。</p>
+<p>代码：</p>
+<pre><code>commit
+
+↓
+
+version</code></pre>
+<p>模型：</p>
+<pre><code>model version
+
+↓
+
+registry</code></pre>
+<hr/>
+<h1 id="九model-registry是什么">九、Model Registry是什么？</h1>
+<p>中文：</p>
+<p>模型仓库。</p>
+<p>作用：</p>
+<p>管理模型生命周期。</p>
+<p>保存：</p>
+<pre><code>
+模型文件
+
+版本
+
+训练数据
+
+参数
+
+评测结果
+
+创建时间
+
+负责人</code></pre>
+<hr/>
+<p>常见工具：</p>
+<h2 id="mlflow">MLflow</h2>
+<p>非常流行。</p>
+<p>架构：</p>
+<pre><code>
+Training
+
+↓
+
+MLflow Tracking
+
+↓
+
+Model Registry
+
+↓
+
+Deployment</code></pre>
+<hr/>
+<h1 id="十mlflow简单理解">十、MLflow简单理解</h1>
+<p>类似：</p>
+<p>GitHub + Maven仓库。</p>
+<p>代码：</p>
+<p>Git管理。</p>
+<p>模型：</p>
+<p>MLflow管理。</p>
+<hr/>
+<p>记录：</p>
+<p>例如：</p>
+<pre><code>
+{
+model:
+
+&quot;java-qwen-v2&quot;,
+
+accuracy:
+
+0.92,
+
+dataset:
+
+&quot;java-interview-v3&quot;,
+
+creator:
+
+&quot;AI Team&quot;
+
+}</code></pre>
+<hr/>
+<h1 id="十一模型部署到vllm">十一、模型部署到vLLM</h1>
+<p>训练：</p>
+<p>得到：</p>
+<p>LoRA。</p>
+<p>生产：</p>
+<p>需要：</p>
+<p>模型服务。</p>
+<hr/>
+<p>流程：</p>
+<pre><code>
+LoRA Adapter
+
+
+↓
+
+Merge
+
+
+↓
+
+完整模型
+
+
+↓
+
+vLLM
+
+
+↓
+
+OpenAI API
+
+
+↓
+
+业务系统</code></pre>
+<hr/>
+<h1 id="十二merge模型">十二、Merge模型</h1>
+<p>为什么合并？</p>
+<p>训练：</p>
+<p>得到：</p>
+<pre><code>
+adapter_model.safetensors</code></pre>
+<p>需要：</p>
+<p>基础：</p>
+<pre><code>Qwen
+
++
+
+Adapter</code></pre>
+<p>生产方便：</p>
+<p>合并：</p>
+<pre><code>Qwen-Java-Finetuned</code></pre>
+<hr/>
+<h1 id="十三vllm部署">十三、vLLM部署</h1>
+<p>例如：</p>
+<p>启动：</p>
+<pre><code>python -m vllm.entrypoints.openai.api_server \
+--model ./java-qwen</code></pre>
+<p>启动后：</p>
+<p>接口：</p>
+<pre><code>POST
+
+/v1/chat/completions</code></pre>
+<hr/>
+<p>Spring Boot调用：</p>
+<pre><code>
+用户
+
+↓
+
+Spring Boot
+
+↓
+
+vLLM API
+
+↓
+
+Java专家模型
+
+↓
+
+回答</code></pre>
+<hr/>
+<h1 id="十四为什么企业不用直接替换模型">十四、为什么企业不用直接替换模型？</h1>
+<p>因为风险。</p>
+<p>例如：</p>
+<p>旧模型：</p>
+<p>很好。</p>
+<p>新模型：</p>
+<p>可能：</p>
+<ul class="lvl"><li>某些问题下降</li></ul>
+<ul class="lvl"><li>速度慢</li></ul>
+<ul class="lvl"><li>成本高</li></ul>
+<p>所以：</p>
+<p>灰度发布。</p>
+<hr/>
+<h1 id="十五canary-release灰度发布">十五、Canary Release【灰度发布】</h1>
+<p>中文：</p>
+<p>金丝雀发布。</p>
+<p>思想：</p>
+<p>少量用户测试。</p>
+<hr/>
+<p>例如：</p>
+<p>10000用户。</p>
+<p>先：</p>
+<pre><code>
+旧模型:
+
+90%
+
+
+新模型:
+
+10%</code></pre>
+<hr/>
+<p>观察：</p>
+<ul class="lvl"><li>成功率</li></ul>
+<ul class="lvl"><li>用户反馈</li></ul>
+<ul class="lvl"><li>延迟</li></ul>
+<p>满意：</p>
+<p>扩大。</p>
+<hr/>
+<h1 id="十六模型路由">十六、模型路由</h1>
+<p>企业：</p>
+<p>同时存在：</p>
+<p>多个模型。</p>
+<p>例如：</p>
+<pre><code>
+                 请求
+
+
+                  |
+
+                  ↓
+
+
+             Model Gateway
+
+
+        +---------+---------+
+
+        |                   |
+
+
+    Qwen7B             Qwen72B
+
+
+简单问题             复杂问题
+</code></pre>
+<hr/>
+<p>规则：</p>
+<p>简单：</p>
+<p>小模型。</p>
+<p>复杂：</p>
+<p>大模型。</p>
+<hr/>
+<h1 id="十七ab-testingab测试">十七、A/B Testing【A/B测试】</h1>
+<p>比较：</p>
+<p>两个模型。</p>
+<p>例如：</p>
+<p>A：</p>
+<p>Qwen原版。</p>
+<p>B：</p>
+<p>Java微调版。</p>
+<hr/>
+<p>指标：</p>
+<ul class="lvl"><li>用户评分</li></ul>
+<ul class="lvl"><li>完成率</li></ul>
+<ul class="lvl"><li>Token成本</li></ul>
+<hr/>
+<h1 id="十八生产监控">十八、生产监控</h1>
+<p>上线以后：</p>
+<p>必须监控。</p>
+<hr/>
+<h2 id="系统层">系统层</h2>
+<p>Prometheus。</p>
+<p>监控：</p>
+<ul class="lvl"><li>CPU</li></ul>
+<ul class="lvl"><li>GPU</li></ul>
+<ul class="lvl"><li>内存</li></ul>
+<ul class="lvl"><li>网络</li></ul>
+<hr/>
+<h2 id="模型层">模型层</h2>
+<p>监控：</p>
+<ul class="lvl"><li>请求数量</li></ul>
+<ul class="lvl"><li>Token</li></ul>
+<ul class="lvl"><li>延迟</li></ul>
+<ul class="lvl"><li>错误率</li></ul>
+<hr/>
+<h2 id="业务层">业务层</h2>
+<p>例如：</p>
+<p>客服：</p>
+<ul class="lvl"><li>问题解决率</li></ul>
+<ul class="lvl"><li>转人工率</li></ul>
+<hr/>
+<h1 id="十九完整企业模型上线架构">十九、完整企业模型上线架构</h1>
+<pre><code>
+              用户
+
+
+                |
+
+                ↓
+
+
+          API Gateway
+
+
+                |
+
+                ↓
+
+
+          AI Gateway
+
+
+                |
+
+        +-------+-------+
+
+        |               |
+
+
+      vLLM-v1        vLLM-v2
+
+
+        |               |
+
+
+    旧模型          新模型
+
+
+        |
+
+        ↓
+
+
+      GPU Cluster
+</code></pre>
+<hr/>
+<h1 id="二十结合你的-java-ai-项目">二十、结合你的 Java AI 项目</h1>
+<p>你的：</p>
+<p>AI Interview Agent。</p>
+<p>生产升级：</p>
+<h2 id="模型版本">模型版本：</h2>
+<pre><code>
+java-interview-qwen-v1
+
+↓
+
+java-interview-qwen-v2
+
+↓
+
+java-interview-qwen-v3</code></pre>
+<hr/>
+<h2 id="测试集">测试集：</h2>
+<p>1000题。</p>
+<p>分类：</p>
+<pre><code>Java基础
+
+并发
+
+JVM
+
+Spring
+
+AI
+
+RAG
+
+Agent</code></pre>
+<hr/>
+<h2 id="上线">上线：</h2>
+<pre><code>
+v1:
+
+90%
+
+
+v2:
+
+10%</code></pre>
+<hr/>
+<h1 id="二十一面试回答">二十一、面试回答</h1>
+<h2 id="q1">Q1：</h2>
+<blockquote><p>微调后的模型如何上线？</p></blockquote>
+<p>标准回答：</p>
+<blockquote><p>微调完成后不会直接上线，需要先通过Golden Dataset进行评测，验证效果和性能。然后通过Model Registry管理版本，将模型部署到vLLM推理服务，通过灰度发布观察线上指标，确认稳定后逐步扩大流量。</p></blockquote>
+<hr/>
+<h2 id="q2">Q2：</h2>
+<blockquote><p>如何判断一个RAG系统效果好？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>我会从检索和生成两个阶段评估。检索阶段关注Recall、Precision和Context相关性，生成阶段关注答案准确性、忠实性和用户反馈，同时通过Golden Dataset持续回归测试。</p></blockquote>
+<hr/>
+<h2 id="q3">Q3：</h2>
+<blockquote><p>为什么需要模型版本管理？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>企业模型会持续迭代，不同版本可能影响效果、成本和稳定性，因此需要类似代码版本管理的机制记录模型、数据、参数和评测结果，支持回滚和持续优化。</p></blockquote>
+<hr/>
+<h1 id="二十二day29知识地图">二十二、Day29知识地图</h1>
+<p>现在完整掌握：</p>
+<pre><code>
+数据
+
+↓
+
+训练
+
+↓
+
+微调
+
+↓
+
+评测
+
+↓
+
+模型仓库
+
+↓
+
+部署
+
+↓
+
+灰度
+
+↓
+
+监控
+
+↓
+
+迭代</code></pre>
+<hr/>
+<h1 id="二十三day29之后你的能力等级">二十三、Day29之后你的能力等级</h1>
+<p>你已经从：</p>
+<pre><code>Java开发者
+
+↓
+
+调用AI API</code></pre>
+<p>升级到：</p>
+<pre><code>Java AI Engineer
+
++
+
+LLM Application Engineer
+
++
+
+Model Deployment Engineer
+
++
+
+MLOps Engineer</code></pre>
+<hr/>
+<h1 id="下一节-day30阶段总结">下一节 Day30（阶段总结）</h1>
+<p>建议进入：</p>
+<h1 id="day30java-ai-engineer-完整能力闭环从模型-应用-平台-企业架构">《Day30：Java AI Engineer 完整能力闭环：从模型 → 应用 → 平台 → 企业架构》</h1>
+<p>总结：</p>
+<p>你这30天形成：</p>
+<pre><code>Java
+
+↓
+
+LLM
+
+↓
+
+RAG
+
+↓
+
+Agent
+
+↓
+
+模型部署
+
+↓
+
+微调
+
+↓
+
+MLOps
+
+↓
+
+企业AI平台</code></pre>
+<p>并且会输出：</p>
+<ul class="lvl"><li>AI工程师技能树</li></ul>
+<ul class="lvl"><li>简历项目包装</li></ul>
+<ul class="lvl"><li>面试100问</li></ul>
+<ul class="lvl"><li>未来6个月成长路线</li></ul>
+<ul class="lvl"><li>从Java转AI Engineer求职路线</li></ul>
+<p>完成：</p>
+<blockquote><p>从 Java 后端工程师 → Java AI 应用工程师 的完整升级路线。</p></blockquote>
+</main>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day5spring-boot-langchain4j-milvus-实现-rag-pipeline">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</h1>
+<h1 id="spring-boot-langchain4j-milvus-实现-rag-pipeline">Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</h1>
+<p>今天开始进入你最熟悉的领域：</p>
+<blockquote><p><strong>Java 工程化落地。</strong></p></blockquote>
+<p>前面：</p>
+<ul class="lvl"><li>Day1～Day3：你学会了模型微调</li></ul>
+<ul class="lvl"><li>Day4：理解 RAG + LoRA 架构</li></ul>
+<p>今天：</p>
+<blockquote><p>用 Spring Boot 把 RAG 真正跑起来。</p></blockquote>
+<p>最终目标：</p>
+<p>实现：</p>
+<p><strong>Java AI Interview Agent V3</strong></p>
+<p>能力：</p>
+<p>用户上传：</p>
+<pre><code>Java面试笔记.md
+项目文档.pdf
+源码分析.md</code></pre>
+<p>然后：</p>
+<pre><code>上传
+ ↓
+解析
+ ↓
+切片
+ ↓
+Embedding
+ ↓
+Milvus存储
+ ↓
+检索
+ ↓
+Qwen+LoRA回答</code></pre>
+<hr/>
+<h1 id="一整体架构">一、整体架构</h1>
+<p>今天实现：</p>
+<pre><code>                 用户
+
+                  |
+                  ↓
+
+            Spring Boot API
+
+
+                  |
+        +---------+----------+
+
+        |                    |
+
+        ↓                    ↓
+
+
+ Document Loader        Chat API
+
+
+ 文档加载                问题回答
+
+
+        |                    |
+
+        ↓                    ↓
+
+
+ Text Splitter          Retriever
+
+
+        |                    |
+
+        ↓                    ↓
+
+
+ Embedding Model       Prompt
+
+
+        |                    |
+
+        ↓                    |
+
+
+ Milvus Vector DB      Qwen LoRA
+
+
+        |                    |
+
+        +---------+----------+
+
+                  |
+
+                  ↓
+
+
+              Answer</code></pre>
+<hr/>
+<h1 id="二技术选型">二、技术选型</h1>
+<h2 id="后端">后端</h2>
+<pre><code>Spring Boot 3</code></pre>
+<h2 id="ai框架">AI框架</h2>
+<pre><code>LangChain4j</code></pre>
+<h2 id="向量数据库">向量数据库</h2>
+<pre><code>Milvus</code></pre>
+<h2 id="embedding模型">Embedding模型</h2>
+<p>推荐：</p>
+<p>你已经有：</p>
+<pre><code>nomic-embed-text</code></pre>
+<p>Ollama运行：</p>
+<pre><code>ollama pull nomic-embed-text</code></pre>
+<h2 id="大模型">大模型</h2>
+<p>你的：</p>
+<pre><code>Qwen + Java LoRA</code></pre>
+<p>通过 Ollama 暴露。</p>
+<hr/>
+<h1 id="三创建-spring-boot-项目">三、创建 Spring Boot 项目</h1>
+<p>结构：</p>
+<pre><code>java-ai-interview-agent
+
+├── controller
+
+├── service
+
+├── rag
+
+├── embedding
+
+├── vector
+
+├── llm
+
+└── config</code></pre>
+<hr/>
+<p>Maven：</p>
+<p>加入：</p>
+<pre><code>&lt;dependencies&gt;
+
+
+&lt;!-- Spring Web --&gt;
+
+&lt;dependency&gt;
+
+&lt;groupId&gt;
+org.springframework.boot
+&lt;/groupId&gt;
+
+&lt;artifactId&gt;
+spring-boot-starter-web
+&lt;/artifactId&gt;
+
+&lt;/dependency&gt;
+
+
+
+&lt;!-- LangChain4j --&gt;
+
+&lt;dependency&gt;
+
+&lt;groupId&gt;
+dev.langchain4j
+&lt;/groupId&gt;
+
+&lt;artifactId&gt;
+langchain4j-spring-boot-starter
+&lt;/artifactId&gt;
+
+&lt;/dependency&gt;
+
+
+&lt;!-- Ollama --&gt;
+
+&lt;dependency&gt;
+
+&lt;groupId&gt;
+dev.langchain4j
+&lt;/groupId&gt;
+
+&lt;artifactId&gt;
+langchain4j-ollama-spring-boot-starter
+&lt;/artifactId&gt;
+
+&lt;/dependency&gt;
+
+
+&lt;/dependencies&gt;</code></pre>
+<hr/>
+<h1 id="四启动-ollama-模型">四、启动 Ollama 模型</h1>
+<p>你的本地：</p>
+<pre><code>ollama list</code></pre>
+<p>应该：</p>
+<pre><code>qwen3.5:9b
+
+java-interviewer
+nomic-embed-text</code></pre>
+<p>启动：</p>
+<pre><code>ollama serve</code></pre>
+<p>默认：</p>
+<pre><code>http://localhost:11434</code></pre>
+<hr/>
+<h1 id="五配置-llm">五、配置 LLM</h1>
+<p>application.yml</p>
+<pre><code>langchain4j:
+
+  ollama:
+
+    chat-model:
+
+      base-url:
+        http://localhost:11434
+
+      model-name:
+        java-interviewer
+
+      temperature:
+        0.7</code></pre>
+<p>含义：</p>
+<pre><code>Spring Boot
+
+↓
+
+LangChain4j
+
+↓
+
+Ollama
+
+↓
+
+java-interviewer</code></pre>
+<hr/>
+<h1 id="六创建-chat-service">六、创建 Chat Service</h1>
+<p>接口：</p>
+<pre><code>public interface InterviewAssistant {
+
+
+    String chat(
+        String question
+    );
+
+}</code></pre>
+<hr/>
+<p>实现：</p>
+<pre><code>@Service
+public class InterviewService {
+
+
+    private final ChatLanguageModel model;
+
+
+
+    public InterviewService(
+        ChatLanguageModel model
+    ){
+
+        this.model=model;
+
+    }
+
+
+
+    public String answer(String question){
+
+        return model.generate(question);
+
+    }
+
+}</code></pre>
+<hr/>
+<p>测试：</p>
+<p>请求：</p>
+<pre><code>GET
+
+/chat?question=HashMap为什么线程不安全</code></pre>
+<p>返回：</p>
+<pre><code>HashMap线程不安全原因...</code></pre>
+<p>说明：</p>
+<p>Java已经调用模型。</p>
+<hr/>
+<h1 id="七加入-embedding">七、加入 Embedding</h1>
+<p>现在：</p>
+<p>用户上传：</p>
+<pre><code>HashMap.md</code></pre>
+<p>需要变成向量。</p>
+<p>流程：</p>
+<pre><code>文本
+
+↓
+
+Embedding Model
+
+↓
+
+向量
+
+↓
+
+Milvus</code></pre>
+<hr/>
+<p>创建：</p>
+<pre><code>@Bean
+EmbeddingModel embeddingModel(){
+
+return OllamaEmbeddingModel.builder()
+
+.baseUrl(
+&quot;http://localhost:11434&quot;
+)
+
+.modelName(
+&quot;nomic-embed-text&quot;
+)
+
+.build();
+
+}</code></pre>
+<hr/>
+<h1 id="八文本切片-chunk">八、文本切片 Chunk</h1>
+<p>为什么切？</p>
+<p>因为：</p>
+<p>模型上下文有限。</p>
+<p>例如：</p>
+<p>100页PDF：</p>
+<p>不能直接塞。</p>
+<p>所以：</p>
+<pre><code>PDF
+
+↓
+
+1000个Chunk
+
+↓
+
+每个500 token</code></pre>
+<hr/>
+<p>代码：</p>
+<pre><code>DocumentSplitter splitter =
+DocumentSplitters.recursive(
+500,
+100
+);</code></pre>
+<p>含义：</p>
+<pre><code>chunk size:
+
+500
+
+
+overlap:
+
+100</code></pre>
+<hr/>
+<h1 id="九创建-milvus-vector-store">九、创建 Milvus Vector Store</h1>
+<p>你的环境：</p>
+<p>之前已经安装：</p>
+<pre><code>milvus-lite</code></pre>
+<hr/>
+<p>配置：</p>
+<pre><code>@Bean
+EmbeddingStore&lt;TextSegment&gt; store(){
+
+return MilvusEmbeddingStore.builder()
+
+.host(&quot;localhost&quot;)
+
+.port(19530)
+
+.collectionName(
+&quot;java_knowledge&quot;
+)
+
+.build();
+
+}</code></pre>
+<hr/>
+<p>数据流：</p>
+<pre><code>Java知识
+
+↓
+
+Embedding
+
+↓
+
+Milvus
+
+保存：
+
+[
+0.123,
+0.432,
+...
+]
+
++
+原文本</code></pre>
+<hr/>
+<h1 id="十实现文档导入">十、实现文档导入</h1>
+<p>接口：</p>
+<pre><code>@PostMapping(&quot;/upload&quot;)
+public String upload(
+MultipartFile file
+){
+
+ragService.ingest(file);
+
+return &quot;success&quot;;
+
+}</code></pre>
+<hr/>
+<p>流程：</p>
+<pre><code>upload
+
+↓
+
+读取文件
+
+↓
+
+Document
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Milvus</code></pre>
+<hr/>
+<h1 id="十一实现-retrieval">十一、实现 Retrieval</h1>
+<p>用户：</p>
+<pre><code>ConcurrentHashMap如何扩容？</code></pre>
+<p>执行：</p>
+<pre><code>Embedding
+
+↓
+
+Milvus搜索
+
+↓
+
+Top K</code></pre>
+<p>例如返回：</p>
+<pre><code>concurrenthashmap.md
+
+第30段
+
+扩容迁移机制...</code></pre>
+<hr/>
+<h1 id="十二组合-rag-prompt">十二、组合 RAG Prompt</h1>
+<p>最终：</p>
+<p>发送给模型：</p>
+<pre><code>System:
+
+你是Java高级面试官
+
+
+参考资料:
+
+-----
+ConcurrentHashMap扩容采用多线程迁移...
+-----
+
+
+问题:
+
+ConcurrentHashMap如何扩容？</code></pre>
+<hr/>
+<p>模型：</p>
+<pre><code>Qwen+LoRA</code></pre>
+<p>输出：</p>
+<pre><code>面试回答：
+
+JDK8 ConcurrentHashMap扩容...
+
+第一...
+第二...
+第三...</code></pre>
+<hr/>
+<h1 id="十三完整调用链面试重点">十三、完整调用链（面试重点）</h1>
+<p>你以后面试可以这样回答：</p>
+<blockquote><p>用户提出问题后，Spring Boot 接收到请求，通过 LangChain4j 调用 Retriever，从 Milvus 向量数据库中检索相关知识片段，然后将检索结果和用户问题组装成 Prompt，发送给经过 LoRA 微调的 Qwen 模型，模型结合自身能力和外部知识生成最终答案。</p></blockquote>
+<p>链路：</p>
+<pre><code>User
+
+↓
+
+Spring Boot
+
+↓
+
+LangChain4j
+
+↓
+
+Retriever
+
+↓
+
+Milvus
+
+↓
+
+Prompt Builder
+
+↓
+
+Qwen LoRA
+
+↓
+
+Answer</code></pre>
+<hr/>
+<h1 id="十四今天完成标准">十四、今天完成标准</h1>
+<p>完成：</p>
+<p>✅ Spring Boot启动</p>
+<p>✅ Ollama调用</p>
+<p>✅ Embedding配置</p>
+<p>✅ Milvus接入</p>
+<p>✅ 文档切片</p>
+<p>✅ RAG链路理解</p>
+<hr/>
+<h1 id="下一步-day6">下一步 Day6</h1>
+<h2 id="day6实现完整-agent">Day6：实现完整 Agent</h2>
+<p>把你的系统升级：</p>
+<p>从：</p>
+<pre><code>RAG问答</code></pre>
+<p>变成：</p>
+<pre><code>Java AI Interview Agent</code></pre>
+<p>加入：</p>
+<p>Tools【工具】</p>
+<ul class="lvl"><li>查询知识库</li></ul>
+<ul class="lvl"><li>分析简历</li></ul>
+<ul class="lvl"><li>自动出题</li></ul>
+<ul class="lvl"><li>自动评分</li></ul>
+<ul class="lvl"><li>保存错题</li></ul>
+<p>架构：</p>
+<pre><code>User
+
+↓
+
+Agent
+
+↓
+
+Decision
+
+↓
+
+Tool Calling
+
+↓
+
+RAG
+
+↓
+
+LLM
+
+↓
+
+Answer</code></pre>
+<p>这一步会把你之前学习的 <strong>Tool Calling + MCP + Agent</strong> 全部串起来。你现在这条路线已经接近一个完整 AI Engineer 项目闭环。</p>
+</main>
+</body>
+</html>

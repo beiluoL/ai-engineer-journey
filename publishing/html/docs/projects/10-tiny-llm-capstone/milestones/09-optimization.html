@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 09 — Optimization：收益与代价必须一起量</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-09-optimization收益与代价必须一起量">Milestone 09 — Optimization：收益与代价必须一起量</h1>
+<p>M08 证明了&quot;能推理&quot;。但能跑不等于跑得起——这一章算两笔账：<strong>这份权重部署时要占多少空间（量化）</strong>，以及<strong>长上下文要额外花多少显存（KV Cache 账本）</strong>。</p>
+<p>本章的立场只有一句：<strong>只报压缩比的优化方案不可信。</strong> 压缩比只说明省了多少空间；<strong>ΔPPL 才说明你为此付出了多少代价</strong>。两者必须同时报出来，否则那不是优化方案，是宣传材料。</p>
+<hr/>
+<h2 id="1-why优化有两个常见的半边账">1. Why：优化有两个常见的&quot;半边账&quot;</h2>
+<ul class="lvl"><li><strong>只报压缩比，不报精度损失。</strong> &quot;INT4 压缩 16 倍！&quot;——听起来很美。但如果它让 PPL 从 315.79 涨到 324.20（+2.66%），你就得分清：<strong>这个代价在你的场景里值不值 8 倍空间</strong>。</li><li><strong>只报&quot;省了显存&quot;，不报&quot;每 token 到底花多少&quot;。</strong> KV Cache 的显存占用不是常数，它随 <code>batch × seq_len</code> 线性增长。<strong>必须把它算成一个公式</strong>，才能回答&quot;多长的上下文会让 KV 超过模型本身&quot;。</li></ul>
+<h2 id="2-design把两个账都算成公式">2. Design：把两个账都算成公式</h2>
+<h3 id="21-量化精度-粒度">2.1 量化：精度 × 粒度</h3>
+<pre><code>量化：w → round((w - zero) / scale)，再反量化回浮点参与计算
+粒度：
+  per-tensor   整个张量共享一组 (scale, zero)     ← 存 1 组，但误差大
+  per-channel  每个输出通道一组 (scale, zero)     ← 多存 d_out 组，误差小
+  NF4 block=64 每 64 个权重一组 + 二次量化 scale  ← 误差居中，压缩比最高</code></pre>
+<p><strong>为什么 per-channel 能让误差明显下降</strong>：神经网络的权重<strong>各通道的尺度往往差很多</strong>（<code>std/mean|w| = 0.872</code> 说明幅度很离散）。per-tensor 用一组 scale 覆盖所有通道，就必然在&quot;大通道&quot;上欠拟合、在&quot;小通道&quot;上过拟合。<strong>per-channel 为每个通道单独定标，只多存一点 scale，误差就掉一半。这就是&quot;免费的精度&quot;。</strong></p>
+<p><strong>代价怎么量</strong>：不看它自己的 MSE，而是在<strong>真实验证集</strong>上跑语言模型评估，记录 <code>ΔPPL = (量化后 PPL − 量化前 PPL) / 量化前 PPL</code>。MSE 只是&quot;权重像不像&quot;，ΔPPL 才是&quot;任务坏没坏&quot;。</p>
+<h3 id="22-kv-cache-显存公式">2.2 KV Cache 显存公式</h3>
+<pre><code>bytes_per_token = 2 × layers × kv_heads × head_dim × dtype_bytes
+                = 2 × 2 × 4 × 16 × dtype_bytes      （2 是因为 K 和 V）
+                = 256 × dtype_bytes</code></pre>
+<p>代入 <code>layers=2, kv_heads=4, head_dim=16</code>：fp32 = <strong>1024 B/token</strong>、fp16 = <strong>512 B/token</strong>。</p>
+<p><strong>这是一个纯解析公式，不依赖任何运行时</strong>。它的价值在于：<strong>在小模型上验证公式对不对，在大模型上用它做容量预判</strong>。7B 模型的 <code>bytes_per_token</code> 会是这个值的几百倍——那时&quot;长上下文吃爆显存&quot;就是一个能提前算出来的数字，而不是上线后才知道的事故。</p>
+<figure class="figure"><img alt="M09 Optimization：部署体积 + 量化代价 + KV Cache 账本" src="../../../../../../projects/10-tiny-llm-capstone/assets/optimization.svg" loading="lazy"/><figcaption>M09 Optimization：部署体积 + 量化代价 + KV Cache 账本</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_09_optimization_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M09 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-09-optimization.png" loading="lazy"/><figcaption>M09 真实运行</figcaption></figure>
+<h3 id="31-起点模型有多大">3.1 起点：模型有多大</h3>
+<pre><code>参数量        230,400
+张量数        28
+fp64（训练时）  1.76 MiB
+  └ token_embedding    81,920  (35.6%)
+  └ output_projection  81,920  (35.6%)
+  └ transformer_blocks 66,432  (28.8%)
+  └ final_layernorm       128  (0.1%)</code></pre>
+<p>参数分布和 M04 一致：<strong>词嵌入 + 输出投影合计 71.2%</strong>，真正的 Transformer Block 只有 28.8%。这个分布预示了后面的一个反直觉结论：<strong>量化误差主要由少数几块大权重决定。</strong></p>
+<h3 id="32-部署体积账同一份权重五档精度">3.2 部署体积账：同一份权重，五档精度</h3>
+<pre><code>精度           字节/参数  总字节        MiB
+fp64（训练时）        8  1,843,200  1.76
+fp32（常见推理）       4    921,600  0.88
+fp16 / bf16      2    460,800  0.44
+INT8             1    230,400  0.22
+INT4           0.5  115,200.0  0.11
+fp64 → INT4 的压缩比   16×</code></pre>
+<p><strong>从 fp64 到 INT4 是精确的 16 倍</strong>（8 字节 → 0.5 字节）。但这里有个容易忽略的现实约束：<strong>训练通常要 fp64/fp32（累加精度），推理只要 fp16，只有边缘部署才上 INT8/INT4</strong>。所以&quot;压缩 16×&quot;是从<strong>训练精度</strong>起算的；如果基线是 fp32 推理，INT4 只省 8 倍。</p>
+<h3 id="33-kv-cache-账本每-token-多少字节">3.3 KV Cache 账本：每 token 多少字节</h3>
+<pre><code>架构                    layers=2  kv_heads=4  head_dim=16
+每 token（fp32 / fp16）    1024 B / 512 B
+公式                    2（K和V）× layers × kv_heads × head_dim × dtype_bytes
+模型权重（fp32）            921,600 B
+
+batch  seq_len  KV 字节      KV GiB    占权重比
+    1       64     32,768  0.000031    3.5556%
+    1      256    131,072  0.000122   14.2222%
+    1     1024    524,288  0.000488   56.8889%
+    1     4096  2,097,152  0.001953  227.5556%
+    4       64    131,072  0.000122   14.2222%
+    4     1024  2,097,152  0.001953  227.5556%
+KV Cache 追上模型权重所需长度   1801   fp16、batch=1
+实测 max_len 下的 KV          65,536 B（64.00 KiB）</code></pre>
+<p><strong>这张表的意义是把&quot;显存焦虑&quot;变成一个可算的数字。</strong></p>
+<ul class="lvl"><li><code>seq_len=64</code>（本项目 <code>max_len</code>）时，KV 只占权重的 <strong>3.56%</strong>——<strong>这个模型小到 KV Cache 几乎不花钱</strong>。</li><li>但 <strong><code>seq_len=4096</code> 时占 227.6%</strong>——KV 比整个模型还大。</li><li><strong>反解：1801 个 token 的 KV 就等于整个模型。</strong></li></ul>
+<p>记住这个 <strong>1801</strong>。它不是这个项目的实际需求（本项目只用 64），而是<strong>公式给出的一个可迁移的直觉</strong>：当上下文长度增长时，&quot;KV 的开销&quot;会从&quot;可以忽略&quot;迅速变成&quot;比权重还大&quot;。<strong>在 7B 模型上这个临界点会早得多，那才是&quot;长上下文吃爆显存&quot;的数学根源。</strong></p>
+<p><strong>为什么 batch 和 seq_len 一起乘</strong>：KV 的形状是 <code>(batch, kv_heads, seq_len, head_dim)</code>，逐 token、逐样本都要存。所以 <code>batch=4, seq_len=1024</code> 和 <code>batch=1, seq_len=4096</code> 的 KV 字节数<strong>完全一样</strong>——都是 2,097,152 B。<strong>这两个维度对称，是这张表里唯一需要&quot;看两眼才反应过来&quot;的地方。</strong></p>
+<h3 id="34-量化压缩比-vs-精度代价">3.4 量化：压缩比 vs 精度代价</h3>
+<pre><code>基线（未量化）   val_loss=5.7551  ppl=315.79  token_acc=0.1736
+
+精度    粒度            压缩比    MSE        量化前 PPL  量化后 PPL  ΔPPL    token_acc
+INT8  per_channel   3.85×  9.878e-07   315.79   316.06  +0.08%     0.1731
+INT4  per_channel   7.42×  3.175e-04   315.79   324.20  +2.66%     0.1706
+NF4   nf4_block_64  7.75×  2.867e-04   315.79   328.45  +4.01%     0.1736</code></pre>
+<p><strong>反直觉结论：INT4 的代价（+2.66%）远大于 INT8（+0.08%）——相差 33 倍，而压缩比只多了不到一倍（3.85× → 7.42×）。</strong></p>
+<p>为什么？<strong>小模型每层权重少、冗余度低，4 bit 的粗粒度误差占比反而更高。</strong> 这与&quot;7B 模型上 INT4 基本无损&quot;的常识<strong>相反</strong>——大模型有大量冗余可以吸收量化噪声，而 230K 参数的小模型几乎没有冗余。<strong>所以&quot;INT4 无损&quot;不是一条普适规律，而是&quot;大模型特有&quot;的性质。</strong></p>
+<p>再看 NF4：压缩比最高（7.75×），但 ΔPPL <strong>+4.01%</strong> 反而比 INT4 更差。<strong>&quot;更先进的算法&quot;（NF4 + 双重量化）在这么小的模型上并没有换回精度</strong>——它省了 MSE（2.867e-4 vs INT4 的 3.175e-4），但任务指标更差。<strong>这再次说明：MSE 小 ≠ 任务好。</strong></p>
+<h3 id="35-粒度perchannel-是免费的精度">3.5 粒度：per-channel 是&quot;免费&quot;的精度</h3>
+<pre><code>取样张量               token_emb.weight
+形状                   (1280, 64)
+权重幅度离散度 std/mean|w|   0.872
+
+精度    per-tensor MSE  per-channel MSE  MSE 降低  rL2(per-t)  rL2(per-c)
+INT8       1.277e-06        6.621e-07   48.1%      0.0160      0.0115
+INT4       4.065e-04        2.139e-04   47.4%      0.2859      0.2074
+NF4        4.132e-05        4.132e-05    0.0%      0.0911      0.0911</code></pre>
+<p><strong>per-channel 把 INT8 的 MSE 降了 48.1%、INT4 降了 47.4%——误差直接砍半，而代价只是多存几组 scale。</strong></p>
+<p><code>std/mean|w| = 0.872</code> 解释了为什么有效：<strong>权重幅度的离散度接近 0.87，说明各通道尺度差异很大</strong>，per-tensor 用一把尺子量所有人必然吃亏。</p>
+<p>最后一行的 <strong>NF4：per-tensor 和 per-channel 的 MSE 完全一样（4.132e-05），降低 0.0%</strong>。原因很干净：<strong>NF4 的码本本身就是分块的（block=64），块内已经自带了细粒度的尺度调整</strong>，再叠加 per-channel 就是重复劳动，所以数值完全不变。<strong>这一行不是&quot;NF4 没用&quot;，而是说明 per-channel 的价值只对&quot;全局统一量化的方案&quot;（INT8/INT4）成立。</strong></p>
+<h3 id="36-另一半优化kv-cache-的速度收益">3.6 另一半优化：KV Cache 的速度收益</h3>
+<pre><code>无缓存 / 有缓存 中位耗时   5.09 ms / 3.56 ms
+加速比              1.43×
+输出是否一致           True
+logits 最大绝对误差    3.442e-15</code></pre>
+<p>和 M08 同一个结论（略有波动，1.43× vs 1.34×，因为运行环境噪声）：<strong>KV Cache 是&quot;严格无损&quot;的优化——误差 3.442e-15（浮点舍入量级），输出完全一致。</strong></p>
+<p><strong>&quot;不等价的速度优化是 bug，不是优化&quot;</strong> 这句话在这一章被重复验证，因为它是量化和 KV Cache 的<strong>根本区别</strong>：</p>
+<ul class="lvl"><li>量化：<strong>有损</strong>，代价是 ΔPPL（换来体积和算力）；</li><li>KV Cache：<strong>无损</strong>，代价是显存（换来延迟）。</li></ul>
+<p><strong>把这两种&quot;优化&quot;混在一起谈，是优化章节最常见的错误。</strong></p>
+<h3 id="37-一张表说清楚每种优化的收益与代价">3.7 一张表说清楚：每种优化的收益与代价</h3>
+<pre><code>优化手段                收益        代价              适用判断
+INT8 per-channel       体积 ÷4      PPL +0.08%  小模型首选
+INT4 per-channel       体积 ÷8      PPL +2.66%  小模型上不划算
+NF4（block 64 双重量化）   体积 ÷7.8      PPL +4.01%  比 INT4 稳
+KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code></pre>
+<p>这张表是本章的<strong>交付物</strong>：<strong>任何一个优化决策，都必须能填进这四列</strong>。填不满&quot;代价&quot;那一列的方案，不许上线。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>&quot;INT4 基本无损&quot;是小模型上的假命题。</strong> 本项目实测 INT4 <strong>ΔPPL +2.66%</strong>，是 INT8（+0.08%）的 33 倍。<strong>大模型的冗余能吸收量化噪声，小模型不能。</strong> 任何从大模型抄来的&quot;经验值&quot;，都要在小模型上重新量一遍。</li><li><strong>MSE 小 ≠ 任务好。</strong> NF4 的 MSE（2.867e-4）比 INT4（3.175e-4）还低，但 ΔPPL 反而更高（+4.01% vs +2.66%）。<strong>量化方案必须用 ΔPPL 验收，不能只看权重重建误差。</strong></li><li><strong>per-channel 是&quot;免费&quot;的精度。</strong> INT8/INT4 的 MSE 都降了约 <strong>48%</strong>，代价只是多存一点 scale。成本几乎为零、收益接近一半，这种优化没有理由不做。</li><li><strong>per-channel 对 NF4 完全无效（0.0%）。</strong> 因为 NF4 的 block 量化<strong>已经内置了细粒度尺度</strong>，再叠 per-channel 是重复。<strong>这说明&quot;加粒度&quot;不是越多越好，要看方案本身有没有已经在做这件事。</strong></li><li><strong>KV Cache 的显存公式里 batch 和 seq_len 是乘起来的，彼此对称。</strong> <code>batch=4, seq=1024</code> 与 <code>batch=1, seq=4096</code> 消耗<strong>完全相同</strong>（2,097,152 B）。这一点不看形状容易忽略。</li><li><strong>1801 个 token 的 KV 就等于整个模型（fp16, batch=1）。</strong> 这个数字在 7B 上会小得多。<strong>&quot;长上下文吃爆显存&quot;不是玄学，是可反解的不等式。</strong></li><li><strong>量化（有损）和 KV Cache（无损）是两类优化，别混。</strong> 量化省空间、代价是精度；KV Cache 省延迟、代价是显存。<strong>同一个&quot;优化&quot;标签下，权衡的维度完全不同。</strong></li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>模型 <strong>230,400 参数 / 28 张量 / fp64 1.76 MiB</strong>；词嵌入 + 输出投影占 <strong>71.2%</strong>。</li><li>部署体积：fp64 1.76 → fp32 0.88 → fp16 <strong>0.44</strong> → INT8 <strong>0.22</strong> → INT4 <strong>0.11</strong> MiB，<strong>fp64→INT4 压缩 16×</strong>。</li><li>KV Cache 账本：<strong>256 × dtype_bytes</strong>，即 fp32 <strong>1024 B/token</strong>、fp16 <strong>512 B/token</strong>；<code>seq_len=64</code> 占权重 <strong>3.56%</strong>，<code>seq_len=4096</code> 占 <strong>227.6%</strong>；<strong>1801 token 的 KV = 整个模型</strong>。</li><li>量化代价（真实验证集）：<strong>INT8 3.85× / ΔPPL +0.08%</strong>、<strong>INT4 7.42× / +2.66%</strong>、<strong>NF4 7.75× / +4.01%</strong> ⇒ <strong>INT4 的代价是 INT8 的 33 倍，只换来不到 2× 的压缩</strong>。</li><li>粒度：per-channel 把 INT8/INT4 的 MSE 降 <strong>48.1% / 47.4%</strong>（近乎免费）；对 NF4 <strong>0.0%</strong>（block 量化已内置）。</li><li>KV Cache 加速 <strong>1.43×</strong>（5.09 → 3.56 ms），<strong>严格无损</strong>（误差 3.442e-15）。</li><li>一句话结论：<strong>优化必须同时报收益和代价；只报压缩比的方案不可信。</strong></li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/optimize.py</code></td><td><code>deployment_size_table</code>（五档体积）/ <code>kv_cache_report</code>（每 token 字节 + 追赶长度）/ <code>quantization_report</code>（真实验证集 ΔPPL）/ <code>granularity_report</code>（per-tensor vs per-channel MSE）/ <code>optimization_report</code>（收益代价总表）</td></tr><tr><td>P09 <code>src/ie/quantize.py</code></td><td>INT8 / INT4 / NF4 的量化与反量化实现、per-tensor / per-channel 分支</td></tr><tr><td>P09 <code>src/ie/kvbook.py</code></td><td>KV Cache 字节公式与账面</td></tr><tr><td><code>src/tiny/infer.py</code></td><td><code>cache_consistency_error</code> / <code>benchmark</code>（无损性验证）</td></tr><tr><td><code>demos/demo_09_optimization.py</code></td><td>7 节：起点体积 / 五档精度 / KV 账本 / 量化 ΔPPL / 粒度 / 速度 / 收益代价总表</td></tr><tr><td><code>demos/out/demo_09_optimization_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/optimization.svg</code></td><td>部署体积 + 量化代价 + 粒度 + KV 账本</td></tr><tr><td><code>assets/term-09-optimization.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.8 → <strong>v0.9</strong>，量化与 KV Cache 账本落地并被双向度量。实测：<strong>230,400 参数 / fp64 1.76 MiB</strong>，fp64→INT4 <strong>压缩 16×</strong>；KV 每 token fp32 <strong>1024 B</strong> / fp16 <strong>512 B</strong>，<strong>1801 token 的 KV = 整个模型</strong>；量化（真实验证集）<strong>INT8 3.85× / ΔPPL +0.08%</strong>、<strong>INT4 7.42× / +2.66%</strong>、<strong>NF4 7.75× / +4.01%</strong>；per-channel 让 INT8/INT4 的 MSE 降低 <strong>48.1% / 47.4%</strong>（NF4 为 0.0%）；KV Cache 加速 <strong>1.43×</strong>、误差 <strong>3.442e-15</strong>（严格无损）。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

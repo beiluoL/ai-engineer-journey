@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Exercises 03-service-and-ops — M06 / M07 / M08 / M09 配套练习</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="exercises-03serviceandops-m06-m07-m08-m09-配套练习">Exercises 03-service-and-ops — M06 / M07 / M08 / M09 配套练习</h1>
+<blockquote><p>对应：<code>milestones/06-logging.md</code>（⬜ 未学习）、<code>milestones/07-testing-and-debugging.md</code>（⬜ 未学习）、<code>milestones/08-packaging.md</code>（⬜ 未学习）、<code>milestones/09-fastapi.md</code>（⬜ 未学习） 规则：<strong>亲手敲，不复制粘贴</strong>。每题先自己写、跑通，再对照 milestone 里的示例。 勾选权在你手里：本文件所有复选框一律 ⬜，跑通的是「参考答案」，不是「你学会了」。</p></blockquote>
+<h2 id="a-日志milestone-06">A. 日志（Milestone 06）</h2>
+<ul class="lvl"><li>[ ] <strong>A1</strong> 解析日志行。<code>setup_logging()</code> 用的格式串是 <code>&quot;%(asctime)s %(levelname)-7s %(name)-22s %(message)s&quot;</code>（<code>datefmt=&quot;%H:%M:%S&quot;</code>）。 写正则把一行日志拆成 <code>{时间, 级别, logger 名, 消息}</code>，并断言拆出来的级别真的是 <code>INFO</code>。 验证：拿一行真实日志去拆；再用一行格式不对的日志验证「匹配失败时你该怎么办」（不要静默返回空字典）。</li></ul>
+<ul class="lvl"><li>[ ] <strong>A2</strong> 脱敏。读 <code>src/assistant/logging_setup.py</code> 里的 <code>redact_headers()</code>，自己做一遍： <code>{&quot;Authorization&quot;: &quot;Bearer sk-xxx&quot;, &quot;X-Api-Key&quot;: &quot;abc&quot;, &quot;Content-Type&quot;: &quot;application/json&quot;}</code> 断言 <code>Authorization</code> / <code>X-Api-Key</code> 被打成 <code>***</code>，其它原样，且<strong>原字典没被改</strong>（它返回的是新字典）。 再验证：这个函数会匹配哪些 key（大小写、连字符），列出来。</li></ul>
+<ul class="lvl"><li>[ ] <strong>A3</strong> 结构化日志。用 <code>JsonFormatter</code> 写一个 logger，挂 <code>StringIO</code> handler，<code>logger.info(&quot;LLM 调用完成&quot;, extra={&quot;extra_fields&quot;: {...}})</code>， 把输出行 <code>json.loads</code> 回来，断言里面有 <code>ts / level / logger / msg</code> 和你塞进去的自定义字段。 验证：故意塞一个「没有 extra_fields」的日志行，看它是否被跳过（而不是变成 <code>null</code>）。</li></ul>
+<h2 id="b-测试与调试milestone-07">B. 测试与调试（Milestone 07）</h2>
+<ul class="lvl"><li>[ ] <strong>B1</strong> 写一个<strong>真的用 pytest 跑绿</strong>的用例：用 <code>FakeClient</code> + <code>AssistantService</code>，断言「问一句 → 拿到固定回答 → 历史里多了两条消息」。 Requirements：把用例写进临时目录的 <code>test_xxx.py</code>，用 <code>sys.executable -m pytest</code> 真跑一遍，断言退出码为 0 且输出里出现了 <code>passed</code>。 验证：故意把断言写反，确认它真的会 fail（这一步是体会「测试为什么有价值」）。</li></ul>
+<ul class="lvl"><li>[ ] <strong>B2</strong> 异常链。写一个 <code>parse_answer()</code>：里面先访问 <code>data[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code>，捕获 <code>(KeyError, IndexError, TypeError)</code> 后 <code>raise ValueError(&quot;响应格式不对&quot;) from e</code>。 断言：<code>ValueError.__cause__</code> 就是那个原始异常，<code>__suppress_context__</code> 为 <code>False</code>； 再对比「不写 <code>from</code> 的写法」，指出那种写法丢掉了什么。</li></ul>
+<ul class="lvl"><li>[ ] <strong>B3</strong> 失败路径也要断言：<ul class="lvl"><li><code>service.ask(&quot;   &quot;)</code>（纯空白）应抛 <code>ValueError</code>；</li><li>用 <code>FakeClient(fail_times=99)</code> 时，<code>service.ask(&quot;xxx&quot;)</code> 抛的应是 <code>LLMRateLimitError</code>，并且它是 <code>LLMError</code> 的子类。 验证：两条都真的抛，且异常类型逐级对得上。</li></ul></li></ul>
+<h2 id="c-打包milestone-08">C. 打包（Milestone 08）</h2>
+<ul class="lvl"><li>[ ] <strong>C1</strong> 用 <code>tomllib</code> 读 <code>pyproject.toml</code>，断言：<code>name</code> / <code>version</code> / <code>requires-python</code> / <code>dependencies</code> 都在， <code>[project.scripts]</code> 里的入口点 <code>ai-assistant</code> 指向的 <code>assistant.cli:main</code> <strong>这个文件存在且真的定义了 <code>main</code></strong>。 验证：入口点这件事不靠读文档，靠反射验证。</li></ul>
+<ul class="lvl"><li>[ ] <strong>C2</strong> 反射包结构：<code>assistant.__all__</code> 里的每个名字都能 <code>getattr</code> 到；再用 <code>importlib.metadata.version(&lt;包名&gt;)</code> 验证这个包真的被安装过了。 验证：数一数 <code>__all__</code> 里有几个名字，全部可导出。</li></ul>
+<h2 id="d-fastapimilestone-09">D. FastAPI（Milestone 09）</h2>
+<ul class="lvl"><li>[ ] <strong>D1</strong> 用 <code>TestClient</code> 打 <code>/health</code> 和 <code>/chat</code>：把 <code>get_service</code> 依赖 <code>override</code> 成「<code>FakeClient</code> 驱动的 service」，<strong>不启真实端口、不触发 lifespan</strong>。 验证：<code>/health</code> 返回 <code>{&quot;status&quot;: &quot;ok&quot;}</code>；<code>/chat</code> 返回 200 且 <code>reply</code> 就是 <code>FakeClient</code> 的固定回答。</li></ul>
+<ul class="lvl"><li>[ ] <strong>D2</strong> 入参校验：POST <code>/chat</code> 传 <code>{&quot;message&quot;: &quot;&quot;}</code>。 验证：返回 422，且 <code>detail[0][&quot;loc&quot;] == [&quot;body&quot;, &quot;message&quot;]</code> —— 这是 Pydantic 给的，不是你写的。</li></ul>
+<ul class="lvl"><li>[ ] <strong>D3</strong> 错误映射：让依赖返回的是一个「一问就抛 <code>LLMRateLimitError</code>」的 service。 验证：<code>/chat</code> 返回 <strong>502</strong>，且 <code>detail</code> 里带着错误原因（<code>api.py</code> 里把 <code>LLMError</code> 映射到 502 的那一层）。</li></ul>
+<h2 id="验收标准">验收标准</h2>
+<p>A1-A3 + B1-B3 + C1-C2 + D1-D3 全部自己写得出来并跑通 = 这组对应章节进入「能写代码」档。 特别要求：B1 必须是<strong>你自己写的用例</strong>跑出来的绿，看参考答案不算。</p>
+<h2 id="参考答案与判卷">参考答案与判卷</h2>
+<ul class="lvl"><li>参考答案：<code>answers.py</code>（每题一个函数，纯离线，FastAPI 那几题一律走 <code>TestClient</code>）</li><li>怎么跑： ``<code>bash .venv/bin/python exercises/03-service-and-ops/answers.py </code>``</li><li>怎么判卷（全仓库一起判）： ``<code>bash .venv/bin/python exercises/grade.py </code>``</li></ul>
+<blockquote><p><strong>重要</strong>：<code>answers.py</code> 跑通只代表「参考答案跑通」。是否学会由你自己勾选，参考：<a href="../README.html"><code>../README.md</code></a></p></blockquote>
+</main>
+</body>
+</html>

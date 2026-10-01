@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 07 — Evaluation：把「训完了」和「训好了」分开</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-07-evaluation把训完了和训好了分开">Milestone 07 — Evaluation：把「训完了」和「训好了」分开</h1>
+<p>M06 交出了一份权重，并且证明了它是&quot;验证最优&quot;的那一份。但<strong>&quot;比随机初始化好&quot;和&quot;能用&quot;之间隔着一条鸿沟</strong>。这一章就是去量那条鸿沟有多宽。</p>
+<p>要做到这一点，需要<strong>三层评估</strong>（缺一层结论就不成立）+ <strong>两组配对实验</strong>（因为平均值上的提升，可能只是被个别样本带偏的假象）。本章的结论是诚实的：困惑度 PPL 315.79 看着还行，但关键词覆盖率是 <strong>0.000</strong>。</p>
+<hr/>
+<h2 id="1-why困惑度只说明确定不说明对">1. Why：困惑度只说明&quot;确定&quot;，不说明&quot;对&quot;</h2>
+<p>一个 1280 词表上的均匀分布，PPL 就是 1280。我们的模型 PPL 是 315.79，相对下降 75.3%——<strong>这确实说明它学到了东西</strong>。但困惑度有一个致命性质：</p>
+<blockquote><p><strong>它只衡量模型给正确答案分配了多少概率，不衡量那个概率对不对得上&quot;语义正确&quot;。</strong></p></blockquote>
+<p>模型可以给&quot;token token token&quot;这种无意义序列很高的概率，只要语料里这种模式出现过。所以单看 PPL 甚至能骗过你自己：</p>
+<ul class="lvl"><li><strong>PPL 降了</strong> ⇒ 模型更&quot;确定&quot;了（分布更尖锐）</li><li><strong>PPL 降了 ≠ 模型更&quot;对&quot;了</strong></li></ul>
+<p>要补上另外两个维度：</p>
+<ul class="lvl"><li><strong>校准层（ECE）</strong>：模型说&quot;我有 94% 把握&quot;的时候，实际有多少次是对的？——<strong>&quot;很自信地说错话&quot;比&quot;不知道&quot;更危险</strong>，因为用户会相信那个数字。</li><li><strong>生成层</strong>：拿验证集里的&quot;问&quot;去问它（答案它训练时没见过），看它答得怎样。这是<strong>唯一贴近真实使用场景</strong>的一层。</li></ul>
+<p>再加<strong>配对实验</strong>，因为两个模型的平均分差 1.4 分，也可能是&quot;37 个样本里 3 个大胜 + 34 个小负&quot;——平均值掩盖了方向。</p>
+<h2 id="2-design三层各自回答一个问题">2. Design：三层各自回答一个问题</h2>
+<pre><code>① 语言层  evaluate_loss()      → CE / PPL / token_accuracy   「能不能预测」
+② 校准层  ie.metrics.calibration() → ECE + 5 个可靠性分箱     「确定得有没有道理」
+③ 生成层  generation_report()  → 关键词覆盖 / 忠实 / 不重复    「说出来能不能用」</code></pre>
+<p>配对实验用的是 P09 的 <code>ie.compare.paired_compare</code>，它不是比两个平均数，而是<strong>逐条样本对拍</strong>，然后数 <code>胜 / 负 / 平</code> 和<strong>符号一致性</strong>（有多少比例样本方向一致）。</p>
+<p><strong>为什么必须逐条对拍</strong>：假设模型 A 平均 CE 比 B 低 0.1，但这个优势全来自一条特别长的样本，其余 36 条 B 都略好——那&quot;平均改善&quot;就是个假象。<code>symbol consistency = 1.000</code> 才是&quot;每条都一样好&quot;的证据。</p>
+<figure class="figure"><img alt="M07 Evaluation：三层评估 + 两组配对对照" src="../../../../../../projects/10-tiny-llm-capstone/assets/evaluation.svg" loading="lazy"/><figcaption>M07 Evaluation：三层评估 + 两组配对对照</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_evaluation_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M07 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-07-evaluation.png" loading="lazy"/><figcaption>M07 真实运行</figcaption></figure>
+<h3 id="31-语言层平均之下藏着方差">3.1 语言层：平均之下藏着方差</h3>
+<pre><code>验证集平均交叉熵        5.7551
+验证困惑度 PPL        315.79
+下一个 token 准确率      0.1736
+随机猜测的困惑度         1280
+相对随机的下降          75.3%
+
+样本#  有效 token  cross_entropy  ppl
+  0        64         6.1708  478.56
+  1        64         6.7438  848.80
+  2        64         5.7601  317.38
+  3        64         4.8671  129.95
+  4        64         5.2832  196.99
+  5        64         5.4194  225.73</code></pre>
+<p><strong>平均 5.7551，逐样本从 4.8671 到 6.7438（PPL 129.95 到 848.80）——最差样本的困惑度是最优样本的 6.5 倍。</strong></p>
+<p>这一行表格的价值在于：<strong>它证明&quot;平均 PPL&quot;是一个会骗人的指标</strong>。如果只看 315.79，你会以为模型&quot;均匀地弱&quot;；实际上它在某些样本上是&quot;可用&quot;（PPL 130），在另一些样本上完全&quot;懵了&quot;（PPL 849）。只报平均值，等于把这些差异全抹平了。</p>
+<p>不过话说回来，<strong>75.3% 的相对下降是真实的</strong>——这不是玄学，是量出来的。它说明模型确实学到了东西（哪怕只是字词分布），也说明这套结构是work的。</p>
+<h3 id="32-校准层模型比它自己以为的更容易错">3.2 校准层：模型比它自己以为的更容易错</h3>
+<pre><code>ECE（期望校准误差）        0.0662
+参评 token 数           2368
+置信度区间       token 数  平均置信度  实际准确率  置信度−准确率
+[0.0, 0.2)     1724  0.060  0.084   -0.024
+[0.2, 0.4)      258  0.289  0.151   +0.137
+[0.4, 0.6)       98  0.492  0.316   +0.175
+[0.6, 0.8)       60  0.711  0.300   +0.411
+[0.8, 1.0)      228  0.945  0.781   +0.164
+过度自信的箱子数  4 / 5</code></pre>
+<p>读这张表有个反直觉的点：<strong>72.8%（1724/2368）的 token 都落在最低的置信度箱 [0.0, 0.2) 里</strong>，而且这个箱子是<strong>略微偏保守</strong>的（-0.024，说 6% 把握、实际对了 8.4%）。</p>
+<p>真正的问题出在<strong>中高置信度段</strong>：</p>
+<ul class="lvl"><li><strong>[0.6, 0.8) 箱：模型说&quot;71% 把握&quot;，实际只有 30% 对——高估了 41 个百分点。</strong> 这是全表最严重的一格。</li><li><strong>[0.8, 1.0) 箱：说&quot;94.5% 把握&quot;，实际 78.1% 对。</strong></li></ul>
+<p><strong>这就是&quot;上线即灾难&quot;的具体形态</strong>：用户在界面上看到&quot;置信度 0.94&quot;，会当成&quot;基本不会错&quot;；实际 5 次里有 1 次是错的。而 72.8% 的 token 落在&quot;低置信&quot;区，则说明<strong>模型在大部分位置其实是&quot;知道自己不确定&quot;的</strong>——它只在少数位置过度自信，但这些位置恰恰容易被用户当真。</p>
+<p>ECE <strong>0.0662</strong>（越接近 0 越好）是这 5 个箱子的<strong>加权平均</strong>（按 token 数）。因为大头（1724 个）的偏差很小，所以整体 ECE 看着还不错；但<strong>分布是不均匀的</strong>——这正是&quot;要看分箱、不能只看 ECE&quot;的原因。</p>
+<h3 id="33-生成层这是最诚实的一节">3.3 生成层：这是最诚实的一节</h3>
+<pre><code>held-out 问答对（来自验证集）   7
+评分口径   keyword_coverage 40% / 格式 15% / 长度 15% / 忠实 20% / 不重复 10%
+
+解码策略 A（贪心）           总分 16.84
+[A1] 问：什么是梯度裁剪？
+     生成：什么是 token token token token token token token token token token token
+[A2] 问：什么是 QLoRA？
+     生成：什么是 token token token token token token token token token token token
+
+解码策略 B（采样 T=0.8/top_p 0.9/rep 1.15）  总分 31.81
+[B1] 问：什么是梯度裁剪？
+     参考：梯度裁剪按全局范数缩放梯度，避免异常大的梯度把训练带崩。
+     生成：什么是 I 上下文链路算问题正故障的 输出m检索于然瓶态然Oje通
+     得分：30.2（覆盖 0.00 忠实 0.00 不重复 1.00）
+[B2] 问：什么是 QLoRA？
+     参考：QLoRA 把基座量化到 4 比特，再在量化权重之上训练 LoRA 适配器。
+     生成：什么是 GA确否则模型给步检索的 Agent token Agent 和eO(请。
+     得分：33.1（覆盖 0.00 忠实 0.00 不重复 0.91）
+
+关键词覆盖 / 忠实度        0.000 / 0.018
+不重复分 / 长度合理性        0.945 / 0.967</code></pre>
+<p><strong>这一节必须原样保留，不能美化。</strong> 两个策略各自的失败模式都很典型：</p>
+<ul class="lvl"><li><strong>贪心（T=0）：复读。</strong> 它直接输出&quot;token token token...&quot;——因为&quot;token&quot;是语料里的高频词，贪心每一步都选概率最大的，就会卡死在一个循环里。形式上它&quot;生成&quot;了 16.84 分（主要靠不重复分之外的项），但语义上什么都没说。</li><li><strong>采样（T=0.8 + top_p + 惩罚）：看着像中文，实则是词块拼贴。</strong> &quot;什么是 I 上下文链路算问题正故障的 输出m检索于然瓶态然Oje通&quot;——每个片段都是语料里出现过的领域词（&quot;上下文&quot;&quot;链路&quot;&quot;检索&quot;&quot;瓶态&quot;），但拼在一起<strong>不构成任何意思</strong>。关键词覆盖 <strong>0.000</strong>：连&quot;梯度裁剪&quot;这几个字都没答出来。</li></ul>
+<p><strong>⚠ 诚实的结论</strong>（原样引用自运行输出）：</p>
+<blockquote><p>230,400 参数 + 6,384 个训练 token 学不会语义。模型只学到了「字词形态 + 领域词表」：采样后看着像中文，但答不了题。这一层的作用恰恰是<strong>把这个真相量化出来</strong>，而不是让 loss 曲线替它遮羞。</p></blockquote>
+<p><strong>为什么这一节是本项目最有价值的一节</strong>：如果只看 §3.1 的 PPL（相对随机下降 75.3%），你完全可以写一篇&quot;训练成功&quot;的报告。是生成层把这份报告的<strong>真实成色</strong>暴露了出来：<strong>这个模型会拼词、不会答题。</strong></p>
+<h3 id="34-多样性人眼看不出复读数字看得见">3.4 多样性：人眼看不出复读，数字看得见</h3>
+<pre><code>采样策略                         distinct-1  distinct-2  3-gram 重复率
+贪心 T=0                            0.049       0.057       0.934
+T=0.8                               0.741       0.917       0.048
+T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
+<p><strong>distinct-1 从 0.795 断崖式跌到 0.049</strong>——贪心模式下只有 4.9% 的 token 是不同的，93.4% 的 3-gram 是重复的。<strong>这个数字就是 §3.3 里那串&quot;token token token&quot;的另一种表述。</strong></p>
+<p>判据：<strong>distinct-1 断崖式下跌 = 模型开始复读。人眼扫一眼输出可能以为&quot;它就是啰嗦&quot;，但数字能精确定位到&quot;它在循环&quot;。</strong></p>
+<p>采样把 distinct-1 从 0.049 拉回 0.795（16 倍），代价是抛掉了确定性（每次输出不同）。这是一个<strong>必付的取舍</strong>：要么连贯地复读，要么发散地乱说。对 230K 参数的小模型来说，第三个选项（连贯且正确）不存在。</p>
+<h3 id="35-配对实验-a未训练-vs-已训练">3.5 配对实验 A：未训练 vs 已训练</h3>
+<pre><code>样本数（逐条配对）        37
+未训练 / 已训练 平均交叉熵   7.1523 / 5.7551
+平均改善              +1.3972
+胜 / 负 / 平          37 / 0 / 0
+符号一致性             1.000
+是否出现方向翻转          False</code></pre>
+<p><strong>37 胜 0 负 0 平，符号一致性 1.000。</strong> 这是配对实验的理想结果：不是&quot;平均上更好&quot;，而是<strong>每一条样本单独看都更好</strong>。</p>
+<p>对比一下 §3.1 的逐样本方差（4.87 ~ 6.74）就看得出配对的必要性：<strong>平均改善 +1.3972 是个宏观数字，但只有&quot;37/0/0 + 一致性 1.000&quot;才能排除&quot;改善是噪声&quot;的可能。</strong> 如果 50.5% 的样本变好、49.5% 变差，平均可能照样是 +1.4——那这个改善就完全不可信。</p>
+<h3 id="36-配对实验-b早停回滚到底值多少分本章最硬的一组数字">3.6 配对实验 B：早停回滚到底值多少分（本章最硬的一组数字）</h3>
+<pre><code>回滚模型停在          第 800 步（验证最优）
+不回滚模型停在         第 1200 步（训练终点）
+不回滚模型 PPL        338.13
+回滚模型 PPL         315.79   低 6.61%
+逐条对拍 平均改善        +0.0684
+胜 / 负 / 平          24 / 13 / 0</code></pre>
+<p>这一节把 M06 里&quot;早停&quot;这个做法，从&quot;<strong>看起来有道理</strong>&quot;变成了&quot;<strong>有数字支撑的决策</strong>&quot;：</p>
+<ul class="lvl"><li>PPL 315.79 vs 338.13，<strong>低 6.61%</strong>；</li><li><strong>但更有说服力的是 24 胜 13 负 0 平</strong>——它不是被一两个超长样本带出来的。37 个样本里 24 个变好、13 个变差、<strong>没有一个打平</strong>。</li></ul>
+<p>注意 13 负这一列：<strong>回滚不是&quot;全面碾压&quot;</strong>。有 13 条样本上，多训 400 步的模型反而更准。但因为赢的更多（24 &gt; 13），整体是正的，且平均改善 +0.0684。<strong>这就是&quot;逐条对拍&quot;能给出的、平均值给不出的信息</strong>：我们知道回滚是&quot;多数情况更好&quot;，而不是&quot;所有情况都更好&quot;——后者才是需要警惕的（常常意味着样本太少）。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>PPL 和&quot;能答题&quot;之间没有必然联系。</strong> 相对随机下降 75.3%（看着很成功）与关键词覆盖 0.000（完全答不了题）<strong>同时成立</strong>。任何&quot;只看 loss 曲线&quot;的评估，都会得出错误结论。</li><li><strong>平均 PPL 会掩盖逐样本的方差。</strong> 6 条样本的 PPL 从 129.95 到 848.80，相差 6.5 倍。<strong>报平均值时必须同时报分布</strong>，否则&quot;315.79&quot;这个数字会误导读者以为模型是&quot;均匀地弱&quot;。</li><li><strong>&quot;置信度 0.94&quot;实际只有 78% 正确。</strong> 校准层抓的是这类问题：<code>[0.8,1.0)</code> 箱里平均置信度 0.945、实际准确率 0.781。<strong>过度自信的 UI 比&quot;低置信度&quot;更危险</strong>，因为用户会信那个数字。</li><li><strong>大部分 token 其实落在&quot;低置信&quot;箱（72.8%）。</strong> 所以整体 ECE（0.0662）看着还行，但<strong>分箱后才看得出问题集中在 <code>[0.6,0.8)</code>（高估 41 个百分点）</strong>。只看一个 ECE 数字是盲的。</li><li><strong>贪心&quot;复读&quot;和采样&quot;乱说&quot;是两个不同的失败，别混为一谈。</strong> 贪心：distinct-1 = 0.049、重复率 0.934（<strong>循环</strong>）；采样：distinct-1 = 0.795、重复率 0.048（<strong>发散</strong>）。<strong>两种都错，但错法不同</strong>，需要用两个指标分开看。</li><li><strong>配对实验要报告&quot;负&quot;的那一列。</strong> 回滚 vs 不回滚是 24 胜 <strong>13 负</strong>，不是 37 胜。只报胜场、不报负场的配对实验，是在隐藏信息。<strong>13 负正好说明这个实验样本量够、结论真实</strong>——如果 37 胜 0 负反而要怀疑是不是设置有问题（比如两个模型差别被放大了）。</li><li><strong><code>gap</code> 是绝对值，看不出偏的方向。</strong> P09 的 <code>calibration</code> 返回的 <code>gap</code> 是 <code>|avg_confidence - accuracy|</code>，永远 ≥ 0。要判断&quot;过度自信还是过度保守&quot;，必须自己算<strong>有符号差</strong> <code>avg_confidence - accuracy</code>。demo 里就是这么做的——否则你会漏掉&quot;低置信箱其实偏保守（-0.024）&quot;这个细节。</li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><strong>语言层</strong>：验证 CE <strong>5.7551</strong>、PPL <strong>315.79</strong>、token 准确率 <strong>0.1736</strong>，相对随机（1280）下降 <strong>75.3%</strong>。逐样本 CE 从 4.8671 到 6.7438（PPL 129.95 ~ 848.80）。</li><li><strong>校准层</strong>：ECE <strong>0.0662</strong>，<strong>5 个箱中 4 个过度自信</strong>；最严重的是 <code>[0.8,1.0)</code> 箱——平均置信度 <strong>0.945</strong> 对应实际准确率 <strong>0.781</strong>；同时 <strong>72.8% 的 token 落在低置信箱</strong>。</li><li><strong>生成层</strong>：贪心总分 <strong>16.84</strong>（distinct-1 0.049 / 重复率 0.934，复读）、采样总分 <strong>31.81</strong>（<strong>关键词覆盖 0.000</strong> / 忠实 0.018 / 不重复 0.945）。<strong>模型会拼词、不会答题。</strong></li><li><strong>配对 A</strong>（未训练 vs 已训练）：平均 CE 7.1523 → 5.7551，改善 <strong>+1.3972</strong>，<strong>37 胜 0 负 0 平</strong>，符号一致性 <strong>1.000</strong>，无方向翻转。</li><li><strong>配对 B</strong>（早停回滚 vs 不回滚）：PPL 338.13 → <strong>315.79（低 6.61%）</strong>，逐条对拍平均改善 <strong>+0.0684</strong>，<strong>24 胜 13 负 0 平</strong> ⇒ 回滚是<strong>稳定的</strong>改善，不是个别样本的假象。</li><li>一句话结论：<strong>PPL 只是入场券；校准度、生成质量、配对显著性才是判决书。</strong></li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/evaluate.py</code></td><td><code>evaluate_model</code>（三层入口）/ <code>per_example_losses</code> / <code>compare_models</code>（走 P09 配对）/ <code>qa_pairs_from_lines</code> / <code>diversity_report</code> / <code>generation_report</code></td></tr><tr><td><code>src/tiny/train.py</code></td><td><code>evaluate_loss</code>（CE / PPL / token_accuracy）</td></tr><tr><td>P09 <code>src/ie/metrics.py</code></td><td><code>calibration</code>（ECE + 可靠性分箱，<code>gap</code> 为绝对值）</td></tr><tr><td>P09 <code>src/ie/compare.py</code></td><td><code>paired_compare</code>（逐条对拍：胜/负/平 + 符号一致性）</td></tr><tr><td>P08 <code>src/ft/autoeval.py</code></td><td><code>generation_report</code> 的评分口径（关键词覆盖 40% / 格式 15% / 长度 15% / 忠实 20% / 不重复 10%）</td></tr><tr><td><code>demos/demo_07_evaluation.py</code></td><td>7 节：三层总览 / 语言 / 校准 / 生成 / 多样性 / 配对 A / 配对 B</td></tr><tr><td><code>demos/out/demo_07_evaluation_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/evaluation.svg</code></td><td>三层评估 + 多样性 + 两组配对对照</td></tr><tr><td><code>assets/term-07-evaluation.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.6 → <strong>v0.7</strong>，三层评估 + 配对显著性落地。实测：语言层 PPL <strong>315.79</strong> / token 准确率 <strong>0.1736</strong>（相对随机 1280 下降 75.3%），逐样本 PPL 129.95 ~ 848.80；校准层 ECE <strong>0.0662</strong>，<strong>4/5 箱过度自信</strong>（<code>[0.8,1.0)</code> 说 0.945 只有 0.781 对，72.8% token 落在低置信箱）；生成层贪心 <strong>16.84</strong>（重复率 0.934）/ 采样 <strong>31.81</strong>（<strong>关键词覆盖 0.000</strong>）；配对 A <strong>37 胜 0 负 0 平</strong>、一致性 <strong>1.000</strong>（改善 +1.3972）；配对 B PPL <strong>低 6.61%</strong>、<strong>24 胜 13 负 0 平</strong>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

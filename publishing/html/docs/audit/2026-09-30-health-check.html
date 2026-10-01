@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>全仓库体检报告 · 2026-09-30</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="全仓库体检报告-20260930">全仓库体检报告 · 2026-09-30</h1>
+<blockquote><p>体检对象：<code>ai-engineer-journey</code> @ <strong><code>2014d85</code></strong> 全部数字来自当场执行的真实命令，原始输出存档在 <a href="../../../../audit/assets/audit-run.txt"><code>assets/audit-run.txt</code></a> 与 <a href="../../../../audit/assets/tests-run.txt"><code>assets/tests-run.txt</code></a>。</p><p><strong>口径说明</strong>：本报告描述的是 <code>2014d85</code> 那一刻的状态。报告自身连同体检脚本一共新增了 9 个文件（2 篇文档 + 4 张截图 + 2 份原始输出 + 1 个脚本），因此把报告提交上去之后， 「跟踪文件 / Markdown / 配图 / 链接」这几个总数会比下表各多出对应的一点点。 这是审计报告的固有自指效应，不是数据失真 —— 需要最新数字时重跑 <code>scripts/audit.py</code> 即可。</p></blockquote>
+<hr/>
+<h2 id="0-一句话结论">0. 一句话结论</h2>
+<p><strong>骨架是完整的，质量底线守住了，但「新克隆者能不能跑起来」和「CI 到底守住了什么」这两件事上没有对齐。</strong></p>
+<ul class="lvl"><li>守住的部分：1180 项测试全绿、859 条相对链接零死链、零硬编码密钥、333 张配图里 325 张有引用（无占位图、无来源不明图片）。</li><li>没对齐的部分：<strong>1 个阻断级缺口（P07 无正文）</strong>、<strong>3 项会让复现失败的欠账（CI 只门禁 2/10 项目、P04/P05 无 <code>.env.example</code>、P04 证据链未入库）</strong>，外加 11 项文档漂移与规范漂移。</li></ul>
+<p>体检结论：<code>ERROR 1 · WARN 15 · INFO 11</code>。</p>
+<hr/>
+<h2 id="1-体检方法可复现">1. 体检方法（可复现）</h2>
+<pre><code>python3 scripts/audit.py --quick          # 8 项检查：规模 / 骨架 / 证据链 / 配图 / 漂移 / 交叉引用 / 密钥
+python3 scripts/audit.py --tests          # 额外实跑全部项目测试（约 85 秒）</code></pre>
+<figure class="figure"><img alt="仓库健康体检 · 规模概览与项目骨架" src="../../../../audit/assets/audit-01-skeleton.png" loading="lazy"/><figcaption>仓库健康体检 · 规模概览与项目骨架</figcaption></figure>
+<p>上图这一屏就把问题暴露出来了：<code>07-open-source-llm</code> 的 <code>MI</code>（milestone 数）是 <strong>0</strong>，而 <code>04-rag</code> / <code>05-agent-mcp</code> 的 <code>ENV</code> 列是空的。</p>
+<blockquote><p><strong>写体检工具时踩到的一个坑，值得单独记一句</strong>：孤儿图检测最初扫描仓库里<strong>所有</strong>文本文件。 结果本报告的归档 <code>assets/audit-run.txt</code> 里原样抄了一遍 <code>[INFO] 孤儿图: .../site-pandas.png</code>， 工具就把这行当成了「该图被引用」，<strong>8 个孤儿图瞬间全部消失</strong>。 修法：引用来源只扫 <code>.md / .html / .py / .yml / .json / .ipynb</code>，不扫 <code>.txt</code>。 教训——<strong>观测工具的输出一旦进了被观测范围，就会污染观测结果</strong>；这类自指污染不会报错，只会让数字悄悄变好看。</p></blockquote>
+<hr/>
+<h2 id="2-现状盘点">2. 现状盘点</h2>
+<h3 id="21-规模">2.1 规模</h3>
+<table><thead><tr><th>项</th><th>数量</th></tr></thead><tbody><tr><td>git 跟踪文件</td><td>1,052</td></tr><tr><td>Markdown</td><td>197 篇 / 85,830 行</td></tr><tr><td>Python</td><td>340 个 / 49,999 行</td></tr><tr><td>配图</td><td>287 PNG + 46 SVG</td></tr></tbody></table>
+<h3 id="22-项目矩阵y-表示齐备-表示缺失">2.2 项目矩阵（<code>Y</code> 表示齐备，<code>-</code> 表示缺失）</h3>
+<table><thead><tr><th>项目</th><th>README</th><th>Milestones</th><th>src</th><th>测试数</th><th>依赖声明</th><th><code>.env.example</code></th></tr></thead><tbody><tr><td>01-python-ai-cli</td><td>Y</td><td>10</td><td>Y</td><td>6</td><td>不需要¹</td><td>Y</td></tr><tr><td>02-engineering-ai-assistant</td><td>Y</td><td>10</td><td>Y</td><td>33</td><td>Y</td><td>Y</td></tr><tr><td>03-ai-application</td><td>Y</td><td>9</td><td>Y</td><td>61</td><td>Y</td><td>Y</td></tr><tr><td>04-rag</td><td>Y</td><td>17</td><td>Y</td><td>197</td><td>Y</td><td><strong>-</strong></td></tr><tr><td>05-agent-mcp</td><td>Y</td><td>10</td><td>Y</td><td>244</td><td>Y</td><td><strong>-</strong></td></tr><tr><td>06-mini-transformer-llm</td><td>Y</td><td>10</td><td>Y</td><td>150</td><td>Y</td><td>不需要²</td></tr><tr><td><strong>07-open-source-llm</strong></td><td>Y</td><td><strong>0</strong></td><td>Y</td><td><strong>0</strong></td><td><strong>-</strong></td><td>不需要³</td></tr><tr><td>08-fine-tuning</td><td>Y</td><td>9</td><td>Y</td><td>189</td><td>Y</td><td>不需要²</td></tr><tr><td>09-evaluation-inference</td><td>Y</td><td>11</td><td>Y</td><td>229</td><td>Y</td><td>不需要²</td></tr><tr><td>10-tiny-llm-capstone</td><td>Y</td><td>11</td><td>Y</td><td>71</td><td>Y</td><td>不需要²</td></tr></tbody></table>
+<p>¹ P01 是纯标准库教学项目（<code>import</code> 只有 <code>pkgdemo</code> 等本地包），按 CONTRIBUTING §4「v0.1 允许零依赖标准库实现」豁免。 ² P06 / P08 / P09 / P10 走纯 numpy 手写路线，不调外部 API，因此没有 Key 需求。 ³ P07 的 <code>pipelines/</code> 需要 <code>DEEPSEEK_API_KEY</code>，但确实没有 <code>.env.example</code> —— 见 §3 第 3 条。</p>
+<h3 id="23-测试实跑1180-项全绿">2.3 测试实跑（1180 项，全绿）</h3>
+<figure class="figure"><img alt="全量测试实跑汇总" src="../../../../audit/assets/audit-04-tests.png" loading="lazy"/><figcaption>全量测试实跑汇总</figcaption></figure>
+<p>合计 <strong>1180 项全绿，0 failed</strong>。这个数字值得单独强调：它是本仓库最硬的质量资产。</p>
+<blockquote><p>表末两行是本期人工补充的 CI 现状说明，不是工具输出。同一批数字已用 <code>python3 scripts/audit.py --tests</code> 独立复跑一次核对（87 秒，逐项一致，<code>全部通过 ✓</code>）， 所以结论不依赖某个临时脚本。</p></blockquote>
+<h3 id="24-安全与链接基线">2.4 安全与链接基线</h3>
+<figure class="figure"><img alt="文档漂移、交叉引用、密钥与死链检查" src="../../../../audit/assets/audit-03-links.png" loading="lazy"/><figcaption>文档漂移、交叉引用、密钥与死链检查</figcaption></figure>
+<p>这一屏是全仓库最让人放心的部分：<strong>零硬编码密钥、零 <code>.env</code>/<code>.key</code> 入库、859 条相对链接零死链零坏图</strong>。 <code>check_links.py --strict</code> 也挂在 CI 上，属于「已经守住、不需要额外投入」的底线。</p>
+<hr/>
+<h2 id="3-发现清单">3. 发现清单</h2>
+<h3 id="p0-阻断级1-项">P0 — 阻断级（1 项）</h3>
+<h4 id="31-projects07opensourcellmmilestones-为空">3.1 <code>projects/07-open-source-llm/milestones/</code> 为空</h4>
+<ul class="lvl"><li><strong>现象</strong>：目录存在但 0 个 <code>.md</code>。ROADMAP 承诺 9 个 Milestone，实际一条正文都没有。</li><li><strong>不是偷懒，是被资源卡住</strong>：本机 M1 磁盘余量 ~15 GB，而 Qwen2.5-7B 的 bf16 权重就要 14.18 GiB。项目已拆成两条线，<code>pipelines/</code> 那条（调用 / 参数 / 显存账本）<strong>已真实跑通并产出 6 张终端截图</strong>，<code>notebooks/</code> 那条在等 Colab GPU。</li><li><strong>后果</strong>：这是全仓库唯一的 <code>ERROR</code>。它让 ROADMAP 里「9 个 Milestone」的进度表（✅/🔶/⬜）失去正文支撑 —— 读者点进去是空的。同时它也是唯一没有单元测试的项目，而 P07 的 <code>pipelines/llm_client/</code> 是有真实逻辑的（参数账本、KV Cache 估算、usage 守恒校验）。</li><li><strong>建议（两条路，推荐先做 B）</strong>：<ul class="lvl"><li><strong>A（等资源）</strong>：等你在 Colab 跑完 <code>p07_colab.ipynb</code> / <code>p07_finetune_java_interview.ipynb</code>，回收输出后再写 milestone。缺点：无限期挂起，且 P07 会一直是仓库里唯一没有正文的项目。</li><li><strong>B（推荐，立即可做）</strong>：把 <code>pipelines/</code> 已跑通的 6 条线<strong>直接落成 6 篇 milestone 正文</strong>（M01 调用 / M02 流式 / M03 生成参数 / M04 参数量对账 / M05 显存账本 / M06 Java 面试助手应用），把剩下 3 条（HF 生态 / BPE 细节 / 量化）在正文里明确标注为「待 GPU 资源，当前不可复现」。这样 P07 从「🔴 空目录」变成「🟡 6/9 文档就绪、3/9 明确挂起」，ROADMAP 的进度表才立得住。</li><li><strong>顺带</strong>：给 <code>pipelines/llm_client/</code> 补最小单测（参数账本与 usage 守恒都是纯算术，不需要网络即可断言），补上 <code>pyproject.toml</code>。</li></ul></li></ul>
+<h3 id="p1-影响复现3-项">P1 — 影响复现（3 项）</h3>
+<h4 id="32-ci-只门禁-210-个项目1180-项测试里只有-39-项被-ci-跑">3.2 CI 只门禁 2/10 个项目：1180 项测试里只有 39 项被 CI 跑</h4>
+<ul class="lvl"><li><strong>现象</strong>：<code>.github/workflows/ci.yml</code> 只跑 <code>01-python-ai-cli</code>（unittest 6 项）与 <code>02-engineering-ai-assistant</code>（pytest 33 项）。<strong>3 / 4 / 5 / 6 / 8 / 9 / 10 共 7 个项目、1141 项测试完全不进 CI。</strong></li><li><strong>风险</strong>：CI 流水线显示绿色，容易被读成「全仓库健康」，实际它只覆盖了 3.3% 的测试。本仓库所有项目都刻意做到了<strong>离线可跑</strong>（Fake/InMemory 客户端 + 真实链路分离），所以加进去没有技术障碍。单次耗时也很可控：P08 最慢，34.8 s。</li><li><strong>建议</strong>：在 <code>ci.yml</code> 里按 <code>working-directory</code> 逐个补 step。P01/P02 步骤保留，新增 7 个。若担心总时长，可用 <code>matrix</code> 并行，或把 P08 单独放一个 job。验收：GitHub Actions 一次运行能打印出 1180 项测试结果。</li></ul>
+<h4 id="33-p04-p05-没有-envexamplereadme-也没说要配什么">3.3 P04 / P05 没有 <code>.env.example</code>，README 也没说要配什么</h4>
+<ul class="lvl"><li><strong>现象</strong>：两个项目的代码都读外部凭据（<code>DASHSCOPE_API_KEY</code>、<code>DEEPSEEK_API_KEY</code>），但仓库里既没有 <code>.env.example</code>，项目 README 里也<strong>一个字都没提环境准备</strong>。</li><li><strong>对比</strong>：P01 / P02 / P03 都有规范的 <code>.env.example</code>（内含 <code>your-api-key-here</code> 占位 + <code>DEEPSEEK_BASE_URL</code> 等）。</li><li><strong>后果</strong>：新克隆者跑 P04 的 embedding 链路会直接拿到 KeyError/401，且不知道要去哪配。这也是 CONTRIBUTING §4 明写的要求（「引入第三方库时同步给 <code>requirements.txt</code> + <code>.env.example</code>」）。</li><li><strong>建议</strong>：补两个 <code>.env.example</code>（<code>DASHSCOPE_API_KEY</code> / <code>DASHSCOPE_BASE_URL</code>、<code>DEEPSEEK_API_KEY</code> / <code>DEEPSEEK_BASE_URL</code> / <code>DEFAULT_MODEL</code>），并在两个 README 加一节「环境准备」。验收：<code>git ls-files | grep env.example</code> 能列出 5 个项目。</li></ul>
+<h4 id="34-p04-的-demo-输出全部未入库证据链与其余-9-个项目不一致">3.4 P04 的 demo 输出全部未入库，证据链与其余 9 个项目不一致</h4>
+<ul class="lvl"><li><strong>现象</strong>：<code>projects/04-rag/.gitignore</code> 里有一行 <code>demos/out/</code>，导致本地 24 个输出文件<strong>一个都没入库</strong>；而 01 / 02 / 03 / 05 / 06 / 07 / 08 / 09 / 10 <strong>全部入库</strong>（P05 入库 14 个、P01 9 个……）。</li><li><strong>后果</strong>：P04 文档里引用的实测数字（<code>recall@1 87.5%</code>、阈值校准曲线等）在克隆后的仓库里<strong>无法被复核</strong>，也无法重渲染截图。这与 P10 确立的原则直接冲突：<em>「<code>demos/out/*_terminal.txt</code> 必须入库，它是文档里所有数字的唯一来源」</em>。</li><li><strong>建议</strong>：二选一并写进 CONTRIBUTING，不要两套政策并存。推荐<strong>改成与其余项目一致</strong>（删掉那行 ignore、把 24 个输出入库），因为 P04 是本仓库图最多的项目（44 张），证据权重最高。验收：<code>git ls-files projects/04-rag | grep -c &#x27;demos/out/&#x27;</code> 大于 0。</li></ul>
+<h3 id="p2-文档漂移按-contributing-5这些视为-bug">P2 — 文档漂移（按 CONTRIBUTING §5，这些「视为 bug」）</h3>
+<table><thead><tr><th>#</th><th>位置</th><th>声称</th><th>实际</th></tr></thead><tbody><tr><td>3.5</td><td><code>PROGRESS.md</code> Project 02 行</td><td><code>assets 共 23 张</code></td><td><strong>25 张</strong></td></tr><tr><td>3.6</td><td><code>PROGRESS.md</code> Project 03 行</td><td><code>assets 共 18 张</code></td><td><strong>20 张</strong></td></tr><tr><td>3.7</td><td><code>README.md</code> 结构树第 75 行</td><td><code>exercises/ # 01-basic 已有题，02/03/04 待播种</code></td><td><strong>4 个目录都已播种</strong>（各 2 个文件）</td></tr><tr><td>3.8</td><td><code>projects/07-open-source-llm/pipelines/README.md</code></td><td>3 处引用 <code>workflows/</code> 目录（第 5 / 16 / 266 行）</td><td><strong>该目录不存在</strong>（<code>ls</code> 报 No such file）</td></tr><tr><td>3.9</td><td><code>README.md</code> §基础知识层 + <code>ROADMAP.md</code> 附节</td><td>「两者<strong>互相引用</strong>，不重复正文」</td><td>双向真实相对链接 <strong>0 条</strong>（<code>llm-fundamentals → projects/</code> 0，反向 0）</td></tr><tr><td>3.10</td><td><code>CONTRIBUTING.md</code> §1</td><td>「<strong>所有知识</strong>只维护在 <code>projects/*/milestones/</code>」；禁止清单含 <code>curriculum/</code> <code>labs/</code> <code>knowledge/</code> <code>assessments/</code></td><td><code>llm-fundamentals/</code> 是事实上的第二棵知识树，<strong>不在豁免清单里</strong>，措辞与之直接冲突</td></tr><tr><td>3.11</td><td><code>CONTRIBUTING.md</code> §6</td><td>「是否推送由维护者当场决定；未明确授权时不推送」</td><td>实际执行的是 origin + gitee 双推，两者矛盾</td></tr><tr><td>3.12</td><td><code>CONTRIBUTING.md</code> §6</td><td>「里程碑打 tag」</td><td><code>git tag</code> <strong>0 个</strong></td></tr></tbody></table>
+<p><strong>建议</strong>：3.5–3.9 是纯修数字/改措辞，一次提交可清完；3.10 / 3.11 需要在 CONTRIBUTING 里补第 3 条豁免（把 <code>llm-fundamentals/</code> 写成「已批准的例外：理论层只讲为什么，不复制 milestone 正文」）并重写推送条款；3.12 要么给已完成的 P08/P09/P10 补 tag，要么把这条规则删掉（<strong>规则写了不执行，比没写更有害</strong>，因为后来者会以为它在执行）。</p>
+<h3 id="p3-资产与规范6-项">P3 — 资产与规范（6 项）</h3>
+<h4 id="313-7-个项目主页零配图">3.13 7 个项目主页零配图</h4>
+<p><code>projects/{04-rag, 05-agent-mcp, 06-mini-transformer-llm, 07-open-source-llm, 08-fine-tuning, 09-evaluation-inference, 10-tiny-llm-capstone}/README.md</code> 一篇图都没有。这 7 个恰好是最&quot;重&quot;的项目。项目主页是读者进入任何项目的<strong>第一落点</strong>，而仓库的硬约定是「所有文档必须配图」。</p>
+<p><strong>建议</strong>：每个主页补 1 张——优先复用已有资产里的<strong>架构图 SVG</strong>（P06–P10 各有 9–11 张手写 SVG），或用现成的终端截图拼一张 montage。不要新造图，避免又产生一批没人引用的孤儿图。</p>
+<figure class="figure"><img alt="配图与孤儿图体检结果" src="../../../../audit/assets/audit-02-images.png" loading="lazy"/><figcaption>配图与孤儿图体检结果</figcaption></figure>
+<h4 id="314-4-张无人引用的网站截图约-833-kb">3.14 4 张无人引用的网站截图（约 833 KB）</h4>
+<p><code>site-django.png</code> 56 KB、<code>site-fastapi.png</code> 124 KB、<code>site-pandas.png</code> 116 KB、<code>site-pytorch2.png</code> 537 KB —— <code>git grep</code> 全仓库零命中。<strong>建议</strong>：确认是否留给后续文章；若无用途则删除。<strong>不建议直接删</strong>，先确认。</p>
+<h4 id="315-4-个-diagram8svg-不是孤儿但容易被误删">3.15 4 个 <code>diagram8-*.svg</code> 不是孤儿，但容易被误删</h4>
+<p>它们与同名 <code>.png</code> 成对存在（<code>diagram8-decision.svg</code> ↔ <code>.png</code>），是渲染 PNG 前保留的矢量源文件。体检脚本把它们标为「未被引用」，实际是<strong>有意保留</strong>。<strong>建议</strong>：在 <code>publishing/tutorials/README.md</code> 的「配图规范」里补一行「SVG 矢量源文件与 PNG 成品并存，不入引用表」，否则下一轮体检或清理时大概率被当垃圾删掉。</p>
+<h4 id="316-配图命名规范漂移">3.16 配图命名规范漂移</h4>
+<p>CONTRIBUTING §2 规定配图前缀为 <code>site-* / term-* / colab-* / diagram-*</code>。实际：</p>
+<ul class="lvl"><li><code>llm-fundamentals/assets/</code>：<code>attention-heatmap.png</code>、<code>kv-cache-memory.png</code>、<code>positional-encoding.png</code>、<code>scaling-law.png</code>、<code>softmax-temperature.png</code>、<code>lora-params.png</code> —— 6 张全部无前缀。</li><li><code>projects/06–10/assets/*.svg</code>：描述性命名（如 <code>model-serving.svg</code>），亦无前缀。</li></ul>
+<p><strong>建议</strong>：与其强行改名（会产生大量链接变更风险），不如<strong>放宽规范</strong>：在 CONTRIBUTING §2 补一句「教学用示意图允许描述性命名，但同一目录内必须唯一且格式统一」。规范要服务一致性，不是制造改造工作量。</p>
+<h4 id="317-错题本几乎空着">3.17 错题本几乎空着</h4>
+<p><code>mistakes/</code> 只有 1 条记录（2026-09-15）。而<strong>实际踩过的坑远不止一个</strong>——仅在项目工作日志里就能捞出几十条，例如：</p>
+<ul class="lvl"><li>P06 的 <code>Tensor.__init__</code> 把 <code>_backward</code> 设成实例属性，<strong>遮蔽</strong>子类同名方法 → 梯度校验静默返回 1.0、loss 不降且不报错（最阴的一类静默失败）</li><li>P06 的 <code>Module.parameters()</code> 漏掉整个词嵌入（<code>TokenEmbedding</code> 未继承 <code>Module</code>）→ 少算 65,536 参数</li><li>P06 的 Adam 动量从未累积（<code>step()</code> 里 m/v 是局部变量）</li><li>ASCII 双引号内嵌中文引号 → Python <code>SyntaxError</code>（llm-fundamentals 4 个脚本同时中招）</li><li>macOS 的 <code>HTTP_PROXY</code> 拦截 localhost → 本地服务测不通</li></ul>
+<p><code>mistakes/README.md</code> 自己写着「教程让人看懂，错误记录让人真正掌握」。<strong>这是 Track 1（我是否真的学会）的一部分，但它现在是空的。</strong> 建议：先补 5 条最有价值的（上面前三条 + 中文引号 + HTTP_PROXY），每条按既定 7 段式写。</p>
+<h4 id="318-只有-210-个项目有自测清单track-1-无法执行">3.18 只有 2/10 个项目有自测清单，Track 1 无法执行</h4>
+<p>PROGRESS 把「学习进度」列为 Track 1 并声明「文档就绪 ≠ 已掌握」，判定规则是「做完题 → 能讲清为什么 → 才由你本人打勾」。但：</p>
+<ul class="lvl"><li><code>LEARNING.md</code>（自测清单）<strong>只有 P02、P03 有</strong>。</li><li><code>exercises/</code>（题库）<strong>只有 P01、P02、P03 有</strong>。</li></ul>
+<p>也就是说，<strong>P04–P10 这 7 个项目（占仓库 63% 的里程碑、最多的代码）根本没有自测手段</strong>，Track 1 对它们完全是空转。</p>
+<p><strong>建议</strong>：这是本报告里<strong>对你的学习收益 highest-leverage 的一项</strong>。不必一次做满 7 个，建议按「你已经学完哪个就补哪个」的顺序，每个项目先做 10 道判断题 + 5 道动手题（P02/P03 的 LEARNING.md 已有成熟模板可复制）。验收：PROGRESS 的 Track 1 表格里，7 个「⬜ 未开始」至少有 1 个能开始。</p>
+<hr/>
+<h2 id="4-补充建议清单可直接照着做">4. 补充建议清单（可直接照着做）</h2>
+<p>按「先修会误导人的，再修会拦住人的，最后修锦上添花的」排序。</p>
+<table><thead><tr><th>序</th><th>事项</th><th>动作</th><th>验收标准</th><th>量级</th></tr></thead><tbody><tr><td>1</td><td>P07 无正文（P0）</td><td>把 <code>pipelines/</code> 已跑通的 6 条线落成 6 篇 milestone，其余 3 条标注「待 GPU」</td><td><code>ls projects/07-open-source-llm/milestones/*.md</code> ≥ 6</td><td>中</td></tr><tr><td>2</td><td>CI 形同虚设（P1）</td><td><code>ci.yml</code> 补 7 个项目的 pytest step</td><td>Actions 日志能见到 1180 项测试</td><td>小</td></tr><tr><td>3</td><td>文档漂移 3.5–3.9</td><td>改 2 处数字、1 处结构树描述、3 处 <code>workflows/</code> 引用、交叉引用措辞</td><td><code>python3 scripts/audit.py</code> 的 WARN 减少 5 条</td><td>小</td></tr><tr><td>4</td><td>P04/P05 无法复现（P1）</td><td>补 2 个 <code>.env.example</code> + 2 段「环境准备」</td><td>`git ls-files \</td><td>grep -c env.example` = 5</td><td>小</td></tr><tr><td>5</td><td>P04 证据链（P1）</td><td>取消 <code>demos/out/</code> 忽略、24 个输出入库</td><td>P04 输出入库数 &gt; 0</td><td>小</td></tr><tr><td>6</td><td>CONTRIBUTING 与现实冲突 3.10–3.12</td><td>补 <code>llm-fundamentals</code> 豁免条款、重写推送条款、给 P08–P10 补 tag（或删掉该规则）</td><td>规则与实际一致，无「写了不执行」的条款</td><td>小</td></tr><tr><td>7</td><td>项目主页零配图 3.13</td><td>7 个主页各配 1 张（优先复用已有 SVG/截图）</td><td>audit 的「项目主页零配图」WARN 归零</td><td>中</td></tr><tr><td>8</td><td>错题本空置 3.17</td><td>补 5 条真实踩坑记录</td><td>`ls mistakes/*.md \</td><td>wc -l` ≥ 6</td><td>中</td></tr><tr><td>9</td><td>Track 1 空转 3.18</td><td>按已学进度，给 P04–P10 补 <code>LEARNING.md</code> + 题</td><td>Track 1 至少有 3 个项目能开始</td><td><strong>大（但收益最高）</strong></td></tr><tr><td>10</td><td>资产清理 3.14 / 3.15 / 3.16</td><td>确认 4 张无用截图后再删；补 SVG 源文件说明；放宽命名规范</td><td>audit 的 INFO 项有明确处置意见</td><td>小</td></tr></tbody></table>
+<hr/>
+<h2 id="5-不建议做的事">5. 不建议做的事</h2>
+<ul class="lvl"><li><strong>不要把 <code>llm-fundamentals/</code> 合并进 <code>projects/</code></strong>。两者定位不同（理论层 vs 实践层），合并成本高且会让 milestone 正文变成大杂烩。正确解法是补交叉引用（建议：llm-fundamentals 每章末尾加一行「对应实践项目」，同时给 P06/P08/P10 的 README 加一行「理论背景见 llm-fundamentals 第 N 章」）。</li><li><strong>不要为了统一命名规范去批量重命名配图</strong>。333 张图里任何一次改名都要同步文档引用，风险远大于收益。放宽规范即可。</li><li><strong>不要直接删那 4 张 <code>site-*.png</code></strong>。先确认没有留给后续文章，再走删除流程。</li></ul>
+<hr/>
+<h2 id="附复现本期体检">附：复现本期体检</h2>
+<pre><code>cd ai-engineer-journey
+python3 scripts/audit.py &gt; audit/assets/audit-run.txt              # 体检（本报告 §1/§3 的证据）
+python3 scripts/audit.py --tests | tail -16 | tee audit/assets/tests-run.txt  # 全量测试（§2.3）
+python3 scripts/check_links.py --strict                            # 死链坏图</code></pre>
+<p>截图渲染（需要带 Pillow 的解释器）：</p>
+<pre><code>P=/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python
+$P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-run.txt) \
+    --out audit/assets/audit-01-skeleton.png --title &quot;bash — python3 scripts/audit.py&quot;</code></pre>
+<hr/>
+<p class="nav-footer"><a href="README.html">← 返回体检档案</a></p>
+</main>
+</body>
+</html>

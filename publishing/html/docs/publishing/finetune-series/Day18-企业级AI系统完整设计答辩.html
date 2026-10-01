@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day18 企业级 AI 系统完整设计答辩</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day18-企业级-ai-系统完整设计答辩">Day18 企业级 AI 系统完整设计答辩</h1>
+<h1 id="从需求分析-架构设计-技术选型-上线运维">从需求分析 → 架构设计 → 技术选型 → 上线运维</h1>
+<p>前面 Day1～Day17，你已经学习了：</p>
+<pre><code> id=&quot;9t2q5a&quot;
+大模型基础
+
+↓
+
+模型部署
+
+↓
+
+vLLM
+
+↓
+
+RAG
+
+↓
+
+Agent
+
+↓
+
+Tool Calling
+
+↓
+
+LoRA/QLoRA
+
+↓
+
+安全
+
+↓
+
+MLOps</code></pre>
+<p>但是企业面试最后考察的是：</p>
+<blockquote><p><strong>你能不能从 0 设计一个完整 AI 产品。</strong></p></blockquote>
+<p>今天模拟：</p>
+<p>你作为：</p>
+<blockquote><p>AI 应用架构工程师</p></blockquote>
+<p>设计一个企业级 AI 系统。</p>
+<hr/>
+<h1 id="一真实面试题">一、真实面试题</h1>
+<p>面试官：</p>
+<blockquote><p>公司准备建设一个内部 AI 助手平台，支持员工查询公司知识、生成报告、分析代码、自动处理业务流程。用户规模预计 10 万人，请你设计整体架构。</p></blockquote>
+<hr/>
+<p>很多初级回答：</p>
+<p>❌</p>
+<blockquote><p>用 ChatGPT API，然后接一个知识库。</p></blockquote>
+<p>这个不够。</p>
+<p>高级回答需要：</p>
+<pre><code>需求分析
+
+↓
+
+整体架构
+
+↓
+
+技术选型
+
+↓
+
+核心链路
+
+↓
+
+稳定性
+
+↓
+
+安全
+
+↓
+
+成本
+
+↓
+
+运维</code></pre>
+<hr/>
+<h1 id="二第一步需求分析">二、第一步：需求分析</h1>
+<p>不要直接选技术。</p>
+<p>先分析业务。</p>
+<hr/>
+<h2 id="业务目标">业务目标</h2>
+<p>建设：</p>
+<h1 id="enterprise-ai-assistant企业智能助手">Enterprise AI Assistant【企业智能助手】</h1>
+<p>能力：</p>
+<h3 id="1-企业知识问答">1. 企业知识问答</h3>
+<p>例如：</p>
+<p>员工：</p>
+<blockquote><p>公司报销流程是什么？</p></blockquote>
+<p>系统：</p>
+<p>查询：</p>
+<ul class="lvl"><li>制度文档</li></ul>
+<ul class="lvl"><li>HR文档</li></ul>
+<ul class="lvl"><li>技术文档</li></ul>
+<hr/>
+<h3 id="2-智能办公">2. 智能办公</h3>
+<p>例如：</p>
+<p>生成：</p>
+<ul class="lvl"><li>周报</li></ul>
+<ul class="lvl"><li>总结</li></ul>
+<ul class="lvl"><li>方案</li></ul>
+<hr/>
+<h3 id="3-代码助手">3. 代码助手</h3>
+<p>例如：</p>
+<p>开发：</p>
+<blockquote><p>解释这个Spring代码。</p></blockquote>
+<hr/>
+<h3 id="4-agent自动处理">4. Agent自动处理</h3>
+<p>例如：</p>
+<p>用户：</p>
+<blockquote><p>帮我创建一个项目申请。</p></blockquote>
+<p>Agent：</p>
+<p>调用：</p>
+<ul class="lvl"><li>OA系统</li></ul>
+<ul class="lvl"><li>邮件系统</li></ul>
+<ul class="lvl"><li>数据库</li></ul>
+<hr/>
+<h1 id="三非功能需求">三、非功能需求</h1>
+<p>企业一定关注：</p>
+<hr/>
+<h2 id="1-性能">1. 性能</h2>
+<p>例如：</p>
+<p>10万用户。</p>
+<p>同时在线：</p>
+<p>5000。</p>
+<hr/>
+<h2 id="2-延迟">2. 延迟</h2>
+<p>目标：</p>
+<p>普通问答：</p>
+<p>&lt;3秒。</p>
+<p>复杂Agent：</p>
+<p>&lt;10秒。</p>
+<hr/>
+<h2 id="3-安全">3. 安全</h2>
+<p>要求：</p>
+<ul class="lvl"><li>权限隔离</li></ul>
+<ul class="lvl"><li>数据不泄露</li></ul>
+<ul class="lvl"><li>操作审计</li></ul>
+<hr/>
+<h2 id="4-成本">4. 成本</h2>
+<p>不能：</p>
+<p>每次调用GPT。</p>
+<hr/>
+<h1 id="四整体架构设计">四、整体架构设计</h1>
+<p>最终架构：</p>
+<pre><code>                         用户
+
+                          |
+
+                          ↓
+
+
+                    Web / App
+
+
+                          |
+
+                          ↓
+
+
+                  API Gateway
+
+
+                          |
+
+                          ↓
+
+
+                AI Application Layer
+
+
+                          |
+
+        +-----------------+----------------+
+
+        |                 |                |
+
+
+        ↓                 ↓                ↓
+
+
+      Chat             Agent           Workflow
+
+
+        |                 |                |
+
+
+        +-----------------+----------------+
+
+                          |
+
+                          ↓
+
+
+                  LLM Gateway
+
+
+                          |
+
+        +-----------------+----------------+
+
+        |                 |                |
+
+
+        ↓                 ↓                ↓
+
+
+      Qwen             DeepSeek          GPT
+
+
+     vLLM                API             API
+
+
+                          |
+
+                          ↓
+
+
+                    Model Layer
+
+</code></pre>
+<hr/>
+<h1 id="五ai应用层设计">五、AI应用层设计</h1>
+<h2 id="1-chat-service">1. Chat Service</h2>
+<p>普通问答。</p>
+<p>流程：</p>
+<pre><code>用户问题
+
+↓
+
+LLM
+
+↓
+
+回答</code></pre>
+<hr/>
+<h2 id="2-rag-service">2. RAG Service</h2>
+<p>企业知识。</p>
+<p>流程：</p>
+<pre><code>文档
+
+↓
+
+解析
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Vector DB
+
+↓
+
+Retriever
+
+↓
+
+LLM</code></pre>
+<hr/>
+<h2 id="3-agent-service">3. Agent Service</h2>
+<p>复杂任务。</p>
+<p>例如：</p>
+<p>查询：</p>
+<p>订单状态。</p>
+<p>流程：</p>
+<pre><code>用户
+
+↓
+
+Agent
+
+↓
+
+Tool选择
+
+↓
+
+调用ERP
+
+↓
+
+返回结果</code></pre>
+<hr/>
+<h1 id="六模型层设计">六、模型层设计</h1>
+<p>企业不会只有一个模型。</p>
+<p>设计：</p>
+<h2 id="通用模型">通用模型</h2>
+<p>例如：</p>
+<p>Qwen2.5-72B</p>
+<p>处理：</p>
+<p>复杂任务。</p>
+<hr/>
+<h2 id="小模型">小模型</h2>
+<p>例如：</p>
+<p>Qwen2.5-7B</p>
+<p>处理：</p>
+<p>简单问答。</p>
+<hr/>
+<h2 id="专业模型">专业模型</h2>
+<p>例如：</p>
+<p>代码模型：</p>
+<p>DeepSeek-Coder。</p>
+<hr/>
+<h1 id="七llm-gateway设计">七、LLM Gateway设计</h1>
+<p>核心：</p>
+<p>统一入口。</p>
+<p>接口：</p>
+<pre><code>POST /v1/chat/completions</code></pre>
+<p>请求：</p>
+<pre><code>{
+&quot;model&quot;:
+&quot;enterprise-ai&quot;,
+
+&quot;messages&quot;:[...]
+
+}</code></pre>
+<p>Gateway决定：</p>
+<p>调用：</p>
+<p>哪个模型。</p>
+<hr/>
+<h1 id="八模型路由策略">八、模型路由策略</h1>
+<h2 id="简单问题">简单问题</h2>
+<p>例如：</p>
+<blockquote><p>公司假期多少天？</p></blockquote>
+<p>选择：</p>
+<pre><code>Qwen7B</code></pre>
+<hr/>
+<h2 id="复杂推理">复杂推理</h2>
+<p>例如：</p>
+<blockquote><p>分析年度经营数据。</p></blockquote>
+<p>选择：</p>
+<pre><code>DeepSeek-R1</code></pre>
+<hr/>
+<h2 id="代码分析">代码分析</h2>
+<p>选择：</p>
+<pre><code>Code Model</code></pre>
+<hr/>
+<h1 id="九知识库架构">九、知识库架构</h1>
+<p>企业文档：</p>
+<p>来源：</p>
+<pre><code>PDF
+
+Word
+
+Wiki
+
+Git
+
+数据库</code></pre>
+<hr/>
+<p>处理：</p>
+<pre><code>Document Loader
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Vector DB
+</code></pre>
+<hr/>
+<p>数据库选择：</p>
+<h2 id="向量数据库">向量数据库</h2>
+<p>Milvus。</p>
+<hr/>
+<h2 id="关键词搜索">关键词搜索</h2>
+<p>Elasticsearch。</p>
+<hr/>
+<p>最终：</p>
+<p>Hybrid Search。</p>
+<hr/>
+<h1 id="十agent设计">十、Agent设计</h1>
+<p>Agent不要直接操作数据库。</p>
+<p>中间：</p>
+<p>Tool层。</p>
+<p>例如：</p>
+<pre><code>Agent
+
+↓
+
+Tool Router
+
+↓
+
+Tools
+
+
+├── 查询订单
+
+├── 查询员工
+
+├── 创建审批
+
+└── 查询库存</code></pre>
+<hr/>
+<h1 id="十一权限设计">十一、权限设计</h1>
+<p>企业核心。</p>
+<p>例如：</p>
+<p>员工A：</p>
+<p>只能：</p>
+<p>查询自己部门。</p>
+<p>员工B：</p>
+<p>管理员权限。</p>
+<hr/>
+<p>设计：</p>
+<pre><code>User
+
+↓
+
+Identity Service
+
+↓
+
+Permission
+
+↓
+
+Tool
+
+↓
+
+Data Filter</code></pre>
+<hr/>
+<h1 id="十二数据安全设计">十二、数据安全设计</h1>
+<h2 id="数据隔离">数据隔离</h2>
+<p>多租户：</p>
+<pre><code>tenant_id
+
+department_id
+
+user_id</code></pre>
+<hr/>
+<h2 id="数据脱敏">数据脱敏</h2>
+<p>例如：</p>
+<p>身份证：</p>
+<pre><code>430123199xxxxxxx</code></pre>
+<p>变：</p>
+<pre><code>430********123</code></pre>
+<hr/>
+<h1 id="十三部署架构">十三、部署架构</h1>
+<p>生产：</p>
+<p>Kubernetes。</p>
+<pre><code>                 Kubernetes
+
+
+                     |
+
+        +------------+-------------+
+
+        |                          |
+
+
+    AI Service Pods          Model Pods
+
+
+        |                          |
+
+
+    Spring Boot              vLLM
+
+
+                              |
+
+                              ↓
+
+
+                             GPU
+</code></pre>
+<hr/>
+<h1 id="十四gpu资源规划">十四、GPU资源规划</h1>
+<p>假设：</p>
+<p>10万用户。</p>
+<p>不是：</p>
+<p>10万个模型。</p>
+<hr/>
+<p>采用：</p>
+<p>共享模型。</p>
+<p>例如：</p>
+<p>GPU集群：</p>
+<pre><code>A100 x 8
+
+↓
+
+vLLM Cluster
+
+↓
+
+负载均衡</code></pre>
+<hr/>
+<h1 id="十五性能优化">十五、性能优化</h1>
+<h2 id="1-kv-cache">1. KV Cache</h2>
+<p>vLLM：</p>
+<p>减少重复计算。</p>
+<hr/>
+<h2 id="2-continuous-batching">2. Continuous Batching</h2>
+<p>多个请求一起计算。</p>
+<hr/>
+<h2 id="3-prompt-cache">3. Prompt Cache</h2>
+<p>重复Prompt复用。</p>
+<hr/>
+<h2 id="4-小模型路由">4. 小模型路由</h2>
+<p>简单任务不用大模型。</p>
+<hr/>
+<h1 id="十六监控体系">十六、监控体系</h1>
+<p>三层：</p>
+<hr/>
+<h2 id="应用监控">应用监控</h2>
+<p>Spring Boot：</p>
+<ul class="lvl"><li>QPS</li></ul>
+<ul class="lvl"><li>延迟</li></ul>
+<ul class="lvl"><li>错误</li></ul>
+<hr/>
+<h2 id="ai监控">AI监控</h2>
+<p>模型：</p>
+<ul class="lvl"><li>Token</li></ul>
+<ul class="lvl"><li>Cost</li></ul>
+<ul class="lvl"><li>Quality</li></ul>
+<hr/>
+<h2 id="gpu监控">GPU监控</h2>
+<p>GPU：</p>
+<ul class="lvl"><li>显存</li></ul>
+<ul class="lvl"><li>利用率</li></ul>
+<ul class="lvl"><li>温度</li></ul>
+<hr/>
+<p>工具：</p>
+<ul class="lvl"><li>Prometheus</li></ul>
+<ul class="lvl"><li>Grafana</li></ul>
+<hr/>
+<h1 id="十七上线流程">十七、上线流程</h1>
+<p>企业流程：</p>
+<pre><code>开发环境
+
+↓
+
+测试环境
+
+↓
+
+灰度环境
+
+↓
+
+生产环境
+
+↓
+
+监控
+
+↓
+
+优化</code></pre>
+<hr/>
+<h1 id="十八模型迭代">十八、模型迭代</h1>
+<p>流程：</p>
+<pre><code>用户反馈
+
+↓
+
+新增数据
+
+↓
+
+Evaluation
+
+↓
+
+LoRA训练
+
+↓
+
+模型版本
+
+↓
+
+灰度
+
+↓
+
+上线</code></pre>
+<hr/>
+<h1 id="十九成本控制设计">十九、成本控制设计</h1>
+<p>企业最关心。</p>
+<p>措施：</p>
+<hr/>
+<h2 id="1-模型分级">1. 模型分级</h2>
+<p>简单：</p>
+<p>7B。</p>
+<p>复杂：</p>
+<p>70B。</p>
+<hr/>
+<h2 id="2-cache">2. Cache</h2>
+<p>重复问题：</p>
+<p>Redis。</p>
+<hr/>
+<h2 id="3-token限制">3. Token限制</h2>
+<p>控制：</p>
+<p>最大输出。</p>
+<hr/>
+<h2 id="4-rag优化">4. RAG优化</h2>
+<p>减少Prompt长度。</p>
+<hr/>
+<h1 id="二十完整面试回答">二十、完整面试回答</h1>
+<p>面试官：</p>
+<blockquote><p>请设计一个企业级大模型应用平台。</p></blockquote>
+<p>你的回答：</p>
+<blockquote><p>我会将系统拆分为应用层、模型服务层和基础设施层。应用层基于Spring Boot和LangChain4j实现Chat、RAG和Agent能力；知识场景采用RAG架构，通过文档解析、Chunk、Embedding和向量数据库实现企业知识增强；复杂业务通过Agent结合Tool Calling调用内部系统。模型层通过LLM Gateway统一管理多个模型，根据任务类型进行路由。部署层使用Kubernetes管理服务，通过vLLM提供高性能推理，并结合GPU监控、模型评测、灰度发布和MLOps流程保证系统稳定迭代。</p></blockquote>
+<hr/>
+<h1 id="二十一你的能力升级">二十一、你的能力升级</h1>
+<p>完成 Day18 后，你已经形成：</p>
+<pre><code>Java后端能力
+
+        +
+
+AI应用能力
+
+        +
+
+模型部署能力
+
+        +
+
+Agent能力
+
+        +
+
+MLOps能力
+
+        +
+
+系统架构能力
+
+=
+
+AI Application Engineer</code></pre>
+<hr/>
+<h1 id="下一阶段-day19">下一阶段 Day19</h1>
+<p>建议进入：</p>
+<h1 id="day19从-ai-工程师到-ai-产品工程师设计开发上线一个完整-ai-saas">《Day19：从 AI 工程师到 AI 产品工程师：设计、开发、上线一个完整 AI SaaS》</h1>
+<p>目标：</p>
+<p>把技术能力转成：</p>
+<ul class="lvl"><li>可商业化产品</li></ul>
+<ul class="lvl"><li>用户需求分析</li></ul>
+<ul class="lvl"><li>SaaS架构</li></ul>
+<ul class="lvl"><li>收费模式</li></ul>
+<ul class="lvl"><li>MVP开发路线</li></ul>
+<p>因为对于你现在的背景（6年 Java + AI 转型），除了求职，也可以探索：</p>
+<blockquote><p>AI工具产品 / 独立开发 / 创业验证。</p></blockquote>
+</main>
+</body>
+</html>

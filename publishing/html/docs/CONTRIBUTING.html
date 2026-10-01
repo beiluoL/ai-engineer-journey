@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Contributing — 仓库维护规范</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="contributing-仓库维护规范">Contributing — 仓库维护规范</h1>
+<blockquote><p>本仓库是个人学习系统 + 开源项目。所有改动（包括 AI 协助生成）都遵守本规范。</p></blockquote>
+<h2 id="1-单一事实源">1. 单一事实源</h2>
+<ul class="lvl"><li><strong>知识只维护在 <code>projects/*/milestones/</code></strong>。<code>publishing/</code> 只是派生输出，禁止在两处平行维护同一知识。</li><li>禁止出现平行知识体系：<code>curriculum/</code>、<code>labs/</code>、<code>knowledge/</code>、<code>assessments/</code>。</li></ul>
+<h2 id="2-文件命名">2. 文件命名</h2>
+<table><thead><tr><th>内容</th><th>规则</th><th>示例</th></tr></thead><tbody><tr><td>milestone</td><td><code>NN-english-slug.md</code>（两位序号 + 英文短横线）</td><td><code>04-dataclass.md</code></td></tr><tr><td>tutorial</td><td><code>NN-english-slug.md/.html</code></td><td><code>04-enterprise-llm-deploy-gpu-vllm-springboot.md</code></td></tr><tr><td>错误记录</td><td><code>YYYY-MM-DD-slug.md</code></td><td><code>2026-09-15-package-init-export-miss.md</code></td></tr><tr><td>配图</td><td><code>site-*</code> / <code>term-*</code> / <code>colab-*</code> / <code>diagram-*</code> 前缀</td><td><code>colab-nvidia-smi-t4.png</code></td></tr></tbody></table>
+<p>中文标题写在文档 H1 / 副标题里，不进文件名。</p>
+<h2 id="3-内容分级防假装学会">3. 内容分级（防「假装学会」）</h2>
+<table><thead><tr><th>标记</th><th>含义</th></tr></thead><tbody><tr><td>📝 草稿</td><td>AI 生成或笔记原始态，未核实</td></tr><tr><td>✅ 已校对</td><td>人工核实事实与代码（价格/版本/API 必须联网核实）</td></tr><tr><td>🎓 已学习</td><td>亲手跑通 + 能复述，计入 PROGRESS 学习进度轨</td></tr></tbody></table>
+<p>只有 🎓 才能写进 PROGRESS 的学习轨；publishing/finetune-series 等草稿库的头部 README 负责维护分级。</p>
+<h2 id="4-代码规范">4. 代码规范</h2>
+<ul class="lvl"><li>类型注解齐全；模块 docstring 说明「对应哪个 milestone」且<strong>引用路径必须真实存在</strong></li><li>异常不允许静默吞掉；对外行为（HTTP 状态、退出码）有明确映射</li><li>每个项目的核心逻辑有单元测试（unittest 起步，Project 02 起切 pytest）</li><li>v0.1 项目允许零依赖标准库实现；引入第三方库时同步给 <code>requirements.txt</code>（版本用 <code>==</code> 锚定）+ <code>.env.example</code></li></ul>
+<h2 id="5-文档同步规矩防漂移">5. 文档同步规矩（防漂移）</h2>
+<ul class="lvl"><li><strong>结构性重构（移动/删除目录）的 commit，必须同步修复所有引用旧路径的文件</strong>，commit message 附「受影响引用清单」</li><li>README / PROGRESS / ROADMAP 与仓库现实不一致，视为 bug</li><li>提交前跑一遍：<code>grep -rnE &quot;已删除目录名&quot; --include=&quot;*.py&quot; --include=&quot;*.md&quot; projects/ README.md</code></li></ul>
+<h2 id="6-git-约定">6. Git 约定</h2>
+<ul class="lvl"><li>Commit message 用约定式前缀：<code>feat:</code> / <code>fix:</code> / <code>docs:</code> / <code>refactor:</code> / <code>test:</code> / <code>chore:</code> / <code>experiment:</code></li><li>双远程：origin（GitHub）+ gitee（Gitee）。<strong>是否推送、推送到哪，由维护者当场决定</strong>；未明确授权时不推送</li><li>每个完整学习/开发任务一个 commit；里程碑打 tag</li></ul>
+<h2 id="7-安全">7. 安全</h2>
+<ul class="lvl"><li>API Key / Token / 密码只走环境变量或本地 <code>.env</code>（已 gitignore），仓库只有 <code>.env.example</code></li><li>严禁在任何文件、日志、截图里出现真实凭证</li></ul>
+</main>
+</body>
+</html>

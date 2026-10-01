@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 07 — DecoderStack：把 N 层堆起来，输出 logits</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-07-decoderstack把-n-层堆起来输出-logits">Milestone 07 — DecoderStack：把 N 层堆起来，输出 logits</h1>
+<p>Milestone 03–06 已经把「单个 Block」写好了。这一层把它们<strong>堆成整条前向链路</strong>：Embedding 进来，过 N 个 Block，最后接一个最终 LayerNorm 和输出投影，把每个位置的隐藏向量变成词表上的 <code>logits</code>。到这里，从 id 到 logits 的整条路就闭环了 —— 下一步交给交叉熵算损失。</p>
+<p>在 Project 05 里 <code>model(_messages) → text</code> 是个黑盒；这里 <code>ids → Embedding → [Block × N] → LN → proj → logits(seq, V)</code> 每一步的形状我都亲手钉死。</p>
+<hr/>
+<h2 id="1-what-why堆叠层数为什么不影响接口">1. What / Why：堆叠层数为什么不影响接口</h2>
+<p><code>DecoderStack</code> 把 N 个 Block 串起来。关键性质：<strong>不论堆几层，输入 <code>(B, seq, d_model)</code>、输出还是 <code>(B, seq, d_model)</code></strong> —— 每个 Block 都保持维度不变（残差保证的）。所以「换层数」只改容量，不改接口，训练侧和推理侧都不用动。最后一层投影 <code>(d_model → vocab)</code> 才把维度掰到词表大小。</p>
+<p><code>TransformerLM</code> 是把 <code>Embedding + DecoderStack</code> 缝在一起的整机，训练和推理都直接用它（Milestone 09/10 直接用）。</p>
+<h2 id="2-designn-层-最终-ln-投影">2. Design：N 层 + 最终 LN + 投影</h2>
+<p><code>src/model/decoder.py</code>：</p>
+<ul class="lvl"><li><code>DecoderStack.__init__</code>：<code>self.blocks = [TransformerBlock(...) for _ in range(n_layers)]</code>、一个 <code>_FinalLayerNorm</code>、<code>self.proj = Parameter(np.random.randn(d_model, vocab_size) * 0.02)</code>。</li><li><code>forward</code>：<code>h = x; for block in blocks: h = block(h, mask); h = ln_f(h); return linear(h, proj)</code>。</li><li><code>TransformerLM</code>：<code>token_emb + pos_enc + decoder</code> 三件套；<code>forward(ids)</code> 自动按序列长生成因果掩码，返回 <code>logits (B, seq, vocab)</code>。</li></ul>
+<figure class="figure"><img alt="DecoderStack → logits 前向闭环" src="../../../../../../projects/06-mini-transformer-llm/assets/decoder.svg" loading="lazy"/><figcaption>DecoderStack → logits 前向闭环</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo07decodertxt">3. Real-run evidence（来自 <code>demos/out/demo_07_decoder.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。<strong>注意这是随机初始化、未训练的模型，只看形状与数值合理性。</strong></p>
+<pre><code>vocab=500, d_model=24, n_heads=4, d_ff=64, n_layers=2
+DecoderStack 参数个数 : 27
+
+句子（前 12 token）：[&#x27;大模型&#x27;, &#x27;的&#x27;, &#x27;第&#x27;, &#x27;一步&#x27;, &#x27;是&#x27;, &#x27; &#x27;, &#x27;Tokenization&#x27;, &#x27;，&#x27;, &#x27;也&#x27;, &#x27;就&#x27;, &#x27;是&#x27;, &#x27;把&#x27;]
+ids 形状 : (1, 12)
+logits 形状 : (1, 12, 500)  (seq, vocab)
+logits 有限 : True</code></pre>
+<p>未训练时每个位置的预测基本是乱猜，最后一位 top5：</p>
+<pre><code>#1  &#x27;表&#x27;    (id=258, logit=+0.246)
+#2  &#x27;AdamW&#x27;  (id=416, logit=+0.241)
+#3  &#x27;温&#x27;    (id=211, logit=+0.236)
+#4  &#x27;y&#x27;     (id=57,  logit=+0.226)
+#5  &#x27;表示&#x27;   (id=351, logit=+0.214)
+随机初始下 logits 的量级 |max| ≈ 0.409</code></pre>
+<p>最重要的是「堆叠层数不影响接口形状」被验证：</p>
+<pre><code>n_layers=1 → logits 形状 (1, 12, 500)
+n_layers=3 → logits 形状 (1, 12, 500)</code></pre>
+<p><code>|max| ≈ 0.409</code> 也印证了小初始化（0.02）按预期生效：随机初始的 logits 离「均匀」不远，没一上来就饱和。</p>
+<figure class="figure"><img alt="DecoderStack demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-07-decoder.png" loading="lazy"/><figcaption>DecoderStack demo 真实运行输出</figcaption></figure>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<p>本 milestone demo 没有暴露真实运行 bug。一个<strong>值得记的设计点</strong>：<code>TransformerLM.forward</code> 在 <code>mask is None</code> 时自动按当前 <code>seq_len</code> 生成因果掩码（<code>causal_mask(seq_len)</code>），并校验 <code>seq_len ≤ max_len</code>。这条把「模型自己管掩码」收口在一处，避免训练/推理两边各写一份掩码逻辑、对齐出错（Milestone 02 强调过「特殊 token 顺序写死、两边不许各写一套」，掩码同理）。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>DecoderStack = <code>[Block × N] → FinalLN → 投影(d_model→V)</code>，输出 <code>(seq, vocab)</code> 的 logits。</li><li>因为 Block 维度不变，<strong>层数只改容量、不改接口</strong> —— <code>n_layers=1</code> 和 <code>3</code> 输出形状相同。</li><li><code>TransformerLM</code> 把 Embedding+Decoder 缝成整机，并<strong>统一负责因果掩码</strong>，训练/推理共用一份逻辑。</li><li>随机初始 logits <code>|max|≈0.409</code>，说明小初始化按预期生效，没饱和。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/decoder.py</code></td><td><code>DecoderStack</code>（N 层 Block + FinalLN + proj）、<code>TransformerLM</code>（Embedding+PosEnc+Decoder 整机，统一管掩码）</td></tr><tr><td><code>src/model/block.py</code></td><td>复用的 <code>TransformerBlock</code></td></tr><tr><td><code>src/model/embedding.py</code></td><td>复用的 <code>TokenEmbedding</code> / <code>PositionalEncoding</code> / <code>combine</code></td></tr><tr><td><code>demos/demo_07_decoder.py</code></td><td>4 节演示：构造 / 前向 / 未训练预测 / 层数无关性，输出落 <code>demos/out/demo_07_decoder.txt</code></td></tr><tr><td><code>assets/decoder.svg</code></td><td>本章前向闭环图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.5 → <strong>v0.6</strong>，DecoderStack + TransformerLM 整机落地（id→logits 全链路闭环，层数无关接口验证），演示真实跑通并核对 logits 形状/未训练预测，配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 06 — Quantization：INT8 / INT4 / NF4</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-06-quantizationint8-int4-nf4">Milestone 06 — Quantization：INT8 / INT4 / NF4</h1>
+<p>M05 证明了&quot;训练过的模型比基座好&quot;（10/0/0 稳定）。现在进入后半段主线的第一站：<strong>模型太大，跑不起怎么办？</strong></p>
+<p>P08 的 QLoRA 已经用过 NF4（把<strong>冻结的基座</strong>压成 4 bit 以省显存）。本章的问题更一般：<strong>对任意一张权重矩阵，INT8 / INT4 / NF4 各自要付多少代价？</strong></p>
+<p>答案是两条，而且<strong>它们互相矛盾</strong>：</p>
+<ul class="lvl"><li>按<strong>权重重建误差</strong>排：INT8 ≫ INT4 &gt; NF4（INT8 最好）。</li><li>按<strong>端到端困惑度</strong>排：NF4 ≫ INT8 &gt; INT4（NF4 最好）。</li></ul>
+<p><strong>权重误差最小的方案，端到端不是最好的。</strong> 这是本章最值得记住的一件事，也是整个 P09 里最有价值的一条实测发现。</p>
+<p><strong>纯 numpy 手写</strong>：对称量化、per-channel scale、NF4 码本复用 P08、存储账本、端到端量化，全部自己实现（<code>src/ie/quantize.py</code>）。没有 <code>bitsandbytes</code>、没有 <code>GPTQ</code>。</p>
+<hr/>
+<h2 id="1-why为什么量化必然有代价以及代价怎么衡量">1. Why：为什么量化必然有代价，以及代价怎么衡量</h2>
+<p>量化的本质是<strong>用 <code>bits</code> 个离散码字 + 一个 scale 去表示一片浮点数</strong>：</p>
+<pre><code>Ŵ = scale × round(W / scale)        # 对称量化（INT8 / INT4）</code></pre>
+<p>代价是 <code>W − Ŵ</code>。衡量它有两种完全不同的口径：</p>
+<table><thead><tr><th>口径</th><th>指标</th><th>衡量什么</th></tr></thead><tbody><tr><td><strong>重建误差</strong></td><td>MSE / 相对 L2</td><td>权重矩阵本身被改了多少</td></tr><tr><td><strong>任务代价</strong></td><td>端到端 PPL</td><td>这个改动让模型变笨了多少</td></tr></tbody></table>
+<p><strong>直觉是两者正相关，实测不是。</strong> 原因有三条，按重要性排：</p>
+<ul class="lvl"><li><strong>量化误差不是白噪声，是结构化噪声。</strong> 它与权重的幅度、分布、离群值位置相关。MSE 只算&quot;总量&quot;，不算&quot;方向&quot; —— 一个沿着&quot;输出不敏感方向&quot;的大误差，可能比一个沿着敏感方向的小误差更无害。</li><li><strong>网络的各层对扰动的敏感度差异极大。</strong> 同一个 MSE，压在 <code>attn.Wq</code> 上和压在 <code>ffn.W2</code> 上，后果完全不同。</li><li><strong>PPL 是 CE 的指数。</strong> CE 上 0.04 的微小变化，在 PPL 上被放大成 4% 的&quot;看起来很大&quot;的变化（见 4.2）。</li></ul>
+<h2 id="2-design三种方案-两套粒度">2. Design：三种方案 + 两套粒度</h2>
+<pre><code>quantize_symmetric(W, bits, granularity, channel_axis)   # INT8 / INT4：对称 + 最近邻取整
+quantize_nf4(W, block_size, double_quant)                # NF4：复用 P08 的分位数码本</code></pre>
+<ul class="lvl"><li><strong>INT8 / INT4（对称量化）</strong>：<code>scale = absmax / (2^(bits-1) − 1)</code>，<code>codes = clip(round(W/scale), −qmax, qmax)</code>。零必须能被表示（对称量化的直接结果）。</li><li><strong>NF4</strong>：不等距的 16 个码字，按<strong>标准正态的分位数</strong>切分，用 <code>argmin|W/absmax − c|</code> 最近邻查找（不能 <code>round</code>，码字不等距）。这是 P08 已经做过的，本章直接复用 <code>ft.quantize</code>。</li><li><strong>两种粒度</strong>：<ul class="lvl"><li><code>per_tensor</code>：整张矩阵<strong>一个</strong> scale（4 字节存储开销）。</li><li><code>per_channel</code>：沿 <code>channel_axis</code> 每个通道一个 scale。对 <code>decoder.proj (64, 1024)</code> 就是 <strong>1024 个 fp32 scale = 4,096 字节</strong>。</li></ul></li></ul>
+<figure class="figure"><img alt="M06 量化：per-tensor vs per-channel 粒度对比 + INT8/INT4/NF4 三方案" src="../../../../../../projects/09-evaluation-inference/assets/quantization.svg" loading="lazy"/><figcaption>M06 量化：per-tensor vs per-channel 粒度对比 + INT8/INT4/NF4 三方案</figcaption></figure>
+<p><strong>端到端量化</strong> <code>quantize_model</code>（<code>src/ie/quantize.py:125</code>）：深拷贝模型，遍历 <code>named_parameters</code>，把<strong>所有 <code>ndim &gt;= 2</code> 的参数</strong>替换成&quot;量化后再反量化&quot;的值 —— 也就是说<strong>前向仍然用浮点数算</strong>，量化的影响体现在&quot;权重值被改变了&quot;。这是<strong>训练后量化（PTQ）的最简形式</strong>，也是隔离&quot;量化误差&quot;这一变量的正确做法。</p>
+<blockquote><p>注意：这里遍历用的是 <strong>P08 的 <code>ft.inject.named_parameters</code></strong>，不是 P06 的 <code>Module.parameters()</code> —— 后者<strong>漏掉了 <code>token_emb.weight</code></strong>（<code>TokenEmbedding</code> 没继承 <code>Module</code>，<code>_collect_params</code> 只认 <code>Parameter</code>/<code>Module</code>/list/dict）。不改 P06，绕开它（见 4.5）。</p></blockquote>
+<h2 id="3-realrun-evidence来自-demosoutdemo06quantizationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_06_quantization_terminal.txt</code>）</h2>
+<h3 id="31-单矩阵上的权重误差与压缩实测">3.1 单矩阵上的权重误差与压缩（实测）</h3>
+<p>对比权重：<code>decoder.proj (64, 1024)</code>，<strong>65,536 个参数</strong>。粒度 <code>per_channel</code>。</p>
+<table><thead><tr><th>方案</th><th>MSE</th><th>相对 L2</th><th>存储 bytes</th><th>相对 fp32 压缩</th></tr></thead><tbody><tr><td><strong>INT8</strong></td><td><strong>7.67262816e-08</strong></td><td>0.003431</td><td>69,632</td><td><strong>3.76×</strong></td></tr><tr><td>INT4</td><td>2.51961847e-05</td><td>0.062178</td><td>36,864</td><td>7.11×</td></tr><tr><td><strong>NF4</strong></td><td><strong>5.24610312e-05</strong></td><td>0.089720</td><td>33,808</td><td><strong>7.75×</strong></td></tr></tbody></table>
+<p>存储账（<code>decoder.proj</code>，per_channel，轴 = 1024 通道）：</p>
+<table><thead><tr><th>方案</th><th>codes</th><th>scale</th><th>合计</th></tr></thead><tbody><tr><td>fp32 原始</td><td>—</td><td>—</td><td>262,144 B</td></tr><tr><td>INT8</td><td>65,536 × 1 B</td><td>1,024 × 4 B = 4,096</td><td><strong>69,632 B</strong> → 3.76×</td></tr><tr><td>INT4</td><td>65,536 × 0.5 B</td><td>4,096</td><td><strong>36,864 B</strong> → 7.11×</td></tr><tr><td>NF4（block=64 + 双量化）</td><td>65,536 × 0.5 B</td><td>absmax 二次量化 ≈ 1,040</td><td><strong>33,808 B</strong> → 7.75×</td></tr></tbody></table>
+<p><strong>INT8 的 MSE 是 NF4 的 1/684</strong>（7.673e-08 vs 5.246e-05），但压缩倍数只有 3.76× vs 7.75× —— 这就是&quot;精度换体积&quot;的经典权衡，到这里为止一切符合直觉。</p>
+<h3 id="32-端到端答案区困惑度实测同一-heldout-8-条">3.2 端到端答案区困惑度（实测，同一 held-out 8 条）</h3>
+<table><thead><tr><th>方案</th><th>PPL</th><th>相对变化</th><th>PPL 代价</th></tr></thead><tbody><tr><td>FP64 计算基线</td><td><strong>5496.7621</strong></td><td>+0.000%</td><td>—</td></tr><tr><td>INT8</td><td>5495.2057</td><td><strong>−0.028%</strong></td><td>−1.5564</td></tr><tr><td>INT4</td><td>5503.2843</td><td><strong>+0.119%</strong></td><td>+6.5221</td></tr><tr><td><strong>NF4</strong></td><td><strong>5272.0521</strong></td><td><strong>−4.088%</strong></td><td><strong>−224.7101</strong></td></tr></tbody></table>
+<p><strong>排序完全翻转了。</strong> 权重 MSE 最差的 NF4（是 INT8 的 <strong>684 倍</strong>），端到端 PPL 反而最好（比 FP64 基线还低 224.71）。</p>
+<figure class="figure"><img alt="M06 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-06-quantization.png" loading="lazy"/><figcaption>M06 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-权重误差最小-端到端最优本章最重要的一条">4.1 ⭐ 权重误差最小 ≠ 端到端最优（本章最重要的一条）</h3>
+<p>把两张表并排放：</p>
+<table><thead><tr><th>方案</th><th>权重 MSE</th><th>排名</th><th>端到端 PPL 变化</th><th>排名</th></tr></thead><tbody><tr><td>INT8</td><td><strong>7.673e-08</strong></td><td>🥇 1</td><td>−0.028%</td><td>🥈 2</td></tr><tr><td>INT4</td><td>2.520e-05</td><td>🥈 2</td><td>+0.119%</td><td>🥉 3</td></tr><tr><td>NF4</td><td><strong>5.246e-05</strong></td><td>🥉 3</td><td><strong>−4.088%</strong></td><td>🥇 1</td></tr></tbody></table>
+<p><strong>MSE 排名和 PPL 排名完全相反。</strong> NF4 的权重 MSE 是 INT8 的 <strong>684 倍</strong>（5.24610312e-05 ÷ 7.67262816e-08 = 683.8），端到端却好 224.71 个 PPL 点。</p>
+<p><strong>这意味着：你不能用&quot;重建误差&quot;来选量化方案。</strong> 工程上最常见的错误做法就是&quot;跑几个量化器，选 MSE 最小的那个&quot;—— 本章实测证明这个选择规则是<strong>错的</strong>。</p>
+<p>至于<strong>为什么</strong> NF4 端到端反而更好，诚实地说：</p>
+<ul class="lvl"><li>可以确定的是：量化误差是<strong>结构化</strong>的，NF4 的误差分布（按分位数切分 → 误差与权重幅度相关）与 INT8/INT4 的均匀量化误差<strong>性质不同</strong>，不只是大小不同；</li><li>也可以确定：<strong>NF4 只压到 4 bit</strong>——低比特量化在这个欠训练的玩具模型上可能起到了类似轻微正则/温度缩放的作用；</li><li><strong>不能确定的是机制</strong>。PPL 改善只有 −4.088%，在 CE 尺度上只有 <strong>−0.0418</strong>（见 4.2），<strong>完全可能是这批 8 条 held-out 上的偶然</strong>。</li></ul>
+<blockquote><p><strong>可迁移的唯一结论：量化方案必须在你的任务集上复测，不能只看重建误差选。</strong> 如果你只记住 P09 的一句话，记这句。</p></blockquote>
+<h3 id="42-ppl-是-ce-的指数-4088-听起来很大其实-ce-只动了-00418">4.2 PPL 是 CE 的指数 —— &quot;−4.088%&quot; 听起来很大，其实 CE 只动了 0.0418</h3>
+<pre><code>FP64:  PPL 5496.7621  →  CE = ln(5496.7621) = 8.61196
+NF4:   PPL 5272.0521  →  CE = ln(5272.0521) = 8.57018
+ΔCE = −0.04178   （相对变化仅 −0.485%）
+ΔPPL = −4.088%   （放大 8.4 倍）</code></pre>
+<p><strong>同一个事实，两个尺度。</strong> <code>ppl = exp(CE)</code> 在 CE≈8.6 处的导数是 <code>exp(8.6)≈5500</code>，所以 CE 每变 0.01，PPL 就变约 55 —— &quot;百分比&quot;被放大了整整一个数量级。</p>
+<p>这是 P08 M09 已经埋下的伏笔（&quot;困惑度下降 88.46% 听起来很猛&quot;），本章再次撞上。<strong>报量化收益时请同时报 CE（或同时报 PPL 与基线值）</strong>，否则读者会把 −4.088% 误读成&quot;NF4 让模型脱胎换骨&quot;—— 实际上模型仍然一个字都说不对（PPL 5272）。</p>
+<h3 id="43-int4-反而是三者里唯一变差的-但它最正常">4.3 INT4 反而是三者里唯一&quot;变差&quot;的 —— 但它最&quot;正常&quot;</h3>
+<p>INT4 的 PPL 是 <strong>+0.119%（+6.5221）</strong>，是三者中唯一变差的。</p>
+<p>这其实<strong>符合直觉</strong>：均匀 INT4 只有 16 个电平（qmax=7，即 15 个非零电平 + 零），重建误差 0.062178，压到 7.11×。它既没有 INT8 那么高的精度，也没有 NF4 那种&quot;按分布定制&quot;的码本。<strong>它是三者里最&quot;朴素&quot;的方案，也是唯一给出&quot;预期内&quot;结果的方案。</strong></p>
+<p>对比之下，NF4 的 −4.088% 才是那个<strong>异常值</strong>。所以正确的读法不是&quot;NF4 真厉害&quot;，而是&quot;<strong>这个预训练不足的玩具模型对量化扰动的响应很反常</strong>&quot;。</p>
+<p>诚实标注：<strong>这个反常结论是在 8 条 held-out、d_model=64 的 2 层玩具模型上测出来的。不能推广到真实 7B 模型。</strong> 真实模型上 NF4 与 INT8 的排序大概率会回到&quot;INT8 更好&quot;（这是推断，不是实测）。</p>
+<h3 id="44-perchannel-的-scale-开销小矩阵上不划算结构性分析">4.4 per-channel 的 scale 开销：小矩阵上不划算（结构性分析）</h3>
+<p>本章实测全部用 <code>per_channel</code>（<code>decoder.proj</code> 的 1024 个通道各一个 fp32 scale = 4,096 字节）。</p>
+<p>对比两种粒度的<strong>存储账</strong>（结构性计算，非本章实测的精度对比）：</p>
+<table><thead><tr><th>粒度</th><th>INT8 存储</th><th>相对 fp32</th><th>scale 占比</th></tr></thead><tbody><tr><td><code>per_tensor</code></td><td>65,536 + <strong>4</strong> = 65,540 B</td><td><strong>4.00×</strong></td><td>0.006%</td></tr><tr><td><code>per_channel</code></td><td>65,536 + <strong>4,096</strong> = 69,632 B</td><td><strong>3.76×</strong></td><td><strong>5.88%</strong></td></tr></tbody></table>
+<p><strong>per-channel 让 INT8 的压缩比从 4.00× 掉到 3.76×（体积多 6.2%），换的是离群值隔离能力。</strong></p>
+<p>这笔买卖划不划算取决于矩阵形状：<strong>通道数越少越划算</strong>。<code>decoder.proj (64, 1024)</code> 有 1024 个通道 → scale 占 5.88%；而 <code>attn.Wq (64, 64)</code> 只有 64 个通道 → scale 只占 0.4%。</p>
+<blockquote><p>真实大模型上通常是<strong>反过来的</strong>：权重大多接近零均值正态，离群值少，但 Embedding / LM Head 这类矩阵离群值很猛 —— 工业界做法正是<strong>对大多数层用 per-tensor / per-channel，对少数敏感层用 per-group 或保留 fp16</strong>。</p></blockquote>
+<h3 id="45-遍历参数必须绕开-p06-的-moduleparameters它漏掉词嵌入">4.5 ⚠ 遍历参数必须绕开 P06 的 <code>Module.parameters()</code>（它漏掉词嵌入）</h3>
+<p><code>quantize_model</code> 要遍历模型里所有权重。用 P06 自带的 <code>Module.parameters()</code> 会<strong>漏掉 <code>token_emb.weight</code></strong>：</p>
+<pre><code># projects/06-mini-transformer-llm/src/model/autograd.py
+def parameters(self):
+    for value in self.__dict__.values():
+        params.extend(_collect_params(value))     # 只认 Parameter / Module / list / dict</code></pre>
+<p><code>TokenEmbedding</code> 是普通类、没继承 <code>Module</code>，于是它抱着的那块 <code>(1024, 64)</code> 词嵌入<strong>永远不在参数表里</strong>。对量化的后果是：<strong>一半以上的参数不会被压</strong>（词嵌入 65,536 个参数，和 <code>decoder.proj</code> 一样大），压缩比报告会严重虚高。</p>
+<p><strong>本项目不改 P06</strong>，一律用 P08 的 <code>ft.inject.named_parameters</code>（遍历任意对象的 <code>__dict__</code>，并跳过 <code>_prev</code> 这类计算图边）：</p>
+<pre><code>from ft.inject import named_parameters        # src/ie/quantize.py:16
+for path, parameter in named_parameters(copied):
+    if parameter.data.ndim &lt; 2:
+        continue                              # 跳过 bias / LN gamma / beta</code></pre>
+<p>顺带一个同源缺陷：P06 的 <code>Adam</code> 动量<strong>从不累积</strong>（详见 M05 4.6）。两个缺陷都在 P06，本项目一律&quot;绕开而不修改&quot;。</p>
+<h3 id="46-ndim-2-的跳过规则-别把-layernorm-也压了">4.6 <code>ndim &lt; 2</code> 的跳过规则 —— 别把 LayerNorm 也压了</h3>
+<pre><code>if parameter.data.ndim &lt; 2: continue</code></pre>
+<p>只压二维及以上的矩阵，跳过所有 bias（<code>b1</code>/<code>b2</code>）和 LayerNorm 的 <code>gamma</code>/<code>beta</code>。理由：</p>
+<ul class="lvl"><li><strong>bias 是加性项</strong>，量化它会引入一个<strong>恒定的偏移量</strong>，直接平移整个激活分布 —— 破坏性远大于乘性权重的相对误差；</li><li><strong>LayerNorm 的 gamma/beta 是尺度与平移</strong>，同理；</li><li>这些张量加起来只占参数的极小部分，压了也省不了什么。</li></ul>
+<p>工业界的 PTQ 实现（如 <code>bitsandbytes</code>）同样只量化 <code>nn.Linear</code> 的 weight。</p>
+<h3 id="47-fp64-基线-54967621-与-m01-的答案区-ppl-完全一致-这是口径自检">4.7 FP64 基线 5496.7621 与 M01 的答案区 PPL 完全一致 —— 这是口径自检</h3>
+<p>M01 打印的&quot;答案区困惑度&quot;是 <strong>5496.7621</strong>，M06 打印的&quot;FP64 计算基线&quot;也是 <strong>5496.7621</strong>。</p>
+<p>两个数字来自不同的 demo、不同的代码路径（M01 走 <code>evaluate()</code>，M06 走 <code>perplexity()</code>），但<strong>同一个 held-out（8 条）、同一个 <code>batch_size=2</code>、同一套 fp64 计算</strong>。完全一致说明：</p>
+<ul class="lvl"><li>两章的评估口径严格对齐（否则 M06 的&quot;相对变化&quot;就没意义）；</li><li><code>evaluate()</code> 与 <code>perplexity()</code> 在 <code>use_mask=True</code> 下是同一个量。</li></ul>
+<p><strong>跨章节数字能对上，是&quot;数字真实&quot;最廉价也最有效的自检。</strong> 每次引用别的里程碑的数字时都该做一次。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>量化代价有两个口径：<strong>重建误差（MSE / 相对 L2）</strong> 与 <strong>任务代价（端到端 PPL）</strong>。直觉认为正相关，<strong>实测不相关</strong>。</li><li>⭐ <strong>权重误差最小 ≠ 端到端最优</strong>：NF4 权重 MSE <strong>5.246e-05</strong>（是 INT8 7.673e-08 的 <strong>684 倍</strong>），端到端 PPL 却最好（<strong>−4.088%，降 224.71</strong>）；INT8 权重 MSE 最小，端到端只有 <strong>−0.028%</strong>。<strong>量化方案必须用任务集复测。</strong></li><li>实测压缩：INT8 <strong>3.76×</strong>（69,632 B）/ INT4 <strong>7.11×</strong>（36,864 B）/ NF4 <strong>7.75×</strong>（33,808 B），基准 <code>decoder.proj (64,1024)</code>、65,536 参数、per_channel。</li><li>实测端到端 PPL：FP64 <strong>5496.7621</strong> / INT8 <strong>5495.2057（−0.028%）</strong> / INT4 <strong>5503.2843（+0.119%）</strong> / NF4 <strong>5272.0521（−4.088%）</strong>。</li><li><strong>PPL 是 CE 的指数</strong>：NF4 的 −4.088% 对应 CE 只动 <strong>−0.0418</strong>（相对 0.485%），被放大 8.4 倍。报量化收益必须同时给基线值。</li><li><strong>INT4（+0.119%）是三者中唯一变差的，也是最&quot;正常&quot;的</strong> —— NF4 的 −4.088% 才是异常值，且<strong>不可推广到真实 7B</strong>（推断）。</li><li><strong>per-channel 让 INT8 从 4.00× 掉到 3.76×</strong>（scale 占 5.88%），是否划算取决于通道数（结构性分析，非本章实测对比）。</li><li>⚠ <strong>遍历参数必须用 P08 的 <code>ft.inject.named_parameters</code></strong>，绕开 P06 <code>Module.parameters()</code> 漏掉 <code>token_emb.weight</code> 的已知缺陷（不改 P06）；同理绕过 P06 <code>Adam</code> 动量不累积的缺陷。</li><li><strong>只压 <code>ndim &gt;= 2</code> 的矩阵</strong> —— bias 与 LayerNorm 的 gamma/beta 是加性/平移项，量化会平移激活分布。</li><li><strong>跨章节自检</strong>：M06 的 FP64 基线 5496.7621 与 M01 的答案区 PPL 完全一致，证明两章评估口径对齐。</li><li>手写实现的意义：因为码本、scale、存储账全是自己管的，我才能同时给出&quot;权重 MSE&quot;和&quot;端到端 PPL&quot;两个口径并发现它们矛盾 —— 用 <code>bitsandbytes</code> 只能拿到一个黑盒结论。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/quantize.py</code></td><td><code>QuantizedTensor</code>（codes/scale/shape/bits/granularity + <code>dequantize</code> + <code>storage_bytes</code>）/ <code>quantize_symmetric</code>（INT8/INT4 对称量化，per_tensor / per_channel）/ <code>quantization_error</code>（mse/rmse/mean_abs/max_abs/relative_l2）/ <code>compression_ratio</code> / <code>compare_quantizers</code>（三方案对比）/ <code>quantize_model</code>（深拷贝 + 全模型 PTQ）/ <code>quantize_model_nf4</code> / <code>save_quantized_artifact</code></td></tr><tr><td><code>src/ie/quantize.py:16</code></td><td><code>from ft.inject import named_parameters</code> —— 绕开 P06 <code>Module.parameters()</code> 漏词嵌入的缺陷</td></tr><tr><td><code>src/ie/quantize.py:132</code></td><td><code>if parameter.data.ndim &lt; 2: continue</code> —— 跳过 bias / LayerNorm</td></tr><tr><td><code>src/ie/metrics.py</code></td><td><code>perplexity</code>：端到端 PPL 的测量口径（与 M01 一致）</td></tr><tr><td><code>demos/demo_06_quantization.py</code></td><td>4 节：单矩阵三方案对比 / 端到端量化 / PPL 对比 / 关键结论</td></tr><tr><td><code>demos/out/demo_06_quantization_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>models/base_int8_per_channel.npz</code>、<code>models/base_int4_per_channel.npz</code></td><td>量化产物（codes + scale + 元信息）</td></tr><tr><td><code>assets/quantization.svg</code></td><td>本章量化粒度与三方案对比图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.5 → <strong>v0.6</strong>，M06 量化落地。实测（基准 <code>decoder.proj (64,1024)</code>、65,536 参数、per_channel）：INT8 MSE <strong>7.673e-08</strong> / 压缩 <strong>3.76×</strong>（69,632 B），INT4 <strong>2.520e-05</strong> / <strong>7.11×</strong>（36,864 B），NF4 <strong>5.246e-05</strong> / <strong>7.75×</strong>（33,808 B）；端到端答案区 PPL（同一 held-out 8 条）：FP64 <strong>5496.7621</strong>、INT8 <strong>5495.2057（−0.028%）</strong>、INT4 <strong>5503.2843（+0.119%）</strong>、NF4 <strong>5272.0521（−4.088%，降 224.71）</strong>。⭐ 并诚实记录核心反直觉发现「<strong>权重 MSE 最小不自动等价于端到端 PPL 最优</strong>（NF4 MSE 是 INT8 的 684 倍却端到端最好），量化方案必须在任务集上复测」，以及「PPL 是 CE 的指数，−4.088% 对应 CE 仅 −0.0418」「NF4 的 −4.088% 是异常值，不可推广到真实 7B（推断）」「⚠ 遍历参数须用 P08 <code>ft.inject.named_parameters</code> 绕开 P06 <code>Module.parameters()</code> 漏词嵌入的缺陷（不改 P06）」。纯 numpy，无 bitsandbytes / GPTQ。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

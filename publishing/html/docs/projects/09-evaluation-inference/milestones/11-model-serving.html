@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 11 — Model Serving：http.server + OpenAI API + SSE</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-11-model-servinghttpserver-openai-api-sse">Milestone 11 — Model Serving：http.server + OpenAI API + SSE</h1>
+<p>前十层都在&quot;离线&quot;地评估和压榨模型。最后一层把它们<strong>服务出去</strong>：起一个 HTTP 服务，接受 OpenAI 兼容的请求，非流式返回 JSON、流式返回 SSE，并暴露 <code>/health</code> 与 <code>/metrics</code>。</p>
+<p>这是整条主线的终点：</p>
+<pre><code>评估（M01-05） → 压模型（M06） → 压延迟（M07-10） → 服务化（M11）</code></pre>
+<p><strong>纯 Python 标准库</strong>：<code>http.server</code> + <code>urllib.request</code> + <code>threading</code> + <code>json</code> + <code>uuid</code>。<strong>没有 FastAPI、没有 uvicorn、没有 vLLM、没有 openai SDK</strong> —— 连客户端都是自己用 <code>urllib</code> 写的。</p>
+<hr/>
+<h2 id="1-why为什么是-openai-兼容-api以及为什么手写">1. Why：为什么是 OpenAI 兼容 API，以及为什么手写</h2>
+<p><strong>为什么 OpenAI 兼容</strong>：它已经是事实标准。任何支持它的客户端（<code>openai</code> SDK、LangChain、各类前端）都能零改动接进来。自己发明一套协议等于把自己隔离在生态之外。</p>
+<p><strong>为什么手写 HTTP 而不是 FastAPI</strong>：</p>
+<ul class="lvl"><li><strong>暴露真实复杂度</strong>。FastAPI + uvicorn 帮你处理了并发模型、keep-alive、流式响应的 chunk 编码 —— 你就永远不知道 SSE 到底要发哪些 header。</li><li><strong><code>stream_options.include_usage</code> 这类细节只有自己写才会碰到</strong>。OpenAI 的流式协议里，usage 是在最后一个 chunk 之后、<code>[DONE]</code> 之前单独发的，且 <code>choices</code> 为空数组。</li><li><strong>零依赖</strong>：整个 P09 只有 numpy，这一章连 HTTP 都不借外力。</li></ul>
+<p>代价也要写清楚：<strong>这个服务没有鉴权、没有限流、没有请求超时、没有真正的批处理调度</strong>（见 4.6）。它是一个&quot;把原理跑通&quot;的服务，不是生产服务。</p>
+<h2 id="2-design四个端点一个对象">2. Design：四个端点，一个对象</h2>
+<pre><code>class ServingMetrics:
+    requests / errors / generated_tokens / latencies_ms      # 全部在 threading.Lock 下更新
+    snapshot() -&gt; 请求数 / 错误数 / token 数 / 均值 / p50 / p95 / token 吞吐
+
+make_handler(engine, tokenizer, metrics) -&gt; BaseHTTPRequestHandler
+    GET  /health                 {&quot;status&quot;: &quot;ok&quot;}
+    GET  /metrics                metrics.snapshot()
+    POST /v1/chat/completions    OpenAI 兼容；stream=false → JSON；stream=true → SSE</code></pre>
+<p>四个关键设计点：</p>
+<ul class="lvl"><li><strong><code>ThreadingHTTPServer</code> + <code>daemon_threads</code></strong>（<code>src/ie/serve.py:187</code>）：每个请求一个线程，进程退出时不卡在等待上。</li><li><strong><code>protocol_version = &quot;HTTP/1.1&quot;</code> + 显式 <code>Content-Length</code></strong>：HTTP/1.1 默认 keep-alive，但<strong>必须给出准确的 <code>Content-Length</code></strong>，否则客户端不知道响应体何时结束，会一直等。<code>_json</code> 里用 <code>len(body)</code> 计算。</li><li><strong>SSE 的三件套 header</strong>：<code>Content-Type: text/event-stream</code>、<code>Cache-Control: no-cache</code>、<code>Connection: close</code>，并在每次 <code>write</code> 后 <code>flush()</code> —— <strong>不 flush 的话数据会留在缓冲区，客户端看不到&quot;流式&quot;</strong>。</li><li><strong><code>metrics.record</code> 在异常路径也要调用</strong>（<code>src/ie/serve.py:130</code>）：<code>except</code> 分支里同样 <code>record(..., error=True)</code>，否则错误请求不计入错误率 —— <strong>一个永远显示 <code>errors: 0</code> 的监控等于没有监控</strong>。</li></ul>
+<p><strong>消息 → prompt 的转换</strong>（<code>src/ie/serve.py:45</code>）：把 <code>messages</code> 渲染成 <code>role: content</code> 逐行拼接，末尾加 <code>assistant:</code>。这是最朴素的 chat template —— 真实模型有各自的 template，用错了质量会明显下降。</p>
+<figure class="figure"><img alt="M11 服务架构：HTTP 端点 + OpenAI 兼容协议 + SSE 流式 + metrics" src="../../../../../../projects/09-evaluation-inference/assets/model-serving.svg" loading="lazy"/><figcaption>M11 服务架构：HTTP 端点 + OpenAI 兼容协议 + SSE 流式 + metrics</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo11modelservingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_11_model_serving_terminal.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。<code>port=0</code> 让内核分配空闲端口。</p>
+<pre><code>  服务地址（port=0 实际分配）                  http://127.0.0.1:50712
+  GET /health                        HTTP 200, status=ok
+  Non-stream                         HTTP 200, object=chat.completion
+  Non-stream completion tokens       5
+  SSE                                HTTP 200
+  SSE token chunks                   6
+  SSE usage chunks                   1   stream_options.include_usage=true
+  SSE 总 data 事件                      9   含 finish、usage、[DONE]
+  4 个并发请求                            4/4 成功，墙钟 11.46 ms</code></pre>
+<pre><code>── GET /metrics（真实请求计数与延迟） ─────────────────────────────────
+  HTTP                               200
+  请求数                                6
+  错误数                                0
+  生成 token 数                         27
+  平均延迟                               2.199 ms
+  p95 延迟                             3.311 ms
+  Token 吞吐                           2046.08 token/s
+  客户端显式使用 ProxyHandler({})，已验证本机 HTTP_PROXY 不会劫持 localhost。</code></pre>
+<p><strong>数字全部对得上（这是最有力的自检）：</strong></p>
+<table><thead><tr><th>项</th><th>还原</th></tr></thead><tbody><tr><td>请求数 <strong>6</strong></td><td>1（non-stream）+ 1（SSE）+ 4（并发）= <strong>6</strong>；<code>/health</code> 与 <code>/metrics</code> 走 <code>do_GET</code>，不计入</td></tr><tr><td>生成 token <strong>27</strong></td><td><code>5</code>（non-stream, max_tokens=5）+ <code>6</code>（SSE, max_tokens=6）+ <code>4×4=16</code>（并发, max_tokens=4）= <strong>27</strong></td></tr><tr><td>SSE data 事件 <strong>9</strong></td><td>6 个 token chunk + 1 个 finish chunk + 1 个 usage chunk + 1 个 <code>[DONE]</code> = <strong>9</strong></td></tr><tr><td>Token 吞吐 <strong>2046.08</strong></td><td><code>27 / (Σ延迟 / 1000)</code>，反解 <code>Σ延迟 = 13.196 ms</code>，均值 <code>13.196 / 6 = 2.199 ms</code> ✓</td></tr></tbody></table>
+<p>五个读数：</p>
+<ul class="lvl"><li><strong><code>port=0</code> 实际分配到 50712</strong>。这是让内核挑空闲端口的标准做法 —— demo 不用硬编码端口，也就不会和机器上已经跑着的服务打架。</li><li><strong>SSE 的 <code>stream_options.include_usage=true</code> 生效</strong>：6 个 token chunk 之后单独发了 1 个 usage chunk（<code>choices: []</code>），最后发 <code>data: [DONE]</code>。</li><li><strong>4 个并发请求 4/4 成功，零错误</strong>（<code>错误数 0</code>）。</li><li><strong>p95 3.311 ms vs 均值 2.199 ms</strong> —— 长尾约为均值的 1.5 倍，符合&quot;请求长度不同 + 线程调度&quot;的预期。</li><li><strong>2046.08 token/s</strong> —— 见 4.5，这个数<strong>不能当生产指标</strong>。</li></ul>
+<figure class="figure"><img alt="M11 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-11-model-serving.png" loading="lazy"/><figcaption>M11 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-macos-的-httpproxy-会拦-localhost-必须显式禁用代理">4.1 ⭐ macOS 的 <code>HTTP_PROXY</code> 会拦 localhost —— 必须显式禁用代理</h3>
+<p>这是本章唯一一个<strong>会让 demo 直接跑不起来</strong>的真实踩坑。</p>
+<p><code>urllib.request</code> 默认会读环境变量 <code>http_proxy</code> / <code>HTTP_PROXY</code> / <code>no_proxy</code>。在 macOS 上（尤其装了代理软件、<code>brew</code> 配过代理、或公司网络环境下），<code>HTTP_PROXY</code> <strong>通常是全局设置的</strong> —— 于是 <code>urlopen(&quot;http://127.0.0.1:50712/health&quot;)</code> 会被<strong>送进代理</strong>，代理当然找不到你本机刚起的临时端口，直接失败。</p>
+<p>解法是显式构造一个<strong>不带任何代理</strong>的 opener：</p>
+<pre><code>def no_proxy_opener():
+    &quot;&quot;&quot;显式禁用 HTTP_PROXY，确保 localhost 请求不绕到代理。&quot;&quot;&quot;
+    return build_opener(ProxyHandler({}))</code></pre>
+<p><code>ProxyHandler({})</code> 传的是<strong>空字典</strong> —— 意思是&quot;所有协议都没有代理&quot;，这会覆盖掉环境变量。demo 里所有请求（POST 和 GET）都走它。</p>
+<blockquote><p>更常见的做法是设 <code>no_proxy=localhost,127.0.0.1</code>，但那依赖环境变量被正确读取；<strong><code>ProxyHandler({})</code> 是更强的保证</strong> —— 它不依赖环境，直接在 opener 层面把代理关掉。</p><p>可迁移的经验：<strong>测试本地服务时，任何&quot;连不上&quot;的报错先怀疑代理。</strong> 这条在 macOS + 公司代理的环境下命中率极高。</p></blockquote>
+<h3 id="42-4-并发墙钟-1146-ms-4-单请求均值-它们其实是串行的">4.2 4 并发墙钟 11.46 ms &gt; 4 × 单请求均值 —— 它们其实是串行的</h3>
+<p><code>ThreadingHTTPServer</code> 给了 4 个线程，但<strong>没有真正的并行</strong>：</p>
+<pre><code>单请求平均延迟 2.199 ms
+4 并发墙钟     11.46 ms
+若完全并行：    ≈ 2.2 ms
+若完全串行：    4 × 2.199 = 8.80 ms
+实测：          11.46 ms  ← 比&quot;完全串行&quot;还慢</code></pre>
+<p>超出串行预期的 2.66 ms 是<strong>线程创建与 GIL 切换的开销</strong>。</p>
+<p>原因有两层：</p>
+<ul class="lvl"><li><strong>模型推理本身没有批处理</strong>：每个请求独立调用 <code>engine.generate_ids()</code>，一次一个序列 —— M09 的 continuous batching <strong>没有接进来</strong>。</li><li><strong>GIL</strong>：numpy 只在<strong>大矩阵运算</strong>时释放 GIL，而本项目的矩阵是 <code>64×64</code> 量级，<strong>释放的时间远小于争用的时间</strong>，所以多线程实际是串行执行。</li></ul>
+<blockquote><p>诚实标注：<strong>&quot;4/4 成功&quot;证明的是并发安全性（metrics 的锁、 handler 的无状态），不是并发性能。</strong> 真正的吞吐要靠 M09 的调度 + M08 的分页 + 真实的批 kernel，本项目没有把它们接到 HTTP 层 —— 这是明确的下一步，不是遗漏。</p></blockquote>
+<h3 id="43-sse-不-flush-就不是流式">4.3 SSE 不 <code>flush()</code> 就不是流式</h3>
+<pre><code>def send(data):
+    encoded = f&quot;data: {json.dumps(data, ensure_ascii=False)}\n\n&quot;.encode(&quot;utf-8&quot;)
+    self.wfile.write(encoded)
+    self.wfile.flush()          # ← 必须有</code></pre>
+<p><code>self.wfile</code> 是带缓冲的。不 <code>flush()</code> 的话，6 个 chunk 会攒在缓冲区里，直到 <code>close_connection</code> 时才一起发出去 —— <strong>客户端看到的是&quot;一次性收到全部&quot;，完全失去了流式的意义</strong>（首 token 延迟 = 全量延迟）。</p>
+<p>三件套 header 里 <code>Connection: close</code> 也是必需的：SSE 是长连接响应，不能用 keep-alive 复用，而 <code>Content-Length</code> 又不该给（长度未知）。所以最后要显式 <code>self.close_connection = True</code>。</p>
+<h3 id="44-metricsrecord-必须覆盖异常路径">4.4 <code>metrics.record</code> 必须覆盖异常路径</h3>
+<pre><code>except Exception as exc:
+    metrics.record(generated, (time.perf_counter() - started) * 1000.0, error=True)</code></pre>
+<p>如果只在成功分支 <code>record</code>，那么<strong>所有失败请求都不进指标</strong> —— 监控面板会永远显示 <code>errors: 0</code>、p95 只统计成功的请求（幸存者偏差）。</p>
+<p>本 demo 的 <code>错误数 0</code> 是可信的，正因为异常路径<strong>也会</strong>计数：如果真有请求失败，它会被记成 1 而不是被隐藏。</p>
+<p>顺带一个细节：<code>generated</code> 在异常时是多少就记多少（生成了一半也记），这样&quot;生成 token 数&quot;这个指标不会因为失败而虚低。</p>
+<h3 id="45-后端挂的是玩具模型2046-tokens-不能当生产指标">4.5 ⚠ 后端挂的是玩具模型，2046 token/s 不能当生产指标</h3>
+<p>必须诚实标注：</p>
+<ul class="lvl"><li>服务端挂的是 <strong>P09 的玩具模型</strong>（<code>d_model=64</code>、<code>n_layers=2</code>、vocab 1024），<strong>不是 7B</strong>。</li><li><code>2046.08 token/s</code> = <code>27 token / 13.196 ms</code>。它衡量的是&quot;<strong>这个玩具模型在这台机器上、单请求串行</strong>的生成速度&quot;。</li><li>它的分母里<strong>没有排队时间</strong>（demo 里请求是串行发出的），所以它不是&quot;服务吞吐&quot;，而是&quot;纯生成速率&quot;。</li><li>真实 7B 在 A100 上单请求大约 30~60 token/s（<strong>业界经验值，非本机实测</strong>）—— 比这里慢几十倍，因为模型大 1000 万倍。</li></ul>
+<p><strong>这个数字在本项目里的唯一用途是：证明 <code>/metrics</code> 端点的计算逻辑正确</strong>（27 token、13.196 ms、2046.08 三者自洽）。</p>
+<h3 id="46-边界这个服务缺什么">4.6 边界：这个服务缺什么</h3>
+<p>如实列出，避免把 demo 误读成生产方案：</p>
+<table><thead><tr><th>缺失</th><th>后果</th><th>真实实现的做法</th></tr></thead><tbody><tr><td><strong>批处理调度</strong></td><td>请求串行执行，吞吐上不去</td><td>M09 的 continuous batching + M08 的分页（<strong>本项目未接入 HTTP 层</strong>）</td></tr><tr><td><strong>鉴权</strong></td><td>任何人都能调用</td><td>API Key / Bearer token</td></tr><tr><td><strong>限流</strong></td><td>一个客户端能打满服务</td><td>令牌桶 + 并发上限 + 队列</td></tr><tr><td><strong>请求超时</strong></td><td>慢请求永久占用线程</td><td>per-request deadline</td></tr><tr><td><strong>KV 显存上限</strong></td><td>长请求会 OOM</td><td>M08 的块池 + M10 的账本做准入控制</td></tr><tr><td><strong>真正的并行</strong></td><td>GIL 限制</td><td>多进程 / 异步 + CUDA</td></tr></tbody></table>
+<p><strong>本项目刻意不做这些</strong>，是因为它们每一个都值得独立一章，而本章的目标是&quot;把 HTTP ↔ 模型 ↔ 指标这条链路跑通&quot;。</p>
+<h3 id="47-logmessage-被覆盖成空函数-demo-可复现性的小细节">4.7 <code>log_message</code> 被覆盖成空函数 —— demo 可复现性的小细节</h3>
+<pre><code>def log_message(self, _format, *args) -&gt; None:
+    return</code></pre>
+<p><code>BaseHTTPRequestHandler</code> 默认会把每个请求打到 stderr。demo 要把输出落进 <code>demos/out/*.txt</code> 做对比，<strong>stderr 的日志会污染输出</strong>。</p>
+<p>这类&quot;为了让输出可复现而静音&quot;的处理，在整个 P09 反复出现（M02 的全序排序、M03 的 seed、M07 的中位数）—— <strong>可复现性是一系列小决定的总和，不是某一个大决定。</strong></p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>服务 = <strong>4 个端点 + 1 个 <code>ServingMetrics</code></strong>：<code>/health</code>、<code>/metrics</code>、<code>POST /v1/chat/completions</code>（<code>stream=false</code> → JSON / <code>stream=true</code> → SSE）。</li><li>实测（<code>port=0</code> → <strong>50712</strong>）：<code>/health</code> 200、<code>non-stream</code> 200（<code>object=chat.completion</code>，5 token）、SSE 200（<strong>6 token chunk + 1 usage chunk</strong>，<strong>总 data 事件 9</strong>）、<strong>4 并发 4/4 成功（墙钟 11.46 ms）</strong>。</li><li><strong><code>/metrics</code> 数字自洽</strong>：请求 <strong>6</strong> = 1+1+4；生成 token <strong>27</strong> = 5+6+16；均值 <strong>2.199 ms</strong>、p95 <strong>3.311 ms</strong>、<strong>2046.08 token/s</strong>（<code>27 / 13.196 ms</code> 反解一致）；错误 <strong>0</strong>。</li><li>⭐ <strong>macOS 的 <code>HTTP_PROXY</code> 会拦 localhost</strong> —— 必须用 <code>build_opener(ProxyHandler({}))</code> 显式禁用代理，否则连不上自己的服务。这是真实踩坑。</li><li><strong>SSE 必须 <code>flush()</code> + <code>Connection: close</code> + <code>Cache-Control: no-cache</code></strong>，否则退化成一次性返回。</li><li><strong><code>metrics.record</code> 要覆盖异常路径</strong>（<code>error=True</code>），否则错误率恒为 0、延迟统计有幸存者偏差。</li><li>⚠ <strong>4 并发实测是串行的</strong>（11.46 ms &gt; 4×2.199 ms）—— GIL + 无批处理；<strong>M09 的 continuous batching 未接入 HTTP 层</strong>，这是明确的下一步。</li><li>⚠ <strong>后端是玩具模型不是 7B</strong>：2046.08 token/s 只用于证明 <code>/metrics</code> 计算自洽，<strong>不能当生产指标</strong>。</li><li><strong>边界</strong>：无鉴权 / 无 限流 / 无超时 / 无 KV 准入控制 —— 刻意不做，避免把 demo 误读成生产方案。</li><li>手写实现的意义：因为 HTTP handler 是自己写的，我才能<strong>精确控制 SSE 的每个字节</strong>（<code>data: {json}\n\n</code>）并验证 <code>include_usage</code> 的 chunk 顺序 —— 用 FastAPI 的 <code>StreamingResponse</code> 你只会得到一个&quot;能跑&quot;的黑盒。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/serve.py</code></td><td><code>ServingMetrics</code>（<code>threading.Lock</code> 下的请求/错误/token/延迟记录，<code>snapshot()</code> 算均值/p50/p95/token 吞吐）/ <code>_prompt_from_messages</code>（<code>role: content</code> 拼接 + <code>assistant:</code>）/ <code>make_handler</code>（<code>do_GET</code> / <code>do_POST</code> / <code>_stream</code>）/ <code>create_server</code> / <code>start_server</code>（后台线程 <code>serve_forever</code>）/ <code>stop_server</code> / <strong><code>no_proxy_opener</code>（<code>ProxyHandler({})</code>，本章最关键的踩坑修复）</strong></td></tr><tr><td><code>src/ie/serve.py:59</code></td><td><code>protocol_version = &quot;HTTP/1.1&quot;</code> —— 配合显式 <code>Content-Length</code> 支持 keep-alive</td></tr><tr><td><code>src/ie/serve.py:130</code></td><td>异常路径同样 <code>metrics.record(..., error=True)</code></td></tr><tr><td><code>src/ie/serve.py:201</code></td><td><code>no_proxy_opener()</code>：<code>build_opener(ProxyHandler({}))</code></td></tr><tr><td><code>src/ie/engine.py</code></td><td><code>CausalLMWithKVCache.generate_ids</code>：服务端的生成后端（M07 的引擎，带 KV Cache）</td></tr><tr><td><code>demos/demo_11_model_serving.py</code></td><td>5 节：启动 / health / non-stream / SSE / 4 并发 + metrics</td></tr><tr><td><code>demos/out/demo_11_model_serving_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/model-serving.svg</code></td><td>本章服务架构与 SSE 流式图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.10 → <strong>v1.0</strong>，M11 模型服务化落地，Project 09 主线完成。实测（<code>port=0</code> → <strong>50712</strong>）：<code>/health</code> HTTP 200 <code>status=ok</code>；non-stream HTTP 200 <code>object=chat.completion</code>（5 token）；SSE HTTP 200、<strong>6 个 token chunk + 1 个 usage chunk</strong>、<strong>总 data 事件 9</strong>（含 finish、usage、<code>[DONE]</code>）；<strong>4 并发 4/4 成功，墙钟 11.46 ms</strong>；<code>/metrics</code> 请求 <strong>6</strong> / 错误 <strong>0</strong> / 生成 token <strong>27</strong> / 平均延迟 <strong>2.199 ms</strong> / p95 <strong>3.311 ms</strong> / <strong>2046.08 token/s</strong>（27 ÷ 13.196 ms 反解自洽）。并诚实记录「⭐ <strong>macOS 的 <code>HTTP_PROXY</code> 会拦 localhost，必须 <code>ProxyHandler({})</code> 显式禁用代理</strong>」「⚠ 4 并发实际串行（11.46 ms &gt; 4×2.199 ms），GIL + 未接入 M09 批处理，是明确下一步」「⚠ 后端是玩具模型不是 7B，2046.08 token/s 仅证明 <code>/metrics</code> 计算自洽，不可当生产指标」「无鉴权 / 限流 / 超时 / KV 准入控制」。纯 Python 标准库（<code>http.server</code> + <code>urllib</code> + <code>threading</code>），无 FastAPI / uvicorn / vLLM / openai SDK。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

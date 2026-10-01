@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>05 · 微调：在预训练模型上做减法</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="05-微调在预训练模型上做减法">05 · 微调：在预训练模型上做减法</h1>
+<blockquote><p><strong>一句话结论</strong>：微调不是&quot;教模型新知识&quot;，而是<strong>用少量高质量样本把模型已有的能力&quot;对齐&quot;到你的任务格式上</strong>。 由于全量微调显存开销巨大，实践中的主角是 <strong>LoRA / QLoRA</strong> —— 只训练 0.1%–1% 的参数，效果却接近全量。</p></blockquote>
+<hr/>
+<h2 id="51-先做选择prompt-rag-微调-该用哪个">5.1 先做选择：Prompt / RAG / 微调 该用哪个</h2>
+<p>在动手调参之前，先回答&quot;这件事到底该不该微调&quot;：</p>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>RAG</code> — 用 RAG 检索外部知识库</li><li><code>P</code> — 用 Prompt / Few-shot 成本最低</li><li><code>FT</code> — 微调 把格式固化进权重</li><li><code>RL</code> — SFT + 偏好优化 或换更强的基座</li></ul></div>
+<table><thead><tr><th>方案</th><th>解决</th><th>成本</th><th>更新速度</th><th>典型场景</th></tr></thead><tbody><tr><td>Prompt 工程</td><td>表达方式（能用话讲清的）</td><td>最低</td><td>立刻</td><td>分类、改写、简单抽取</td></tr><tr><td>RAG</td><td>事实与私有知识</td><td>中</td><td>实时（改库即可）</td><td>企业知识问答、文档问答</td></tr><tr><td><strong>微调</strong></td><td>行为模式、格式、语气、领域黑话</td><td>高</td><td>慢（要重训）</td><td>固定 JSON 输出、客服口吻、领域术语</td></tr><tr><td>长上下文</td><td>单次任务的信息量</td><td>低</td><td>立刻</td><td>长文摘要、多文档对比</td></tr></tbody></table>
+<blockquote><p><strong>最常被搞混的一条</strong>：<strong>微调不擅长注入新事实</strong>。想让它记住&quot;2026 年公司新政策第 7 条&quot;，微调的效果远不如把文档塞进 RAG。微调真正擅长的是&quot;学会怎么说话、怎么组织输出&quot;。</p></blockquote>
+<hr/>
+<h2 id="52-sft监督微调把续写变成听话">5.2 SFT：监督微调（把&quot;续写&quot;变成&quot;听话&quot;）</h2>
+<h3 id="521-数据长什么样">5.2.1 数据长什么样</h3>
+<p>SFT 的数据是<strong>指令-回答对</strong>，训练时<strong>只对&quot;回答&quot;部分算损失</strong>：</p>
+<pre><code>&lt;|im_start|&gt;system
+你是一个严谨的助手。            &lt;- 系统提示（可省略）
+&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+把下面这句话翻译成英文：你好    &lt;- 指令
+&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+Hello.                          &lt;- 只对这一段的 token 算 loss
+&lt;|im_end|&gt;</code></pre>
+<pre><code>loss mask 示意:
+token:   &lt;|im_start|&gt; system ... &lt;|im_end|&gt; &lt;|im_start|&gt; user ... &lt;|im_end|&gt; &lt;|im_start|&gt; assistant Hello . &lt;|im_end|&gt;
+loss:    0    0     0    ...     0        0        0    0  ...    0        0          1    1    1    1    1     1
+         └────────────── 系统与用户部分不算 loss ──────────────┘  └──── 只算回答部分的 ────┘</code></pre>
+<p><strong>为什么必须 mask 掉指令部分</strong>？否则模型会把&quot;学会复述用户的问题&quot;也当成目标，浪费容量并可能出现&quot;回答里重复提问&quot;的毛病。</p>
+<h3 id="522-关键超参与预训练完全不同">5.2.2 关键超参（与预训练完全不同）</h3>
+<table><thead><tr><th>超参</th><th>预训练</th><th>SFT</th><th>原因</th></tr></thead><tbody><tr><td>学习率</td><td>1e-4 ~ 3e-4</td><td><strong>1e-5 ~ 2e-4</strong>（LoRA 可到 1e-4~3e-4）</td><td>参数已有好初值，大步长会震散知识</td></tr><tr><td>epoch</td><td>多 epoch over 大语料</td><td><strong>1 ~ 3</strong></td><td>数据量小，多了必然过拟合</td></tr><tr><td>批大小</td><td>几百万 token</td><td>几十~几百条样本</td><td>数据规模差异</td></tr><tr><td>损失</td><td>全部 token</td><td>只算回答 token</td><td>见上</td></tr><tr><td>warmup</td><td>有</td><td>少量（总步数 3% 左右）</td><td>—</td></tr></tbody></table>
+<p><strong>SFT 数据质量 &gt; 数量</strong>：1000 条精心构造的样本，往往胜 10 万条噪声数据。业界共识（如 LIMA 论文）：<strong>少量高质量即可激活模型已有的能力</strong>——这也反过来说明，SFT 主要在&quot;选能力&quot;，不是在&quot;装能力&quot;。</p>
+<hr/>
+<h2 id="53-全量微调为什么个人做不了">5.3 全量微调：为什么个人做不了</h2>
+<p>全量微调要更新全部参数，显存账是这么算的（AdamW）：</p>
+<p>$$ \text{显存} \approx \underbrace{2N}_{\text{权重 fp16}} + \underbrace{2N}_{\text{梯度}} + \underbrace{8N}_{\text{Adam 一阶/二阶动量 fp32}} + \underbrace{\text{激活值}}_{\text{与 batch × seq 相关}} $$</p>
+<p>以 7B 模型为例（<code>demos/06_lora_params.py</code> 的真实计算）：</p>
+<figure class="figure"><img alt="LoRA 参数量与显存真实计算" src="../../../../llm-fundamentals/assets/term-06_lora_params.png" loading="lazy"/><figcaption>LoRA 参数量与显存真实计算</figcaption></figure>
+<table><thead><tr><th>项目</th><th>全量微调</th><th>LoRA(r=8)</th></tr></thead><tbody><tr><td>权重 fp16</td><td>13.0 GB</td><td>13.0 GB</td></tr><tr><td>梯度</td><td>13.0 GB</td><td>0.03 GB</td></tr><tr><td>优化器状态 fp32</td><td>52.2 GB</td><td>0.21 GB</td></tr><tr><td><strong>合计（不含激活）</strong></td><td><strong>78.2 GB</strong></td><td><strong>13.3 GB</strong></td></tr></tbody></table>
+<p><strong>结论</strong>：全量微调 7B 至少要 1–2 张 A100 80G，还要额外处理激活值（靠梯度检查点）；而 LoRA 在<strong>一张 24G 的 3090/4090 上就能跑</strong>。这就是 PEFT 存在的全部理由。</p>
+<hr/>
+<h2 id="54-lora低秩假设带来的免费午餐">5.4 LoRA：低秩假设带来的&quot;免费午餐&quot;</h2>
+<h3 id="541-核心思想">5.4.1 核心思想</h3>
+<p>微调时权重的<strong>变化量</strong> $\Delta W$ 是低秩的——不需要动完整的 d×d 矩阵，用两个瘦矩阵近似就够：</p>
+<p>$$ W&#x27; = W + \Delta W = W + \frac{\alpha}{r} B A \qquad B \in \mathbb{R}^{d \times r},\; A \in \mathbb{R}^{r \times d},\; r \ll d $$</p>
+<table><thead><tr><th>符号</th><th>含义</th><th>典型值</th></tr></thead><tbody><tr><td>$W$</td><td>原始权重，<strong>冻结不更新</strong></td><td>d×d</td></tr><tr><td>$B, A$</td><td>两个可训练的小矩阵</td><td>r×d 与 d×r</td></tr><tr><td>$r$</td><td>秩（rank），控制容量</td><td>4 / 8 / 16 / 64</td></tr><tr><td>$\alpha$</td><td>缩放系数，实际学习率为 <code>lr × α/r</code></td><td>常取 <code>2r</code></td></tr></tbody></table>
+<p>训练时<strong>前向不变</strong>（初始 B=0 保证 ΔW=0）：</p>
+<p>$$ h = W&#x27;x = Wx + \frac{\alpha}{r}BAx $$</p>
+<p>推理时可以<strong>合并回原权重</strong>（<code>W&#x27; = W + (α/r)BA</code>），<strong>零额外延迟</strong> —— 这是 LoRA 相比 Adapter 类方法的决定性优势。</p>
+<h3 id="542-为什么低秩假设成立">5.4.2 为什么&quot;低秩&quot;假设成立</h3>
+<table><thead><tr><th>证据/直觉</th><th>说明</th></tr></thead><tbody><tr><td>微调任务与预训练任务高度相关</td><td>只是&quot;重新加权&quot;已有能力，不需要新增自由度</td></tr><tr><td>实验观察</td><td>微调后 ΔW 的奇异值谱下降极快，前几个奇异值就占了大部分能量</td></tr><tr><td>实测</td><td>r=8 时效果已接近全量微调；r 再往上收益迅速递减</td></tr></tbody></table>
+<p><code>demos/06_lora_params.py</code> 里的两个数值验证：</p>
+<ul class="lvl"><li><strong>B 初始化为 0 → ΔW 全零</strong>（最大绝对值 0.00e+00）：保证微调起点就是原模型，绝不会&quot;一上来就变差&quot;。</li><li><strong>B(64×4) @ A(4×64) 的秩 = 4</strong>：这是低秩假设的<strong>代价</strong>——LoRA 只能表达秩 ≤ r 的更新，超出这个子空间的信息学不进去。这也是为什么 r 太小会&quot;学不动&quot;，r 太大又退化成全量微调并容易过拟合。</li></ul>
+<h3 id="543-参数量与-r-的取舍真实计算">5.4.3 参数量与 r 的取舍（真实计算）</h3>
+<figure class="figure"><img alt="LoRA 参数量随秩变化" src="../../../../llm-fundamentals/assets/lora-params.png" loading="lazy"/><figcaption>LoRA 参数量随秩变化</figcaption></figure>
+<table><thead><tr><th>层</th><th>形状</th><th>r</th><th>全量参数</th><th>LoRA 参数</th><th>占比</th></tr></thead><tbody><tr><td>q_proj</td><td>4096×4096</td><td>8</td><td>16,777,216</td><td>65,536</td><td><strong>0.39%</strong></td></tr><tr><td>v_proj</td><td>4096×4096</td><td>16</td><td>16,777,216</td><td>131,072</td><td>0.78%</td></tr><tr><td>q_proj</td><td>4096×4096</td><td>64</td><td>16,777,216</td><td>524,288</td><td>3.12%</td></tr><tr><td>up_proj (FFN)</td><td>4096×11008</td><td>8</td><td>45,088,768</td><td>120,832</td><td><strong>0.27%</strong></td></tr></tbody></table>
+<p><strong>FFN 层更划算</strong>：形状越&quot;瘦长&quot;，LoRA 的占比越低。现代实践通常对<strong>全部线性层</strong>（含 FFN）挂 LoRA，而不仅限 attention。</p>
+<h3 id="544-挂在哪里用什么配置">5.4.4 挂在哪里、用什么配置</h3>
+<table><thead><tr><th>配置项</th><th>常见选择</th><th>说明</th></tr></thead><tbody><tr><td>target_modules</td><td>只挂 <code>q_proj,v_proj</code> → 挂全部线性层</td><td>挂全层通常更好，参数仍只有 1% 左右</td></tr><tr><td>r</td><td>8（对话）/ 16–64（领域知识/代码）</td><td>任务越&quot;远&quot;，r 越大</td></tr><tr><td>lora_alpha</td><td>2r 或固定 16/32</td><td>影响有效学习率</td></tr><tr><td>lora_dropout</td><td>0.05 ~ 0.1</td><td>小数据集防过拟合</td></tr><tr><td>bias</td><td><code>none</code></td><td>训练 bias 收益小</td></tr><tr><td>合并</td><td>部署前 merge_and_unload</td><td>推理零开销</td></tr></tbody></table>
+<hr/>
+<h2 id="55-qlora把门槛再降一个数量级">5.5 QLoRA：把门槛再降一个数量级</h2>
+<p>QLoRA = <strong>4bit 量化的基座 + LoRA 适配器</strong>，三处关键设计：</p>
+<table><thead><tr><th>技术</th><th>做什么</th><th>效果</th></tr></thead><tbody><tr><td><strong>NF4</strong>（4-bit NormalFloat）</td><td>按正态分布分位数量化，信息论上对正态权重最优</td><td>比 INT4 精度更高</td></tr><tr><td><strong>双重量化</strong></td><td>量化常数的本身也被量化</td><td>每参数再省约 0.37 bit</td></tr><tr><td><strong>Paged Optimizer</strong></td><td>优化器状态用统一内存分页，峰值时换出到 CPU</td><td>避免 OOM 崩训练</td></tr></tbody></table>
+<table><thead><tr><th>方案</th><th>7B 模型基座显存</th><th>单卡可行性</th></tr></thead><tbody><tr><td>全量 fp16</td><td>14 GB 权重 + 66 GB 状态</td><td>需多卡</td></tr><tr><td>LoRA fp16</td><td>14 GB + ~0.2 GB</td><td>24G 卡可跑</td></tr><tr><td><strong>QLoRA</strong></td><td><strong>~3.5 GB</strong>（4bit 基座）+ ~0.2 GB</td><td>✅ 消费级显卡（8–12G 可跑小模型）</td></tr></tbody></table>
+<p>代价：4bit 反量化会带来少量精度损失和速度下降（约 20–40% 训练变慢），但<strong>质量基本对齐 16bit LoRA</strong>。</p>
+<hr/>
+<h2 id="56-其他-peft-方法对比">5.6 其他 PEFT 方法对比</h2>
+<table><thead><tr><th>方法</th><th>改哪里</th><th>额外参数</th><th>推理开销</th><th>现状</th></tr></thead><tbody><tr><td><strong>LoRA</strong></td><td>权重旁路（低秩增量）</td><td>0.1%–1%</td><td><strong>可合并，无</strong></td><td>✅ 主流</td></tr><tr><td>QLoRA</td><td>LoRA + 4bit 基座</td><td>同上</td><td>可合并</td><td>✅ 显存最优</td></tr><tr><td>DoRA</td><td>把幅度与方向解耦</td><td>略多于 LoRA</td><td>可合并</td><td>小数据上更稳，2024 起流行</td></tr><tr><td>Adapter</td><td>层间插入小 MLP</td><td>1%–5%</td><td><strong>有</strong>（不能合并）</td><td>已边缘化</td></tr><tr><td>Prefix / P-Tuning</td><td>在序列前加可训练的&quot;虚拟 token&quot;</td><td>&lt;0.1%</td><td>占上下文位置</td><td>效果不稳</td></tr><tr><td>Prompt Tuning</td><td>只学 soft prompt</td><td>极少</td><td>占位置</td><td>大模型上不如 LoRA</td></tr><tr><td>全量微调</td><td>全部参数</td><td>100%</td><td>无</td><td>数据多、算力足时的上限方案</td></tr></tbody></table>
+<blockquote><p><strong>选择建议</strong>：显存够就用 LoRA（r=16，全线性层）；显存紧就 QLoRA；数据量大（&gt;10 万条）且要压榨上限，才考虑全量。</p></blockquote>
+<hr/>
+<h2 id="57-灾难性遗忘微调的副作用">5.7 灾难性遗忘：微调的副作用</h2>
+<p><strong>现象</strong>：在一个很窄的任务上微调后，模型在该任务上变强，但通用能力（写代码、数学、多语言）<strong>明显退化</strong>。</p>
+<table><thead><tr><th>缓解手段</th><th>做法</th><th>代价</th></tr></thead><tbody><tr><td>混入通用数据</td><td>训练集里掺 5%–20% 通用指令数据</td><td>需要准备数据</td></tr><tr><td>降低学习率 / 减少 epoch</td><td>别把模型&quot;训狠了&quot;</td><td>收敛慢</td></tr><tr><td>用 LoRA 而非全量</td><td>更新被限制在低秩子空间，天然更保守</td><td>上限略低</td></tr><tr><td>只训高层</td><td>冻结底层</td><td>领域适配可能不足</td></tr><tr><td>定期评测通用能力</td><td>每次训练后跑 MMLU/C-Eval 子集</td><td>增加流程成本</td></tr><tr><td>模型合并（model soup / TIES）</td><td>把多个微调版本权重融合</td><td>需要实验</td></tr></tbody></table>
+<p><strong>判断标准</strong>：如果微调后模型在原有场景&quot;变笨了&quot;，最常见原因就是<strong>lr 太大 + epoch 太多 + 数据太窄</strong>这三件事叠加。</p>
+<hr/>
+<h2 id="58-微调实战-checklist">5.8 微调实战 checklist</h2>
+<table><thead><tr><th>阶段</th><th>要做的事</th><th>常见坑</th></tr></thead><tbody><tr><td>数据</td><td>统一 chat template；去重；清理格式错乱样本</td><td>训练/推理模板不一致（最致命的坑）</td></tr><tr><td>划分</td><td>留 5%–10% 验证集</td><td>无验证集 → 看不见过拟合</td></tr><tr><td>基线</td><td><strong>先跑 prompt/few-shot 基线</strong></td><td>直接微调，最后发现提示词就够用</td></tr><tr><td>训练</td><td>lr 从 2e-4（LoRA）或 1e-5（全量）试；epoch 1–3</td><td>lr 过大 → loss 震荡、通用能力崩</td></tr><tr><td>监控</td><td>训练 loss + 验证 loss + 通用能力抽样</td><td>只看训练 loss → 过拟合无感</td></tr><tr><td>评估</td><td>任务指标 + 通用指标 + 人工抽检</td><td>只测训练集分布，等于自欺</td></tr><tr><td>部署</td><td>merge LoRA → 量化 → 服务化</td><td>忘了 merge 导致推理变慢</td></tr></tbody></table>
+<blockquote><p><strong>数据格式才是第一大坑</strong>。LoRA 训练 90% 的&quot;效果不好&quot;，根因是训练时用的 chat template 和推理时不一致（多一个空格、少一个 <code>&lt;|im_end|&gt;</code> 都会显著掉点）。</p></blockquote>
+<hr/>
+<h2 id="59-常被误解的点">5.9 常被误解的点</h2>
+<table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;微调能让模型记住新知识&quot;</td><td>效果有限且不稳定，事实注入应该用 RAG</td></tr><tr><td>&quot;LoRA 效果一定不如全量&quot;</td><td>多数任务上接近甚至更好（正则化效应）；数据极多时全量才有优势</td></tr><tr><td>&quot;r 越大效果越好&quot;</td><td>收益快速递减，且更容易过拟合；r=8~16 是甜蜜点</td></tr><tr><td>&quot;LoRA 会增加推理延迟&quot;</td><td>合并后与原模型<strong>完全一致</strong>，零开销</td></tr><tr><td>&quot;QLoRA 是精度换显存，效果一定差&quot;</td><td>实测质量基本对齐 16bit LoRA，是现代最低门槛方案</td></tr><tr><td>&quot;SFT 数据越多越好&quot;</td><td>质量 &gt; 数量；10 万条脏数据会教坏模型</td></tr><tr><td>&quot;训练 loss 降到很低就是成功&quot;</td><td>更可能是过拟合；要看验证集与通用能力</td></tr></tbody></table>
+<hr/>
+<h2 id="510-动手">5.10 动手</h2>
+<pre><code>python3 demos/06_lora_params.py     # 参数量、显存账、秩验证，全部现场计算
+python3 demos/make_figures.py       # 重画 lora-params.png</code></pre>
+<p><strong>建议改的三处</strong>：</p>
+<ul class="lvl"><li>把 <code>r</code> 改成 256、1024，观察参数量占比如何逼近全量 → 理解&quot;LoRA 是连续退化为全量&quot;的渐变过程。</li><li>把 <code>d_out</code> 从 4096 改成 11008（FFN 层），比较 LoRA 占比变化。</li><li>手算：给一个 13B 模型（L=40, d=5120）全量微调，需要多少 GB 显存？</li></ul>
+<p>真跑一次微调，见 <a href="11-open-source-projects.html">第 11 章</a> 里的 LLaMA-Factory / PEFT 路径。</p>
+<hr/>
+<h2 id="511-自查问题">5.11 自查问题</h2>
+<ul class="lvl"><li>什么时候该用 RAG，什么时候该微调？给两个具体例子说明。</li><li>SFT 为什么要 mask 掉指令部分的 loss？</li><li>LoRA 的两个矩阵形状分别是什么？为什么初始化时 B 要设为 0？</li><li>r、alpha 分别控制什么？为什么有效学习率与 α/r 有关？</li><li>全量微调 7B 的显存怎么算？各部分分别是多少？</li><li>QLoRA 的三项关键技术分别解决什么问题？</li><li>灾难性遗忘的症状是什么？三种缓解手段？</li><li>为什么说&quot;训练/推理 chat template 不一致&quot;是最致命的坑？</li></ul>
+<hr/>
+<p class="nav-footer"><a href="04-pretraining.html">← 上一章：预训练</a> · <a href="README.html">返回总览</a> · <a href="06-scaling-and-emergence.html">下一章：涌现与缩放定律 →</a></p>
+</main>
+</body>
+</html>

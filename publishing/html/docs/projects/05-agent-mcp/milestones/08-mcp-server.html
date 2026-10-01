@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 08 — MCP Server：把工具提供出去</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-08-mcp-server把工具提供出去">Milestone 08 — MCP Server：把工具提供出去</h1>
+<blockquote><p>Milestone 07 只管消息长什么样。这一章是<strong>真的把工具提供出去</strong>：</p><p>``<code>bash python -m agent.mcp.server      # 它就挂在 stdio 上等人来问 </code>``</p></blockquote>
+<h2 id="1-一个必须想清楚的设计错误分两类">1. 一个必须想清楚的设计：错误分两类</h2>
+<p>MCP 把错误分成两路，<strong>混用会让客户端完全没法处理</strong>：</p>
+<table><thead><tr><th>类型</th><th>含义</th><th>例子</th></tr></thead><tbody><tr><td>JSON-RPC error</td><td>协议 / 调用层面的问题：调用方该改代码</td><td>方法不存在、参数不合法、工具名没注册</td></tr><tr><td><code>result.isError</code></td><td><strong>工具本身执行了但失败了</strong>：这是工具的一次正常结果</td><td>查不到、算式非法、超时</td></tr></tbody></table>
+<p>第二条很容易被写成第一条。区别在哪：</p>
+<pre><code>工具名不存在 → 调用方该改代码（是 bug），走 JSON-RPC error
+查不到内容   → 这是工具的一次正常结果，模型看到后应该换个词再查</code></pre>
+<p>所以 <code>tools/call</code> 的实现里，工具抛异常要<strong>包成 <code>isError=True</code> 的 content 返回</strong>， 而不是往外抛 JSON-RPC error。否则就退化成 Milestone 01 讲过的那件事： 把「一次失败」变成「整轮任务被打死」。</p>
+<p>真实输出（<code>demos/out/demo_07_mcp.txt</code> 第 4 节）：</p>
+<pre><code>{  &quot;result&quot;: {&quot;content&quot;: [{&quot;type&quot;: &quot;text&quot;, &quot;text&quot;: &quot;[工具执行失败] boom: 查不到&quot;}],
+              &quot;isError&quot;: true}   }      ← 工具执行失败：走 result
+
+{  &quot;error&quot;: {&quot;code&quot;: -32602, &quot;message&quot;: &quot;没有名为 &#x27;nope&#x27; 的工具...&quot;} }  ← 工具名不存在：走 error</code></pre>
+<h2 id="2-错误码也要选对">2. 错误码也要选对</h2>
+<p>「工具名不存在」一开始我抛的是 <code>ValueError</code>，被统一兜底成 <strong>-32603（内部错误）</strong>。 这是个会误导客户端的错误码：</p>
+<pre><code>-32603  服务端内部错误  →  客户端以为服务端崩了，于是重试
+-32602  参数不合法      →  客户端正确地知道「改我的参数」</code></pre>
+<p>所以专门加了 <code>CallError(code, message)</code>，让调用方能明确区分「你错了」和「我错了」。</p>
+<h2 id="3-stdio-主循环的两个坑">3. stdio 主循环的两个坑</h2>
+<pre><code>for line in inp:                 # ① 逐行读
+    ...
+    out.write(encode_frame(response))
+    out.flush()                  # ② 必须 flush</code></pre>
+<p><strong>① 不能一次 <code>read()</code> 全读再处理</strong> —— 客户端是「发一条、等一条」， 你等 EOF 就等于永远等不到（它的 stdin 还开着）。</p>
+<p><strong>② 不 flush 客户端会一直等</strong> —— stdio 是块缓冲的，写满 4KB 才真正发出去。 这个错的表现是「客户端卡住不动」，而不是报错，非常难查。</p>
+<p>退出时机：stdin 关闭（EOF）就该退出。客户端进程没了，服务端留着没意义。</p>
+<h2 id="4-真实跑起来">4. 真实跑起来</h2>
+<figure class="figure"><img alt="真实子进程对话" src="../../../../../../projects/05-agent-mcp/assets/term-08-real-subprocess.png" loading="lazy"/><figcaption>真实子进程对话</figcaption></figure>
+<p><code>default_server()</code> 把 Project 05 的内置工具（<code>rag_search</code> / <code>calculator</code> / <code>now</code>） 全部通过 MCP 暴露。这一步的意义：<strong>这些工具不再只能被同一个进程里的 Agent 调用了</strong>。</p>
+<h2 id="5-踩到的坑">5. 踩到的坑</h2>
+<p><strong>坑 1：<code>Tool.schema()</code> 返回的是完整外壳。</strong> 本项目的约定是 <code>{&quot;type&quot;: &quot;function&quot;, &quot;function&quot;: {...}}</code>（Milestone 03 修 422 时定的）。 MCP 要的是<strong>内层的纯 JSON Schema</strong>，所以要剥掉外壳：</p>
+<pre><code>outer = tool.schema()
+inner = outer.get(&quot;function&quot;, outer)   # 剥壳</code></pre>
+<p>一开始直接取 <code>schema[&quot;parameters&quot;]</code> 拿到的是 <code>None</code>，注册出来的工具参数全空。 <strong>服务端不该把 LLM 的形状泄漏到协议里</strong> —— 它可能同时服务于别的客户端， 那些客户端根本不知道 &quot;function&quot; 是什么。</p>
+<p><strong>坑 2：<code>lambda **kw, _t=tool: ...</code> 是语法错误。</strong> 关键字参数必须放在 <code>**kwargs</code> <strong>之前</strong>：<code>lambda _t=tool, **kw: _t.run(**kw)</code>。</p>
+<h2 id="6-结论">6. 结论</h2>
+<ul class="lvl"><li><strong>协议错误与工具失败是两回事</strong>，前者让调用方改代码，后者让模型换个参数。</li><li><strong>错误码要选对</strong>，否则客户端会对着不该重试的错误发起重试。</li><li>stdio 主循环必须<strong>逐行读 + 每次 flush</strong>。</li></ul>
+<h2 id="7-代码位置">7. 代码位置</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/mcp/server.py</code></td><td><code>MCPToolSpec</code> / <code>MCPServer</code> / <code>CallError</code> / <code>run_stdio</code> / <code>default_server</code></td></tr><tr><td><code>tests/test_mcp.py</code></td><td><code>TestServerHandshake</code> / <code>TestServerTools</code> / <code>TestServerStdio</code>（15 项）</td></tr><tr><td><code>demos/demo_07_mcp.py</code></td><td>第 3–5 节</td></tr></tbody></table>
+<h2 id="8-版本">8. 版本</h2>
+<p>v0.8 → <strong>v0.9</strong>，MCP Server 落地，工具跨进程可用；测试 230 passed。</p>
+</main>
+</body>
+</html>

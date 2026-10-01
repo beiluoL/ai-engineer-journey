@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day28：大模型训练环境实战</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day28大模型训练环境实战">Day28：大模型训练环境实战</h1>
+<h1 id="gpu服务器-cuda-pytorch-llamafactory-qlora第一次训练">GPU服务器 → CUDA → PyTorch → LLaMA-Factory → QLoRA第一次训练</h1>
+<p>前面 Day27：</p>
+<p>你已经理解：</p>
+<pre><code>Transformer
+
+↓
+
+预训练 Pre-training
+
+↓
+
+SFT
+
+↓
+
+LoRA
+
+↓
+
+QLoRA
+
+↓
+
+Adapter
+
+↓
+
+部署</code></pre>
+<p>但是作为 AI 工程师，光理解概念不够。</p>
+<p>企业面试会问：</p>
+<blockquote><p>“你有没有真正微调过模型？”</p></blockquote>
+<p>今天进入实战流程。</p>
+<p>目标：</p>
+<p>从 0：</p>
+<p>租一台 GPU 服务器</p>
+<p>↓</p>
+<p>安装环境</p>
+<p>↓</p>
+<p>下载 Qwen</p>
+<p>↓</p>
+<p>准备数据</p>
+<p>↓</p>
+<p>LLaMA-Factory</p>
+<p>↓</p>
+<p>QLoRA训练</p>
+<p>↓</p>
+<p>测试模型</p>
+<p>最终得到：</p>
+<p>你的：</p>
+<h1 id="java-interview-ai-model">Java Interview AI Model</h1>
+<hr/>
+<h1 id="一完整微调链路">一、完整微调链路</h1>
+<p>今天完成：</p>
+<pre><code>
+GPU服务器
+
+
+↓
+
+Ubuntu系统
+
+
+↓
+
+NVIDIA Driver
+
+
+↓
+
+CUDA
+
+
+↓
+
+PyTorch
+
+
+↓
+
+Transformers
+
+
+↓
+
+LLaMA-Factory
+
+
+↓
+
+Qwen模型
+
+
+↓
+
+Java面试数据
+
+
+↓
+
+QLoRA
+
+
+↓
+
+LoRA Adapter
+
+
+↓
+
+测试</code></pre>
+<hr/>
+<h1 id="二第一步选择gpu服务器">二、第一步：选择GPU服务器</h1>
+<p>微调不是普通服务器。</p>
+<p>需要：</p>
+<p>GPU显存。</p>
+<hr/>
+<h2 id="入门推荐">入门推荐</h2>
+<h3 id="rtx4090">RTX4090</h3>
+<p>配置：</p>
+<pre><code>
+GPU:
+
+RTX4090 24GB
+
+
+CPU:
+
+8核以上
+
+
+内存:
+
+64GB
+
+
+SSD:
+
+200GB+</code></pre>
+<hr/>
+<p>价格：</p>
+<p>云GPU：</p>
+<p>约：</p>
+<p>2～10元/小时。</p>
+<hr/>
+<p>适合：</p>
+<p>Qwen：</p>
+<p>7B模型。</p>
+<hr/>
+<h1 id="三云gpu平台选择">三、云GPU平台选择</h1>
+<p>国内：</p>
+<h2 id="1-autodl">1. AutoDL</h2>
+<p>适合：</p>
+<p>个人学习。</p>
+<p>优点：</p>
+<ul class="lvl"><li>便宜</li></ul>
+<ul class="lvl"><li>镜像多</li></ul>
+<ul class="lvl"><li>CUDA环境方便</li></ul>
+<hr/>
+<h2 id="2-阿里云pai">2. 阿里云PAI</h2>
+<p>企业常用。</p>
+<hr/>
+<h2 id="3-腾讯云gpu">3. 腾讯云GPU</h2>
+<p>企业常用。</p>
+<hr/>
+<p>国外：</p>
+<h2 id="lambda-cloud">Lambda Cloud</h2>
+<h2 id="runpod">RunPod</h2>
+<h2 id="aws">AWS</h2>
+<hr/>
+<p>第一次：</p>
+<p>推荐：</p>
+<p>AutoDL。</p>
+<hr/>
+<h1 id="四创建gpu实例">四、创建GPU实例</h1>
+<p>选择：</p>
+<p>Ubuntu。</p>
+<p>推荐：</p>
+<pre><code>
+Ubuntu 22.04
+
+CUDA 12.x
+
+Python 3.10</code></pre>
+<hr/>
+<p>GPU：</p>
+<p>选择：</p>
+<p>RTX4090。</p>
+<hr/>
+<p>启动。</p>
+<p>进入：</p>
+<p>SSH。</p>
+<hr/>
+<h1 id="五连接服务器">五、连接服务器</h1>
+<p>Mac：</p>
+<p>终端：</p>
+<pre><code>ssh root@服务器IP</code></pre>
+<p>例如：</p>
+<pre><code>ssh root@123.xxx.xxx.xxx</code></pre>
+<hr/>
+<p>进入：</p>
+<pre><code>
+root@server:
+
+#</code></pre>
+<hr/>
+<h1 id="六检查gpu">六、检查GPU</h1>
+<p>执行：</p>
+<pre><code>nvidia-smi</code></pre>
+<p>看到：</p>
+<p>类似：</p>
+<pre><code>+----------------+
+
+GPU Name
+
+RTX4090
+
+
+Memory
+
+0MiB/24564MiB
+
++----------------+</code></pre>
+<p>说明：</p>
+<p>GPU正常。</p>
+<hr/>
+<h1 id="七理解-nvidiasmi">七、理解 nvidia-smi</h1>
+<p>输出：</p>
+<p>例如：</p>
+<pre><code>GPU:
+
+RTX4090
+
+
+Memory:
+
+0/24576MB
+
+
+CUDA Version:
+
+12.4</code></pre>
+<p>解释：</p>
+<hr/>
+<h2 id="gpu-name">GPU Name</h2>
+<p>显卡型号。</p>
+<hr/>
+<h2 id="memory">Memory</h2>
+<p>显存。</p>
+<p>24GB。</p>
+<hr/>
+<h2 id="cuda-version">CUDA Version</h2>
+<p>支持CUDA版本。</p>
+<hr/>
+<h1 id="八cuda是什么">八、CUDA是什么？</h1>
+<p>再复习：</p>
+<p>CUDA：</p>
+<p>NVIDIA GPU计算平台。</p>
+<p>关系：</p>
+<pre><code>
+PyTorch
+
+↓
+
+CUDA
+
+↓
+
+NVIDIA Driver
+
+↓
+
+GPU</code></pre>
+<hr/>
+<p>没有CUDA：</p>
+<p>PyTorch不能调用GPU。</p>
+<hr/>
+<h1 id="九安装python环境">九、安装Python环境</h1>
+<p>推荐：</p>
+<p>Conda。</p>
+<p>安装：</p>
+<pre><code>wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+
+bash Miniconda3-latest-Linux-x86_64.sh</code></pre>
+<hr/>
+<p>创建环境：</p>
+<pre><code>conda create \
+-n llama \
+python=3.10</code></pre>
+<hr/>
+<p>进入：</p>
+<pre><code>conda activate llama</code></pre>
+<hr/>
+<h1 id="十安装pytorch">十、安装PyTorch</h1>
+<p>PyTorch：</p>
+<p>深度学习框架。</p>
+<p>作用：</p>
+<p>加载模型、训练。</p>
+<hr/>
+<p>安装：</p>
+<p>CUDA版本：</p>
+<p>例如：</p>
+<p>CUDA12.1。</p>
+<pre><code>pip install torch torchvision torchaudio \
+--index-url https://download.pytorch.org/whl/cu121</code></pre>
+<hr/>
+<p>测试：</p>
+<p>Python：</p>
+<pre><code>import torch
+
+
+print(
+torch.cuda.is_available()
+)</code></pre>
+<p>输出：</p>
+<pre><code>True</code></pre>
+<p>成功。</p>
+<hr/>
+<h1 id="十一安装llamafactory">十一、安装LLaMA-Factory</h1>
+<p>项目：</p>
+<p><a href="https://github.com/hiyouga/LLaMA-Factory" target="_blank" rel="noopener">https://github.com/hiyouga/LLaMA-Factory</a></p>
+<hr/>
+<p>下载：</p>
+<pre><code>git clone https://github.com/hiyouga/LLaMA-Factory.git</code></pre>
+<p>进入：</p>
+<pre><code>cd LLaMA-Factory</code></pre>
+<hr/>
+<p>安装：</p>
+<pre><code>pip install -e .</code></pre>
+<hr/>
+<p>测试：</p>
+<pre><code>llamafactory-cli version</code></pre>
+<hr/>
+<h1 id="十二准备模型">十二、准备模型</h1>
+<p>选择：</p>
+<p>Qwen2.5-7B-Instruct。</p>
+<p>为什么？</p>
+<p>你的目标：</p>
+<p>Java AI工程师。</p>
+<p>7B：</p>
+<p>适合学习。</p>
+<hr/>
+<p>下载：</p>
+<p>方式1：</p>
+<p>Hugging Face。</p>
+<pre><code>huggingface-cli download \
+Qwen/Qwen2.5-7B-Instruct</code></pre>
+<hr/>
+<p>下载结构：</p>
+<pre><code>
+Qwen2.5-7B
+
+
+├── config.json
+
+├── tokenizer.json
+
+├── model.safetensors
+
+└── generation_config.json</code></pre>
+<hr/>
+<h1 id="十三准备训练数据">十三、准备训练数据</h1>
+<p>你的：</p>
+<p>java_interview.json</p>
+<p>例如：</p>
+<pre><code>[
+{
+&quot;instruction&quot;:
+&quot;你是一名Java高级面试官&quot;,
+
+&quot;input&quot;:
+&quot;HashMap为什么线程不安全？&quot;,
+
+&quot;output&quot;:
+&quot;HashMap在并发环境...&quot;
+}
+]</code></pre>
+<hr/>
+<p>放：</p>
+<pre><code>LLaMA-Factory/data/
+
+java_interview.json</code></pre>
+<hr/>
+<h1 id="十四注册数据集">十四、注册数据集</h1>
+<p>编辑：</p>
+<pre><code>data/dataset_info.json</code></pre>
+<p>添加：</p>
+<pre><code>{
+&quot;java_interview&quot;:{
+
+&quot;file_name&quot;:
+&quot;java_interview.json&quot;,
+
+&quot;columns&quot;:{
+
+&quot;instruction&quot;:
+&quot;instruction&quot;,
+
+&quot;input&quot;:
+&quot;input&quot;,
+
+&quot;output&quot;:
+&quot;output&quot;
+
+}
+
+}
+}</code></pre>
+<hr/>
+<p>现在：</p>
+<p>LLaMA-Factory知道：</p>
+<p>你的数据在哪里。</p>
+<hr/>
+<h1 id="十五创建qlora配置">十五、创建QLoRA配置</h1>
+<p>创建：</p>
+<pre><code>train_java.yaml</code></pre>
+<p>内容：</p>
+<pre><code>model_name_or_path:
+
+Qwen/Qwen2.5-7B-Instruct
+
+
+stage:
+
+sft
+
+
+do_train:
+
+true
+
+
+finetuning_type:
+
+lora
+
+
+quantization_bit:
+
+4
+
+
+dataset:
+
+java_interview
+
+
+template:
+
+qwen
+
+
+output_dir:
+
+./java-qwen-lora
+
+
+learning_rate:
+
+2e-4
+
+
+num_train_epochs:
+
+3
+
+
+per_device_train_batch_size:
+
+1
+
+
+gradient_accumulation_steps:
+
+8</code></pre>
+<hr/>
+<p>解释：</p>
+<hr/>
+<h2 id="quantizationbit">quantization_bit</h2>
+<pre><code>4</code></pre>
+<p>表示：</p>
+<p>4bit量化。</p>
+<p>就是：</p>
+<p>QLoRA。</p>
+<hr/>
+<h2 id="lora">lora</h2>
+<p>只训练：</p>
+<p>Adapter。</p>
+<hr/>
+<h2 id="batchsize">batch_size</h2>
+<p>一次训练多少数据。</p>
+<p>显存小：</p>
+<p>设置1。</p>
+<hr/>
+<h2 id="gradientaccumulation">gradient_accumulation</h2>
+<p>模拟大Batch。</p>
+<hr/>
+<h1 id="十六开始训练">十六、开始训练</h1>
+<p>执行：</p>
+<pre><code>llamafactory-cli train \
+train_java.yaml</code></pre>
+<hr/>
+<p>屏幕：</p>
+<p>类似：</p>
+<pre><code>epoch 1
+
+loss 2.35
+
+
+epoch 2
+
+loss 1.21
+
+
+epoch 3
+
+loss 0.65</code></pre>
+<hr/>
+<h1 id="十七loss是什么">十七、Loss是什么？</h1>
+<p>Loss：</p>
+<p>损失。</p>
+<p>表示：</p>
+<p>模型预测错误程度。</p>
+<p>训练目标：</p>
+<p>降低。</p>
+<hr/>
+<p>例如：</p>
+<p>开始：</p>
+<pre><code>loss=3.0</code></pre>
+<p>训练：</p>
+<pre><code>loss=0.5</code></pre>
+<p>说明：</p>
+<p>模型更适应数据。</p>
+<hr/>
+<p>注意：</p>
+<p>不是越低越好。</p>
+<p>过低：</p>
+<p>可能：</p>
+<p>过拟合。</p>
+<hr/>
+<h1 id="十八训练输出">十八、训练输出</h1>
+<p>生成：</p>
+<pre><code>
+java-qwen-lora/
+
+
+├── adapter_model.safetensors
+
+
+├── adapter_config.json
+</code></pre>
+<hr/>
+<p>这就是：</p>
+<p>你的Java专家能力。</p>
+<hr/>
+<h1 id="十九测试模型">十九、测试模型</h1>
+<p>加载：</p>
+<p>基础模型：</p>
+<p>Qwen。</p>
+<p>LoRA。</p>
+<p>测试：</p>
+<p>问题：</p>
+<pre><code>解释ConcurrentHashMap</code></pre>
+<p>观察：</p>
+<p>是否：</p>
+<p>更像Java面试专家。</p>
+<hr/>
+<h1 id="二十微调前后区别">二十、微调前后区别</h1>
+<p>原Qwen：</p>
+<p>回答：</p>
+<p>通用解释。</p>
+<hr/>
+<p>微调后：</p>
+<p>回答：</p>
+<p>更加：</p>
+<pre><code>
+面试结构
+
+↓
+
+核心原理
+
+↓
+
+源码
+
+↓
+
+追问
+
+↓
+
+项目场景</code></pre>
+<hr/>
+<h1 id="二十一企业真实流程">二十一、企业真实流程</h1>
+<p>生产：</p>
+<p>不是：</p>
+<p>训练完直接上线。</p>
+<p>流程：</p>
+<pre><code>
+Dataset
+
+
+↓
+
+Training
+
+
+↓
+
+Evaluation
+
+
+↓
+
+Model Registry
+
+
+↓
+
+Gray Release
+
+
+↓
+
+Production</code></pre>
+<hr/>
+<h1 id="二十二常见错误">二十二、常见错误</h1>
+<h2 id="错误1">错误1：</h2>
+<p>显存不足</p>
+<p>解决：</p>
+<p>降低：</p>
+<ul class="lvl"><li>batch</li></ul>
+<ul class="lvl"><li>rank</li></ul>
+<ul class="lvl"><li>seq length</li></ul>
+<hr/>
+<h2 id="错误2">错误2：</h2>
+<p>CUDA不匹配</p>
+<p>检查：</p>
+<pre><code>nvidia-smi</code></pre>
+<p>和：</p>
+<p>PyTorch CUDA版本。</p>
+<hr/>
+<h2 id="错误3">错误3：</h2>
+<p>数据质量差</p>
+<p>大模型微调：</p>
+<p>数据 &gt; 参数。</p>
+<hr/>
+<h1 id="二十三你的项目实践路线">二十三、你的项目实践路线</h1>
+<p>你的目标：</p>
+<p>Java AI Engineer。</p>
+<p>建议训练：</p>
+<p>三个LoRA。</p>
+<hr/>
+<h2 id="模型1">模型1：</h2>
+<p>Java Interview LoRA</p>
+<p>数据：</p>
+<p>1000～5000题。</p>
+<hr/>
+<h2 id="模型2">模型2：</h2>
+<p>AI Engineer Interview LoRA</p>
+<p>数据：</p>
+<p>RAG/Agent/MCP。</p>
+<hr/>
+<h2 id="模型3">模型3：</h2>
+<p>你的个人知识助手</p>
+<p>数据：</p>
+<p>你的：</p>
+<ul class="lvl"><li>Obsidian</li></ul>
+<ul class="lvl"><li>博客</li></ul>
+<ul class="lvl"><li>学习笔记</li></ul>
+<hr/>
+<h1 id="二十四面试回答">二十四、面试回答</h1>
+<h2 id="q">Q：</h2>
+<blockquote><p>你有没有做过模型微调？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>我使用Qwen2.5-7B作为基础模型，通过LLaMA-Factory完成SFT训练，采用QLoRA方式降低显存占用。训练数据采用JSON指令格式，通过LoRA Adapter学习Java技术面试场景，训练完成后通过vLLM加载模型，并结合Spring Boot和LangChain4j提供业务接口。</p></blockquote>
+<hr/>
+<h1 id="二十五day28知识地图">二十五、Day28知识地图</h1>
+<p>现在完整链路：</p>
+<pre><code>
+GPU服务器
+
+
+↓
+
+CUDA
+
+
+↓
+
+PyTorch
+
+
+↓
+
+LLaMA-Factory
+
+
+↓
+
+Qwen
+
+
+↓
+
+QLoRA
+
+
+↓
+
+LoRA Adapter
+
+
+↓
+
+Merge
+
+
+↓
+
+vLLM
+
+
+↓
+
+Spring Boot</code></pre>
+<hr/>
+<h1 id="下一节-day29">下一节 Day29</h1>
+<p>建议进入：</p>
+<h1 id="day29模型评测与生产上线evaluation-model-registry-vllm-灰度发布">《Day29：模型评测与生产上线：Evaluation → Model Registry → vLLM → 灰度发布》</h1>
+<p>因为企业真正关心：</p>
+<p>不是：</p>
+<p>“你会训练”。</p>
+<p>而是：</p>
+<blockquote><p>“你训练的模型有没有效果？怎么安全上线？”</p></blockquote>
+<p>下一节学习：</p>
+<ul class="lvl"><li>Golden Dataset【黄金测试集】</li></ul>
+<ul class="lvl"><li>自动评测</li></ul>
+<ul class="lvl"><li>人工评测</li></ul>
+<ul class="lvl"><li>模型版本管理</li></ul>
+<ul class="lvl"><li>灰度发布</li></ul>
+<ul class="lvl"><li>A/B测试</li></ul>
+<ul class="lvl"><li>生产监控</li></ul>
+<p>这一步就是从：</p>
+<p><strong>会微调模型 → 会管理企业模型生命周期。</strong></p>
+</main>
+</body>
+</html>

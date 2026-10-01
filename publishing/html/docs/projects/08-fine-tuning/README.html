@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 08 — LoRA / QLoRA Fine-Tuning</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-08-lora-qlora-finetuning">Project 08 — LoRA / QLoRA Fine-Tuning</h1>
+<h2 id="项目目标">项目目标</h2>
+<p>掌握模型微调，让通用模型变成领域模型。</p>
+<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<p>RAG 是外挂知识，Fine-tuning【微调】是把知识和行为&quot;烧进&quot;模型。生产中 LoRA / QLoRA 是标配。</p>
+<h2 id="解决什么问题">解决什么问题</h2>
+<ul class="lvl"><li>RAG 能加知识但不能改变模型行为</li><li>需要模型在特定领域表现更好</li><li>需要让模型学会新的任务格式</li></ul>
+<h2 id="最终能力">最终能力</h2>
+<pre><code>Base Model
+    ↓
+Dataset
+    ↓
+Fine-Tuning
+    ↓
+LoRA / QLoRA
+    ↓
+Checkpoint
+    ↓
+Evaluation
+    ↓
+Usable Model</code></pre>
+<h2 id="技术栈">技术栈</h2>
+<ul class="lvl"><li><strong>纯 numpy 手写</strong>：LoRA / NF4 量化 / QLoRA / 指令微调 / 断点续训 / Adapter 合并</li><li>不引入 torch、transformers、peft —— 每一行都是自己写的</li><li>基座模型复用 Project 06 手写的 Transformer 与其自动微分（<code>src/model/</code>）</li></ul>
+<h2 id="项目演进">项目演进</h2>
+<pre><code>Local Open Source LLM
+    ↓ SFT 基础
+Fine-tuning v0.1
+    ↓ LoRA / QLoRA
+Fine-tuning v0.2
+    ↓ Checkpoint + 评估
+Fine-tuning v1.0   ✅</code></pre>
+<h2 id="milestones">Milestones</h2>
+<table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Fine-Tuning</td><td>微调概念 / SFT / 全量 vs LoRA 开销对比</td><td>✅ 已落地</td></tr><tr><td>02</td><td>Dataset Preparation</td><td>Alpaca 指令数据 / 分词 / 长度分布</td><td>✅ 已落地</td></tr><tr><td>03</td><td>Instruction Tuning</td><td>指令格式 / 只在答案区算 loss</td><td>✅ 已落地</td></tr><tr><td>04</td><td>LoRA</td><td>从零实现 <code>W + (α/r)·B·A</code>，B 零初始化</td><td>✅ 已落地</td></tr><tr><td>05</td><td>QLoRA</td><td>NF4 分位量化 / 双量化 / 显存账本</td><td>✅ 已落地</td></tr><tr><td>06</td><td>Training Configuration</td><td>rank / lr / alpha 真实扫描</td><td>✅ 已落地</td></tr><tr><td>07</td><td>Checkpoint</td><td>Adapter 存取 / 断点续训</td><td>✅ 已落地</td></tr><tr><td>08</td><td>Merge / Load Adapter</td><td>合并回基座 / 等价性证明</td><td>✅ 已落地</td></tr><tr><td>09</td><td>Fine-Tuned Model Evaluation</td><td>域内困惑度 / 灾难性遗忘</td><td>✅ 已落地</td></tr></tbody></table>
+<h2 id="当前状态">当前状态</h2>
+<p><strong>v1.0 —— 9/9 Milestone 全部落地，189 项 pytest 全绿，9 个真实 demo，9 张真实终端截图 + 9 张手写架构图。</strong></p>
+<p>主线叙事：<strong>通用基座 → 冻结 → 注入 LoRA → Java 面试领域 SFT → 评估</strong>。 领域数据集沿用 Project 07 手写的 <code>java_interview.json</code>（59 条，只读引用）。</p>
+<h3 id="关键实测数字">关键实测数字</h3>
+<table><thead><tr><th>维度</th><th>实测结果</th></tr></thead><tbody><tr><td>基座参数量</td><td>230,656（P06 的 <code>parameters()</code> 漏报 65,536 词嵌入，只报 165,120）</td></tr><tr><td>LoRA 可训练占比</td><td>r=8 → 27,136 / 230,656 = <strong>10.53%</strong></td></tr><tr><td>训练显存</td><td>LoRA 1.29 MB vs 全量 3.52 MB = <strong>36.76%</strong></td></tr><tr><td>B 零初始化等价性</td><td>整机 262,144 个输出<strong>逐位相同</strong>，最大绝对误差 <strong>0.000e+00</strong></td></tr><tr><td>手写 autograd 对拍</td><td><code>grad_check</code> 最大相对误差 <strong>6.585e-05</strong></td></tr><tr><td>冻结是否生效</td><td>训练后基座被改动张量 <strong>0 / 28</strong>，adapter <strong>26 / 26</strong></td></tr><tr><td>NF4 量化误差</td><td>相对误差 <strong>0.0914</strong>；比均匀 int4 低 <strong>5.45%</strong></td></tr><tr><td>压缩比</td><td>fp32 → NF4+双量化 <strong>7.75×</strong>（0.5159 B/权重），双量化额外省 8.29%</td></tr><tr><td>最优超参</td><td>r=8 / alpha=16 / lr=0.01 → 域内困惑度 <strong>405.7</strong></td></tr><tr><td>Adapter 体积</td><td>仅权重 115.76 KB vs 基座 901 KB（<strong>7.8×</strong>）</td></tr><tr><td>合并等价性</td><td>合并前后最大绝对误差 <strong>0.000e+00</strong></td></tr><tr><td>领域微调效果</td><td>域内困惑度 <strong>3649.9 → 421.1</strong>（↓88.46%）</td></tr></tbody></table>
+<h3 id="三个想当然被实测推翻的结论">三个&quot;想当然被实测推翻&quot;的结论</h3>
+<ul class="lvl"><li><strong>&quot;LoRA 更抗遗忘&quot;在本项目不成立</strong>：通用（见过）语料上 LoRA 涨 +240.71%，全量微调只涨 +118.83%。 原因是基座本身欠训练，且 LoRA 等效 <code>mean|ΔW|/mean|W|</code> 已到 <strong>104.1%</strong>，并不&quot;小改动&quot;。</li><li><strong>小模型上 QLoRA 不划算</strong>：adapter 106 KB 反而大于 NF4 量化后的基座 82.54 KB（<strong>128.42%</strong>）。 量化收益随模型规模线性增长——7B 上才是 0.66 MB vs 3.5 GB 的区别（外推，非本机实测）。</li><li><strong>困惑度下降 ≠ 可用</strong>：域内困惑度 3649.9 → 421.1 是真的，但玩具模型生成出来仍是乱码。 指标是真的，能力不是。</li></ul>
+<h3 id="顺带挖出的-p06-缺陷本项目不改-p06照实记录">顺带挖出的 P06 缺陷（本项目不改 P06，照实记录）</h3>
+<ul class="lvl"><li><code>Module.parameters()</code> <strong>漏掉整个词嵌入</strong>（<code>TokenEmbedding</code> 未继承 <code>Module</code>），65,536 参数不在表内。</li><li><code>Adam</code> 动量从未累积：<code>step()</code> 里 m/v 是局部变量、没写回 <code>self.state</code>，训完非零元素 0/54,272。</li><li><code>Tensor._prev</code> 是 <code>set</code>，迭代顺序由对象地址决定 → 跨进程不可复现。本项目用 <code>enable_deterministic_autograd()</code> 在不改 P06 的前提下包一层修掉。</li></ul>
+<h2 id="当前版本">当前版本</h2>
+<p>v1.0</p>
+<h2 id="项目结构">项目结构</h2>
+<pre><code>projects/08-fine-tuning/
+├── README.md                  # 本文件
+├── pyproject.toml             # pytest 配置（pythonpath=src）
+├── src/ft/                    # 12 个手写模块
+│   ├── paths.py               # 跨项目导入 P06 + 确定性自动微分开关
+│   ├── base.py                # 基座模型构建 / 预训练 / npz 缓存
+│   ├── lora.py                # LoRALinear：W + (α/r)·B·A
+│   ├── inject.py              # 注入冻结基座 + 冻结/可训练参数分离
+│   ├── quantize.py            # NF4 分位量化 + 双量化 + 反量化
+│   ├── qlora.py               # QLoRALinear：NF4 基座 + LoRA 旁路
+│   ├── sft_data.py            # Alpaca 指令数据 + 答案区 mask
+│   ├── trainer.py             # 只训练 adapter 的训练器
+│   ├── checkpoint.py          # adapter 存取 / 断点续训
+│   ├── merge.py               # 合并回基座
+│   └── eval.py                # 困惑度 / 遗忘 / 定性对比
+├── tests/                     # 189 passed（lora 30 / quantize 25 / qlora 24 / ...）
+├── demos/                     # 9 个真实可跑 demo（01-09 对应 9 个 Milestone）
+│   └── out/*_terminal.txt     # 真实输出（文档里所有数字都来自这里）
+├── assets/                    # 9 张真实终端截图 + 9 张手写架构图 SVG
+├── milestones/                # 01-09 文档
+└── models/                    # 基座与 adapter 缓存（.gitignore 排除，删掉可重建）</code></pre>
+<h2 id="运行方式">运行方式</h2>
+<pre><code># 跑测试（189 passed）
+/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python -m pytest -q
+
+# 跑任意一个 demo（输出同时打到终端和 demos/out/*.txt）
+/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python demos/demo_04_lora.py</code></pre>
+<blockquote><p>本项目刻意<strong>不建 venv</strong>：统一复用带 numpy 的托管解释器，省磁盘空间。</p></blockquote>
+<h2 id="已掌握能力">已掌握能力</h2>
+<ul class="lvl"><li>Project 01-07 的所有能力</li><li>从零手写 LoRA / NF4 量化 / QLoRA，并能用有限差分验证反向传播正确</li><li>指令微调的 mask 设计、超参扫描、断点续训、Adapter 合并与效果评估</li></ul>
+<h2 id="下一步">下一步</h2>
+<p>Project 09 —— LLM Evaluation / Inference Platform（Benchmark / 量化部署 / vLLM）。</p>
+<p><strong>前置项目</strong>：<a href="../../../../../projects/07-open-source-llm">Project 07 — Open Source LLM</a> <strong>底座来源</strong>：<a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</a></p>
+</main>
+</body>
+</html>

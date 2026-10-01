@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>11 · 开源项目推荐：从&quot;读懂&quot;到&quot;跑通&quot;</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="11-开源项目推荐从读懂到跑通">11 · 开源项目推荐：从&quot;读懂&quot;到&quot;跑通&quot;</h1>
+<blockquote><p>选项目的标准：<strong>能跑（有清晰的安装与数据准备说明）</strong>、<strong>能读（代码量与结构适合学）</strong>、<strong>能对应到本目录的具体章节</strong>。 下面 10 个按&quot;从零实现 → 生态与微调 → 推理部署&quot;排序，每个都标注了对应章节和上手建议。</p></blockquote>
+<hr/>
+<h2 id="111-一览表">11.1 一览表</h2>
+<table><thead><tr><th>#</th><th>项目</th><th>一句话</th><th>对应章节</th><th>难度</th></tr></thead><tbody><tr><td>1</td><td><a href="#1-karpathynanogpt">karpathy/nanoGPT</a></td><td>400 行代码从零训练 GPT</td><td><a href="01-basics-language-model.html">01</a> · <a href="03-transformer.html">03</a> · <a href="04-pretraining.html">04</a></td><td>⭐⭐</td></tr><tr><td>2</td><td><a href="#2-karpathyminbpe">karpathy/minbpe</a></td><td>从零实现 BPE 分词器</td><td><a href="01-basics-language-model.html">01.2</a></td><td>⭐</td></tr><tr><td>3</td><td><a href="#3-rasbtllms-from-scratch">rasbt/LLMs-from-scratch</a></td><td>配套《Build a LLM from Scratch》的完整代码</td><td>全书 01–05</td><td>⭐⭐</td></tr><tr><td>4</td><td><a href="#4-bbycroftllm-viz">bbycroft/llm-viz</a></td><td>GPT 前向计算的 3D 可视化</td><td><a href="02-attention.html">02</a> · <a href="03-transformer.html">03</a></td><td>⭐</td></tr><tr><td>5</td><td><a href="#5-huggingfacetransformers">huggingface/transformers</a></td><td>模型加载与推理的事实标准</td><td><a href="03-transformer.html">03</a> · <a href="05-finetuning.html">05</a></td><td>⭐⭐</td></tr><tr><td>6</td><td><a href="#6-huggingfacepeft">huggingface/peft</a></td><td>LoRA / QLoRA 的官方实现</td><td><a href="05-finetuning.html">05</a></td><td>⭐⭐</td></tr><tr><td>7</td><td><a href="#7-hiyougallama-factory">hiyouga/LLaMA-Factory</a></td><td>零代码微调平台（中文友好）</td><td><a href="05-finetuning.html">05</a></td><td>⭐</td></tr><tr><td>8</td><td><a href="#8-huggingfacetrl">huggingface/trl</a></td><td>SFT / DPO / PPO / GRPO 训练库</td><td><a href="08-alignment-rlhf.html">08</a></td><td>⭐⭐⭐</td></tr><tr><td>9</td><td><a href="#9-vllm-projectvllm">vllm-project/vllm</a></td><td>高吞吐推理引擎（PagedAttention 发源地）</td><td><a href="07-decoding-and-inference.html">07</a></td><td>⭐⭐</td></tr><tr><td>10</td><td><a href="#10-jingyaogongminimind">jingyaogong/minimind</a></td><td>从零训练中文小模型（2 小时）</td><td>全书</td><td>⭐⭐</td></tr></tbody></table>
+<hr/>
+<h2 id="1-karpathynanogpt">1. karpathy/nanoGPT</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/karpathy/nanoGPT&gt;</li><li><strong>简介</strong>：Andrej Karpathy 写的&quot;最简可训练的 GPT&quot;参考实现。<code>model.py</code> 约 300 行，<code>train.py</code> 约 300 行，把<a href="03-transformer.html">第 03 章</a>里的 decoder block 完整写了一遍：多头因果自注意力、MLP、残差、LayerNorm、权重共享。</li><li><strong>对应章节</strong>：<ul class="lvl"><li><a href="01-basics-language-model.html">01 语言模型基础</a> —— 亲手看到 <code>x</code> 与 <code>y</code> 错开一位、交叉熵怎么算</li><li><a href="03-transformer.html">03 Transformer 架构</a> —— 这是本书架构章的<strong>可执行版本</strong></li><li><a href="04-pretraining.html">04 预训练</a> —— 体验 <code>C≈6ND</code>、学习率调度、梯度裁剪</li></ul></li><li><strong>上手建议</strong>： ``<code>bash git clone https://github.com/karpathy/nanoGPT &amp;&amp; cd nanoGPT python data/shakespeare_char/prepare.py      # 准备数据集 python train.py config/train_shakespeare_char.py   # 单卡几十分钟 </code>`<code> 跑完后 </code>loss` 会从 ~4.2 降到 ~1.5，然后可以采样出一段&quot;莎士比亚风格&quot;文本。<strong>这是理解&quot;预训练到底在做什么&quot;最直观的一次体验。</strong></li><li><strong>读代码顺序建议</strong>：<code>model.py</code> 的 <code>CausalSelfAttention</code> → <code>MLP</code> → <code>Block</code> → <code>GPT.forward</code>，与<a href="03-transformer.html">第 03 章 3.5 的数据流图</a>逐行对照。</li></ul>
+<hr/>
+<h2 id="2-karpathyminbpe">2. karpathy/minbpe</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/karpathy/minbpe&gt;</li><li><strong>简介</strong>：极简 BPE 实现（含 GPT-2/GPT-4 风格的正则预切分），代码不到 300 行，是 <code>tiktoken</code> 的教学简化版。</li><li><strong>对应章节</strong>：<a href="01-basics-language-model.html">01.2 分词</a></li><li><strong>上手建议</strong>：先跑通 <code>train()</code> 观察合并过程，再对照本目录 <code>demos/01_bpe_tokenizer.py</code>——后者是本章 demo 的原型，你可以把两个实现并排读，看工业实现多了哪些处理（正则预切分、特殊 token、字节级处理）。</li></ul>
+<hr/>
+<h2 id="3-rasbtllmsfromscratch">3. rasbt/LLMs-from-scratch</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/rasbt/LLMs-from-scratch&gt;</li><li><strong>简介</strong>：配套《Build a Large Language Model (From Scratch)》一书的全部代码，从 tokenizer、注意力、GPT 架构，到预训练、加载预训练权重、指令微调，<strong>一章一个 notebook</strong>，循序渐进且不需要多卡。</li><li><strong>对应章节</strong>：本目录 <a href="01-basics-language-model.html">01</a> – <a href="05-finetuning.html">05</a> 的<strong>最佳动手配套</strong>，尤其是：<ul class="lvl"><li>第 3 章 → <a href="02-attention.html">第 02 章 注意力</a></li><li>第 4 章 → <a href="03-transformer.html">第 03 章 架构</a></li><li>第 6-7 章 → <a href="05-finetuning.html">第 05 章 微调</a></li></ul></li><li><strong>上手建议</strong>：按章节 notebook 顺序做，每个 notebook 都有清晰的&quot;自己动手改&quot;练习。适合<strong>边读本书边敲代码</strong>的节奏。</li></ul>
+<hr/>
+<h2 id="4-bbycroftllmviz">4. bbycroft/llm-viz</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/bbycroft/llm-viz&gt;</li><li><strong>简介</strong>：用 3D 方式可视化 GPT 的前向计算——每个 token 如何变成 embedding、QKV 如何投影、注意力矩阵长什么样、softmax 在哪一步发生、最终如何采样出 token。<strong>把<a href="02-attention.html">第 02</a>/<a href="03-transformer.html">03 章</a>的抽象过程变成可旋转的实物</strong>。</li><li><strong>对应章节</strong>：<a href="02-attention.html">02 注意力</a>、<a href="03-transformer.html">03 Transformer</a></li><li><strong>上手建议</strong>：先自己做一遍 <code>demos/02_self_attention.py</code>，再用这个项目对照——你会发现两者的计算步骤完全一致，只是它把张量画了出来。</li></ul>
+<hr/>
+<h2 id="5-huggingfacetransformers">5. huggingface/transformers</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/huggingface/transformers&gt;</li><li><strong>简介</strong>：几乎所有开源模型的统一加载与推理接口。<strong>读懂它的 <code>modeling_llama.py</code> / <code>modeling_qwen2.py</code>，等于读懂了工业级实现</strong>（FlashAttention 集成、KV Cache、RoPE 实现、GQA）。</li><li><strong>对应章节</strong>：<ul class="lvl"><li><a href="03-transformer.html">03 架构</a> —— 对照 <code>LlamaDecoderLayer</code> 看每个子层</li><li><a href="05-finetuning.html">05 微调</a>、<a href="07-decoding-and-inference.html">07 推理</a> —— 加载、生成、量化接口</li></ul></li><li><strong>上手建议</strong>： ``<code>python from transformers import AutoModelForCausalLM, AutoTokenizer tok = AutoTokenizer.from_pretrained(&quot;Qwen/Qwen2.5-0.5B-Instruct&quot;) m = AutoModelForCausalLM.from_pretrained(&quot;Qwen/Qwen2.5-0.5B-Instruct&quot;) </code>`<code> 然后用 </code>output_hidden_states=True` 把中间层打出来，和本目录讲的形状表逐项核对。</li></ul>
+<hr/>
+<h2 id="6-huggingfacepeft">6. huggingface/peft</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/huggingface/peft&gt;</li><li><strong>简介</strong>：LoRA / QLoRA / DoRA / Prefix Tuning 等 PEFT 方法的官方实现，接口极简（几行配置即可挂载）。</li><li><strong>对应章节</strong>：<a href="05-finetuning.html">05 微调</a>（尤其是 LoRA 与 QLoRA 两节）</li><li><strong>上手建议</strong>： ``<code>python from peft import LoraConfig, get_peft_model cfg = LoraConfig(r=8, lora_alpha=16, target_modules=[&quot;q_proj&quot;, &quot;v_proj&quot;], lora_dropout=0.05) model = get_peft_model(base_model, cfg) model.print_trainable_parameters()   # 亲手验证 0.39% 这个数字 </code>`<code> 跑完把这个输出与 </code>demos/06_lora_params.py` 的表格比对，<strong>你会看到数学公式和真实框架完全对上</strong>。</li></ul>
+<hr/>
+<h2 id="7-hiyougallamafactory">7. hiyouga/LLaMA-Factory</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/hiyouga/LlamaFactory&gt;（原 <code>hiyouga/LLaMA-Factory</code>，仓库已改名）</li><li><strong>简介</strong>：国产开源微调平台，支持 100+ 模型、SFT / DPO / PPO / 预训练全流程，<strong>带 WebUI 和中文文档</strong>，命令行与配置文件两种方式都能跑。</li><li><strong>对应章节</strong>：<a href="05-finetuning.html">05 微调</a>、<a href="08-alignment-rlhf.html">08 对齐</a></li><li><strong>上手建议</strong>：用 WebUI 走一遍&quot;选模型 → 上传数据集 → 选 LoRA → 训练 → 推理&quot;的全流程，<strong>把本目录第 05 章的每个超参在界面上找到对应项</strong>。这是最低成本的一次真实微调体验。</li><li><strong>注意</strong>：显存门槛取决于模型大小，QLoRA + 7B 在 12–24 GB 卡上可行。</li></ul>
+<hr/>
+<h2 id="8-huggingfacetrl">8. huggingface/trl</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/huggingface/trl&gt;</li><li><strong>简介</strong>：Transformer Reinforcement Learning，实现 SFT、DPO、PPO、GRPO、ORPO、KTO 等对齐算法，与 <code>peft</code> / <code>transformers</code> 无缝配合。</li><li><strong>对应章节</strong>：<a href="08-alignment-rlhf.html">08 对齐（RLHF 与 DPO）</a></li><li><strong>上手建议</strong>：从 <code>DPOTrainer</code> 开始（不需要奖励模型，几十行就能跑通），跑通后再看 <code>PPOTrainer</code> 的实现——<strong>对比两者的数据流，第 08 章的&quot;4 个模型 vs 2 个模型&quot;就变成可触摸的代码差异</strong>。</li></ul>
+<hr/>
+<h2 id="9-vllmprojectvllm">9. vllm-project/vllm</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/vllm-project/vllm&gt;</li><li><strong>简介</strong>：当前最主流的推理引擎，PagedAttention 与连续批处理的发源地。同样硬件下吞吐常是朴素实现的十几倍。</li><li><strong>对应章节</strong>：<a href="07-decoding-and-inference.html">07 解码与推理</a>（KV Cache / PagedAttention / 连续批处理）</li><li><strong>上手建议</strong>： ``<code>bash pip install vllm vllm serve Qwen/Qwen2.5-0.5B-Instruct --max-model-len 4096 </code>`<code> 然后用 </code>nvidia-smi<code>（或有 </code>metrics` 接口时看日志）观察：<ul class="lvl"><li>并发 1 个请求 vs 32 个请求时的吞吐差异 → 验证&quot;decode 是带宽瓶颈&quot;</li><li>日志里的 <strong>GPU KV cache usage</strong> → 验证<a href="07-decoding-and-inference.html">第 07 章</a>的 KV Cache 显存公式</li><li>对比 <code>--gpu-memory-utilization</code> 调大后并发能力的变化</li></ul></li></ul>
+<hr/>
+<h2 id="10-jingyaogongminimind">10. jingyaogong/minimind</h2>
+<ul class="lvl"><li><strong>仓库</strong>：&lt;https://github.com/jingyaogong/minimind&gt;</li><li><strong>简介</strong>：中文社区很受欢迎的&quot;从零训练小模型&quot;项目：<strong>约 2 小时、单卡 3090 就能训出一个 26M 参数、能对话的中文小模型</strong>，覆盖 tokenizer → 预训练 → SFT → LoRA → 推理全链路，文档全中文。</li><li><strong>对应章节</strong>：本目录<strong>全书的主线</strong>——<a href="01-basics-language-model.html">01</a> 的 token 流程、<a href="03-transformer.html">03</a> 的架构、<a href="04-pretraining.html">04</a> 的预训练、<a href="05-finetuning.html">05</a> 的 SFT/LoRA</li><li><strong>上手建议</strong>：<strong>这是本目录最推荐的&quot;毕业项目&quot;</strong>。它把本书所有章节串成一条可执行链路，而且中文语境下更容易对照理解（分词、数据、对话模板都是中文场景）。</li><li><strong>对照读法</strong>：一边跑训练一边回来翻本目录对应章节，尤其是&quot;预训练数据怎么准备&quot;&quot;SFT 的 loss mask 怎么打&quot;这两处细节。</li></ul>
+<hr/>
+<h2 id="112-学习路径三条不同起点的路线">11.2 学习路径：三条不同起点的路线</h2>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>L1</code> — 路线 A · 想彻底搞懂原理（2–4 周）</li><li><code>A1</code> — minbpe 分词</li><li><code>A2</code> — nanoGPT 架构 + 预训练</li><li><code>A3</code> — LLMs-from-scratch 逐章精读</li><li><code>A4</code> — peft 亲手验证 0.39%</li><li><code>L2</code> — 路线 B · 想尽快能干活（1–2 周）</li><li><code>B1</code> — llm-viz 建立直觉</li><li><code>B2</code> — LLaMA-Factory 跑通一次微调</li><li><code>B3</code> — vllm 部署与压测</li><li><code>B4</code> — trl 做一次 DPO</li><li><code>L3</code> — 路线 C · 中文项目实战（1 周）</li><li><code>C1</code> — minimind 全链路复现</li><li><code>C2</code> — transformers 读工业实现</li><li><code>C3</code> — LLaMA-Factory + trl 中文对话模型</li></ul></div>
+<hr/>
+<h2 id="113-延伸资源不计入正式推荐但值得知道">11.3 延伸资源（不计入正式推荐，但值得知道）</h2>
+<table><thead><tr><th>资源</th><th>类型</th><th>用途</th></tr></thead><tbody><tr><td>&lt;https://github.com/ggml-org/llama.cpp&gt;</td><td>推理引擎</td><td>在 CPU / Apple Silicon 上跑量化模型（GGUF），本地开发首选</td></tr><tr><td>&lt;https://github.com/EleutherAI/lm-evaluation-harness&gt;</td><td>评测框架</td><td>跑 MMLU / GSM8K 等标准 benchmark（<a href="06-scaling-and-emergence.html">第 06 章</a>评测）</td></tr><tr><td>&lt;https://github.com/huggingface/lighteval&gt;</td><td>评测框架</td><td>HF 生态的评测工具，与 Transformers 集成</td></tr><tr><td>&lt;https://github.com/Dao-AILab/flash-attention&gt;</td><td>底层算子</td><td>FlashAttention 官方实现（<a href="02-attention.html">第 02 章 2.7</a>）</td></tr><tr><td>&lt;https://github.com/huggingface/accelerate&gt;</td><td>训练工具</td><td>一行命令切换单卡/多卡/FSDP（<a href="04-pretraining.html">第 04 章 4.4</a>）</td></tr><tr><td>&lt;https://github.com/deepspeedai/DeepSpeed&gt;</td><td>训练框架</td><td>ZeRO 系列实现（<a href="04-pretraining.html">第 04 章 4.4</a>）</td></tr><tr><td>&lt;https://jalammar.github.io/illustrated-transformer/&gt;</td><td>图解博客</td><td>The Illustrated Transformer，理解注意力最经典的图文教程</td></tr></tbody></table>
+<hr/>
+<h2 id="114-建议的验证方式怎么算跑通了">11.4 建议的验证方式（怎么算&quot;跑通了&quot;）</h2>
+<table><thead><tr><th>项目</th><th>跑通的标志</th><th>与本目录的对照点</th></tr></thead><tbody><tr><td>minbpe</td><td>能打印出合并记录，且新词切分结果与你手推一致</td><td><a href="01-basics-language-model.html">01.2</a> 的合并表</td></tr><tr><td>nanoGPT</td><td>loss 从 ~4.2 降到 ~1.5，能采样出连贯风格文本</td><td><a href="04-pretraining.html">04.5</a> 的算力账</td></tr><tr><td>peft</td><td><code>print_trainable_parameters()</code> 输出 ≈ 0.39%（r=8）</td><td><a href="05-finetuning.html">05.4</a> 的参数量表</td></tr><tr><td>vllm</td><td>并发提升后吞吐显著上升，日志显示 KV cache 使用率</td><td><a href="07-decoding-and-inference.html">07.3</a> 的显存公式</td></tr><tr><td>trl (DPO)</td><td>偏好对的 <code>rewards/chosen</code> 上升、<code>rejected</code> 下降</td><td><a href="08-alignment-rlhf.html">08.3</a> 的 DPO 损失</td></tr><tr><td>minimind</td><td>2 小时训出能对话的中文小模型</td><td>全书串讲</td></tr></tbody></table>
+<hr/>
+<p class="nav-footer"><a href="10-glossary.html">← 上一章：术语表</a> · <a href="README.html">返回总览</a> · <a href="../README.html">返回仓库首页</a></p>
+</main>
+</body>
+</html>

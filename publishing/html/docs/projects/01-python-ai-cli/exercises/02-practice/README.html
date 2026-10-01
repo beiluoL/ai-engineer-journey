@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Exercises 02-practice — Milestone 03-06 配套练习</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="exercises-02practice-milestone-0306-配套练习">Exercises 02-practice — Milestone 03-06 配套练习</h1>
+<blockquote><p>对应：<code>03-condition-loop.md</code> · <code>04-function.md</code> · <code>05-module-package.md</code> · <code>06-exception.md</code> 状态：⬜ 题目已播种，未开始做。做到哪题就把前面的 <code>- [ ]</code> 改成 <code>- [x]</code>。 规则同 01：<strong>亲手敲，不复制粘贴</strong>。写完的代码放本目录（如 <code>03_answers.py</code>）。</p></blockquote>
+<hr/>
+<h2 id="c-条件与循环milestone-03">C. 条件与循环（Milestone 03）</h2>
+<ul class="lvl"><li>[ ] <strong>C1</strong> 写 <code>guess_number(answer, guess)</code>：返回 <code>&quot;大了&quot; / &quot;小了&quot; / &quot;猜对了&quot;</code> 三选一（用 <code>if / elif / else</code>）</li><li>[ ] <strong>C2</strong> 遍历 <code>messages</code> 列表，只打印 <code>role == &quot;user&quot;</code> 的 content（用 <code>for ... in</code>）</li><li>[ ] <strong>C3</strong> 用 <code>while</code> 写一个「一直问，直到输入 quit 才退出」的循环，注意别写成死循环</li><li>[ ] <strong>C4</strong> 对比 <code>range(5)</code>、<code>list(range(5))</code>、<code>enumerate([&quot;a&quot;,&quot;b&quot;])</code> 各自打印什么；用 <code>enumerate</code> 重写 C2，把序号一起打印</li><li>[ ] <strong>C5（挑战）</strong> 用列表推导式把 <code>[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;]</code> 转成 <code>[1,2,3]</code>，再写出等价的普通 for 版本，体会两者的可读性差异</li></ul>
+<blockquote><p>Java 类比：<code>for x in list</code> ≈ 增强 for；Python 没有 <code>for(int i=0;...)</code>，要下标就用 <code>enumerate</code>。</p></blockquote>
+<h2 id="d-函数milestone-04">D. 函数（Milestone 04）</h2>
+<ul class="lvl"><li>[ ] <strong>D1</strong> 写 <code>add(a, b=1)</code>，分别用 <code>add(3)</code> 和 <code>add(3, 5)</code> 调用，观察默认参数</li><li>[ ] <strong>D2</strong> 写 <code>sum_all(*nums)</code>，接收任意个数字并返回总和（可变参数）</li><li>[ ] <strong>D3</strong> 故意踩坑：写 <code>def bad(items=[]): items.append(1); return items</code>，连续调用 3 次看结果，然后解释为什么（提示：默认参数只求值一次）</li><li>[ ] <strong>D4</strong> 写 <code>divide(a, b)</code>，用类型注解 <code>-&gt; float</code>，并用 <code>help(divide)</code> 看注解是否显示</li><li>[ ] <strong>D5（挑战）</strong> 写一个 <code>retry(func, times)</code>：把任意函数包一层，失败就重试 N 次（函数当参数传，Java 里要靠接口/Lambda）</li></ul>
+<h2 id="e-模块与包milestone-05">E. 模块与包（Milestone 05）</h2>
+<ul class="lvl"><li>[ ] <strong>E1</strong> 在本目录建 <code>mymath.py</code>（放一个 <code>square(n)</code>），再从另一个文件 <code>import mymath</code> 调用它</li><li>[ ] <strong>E2</strong> 建包 <code>tools/</code>（含 <code>__init__.py</code>、<code>tools/strutil.py</code>、<code>tools/numutil.py</code>），从外部 <code>from tools import strutil</code> 调用</li><li>[ ] <strong>E3</strong> 在 <code>mymath.py</code> 底部加 <code>if __name__ == &quot;__main__&quot;:</code> 自测代码，分别「直接运行」和「被 import」两种方式跑，观察区别</li><li>[ ] <strong>E4</strong> 故意漏写 <code>__init__.py</code>，看报什么错；再补回来（Python 3 的命名空间包能 import，但显式写更稳）</li><li>[ ] <strong>E5（挑战）</strong> 对照 <code>projects/01-python-ai-cli/src/assistant/</code> 这个真实包，画出它的模块依赖关系，说明 <code>__init__.py</code> 在这里承担什么职责</li></ul>
+<h2 id="f-异常milestone-06">F. 异常（Milestone 06）</h2>
+<ul class="lvl"><li>[ ] <strong>F1</strong> 触发并捕获三种异常：<code>ZeroDivisionError</code> / <code>KeyError</code> / <code>FileNotFoundError</code>，各自打印友好提示</li><li>[ ] <strong>F2</strong> 写 <code>safe_divide(a, b)</code>：失败时返回 <code>None</code> 而不是抛异常，并说明什么时候该返回 None、什么时候该抛</li><li>[ ] <strong>F3</strong> 用 <code>try / except / else / finally</code> 完整四段写一遍文件读取，观察 <code>finally</code> 在异常时是否仍执行</li><li>[ ] <strong>F4</strong> 自定义异常 <code>class ConfigError(Exception)</code>，在「配置缺 key」时抛出，并在调用方捕获</li><li>[ ] <strong>F5（挑战）</strong> 读 <code>projects/01-python-ai-cli/src/assistant/errors.py</code>，说明它定义的异常层级（基类 → 子类）是怎么设计的，为什么这么分层</li></ul>
+<hr/>
+<h2 id="验收标准">验收标准</h2>
+<p>C1-C4 + D1-D4 + E1-E4 + F1-F4 全部亲手跑通 = Milestone 03-06 可标记 🎓。 C5 / D5 / E5 / F5 是思考题，做不出来先跳过，回头再补。</p>
+</main>
+</body>
+</html>

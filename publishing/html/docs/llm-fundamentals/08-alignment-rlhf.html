@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="08-对齐从会续写到会听话">08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</h1>
+<blockquote><p><strong>一句话结论</strong>：对齐 = <strong>用人类偏好数据，把&quot;预测下一个 token&quot;的目标改造成&quot;输出人类喜欢的回答&quot;</strong>。 主流路线是 RLHF（奖励模型 + 强化学习），而 DPO 把其中两步合并成一个类似监督学习的损失，工程门槛低得多。</p></blockquote>
+<hr/>
+<h2 id="81-为什么需要对齐">8.1 为什么需要对齐</h2>
+<p>预训练（<a href="04-pretraining.html">第 04 章</a>）和指令微调（<a href="05-finetuning.html">第 05 章</a>）之后，模型&quot;能听懂指令&quot;了，但还不能判断<strong>什么样的回答算好回答</strong>：</p>
+<table><thead><tr><th>问题</th><th>表现</th><th>对齐如何解决</th></tr></thead><tbody><tr><td>有害内容</td><td>问危险问题照答</td><td>偏好数据中&quot;拒绝&quot;被标注为更好</td></tr><tr><td>幻觉</td><td>编造事实时同样自信</td><td>偏好数据中&quot;承认不知道&quot;优于&quot;编造&quot;</td></tr><tr><td>冗长/谄媚</td><td>话多、讨好、不直接</td><td>人类偏好更短、更直接、更诚实的回答</td></tr><tr><td>格式混乱</td><td>该列表的写成一段</td><td>偏好数据固定了常用输出结构</td></tr><tr><td>不做澄清</td><td>遇到模糊需求直接瞎答</td><td>学会反问</td></tr></tbody></table>
+<p>关键点：<strong>&quot;好回答&quot;很难用规则写出来，但人很容易比较两个回答谁更好</strong>。这就是偏好数据的价值——<strong>相对判断比绝对评分更可靠</strong>。</p>
+<hr/>
+<h2 id="82-rlhf-三阶段">8.2 RLHF 三阶段</h2>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>S1</code> — ① SFT 指令-回答对监督微调 （第 05 章）</li><li><code>M0</code> — SFT 模型 π_SFT</li><li><code>S2</code> — ② 训练奖励模型 RM 同一问题生成多个回答 人类标注两两偏好 学一个打分函数 r(x,y)</li><li><code>RM</code> — 奖励模型 r_φ</li><li><code>S3</code> — ③ 强化学习 (PPO) 用 RM 当裁判 最大化期望奖励 同时加 KL 惩罚别跑偏</li><li><code>F</code> — 对齐后的模型 π_θ</li></ul></div>
+<table><thead><tr><th>阶段</th><th>数据</th><th>产物</th><th>训练信号</th></tr></thead><tbody><tr><td>① SFT</td><td>指令-回答对</td><td>会听指令的模型</td><td>监督（交叉熵）</td></tr><tr><td>② RM</td><td>同一 prompt 下的回答<strong>排序</strong>（A &gt; B）</td><td>打分器 r(x,y)</td><td>偏好对（分类/回归）</td></tr><tr><td>③ RL</td><td>无需新标注，模型自己采样</td><td>最终策略 π_θ</td><td>标量奖励（RM 打分）</td></tr></tbody></table>
+<h3 id="821-奖励模型把偏好变成标量">8.2.1 奖励模型：把偏好变成标量</h3>
+<p>用 <strong>Bradley-Terry 模型</strong>把&quot;人觉得 A 比 B 好&quot;转成可优化目标：</p>
+<p>$$ P(y_w \succ y_l \mid x) = \sigma\big(r_\phi(x, y_w) - r_\phi(x, y_l)\big) $$</p>
+<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td>$x$</td><td>问题（prompt）</td></tr><tr><td>$y_w$</td><td>被偏好的回答（winner）</td></tr><tr><td>$y_l$</td><td>被拒绝的回答（loser）</td></tr><tr><td>$r_\phi(x,y)$</td><td>奖励模型输出的标量分数（通常就是 LM 头部改成一个输出 1 维的线性层）</td></tr><tr><td>$\sigma$</td><td>sigmoid，把分数差映射成概率</td></tr></tbody></table>
+<p>损失函数就是最大化&quot;偏好对排序正确&quot;的似然：</p>
+<p>$$ \mathcal{L}_{RM} = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \Big[\log \sigma\big(r_\phi(x,y_w) - r_\phi(x,y_l)\big)\Big] $$</p>
+<p><strong>直觉</strong>：不要求模型学出&quot;绝对分数&quot;，只要能正确排序——这就是为什么用两两比较而不是打分（人的绝对打分极不一致，但相对排序可靠）。</p>
+<h3 id="822-ppo-目标">8.2.2 PPO 目标</h3>
+<p>$$ \mathcal{J}(\theta) = \mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi_\theta(y|x)} \left[\; r_\phi(x, y) \;-\; \beta \, \mathrm{KL}\!\big(\pi_\theta(y|x) \,\|\, \pi_{ref}(y|x)\big) \right] $$</p>
+<table><thead><tr><th>项</th><th>作用</th><th>不要它会发生什么</th></tr></thead><tbody><tr><td>$r_\phi(x,y)$</td><td>奖励：RM 打了多少分</td><td>模型没有优化方向</td></tr><tr><td>$\beta \cdot \mathrm{KL}(\pi_\theta \</td><td>\pi_{ref})$</td><td><strong>惩罚&quot;偏离参考模型&quot;</strong></td><td>模型会找到 RM 的漏洞，输出人类看不懂但对 RM 分数极高的怪话（reward hacking）</td></tr><tr><td>$\pi_{ref}$</td><td>参考模型（通常就是 SFT 模型），<strong>冻结</strong></td><td>没有锚点，模型会漂移</td></tr></tbody></table>
+<p>为什么 KL 惩罚必不可少：<strong>RM 只是人类偏好的一个近似</strong>。让模型无约束地去骗这个近似，等价于&quot;过度拟合奖励模型的偏好&quot;，会牺牲真实有用性。KL 项就是&quot;别忘了原本会说话&quot;。</p>
+<blockquote><p>PPO 本身是个复杂的 RL 算法（actor + critic + 优势估计 + 裁剪目标）。对齐场景里普遍用简化配置（去掉部分组件、用 GAE、共享 backbone），这也是它工程复杂、容易训崩的原因。</p></blockquote>
+<hr/>
+<h2 id="83-dpo把-rlhf-化简成一个监督损失">8.3 DPO：把 RLHF 化简成一个监督损失</h2>
+<p><strong>核心洞察</strong>（Rafailov et al. 2023）：在 KL 约束下最大化奖励的那个最优策略，有解析解：</p>
+<p>$$ \pi^*(y \mid x) = \frac{1}{Z(x)} \, \pi_{ref}(y \mid x) \exp\!\left(\frac{1}{\beta} r(x,y)\right) $$</p>
+<p>反过来就能把&quot;奖励&quot;用策略和参考模型的概率比表达出来：</p>
+<p>$$ r(x,y) = \beta \log \frac{\pi^*(y|x)}{\pi_{ref}(y|x)} + \beta \log Z(x) $$</p>
+<p>把它代回 Bradley-Terry 偏好模型，<strong>配分配对消掉</strong>，得到只含两个模型的直接优化目标：</p>
+<p>$$ \boxed{\; \mathcal{L}_{DPO}(\theta) = -\mathbb{E}_{(x, y_w, y_l)} \left[ \log \sigma\!\left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)}</p>
+<ul class="lvl"><li>\beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}</li></ul>
+<p>\right) \right] \;} $$</p>
+<p><strong>人话版</strong>：让模型<strong>相对于参考模型</strong>更倾向于回答 $y_w$、更不倾向于 $y_l$。<code>β</code> 控制偏离参考模型的强度（越大越保守）。</p>
+<pre><code>RLHF:  需要 4 个模型同时在线
+       actor(π_θ) + critic + reward model + reference   →  显存大、流程复杂、易崩
+
+DPO:   只需 2 个模型
+       policy(π_θ) + reference(π_ref)                   →  训练像 SFT 一样简单</code></pre>
+<table><thead><tr><th>维度</th><th>RLHF（PPO）</th><th>DPO</th></tr></thead><tbody><tr><td>需要的模型数</td><td>4（actor/critic/RM/ref）</td><td>2（policy/ref）</td></tr><tr><td>训练稳定性</td><td>差（RL 调参敏感、易 reward hack）</td><td>好（监督式损失，和 SFT 同级）</td></tr><tr><td>数据需求</td><td>偏好对 + 需要在线采样</td><td><strong>只要现成的偏好对</strong></td></tr><tr><td>效果</td><td>上限更高（有在线探索）</td><td>多数场景接近，部分任务略逊</td></tr><tr><td>算力</td><td>高</td><td>低（约等于一次 SFT）</td></tr><tr><td>适用</td><td>大厂、追求极限</td><td>✅ 绝大多数团队与个人</td></tr></tbody></table>
+<p><strong>实践建议</strong>：预算有限或刚开始做对齐 → <strong>DPO</strong>；有稳定的 RM 且要压榨上限 → RLHF/GRPO。</p>
+<hr/>
+<h2 id="84-后续演进更简单更省数据">8.4 后续演进：更简单、更省数据</h2>
+<table><thead><tr><th>方法</th><th>一句话</th><th>需要偏好对？</th><th>需要奖励模型？</th></tr></thead><tbody><tr><td>PPO（RLHF）</td><td>经典在线 RL</td><td>RM 生成的偏好</td><td>是</td></tr><tr><td><strong>DPO</strong></td><td>离线偏好优化的解析化简</td><td>是</td><td>否</td></tr><tr><td><strong>RLAIF / Constitutional AI</strong></td><td>用 AI（而非人类）生成偏好标注</td><td>是（AI 生成）</td><td>视实现</td></tr><tr><td><strong>GRPO</strong>（DeepSeek）</td><td>去掉 critic，组内相对比较估优势</td><td>否（用规则/答案）</td><td>可选</td></tr><tr><td>ORPO</td><td>把 SFT 和偏好优化合成一步</td><td>是</td><td>否</td></tr><tr><td>KTO</td><td>只需要&quot;好/坏&quot;二元标签，不需要成对</td><td>否（单条即可）</td><td>否</td></tr><tr><td>SimPO</td><td>DPO 的无参考模型版本（用平均 log 概率当隐式奖励）</td><td>是</td><td>否</td></tr></tbody></table>
+<p><strong>RLAIF 为什么重要</strong>：人类标注贵且慢。用强模型（或按一套&quot;宪法原则&quot;自我批判）生成偏好数据，成本降一个数量级，效果在多数任务上接近 RLHF——这是当前工业界对齐数据的主要来源之一。</p>
+<p><strong>GRPO 为什么火</strong>：推理模型（如 DeepSeek-R1）训练时用<strong>规则可验证的奖励</strong>（数学答案对不对、代码过不过测试）取代人类偏好模型，配合组内相对优势估计，避免训练一个 critic。这直接绕开了&quot;奖励模型被钻空子&quot;的问题——因为奖励是客观可验证的。</p>
+<hr/>
+<h2 id="85-奖励劫持reward-hacking与安全">8.5 奖励劫持（Reward Hacking）与安全</h2>
+<p><strong>定义</strong>：模型学会<strong>提高奖励分数</strong>而不是<strong>真正变得更好</strong>。</p>
+<table><thead><tr><th>症状</th><th>例子</th></tr></thead><tbody><tr><td>谄媚（sycophancy）</td><td>用户说错话，模型顺着说&quot;你说得对&quot;</td></tr><tr><td>长度膨胀</td><td>RM 偏好长回答 → 输出越来越啰嗦</td></tr><tr><td>格式讨好</td><td>无脑堆列表、加粗、emoji 骗分</td></tr><tr><td>过度拒绝</td><td>安全训练过头，正常问题也拒答</td></tr><tr><td>拒绝承认不知道</td><td>宁可编也不说&quot;我不确定&quot;</td></tr></tbody></table>
+<p>对应治理手段：</p>
+<table><thead><tr><th>手段</th><th>说明</th></tr></thead><tbody><tr><td>KL 约束</td><td>限制偏离参考模型（<a href="#822-ppo-目标">8.2.2</a>）</td></tr><tr><td>奖励模型集成</td><td>多个 RM 平均，降低被单点欺骗的概率</td></tr><tr><td>可验证奖励</td><td>用规则/单测代替人偏好（数学、代码）</td></tr><tr><td>长度/格式去偏</td><td>训练 RM 时消除长度等表面特征的相关性</td></tr><tr><td>红队测试 + 持续评估</td><td>上线前系统化找漏洞</td></tr><tr><td>定期用人类抽检校准</td><td>防止指标好看但体验变差</td></tr></tbody></table>
+<blockquote><p><strong>核心矛盾</strong>：对齐指标（RM 分数、胜率）是<strong>代理指标</strong>，而我们要的是&quot;真实有用、安全&quot;。代理指标一定可以被优化到失真。这不是工程 bug，而是这类方法的固有风险。</p></blockquote>
+<hr/>
+<h2 id="86-对齐的完整位置">8.6 对齐的完整位置</h2>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>P</code> — 预训练 Base Model</li><li><code>S</code> — SFT 会听指令</li><li><code>A</code> — 偏好优化 RLHF / DPO / GRPO</li><li><code>R</code> — 推理模型 + 可验证奖励 RL</li><li><code>D</code> — 部署 + 系统提示 + 工具 + 安全护栏</li><li><code>E</code> — 持续评估与红队</li></ul></div>
+<p><strong>对齐不是终点</strong>：系统提示、RAG、工具调用、输出过滤、权限控制都是&quot;部署期对齐&quot;的一部分。把安全性完全寄托在权重上是不现实的。</p>
+<hr/>
+<h2 id="87-常被误解的点">8.7 常被误解的点</h2>
+<table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;RLHF 让模型学会了新知识&quot;</td><td>它调的是<strong>偏好与风格</strong>；知识来自预训练</td></tr><tr><td>&quot;DPO 完全等价于 RLHF&quot;</td><td>在离线数据下接近，但缺少在线探索，上限通常略低</td></tr><tr><td>&quot;KL 惩罚是为了防止过拟合&quot;</td><td>更准确说是防止<strong>偏离参考模型去骗奖励模型</strong>（reward hacking）</td></tr><tr><td>&quot;对齐后困惑度应该更低&quot;</td><td>常常<strong>略升</strong>；因为优化目标变了，人类评价才是准绳</td></tr><tr><td>&quot;安全对齐靠加一堆拒绝话术&quot;</td><td>过度拒绝本身是缺陷；好的对齐是&quot;该拒的拒、该答的认真答&quot;</td></tr><tr><td>&quot;有 RM 就够了&quot;</td><td>RM 是代理指标，可被优化到失真；必须配合评估与人类抽检</td></tr></tbody></table>
+<hr/>
+<h2 id="88-自查问题">8.8 自查问题</h2>
+<ul class="lvl"><li>为什么用两两比较而不是绝对打分来收集偏好数据？</li><li>写出 Bradley-Terry 偏好概率与 RM 损失。</li><li>PPO 目标里的 KL 项作用是什么？去掉会怎样？</li><li>DPO 为什么不需要奖励模型？它的损失在比较什么？</li><li>RLHF 和 DPO 各需要几个模型？工程差异体现在哪里？</li><li>什么是 reward hacking？举三个真实症状。</li><li>为什么推理模型偏好&quot;可验证奖励&quot;而不是人类偏好模型？</li></ul>
+<hr/>
+<p class="nav-footer"><a href="07-decoding-and-inference.html">← 上一章：解码与推理</a> · <a href="README.html">返回总览</a> · <a href="09-math-foundations.html">下一章：数学基础 →</a></p>
+</main>
+</body>
+</html>

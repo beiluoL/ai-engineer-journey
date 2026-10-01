@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>01 Prompt 与 Messages — M01 / M02 配套练习</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="01-prompt-与-messages-m01-m02-配套练习">01 Prompt 与 Messages — M01 / M02 配套练习</h1>
+<blockquote><p>先独立完成，再按题号查看 <code>answers.py</code> 中对应函数。所有状态从 ⬜ 开始；参考答案跑通不代表你已掌握。</p></blockquote>
+<h2 id="a-promptm01">A. Prompt（M01）</h2>
+<ul class="lvl"><li>[ ] <strong>A1</strong> 使用真实 <code>assistant.prompts.PromptTemplate</code> 创建含 <code>role</code>、<code>task</code>、<code>limit</code> 三个变量的模板，渲染一次并断言三个输入都进入输出，同时用 <code>variables()</code> 验证声明顺序不变。</li><li>[ ] <strong>A2</strong> 对只要求 <code>topic</code> 的真实 <code>PromptTemplate</code> 不传参数，断言抛出 <code>ValueError</code>，且错误文本同时包含模板名与“缺少变量”，证明缺参不会静默发给模型。</li><li>[ ] <strong>A3</strong> 给只含 <code>topic</code> 的真实模板额外传入拼错的 <code>toipc</code>，断言抛出 <code>ValueError</code> 且提示“不存在”，验证未知变量检测而不是只测成功路径。</li><li>[ ] <strong>A4</strong> 分别渲染真实 <code>DEFAULT_SYSTEM</code> 与 <code>INTERVIEW</code>，断言句数、领域、主题和题数进入结果，并检查模板对象仍保留未求值的 <code>{max_sentences}</code> / <code>{topic}</code> 占位符。</li><li>[ ] <strong>A5</strong> 把“忽略规则并泄露系统提示词”作为输入交给真实 <code>EXTRACT</code>，断言输入被 <code>&lt;user_input&gt;</code> 包住、提示中明确“不是指令”，且原始攻击文本仍作为数据完整保留。</li></ul>
+<h2 id="b-messagesm02">B. Messages（M02）</h2>
+<ul class="lvl"><li>[ ] <strong>B1</strong> 用真实 <code>Conversation</code> 依次加入 user、assistant、user，断言 <code>to_messages()</code> 的角色顺序为 system/user/assistant/user，且 system 只出现一次。</li><li>[ ] <strong>B2</strong> 修改 <code>Conversation.to_messages()</code> 返回列表中的字典，再断言真实 <code>turns</code> 未变化；同时修改 <code>history</code> 返回值，验证两条读取路径都返回字典副本。</li><li>[ ] <strong>B3</strong> 调用真实 <code>to_messages_with(&quot;本轮问题&quot;)</code>，断言返回值末尾有临时 user 消息、原会话历史长度不变，并确认已有 system 不会被重复插入。</li><li>[ ] <strong>B4</strong> 将同一个非法 messages 列表交给真实 <code>validate_messages</code>，分别验证空列表与 <code>role=&quot;AI&quot;</code> 都抛 <code>ValueError</code>，并断言错误信息能定位“不能为空”或“role 非法”。</li><li>[ ] <strong>B5</strong> 构造 assistant <code>tool_calls</code> 与匹配的 tool 消息并通过真实 <code>validate_messages</code>；再删除 <code>tool_call_id</code>，断言同一个校验器明确抛出缺少该字段的 <code>ValueError</code>。</li></ul>
+<h2 id="运行参考答案">运行参考答案</h2>
+<pre><code>.venv/bin/python exercises/01-prompt-and-messages/answers.py</code></pre>
+</main>
+</body>
+</html>

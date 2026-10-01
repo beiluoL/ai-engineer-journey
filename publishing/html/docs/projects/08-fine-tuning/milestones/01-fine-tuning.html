@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 01 — Fine-Tuning：同一个基座，两条路的代价差多少</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-01-finetuning同一个基座两条路的代价差多少">Milestone 01 — Fine-Tuning：同一个基座，两条路的代价差多少</h1>
+<p>主线叙事的第一站。P06 手写了一个 Decoder-Only Transformer 并把它预训练成「通用但弱」的基座，P07 攒出了 59 条 Java 面试问答。这一层要回答一个最朴素的问题：<strong>把通用模型变成领域模型，到底要&quot;动&quot;多少东西？</strong></p>
+<p>两条路摆在一起对拍：</p>
+<ul class="lvl"><li><strong>全量微调</strong>：基座每个参数都进优化器，每个下游任务存一份完整权重。</li><li><strong>LoRA</strong>：基座冻结，只在 13 个线性层旁边插一条低秩旁路，每个任务存一百多 KB。</li></ul>
+<p>答案是&quot;看数字说话&quot;，而不是&quot;LoRA 一定更好&quot;。本项目<strong>纯 numpy 手写</strong>，不引入 torch / peft / transformers —— LoRA 的每一次前向、每一条反向、每一份显存账都是自己算出来的，所以下面每个数字都能追到具体代码行。</p>
+<hr/>
+<h2 id="1-why为什么先做这一步">1. Why：为什么先做这一步</h2>
+<p>微调的概念人人会说，但&quot;值得不值得&quot;是三笔账：<strong>要训练多少个数字、训练时占多少显存、训出来效果差多少</strong>。这三笔账不先算清楚，后面 LoRA / QLoRA / checkpoint / merge 全都是空中楼阁 —— 它们存在的理由，全部写在这三笔账里。</p>
+<p>还有一个必须当场解决的坑：<strong>参数量口径</strong>。基座 230,656 个参数，P06 的 <code>Module.parameters()</code> 只报 165,120。差了整整一整个词嵌入。如果沿用 P06 的口径，后面所有&quot;可训练占比&quot;&quot;压缩倍数&quot;都会算错，而且错得毫无察觉。</p>
+<h2 id="2-design参数账-显存账-真训一遍">2. Design：参数账 + 显存账 + 真训一遍</h2>
+<p><strong>参数账。</strong> LoRA 的全部想法是一行公式（M04 会把它彻底解剖）：</p>
+<pre><code>W&#x27; = W + ΔW = W + (alpha / r) · B @ A</code></pre>
+<p><code>W</code> 冻结，只有 <code>A ∈ R^{in×r}</code>、<code>B ∈ R^{r×out}</code> 被训练。本项目往 13 个二维权重上注入（<code>Wq/Wk/Wv/Wo/W1/W2</code> 各 2 个 block，再加输出投影 <code>proj</code>），r=8 时得到 27,136 个可训练参数。</p>
+<p><strong>显存账。</strong> 训练时每个<strong>可训练</strong>参数要占 <code>4B(参数) + 4B(梯度) + 8B(Adam 的 m 与 v) = 16B</code>；被冻结的基座只要躺着，4B/参数，不产生梯度和动量。所以 LoRA 省的不是权重，是<strong>梯度 + 动量</strong> —— 这一区别决定了 M05 为什么还要再量化基座。</p>
+<p><strong>真训一遍。</strong> 光算账不够，两路各训 60 步，同一份数据、同一 seed、只算答案区 loss（M03 会解释为什么要只算答案区）。</p>
+<figure class="figure"><img alt="M01 两条路：参数账 + 训练显存账" src="../../../../../../projects/08-fine-tuning/assets/finetune-basics.svg" loading="lazy"/><figcaption>M01 两条路：参数账 + 训练显存账</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo01finetunebasicsterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_01_finetune_basics_terminal.txt</code>）</h2>
+<p>真实环境：Python 3.13 | numpy 2.5，基座从 <code>models/base_lm.npz</code> 缓存读取（1810 KB，预训练 120 步，loss <code>6.948 → 4.715</code>），词表 1024 / d_model 64 / 2 层。</p>
+<p><strong>参数账（实测）：</strong></p>
+<table><thead><tr><th>方式</th><th>可训练参数</th><th>基座参数(冻结)</th><th>可训练占比</th><th>每个任务的存储(fp32)</th></tr></thead><tbody><tr><td>全量微调</td><td>230,656</td><td>0</td><td>100.00%</td><td>901.00 KB</td></tr><tr><td>LoRA r=8</td><td><strong>27,136</strong></td><td>230,656</td><td><strong>10.53%</strong></td><td><strong>106.00 KB</strong></td></tr></tbody></table>
+<p>可训练参数量倍数 <strong>8.50×</strong>；LoRA 注入 <strong>13 个线性层</strong>（<code>decoder.blocks.0.attn.Wq</code> … <code>proj</code>）。</p>
+<p><strong>训练显存账（实测）：</strong></p>
+<table><thead><tr><th>方式</th><th>权重</th><th>梯度</th><th>Adam 状态</th><th>合计</th><th>相对全量</th></tr></thead><tbody><tr><td>全量微调</td><td>901.00 KB</td><td>901.00 KB</td><td>1.76 MB</td><td>3.52 MB</td><td>1.00×</td></tr><tr><td>LoRA r=8</td><td>1,007.00 KB</td><td>106.00 KB</td><td>212.00 KB</td><td><strong>1.29 MB</strong></td><td><strong>0.37×</strong></td></tr></tbody></table>
+<p>即 <code>1.29 / 3.52 = 36.76%</code>，训练显存节省 <strong>2.72×</strong>。注意 LoRA 那一行权重反而更大（1,007 KB &gt; 901 KB）—— 因为基座权重没搬走，还额外多了 A/B。</p>
+<p><strong>真训 60 步（同一份 Java 面试数据，只算答案区 loss）：</strong></p>
+<pre><code>           全量微调    LoRA r=8
+  -------  ------  --------
+  step 1   8.2909    8.2909
+  step 11  6.6401    6.6785
+  step 21  6.3540    6.4202
+  step 31  6.1918    6.1631
+  step 41  6.1191    6.1681
+  step 51  5.9035    5.9488
+  step 60  6.1109    6.1882</code></pre>
+<p>全量 <code>8.2909 → 6.1109</code>（降 2.1800，3.34 s）；LoRA <code>8.2909 → 6.1882</code>（降 2.1028，3.47 s）。末步全量更低，但只差 <strong>0.0772</strong>。</p>
+<figure class="figure"><img alt="M01 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-01-finetune-basics.png" loading="lazy"/><figcaption>M01 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-p06-的-moduleparameters-漏掉了整个词嵌入实测">4.1 P06 的 <code>Module.parameters()</code> 漏掉了整个词嵌入（实测）</h3>
+<pre><code>基座参数量（P08 口径）                230,656
+基座参数量（P06 parameters() 口径）   165,120   ⚠ 少了一整个词嵌入
+两者的差                            65,536   = TokenEmbedding 未继承 Module</code></pre>
+<p><code>TokenEmbedding</code> 在 P06 里是普通类、没继承 <code>Module</code>，而 <code>_collect_params</code> 只认 <code>Parameter</code> / <code>Module</code> / list / dict，于是那 65,536 个参数（1024 × 64）根本不在参数表里 —— 优化器看不到它，词向量永远学不到。</p>
+<p>P08 对 P06 是<strong>只读依赖</strong>（一行都不改），所以自己写了 <code>walk_parameters()</code>：遍历任意对象的 <code>__dict__</code>，不依赖 <code>Module</code> 继承关系（<code>src/ft/inject.py:81</code>）。这不是洁癖，是<strong>不这么写基座就训不出来</strong>。</p>
+<h3 id="42-loss-更低-更好在本章就是个陷阱实测">4.2 「loss 更低 = 更好」在本章就是个陷阱（实测）</h3>
+<p>60 步后全量微调的 loss 更低（差 0.0772），读到这里很容易得出&quot;全量微调更强&quot;。但全量微调改写的是<strong>整个基座</strong>，代价要到 M09 的灾难性遗忘检查里才看得出来 —— 那里结论会反转。</p>
+<blockquote><p>本章刻意只下&quot;低秩假设成立&quot;这一个结论：用了 1/8.5 的参数，loss 追平到 0.0772 以内。剩下的留给 M09。</p></blockquote>
+<h3 id="43-省的是梯度-动量不是权重实测">4.3 省的是梯度 + 动量，不是权重（实测）</h3>
+<p>上表里 LoRA 的&quot;权重&quot;一列是 1,007.00 KB，比全量的 901.00 KB 还大。很多人以为 LoRA 顺带把基座也变小了 —— <strong>没有</strong>。基座还是那个基座，fp32 老老实实躺着。这正是 M05 必须再上 NF4 量化的原因：LoRA 解决&quot;训练不动那么多参数&quot;，QLoRA 才解决&quot;基座本身就装不下&quot;。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>同一个基座上，LoRA r=8 只训 <strong>27,136 / 257,792 = 10.53%</strong>，每任务存储从 901 KB 降到 <strong>106 KB</strong>。</li><li>训练显存（含 Adam）<strong>1.29 MB vs 3.52 MB = 36.76%</strong>，省的是梯度 + 动量；基座权重那部分省不掉。</li><li>60 步后 loss <strong>全量 6.1109 / LoRA 6.1882</strong>，差 0.0772 —— 低秩假设在本任务上成立。</li><li><strong>参数量口径必须先校准</strong>：P06 的 <code>Module.parameters()</code> 漏了 65,536 个词嵌入参数，P08 自建 <code>walk_parameters()</code> 修正。</li><li>手写实现的意义在这里第一次兑现：上面每个数字都不是框架报的，是自己一字节一字节算出来的，所以能指出框架（这里是 P06 的 <code>parameters()</code>）漏了什么。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/base.py</code></td><td>基座模型：复用 P06 架构、确定性预训练、npz 缓存（<code>ensure_base_model</code>）；含 <code>walk_parameters</code> 修正后的存盘</td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer</code>：前向 → 带 mask 的交叉熵 → 反传 → 只更新 adapter；<code>curve_summary</code></td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>walk_parameters</code> / <code>named_parameters</code> / <code>inject_lora</code> / <code>freeze_base</code> / <code>count_parameters</code></td></tr><tr><td><code>src/ft/qlora.py</code></td><td><code>training_memory()</code>：参数 + 梯度 + 优化器状态的显存账（本章用它算 3.52 MB / 1.29 MB）</td></tr><tr><td><code>src/ft/sft_data.py</code></td><td>Alpaca 三元组 → 带答案区 mask 的 SFT 样本（M02/M03 主角）</td></tr><tr><td><code>demos/demo_01_finetune_basics.py</code></td><td>5 节：基座 / 参数账 / 显存账 / 真训 60 步 / 关键数字</td></tr><tr><td><code>demos/out/demo_01_finetune_basics_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/finetune-basics.svg</code></td><td>本章两条路的参数账 + 显存账图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.0 → <strong>v0.1</strong>，M01 微调全景落地。实测：可训练 27,136 / 257,792 = 10.53%，训练显存 1.29 MB vs 3.52 MB = 36.76%，60 步 loss 全量 6.1109 / LoRA 6.1882；并定位 P06 <code>Module.parameters()</code> 漏报 65,536 词嵌入参数。纯 numpy、无 torch/peft/transformers。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

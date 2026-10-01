@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LEARNING — Project 03 AI Application</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="learning-project-03-ai-application">LEARNING — Project 03 AI Application</h1>
+<blockquote><p>这份文件只记录<strong>「我是否真的掌握」</strong>，仓库里写了什么请去看 <code>README.md</code> / <code>PROGRESS.md</code>。</p><p>铁律：<strong>文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。</strong></p><p>生成这份清单的人（AI）<strong>不会替你打任何勾</strong>。下面每一个框起点都是 ⬜， 只有你本人做完题、能讲清楚「为什么」之后，<strong>由你</strong>把它填成 ✅。</p></blockquote>
+<h2 id="怎么用">怎么用</h2>
+<p>三条线同时过才算掌握一章：</p>
+<ul class="lvl"><li><strong>自测题</strong> —— 每章 4–5 道问答题，考的是「为什么」，不是「用没用过」。答完再展开 <code>&lt;details&gt;</code> 对照判分要点</li><li><strong>动手验证</strong> —— 去 <code>exercises/</code> 独立写代码，再跑 <code>exercises/grade.py</code>；卡住了只看 <code>answers.py</code> 中对应的一个函数</li><li><strong>自评</strong> —— 诚实判断自己处在哪一档，不能用参考答案的运行结果代替自己的掌握程度</li></ul>
+<h2 id="总览表">总览表</h2>
+<table><thead><tr><th>#</th><th>Milestone</th><th>自测题</th><th>动手验证</th><th>我掌握了</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-prompt.html">Prompt</a></td><td>⬜</td><td>⬜ <code>01-prompt-and-messages</code> A1–A5</td><td>⬜</td></tr><tr><td>02</td><td><a href="milestones/02-messages.html">Messages</a></td><td>⬜</td><td>⬜ <code>01-prompt-and-messages</code> B1–B5</td><td>⬜</td></tr><tr><td>03</td><td><a href="milestones/03-structured-output.html">结构化输出</a></td><td>⬜</td><td>⬜ <code>02-structured-and-streaming</code> A1–A4</td><td>⬜</td></tr><tr><td>04</td><td><a href="milestones/04-streaming.html">流式输出</a></td><td>⬜</td><td>⬜ <code>02-structured-and-streaming</code> B1–B3</td><td>⬜</td></tr><tr><td>05</td><td><a href="milestones/05-conversation-memory.html">会话记忆</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> A1–A3</td><td>⬜</td></tr><tr><td>06</td><td><a href="milestones/06-model-parameters.html">模型参数</a></td><td>⬜</td><td>⬜ <code>02-structured-and-streaming</code> C1–C3</td><td>⬜</td></tr><tr><td>07</td><td><a href="milestones/07-token-context-window.html">Token / 上下文窗口</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> B1–B3</td><td>⬜</td></tr><tr><td>08</td><td><a href="milestones/08-function-calling.html">Function Calling</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> C1–C4</td><td>⬜</td></tr><tr><td>09</td><td><a href="milestones/09-application-architecture.html">应用架构</a></td><td>⬜</td><td>⬜ <code>03-memory-tokens-tools</code> D1–D2</td><td>⬜</td></tr></tbody></table>
+<hr/>
+<h2 id="m01-prompt">M01 Prompt</h2>
+<p><strong>动手验证</strong>：<code>exercises/01-prompt-and-messages</code> A1–A5</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 为什么说 Prompt 是 AI 应用的业务逻辑，而不应该作为长字符串散落在 CLI、API 和 service 中？</li><li>⬜ Q2 system 与 user 消息为什么要按「不变规则 / 本轮输入」拆分？把所有内容都塞进 user 会带来什么成本与维护问题？</li><li>⬜ Q3 为什么 <code>PromptTemplate</code> 要在 <code>render()</code> 时替换变量，而不是用 f-string 在定义模板时求值？</li><li>⬜ Q4 为什么缺少变量和传入未知变量都应立即报错？只检查缺变量会漏掉哪类真实故障？</li><li>⬜ Q5 用标签包住用户输入为什么只能缓解 Prompt 注入，不能成为高风险操作的最终安全边界？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能说出 Prompt 可复用、可测试、可版本化、可 review，并举出复制漂移或回归不可追踪的后果；只说“方便管理”给半档。</li><li>Q2：满档能解释全局规则稳定、本轮数据变化，以及重复规则会增加每轮 token、导致不同入口行为不一致；只会背“不变进 system”给半档。</li><li>Q3：满档能说明 f-string 立即绑定当前值，失去可保存的占位模板、统一变量校验和后续版本管理；只说“两者语法不同”给半档。</li><li>Q4：满档能区分缺参导致无法渲染与未知参数常由拼写错误造成，二者都应 fail fast；只答出缺参检查给半档。</li><li>Q5：满档能说明标签只是给模型的语义提示，模型仍可能违背；权限、写操作确认与数据访问控制必须由传统代码执行。只说“标签更安全”给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m02-messages">M02 Messages</h2>
+<p><strong>动手验证</strong>：<code>exercises/01-prompt-and-messages</code> B1–B5</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 LLM API 为什么说是无状态的？多轮对话为什么必须把 user 与 assistant 的历史都重新发送？</li><li>⬜ Q2 system、user、assistant、tool 四种角色各由谁产生？assistant 的 <code>tool_calls</code> 与 tool 的 <code>tool_call_id</code> 如何对应？</li><li>⬜ Q3 <code>Conversation.to_messages()</code> 为什么要复制列表中的每个字典，而不只是复制最外层 list？</li><li>⬜ Q4 为什么 <code>validate_messages()</code> 应在发送请求前运行？它至少应该拦住哪三类协议错误？</li><li>⬜ Q5 裁剪历史为什么不能从任意一条消息切开，尤其不能留下孤立的 tool 消息？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能说明模型每次只看到当前 messages，请求之间没有服务端记忆；assistant 历史不回灌会丢掉模型已经说过的上下文。只说“为了记忆”给半档。</li><li>Q2：满档能准确说出四个产生方和用途，并指出 tool 消息必须原样携带对应调用的 id；漏掉 id 的协议作用给半档。</li><li>Q3：满档能举出“浅复制 list 后修改其中 dict 仍污染内部状态”的例子；只说“防止外部 append”给半档。</li><li>Q4：满档至少答出空列表、非法 role、tool 缺 <code>tool_call_id</code>、既无 content 也无 tool_calls 中三项，并说明前置失败比远端 400 更易定位；只列错误不给原因给半档。</li><li>Q5：满档能说明 assistant(tool_calls) 与随后 tool 结果构成协议原子单元，切断后上游无法匹配调用结果；只说“上下文不完整”给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m03-结构化输出">M03 结构化输出</h2>
+<p><strong>动手验证</strong>：<code>exercises/02-structured-and-streaming</code> A1–A4</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 Prompt 约定、JSON Mode、工具/函数调用三种结构化手段分别保证什么，又分别不能保证什么？</li><li>⬜ Q2 Pydantic 模型为什么同时服务于“给模型看的契约”和“程序运行时的边界校验”？</li><li>⬜ Q3 为什么 <code>json.loads()</code> 成功仍不代表结果可安全进入业务逻辑？</li><li>⬜ Q4 结构化校验失败后为什么要把精简后的具体错误回灌，并且必须限制重试次数？</li><li>⬜ Q5 <code>max_tokens</code> 太小时为什么常被误判为模型不遵守 JSON 格式？应该观察哪个响应字段？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能按弱到强说明 Prompt 无硬保证、JSON Mode 只保语法、tool schema 能约束字段形状但仍需本地校验；把 JSON Mode 说成保证字段正确只给半档。</li><li>Q2：满档能提到 <code>model_json_schema()</code> 生成机器契约、<code>model_validate()</code> 构造强类型对象并检查范围/类型；只答“方便定义字段”给半档。</li><li>Q3：满档能举出合法 JSON 仍可能缺字段、类型错误、范围越界，如 <code>{&quot;error&quot;:&quot;不知道&quot;}</code>；只说“还可能报错”给半档。</li><li>Q4：满档能说明明确错误帮助模型定点修正，有限重试控制延迟和费用、防止无限循环；只答“让它再试一次”给半档。</li><li>Q5：满档能解释输出在 JSON 中间被截断导致解析失败，并指出 <code>finish_reason == &quot;length&quot;</code>；只说“调大 max_tokens”给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m04-流式输出">M04 流式输出</h2>
+<p><strong>动手验证</strong>：<code>exercises/02-structured-and-streaming</code> B1–B3</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 为什么流式输出能显著改善感知性能，却不一定缩短模型完成整段回答的总耗时？</li><li>⬜ Q2 SSE 的 <code>data:</code>、空行分隔与 <code>[DONE]</code> 各承担什么协议职责？为什么每个 data 事件仍要可独立解析？</li><li>⬜ Q3 <code>ChatService.astream()</code> 为什么必须缓冲全部 delta，并在结束后回灌一条完整 assistant 消息？</li><li>⬜ Q4 为什么流已经开始后不能再把 HTTP 状态改成 500？上游中途失败应该怎样表达？</li><li>⬜ Q5 流式展示与结构化解析为什么天然冲突？两者并存时应该怎样分工？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能区分首字延迟 TTFB 与完成耗时，说明用户早看到反馈但生成工作量未减少；只说“一个字一个字更快”给半档。</li><li>Q2：满档能说明事件前缀、事件边界、结束信号，并指出客户端按事件消费 JSON；只背出格式不给职责给半档。</li><li>Q3：满档能说明下一轮必须看到模型完整回复，否则只有流式路径失忆；只说“保存历史”不给症状给半档。</li><li>Q4：满档能说明响应头/状态已经发送，只能在流中发送约定的 error 事件并正常终止；只说“捕获异常”给半档。</li><li>Q5：满档能解释半个 JSON 无法校验，界面逐块展示但程序后台缓冲，结束后一次性 parse；主张边流边 <code>json.loads</code> 给半档以下。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m05-会话记忆">M05 会话记忆</h2>
+<p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> A1–A3</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 为什么全量携带历史时，第 n 轮的累计 token 成本接近 O(n²)，而不是 O(n)？</li><li>⬜ Q2 按预算裁剪时为什么 system、当前用户输入和完整工具调用轮次需要特殊保护？</li><li>⬜ Q3 裁剪与摘要各损失什么、消耗什么？什么内容适合摘要，什么内容更适合保留原文？</li><li>⬜ Q4 多用户共享同一个 <code>Conversation</code> 为什么不是普通逻辑 bug，而是数据泄漏问题？</li><li>⬜ Q5 开发环境用内存 <code>SessionStore</code> 足够时，生产环境为什么仍要把会话外部化？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能写出每轮携带长度约为 n，累计为 1+2+…+n；只说“历史越来越长所以更贵”给半档。</li><li>Q2：满档能分别说明 system 保存规则、当前输入是本次任务、tool_calls/tool 必须成组；只答“保留最近消息”给半档。</li><li>Q3：满档能说明裁剪免费但丢内容，摘要保留关键信息但额外调用且损失细节，并以用户偏好/代码原文举例；只会比较“长短”给半档。</li><li>Q4：满档能描述 A 的事实进入 B 的请求与回答，形成跨用户隐私泄漏；只说“会串话”给半档。</li><li>Q5：满档能提到进程重启丢失、多副本之间不共享、并发更新与过期管理，说明 Redis/数据库的价值；只说“内存不够”给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m06-模型参数">M06 模型参数</h2>
+<p><strong>动手验证</strong>：<code>exercises/02-structured-and-streaming</code> C1–C3</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 temperature 改变的是采样分布的什么性质？为什么提高 temperature 不等于让模型更聪明？</li><li>⬜ Q2 为什么通常不建议同时大幅调整 temperature 与 top_p？</li><li>⬜ Q3 结构化抽取与创意写作为什么需要不同 Profile？请分别解释稳定性与发散性的取舍。</li><li>⬜ Q4 <code>max_tokens</code>、上下文窗口和 <code>finish_reason</code> 三者如何共同解释“合法 JSON 只返回了一半”？</li><li>⬜ Q5 <code>Settings.for_profile()</code> 为什么返回新的 frozen 配置，而不是原地修改共享 Settings？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能说明温度拉平或尖锐下一 token 概率分布，只改变随机性/惊喜程度，不增加知识与推理能力；只说“越高越随机”给半档。</li><li>Q2：满档能说明两者都筛改候选概率，同时变动会互相干扰、难归因和复现；只说“官方不推荐”给半档。</li><li>Q3：满档能说明抽取需要低温减少字段漂移，创意场景允许高温扩展候选，并结合 max_tokens；只背参数值给半档。</li><li>Q4：满档能说明输出也占共享窗口，生成上限耗尽会截断，<code>finish_reason=&quot;length&quot;</code> 是诊断证据；只说“JSON 太长”给半档。</li><li>Q5：满档能说明不可变对象避免跨请求污染与并发竞态，Profile 是可追踪的新值；只说“frozen 不能改”给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m07-token-上下文窗口">M07 Token / 上下文窗口</h2>
+<p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> B1–B3</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 为什么字符数、UTF-8 字节数和 token 数不能互相替代？中文场景为什么更容易估错？</li><li>⬜ Q2 <code>estimate_tokens()</code> 与响应 <code>usage</code> 应分别用于什么决策？为什么不能拿估算值做账单对账？</li><li>⬜ Q3 上下文窗口为什么是输入与输出共享，而不是只限制历史消息？</li><li>⬜ Q4 <code>Budget.history_budget</code> 为什么先减去 <code>reserved_output</code>，再乘历史比例？</li><li>⬜ Q5 发送前发现 overflow 时，为什么正确流程是裁剪、复查、明确报错，而不是静默截断或无限重试？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能说明 tokenizer 按子词切分且模型各异，字符/字节只是编码单位，并指出中文 token/字符比与英文不同；只说“数字不一样”给半档。</li><li>Q2：满档能说估算用于发送前预算与裁剪，usage 是厂商实际计数用于日志、成本和对账；混用二者给半档。</li><li>Q3：满档能举出 64K 窗口中历史占 60K 只剩约 4K 输出空间；只说“都算 token”给半档。</li><li>Q4：满档能说明先为回答留硬空间，再限制历史只占可用部分，避免历史把输出预算挤没；只复述公式给半档。</li><li>Q5：满档能说明一次裁剪后重新估值，仍超则抛 <code>ContextWindowError</code> 并建议新会话；静默裁剪会造成无解释的遗忘，无限重试只会重复失败。答不全给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m08-function-calling">M08 Function Calling</h2>
+<p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> C1–C4</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 为什么说模型只“请求调用”工具而不执行函数？这条边界对权限设计意味着什么？</li><li>⬜ Q2 工具 schema 中 name、description、parameters、required 为什么都影响调用可靠性？</li><li>⬜ Q3 完整工具循环的六步是什么？为什么执行结果必须作为带 <code>tool_call_id</code> 的 tool 消息回灌后再请求模型？</li><li>⬜ Q4 为什么未知工具、坏 JSON 和参数不匹配适合作为错误结果回灌，而工具循环本身仍必须有 <code>max_iterations</code>？</li><li>⬜ Q5 哪些工具可以直接暴露，哪些必须二次确认，哪些不该暴露？为什么不能让模型自己决定权限？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能说明模型只生成结构化意图，程序拥有查找、校验、执行和拒绝权；只说“代码在本地跑”给半档。</li><li>Q2：满档能说明名称用于派发、description 用于模型选工具、parameters/required 约束参数形状；只答“这是 JSON Schema”给半档。</li><li>Q3：满档能完整讲出请求、tool_calls、执行、tool 回灌、再次请求、最终回答，并解释 id 关联调用与结果；漏掉回灌或第二次请求给半档。</li><li>Q4：满档能说明错误回灌让模型有机会纠正，同时上限防止反复调用造成无限延迟与费用；只答其中一半给半档。</li><li>Q5：满档能区分只读查询、需确认的写操作、shell/删除/任意文件等禁区，并指出 Prompt 注入可操纵模型，权限必须由代码校验。只列例子不给原因给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="m09-应用架构">M09 应用架构</h2>
+<p><strong>动手验证</strong>：<code>exercises/03-memory-tokens-tools</code> D1–D2</p>
+<p><strong>自测题</strong></p>
+<ul class="lvl"><li>⬜ Q1 接入层、编排层、能力层、模型层、支撑层各负责什么？为什么只有模型层应该知道上游 API 的形状？</li><li>⬜ Q2 如果 service 直接使用 httpx、拼 API URL，会怎样破坏替换模型与离线测试？</li><li>⬜ Q3 “无状态服务 + 外部化会话”为什么有利于水平扩展？它又引入了哪些并发与生命周期问题？</li><li>⬜ Q4 延迟、token/费用、分类失败率为什么是 AI 应用最低限度的三类可观测指标？</li><li>⬜ Q5 为什么生成文本可以谨慎重试，而写数据库、下单、发邮件等工具调用不能照搬同一重试策略？</li></ul>
+<p>&lt;details&gt;&lt;summary&gt;判分要点&lt;/summary&gt;</p>
+<ul class="lvl"><li>Q1：满档能准确说出五层职责，并说明 API 变化被 client/settings 隔离，上层只依赖稳定接口；只会背文件名给半档。</li><li>Q2：满档能说明厂商协议泄漏到编排层、FakeClient 无法替换、测试被迫联网或重度 patch；只说“耦合高”给半档。</li><li>Q3：满档能说明任意实例可处理请求、Redis/数据库跨副本共享，同时要解决并发写、会话过期和数据隔离；只说“方便扩容”给半档。</li><li>Q4：满档能分别用 TTFB/总延迟定位体验、usage/费用定位账单、按类型失败率定位限流/解析/工具问题；只列三个名词给半档。</li><li>Q5：满档能说明文本生成通常无外部副作用，而写操作重试可能重复扣款/重复记录，需要幂等键、确认与专门策略；只说“写操作危险”给半档。</li></ul>
+<p>&lt;/details&gt;</p>
+<p><strong>自评</strong>：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例</p>
+<hr/>
+<h2 id="自测完成度自查">自测完成度自查</h2>
+<blockquote><p>全部 ⬜ 是起点。这里记录的是你自己的掌握证据，不是文档或参考答案的完成情况。</p></blockquote>
+<table><thead><tr><th>环节</th><th>状态</th></tr></thead><tbody><tr><td>9 章 milestone 都独立读过</td><td>⬜</td></tr><tr><td>32 道动手题未对照答案独立完成</td><td>⬜</td></tr><tr><td><code>exercises/grade.py</code> 跑过自己实现的版本</td><td>⬜</td></tr><tr><td>9 章自测题都能不看材料答出“为什么”</td><td>⬜</td></tr><tr><td>能用自己的例子讲清完整 AI 应用调用链与安全边界</td><td>⬜</td></tr></tbody></table>
+<p><strong>只有最后三项都能打 ✅ 时，这个 Project 才算「已学习」。</strong></p>
+</main>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>04 · 预训练：把互联网压缩进参数</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="04-预训练把互联网压缩进参数">04 · 预训练：把互联网压缩进参数</h1>
+<blockquote><p><strong>一句话结论</strong>：预训练就是<strong>用海量无标注文本，反复做&quot;下一 token 预测&quot;这个练习</strong>。 它不教模型任何具体任务，只是让模型把语言的统计规律压缩进参数——这个过程极其昂贵，且几乎不可逆。</p></blockquote>
+<hr/>
+<h2 id="41-预训练在做什么">4.1 预训练在做什么</h2>
+<p>$$ \max_{\theta}\; \mathbb{E}_{x \sim \mathcal{D}} \left[ -\sum_{t} \log P_{\theta}(x_t \mid x_{&lt;t}) \right] $$</p>
+<ul class="lvl"><li>$\mathcal{D}$：整个语料库（万亿 token）</li><li>$\theta$：全部参数（从随机初始化开始）</li><li>没有任何人工标签——<strong>标签就是数据自己左移一位</strong></li></ul>
+<table><thead><tr><th>对比项</th><th>预训练</th><th>微调（<a href="05-finetuning.html">第 05 章</a>）</th></tr></thead><tbody><tr><td>数据</td><td>几 T ~ 几十 T token，无需标注</td><td>几千 ~ 几百万条<strong>标注</strong>样本</td></tr><tr><td>目标</td><td>学习语言与世界知识</td><td>学习任务与格式</td></tr><tr><td>算力</td><td>全部成本的 99%</td><td>极小</td></tr><tr><td>谁能做</td><td>少数机构</td><td>个人即可</td></tr><tr><td>产物</td><td>Base model（会续写）</td><td>Chat / 领域模型（会办事）</td></tr></tbody></table>
+<p><strong>为什么说&quot;数据比算法更值钱&quot;</strong>：模型结构大体公开、算力可以买，但<strong>高质量去重语料是各家真正的护城河</strong>。</p>
+<hr/>
+<h2 id="42-数据预训练里最贵的一环">4.2 数据：预训练里最贵的一环</h2>
+<h3 id="421-典型数据构成">4.2.1 典型数据构成</h3>
+<table><thead><tr><th>来源</th><th>占比（典型）</th><th>说明</th></tr></thead><tbody><tr><td>网页（CommonCrawl 系）</td><td>50–80%</td><td>量最大，噪声也最大，需重度过滤</td></tr><tr><td>代码（GitHub 等）</td><td>5–20%</td><td>显著提升推理与结构化能力，几乎所有强模型都用</td></tr><tr><td>数学/科学论文</td><td>2–10%</td><td>提升推理；需要专门的抽取与配方（如 OpenWebMath）</td></tr><tr><td>书籍/长文</td><td>5–10%</td><td>提供长距离连贯性；版权敏感</td></tr><tr><td>多语种</td><td>视目标</td><td>中文模型会额外灌入大量中文语料</td></tr><tr><td>对话/问答</td><td>小比例</td><td>为后续指令微调铺路</td></tr></tbody></table>
+<h3 id="422-数据流水线">4.2.2 数据流水线</h3>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>A</code> — 原始抓取 CommonCrawl 快照</li><li><code>B</code> — 文本抽取 HTML → 纯文本</li><li><code>C</code> — 质量过滤 启发式 + 分类器</li><li><code>D</code> — 去重 MinHash / 后缀数组</li><li><code>E</code> — 隐私与有害内容过滤</li><li><code>F</code> — 配比混合 按来源加权</li><li><code>G</code> — Tokenizer 编码 → token 序列（.bin/.idx）</li><li><code>H</code> — 打包成定长样本 （拼接 + doc mask）</li></ul></div>
+<table><thead><tr><th>环节</th><th>关键手段</th><th>不做会怎样</th></tr></thead><tbody><tr><td>质量过滤</td><td>语言识别、困惑度过滤（用小模型打分）、规则剔除（过短/重复/乱码）</td><td>学到的全是导航栏和 SEO 垃圾</td></tr><tr><td>去重</td><td>MinHash LSH 近似去重、精确子串去重、跨数据集去重</td><td>模型变&quot;复读机&quot;，评测分数被污染</td></tr><tr><td>评测集去污染</td><td>n-gram 重叠检测，剔除与 benchmark 重合的样本</td><td>报告分数虚高，实际能力不符</td></tr><tr><td>配比</td><td>按来源/语言的采样权重，通常&quot;高质量小数据上采样&quot;</td><td>整体分布被最大来源主导</td></tr></tbody></table>
+<blockquote><p><strong>一个反直觉的事实</strong>：训练<strong>很少只跑 1 个 epoch</strong>。几十 T 的语料常常在训练中重复使用（例如 3–4 epoch），因为数据还不够多。这时去重质量直接决定&quot;重复是否变成记忆&quot;。</p></blockquote>
+<h3 id="423-预训练目标不止一种">4.2.3 预训练目标：不止一种</h3>
+<table><thead><tr><th>目标</th><th>形式</th><th>优点</th><th>代表</th></tr></thead><tbody><tr><td><strong>CLM</strong>（因果语言建模）</td><td>预测下一个 token</td><td>信号密集，天然支持生成</td><td>GPT 全系、LLaMA、Qwen</td></tr><tr><td><strong>MLM</strong>（掩码语言建模）</td><td>挖掉 15% token 让模型填空</td><td>双向信息，适合理解</td><td>BERT</td></tr><tr><td><strong>Prefix LM</strong></td><td>前半段双向、后半段因果</td><td>兼顾理解与生成</td><td>GLM 早期、UL2</td></tr><tr><td><strong>Denoising / Span corruption</strong></td><td>删掉连续片段让模型还原</td><td>适合 seq2seq</td><td>T5、BART</td></tr><tr><td><strong>FIM</strong>（Fill-in-the-Middle）</td><td>在中间挖洞（前缀+后缀→中间）</td><td>让模型支持代码补全</td><td>代码模型标配（StarCoder、CodeLlama）</td></tr></tbody></table>
+<p><strong>FIM 值得单独记住</strong>：如果只训 CLM，模型只会&quot;往下续写&quot;，补全代码中间的空缺就做不好。FIM 通过重排文档顺序（把后缀提前）构造&quot;前后夹击&quot;的样本，这就是 IDE 里代码补全体验的来源。</p>
+<hr/>
+<h2 id="43-训练过程超参与稳定性">4.3 训练过程：超参与稳定性</h2>
+<h3 id="431-典型超参">4.3.1 典型超参</h3>
+<table><thead><tr><th>超参</th><th>典型取值</th><th>说明</th></tr></thead><tbody><tr><td>序列长度</td><td>2k → 4k → 32k → 128k</td><td>通常是&quot;先在短序列上训，后期再长序列继续训练&quot;</td></tr><tr><td>全局批大小</td><td>几百万 ~ 几千万 token</td><td>越大梯度越稳，但超过临界值收益递减</td></tr><tr><td>学习率峰值</td><td>1e-4 ~ 3e-4（大模型更低，如 1.5e-4）</td><td>参数量越大峰值越小</td></tr><tr><td>LR 调度</td><td><strong>Warmup + Cosine decay</strong>（近年也有 WSD）</td><td>warmup 步数通常是总量的 0.1–2%</td></tr><tr><td>权重衰减</td><td>0.1（只作用于非 norm/embedding 参数）</td><td>—</td></tr><tr><td>梯度裁剪</td><td>1.0</td><td>防 loss spike</td></tr><tr><td>优化器</td><td>AdamW（β₂=0.95）</td><td>—</td></tr><tr><td>精度</td><td><strong>BF16</strong> 为主，部分用 FP8</td><td>见下</td></tr></tbody></table>
+<pre><code>学习率曲线（Warmup + Cosine）:
+
+lr |      ___
+   |     /   ‾‾‾--__
+   |    /            ‾‾--__
+   |   /                    ‾‾--__
+   |  /                            ‾‾--__
+   | /                                     ‾‾--__
+   |/                                             ‾‾----____
+   +----------------------------------------------------------→ step
+     ↑warmup           ↑余弦衰减                        ↑ 接近 0
+   线性的前 0.1~2%      主体阶段</code></pre>
+<h3 id="432-为什么用-bf16-而不是-fp16">4.3.2 为什么用 BF16 而不是 FP16</h3>
+<table><thead><tr><th>精度</th><th>指数位</th><th>数值范围</th><th>训练稳定性</th></tr></thead><tbody><tr><td>FP32</td><td>8</td><td>大</td><td>稳，但慢且费显存</td></tr><tr><td>FP16</td><td>5</td><td><strong>窄</strong>（易上溢/下溢）</td><td>需要 loss scaling，容易出问题</td></tr><tr><td><strong>BF16</strong></td><td>8</td><td>与 FP32 相同</td><td>✅ 几乎不需要 loss scaling，现代训练默认</td></tr></tbody></table>
+<p><strong>记忆点</strong>：<code>BF16 用精度换范围</code>。深度学习对数值范围敏感、对尾数精度不敏感，所以 BF16 是甜蜜点。</p>
+<h3 id="433-训练不稳定的典型症状与处理">4.3.3 训练不稳定的典型症状与处理</h3>
+<table><thead><tr><th>症状</th><th>可能原因</th><th>处理</th></tr></thead><tbody><tr><td>Loss spike（突然飙高）</td><td>个别难样本、梯度爆炸、数据脏样本</td><td>梯度裁剪、跳过该 batch、降低 LR 后恢复</td></tr><tr><td>Loss 变 NaN</td><td>FP16 溢出、除以 0</td><td>换 BF16、加 z-loss、检查 norm</td></tr><tr><td>长期不降</td><td>LR 太小 / 数据配比失衡 / 模型太小</td><td>调 LR、检查数据、重跑小规模消融</td></tr><tr><td>后期突然变差</td><td>LR 衰减与数据混合不匹配、过拟合重复数据</td><td>调整数据顺序与重复策略</td></tr></tbody></table>
+<blockquote><p>大模型训练中&quot;loss spike 后自己恢复&quot;是常见现象。工业界的做法通常是<strong>保存多个检查点 + 自动重启回滚</strong>，而不是指望一次跑完。</p></blockquote>
+<hr/>
+<h2 id="44-并行策略怎么把模型塞进几千张卡">4.4 并行策略：怎么把模型塞进几千张卡</h2>
+<p>单卡装不下 → 必须切分。四种基本切法：</p>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>DP</code> — 数据并行 DP</li><li><code>D1</code> — 每张卡一份完整模型 各喂不同 batch 梯度 all-reduce 同步</li><li><code>TP</code> — 张量并行 TP</li><li><code>T1</code> — 把同一层矩阵横/竖切开 分到多卡，层内通信</li><li><code>PP</code> — 流水线并行 PP</li><li><code>P1</code> — 不同层放不同卡 micro-batch 流水推进</li><li><code>EP</code> — 专家并行 EP（MoE）</li><li><code>E1</code> — 不同专家放不同卡 token 路由到对应卡</li></ul></div>
+<table><thead><tr><th>策略</th><th>切什么</th><th>通信开销</th><th>适用</th></tr></thead><tbody><tr><td>DP / DDP</td><td>数据</td><td>低（同步梯度）</td><td>模型能装进单卡时首选</td></tr><tr><td>ZeRO-1/2/3 / FSDP</td><td>优化器状态 / 梯度 / 参数</td><td>中</td><td><strong>单卡装不下时的第一选择</strong>，按需分片</td></tr><tr><td>TP</td><td>层内矩阵</td><td><strong>高</strong>（每层都通信）</td><td>单层太大时用，通常限制在单机 8 卡内</td></tr><tr><td>PP</td><td>层间</td><td>中（有气泡）</td><td>跨机扩展，层数多时效果最好</td></tr><tr><td>EP</td><td>专家</td><td>高</td><td>MoE 模型必需</td></tr></tbody></table>
+<p><strong>实战组合</strong>：<code>TP=8（机内）× PP=8（机间）× DP=剩余</code>，配合 ZeRO/FSDP 与激活重计算（gradient checkpointing）。</p>
+<table><thead><tr><th>省显存技巧</th><th>做法</th><th>代价</th></tr></thead><tbody><tr><td>梯度检查点</td><td>不保存中间激活，反向时重算</td><td>约 +30% 算力，省大量显存</td></tr><tr><td>ZeRO-3 / FSDP</td><td>参数也分片</td><td>通信量上升</td></tr><tr><td>CPU offload</td><td>优化器状态放内存/NVMe</td><td>慢</td></tr><tr><td>序列并行</td><td>长序列按 token 切分</td><td>通信上升</td></tr></tbody></table>
+<hr/>
+<h2 id="45-算力与成本算一遍就知道为什么只有大厂能训">4.5 算力与成本：算一遍就知道为什么只有大厂能训</h2>
+<p><strong>经验公式</strong>：训练总算力 ≈ $C \approx 6ND$（N = 参数，D = token 数；前向 2ND、反向 4ND）。</p>
+<p>按 Chinchilla 最优配比 $D = 20N$ 算一遍（<code>demos/07_scaling_law.py</code> 的真实输出）：</p>
+<figure class="figure"><img alt="缩放定律真实运行输出" src="../../../../llm-fundamentals/assets/term-07_scaling_law.png" loading="lazy"/><figcaption>缩放定律真实运行输出</figcaption></figure>
+<figure class="figure"><img alt="损失随参数量的幂律下降" src="../../../../llm-fundamentals/assets/scaling-law.png" loading="lazy"/><figcaption>损失随参数量的幂律下降</figcaption></figure>
+<table><thead><tr><th>模型</th><th>参数量</th><th>Chinchilla 最优 token</th><th>训练算力</th></tr></thead><tbody><tr><td>GPT-2</td><td>2B</td><td>0.04T</td><td>2.70e20 FLOPs</td></tr><tr><td>LLaMA-7B</td><td>7B</td><td>0.14T</td><td>5.88e21 FLOPs</td></tr><tr><td>LLaMA-13B</td><td>13B</td><td>0.26T</td><td>2.03e22 FLOPs</td></tr><tr><td>LLaMA-70B</td><td>70B</td><td>1.4T</td><td>5.88e23 FLOPs</td></tr><tr><td>GPT-3-175B</td><td>175B</td><td>3.5T</td><td>3.67e24 FLOPs</td></tr></tbody></table>
+<p><strong>换算成钱</strong>：以 A100 约 300 TFLOPS（BF16 峰值，实际利用率 40% 左右）估算，5.88e23 FLOPs 需要约：</p>
+<p>$$ \frac{5.88\times 10^{23}}{300\times10^{12} \times 0.4 \times 3600} \approx 1.36\times10^{5}\ \text{GPU 小时} \;\approx\; 1360\ \text{张 A100 跑 100 小时} $$</p>
+<p>按每卡时 2 美元粗算，<strong>仅这一项就是 27 万美元量级</strong>——这还只是 70B 模型的一次训练，不含数据、调参、失败的尝试（通常要乘 2–3 倍）。</p>
+<blockquote><p>这也是为什么个人与小团队<strong>不会</strong>去预训练，而是站在（<a href="05-finetuning.html">第 05 章</a>）微调的肩上。参见现实对照：LLaMA-7B 实际训练了 1T tokens（远超 20×7B=140B），因为<strong>推理成本</strong>也要计入总账——小模型多训一点，长期推理更便宜。详见 <a href="06-scaling-and-emergence.html">第 06 章</a>。</p></blockquote>
+<hr/>
+<h2 id="46-base-model-出来后为什么还不能直接给用户用">4.6 Base Model 出来后，为什么还不能直接给用户用</h2>
+<p>预训练完的模型叫 <strong>base model</strong>，它的行为是这样的：</p>
+<table><thead><tr><th>输入</th><th>Base model 的典型输出</th></tr></thead><tbody><tr><td><code>中国的首都是</code></td><td><code>北京，也是中国的政治中心…</code> ✅ 续写没问题</td></tr><tr><td><code>请把下面这句话翻译成英文：你好</code></td><td><code>好的，我已经翻译完了。</code> ❌ 它只是在&quot;续写一个像样的回复&quot;</td></tr><tr><td><code>如何制作炸弹？</code></td><td>可能真的开始写步骤 ❌ 完全没有安全边界</td></tr></tbody></table>
+<p><strong>原因</strong>：预训练目标只要求&quot;像人写的文本&quot;，不要求&quot;有用的回答&quot;。base model 见过大量&quot;提问-回答&quot;的语料，但那是<strong>模仿数据的分布</strong>，不是<strong>执行指令</strong>。</p>
+<pre><code>Base Model      ：我把你写的东西接着写下去（续写机器）
+        ↓  指令微调 SFT（教它&quot;听到指令要执行&quot;）
+Instruct Model  ：我记得指令的格式，回答基本可用，但好坏参半
+        ↓  对齐 RLHF/DPO（教它&quot;什么算好回答&quot;）
+Chat Model      ：会拒绝、会承认不知道、语气符合人类偏好</code></pre>
+<p>这就是 <a href="05-finetuning.html">第 05 章</a>和 <a href="08-alignment-rlhf.html">第 08 章</a>要解决的问题。</p>
+<hr/>
+<h2 id="47-常被误解的点">4.7 常被误解的点</h2>
+<table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;预训练就是让模型背下所有训练数据&quot;</td><td>目标是压缩出<strong>泛化</strong>规律；但重复数据、罕见字符串确实会被记住（隐私风险来源）</td></tr><tr><td>&quot;数据越多越好&quot;</td><td>无过滤的更多数据可能更差。<strong>质量与去重比数量更关键</strong></td></tr><tr><td>&quot;一个 epoch 是标准做法&quot;</td><td>语料不够时普遍训多个 epoch，重复策略本身是研究课题</td></tr><tr><td>&quot;BF16 比 FP16 精度高&quot;</td><td>恰好相反：BF16 尾数位更少、精度更低，但<strong>范围更大</strong>，所以训练更稳</td></tr><tr><td>&quot;并行策略随便选&quot;</td><td>选错会浪费大量通信带宽；TP 不宜跨机，PP 层数少时气泡严重</td></tr><tr><td>&quot;评测分数高就是好&quot;</td><td>训练数据污染 benchmark 会让分数虚高，必须做去污染</td></tr></tbody></table>
+<hr/>
+<h2 id="48-动手">4.8 动手</h2>
+<p>虽然个人很难真正预训练，但可以用<strong>小规模实验</strong>体会全部流程：</p>
+<pre><code># 1) 看算力/数据配比怎么算：改参数量，观察最优 token 数与算力
+python3 demos/07_scaling_law.py
+
+# 2) 重画幂律曲线
+python3 demos/make_figures.py</code></pre>
+<p>想真跑一次预训练，最小可行路径见 <a href="11-open-source-projects.html">第 11 章</a> —— 用 <code>nanoGPT</code> 在单卡上训一个莎士比亚风格的字符级 GPT（几十分钟、几百 MB 显存），你会亲眼看到 loss 从 4.2 降到 1.5。</p>
+<hr/>
+<h2 id="49-自查问题">4.9 自查问题</h2>
+<ul class="lvl"><li>预训练为什么不需要人工标注？损失函数长什么样？</li><li>数据流水线里哪一步最容易被忽略但影响最大？为什么？</li><li>CLM 和 MLM 的区别？为什么现代 LLM 用 CLM？</li><li>FIM 目标解决什么问题？</li><li>训练为什么用 BF16 而不是 FP16？（从指数位/尾数位说）</li><li>DP / TP / PP / ZeRO 分别切什么？各自的通信代价？</li><li>用 <code>C ≈ 6ND</code> 估算：一个 13B 模型训 1T token 需要多少 FLOPs？</li><li>Base model 为什么不能直接当产品用？举三个反例。</li></ul>
+<hr/>
+<p class="nav-footer"><a href="03-transformer.html">← 上一章：Transformer 架构</a> · <a href="README.html">返回总览</a> · <a href="05-finetuning.html">下一章：微调 →</a></p>
+</main>
+</body>
+</html>

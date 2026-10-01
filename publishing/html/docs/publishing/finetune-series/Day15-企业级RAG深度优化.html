@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day15 企业级 RAG 深度优化</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day15-企业级-rag-深度优化">Day15 企业级 RAG 深度优化</h1>
+<h1 id="hybrid-search-rerank-agentic-rag-evaluation">Hybrid Search + Rerank + Agentic RAG + Evaluation</h1>
+<p>前面 Day5 你实现了：</p>
+<pre><code>基础 RAG Pipeline
+
+文档
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Milvus
+
+↓
+
+Retriever
+
+↓
+
+LLM
+
+↓
+
+答案</code></pre>
+<p>这已经可以跑 Demo。</p>
+<p>但是企业上线后，会遇到大量问题：</p>
+<hr/>
+<h2 id="问题1为什么搜不到">问题1：为什么搜不到？</h2>
+<p>用户：</p>
+<blockquote><p>ConcurrentHashMap 为什么线程安全？</p></blockquote>
+<p>知识库：</p>
+<pre><code>JDK8 ConcurrentHashMap源码解析
+CAS机制分析
+Node节点设计</code></pre>
+<p>但是：</p>
+<p>向量搜索可能召回：</p>
+<pre><code>HashMap基础
+Map接口介绍</code></pre>
+<p>原因：</p>
+<p>语义相似，但是不够精准。</p>
+<hr/>
+<h2 id="问题2为什么找到很多垃圾内容">问题2：为什么找到很多垃圾内容？</h2>
+<p>例如：</p>
+<p>TopK=10：</p>
+<p>返回：</p>
+<pre><code>1. ConcurrentHashMap源码
+
+2. Java集合介绍
+
+3. HashMap历史
+
+4. List源码
+
+5. JVM介绍</code></pre>
+<p>真正需要：</p>
+<p>只有第1个。</p>
+<hr/>
+<h2 id="问题3为什么模型还是胡说">问题3：为什么模型还是胡说？</h2>
+<p>因为：</p>
+<p>检索质量不好。</p>
+<p>LLM再强也无法弥补错误上下文。</p>
+<hr/>
+<p>所以企业 RAG：</p>
+<p>不是：</p>
+<pre><code>Embedding + Vector DB</code></pre>
+<p>而是：</p>
+<pre><code>Query理解
+
+↓
+
+Hybrid Search
+
+↓
+
+Rerank
+
+↓
+
+Context压缩
+
+↓
+
+LLM
+
+↓
+
+Evaluation</code></pre>
+<hr/>
+<h1 id="一企业级-rag-架构">一、企业级 RAG 架构</h1>
+<p>最终：</p>
+<pre><code>                 用户问题
+
+                     |
+
+                     ↓
+
+
+              Query Rewrite
+
+
+                     |
+
+        +------------+-------------+
+
+        |                          |
+
+
+        ↓                          ↓
+
+
+  Vector Search             Keyword Search
+
+
+ Milvus                     Elasticsearch
+
+
+        |                          |
+
+
+        +------------+-------------+
+
+                     |
+
+                     ↓
+
+
+              Merge Result
+
+
+                     |
+
+                     ↓
+
+
+                 Reranker
+
+
+                     |
+
+                     ↓
+
+
+              Top Context
+
+
+                     |
+
+                     ↓
+
+
+                  Prompt
+
+
+                     |
+
+                     ↓
+
+
+                    LLM
+</code></pre>
+<hr/>
+<h1 id="二hybrid-search混合搜索">二、Hybrid Search【混合搜索】</h1>
+<h2 id="什么是-hybrid-search">什么是 Hybrid Search？</h2>
+<p>Hybrid：</p>
+<p>混合。</p>
+<p>结合：</p>
+<ul class="lvl"><li>Dense Retrieval【稠密检索】</li></ul>
+<ul class="lvl"><li>Sparse Retrieval【稀疏检索】</li></ul>
+<hr/>
+<p>简单理解：</p>
+<h2 id="向量搜索">向量搜索</h2>
+<p>擅长：</p>
+<p>语义。</p>
+<p>例如：</p>
+<p>问题：</p>
+<blockquote><p>HashMap安全吗？</p></blockquote>
+<p>找到：</p>
+<blockquote><p>ConcurrentHashMap并发控制</p></blockquote>
+<hr/>
+<p>但是：</p>
+<p>不擅长：</p>
+<p>精确关键词。</p>
+<p>例如：</p>
+<p>用户：</p>
+<blockquote><p>AQS acquireQueued源码</p></blockquote>
+<p>向量可能找：</p>
+<blockquote><p>ReentrantLock源码</p></blockquote>
+<p>但是：</p>
+<p>可能找不到：</p>
+<p><code>acquireQueued</code>。</p>
+<hr/>
+<h2 id="关键词搜索">关键词搜索</h2>
+<p>擅长：</p>
+<p>精确匹配。</p>
+<p>例如：</p>
+<p>搜索：</p>
+<pre><code>acquireQueued</code></pre>
+<p>马上找到。</p>
+<hr/>
+<p>所以：</p>
+<p>组合：</p>
+<pre><code>向量搜索
+
++
+
+关键词搜索
+
+↓
+
+更全面</code></pre>
+<hr/>
+<h1 id="三hybrid-search实现">三、Hybrid Search实现</h1>
+<h2 id="方案1milvus-bm25">方案1：Milvus + BM25</h2>
+<p>架构：</p>
+<pre><code>用户问题
+
+       |
+
+       |
+
++------+------+
+
+|             |
+
+
+BM25        Embedding
+
+
+|             |
+
+
+关键词       语义
+
+
++------+------+
+
+       |
+
+       ↓
+
+
+结果融合</code></pre>
+<hr/>
+<h2 id="bm25是什么">BM25是什么？</h2>
+<p>BM25：</p>
+<p><strong>Best Matching 25【最佳匹配算法】</strong></p>
+<p>传统搜索算法。</p>
+<p>例如：</p>
+<p>ElasticSearch默认相关算法。</p>
+<hr/>
+<h1 id="四为什么需要-rerank">四、为什么需要 Rerank？</h1>
+<p>这是企业 RAG 核心。</p>
+<p>流程：</p>
+<p>第一阶段：</p>
+<p>召回。</p>
+<p>目标：</p>
+<blockquote><p>找全。</p></blockquote>
+<p>例如：</p>
+<p>TopK=50。</p>
+<hr/>
+<p>第二阶段：</p>
+<p>排序。</p>
+<p>目标：</p>
+<blockquote><p>找准。</p></blockquote>
+<p>例如：</p>
+<p>50个：</p>
+<p>↓</p>
+<p>Reranker</p>
+<p>↓</p>
+<p>5个。</p>
+<hr/>
+<p>架构：</p>
+<pre><code>用户问题
+
+↓
+
+Retriever
+
+↓
+
+50个Chunk
+
+↓
+
+Reranker
+
+↓
+
+5个Chunk
+
+↓
+
+LLM</code></pre>
+<hr/>
+<h1 id="五reranker原理">五、Reranker原理</h1>
+<p>普通Embedding：</p>
+<p>判断：</p>
+<pre><code>问题向量
+
+和
+
+文档向量
+
+距离</code></pre>
+<hr/>
+<p>Rerank模型：</p>
+<p>直接：</p>
+<p>输入：</p>
+<pre><code>问题:
+
+ConcurrentHashMap扩容
+
+
+文档:
+
+JDK8扩容通过transfer方法...</code></pre>
+<p>输出：</p>
+<pre><code>{
+&quot;score&quot;:0.96
+}</code></pre>
+<hr/>
+<h1 id="六常见rerank模型">六、常见Rerank模型</h1>
+<p>开源：</p>
+<h2 id="bge-reranker">BGE Reranker</h2>
+<p>例如：</p>
+<pre><code>BAAI/bge-reranker</code></pre>
+<hr/>
+<h2 id="cohere-rerank">Cohere Rerank</h2>
+<p>商业。</p>
+<hr/>
+<h2 id="jina-reranker">Jina Reranker</h2>
+<p>商业+开源。</p>
+<hr/>
+<h1 id="七rag优化前后区别">七、RAG优化前后区别</h1>
+<h2 id="普通rag">普通RAG</h2>
+<pre><code>问题
+
+↓
+
+Embedding
+
+↓
+
+Milvus Top5
+
+↓
+
+LLM</code></pre>
+<p>问题：</p>
+<p>召回不稳定。</p>
+<hr/>
+<h2 id="企业rag">企业RAG</h2>
+<pre><code>问题
+
+↓
+
+Query Rewrite
+
+↓
+
+Hybrid Search
+
+↓
+
+Top50
+
+↓
+
+Rerank
+
+↓
+
+Top5
+
+↓
+
+LLM</code></pre>
+<hr/>
+<h1 id="八query-rewrite查询改写">八、Query Rewrite【查询改写】</h1>
+<p>用户输入：</p>
+<p>可能不好。</p>
+<p>例如：</p>
+<p>用户：</p>
+<blockquote><p>hashmap问题</p></blockquote>
+<p>改写：</p>
+<pre><code>请解释JDK8 HashMap线程安全问题，包括：
+
+1. 数据结构
+
+2. put过程
+
+3. resize
+
+4. 并发风险
+
+5. 面试回答</code></pre>
+<hr/>
+<p>为什么？</p>
+<p>提高检索。</p>
+<hr/>
+<h1 id="九agentic-rag智能体rag">九、Agentic RAG【智能体RAG】</h1>
+<p>普通RAG：</p>
+<p>固定流程。</p>
+<pre><code>问题
+
+↓
+
+搜索
+
+↓
+
+回答</code></pre>
+<hr/>
+<p>Agentic RAG：</p>
+<p>Agent决定：</p>
+<p>是否搜索。</p>
+<p>搜索几次。</p>
+<p>搜索什么。</p>
+<hr/>
+<p>架构：</p>
+<pre><code>用户
+
+↓
+
+Agent
+
+↓
+
+判断:
+
+需要知识吗？
+
+        |
+
+       是
+
+        ↓
+
+调用Search Tool
+
+
+        ↓
+
+判断结果
+
+        ↓
+
+需要继续搜索？
+
+        ↓
+
+回答</code></pre>
+<hr/>
+<h1 id="十你的-java-ai-interview-agent-升级">十、你的 Java AI Interview Agent 升级</h1>
+<p>以前：</p>
+<p>用户：</p>
+<blockquote><p>AQS是什么？</p></blockquote>
+<p>固定：</p>
+<pre><code>搜索一次
+
+↓
+
+回答</code></pre>
+<p>升级：</p>
+<p>Agent：</p>
+<pre><code>用户问题
+
+↓
+
+Agent分析
+
+
+需要：
+
+源码知识
+
++
+
+面试表达模板
+
+
+↓
+
+Tool1:
+
+搜索AQS源码
+
+
+↓
+
+Tool2:
+
+搜索面试模板
+
+
+↓
+
+Tool3:
+
+查询历史薄弱点
+
+
+↓
+
+生成答案</code></pre>
+<hr/>
+<h1 id="十一evaluation评测系统">十一、Evaluation【评测系统】</h1>
+<p>企业最容易忽略。</p>
+<p>不能：</p>
+<p>“感觉效果很好”。</p>
+<p>需要数据。</p>
+<hr/>
+<h1 id="1-golden-dataset黄金测试集">1. Golden Dataset【黄金测试集】</h1>
+<p>建立：</p>
+<pre><code>{
+&quot;question&quot;:
+&quot;ConcurrentHashMap为什么线程安全？&quot;,
+
+&quot;expected_keywords&quot;:[
+
+&quot;CAS&quot;,
+
+&quot;synchronized&quot;,
+
+&quot;Node&quot;
+
+]
+}</code></pre>
+<hr/>
+<h1 id="2-rag评测指标">2. RAG评测指标</h1>
+<h2 id="retrieval-recall召回率">Retrieval Recall【召回率】</h2>
+<p>问题：</p>
+<p>正确答案有没有被找到。</p>
+<p>例如：</p>
+<p>100个问题：</p>
+<p>找到90个。</p>
+<p>Recall：</p>
+<p>90%。</p>
+<hr/>
+<h2 id="precision准确率">Precision【准确率】</h2>
+<p>找到的内容：</p>
+<p>多少相关。</p>
+<hr/>
+<h2 id="faithfulness忠实度">Faithfulness【忠实度】</h2>
+<p>答案是否来自知识库。</p>
+<hr/>
+<h2 id="answer-relevance答案相关性">Answer Relevance【答案相关性】</h2>
+<p>回答是否解决问题。</p>
+<hr/>
+<h1 id="十二自动评测流程">十二、自动评测流程</h1>
+<p>架构：</p>
+<pre><code>测试问题
+
+↓
+
+RAG系统
+
+↓
+
+生成答案
+
+↓
+
+Evaluator模型
+
+↓
+
+评分
+
+↓
+
+报告</code></pre>
+<hr/>
+<p>例如：</p>
+<p>输出：</p>
+<pre><code>{
+&quot;retrieval_score&quot;:0.92,
+
+&quot;answer_score&quot;:0.88,
+
+&quot;hallucination&quot;:false
+}</code></pre>
+<hr/>
+<h1 id="十三rag生产监控">十三、RAG生产监控</h1>
+<p>上线后监控：</p>
+<hr/>
+<h2 id="检索">检索</h2>
+<p>指标：</p>
+<ul class="lvl"><li>Recall</li></ul>
+<ul class="lvl"><li>TopK命中率</li></ul>
+<ul class="lvl"><li>Rerank分数</li></ul>
+<hr/>
+<h2 id="模型">模型</h2>
+<p>指标：</p>
+<ul class="lvl"><li>Token</li></ul>
+<ul class="lvl"><li>延迟</li></ul>
+<ul class="lvl"><li>错误率</li></ul>
+<hr/>
+<h2 id="用户">用户</h2>
+<p>指标：</p>
+<ul class="lvl"><li>满意度</li></ul>
+<ul class="lvl"><li>反馈</li></ul>
+<hr/>
+<h1 id="十四你的项目最终架构升级">十四、你的项目最终架构升级</h1>
+<p>Java AI Interview Agent V7：</p>
+<pre><code>                    用户
+
+                     |
+
+                     ↓
+
+
+                Spring Boot
+
+
+                     |
+
+                     ↓
+
+
+              LangChain4j Agent
+
+
+                     |
+
+                     ↓
+
+
+              Agentic RAG
+
+
+                     |
+
+        +------------+-------------+
+
+        |                          |
+
+
+        ↓                          ↓
+
+
+ Hybrid Search              Tool Calling
+
+
+        |                          |
+
+
+        ↓                          ↓
+
+
+ Milvus + BM25              Resume Tool
+
+
+        |
+
+        ↓
+
+
+     Reranker
+
+
+        |
+
+        ↓
+
+
+     Prompt
+
+
+        |
+
+        ↓
+
+
+   Qwen + LoRA
+
+
+        |
+
+        ↓
+
+
+     Answer</code></pre>
+<hr/>
+<h1 id="十五面试回答模板">十五、面试回答模板</h1>
+<p>面试官：</p>
+<blockquote><p>你们项目RAG效果如何优化？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>初始版本采用Embedding加向量数据库检索，但发现存在召回不准确问题。因此进行了优化：首先增加Query Rewrite改善用户问题表达，然后采用Hybrid Search结合关键词检索和向量检索提升召回能力，再通过Reranker模型对候选文档进行重排序，最终将高质量上下文输入大模型。同时建立Evaluation数据集，通过Recall、相关性和幻觉指标持续评估优化。</p></blockquote>
+<hr/>
+<h1 id="十六今天你的能力升级">十六、今天你的能力升级</h1>
+<p>现在你的知识体系：</p>
+<pre><code>RAG
+
+↓
+
+基础检索
+
+↓
+
+Hybrid Search
+
+↓
+
+Rerank
+
+↓
+
+Agentic RAG
+
+↓
+
+Evaluation
+
+↓
+
+Production RAG</code></pre>
+<p>这已经是企业大模型应用开发核心能力。</p>
+<hr/>
+<h1 id="下一节-day16">下一节 Day16</h1>
+<p>建议进入：</p>
+<h1 id="day16大模型应用安全与稳定性prompt-injection防止幻觉权限控制数据安全">《Day16：大模型应用安全与稳定性：Prompt Injection、防止幻觉、权限控制、数据安全》</h1>
+<p>因为企业上线 AI 系统，面试官一定会问：</p>
+<ul class="lvl"><li>用户输入恶意 Prompt 怎么办？</li></ul>
+<ul class="lvl"><li>如何防止模型泄露公司数据？</li></ul>
+<ul class="lvl"><li>如何控制 Agent 工具权限？</li></ul>
+<ul class="lvl"><li>如何保证回答可信？</li></ul>
+<p>这部分会把你的项目从：</p>
+<blockquote><p>能跑</p></blockquote>
+<p>升级到：</p>
+<blockquote><p>企业敢上线。</p></blockquote>
+</main>
+</body>
+</html>

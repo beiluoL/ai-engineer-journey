@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Exercises 03-project — Milestone 07-09 配套练习</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="exercises-03project-milestone-0709-配套练习">Exercises 03-project — Milestone 07-09 配套练习</h1>
+<blockquote><p>对应：<code>07-file-json.md</code> · <code>08-venv-pip.md</code> · <code>09-http-api.md</code> 状态：⬜ 题目已播种，未开始做。 这一档不再是小片段，而是往 <code>projects/01-python-ai-cli/src/</code> 里真的加功能。 规则：每题都在<strong>虚拟环境</strong>里跑（Milestone 08 教的），写完记得跑一遍 <code>tests/test_all.py</code> 确认没把项目搞坏。</p></blockquote>
+<hr/>
+<h2 id="g-文件与-json-持久化milestone-07">G. 文件与 JSON 持久化（Milestone 07）</h2>
+<ul class="lvl"><li>[ ] <strong>G1</strong> 给 Assistant 加「会话存档」：把 <code>messages</code> 写进 <code>history.json</code>，下次启动自动读回继续聊</li><li>[ ] <strong>G2</strong> 用 <code>pathlib.Path</code> 改写 G1 里的路径拼接（别再手动拼字符串），并把文件放到用户目录下而不是项目目录</li><li>[ ] <strong>G3</strong> 处理三种坏情况：文件不存在 → 新建；文件是空 → 当作空列表；JSON 坏了 → 备份原文件后重建</li><li>[ ] <strong>G4</strong> 写 <code>tests/test_history.py</code>：测「存进去再读出来一致」和「文件损坏时不崩溃」两条</li><li>[ ] <strong>G5（挑战）</strong> 实现「按日期分文件存档」：<code>history/2026-09-25.json</code>，并列出最近 7 天的会话</li></ul>
+<blockquote><p>Java 类比：<code>pathlib.Path</code> ≈ <code>java.nio.file.Path</code>；<code>with open(...)</code> ≈ try-with-resources。</p></blockquote>
+<h2 id="h-venv-pip-环境milestone-08">H. venv / pip / 环境（Milestone 08）</h2>
+<ul class="lvl"><li>[ ] <strong>H1</strong> 从零建一个干净 venv：<code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate</code>，确认 <code>which python3</code> 指向 venv 里</li><li>[ ] <strong>H2</strong> 用 <code>pip freeze &gt; requirements.txt</code> 导出依赖，再在<strong>另一个</strong>新建的 venv 里 <code>pip install -r requirements.txt</code> 还原</li><li>[ ] <strong>H3</strong> 故意在系统 Python 里跑项目（不激活 venv），观察报什么错；再回到 venv 里跑通</li><li>[ ] <strong>H4</strong> 把 <code>.venv/</code> 加进 <code>.gitignore</code>，用 <code>git status</code> 验证它确实不会被提交</li><li>[ ] <strong>H5（挑战）</strong> 说明：为什么项目坚持「零第三方依赖」（只用 stdlib <code>urllib</code> 而不用 <code>requests</code>）？代价是什么？写在你的错题本里</li></ul>
+<h2 id="i-http-apimilestone-09">I. HTTP / API（Milestone 09）</h2>
+<ul class="lvl"><li>[ ] <strong>I1</strong> 读懂 <code>src/assistant/client.py</code>：画出「构造请求 → 发送 → 解析响应」的完整链路</li><li>[ ] <strong>I2</strong> 用 stdlib <code>urllib</code> 手写一次 GET 请求（打 <code>https://httpbin.org/get</code>），打印状态码和响应体</li><li>[ ] <strong>I3</strong> 改造成 POST：带 <code>Authorization: Bearer &lt;key&gt;</code> 头和 JSON body，看服务端回显</li><li>[ ] <strong>I4</strong> 给 client 加超时（<code>timeout</code>）和重试，模拟超时（把 timeout 设成 0.001）验证异常被捕获</li><li>[ ] <strong>I5</strong> 给 client 写单元测试：用 <code>unittest.mock</code> 假掉网络，测「正常解析」「HTTP 非 200」「响应 JSON 缺字段」三种路径</li><li>[ ] <strong>I6（挑战）</strong> 对比 stdlib <code>urllib</code> 与 <code>requests</code> 的同样一段代码，说明为什么教学项目先选 urllib</li></ul>
+<hr/>
+<h2 id="验收标准">验收标准</h2>
+<p>G1-G4 + H1-H4 + I1-I5 全部亲手跑通 = Milestone 07-09 可标记 🎓，此时项目应达到 v0.5（能真实联网）。 每做完一题跑一次 <code>cd src &amp;&amp; python3 -m unittest discover -s tests</code>，<strong>测试必须保持全绿</strong>。</p>
+</main>
+</body>
+</html>

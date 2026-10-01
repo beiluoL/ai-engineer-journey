@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-03-chapter-02system-user-assistant-messages消息结构">Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</h1>
+<blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/memory.py</code>（<code>Conversation</code>）</p></blockquote>
+<hr/>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<p>Chapter 01 解决了「提示词怎么写」，这一章解决「提示词怎么送过去」。</p>
+<p>Project 02 里已经有消息结构了，但只用到两种角色：</p>
+<pre><code># P02 conversation.py
+self._messages: list[dict[str, str]] = []
+if system_prompt:
+    self._messages.append({&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: system_prompt})</code></pre>
+<p>现在要支持完整的四种角色，并回答一个关键问题：</p>
+<blockquote><p><strong>为什么必须把模型自己说过的话再发回去？</strong></p></blockquote>
+<p>本章目标：</p>
+<blockquote><p><strong>正确地构造、累积、校验 messages，让多轮对话和工具调用都能正常工作。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>大模型 API 是<strong>无状态</strong>的。这一点怎么强调都不过分：</p>
+<pre><code>你以为：  模型记得上一轮聊了什么
+实际上：  模型每次只看到你这次发过来的 messages 数组</code></pre>
+<p>所以「多轮对话」这件事，<strong>本质上是客户端在伪造记忆</strong>——每一轮把完整历史重新发一遍。</p>
+<p>这意味着 messages 数组就是 AI 应用最重要的一个数据结构：</p>
+<pre><code>messages 拼错了 → 模型表现诡异，而且很难定位
+                  （因为错误不在代码里，在数据里）</code></pre>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-四种角色">3.1 四种角色</h3>
+<table><thead><tr><th>role</th><th>谁产生的</th><th>作用</th></tr></thead><tbody><tr><td><code>system</code></td><td>你</td><td>全局人设与规则，一般只在开头出现一次</td></tr><tr><td><code>user</code></td><td>你（用户）</td><td>这一轮的输入</td></tr><tr><td><code>assistant</code></td><td>模型</td><td>模型上一轮的回答；<strong>工具调用时承载 <code>tool_calls</code></strong></td></tr><tr><td><code>tool</code></td><td>你（执行工具后）</td><td>把工具执行结果回灌给模型，靠 <code>tool_call_id</code> 对应</td></tr></tbody></table>
+<h3 id="32-一次多轮对话的真实报文">3.2 一次多轮对话的真实报文</h3>
+<p>第 1 轮：</p>
+<pre><code>[
+  {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;你是一个简洁的中文助手。&quot;},
+  {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;我叫小明&quot;}
+]</code></pre>
+<p>模型回：<code>{&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;你好小明，有什么可以帮你？&quot;}</code></p>
+<p>第 2 轮（<strong>注意：三条都要发</strong>）：</p>
+<pre><code>[
+  {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;你是一个简洁的中文助手。&quot;},
+  {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;我叫小明&quot;},
+  {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;你好小明，有什么可以帮你？&quot;},
+  {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;我叫什么名字？&quot;}
+]</code></pre>
+<p><strong><code>assistant</code> 那条是自己上一轮的回复，必须回灌。</strong> 少了它，模型就不知道自己说过什么，也不知道「小明」是谁说的。</p>
+<figure class="figure"><img alt="真实运行：多轮 messages 的完整请求体、tool 往返与 token 估算" src="../../../../../../projects/03-ai-application/assets/term-messages.png" loading="lazy"/><figcaption>真实运行：多轮 messages 的完整请求体、tool 往返与 token 估算</figcaption></figure>
+<figure class="figure"><img alt="真实运行：请求体里除 messages 之外的字段（model / stream / temperature / top_p / max_tokens）、token 估算（1 字符 ≈ 1.30 token），以及把 role 写成 AI 时发送前校验报 ValueError" src="../../../../../../projects/03-ai-application/assets/term-messages-payload.png" loading="lazy"/><figcaption>真实运行：请求体里除 messages 之外的字段（model / stream / temperature / top_p / max_tokens）、token 估算（1 字符 ≈ 1.30 token），以及把 role 写成 AI 时发送前校验报 ValueError</figcaption></figure>
+<h3 id="33-代码里怎么累积">3.3 代码里怎么累积</h3>
+<pre><code>@dataclass
+class Conversation:
+    _system: str = &quot;&quot;
+    _turns: list[dict[str, str]] = field(default_factory=list)
+
+    def add_user(self, content: str) -&gt; None:
+        self._turns.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: content})
+
+    def add_assistant(self, content: str) -&gt; None:
+        self._turns.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: content})
+
+    def add_tool(self, tool_call_id: str, content: str) -&gt; None:
+        self._turns.append({&quot;role&quot;: &quot;tool&quot;, &quot;tool_call_id&quot;: tool_call_id, &quot;content&quot;: content})
+
+    def to_messages(self) -&gt; list[dict[str, str]]:
+        head = [{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: self._system}] if self._system else []
+        return head + list(self._turns)</code></pre>
+<p>关键设计：<code>to_messages()</code> 返回的是<strong>副本</strong>（<code>list(self._turns)</code>），外部拿去改也改不动内部状态。</p>
+<h3 id="34-一条消息该不该被信任">3.4 一条消息该不该被信任</h3>
+<p>messages 是会被多处修改的共享数据，写个校验器很划算：</p>
+<pre><code>def validate_messages(messages: list[dict]) -&gt; None:
+    if not messages:
+        raise ValueError(&quot;messages 不能为空&quot;)
+    for i, m in enumerate(messages):
+        role = m.get(&quot;role&quot;)
+        if role not in {&quot;system&quot;, &quot;user&quot;, &quot;assistant&quot;, &quot;tool&quot;}:
+            raise ValueError(f&quot;第 {i} 条消息 role 非法: {role!r}&quot;)
+        if role == &quot;tool&quot; and &quot;tool_call_id&quot; not in m:
+            raise ValueError(f&quot;第 {i} 条 tool 消息缺少 tool_call_id&quot;)
+        if &quot;content&quot; not in m and &quot;tool_calls&quot; not in m:
+            raise ValueError(f&quot;第 {i} 条消息既没有 content 也没有 tool_calls&quot;)</code></pre>
+<p>在<strong>发送请求前</strong>调用它，能省掉大量「模型为什么答非所问」的排查时间。</p>
+<hr/>
+<h2 id="4-项目代码">4. 项目代码</h2>
+<pre><code>src/assistant/
+├── memory.py      # Conversation：add_user / add_assistant / add_tool / to_messages
+├── schema.py      # Message 类型别名（Chapter 03 用）
+└── client.py      # 发送前调用 validate_messages()</code></pre>
+<p>调用链：</p>
+<pre><code>用户输入
+  ↓ Conversation.add_user()
+Conversation.to_messages()
+  ↓ validate_messages()
+client.chat(messages)            ← 模型
+  ↓ 拿到 assistant 消息
+Conversation.add_assistant()     ← 回灌，下一轮才能带上</code></pre>
+<hr/>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>List&lt;Map&lt;String,String&gt;&gt;</code></td><td><code>list[dict[str, str]]</code></td><td>同（Python 更常用 TypedDict 约束）</td></tr><tr><td>DTO / <code>record Message(String role, String content)</code></td><td><code>@dataclass</code> 或 <code>TypedDict</code></td><td>Python 里 dict 更贴合 JSON 契约</td></tr><tr><td>HTTP 是无状态的（靠 Cookie/Session）</td><td>LLM API 无状态（靠 messages）</td><td><strong>完全同构</strong></td></tr><tr><td><code>Bean Validation @NotNull</code></td><td><code>validate_messages()</code></td><td>同样的前置校验思路</td></tr><tr><td>Jackson 序列化顺序</td><td><code>json.dumps(ensure_ascii=False)</code></td><td>Python 默认转义中文，要关掉</td></tr></tbody></table>
+<p>最贴切的类比：</p>
+<blockquote><p><strong>messages ≈ HTTP 请求体 + Session。</strong> 模型没有服务端状态，每次请求必须自带全部上下文，就像 JWT 无状态鉴权每次都要带上完整的 token。</p></blockquote>
+<hr/>
+<h2 id="6-常见坑">6. 常见坑</h2>
+<h3 id="坑-1忘了回灌-assistant-消息">坑 1：忘了回灌 assistant 消息</h3>
+<pre><code>conv.add_user(&quot;我叫小明&quot;)
+reply = await client.chat(conv.to_messages())
+conv.add_user(&quot;我叫什么名字？&quot;)        # ❌ 少了 add_assistant(reply)
+reply2 = await client.chat(conv.to_messages())   # 模型：我不知道你叫什么</code></pre>
+<p><strong>这是多轮对话最常见的 bug。</strong> 表现是「模型记性好时好时坏」，其实是根本没把记忆发出去。</p>
+<h3 id="坑-2每一轮都重复插入-system">坑 2：每一轮都重复插入 system</h3>
+<pre><code>conv.add_system(&quot;你是一个助手&quot;)     # 每一轮都 append
+conv.add_system(&quot;你是一个助手&quot;)
+conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧 token</code></pre>
+<p>system 应该只存在一份，由 <code>to_messages()</code> 负责拼在开头。</p>
+<h3 id="坑-3role-拼错">坑 3：role 拼错</h3>
+<pre><code>{&quot;role&quot;: &quot;AI&quot;, &quot;content&quot;: &quot;...&quot;}       # ❌ API 直接 400
+{&quot;role&quot;: &quot;human&quot;, &quot;content&quot;: &quot;...&quot;}    # ❌ 这是 LangChain 的写法，不是 OpenAI 契约</code></pre>
+<h3 id="坑-4tool-消息的-toolcallid-对不上">坑 4：tool 消息的 <code>tool_call_id</code> 对不上</h3>
+<p class="nav-footer">工具调用时，模型返回的 <code>tool_calls[].id</code> 必须在回灌时原样带回。对不上会直接报协议错误，且报错信息通常很不友好。</p>
+<h3 id="坑-5裁剪历史时切在工具调用中间">坑 5：裁剪历史时切在工具调用中间</h3>
+<p>当历史太长需要裁剪（Chapter 05）时，如果截掉了 <code>assistant(tool_calls)</code> 但留下了 <code>tool</code> 消息，协议就坏了。</p>
+<p>规则：</p>
+<blockquote><p><strong>裁剪以「一轮完整交互」为单位，不要以「单条消息」为单位。</strong></p></blockquote>
+<hr/>
+<h2 id="7-实战挑战">7. 实战挑战</h2>
+<p><strong>挑战 1</strong>：实现 <code>validate_messages()</code>，并在 <code>client.chat()</code> 里调用——让非法消息在发送前就失败。</p>
+<p><strong>挑战 2</strong>：给 <code>Conversation</code> 加 <code>last_n_turns(n)</code>，只保留最近 n 轮（system 始终保留）。</p>
+<p><strong>挑战 3（进阶）</strong>：支持 <code>tool_calls</code> 结构（Chapter 08 会用到），让 <code>add_assistant()</code> 既能存纯文本也能存工具调用。</p>
+<hr/>
+<h2 id="8-主动回忆">8. 主动回忆</h2>
+<ul class="lvl"><li>为什么多轮对话必须把 assistant 的历史回复再发一遍？</li><li>四种 role 分别由谁产生、作用是什么？</li><li><code>to_messages()</code> 为什么要返回副本？</li><li>system 消息应该出现几次？放在数组的什么位置？</li><li>tool 消息靠什么字段与工具调用对应？</li><li>裁剪历史时，为什么不能以单条消息为单位？</li></ul>
+<hr/>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<ul class="lvl"><li>[ ] 多轮对话能稳定记住上一轮的内容（有真实调用验证）</li><li>[ ] <code>to_messages()</code> 返回副本，外部修改不影响内部</li><li>[ ] 发送前有消息校验，非法 role 会直接报错</li><li>[ ] system 消息全会话只存在一份</li><li>[ ] 已支持 <code>tool</code> 角色与 <code>tool_call_id</code>（为 Chapter 08 做准备）</li></ul>
+<p>下一章：<a href="03-structured-output.html">03-structured-output.md</a> —— 让模型的输出能被程序直接消费。</p>
+</main>
+</body>
+</html>

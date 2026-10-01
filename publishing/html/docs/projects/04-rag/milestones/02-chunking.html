@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 04 — Chapter 02：Chunking【文档切分】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-04-chapter-02chunking文档切分">Project 04 — Chapter 02：Chunking【文档切分】</h1>
+<blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/chunker.py</code>（<code>Chunk</code> + <code>chunk_text()</code> + <code>recursive_split()</code>）</p></blockquote>
+<hr/>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<p>Chapter 01 的产物是一篇篇完整的 <code>Document</code>。看起来&quot;整篇文档直接入库&quot;最省事——为什么不呢？</p>
+<p>三个原因，每个都足够致命：</p>
+<ul class="lvl"><li><strong>上下文窗口有限</strong>。检索到 10 篇文档、每篇 2 万字，塞给模型的 prompt 直接爆炸。你只能选一小部分塞进去，那&quot;选的部分&quot;其实就是隐式切分——不如自己显式地控制。</li><li><strong>检索粒度 = 答案粒度</strong>。用户问&quot;RAG 的 overlap 参数是干嘛的&quot;，理想命中的是<strong>那一小段</strong>讲 overlap 的文字，而不是整篇 50 页的教程。你存什么粒度，就只能检索到什么粒度。</li><li><strong>Embedding 的语义稀释</strong>（下一章细讲）。一篇长文档被压成一个向量，这个向量是&quot;全文大意&quot;的平均味道——而用户的 query 是具体的小问题，大意对不上小问题。</li></ul>
+<pre><code>你以为：  文档越完整，模型知道得越多，回答越好
+实际上：  检索的单位是&quot;块&quot;，块的粒度决定答案的精度；
+          整篇存整篇检索 = 用大炮的瞄准镜找一只蚊子</code></pre>
+<p>本章目标：</p>
+<blockquote><p><strong>把整篇 Document 切成大小合适、边界不切断答案的 Chunk，并保留溯源信息。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>Chunking 是 RAG 里&quot;最不起眼但收益最高&quot;的一环：换 embedding 模型、换向量库都是边际提升，<strong>切分策略错了，后面的所有优化都是在错误的地基上装修</strong>。</p>
+<p>两个核心参数必须真正理解，而不是背默认值：</p>
+<table><thead><tr><th>参数</th><th>含义</th><th>太大的后果</th><th>太小的后果</th></tr></thead><tbody><tr><td><code>chunk_size</code></td><td>每块的目标长度</td><td>块向量是大意，检索不准；塞 prompt 也费 token</td><td>一句话被拆散，检索到的块没有上下文，模型看不懂</td></tr><tr><td><code>overlap</code></td><td>相邻块重叠的长度</td><td>浪费存储和 token</td><td>答案正好跨在两个块的边界上被切断，两边都检索不到完整答案</td></tr></tbody></table>
+<p><code>overlap</code> 的存在动机值得单独说：答案经常恰好落在切分边界上。比如&quot;overlap 的作用是防止答案被切断&quot;这句话，按 500 字切正好断在中间——两个块各拿到半句，都不完整。相邻块重叠 80 字，边界内容就会完整地出现在至少一个块里。</p>
+<p><strong>Java 里这个概念你天天见：分页。</strong> <code>chunk_size</code> 就是 <code>pageSize</code>，<code>overlap</code> 就是&quot;下一页往前回退几条&quot;。切大文件的道理也一样：Java 里按固定字节数分批读大文件时，也要考虑边界记录被截断的问题——Python 里 <code>chunk_text()</code> 干的是同一件事，只是边界单位从&quot;字节&quot;换成了&quot;语义&quot;。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-chunk-dataclass切分产物必须可溯源">3.1 Chunk dataclass：切分产物必须可溯源</h3>
+<p>切完之后，&quot;这段话出自哪篇文档的哪个位置&quot;必须跟着块走：</p>
+<pre><code># src/rag/chunker.py
+from dataclasses import dataclass, field
+
+@dataclass
+class Chunk:
+    chunk_id: str        # f&quot;{doc_id}-{index}&quot;
+    doc_id: str          # 指回 Document，溯源链的关键
+    text: str
+    index: int           # 在原文档中的序号，用于恢复顺序
+    metadata: dict = field(default_factory=dict)
+    # metadata 里合并 Document.metadata（source/格式/页码）+ 自己的 start_char</code></pre>
+<p>注意 <code>chunk_id = f&quot;{doc_id}-{index}&quot;</code>：内容哈希做前缀意味着文档变了块 ID 全变，重建索引是安全的覆盖式操作——这和 Chapter 01 的幂等设计一脉相承。</p>
+<h3 id="32-三种切分策略">3.2 三种切分策略</h3>
+<table><thead><tr><th>策略</th><th>做法</th><th>优点</th><th>缺点</th><th>何时用</th></tr></thead><tbody><tr><td>固定长度</td><td>每 N 个字符切一刀</td><td>简单、可预期</td><td>经常把句子/概念拦腰斩断</td><td>基线、日志类无结构文本</td></tr><tr><td>递归分隔符（推荐）</td><td>按 <code>\n\n</code> → <code>\n</code> → 句号 → 强制切的顺序降级</td><td>尽量贴着自然段落边界切，实现也就 30 行</td><td>段落极长时退化成固定长度</td><td><strong>默认选择</strong></td></tr><tr><td>语义切分</td><td>句子两两算 embedding 相似度，相似度骤降处切</td><td>边界最贴合语义</td><td>要先跑一遍 embedding，成本高</td><td>进阶，本章只提一句</td></tr></tbody></table>
+<p>递归分隔符的直觉：<strong>优先在段落之间切（<code>\n\n</code>），段落太长就在句子之间切，句子太长才硬切。</strong> 语义边界的优先级从高到低降级，所以叫&quot;递归&quot;。</p>
+<figure class="figure"><img alt="真实运行：相邻块共享 80 字符 overlap；中文按「段落 → 行 → 。！？ → .」降级切分" src="../../../../../../projects/04-rag/assets/term-chunk-overlap.png" loading="lazy"/><figcaption>真实运行：相邻块共享 80 字符 overlap；中文按「段落 → 行 → 。！？ → .」降级切分</figcaption></figure>
+<h3 id="33-长度单位token-估算">3.3 长度单位：token 估算</h3>
+<p><code>chunk_size=500</code> 的&quot;500&quot;是什么单位？字符还是 token【词元】？</p>
+<p>生产上应该用 tokenizer 精确数；本章沿用 P03 的估算思路——<strong>英文约 4 字符/token，中文约 1.5~2 字符/token，混合文本用 <code>len(text) / 1.6</code> 估算</strong>：</p>
+<pre><code>def estimate_tokens(text: str) -&gt; int:
+    &quot;&quot;&quot;粗略估算 token 数，只用于 sizing，不用于计费判断。&quot;&quot;&quot;
+    return max(1, int(len(text) / 1.6))</code></pre>
+<p>为什么可以估：切分的 size 是一个工程参数不是法律条款，±20% 的误差不影响检索质量。<strong>Java 里你也会用 <code>text.length() / 2</code> 粗估中英混排的宽度来排版，同一个量级的妥协。</strong></p>
+<hr/>
+<figure class="figure"><img alt="真实运行：1553 字符切成 4 块，相邻块带 80 字符 overlap，中文按句号降级切分" src="../../../../../../projects/04-rag/assets/term-chunk.png" loading="lazy"/><figcaption>真实运行：1553 字符切成 4 块，相邻块带 80 字符 overlap，中文按句号降级切分</figcaption></figure>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<p>以下代码将在 <code>src/rag/chunker.py</code> 落地时实现，现在当设计稿读。</p>
+<pre><code>def split_with_overlap(text: str, size: int, overlap: int) -&gt; list[str]:
+    &quot;&quot;&quot;固定长度切分：步长 = size - overlap。&quot;&quot;&quot;
+    if overlap &gt;= size:
+        raise ValueError(f&quot;overlap({overlap}) 必须小于 size({size})，否则 死循环/原地踏步&quot;)
+    pieces: list[str] = []
+    step = size - overlap
+    for start in range(0, len(text), step):
+        piece = text[start:start + size]
+        if piece.strip():
+            pieces.append(piece)
+        if start + size &gt;= len(text):
+            break
+    return pieces
+
+
+def recursive_split(text: str, size: int, overlap: int,
+                    separators: list[str] | None = None) -&gt; list[str]:
+    &quot;&quot;&quot;递归分隔符切分：优先大边界，降级到强制切。&quot;&quot;&quot;
+    seps = separators if separators is not None else [&quot;\n\n&quot;, &quot;\n&quot;, &quot;。&quot;, &quot;！&quot;, &quot;？&quot;, &quot;.&quot;]
+    if len(text) &lt;= size:
+        return [text] if text.strip() else []
+
+    # 找到第一个&quot;切得动&quot;的分隔符
+    for sep in seps:
+        if sep in text:
+            parts = text.split(sep)
+            break
+    else:
+        # 所有分隔符都切不动：按字符强制切（带 overlap）
+        return split_with_overlap(text, size, overlap)
+
+    # 贪心合并：小段攒成不超过 size 的块
+    chunks: list[str] = []
+    buffer = &quot;&quot;
+    for part in parts:
+        candidate = (buffer + sep + part) if buffer else part
+        if len(candidate) &lt;= size:
+            buffer = candidate
+        else:
+            if buffer:
+                chunks.append(buffer)
+            if len(part) &lt;= size:
+                buffer = part
+            else:
+                # 单段超长：用下一级分隔符继续递归切它
+                chunks.extend(recursive_split(part, size, overlap, seps[1:]))
+                buffer = &quot;&quot;
+    if buffer:
+        chunks.append(buffer)
+
+    # 给相邻块补 overlap：取前一块尾部 overlap 个字符接到下一块开头
+    if overlap &gt; 0:
+        glued: list[str] = []
+        for i, c in enumerate(chunks):
+            if i &gt; 0 and chunks[i - 1]:
+                head = chunks[i - 1][-overlap:]
+                glued.append(head + c)
+            else:
+                glued.append(c)
+        chunks = glued
+    return chunks
+
+
+def chunk_text(text: str, size: int = 500, overlap: int = 80) -&gt; list[str]:
+    &quot;&quot;&quot;对外主入口。size/overlap 的单位是字符（粗对齐 token）。&quot;&quot;&quot;
+    if size &lt;= 0 or overlap &lt; 0:
+        raise ValueError(&quot;size 必须为正，overlap 不能为负&quot;)
+    return recursive_split(text, size, overlap)
+
+
+def chunk_document(doc: &quot;Document&quot;, size: int = 500, overlap: int = 80) -&gt; list[Chunk]:
+    &quot;&quot;&quot;Document → list[Chunk]，逐块带上溯源信息。&quot;&quot;&quot;
+    from .document import Document  # 落地时移到模块顶部
+    pieces = chunk_text(doc.text, size, overlap)
+    chunks: list[Chunk] = []
+    cursor = 0
+    for i, piece in enumerate(pieces):
+        start = doc.text.find(piece, cursor)          # 记录在原文中的位置
+        cursor = start + len(piece)
+        chunks.append(Chunk(
+            chunk_id=f&quot;{doc.doc_id}-{i}&quot;,
+            doc_id=doc.doc_id,
+            text=piece,
+            index=i,
+            metadata={**doc.metadata, &quot;start_char&quot;: start},
+        ))
+    return chunks</code></pre>
+<p>关键实现思路：</p>
+<ul class="lvl"><li><strong><code>overlap &gt;= size</code> 直接抛异常</strong>：步长 <code>size - overlap</code> 会变成 0，切分死循环。这个参数约束要在入口处把守，<strong>Java 里 <code>@Min</code> 校验干的就是这事</strong>。</li><li><strong><code>chunk_document</code> 里 <code>find(piece, cursor)</code> 用游标</strong>：既拿到真实的 <code>start_char</code>，又避免内容重复的块被 find 到错误位置。</li><li><strong>Markdown 文档走专用预处理</strong>：Chapter 01 留下的代码围栏哨兵在这里生效——围栏内的文本按 <code>\n</code> 切而不是按句号切，绝不把代码按 <code>。</code> 拦腰斩断；<code>headings</code> 元数据用于在块 metadata 上标注&quot;本块属于哪个章节标题下&quot;，检索命中后能展示出处章节。</li><li><strong><code>size=500, overlap=80</code> 是本章默认值，不是普适最优</strong>：落地后用真实文档调参，经验范围 size 在 300~800、overlap 在 size 的 10%~20%。</li></ul>
+<hr/>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h3 id="坑-1chunk-太大检索好像都相关但都不准">坑 1：chunk 太大，检索&quot;好像都相关但都不准&quot;</h3>
+<ul class="lvl"><li><strong>现象</strong>：top-5 检索结果每块都沾边，但答案质量差；塞进 prompt 又贵又稀释。</li><li><strong>原因</strong>：块越大，块向量越代表&quot;全文大意&quot;，而 query 是具体小问题，大意匹配不出小问题的相关性。</li><li><strong>正确做法</strong>：从 size=500 起步，检索不准时<strong>优先调小块</strong>（如 300），观察命中片段是否变准，而不是先换 embedding 模型。</li></ul>
+<h3 id="坑-2chunk-太小检索命中了正确但没有上下文的碎片">坑 2：chunk 太小，检索命中了&quot;正确但没有上下文&quot;的碎片</h3>
+<ul class="lvl"><li><strong>现象</strong>：命中一个孤句&quot;它需要先经过向量化&quot;，模型不知道&quot;它&quot;是谁，回答瞎猜。</li><li><strong>原因</strong>：块小于完整语义单元，指代、主语全在上一块里。</li><li><strong>正确做法</strong>：适当加大 size；更稳的做法是检索命中后<strong>带上相邻块</strong>（<code>index-1</code> 和 <code>index+1</code> 一起给模型），或给每块补上所属章节标题作为上下文前缀。</li></ul>
+<h3 id="坑-3中文文本用英文习惯切分块里全是碎句">坑 3：中文文本用英文习惯切分，块里全是碎句</h3>
+<ul class="lvl"><li><strong>现象</strong>：按 <code>.</code> 或空格切中文，一个块里七八个半截句子，句号（中文是 <code>。</code>）压根没当边界。</li><li><strong>原因</strong>：英文以空格分词、句号结束；中文没有空格，句末是全角 <code>。！？</code>。<strong>Java 里处理 i18n 文本不也要注意 <code>BreakIterator</code> 的 locale 吗——同一类教训。</strong></li><li><strong>正确做法</strong>：分隔符序列里<strong>中文句末标点必须排在英文 <code>.</code> 前面</strong>，如上面的 <code>[&quot;\n\n&quot;, &quot;\n&quot;, &quot;。&quot;, &quot;！&quot;, &quot;？&quot;, &quot;.&quot;]</code>。绝不要按空格切中文。</li></ul>
+<h3 id="坑-4overlap-导致同一段话被检索重复命中">坑 4：overlap 导致同一段话被检索重复命中</h3>
+<ul class="lvl"><li><strong>现象</strong>：top-5 里有三个块内容几乎一样（都是 overlap 区的重复），浪费了 prompt 空间，还让&quot;5 个来源&quot;变成&quot;1 个来源说三遍&quot;。</li><li><strong>原因</strong>：overlap 让相邻块共享一段文本，检索时这段文本在多个块里都算命中。</li><li><strong>正确做法</strong>：检索后做去重——相邻块（index 连续）且重叠部分占比高的，合并或只保留信息量最大的一块；prompt 组装阶段按 <code>doc_id + index</code> 排序后再去重。</li></ul>
+<h3 id="坑-5overlap-size-没做校验切分器悄悄死循环">坑 5：<code>overlap &gt;= size</code> 没做校验，切分器悄悄死循环</h3>
+<ul class="lvl"><li><strong>现象</strong>：<code>chunk_text(&quot;...&quot;, size=100, overlap=120)</code> 程序卡死，CPU 飙满。</li><li><strong>原因</strong>：步长 <code>size - overlap</code> ≤ 0，窗口永远不前进。</li><li><strong>正确做法</strong>：入口处参数校验直接 raise（见设计稿），不要相信调用方。</li></ul>
+<hr/>
+<h2 id="6-自检清单">6. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能不看笔记说出&quot;为什么必须切&quot;的三个原因（上下文窗口 / 检索粒度 / 语义稀释）</li><li>[ ] 能解释 overlap 的存在动机：答案被边界切断</li><li>[ ] 能写出递归分隔符的降级顺序，并说出为什么中文分隔符要排前面</li><li>[ ] <code>Chunk</code> 里 <code>doc_id</code> 和 <code>index</code> 各自用于什么（溯源 / 恢复顺序与取相邻块）</li><li>[ ] size/overlap 单位是字符，能说出 <code>len/1.6</code> 估算 token 的适用范围</li><li>[ ] 知道检索侧重复命中的去重时机（检索后、prompt 组装前）</li></ul>
+<hr/>
+<p>上一章：<a href="01-document-ingestion.html">01-document-ingestion.md</a> —— 把乱七八糟的文档变成干净文本</p>
+<p>下一章：<a href="03-embedding.html">03-embedding.md</a> —— 文本切好了，怎么让机器&quot;理解&quot;它说的是什么？</p>
+</main>
+</body>
+</html>

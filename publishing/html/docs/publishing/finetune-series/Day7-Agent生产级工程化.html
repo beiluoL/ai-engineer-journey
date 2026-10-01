@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day7：Spring Boot + LangChain4j Agent 生产级工程化</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day7spring-boot-langchain4j-agent-生产级工程化">大模型微调实战 Day7：Spring Boot + LangChain4j Agent 生产级工程化</h1>
+<h1 id="spring-boot-langchain4j-agent-生产级工程化">Spring Boot + LangChain4j Agent 生产级工程化</h1>
+<p>前 6 天我们完成了：</p>
+<pre><code>Day1
+Google Colab + LLaMA-Factory + 数据准备
+
+↓
+
+Day2
+QLoRA 微调 Qwen
+
+↓
+
+Day3
+LoRA模型部署到 Ollama + Spring Boot
+
+↓
+
+Day4
+RAG + LoRA 架构
+
+↓
+
+Day5
+Spring Boot + LangChain4j + Milvus RAG
+
+↓
+
+Day6
+Agent + Tool Calling</code></pre>
+<p>现在你的系统：</p>
+<p>已经能工作。</p>
+<p>但是距离企业项目还有差距。</p>
+<p>企业关注：</p>
+<blockquote><p>稳定性、可观测性、成本、安全、评测。</p></blockquote>
+<p>今天升级：</p>
+<h1 id="java-ai-interview-agent-v5生产级">Java AI Interview Agent V5（生产级）</h1>
+<hr/>
+<h1 id="一生产级-agent-架构">一、生产级 Agent 架构</h1>
+<p>从：</p>
+<pre><code>用户
+
+↓
+
+Agent
+
+↓
+
+LLM
+
+↓
+
+回答</code></pre>
+<p>升级：</p>
+<pre><code> id=&quot;y3p0d5&quot;
+                         用户
+
+                          |
+
+                          ↓
+
+
+                    API Gateway
+
+
+                          |
+
+                          ↓
+
+
+                 Spring Boot Agent
+
+
+                          |
+
+          +---------------+---------------+
+
+          |               |               |
+
+
+          ↓               ↓               ↓
+
+
+       Memory          Tool           RAG
+
+
+       Redis        Tool Router      Milvus
+
+
+          |               |               |
+
+          +---------------+---------------+
+
+                          |
+
+                          ↓
+
+
+                 LLM Gateway
+
+
+                          |
+
+                          ↓
+
+
+                  Qwen + LoRA
+
+
+                          |
+
+                          ↓
+
+
+                       SSE输出
+</code></pre>
+<hr/>
+<h1 id="二第一步streaming-sse-流式输出">二、第一步：Streaming SSE 流式输出</h1>
+<h2 id="为什么需要-sse">为什么需要 SSE？</h2>
+<p>普通接口：</p>
+<p>请求：</p>
+<pre><code> id=&quot;y1yb9r&quot;
+用户问题
+
+↓
+
+等待30秒
+
+↓
+
+一次返回答案</code></pre>
+<p>体验差。</p>
+<p>ChatGPT：</p>
+<p>为什么感觉快？</p>
+<p>因为：</p>
+<p>Token一个个输出。</p>
+<hr/>
+<h2 id="sse">SSE</h2>
+<p>全称：</p>
+<p><strong>Server-Sent Events【服务器发送事件】</strong></p>
+<p>流程：</p>
+<pre><code>用户
+
+↓
+
+Spring Boot
+
+↓
+
+LLM生成Token
+
+↓
+
+马上推送
+
+↓
+
+浏览器显示</code></pre>
+<hr/>
+<h1 id="三spring-boot-sse实现">三、Spring Boot SSE实现</h1>
+<p>Controller：</p>
+<pre><code>@RestController
+@RequestMapping(&quot;/chat&quot;)
+public class ChatController {
+
+
+@GetMapping(
+produces =
+MediaType.TEXT_EVENT_STREAM_VALUE
+)
+public Flux&lt;String&gt; chat(
+String message
+){
+
+
+return agent.stream(message);
+
+
+}
+
+
+}</code></pre>
+<hr/>
+<p>返回：</p>
+<pre><code>data: ConcurrentHashMap
+
+data: JDK8
+
+data: 使用CAS
+
+data: + synchronized</code></pre>
+<hr/>
+<h1 id="四第二步conversation-memory对话记忆">四、第二步：Conversation Memory【对话记忆】</h1>
+<p>现在：</p>
+<p>用户：</p>
+<p>第一次：</p>
+<pre><code>我叫张三</code></pre>
+<p>第二次：</p>
+<pre><code>我的技术栈是什么？</code></pre>
+<p>模型不知道。</p>
+<p>需要 Memory。</p>
+<hr/>
+<p>架构：</p>
+<pre><code>用户
+
+↓
+
+ConversationId
+
+↓
+
+Redis
+
+↓
+
+ChatMemory
+
+↓
+
+LLM</code></pre>
+<hr/>
+<h1 id="五redis保存聊天记录">五、Redis保存聊天记录</h1>
+<p>Redis：</p>
+<p>保存：</p>
+<pre><code>{
+&quot;user&quot;:&quot;10001&quot;,
+
+&quot;messages&quot;:[
+
+&quot;我是Java工程师&quot;,
+
+&quot;我学习Agent&quot;
+
+]
+
+}</code></pre>
+<hr/>
+<p>LangChain4j：</p>
+<pre><code>@Bean
+ChatMemory chatMemory(){
+
+
+return MessageWindowChatMemory
+.builder()
+
+.maxMessages(20)
+
+.build();
+
+}</code></pre>
+<hr/>
+<p>效果：</p>
+<p>Agent知道：</p>
+<pre><code>用户：
+
+6年Java
+
+正在转AI
+
+需要面试训练</code></pre>
+<hr/>
+<h1 id="六第三步prompt工程化">六、第三步：Prompt工程化</h1>
+<p>之前：</p>
+<p>Prompt写代码里：</p>
+<pre><code>&quot;你是Java面试官&quot;</code></pre>
+<p>生产：</p>
+<p>应该独立。</p>
+<p>目录：</p>
+<pre><code>prompts/
+
+├── interview-system.txt
+
+├── rag-answer.txt
+
+├── resume-analysis.txt
+
+└── evaluation.txt</code></pre>
+<hr/>
+<p>例如：</p>
+<p>interview-system.txt</p>
+<pre><code>你是一名高级Java面试官。
+
+回答规则：
+
+1. 先给结论
+
+2. 再解释原理
+
+3. 给源码
+
+4. 给项目场景
+
+5. 最后给30秒面试话术</code></pre>
+<hr/>
+<p>好处：</p>
+<p>不用重新发版。</p>
+<hr/>
+<h1 id="七第四步tool权限控制">七、第四步：Tool权限控制</h1>
+<p>现在：</p>
+<p>Agent：</p>
+<p>可以调用：</p>
+<pre><code>searchKnowledge()
+
+analyzeResume()</code></pre>
+<p>但是生产：</p>
+<p>不能无限制。</p>
+<p>例如：</p>
+<p>普通用户：</p>
+<p>允许：</p>
+<pre><code>知识搜索</code></pre>
+<p>管理员：</p>
+<p>允许：</p>
+<pre><code>上传知识库
+删除数据</code></pre>
+<hr/>
+<p>设计：</p>
+<pre><code>User
+
+↓
+
+Permission Service
+
+↓
+
+Tool Router
+
+↓
+
+Tool</code></pre>
+<hr/>
+<p>代码：</p>
+<pre><code>@Tool(
+&quot;搜索知识库&quot;
+)
+@Permission(
+&quot;USER&quot;
+)
+public String search(){
+
+}</code></pre>
+<hr/>
+<h1 id="八第五步agent日志">八、第五步：Agent日志</h1>
+<p>AI系统最大问题：</p>
+<p>不知道为什么回答。</p>
+<p>需要记录：</p>
+<h2 id="trace链路追踪">Trace【链路追踪】</h2>
+<p>例如：</p>
+<p>一次请求：</p>
+<pre><code>{
+&quot;requestId&quot;:&quot;abc123&quot;,
+
+&quot;userQuestion&quot;:
+&quot;ConcurrentHashMap扩容&quot;,
+
+&quot;agentPlan&quot;:
+[
+&quot;searchKnowledge&quot;
+],
+
+&quot;tool&quot;:
+&quot;milvusSearch&quot;,
+
+&quot;tokens&quot;:
+1200,
+
+&quot;time&quot;:
+2300
+}</code></pre>
+<hr/>
+<p>可以使用：</p>
+<ul class="lvl"><li>Micrometer</li></ul>
+<ul class="lvl"><li>Prometheus</li></ul>
+<ul class="lvl"><li>Grafana</li></ul>
+<hr/>
+<h1 id="九第六步token成本统计">九、第六步：Token成本统计</h1>
+<p>企业非常关注。</p>
+<p>记录：</p>
+<p>输入：</p>
+<pre><code>prompt tokens</code></pre>
+<p>输出：</p>
+<pre><code>completion tokens</code></pre>
+<p>例如：</p>
+<pre><code>{
+&quot;inputTokens&quot;:1200,
+
+&quot;outputTokens&quot;:500,
+
+&quot;total&quot;:1700
+}</code></pre>
+<p>用途：</p>
+<p>控制成本。</p>
+<hr/>
+<h1 id="十第七步evaluation评测系统">十、第七步：Evaluation【评测系统】</h1>
+<p>这是很多 AI 项目缺少的。</p>
+<p>不能：</p>
+<p>&quot;感觉效果不错&quot;</p>
+<p>需要测试。</p>
+<hr/>
+<p>建立：</p>
+<p>Golden Dataset【黄金测试集】</p>
+<p>例如：</p>
+<pre><code>[
+{
+&quot;question&quot;:
+&quot;HashMap扩容机制&quot;,
+
+&quot;expected&quot;:
+[
+&quot;数组&quot;,
+&quot;链表&quot;,
+&quot;红黑树&quot;,
+&quot;resize&quot;
+]
+}
+]</code></pre>
+<hr/>
+<p>自动评估：</p>
+<p>指标：</p>
+<h2 id="1-retrieval-accuracy检索准确率">1. Retrieval Accuracy【检索准确率】</h2>
+<p>RAG有没有找到正确文档。</p>
+<h2 id="2-answer-quality回答质量">2. Answer Quality【回答质量】</h2>
+<p>答案是否完整。</p>
+<h2 id="3-hallucination幻觉">3. Hallucination【幻觉】</h2>
+<p>是否编造。</p>
+<hr/>
+<h1 id="十一第八步异常处理">十一、第八步：异常处理</h1>
+<p>生产必须考虑：</p>
+<h2 id="llm超时">LLM超时</h2>
+<p>例如：</p>
+<p>30秒没返回。</p>
+<p>处理：</p>
+<pre><code>Timeout
+
+↓
+
+Retry
+
+↓
+
+Fallback</code></pre>
+<hr/>
+<h2 id="模型不可用">模型不可用</h2>
+<p>例如：</p>
+<p>Qwen挂了。</p>
+<p>备用：</p>
+<pre><code>Qwen
+
+↓
+
+DeepSeek
+
+↓
+
+GPT</code></pre>
+<hr/>
+<h1 id="十二第九步docker部署">十二、第九步：Docker部署</h1>
+<p>最终：</p>
+<p>docker-compose:</p>
+<pre><code>services:
+
+
+springboot:
+
+ image:
+ java-agent
+
+
+milvus:
+
+ image:
+ milvus
+
+
+redis:
+
+ image:
+ redis
+
+
+ollama:
+
+ image:
+ ollama</code></pre>
+<hr/>
+<p>启动：</p>
+<pre><code>docker compose up</code></pre>
+<hr/>
+<h1 id="十三最终项目架构">十三、最终项目架构</h1>
+<p>现在你的项目：</p>
+<h1 id="java-ai-interview-agent">Java AI Interview Agent</h1>
+<p>完整链路：</p>
+<pre><code> id=&quot;w0p5x4&quot;
+用户
+
+↓
+
+Vue3
+
+↓
+
+Spring Boot
+
+↓
+
+LangChain4j Agent
+
+↓
+
+Planner
+
+↓
+
+Tool Calling
+
+├── Milvus RAG
+
+├── Resume Analyzer
+
+├── Evaluation Tool
+
+└── Memory
+
+
+↓
+
+Prompt Assembly
+
+
+↓
+
+Qwen + LoRA
+
+
+↓
+
+SSE Streaming
+
+
+↓
+
+用户</code></pre>
+<hr/>
+<h1 id="十四面试30秒回答">十四、面试30秒回答</h1>
+<p>如果面试官问：</p>
+<blockquote><p>你做过 Agent 项目吗？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>我实现过一个 Java AI Interview Agent，整体基于 Spring Boot 和 LangChain4j。系统通过 Agent 负责任务规划，通过 Tool Calling 调用知识库检索、简历分析和评分工具，RAG 使用 Milvus 存储企业知识文档，同时结合 QLoRA 微调 Qwen 模型，使模型具备 Java 面试场景下的回答风格。系统支持 SSE 流式输出、Redis 会话记忆、Prompt 管理以及评测和日志追踪。</p></blockquote>
+<hr/>
+<h1 id="十五到这里你的-ai-工程能力地图">十五、到这里你的 AI 工程能力地图</h1>
+<p>你已经覆盖：</p>
+<pre><code>基础模型
+    ↓
+Prompt Engineering
+    ↓
+Embedding
+    ↓
+RAG
+    ↓
+Vector Database
+    ↓
+Fine-tuning
+    ↓
+LoRA/QLoRA
+    ↓
+Tool Calling
+    ↓
+Agent
+    ↓
+MCP
+    ↓
+Production Engineering</code></pre>
+<p>这套能力已经不是“调用 API 做 Demo”，而是完整 <strong>AI Application Engineer【AI 应用工程师】能力链路</strong>。</p>
+<hr/>
+<p>下一阶段建议：</p>
+<h1 id="day8把这个项目包装成真实求职项目">Day8：把这个项目包装成真实求职项目</h1>
+<p>内容：</p>
+<ul class="lvl"><li>项目背景设计</li></ul>
+<ul class="lvl"><li>架构图</li></ul>
+<ul class="lvl"><li>简历描述</li></ul>
+<ul class="lvl"><li>技术难点</li></ul>
+<ul class="lvl"><li>面试100问</li></ul>
+<ul class="lvl"><li>如何避免“微调模型”被面试官追问穿</li></ul>
+<p>因为对于你目前求职目标（Java + AI），<strong>工程落地表达能力比继续堆技术更重要。</strong></p>
+</main>
+</body>
+</html>

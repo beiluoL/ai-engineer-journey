@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 03 — Dataset：切分必须发生在训词表之前</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-03-dataset切分必须发生在训词表之前">Milestone 03 — Dataset：切分必须发生在训词表之前</h1>
+<p>M02 解决了&quot;文本怎么变成 id&quot;。这一章解决&quot;id 怎么变成训练样本&quot;，而它的核心不是滑窗，是<strong>两条泄漏路径</strong>：</p>
+<ul class="lvl"><li><strong>重复行</strong>同时出现在 train 和 val —— 验证指标会虚高，因为模型&quot;见过&quot;其中一份。</li><li><strong>用全量语料训词表</strong> —— 验证集里的字符提前进了词表，等于是把答案的字母表给了模型。</li></ul>
+<p>第二条比第一条隐蔽得多，而且 M02 已经证明它<strong>确实发生了</strong>（验证集有 23 个字符在词表之外）。</p>
+<hr/>
+<h2 id="1-why样本的等价性写成不变量而不是应该没错">1. Why：样本的等价性写成不变量，而不是&quot;应该没错&quot;</h2>
+<p>滑窗打包很容易写出&quot;看起来对&quot;的实现。所以本章把三条不变量做成<strong>可断言的事实</strong>：</p>
+<ul class="lvl"><li><code>y = x</code> 右移一位（语言模型的定义）；</li><li>样本之间插入 <code>&lt;eos&gt;</code>（否则最后一位的下一 token 是下一行开头，模型会学到<strong>跨句子的假因果</strong>）；</li><li>padding 位置的 <code>mask = 0</code>（不 mask 就等于让模型去预测 <code>&lt;pad&gt;</code>）。</li></ul>
+<p>不变量能被断言，就说明它不是&quot;我记得应该这样&quot;。</p>
+<h2 id="2-design五步流水线-两条泄漏护栏">2. Design：五步流水线 + 两条泄漏护栏</h2>
+<pre><code>① 清洗（去空行 / 短于 min_chars / 去重）
+② 切分（Random(seed) 按行切 → train / val）
+③ 建词表（只用 train_lines）      ← 泄漏护栏 #1
+④ 编码（train_ids / val_ids）
+⑤ 滑窗打包（pack=True，window=max_len，stride）</code></pre>
+<p><strong>泄漏护栏</strong>：</p>
+<ul class="lvl"><li><code>leakage_check(train, val)</code> 直接求交集，非空就抛错（<code>build_dataset</code> 里的硬检查）；</li><li>流程顺序强制&quot;先 ② 后 ③&quot;，<code>build_dataset</code> 内部不接受外部传入的 tokenizer 之外的口子。</li></ul>
+<p><strong>两种样本构造</strong>（<code>make_examples</code>）：</p>
+<ul class="lvl"><li><code>pack=True</code> —— 把语料首尾相接再滑窗，样本几乎全是有效 token，<strong>少 padding</strong>；本项目选它。</li><li><code>pack=False</code> —— 每行一个样本，行短就大量 padding，浪费算力。</li></ul>
+<figure class="figure"><img alt="M03 数据集流水线与泄漏护栏" src="../../../../../../projects/10-tiny-llm-capstone/assets/dataset.svg" loading="lazy"/><figcaption>M03 数据集流水线与泄漏护栏</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo03datasetterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_03_dataset_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M03 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-03-dataset.png" loading="lazy"/><figcaption>M03 真实运行</figcaption></figure>
+<h3 id="31-清洗">3.1 清洗</h3>
+<pre><code>原始行数            295   含 P06 通用语料
+保留行数            295
+丢弃：短于 min_chars 0   min_chars=8
+丢弃：重复行          0</code></pre>
+<p>清洗&quot;什么都没删&quot;也是有用信息：它说明这份语料质量本身是干净的，后面所有数字都没有被清洗动作影响。</p>
+<h3 id="32-切分与泄漏检查">3.2 切分与泄漏检查</h3>
+<pre><code>train / val 行数     251 / 44
+val_ratio          0.15
+交集行数（应为 0）     0
+数据集是否干净        True</code></pre>
+<h3 id="33-编码后的-token-账">3.3 编码后的 token 账</h3>
+<pre><code>train / val token 数   6384 / 1191
+单行 token 数 均值/中位/最大  25.4 / 25 / 41
+超过 max_len 的行占比   0.00%   max_len=64</code></pre>
+<p><strong>单行最长 41 &lt; max_len 64</strong> ⇒ 截断率 0%。这一行很重要：如果截断率很高，滑窗会把句子尾巴全切掉，而 <code>y</code> 却还在提示&quot;预测下一 token&quot;。</p>
+<h3 id="34-滑窗打包">3.4 滑窗打包</h3>
+<pre><code>pack 模式                True
+窗口长 / 步长             64 / 32
+train 样本数             206
+val 样本数               37
+单个样本形状 x/y/mask     (64,) / (64,) / (64,)
+
+x    =809 855 861 1258 341 857 627 855 1258 1102 ...
+y    =855 861 1258 341 857 627 855 1258 1102 1116 ...
+y 是否等于 x 右移一位       True
+样本之间插入 &lt;eos&gt;        True   不插的话模型会学到跨句子的假因果</code></pre>
+<h3 id="35-padding-与-mask">3.5 padding 与 mask</h3>
+<pre><code>batch 形状            (4, 30)   batch=4, 长度按本批最长补齐
+padding 用的 id       0
+mask 中 1 的比例       85.8%   其余位置 loss 不计入
+mask[0] = 1 1 1 1 1 ... 1 0 0 0 0 0 0
+x[0]    = 809 855 861 1258 341 ... 5 23 21 0 0 0 0 0 0</code></pre>
+<p><code>85.8%</code> 是 <code>pack=True</code> 的直接收益：一格里只有 14.2% 是 padding。换成&quot;每行一个样本&quot;，短行一多这个数字会掉到 50% 以下。</p>
+<h3 id="36-batch-迭代与语料规模">3.6 batch 迭代与语料规模</h3>
+<pre><code>batch_size        8
+每轮 batch 数       26
+样本覆盖率          206 / 206
+1200 步 ≈ 多少个 epoch   46.2</code></pre>
+<p><strong>46.2 个 epoch</strong> 是本章最刺眼的数字：1200 步训练里，同一份 206 个样本被反复看了 46 遍。这不是 bug，是语料太小 —— M06 的过拟合曲线和早停机制，根因就写在这里。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>&quot;清洗没删任何东西&quot;也要报出来。</strong> 如果清洗悄悄删掉了 40% 的行，后面所有&quot;语料 295 行&quot;的论述就都是错的。统计是证据的一部分。</li><li><strong><code>&lt;eos&gt;</code> 不插，模型会学到跨句假因果。</strong> 滑窗把 <code>...答：模型会以 token token。</code> 和下一行 <code>问：什么是 RAG？答：...</code> 接在一起，<code>y</code> 就会在两个完全不同的话题之间求&quot;下一 token&quot;。这类错误在 loss 曲线上<strong>完全看不出来</strong>。</li><li><strong>padding id 用 0 是危险的默认值。</strong> 如果 0 同时也是某个真实 token 的 id，mask 写错就会静默地教模型预测一个不存在的词。本项目显式定义了 <code>PAD_ID</code>，并在 demo 里断言&quot;padding 位置确实用了 PAD_ID&quot;。</li><li><strong><code>val_ratio=0.15</code> 在 295 行上只切出 44 行</strong>，其中「问：…答：…」的完整问答对只剩 7 对（M07 用到）。小语料上，验证集能承载的评测能力比想象中弱得多。</li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>五步流水线：清洗（295 → 295）→ 切分（251 / 44）→ 建词表（<strong>只用 train</strong>）→ 编码（6384 / 1191 token）→ 滑窗（206 / 37 样本）。</li><li><strong>泄漏两条路都堵住了</strong>：重复行交集 0；词表只用训练集，验证集的 23 个 OOV 字符就是护栏生效的证据。</li><li>三条不变量全部有断言：<code>y = x 右移一位</code> True；样本间插 <code>&lt;eos&gt;</code> True；padding 位置 <code>mask=0</code>（本批 1 占 85.8%）。</li><li>截断率 <strong>0.00%</strong>（单行最长 41 &lt; max_len 64），所以滑窗没有丢句子尾巴。</li><li><strong>1200 步 = 46.2 个 epoch</strong> —— 这个数字预告了 M06 的过拟合，也是&quot;小语料上必须早停&quot;的定量依据。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/data.py</code></td><td><code>load_corpus</code> / <code>clean_lines</code> / <code>split_lines</code> / <code>leakage_check</code> / <code>make_examples</code>（两种打包）/ <code>pad_batch</code> / <code>batch_iter</code> / <code>build_dataset</code> / <code>dataset_report</code></td></tr><tr><td><code>demos/demo_03_dataset.py</code></td><td>6 节：清洗 / 切分与泄漏 / token 账 / 滑窗打包 / padding mask / batch 迭代</td></tr><tr><td><code>demos/out/demo_03_dataset_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/dataset.svg</code></td><td>五步流水线 + 两条泄漏路径 + 三条不变量</td></tr><tr><td><code>assets/term-03-dataset.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.2 → <strong>v0.3</strong>，数据集落地且泄漏被显式证伪。实测：清洗无丢弃（295 → 295）；train 251 / val 44、交集 <strong>0</strong> 行；编码 6384 / 1191 token，截断率 0.00%；滑窗产出 206 / 37 个样本，<code>y = x 右移一位</code>、样本间插 <code>&lt;eos&gt;</code>、padding <code>mask=0</code>（mask 有效率 85.8%）三条不变量全部成立。并量出 1200 步 ≈ <strong>46.2 个 epoch</strong>，为 M06 的早停提供定量依据。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

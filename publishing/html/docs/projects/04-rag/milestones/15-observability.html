@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>15 — Observability（可观测性）</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="15-observability可观测性">15 — Observability（可观测性）</h1>
+<blockquote><p>14 章回答的是「答得准不准」，这一章回答另一组问题：<strong>慢在哪、召回有没有退化、钱花在哪</strong>。 这三个问题光看日志答不上来——日志是逐条的事件，而这三个是<strong>聚合的分布</strong>。</p></blockquote>
+<figure class="figure"><img alt="真实运行：6 次真实问答后的完整指标报告" src="../../../../../../projects/04-rag/assets/term-metrics-report.png" loading="lazy"/><figcaption>真实运行：6 次真实问答后的完整指标报告</figcaption></figure>
+<h2 id="0-这章解决什么问题">0. 这章解决什么问题</h2>
+<p>RAG 服务上线后最先被问到的三句话，没有一句是「功能对不对」：</p>
+<table><thead><tr><th>问题</th><th>需要的数据</th><th>对应指标</th></tr></thead><tbody><tr><td>「怎么这么慢？」</td><td>各阶段耗时分布</td><td><code>rag.request.latency</code> + 四段分段耗时</td></tr><tr><td>「召回是不是退化了？」</td><td>相似度分数的分布</td><td><code>rag.retrieve.score</code> + 分桶</td></tr><tr><td>「这个月 API 账单怎么算的？」</td><td>外部调用次数</td><td><code>embedding.calls/texts</code>、<code>llm.calls</code></td></tr></tbody></table>
+<p>逐条日志给不出这三问的答案：日志适合排查<strong>单次</strong>故障，分布才适合回答<strong>整体</strong>健康度。</p>
+<h2 id="1-设计一层薄的计数器不是监控系统">1. 设计：一层薄的计数器，不是监控系统</h2>
+<p>新增 <code>src/rag/metrics.py</code>，核心是 <code>MetricsRegistry</code>——进程内的 counter / timing / score 三种样本，加锁保证线程安全。</p>
+<p>三个关键决策：</p>
+<p><strong>① 内部一律存秒，出报告才转毫秒。</strong> 早期版本直接存毫秒，结果一处取秒、一处取毫秒，p99 差了 1000 倍都没人发现。SI 基准单位只有一个，换算只发生在渲染层。</p>
+<p><strong>② 埋点用装饰器包装，不改 client 内部。</strong> <code>MeteredEmbeddingClient</code> / <code>MeteredLLMClient</code> 包在真实客户端外面转发调用：</p>
+<pre><code>class MeteredLLMClient(BaseLLMClient):
+    def chat(self, messages: list[dict]) -&gt; str:
+        self.registry.inc(Names.LLM_CALLS)
+        t0 = time.perf_counter()
+        try:
+            return self._inner.chat(messages)
+        except Exception:
+            self.registry.inc(Names.LLM_ERRORS)
+            raise
+        finally:
+            self.registry.observe(Names.LLM_LATENCY, time.perf_counter() - t0)</code></pre>
+<p>「计量」和「怎么调模型」是两个职责，写死进 <code>OpenAICompatibleLLMClient</code> 会让它同时承担协议适配和统计，测试时还得想办法关掉统计。包一层则完全不包就是原客户端。失败也要记耗时——<strong>超时的那次往往是最慢的，只记成功会把 p99 洗得很好看</strong>。</p>
+<p><strong>③ 分位数用线性插值，不用 nearest-rank。</strong> 样本少（比如只有 3 次调用）时 nearest-rank 只会给出已有的某个值，p90 永远等于 max，看着像「每次都最慢」。插值在样本少时更诚实。</p>
+<h2 id="2-埋点位置与口径">2. 埋点位置与口径</h2>
+<p><code>RAGService</code> 增加可选 <code>metrics</code> 参数，总是持有一个 registry（没传就内部建），埋点代码不用判空，外部读指标取 <code>service.metrics</code>——<strong>免去改 <code>build_components</code> 五元组返回签名</strong>（那一改要动全部测试和 demo）。</p>
+<pre><code>ask(query)
+ ├─ rag.request.latency      端到端（try/finally，失败也记）
+ ├─ rag.retrieve.latency     检索段
+ ├─ rag.rerank.latency       精排段
+ ├─ rag.assemble.latency     组装段
+ ├─ rag.generate.latency     生成段（语义 3 重试两次就记两次）
+ │    └─ llm.latency         单次 LLM 调用（MeteredLLMClient，不含重试）
+ ├─ rag.retrieve.score       分数采样：截断之后、min_score 过滤之前
+ └─ rag.requests / rag.refusals</code></pre>
+<p>两个口径故意分开：<code>rag.generate.latency</code>（这一趟生成总共多久，可能含重试）和 <code>llm.latency</code>（单次调用）。混成一个的话，「重试变多」和「单次变慢」就分不开了。</p>
+<p><strong>分数为什么在「截断之后、过滤之前」采样？</strong> 这才是 top_k 真正拿到的那批质量。过滤后再采样，会把「召回全是噪声」洗成「分数不错」——被 min_score 拦掉的恰恰是最该看见的样本。</p>
+<p>另一个容易被忽略的事实：<code>min_score</code> 是在 <code>ContextAssembler</code> <strong>构造时</strong>定死的，不是每次 build 读 settings。改了 <code>settings.min_score</code> 却没重建 assembler，闸门其实没变——写测试造「检索为空」场景时踩到一次。</p>
+<h2 id="3-真实运行123-秒问答告诉我们的三件事">3. 真实运行：12.3 秒问答告诉我们的三件事</h2>
+<p>6 条库内问题 + 1 条库外问题，真实百炼 embedding + 真实 DeepSeek，总计 12.3s：</p>
+<p><strong>发现一：慢在生成，不在检索。</strong> 端到端均值 2045.6ms，其中生成 1653.5ms（80.8%）、检索 391.8ms（19.2%）、精排 0.2ms、组装 0.05ms。优化优先级一目了然——换更快的模型 / 缩短输出，而不是优化向量检索。对比离线模式（Fake 全在内存里），检索反而占 74%：<strong>占比结论只在真实链路上成立，离线数不能用来做性能判断</strong>。</p>
+<figure class="figure"><img alt="真实运行：四段耗时占比 + 拒答省钱实证" src="../../../../../../projects/04-rag/assets/term-metrics-stage.png" loading="lazy"/><figcaption>真实运行：四段耗时占比 + 拒答省钱实证</figcaption></figure>
+<p><strong>发现二：<code>min_score=0.2</code> 对百炼 embedding 形同虚设。</strong> 30 个召回样本的分数最低 0.228、均值 0.506，<strong>没有一个落进 &lt;0.2 的桶</strong>。余弦相似度的绝对量级在不同模型之间不可比：bge-m3 / 百炼对中文的分数普遍偏高，0.2 这种「通用阈值」在这里永远拦不住任何东西。阈值必须按实际分布校准（比如取 p10）。</p>
+<p><strong>发现三：拒答省钱的闸门其实在 rerank，不在 min_score。</strong> 库外问题「2026 年世界杯冠军」的粗召回分数 0.327 / 0.295 / 0.311，全都高于 0.2，看起来该进 prompt；最终 <code>llm.calls</code> 增量却是 <strong>0</strong>——真正把它拦下来的是 FakeReranker 重打分之后的低分。这提醒我们：<strong>链路上每一道闸门都要单独验证，不能只看粗召回分数</strong>。</p>
+<p><strong>发现四：并发计数不丢。</strong> 4 线程同时问，<code>rag.requests</code> 增量正好是 4。Web API 里 <code>/ask</code> 是 <code>asyncio.to_thread</code> 跑的，字典的 <code>+=</code> 不是原子操作，不加锁会在压测时丢计数——丢的偏偏是「调用次数」这种最不该丢的数（计费对账就靠它）。</p>
+<figure class="figure"><img alt="真实运行：并发计数校验 + 口径纪律" src="../../../../../../projects/04-rag/assets/term-metrics-concurrent.png" loading="lazy"/><figcaption>真实运行：并发计数校验 + 口径纪律</figcaption></figure>
+<h2 id="4-踩坑清单">4. 踩坑清单</h2>
+<ul class="lvl"><li><strong>离线模式下拒答测出 <code>llm.calls</code> 增量 1</strong>——<code>FakeEmbeddingClient</code> 是 char-ngram 哈希，什么查询都召回；<code>FakeLLMClient</code> 发现资料与问题重叠不足，返回拒答话术。拒答发生在 <strong>LLM 之后</strong>而不是闸门。所以 demo 第④节改成「拿分数说话」，两种模式各自给出诚实结论，而不是硬写「省下一次 LLM」。</li><li><strong>改 <code>settings.min_score</code> 不生效</strong>——<code>ContextAssembler(min_score=...)</code> 构造时固化。测试里换成重建 assembler 才造出「检索为空」。</li><li><strong>包装器让 <code>isinstance(service._llm, FakeLLMClient)</code> 失败</strong>——计量壳改变了静态类型。给两个包装器加 <code>inner</code> 属性，测试穿透一层断言，本意不变。</li><li><strong>pytest 函数名里写括号</strong>（<code>test_并发计数不丢(异步无关)</code>）会被当成参数化标记直接收集报错。中文测试名可以，括号不行。</li><li><strong>p99/p50 抖动判读需要足够样本</strong>——2 个样本时插值 p50≈1.05、p99≈1.98，比值不到 2，判读永远不触发。判读逻辑要有「样本够了才说话」的自觉，测试里用 9 快 1 慢的构造触发它。</li></ul>
+<h2 id="5-自检清单">5. 自检清单</h2>
+<ul class="lvl"><li>[x] 指标名集中在 <code>Names</code>，没有散落的裸字符串</li><li>[x] 计数、耗时、分数三类样本分开存；snapshot 一次拿全（避免「请求数」与「耗时数」来自不同时刻）</li><li>[x] 失败请求也进耗时分布；<code>llm.errors</code> / <code>embedding.errors</code> 单独计数</li><li>[x] <code>rag.generate.latency</code>（含重试）与 <code>llm.latency</code>（单次）口径分离并写进文档</li><li>[x] 分数采样在截断后、过滤前；分桶边界与 <code>min_score</code> 对齐</li><li>[x] <code>/stats</code> 直接返回 <code>metrics.snapshot()</code>，API 层零加工</li><li>[x] 17 项 metrics 单测：并发 20 线程 × 500 次 inc 不丢、异常也计时、分桶守恒</li><li>[x] 报告带自动判读（拒答率 &gt;50%、p99/p50 &gt;5 倍抖动、最低桶占比）</li></ul>
+</main>
+</body>
+</html>

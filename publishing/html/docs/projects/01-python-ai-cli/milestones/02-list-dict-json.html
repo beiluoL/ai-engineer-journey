@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lesson 02 — List / Dict → JSON → AI Messages</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="lesson-02-list-dict-json-ai-messages">Lesson 02 — List / Dict → JSON → AI Messages</h1>
+<blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   本章项目：AI Engineer 学习档案升级版 + CLI 对话记录器</p></blockquote>
+<hr/>
+<h1 id="1-这一次我们要解决什么问题">1. 这一次我们要解决什么问题？</h1>
+<p>上一章，我们做出了一个简单的：</p>
+<blockquote><p><strong>AI Engineer 学习档案生成器</strong></p></blockquote>
+<p>它只能保存一个人的一些信息：</p>
+<pre><code>姓名
+职业
+学习时间
+学习方向</code></pre>
+<p>现在需求升级。</p>
+<p>我们希望程序能够做到：</p>
+<pre><code>一个人
+ ↓
+多个学习方向
+ ↓
+多条学习记录
+ ↓
+保存学习记录
+ ↓
+查看历史记录</code></pre>
+<p>然后进一步：</p>
+<pre><code>用户
+ ↓
+输入问题
+ ↓
+程序保存消息
+ ↓
+多条消息组成对话历史
+ ↓
+最终形成 AI API 的 messages</code></pre>
+<p>于是我们会自然遇到：</p>
+<pre><code>List【列表】
+Dict【字典】
+List + Dict
+Nested Data【嵌套数据】
+JSON
+messages
+system / user / assistant
+Context【上下文】</code></pre>
+<hr/>
+<h1 id="2-先从项目需求出发">2. 先从项目需求出发</h1>
+<p>假设现在的学习档案需要保存：</p>
+<pre><code>姓名：Beiluo
+职业：Java 开发工程师
+学习方向：Python
+学习方向：LLM
+学习方向：RAG
+学习方向：Agent</code></pre>
+<p>上一章的思路可能是：</p>
+<pre><code>learning_direction = &quot;Python&quot;</code></pre>
+<p>但现在有多个方向。</p>
+<p>那问题来了：</p>
+<blockquote><p><strong>一个变量怎么保存多个值？</strong></p></blockquote>
+<hr/>
+<h1 id="3-第一个新需求保存多个学习方向">3. 第一个新需求：保存多个学习方向</h1>
+<p>最直接的想法：</p>
+<pre><code>direction1 = &quot;Python&quot;
+direction2 = &quot;LLM&quot;
+direction3 = &quot;RAG&quot;
+direction4 = &quot;Agent&quot;</code></pre>
+<p>这当然能工作。</p>
+<p>但马上出现问题：</p>
+<pre><code>如果有 100 个学习方向呢？</code></pre>
+<p>你难道写：</p>
+<pre><code>direction1
+direction2
+direction3
+...
+direction100</code></pre>
+<p>显然不合理。</p>
+<p>我们需要一种：</p>
+<blockquote><p><strong>一个变量保存多个值</strong></p></blockquote>
+<p>的数据结构。</p>
+<p>于是遇到：</p>
+<h1 id="list列表">List【列表】</h1>
+<hr/>
+<h1 id="4-list一次保存多个值">4. List：一次保存多个值</h1>
+<p>修改项目：</p>
+<pre><code>directions = [
+    &quot;Python&quot;,
+    &quot;LLM&quot;,
+    &quot;RAG&quot;,
+    &quot;Agent&quot;
+]</code></pre>
+<p>现在：</p>
+<pre><code>directions
+ ↓
+[&quot;Python&quot;, &quot;LLM&quot;, &quot;RAG&quot;, &quot;Agent&quot;]</code></pre>
+<p>一个变量保存了多个值。</p>
+<hr/>
+<h1 id="5-list-的第一个特点有顺序">5. List 的第一个特点：有顺序</h1>
+<p>例如：</p>
+<pre><code>directions = [
+    &quot;Python&quot;,
+    &quot;LLM&quot;,
+    &quot;RAG&quot;,
+    &quot;Agent&quot;
+]</code></pre>
+<p>可以通过索引访问：</p>
+<pre><code>print(directions[0])
+print(directions[1])
+print(directions[2])
+print(directions[3])</code></pre>
+<p>输出：</p>
+<pre><code>Python
+LLM
+RAG
+Agent</code></pre>
+<p>Python 的索引从 <code>0</code> 开始。</p>
+<pre><code>0 → Python
+1 → LLM
+2 → RAG
+3 → Agent</code></pre>
+<hr/>
+<h1 id="6-为什么顺序很重要">6. 为什么顺序很重要？</h1>
+<p>继续回到我们的项目。</p>
+<p>假设学习路线是：</p>
+<pre><code>Python
+ ↓
+LLM
+ ↓
+RAG
+ ↓
+Agent</code></pre>
+<p>顺序本身就是信息。</p>
+<p>所以 List 非常适合：</p>
+<blockquote><p><strong>保存有顺序的一组数据。</strong></p></blockquote>
+<p>这以后会直接对应：</p>
+<pre><code>消息历史
+学习步骤
+工具列表
+Token 列表
+检索结果</code></pre>
+<hr/>
+<h1 id="7-给-list-增加数据">7. 给 List 增加数据</h1>
+<p>用户可能后来又学习：</p>
+<pre><code>Transformer</code></pre>
+<p>我们不需要重新创建整个 List：</p>
+<pre><code>directions = [
+    &quot;Python&quot;,
+    &quot;LLM&quot;,
+    &quot;RAG&quot;,
+    &quot;Agent&quot;
+]
+
+directions.append(&quot;Transformer&quot;)</code></pre>
+<p>现在：</p>
+<pre><code>print(directions)</code></pre>
+<p>得到：</p>
+<pre><code>[&#x27;Python&#x27;, &#x27;LLM&#x27;, &#x27;RAG&#x27;, &#x27;Agent&#x27;, &#x27;Transformer&#x27;]</code></pre>
+<p><code>append()</code>：</p>
+<blockquote><p>向 List 尾部添加一个元素。</p></blockquote>
+<hr/>
+<h1 id="8-项目第一个升级">8. 项目第一个升级</h1>
+<p>现在重新写学习档案：</p>
+<pre><code>name = &quot;Beiluo&quot;
+role = &quot;Java 开发工程师&quot;
+
+directions = [
+    &quot;Python&quot;,
+    &quot;LLM&quot;,
+    &quot;RAG&quot;,
+    &quot;Agent&quot;
+]
+
+print(f&quot;姓名：{name}&quot;)
+print(f&quot;职业：{role}&quot;)
+print(f&quot;学习方向：{directions}&quot;)</code></pre>
+<p>虽然能跑，但输出不好看：</p>
+<pre><code>学习方向：[&#x27;Python&#x27;, &#x27;LLM&#x27;, &#x27;RAG&#x27;, &#x27;Agent&#x27;]</code></pre>
+<p>我们希望：</p>
+<pre><code>学习方向：
+
+1. Python
+2. LLM
+3. RAG
+4. Agent</code></pre>
+<p>于是又遇到了上一章学过的：</p>
+<pre><code>for</code></pre>
+<p>组合起来：</p>
+<pre><code>for direction in directions:
+    print(direction)</code></pre>
+<hr/>
+<h1 id="9-list-for">9. List + for</h1>
+<p>完整：</p>
+<pre><code>directions = [
+    &quot;Python&quot;,
+    &quot;LLM&quot;,
+    &quot;RAG&quot;,
+    &quot;Agent&quot;
+]
+
+for direction in directions:
+    print(f&quot;- {direction}&quot;)</code></pre>
+<p>输出：</p>
+<pre><code>- Python
+- LLM
+- RAG
+- Agent</code></pre>
+<p>你现在已经开始把不同知识连接起来：</p>
+<pre><code>List
+ +
+for</code></pre>
+<p>这就是我们学习 AI Engineer Journey 的方式：</p>
+<blockquote><p><strong>不是一章只学一个孤立语法，而是让旧知识和新知识不断组合。</strong></p></blockquote>
+<hr/>
+<h1 id="10-新问题来了只有名字还不够">10. 新问题来了：只有名字还不够</h1>
+<p>现在我们的学习方向：</p>
+<pre><code>directions = [
+    &quot;Python&quot;,
+    &quot;LLM&quot;,
+    &quot;RAG&quot;,
+    &quot;Agent&quot;
+]</code></pre>
+<p>但我们还想保存：</p>
+<pre><code>方向
+当前状态
+学习进度</code></pre>
+<p>比如：</p>
+<pre><code>Python
+已完成
+80%
+
+LLM
+学习中
+20%
+
+RAG
+未开始
+0%</code></pre>
+<p>一个字符串显然不够。</p>
+<p>我们需要：</p>
+<blockquote><p><strong>一条数据里面保存多个有名字的字段。</strong></p></blockquote>
+<hr/>
+<h1 id="11-遇到-dict">11. 遇到 Dict</h1>
+<p>Python 提供：</p>
+<h1 id="dict字典">Dict【字典】</h1>
+<p>例如：</p>
+<pre><code>python_skill = {
+    &quot;name&quot;: &quot;Python&quot;,
+    &quot;status&quot;: &quot;学习中&quot;,
+    &quot;progress&quot;: 80
+}</code></pre>
+<p>现在：</p>
+<pre><code>python_skill
+      │
+      ├── name     → Python
+      ├── status   → 学习中
+      └── progress → 80</code></pre>
+<p>Dict 使用：</p>
+<pre><code>key → value
+键  → 值</code></pre>
+<hr/>
+<h1 id="12-访问-dict">12. 访问 Dict</h1>
+<p>例如：</p>
+<pre><code>print(python_skill[&quot;name&quot;])
+print(python_skill[&quot;status&quot;])
+print(python_skill[&quot;progress&quot;])</code></pre>
+<p>结果：</p>
+<pre><code>Python
+学习中
+80</code></pre>
+<p>这里和上一章变量不一样。</p>
+<p>以前：</p>
+<pre><code>name = &quot;Beiluo&quot;</code></pre>
+<p>直接通过：</p>
+<pre><code>name</code></pre>
+<p>访问。</p>
+<p>现在：</p>
+<pre><code>python_skill = {
+    &quot;name&quot;: &quot;Python&quot;,
+    &quot;status&quot;: &quot;学习中&quot;,
+    &quot;progress&quot;: 80
+}</code></pre>
+<p>通过：</p>
+<pre><code>python_skill[&quot;name&quot;]</code></pre>
+<p>访问。</p>
+<hr/>
+<h1 id="13-java-开发者怎么理解-dict">13. Java 开发者怎么理解 Dict？</h1>
+<p>你可以先类比：</p>
+<pre><code>Python dict
+≈
+Java Map</code></pre>
+<p>Python：</p>
+<pre><code>python_skill = {
+    &quot;name&quot;: &quot;Python&quot;,
+    &quot;status&quot;: &quot;学习中&quot;,
+    &quot;progress&quot;: 80
+}</code></pre>
+<p>Java：</p>
+<pre><code>Map&lt;String, Object&gt; pythonSkill = new HashMap&lt;&gt;();
+
+pythonSkill.put(&quot;name&quot;, &quot;Python&quot;);
+pythonSkill.put(&quot;status&quot;, &quot;学习中&quot;);
+pythonSkill.put(&quot;progress&quot;, 80);</code></pre>
+<p>但记住：</p>
+<blockquote><p>这里只是帮助迁移思维，两者的类型系统和底层实现并不完全相同。</p></blockquote>
+<hr/>
+<h1 id="14-list-和-dict-终于开始组合">14. List 和 Dict 终于开始组合</h1>
+<p>我们现在有：</p>
+<pre><code>python_skill = {
+    &quot;name&quot;: &quot;Python&quot;,
+    &quot;status&quot;: &quot;学习中&quot;,
+    &quot;progress&quot;: 80
+}
+
+llm_skill = {
+    &quot;name&quot;: &quot;LLM&quot;,
+    &quot;status&quot;: &quot;学习中&quot;,
+    &quot;progress&quot;: 20
+}</code></pre>
+<p>那多个技能怎么办？</p>
+<p>可以：</p>
+<pre><code>skills = [
+    python_skill,
+    llm_skill
+]</code></pre>
+<p>也可以直接写：</p>
+<pre><code>skills = [
+    {
+        &quot;name&quot;: &quot;Python&quot;,
+        &quot;status&quot;: &quot;学习中&quot;,
+        &quot;progress&quot;: 80
+    },
+    {
+        &quot;name&quot;: &quot;LLM&quot;,
+        &quot;status&quot;: &quot;学习中&quot;,
+        &quot;progress&quot;: 20
+    }
+]</code></pre>
+<p>这就是：</p>
+<h1 id="list-dict">List + Dict</h1>
+<hr/>
+<h1 id="15-这个结构非常重要">15. 这个结构非常重要</h1>
+<p>现在：</p>
+<pre><code>skills = [
+    {
+        &quot;name&quot;: &quot;Python&quot;,
+        &quot;status&quot;: &quot;学习中&quot;,
+        &quot;progress&quot;: 80
+    },
+    {
+        &quot;name&quot;: &quot;LLM&quot;,
+        &quot;status&quot;: &quot;学习中&quot;,
+        &quot;progress&quot;: 20
+    }
+]</code></pre>
+<p>数据关系：</p>
+<pre><code>skills
+  ↓
+List
+  │
+  ├── Dict
+  │    ├── name
+  │    ├── status
+  │    └── progress
+  │
+  └── Dict
+       ├── name
+       ├── status
+       └── progress</code></pre>
+<p>这就是：</p>
+<blockquote><p><strong>结构化数据【Structured Data】</strong></p></blockquote>
+<hr/>
+<h1 id="16-为什么-ai-开发特别喜欢这种结构">16. 为什么 AI 开发特别喜欢这种结构？</h1>
+<p>因为现实中的 AI 应用有大量“对象列表”。</p>
+<p>例如：</p>
+<pre><code>用户列表
+订单列表
+搜索结果
+文档列表
+工具列表
+消息列表</code></pre>
+<p>一条数据有多个字段：</p>
+<pre><code>name
+status
+content
+id
+metadata</code></pre>
+<p>多个数据：</p>
+<pre><code>List</code></pre>
+<p>所以：</p>
+<pre><code>List + Dict</code></pre>
+<p>会成为 Python AI 开发中非常常见的数据结构。</p>
+<hr/>
+<h1 id="17-项目继续升级学习记录">17. 项目继续升级：学习记录</h1>
+<p>现在我们希望保存：</p>
+<pre><code>2026-09-17
+学习 Python
+学习 2 小时
+
+2026-09-18
+学习 LLM
+学习 3 小时</code></pre>
+<p>我们可以设计成：</p>
+<pre><code>records = [
+    {
+        &quot;date&quot;: &quot;2026-09-17&quot;,
+        &quot;topic&quot;: &quot;Python&quot;,
+        &quot;hours&quot;: 2
+    },
+    {
+        &quot;date&quot;: &quot;2026-09-18&quot;,
+        &quot;topic&quot;: &quot;LLM&quot;,
+        &quot;hours&quot;: 3
+    }
+]</code></pre>
+<p>现在你应该能读懂：</p>
+<pre><code>records
+ ↓
+List
+ ↓
+每一条记录
+ ↓
+Dict
+ ↓
+date / topic / hours</code></pre>
+<hr/>
+<h1 id="18-用-for-遍历结构化数据">18. 用 for 遍历结构化数据</h1>
+<pre><code>for record in records:
+    print(
+        f&quot;{record[&#x27;date&#x27;]}：&quot;
+        f&quot;学习 {record[&#x27;topic&#x27;]}，&quot;
+        f&quot;{record[&#x27;hours&#x27;]} 小时&quot;
+    )</code></pre>
+<p>输出：</p>
+<pre><code>2026-09-17：学习 Python，2 小时
+2026-09-18：学习 LLM，3 小时</code></pre>
+<p>注意这里出现了：</p>
+<pre><code>record[&quot;topic&quot;]</code></pre>
+<p>这就是：</p>
+<pre><code>List
+ ↓
+取出一个 Dict
+ ↓
+读取 Dict 中的字段</code></pre>
+<hr/>
+<h1 id="19-项目继续升级数据越来越结构化">19. 项目继续升级：数据越来越结构化</h1>
+<p>现在我们的项目已经有：</p>
+<pre><code>profile = {
+    &quot;name&quot;: &quot;Beiluo&quot;,
+    &quot;role&quot;: &quot;Java 开发工程师&quot;
+}</code></pre>
+<p>以及：</p>
+<pre><code>skills = [
+    {
+        &quot;name&quot;: &quot;Python&quot;,
+        &quot;status&quot;: &quot;学习中&quot;,
+        &quot;progress&quot;: 80
+    },
+    {
+        &quot;name&quot;: &quot;LLM&quot;,
+        &quot;status&quot;: &quot;学习中&quot;,
+        &quot;progress&quot;: 20
+    }
+]</code></pre>
+<p>以及：</p>
+<pre><code>records = [
+    {
+        &quot;date&quot;: &quot;2026-09-17&quot;,
+        &quot;topic&quot;: &quot;Python&quot;,
+        &quot;hours&quot;: 2
+    }
+]</code></pre>
+<p>这时候出现一个新问题：</p>
+<blockquote><p><strong>这些数据如果想保存到文件怎么办？</strong></p></blockquote>
+<hr/>
+<h1 id="20-为什么需要-json">20. 为什么需要 JSON？</h1>
+<p>假设程序今天关闭。</p>
+<p>我们内存中的：</p>
+<pre><code>skills</code></pre>
+<p>也就没了。</p>
+<p>所以我们需要：</p>
+<blockquote><p><strong>把 Python 数据保存下来。</strong></p></blockquote>
+<p>一种非常常见的方式就是：</p>
+<h1 id="jsonjavascript-object-notationjavascript-对象表示法">JSON【JavaScript Object Notation，JavaScript 对象表示法】</h1>
+<p>JSON 是一种广泛使用的数据交换格式。</p>
+<p>例如：</p>
+<pre><code>{
+  &quot;name&quot;: &quot;Beiluo&quot;,
+  &quot;role&quot;: &quot;Java 开发工程师&quot;
+}</code></pre>
+<p>它非常适合表达结构化数据。</p>
+<hr/>
+<h1 id="21-python-dict-和-json-很像">21. Python Dict 和 JSON 很像</h1>
+<p>Python：</p>
+<pre><code>profile = {
+    &quot;name&quot;: &quot;Beiluo&quot;,
+    &quot;role&quot;: &quot;Java 开发工程师&quot;
+}</code></pre>
+<p>JSON：</p>
+<pre><code>{
+  &quot;name&quot;: &quot;Beiluo&quot;,
+  &quot;role&quot;: &quot;Java 开发工程师&quot;
+}</code></pre>
+<p>看起来非常接近。</p>
+<p>但：</p>
+<blockquote><p><strong>Python Dict 和 JSON 不是同一个东西。</strong></p></blockquote>
+<p>Python Dict 是 Python 程序中的数据结构。</p>
+<p>JSON 是一种数据表示 / 交换格式。</p>
+<p>可以先理解成：</p>
+<pre><code>Python 对象
+   ↓
+序列化
+   ↓
+JSON
+   ↓
+保存 / 网络传输</code></pre>
+<hr/>
+<h1 id="22-python-如何把-dict-转成-json">22. Python 如何把 Dict 转成 JSON？</h1>
+<p>Python 自带：</p>
+<pre><code>import json</code></pre>
+<p>然后：</p>
+<pre><code>profile = {
+    &quot;name&quot;: &quot;Beiluo&quot;,
+    &quot;role&quot;: &quot;Java 开发工程师&quot;
+}
+
+json_text = json.dumps(
+    profile,
+    ensure_ascii=False,
+    indent=2
+)
+
+print(json_text)</code></pre>
+<p>输出：</p>
+<pre><code>{
+  &quot;name&quot;: &quot;Beiluo&quot;,
+  &quot;role&quot;: &quot;Java 开发工程师&quot;
+}</code></pre>
+<p><code>json.dumps()</code>：</p>
+<blockquote><p><strong>把 Python 数据序列化为 JSON 字符串。</strong></p></blockquote>
+<hr/>
+<h1 id="23-json-再转回-python">23. JSON 再转回 Python</h1>
+<p>如果我们得到 JSON：</p>
+<pre><code>json_text = &quot;&quot;&quot;
+{
+    &quot;name&quot;: &quot;Beiluo&quot;,
+    &quot;role&quot;: &quot;Java 开发工程师&quot;
+}
+&quot;&quot;&quot;</code></pre>
+<p>可以：</p>
+<pre><code>profile = json.loads(json_text)</code></pre>
+<p>然后：</p>
+<pre><code>print(profile[&quot;name&quot;])</code></pre>
+<p>输出：</p>
+<pre><code>Beiluo</code></pre>
+<p><code>json.loads()</code>：</p>
+<blockquote><p><strong>把 JSON 数据解析成 Python 对象。</strong></p></blockquote>
+<p>记住：</p>
+<pre><code>dumps
+Python
+ ↓
+JSON
+
+loads
+JSON
+ ↓
+Python</code></pre>
+<p>可以把它暂时记成：</p>
+<blockquote><p><code>dump</code> = 导出去   <code>load</code> = 加载回来</p></blockquote>
+<figure class="figure"><img alt="真实运行：list / dict 操作与 json.dumps(indent=2)、json.loads 读回" src="../../../../../../projects/01-python-ai-cli/assets/term-list-dict-json.png" loading="lazy"/><figcaption>真实运行：list / dict 操作与 json.dumps(indent=2)、json.loads 读回</figcaption></figure>
+<figure class="figure"><img alt="真实运行：第 6-8 节——json.dumps 序列化、json.loads 读回的类型变化、不加 indent 的对比" src="../../../../../../projects/01-python-ai-cli/assets/term-json-roundtrip.png" loading="lazy"/><figcaption>真实运行：第 6-8 节——json.dumps 序列化、json.loads 读回的类型变化、不加 indent 的对比</figcaption></figure>
+<hr/>
+<h1 id="24-项目第一次真正保存数据">24. 项目第一次真正保存数据</h1>
+<p>我们现在做：</p>
+<pre><code>import json
+
+profile = {
+    &quot;name&quot;: &quot;Beiluo&quot;,
+    &quot;role&quot;: &quot;Java 开发工程师&quot;
+}
+
+with open(&quot;profile.json&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    json.dump(
+        profile,
+        file,
+        ensure_ascii=False,
+        indent=2
+    )</code></pre>
+<p>运行以后，会得到：</p>
+<pre><code>profile.json</code></pre>
+<p>内容：</p>
+<pre><code>{
+  &quot;name&quot;: &quot;Beiluo&quot;,
+  &quot;role&quot;: &quot;Java 开发工程师&quot;
+}</code></pre>
+<p>现在：</p>
+<pre><code>程序
+ ↓
+Python Dict
+ ↓
+JSON
+ ↓
+文件</code></pre>
+<p>数据就可以保存下来。</p>
+<hr/>
+<h1 id="25-现在终于进入-ai">25. 现在终于进入 AI</h1>
+<p>我们之前说：</p>
+<blockquote><p>Python 数据结构在 AI 里为什么这么重要？</p></blockquote>
+<p>现在终于可以看到一个最典型的例子：</p>
+<h1 id="messages">messages</h1>
+<p>假设我们做一个 AI 聊天程序。</p>
+<p>第一句话：</p>
+<pre><code>用户：你好</code></pre>
+<p>程序需要保存这条消息。</p>
+<p>可以设计：</p>
+<pre><code>message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;你好&quot;
+}</code></pre>
+<p>这一条消息是：</p>
+<h1 id="dict">Dict</h1>
+<hr/>
+<h1 id="26-多条消息怎么办">26. 多条消息怎么办？</h1>
+<p>假设：</p>
+<pre><code>用户：你好
+AI：你好，有什么可以帮助你？
+用户：什么是 Python？</code></pre>
+<p>我们可以：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    },
+    {
+        &quot;role&quot;: &quot;assistant&quot;,
+        &quot;content&quot;: &quot;你好，有什么可以帮助你？&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;什么是 Python？&quot;
+    }
+]</code></pre>
+<p>注意：</p>
+<pre><code>messages
+ ↓
+List
+ ↓
+每条消息
+ ↓
+Dict</code></pre>
+<p>这就是 AI API 中非常重要的数据结构。</p>
+<hr/>
+<h1 id="27-第一次理解-role">27. 第一次理解 <code>role</code></h1>
+<p>为什么不直接：</p>
+<pre><code>messages = [
+    &quot;你好&quot;,
+    &quot;你好，有什么可以帮助你？&quot;,
+    &quot;什么是 Python？&quot;
+]</code></pre>
+<p>因为模型还需要知道：</p>
+<blockquote><p><strong>这句话是谁说的？</strong></p></blockquote>
+<p>所以增加：</p>
+<pre><code>role</code></pre>
+<p>例如：</p>
+<pre><code>user</code></pre>
+<p>表示用户。</p>
+<pre><code>assistant</code></pre>
+<p>表示助手 / 模型。</p>
+<p>后面还会有：</p>
+<pre><code>system</code></pre>
+<p>表示系统消息。</p>
+<hr/>
+<h1 id="28-system">28. <code>system</code></h1>
+<p>例如：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;system&quot;,
+    &quot;content&quot;: &quot;你是一名 Python 教师，请用适合初学者的方式回答。&quot;
+}</code></pre>
+<p>它表达：</p>
+<blockquote><p><strong>模型在本次对话中应该遵循的行为和上下文。</strong></p></blockquote>
+<hr/>
+<h1 id="29-user">29. <code>user</code></h1>
+<p>例如：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 list？&quot;
+}</code></pre>
+<p>表示：</p>
+<blockquote><p>用户当前的问题 / 请求。</p></blockquote>
+<hr/>
+<h1 id="30-assistant">30. <code>assistant</code></h1>
+<p>例如：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;list 是 Python 中保存多个元素的数据结构。&quot;
+}</code></pre>
+<p>表示：</p>
+<blockquote><p>模型此前生成的回答。</p></blockquote>
+<hr/>
+<h1 id="31-完整-messages">31. 完整 messages</h1>
+<p>我们现在组合：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;system&quot;,
+        &quot;content&quot;: &quot;你是一名 Python 教师。&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;什么是 list？&quot;
+    },
+    {
+        &quot;role&quot;: &quot;assistant&quot;,
+        &quot;content&quot;: &quot;list 是 Python 中用于保存多个元素的数据结构。&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;它和 Java 的 List 类似吗？&quot;
+    }
+]</code></pre>
+<p>这段代码非常重要。</p>
+<p>你现在已经第一次看到：</p>
+<h1 id="真正的-ai-数据结构">真正的 AI 数据结构</h1>
+<hr/>
+<h1 id="32-为什么-messages-是-list-dict">32. 为什么 messages 是 List + Dict？</h1>
+<p>拆开看：</p>
+<pre><code>messages = [...]</code></pre>
+<p><code>messages</code>：</p>
+<blockquote><p>List</p></blockquote>
+<p>里面：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;...&quot;,
+    &quot;content&quot;: &quot;...&quot;
+}</code></pre>
+<p>每一条：</p>
+<blockquote><p>Dict</p></blockquote>
+<p>所以：</p>
+<pre><code>messages
+ ↓
+List
+ ↓
+Dict
+ ↓
+role / content</code></pre>
+<p>这不是我们人为为了教学设计出来的。</p>
+<p>这是现代 AI 应用里非常常见的数据组织方式。</p>
+<hr/>
+<h1 id="33-context上下文第一次出现">33. Context【上下文】第一次出现</h1>
+<p>模型在处理：</p>
+<pre><code>它和 Java 的 List 类似吗？</code></pre>
+<p>时，如果只看到这一句话，就不知道：</p>
+<blockquote><p>“它”到底指什么。</p></blockquote>
+<p>但是如果把历史消息一起发送：</p>
+<pre><code>system
+user
+assistant
+user</code></pre>
+<p>模型就拥有了更多上下文。</p>
+<p>所以可以先理解：</p>
+<blockquote><p><strong>Context【上下文】就是模型当前推理时能够看到的信息。</strong></p></blockquote>
+<p>在我们这个阶段：</p>
+<pre><code>messages
+ ↓
+历史消息
+ ↓
+组成当前请求的一部分上下文</code></pre>
+<hr/>
+<h1 id="34-把-python-数据结构和-ai-联系起来">34. 把 Python 数据结构和 AI 联系起来</h1>
+<p>现在回头看：</p>
+<pre><code>List</code></pre>
+<p>解决：</p>
+<blockquote><p>我要保存很多条消息。</p></blockquote>
+<pre><code>Dict</code></pre>
+<p>解决：</p>
+<blockquote><p>我要描述一条消息。</p></blockquote>
+<pre><code>List + Dict</code></pre>
+<p>解决：</p>
+<blockquote><p>我要保存整个对话历史。</p></blockquote>
+<pre><code>JSON</code></pre>
+<p>解决：</p>
+<blockquote><p>我要把这些结构化数据变成方便保存 / 传输的数据格式。</p></blockquote>
+<pre><code>messages</code></pre>
+<p>解决：</p>
+<blockquote><p>我要把对话历史组织成模型 API 能理解的消息结构。</p></blockquote>
+<p>这样学习就串起来了。</p>
+<hr/>
+<h1 id="35-现在建立完整路线描述">35. 现在建立完整路线描述</h1>
+<p>整个数据流：</p>
+<pre><code>用户输入
+   ↓
+Python 字符串
+   ↓
+封装为 Dict
+   ↓
+加入 messages List
+   ↓
+多个 Dict 形成完整消息历史
+   ↓
+序列化为 JSON
+   ↓
+HTTP API 请求
+   ↓
+LLM</code></pre>
+<h3 id="联系描述">联系描述</h3>
+<p>用户输入最开始只是 Python 中的字符串。程序为了让这条数据具有明确含义，会把它封装成包含 <code>role</code> 和 <code>content</code> 的 Dict。多条消息按照发生顺序加入 List，就形成 <code>messages</code>。这个结构可以进一步转换成 JSON，从而通过 HTTP 请求发送给 LLM API。模型收到这些消息后，就能根据角色和历史内容构建当前请求的上下文。</p>
+<p>注意：</p>
+<blockquote><p><strong>本章先理解数据结构和数据流。真正发送 HTTP 请求，我们在后面的 HTTP / API 课程中正式实现。</strong></p></blockquote>
+<p>这样不会跳知识。</p>
+<hr/>
+<h1 id="36-项目升级cli-对话记录器">36. 项目升级：CLI 对话记录器</h1>
+<p>现在我们做本章的小项目：</p>
+<h1 id="project-01-v02-conversation-recorder">Project 01 v0.2 — Conversation Recorder</h1>
+<p>需求：</p>
+<pre><code>用户输入：
+你好
+
+程序：
+保存消息
+
+用户输入：
+我正在学习 Python
+
+程序：
+保存消息
+
+用户输入：
+什么是 dict？
+
+程序：
+保存消息</code></pre>
+<p>最终：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;我正在学习 Python&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;什么是 dict？&quot;
+    }
+]</code></pre>
+<p>现在还没有真正连接大模型。</p>
+<p>我们只是在练：</p>
+<blockquote><p><strong>如何构建 AI 应用需要的数据结构。</strong></p></blockquote>
+<hr/>
+<h1 id="37-第一个版本">37. 第一个版本</h1>
+<pre><code>messages = []
+
+while True:
+    user_input = input(&quot;You: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        break
+
+    message = {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: user_input
+    }
+
+    messages.append(message)
+
+print(&quot;\n========== Messages ==========&quot;)
+
+for message in messages:
+    print(
+        f&quot;{message[&#x27;role&#x27;]}: &quot;
+        f&quot;{message[&#x27;content&#x27;]}&quot;
+    )</code></pre>
+<p>运行：</p>
+<pre><code>You: 你好
+You: 我正在学习 Python
+You: 什么是 dict？
+You: /exit</code></pre>
+<p>结果：</p>
+<pre><code>========== Messages ==========
+
+user: 你好
+user: 我正在学习 Python
+user: 什么是 dict？</code></pre>
+<p>现在你已经写出了第一个：</p>
+<blockquote><p><strong>AI Chat 数据层雏形。</strong></p></blockquote>
+<hr/>
+<h1 id="38-项目升级模拟-assistant">38. 项目升级：模拟 assistant</h1>
+<p>现在手动加入一个回答：</p>
+<pre><code>messages = []
+
+user_message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 list？&quot;
+}
+
+messages.append(user_message)
+
+assistant_message = {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;list 是 Python 中保存多个元素的数据结构。&quot;
+}
+
+messages.append(assistant_message)</code></pre>
+<p>最后：</p>
+<pre><code>for message in messages:
+    print(f&quot;{message[&#x27;role&#x27;]}: {message[&#x27;content&#x27;]}&quot;)</code></pre>
+<p>结果：</p>
+<pre><code>user: 什么是 list？
+assistant: list 是 Python 中保存多个元素的数据结构。</code></pre>
+<p>这已经非常接近我们以后真正调用 LLM API 时使用的数据了。</p>
+<hr/>
+<h1 id="39-项目升级加入-system">39. 项目升级：加入 system</h1>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;system&quot;,
+        &quot;content&quot;: &quot;你是一名 Python 教师。&quot;
+    }
+]</code></pre>
+<p>用户输入：</p>
+<pre><code>user_message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 dict？&quot;
+}
+
+messages.append(user_message)</code></pre>
+<p>模拟模型：</p>
+<pre><code>assistant_message = {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;dict 是 Python 中用于保存键值对的数据结构。&quot;
+}
+
+messages.append(assistant_message)</code></pre>
+<p>最终：</p>
+<pre><code>system
+ ↓
+user
+ ↓
+assistant</code></pre>
+<p>这就是一个最小对话上下文。</p>
+<hr/>
+<h1 id="40-把-messages-保存成-json">40. 把 messages 保存成 JSON</h1>
+<p>现在我们可以：</p>
+<pre><code>import json
+
+with open(
+    &quot;messages.json&quot;,
+    &quot;w&quot;,
+    encoding=&quot;utf-8&quot;
+) as file:
+    json.dump(
+        messages,
+        file,
+        ensure_ascii=False,
+        indent=2
+    )</code></pre>
+<p>得到：</p>
+<pre><code>messages.json</code></pre>
+<p>里面：</p>
+<pre><code>[
+  {
+    &quot;role&quot;: &quot;system&quot;,
+    &quot;content&quot;: &quot;你是一名 Python 教师。&quot;
+  },
+  {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 dict？&quot;
+  },
+  {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;dict 是 Python 中用于保存键值对的数据结构。&quot;
+  }
+]</code></pre>
+<p>现在整个链路变成：</p>
+<pre><code>用户
+ ↓
+Dict
+ ↓
+messages List
+ ↓
+JSON
+ ↓
+文件</code></pre>
+<hr/>
+<h1 id="41-本章项目结构">41. 本章项目结构</h1>
+<p>本章建议：</p>
+<pre><code>projects/
+└── 01-python-ai-cli/
+    └── 02-list-dict/
+        ├── README.md
+        ├── lesson.md
+        ├── demo/
+        │   ├── 01-list.py
+        │   ├── 02-dict.py
+        │   ├── 03-list-dict.py
+        │   ├── 04-json.py
+        │   ├── 05-messages.py
+        │   └── 06-conversation.py
+        │
+        └── exercises/
+            └── README.md</code></pre>
+<p>建议 Demo 的演进顺序就是：</p>
+<pre><code>01-list
+ ↓
+02-dict
+ ↓
+03-list-dict
+ ↓
+04-json
+ ↓
+05-messages
+ ↓
+06-conversation</code></pre>
+<p>这就是本章的“项目轨迹”。</p>
+<hr/>
+<h1 id="42-本章知识地图">42. 本章知识地图</h1>
+<pre><code>Python
+│
+├── List
+│   │
+│   └── 保存多个元素
+│
+├── Dict
+│   │
+│   └── key → value
+│
+├── List + Dict
+│   │
+│   └── 结构化数据
+│
+├── JSON
+│   │
+│   ├── dumps
+│   └── loads
+│
+└── AI Messages
+    │
+    ├── system
+    ├── user
+    └── assistant
+          │
+          ↓
+       Context</code></pre>
+<hr/>
+<h1 id="43-java-python-对照">43. Java → Python 对照</h1>
+<table><thead><tr><th>场景</th><th>Java</th><th>Python</th></tr></thead><tbody><tr><td>多个值</td><td><code>List</code></td><td><code>list</code></td></tr><tr><td>键值对</td><td><code>Map</code></td><td><code>dict</code></td></tr><tr><td>多个结构化对象</td><td><code>List&lt;Map&lt;...&gt;&gt;</code></td><td><code>list[dict]</code></td></tr><tr><td>JSON</td><td>Jackson 等</td><td><code>json</code></td></tr><tr><td>消息集合</td><td><code>List&lt;Map&lt;...&gt;&gt;</code></td><td><code>list[dict]</code></td></tr></tbody></table>
+<p>例如：</p>
+<p>Java 思维：</p>
+<pre><code>List&lt;Map&lt;String, String&gt;&gt; messages;</code></pre>
+<p>Python：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    }
+]</code></pre>
+<p>你现在应该能够看懂这种 AI API 数据结构了。</p>
+<hr/>
+<h1 id="44-本章最重要的三个理解">44. 本章最重要的三个理解</h1>
+<h3 id="第一">第一</h3>
+<pre><code>List</code></pre>
+<p>不是为了背 API。</p>
+<p>而是：</p>
+<blockquote><p><strong>一个变量保存多个有顺序的数据。</strong></p></blockquote>
+<hr/>
+<h3 id="第二">第二</h3>
+<pre><code>Dict</code></pre>
+<p>不是简单的 Map 替代品。</p>
+<p>而是：</p>
+<blockquote><p><strong>描述一个结构化对象，让数据具有明确字段。</strong></p></blockquote>
+<hr/>
+<h3 id="第三">第三</h3>
+<pre><code>List + Dict</code></pre>
+<p>是很多 AI 应用数据结构的基础。</p>
+<p>例如：</p>
+<pre><code>messages
+tools
+documents
+search_results
+metadata</code></pre>
+<p>都会大量使用类似结构。</p>
+<hr/>
+<h1 id="45-常见坑">45. 常见坑</h1>
+<h2 id="坑-1把-dict-当成-list">坑 1：把 Dict 当成 List</h2>
+<p>错误：</p>
+<pre><code>message[0]</code></pre>
+<p>如果：</p>
+<pre><code>message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;你好&quot;
+}</code></pre>
+<p>应该：</p>
+<pre><code>message[&quot;role&quot;]</code></pre>
+<p>因为 Dict 通过 key 访问。</p>
+<hr/>
+<h2 id="坑-2把-list-当成-dict">坑 2：把 List 当成 Dict</h2>
+<p>如果：</p>
+<pre><code>messages = [...]</code></pre>
+<p>你不能：</p>
+<pre><code>messages[&quot;role&quot;]</code></pre>
+<p>应该先取其中一条：</p>
+<pre><code>messages[0][&quot;role&quot;]</code></pre>
+<p>因为：</p>
+<pre><code>messages
+ ↓
+List
+ ↓
+第 0 个 Dict
+ ↓
+role</code></pre>
+<hr/>
+<h2 id="坑-3认为-json-就是-python-dict">坑 3：认为 JSON 就是 Python Dict</h2>
+<p>不是。</p>
+<pre><code>Python Dict</code></pre>
+<p>是程序内部的数据结构。</p>
+<pre><code>JSON</code></pre>
+<p>是用于表示 / 交换数据的格式。</p>
+<p>两者可以相互转换。</p>
+<hr/>
+<h2 id="坑-4看到-messages-就觉得是模型记忆">坑 4：看到 <code>messages</code> 就觉得是模型记忆</h2>
+<p>更准确的理解：</p>
+<pre><code>messages</code></pre>
+<p>只是一个 Python 数据结构。</p>
+<p>模型是否能看到哪些历史信息，取决于：</p>
+<blockquote><p><strong>最终哪些内容被放进模型当前请求的上下文。</strong></p></blockquote>
+<hr/>
+<h1 id="46-主动回忆">46. 主动回忆</h1>
+<p>现在不要重新看正文，先回答。</p>
+<h3 id="q1">Q1</h3>
+<p>为什么：</p>
+<pre><code>directions = [&quot;Python&quot;, &quot;LLM&quot;, &quot;RAG&quot;]</code></pre>
+<p>适合使用 List？</p>
+<hr/>
+<h3 id="q2">Q2</h3>
+<p>为什么：</p>
+<pre><code>skill = {
+    &quot;name&quot;: &quot;Python&quot;,
+    &quot;progress&quot;: 80
+}</code></pre>
+<p>适合使用 Dict？</p>
+<hr/>
+<h3 id="q3">Q3</h3>
+<p>下面：</p>
+<pre><code>skills = [
+    {
+        &quot;name&quot;: &quot;Python&quot;,
+        &quot;progress&quot;: 80
+    },
+    {
+        &quot;name&quot;: &quot;LLM&quot;,
+        &quot;progress&quot;: 20
+    }
+]</code></pre>
+<p>请说明：</p>
+<pre><code>skills
+skills[0]
+skills[0][&quot;name&quot;]
+skills[1][&quot;progress&quot;]</code></pre>
+<p>分别是什么。</p>
+<hr/>
+<h3 id="q4">Q4</h3>
+<p>Python Dict 和 JSON 是不是同一个东西？</p>
+<p>为什么？</p>
+<hr/>
+<h3 id="q5">Q5</h3>
+<p>为什么 AI 的 <code>messages</code> 经常设计成：</p>
+<pre><code>[
+    {
+        &quot;role&quot;: &quot;...&quot;,
+        &quot;content&quot;: &quot;...&quot;
+    }
+]</code></pre>
+<p>而不是简单的：</p>
+<pre><code>[
+    &quot;你好&quot;,
+    &quot;什么是 Python？&quot;
+]</code></pre>
+<hr/>
+<h3 id="q6">Q6</h3>
+<p>你用“聊天记录”的例子解释：</p>
+<pre><code>List
+Dict
+messages
+Context</code></pre>
+<p>四者是什么关系？</p>
+<hr/>
+<h1 id="47-代码挑战">47. 代码挑战</h1>
+<p>不要看前面的完整代码，自己实现：</p>
+<h2 id="conversation-recorder-v01">Conversation Recorder v0.1</h2>
+<p>要求：</p>
+<p>程序启动后：</p>
+<pre><code>System：
+You：</code></pre>
+<p>用户不断输入。</p>
+<p>当输入：</p>
+<pre><code>/exit</code></pre>
+<p>程序退出。</p>
+<p>然后把所有用户消息保存成：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;...&quot;
+    }
+]</code></pre>
+<p>最后打印：</p>
+<pre><code>========== Conversation ==========
+user: ...
+user: ...
+user: ...
+===================================</code></pre>
+<hr/>
+<h1 id="48-challenge-2加入-assistant">48. Challenge 2：加入 Assistant</h1>
+<p>再增加：</p>
+<pre><code>assistant_message = {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;这是一个模拟回答&quot;
+}</code></pre>
+<p>让最终结构变成：</p>
+<pre><code>system
+user
+assistant
+user
+assistant
+...</code></pre>
+<p>先不调用真正的模型。</p>
+<hr/>
+<h1 id="49-challenge-3保存-json">49. Challenge 3：保存 JSON</h1>
+<p>让程序退出时自动保存：</p>
+<pre><code>messages.json</code></pre>
+<p>然后重新运行程序时：</p>
+<pre><code>messages.json
+ ↓
+json.loads()
+ ↓
+Python messages</code></pre>
+<p>恢复历史。</p>
+<p>这就是我们第一次做：</p>
+<blockquote><p><strong>持久化【Persistence】</strong></p></blockquote>
+<p>的雏形。</p>
+<hr/>
+<h1 id="50-本章完成标准">50. 本章完成标准</h1>
+<p>不要以：</p>
+<blockquote><p>“我看完 Lesson 02 了。”</p></blockquote>
+<p>作为完成标准。</p>
+<p>你至少应该达到：</p>
+<h3 id="level-1">Level 1</h3>
+<p>能够看懂：</p>
+<pre><code>skills = [&quot;Python&quot;, &quot;LLM&quot;]</code></pre>
+<hr/>
+<h3 id="level-2">Level 2</h3>
+<p>能够自己创建：</p>
+<pre><code>skill = {
+    &quot;name&quot;: &quot;Python&quot;,
+    &quot;progress&quot;: 80
+}</code></pre>
+<hr/>
+<h3 id="level-3">Level 3</h3>
+<p>能够组合：</p>
+<pre><code>skills = [
+    {...},
+    {...}
+]</code></pre>
+<hr/>
+<h3 id="level-4">Level 4</h3>
+<p>能够自己使用：</p>
+<pre><code>json.dumps()
+json.loads()</code></pre>
+<hr/>
+<h3 id="level-5">Level 5</h3>
+<p>能够自己创建：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;system&quot;,
+        &quot;content&quot;: &quot;...&quot;
+    },
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;...&quot;
+    }
+]</code></pre>
+<hr/>
+<h3 id="level-6">Level 6</h3>
+<p>不用看教程，独立写出：</p>
+<blockquote><p>Conversation Recorder v0.1</p></blockquote>
+<hr/>
+<h3 id="level-7">Level 7</h3>
+<p>能够向别人解释：</p>
+<blockquote><p>为什么 AI API 的消息结构天然适合用 <code>list + dict</code> 表示？</p></blockquote>
+<p>如果你能做到这一步，这一章才算真正掌握。</p>
+<hr/>
+<h1 id="51-本章与下一阶段的连接">51. 本章与下一阶段的连接</h1>
+<p>现在我们已经完成：</p>
+<pre><code>Python
+ ↓
+List
+ ↓
+Dict
+ ↓
+JSON
+ ↓
+messages</code></pre>
+<p>下一步不是立即跳 Transformer。</p>
+<p>而是继续回答：</p>
+<blockquote><p><strong>这些 <code>messages</code> 到底怎么发送给 AI？</strong></p></blockquote>
+<p>于是下一批 Python 知识就会自然出现：</p>
+<pre><code>Function
+ ↓
+Module
+ ↓
+JSON
+ ↓
+HTTP
+ ↓
+API
+ ↓
+LLM API</code></pre>
+<p>也就是说，下一阶段会开始把：</p>
+<pre><code>Python 数据结构</code></pre>
+<p>真正连接到：</p>
+<pre><code>大模型 API</code></pre>
+<hr/>
+<h1 id="52-本章一句话总结">52. 本章一句话总结</h1>
+<blockquote><p><strong>List 负责组织多条有顺序的数据，Dict 负责描述一条结构化数据，二者组合起来可以表达聊天消息；JSON 则让这些结构化数据能够被保存和交换，而 <code>messages</code> 正是这种数据结构在大模型应用中的典型应用。</strong></p></blockquote>
+<hr/>
+<h1 id="53-ai-engineer-journey-当前进度">53. AI Engineer Journey 当前进度</h1>
+<pre><code>Project 01 — Python AI CLI Assistant
+
+✅ Lesson 01
+Python Variables / Types / Input / Output
+
+🔄 Lesson 02
+List / Dict / JSON / AI Messages
+
+⬜ Lesson 03
+Condition / Loop</code></pre>
+<p>本章真正完成后，再进入：</p>
+<h1 id="lesson-03-condition-loop让-ai-cli-assistant-开始运行起来">Lesson 03 — Condition / Loop：让 AI CLI Assistant 开始“运行起来”</h1>
+<p>下一章我们会继续用 <strong>Conversation Recorder / AI CLI Assistant</strong> 做项目，不会突然切换成纯语法讲解。</p>
+</main>
+</body>
+</html>

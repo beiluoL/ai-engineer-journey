@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 07 — Open Source LLM</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-07-open-source-llm">Project 07 — Open Source LLM</h1>
+<h2 id="项目目标">项目目标</h2>
+<p>接触真实开源模型生态，在云端（Colab GPU）亲手跑通 Hugging Face 开源模型，理解加载 / 推理 / 量化 / 服务。</p>
+<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<p>生产环境不可能每次都调商业 API。需要掌握如何加载、运行、对比开源模型，理解它们的限制和优势。</p>
+<h2 id="解决什么问题">解决什么问题</h2>
+<ul class="lvl"><li>生产环境不能全靠商业 API</li><li>不知道怎么加载开源模型</li><li>不理解模型内存占用和推理速度</li></ul>
+<h2 id="最终能力">最终能力</h2>
+<pre><code>Model
+    ↓
+Tokenizer
+    ↓
+Weights
+    ↓
+Memory
+    ↓
+Inference
+    ↓
+Application</code></pre>
+<h2 id="技术栈">技术栈</h2>
+<ul class="lvl"><li>Hugging Face Transformers</li><li>Tokenizer 深入理解</li><li>Model Loading（device / dtype）</li><li>Model Inference（生成参数 / 采样）</li><li>本地模型 Serving</li><li>量化基础</li></ul>
+<h2 id="项目演进">项目演进</h2>
+<pre><code>Mini Transformer
+    ↓ 接入开源生态
+Open Source LLM v0.1（加载 + 推理）
+    ↓ Generation + 本地 Serving
+Open Source LLM v0.2
+    ↓ 量化 + 应用
+Open Source LLM v1.0</code></pre>
+<h2 id="运行方式colab-云端零本地资源">运行方式（Colab 云端，零本地资源）</h2>
+<blockquote><p>路线决策（2026-09-29）：原计划在本机 M1 装 torch + 下模型，但本机磁盘仅剩 ~15GB 且用户要求「不要使用本地」。 改为 <strong>Colab 云端真跑</strong>：模型与算力都在 Colab 免费 T4 GPU 上，本机零磁盘/内存占用。 详见 <a href="notebooks/README.html"><code>notebooks/README.md</code></a> 与 <a href="../../../../../projects/07-open-source-llm/notebooks/p07_colab.ipynb"><code>notebooks/p07_colab.ipynb</code></a>。</p><p><strong>微调路线（Java 面试专家）</strong>：在 Colab 免费 GPU 上用 LLaMA-Factory 对 Qwen2.5-1.5B 做 QLoRA SFT，产出 LoRA Adapter 并合并成完整模型。详见 <a href="../../../../../projects/07-open-source-llm/notebooks/p07_finetune_java_interview.ipynb"><code>notebooks/p07_finetune_java_interview.ipynb</code></a> 与 <a href="../../../../../projects/07-open-source-llm/scripts"><code>scripts/</code></a>。</p><p><strong>调用管线 <code>pipelines/</code>（当前主线，已真实跑通）</strong>：本机跑不动 7B 权重（bf16 需 14.18 GiB）， 但「调用」不需要本地有卡。<code>pipelines/</code> 走 DeepSeek OpenAI 兼容接口、由本机直接驱动， 6 个模块全部真实运行完毕，产出 6 张真实终端截图。详见 <a href="pipelines/README.html"><code>pipelines/README.md</code></a>。</p></blockquote>
+<pre><code>本机（只写代码）          Colab（跑模型）
+   notebooks/        →   打开 p07_colab.ipynb
+   p07_colab.ipynb        Runtime=GPU, Run All
+         ↓                      ↓
+   回收真实输出       →    demos/out/colab_Mxx.txt
+         ↓
+   渲染截图 + 写 milestones/</code></pre>
+<pre><code>本机（自己就是执行者）  ←── pipelines/ 路线
+   demos/demo_0X.py  →   真实调 DeepSeek API
+         ↓
+   demos/out/*_terminal.txt（真实输出）
+         ↓
+   assets/term-*.png（真实截图）→ pipelines/README.md</code></pre>
+<h2 id="milestones">Milestones</h2>
+<table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Hugging Face</td><td>HF Ecosystem / Hub / Pipeline</td><td>⬜ Colab 待跑</td></tr><tr><td>02</td><td>Tokenizer</td><td>BPE / Token 编码 / decode / chat template</td><td>⬜ Colab 待跑</td></tr><tr><td>03</td><td>Model Loading</td><td>device / dtype / from_pretrained / 参数量</td><td>⬜ Colab 待跑</td></tr><tr><td>04</td><td>Model Inference</td><td>generate / KV cache / 贪心</td><td>⬜ Colab 待跑</td></tr><tr><td>05</td><td>Generation Parameters</td><td>temperature / top_p / top_k</td><td>⬜ Colab 待跑</td></tr><tr><td>06</td><td>Local Model Serving</td><td>pipeline / 延迟 / 吞吐</td><td>⬜ Colab 待跑</td></tr><tr><td>07</td><td>Model Memory / VRAM</td><td>权重 / KV cache / 实测显存</td><td>⬜ Colab 待跑</td></tr><tr><td>08</td><td>Quantization</td><td>4-bit（Colab=bitsandbytes；Mac 本地=GGUF+llama.cpp）</td><td>⬜ Colab 待跑</td></tr><tr><td>09</td><td>Open Source LLM Application</td><td>迷你聊天应用 / 历史记忆</td><td>⬜ Colab 待跑</td></tr></tbody></table>
+<blockquote><p>M08 量化路线：云端 CUDA 用 <code>load_in_4bit</code>（bitsandbytes）真跑；Mac 本地无 CUDA，对应走 GGUF + llama.cpp。</p><p><strong>微调 Track（独立分支，当前主线）</strong>：<code>notebooks/p07_finetune_java_interview.ipynb</code> 覆盖「数据集 → SFT → LoRA → QLoRA → GPU 训练 → 评估 → 合并」全流程，目标产出 Java 面试专家模型。Colab 侧脚本见 <code>scripts/</code>，训练数据见 <code>data/java_interview.json</code>（<strong>59 条</strong>真实 Java 面试问答）。</p></blockquote>
+<blockquote><p><strong>已真实跑通的部分见 <code>pipelines/</code></strong>（可与上表对照）：M05 生成参数、M07 显存/参数量、M09 应用 已有本地真实证据；M03 模型加载、M08 量化因需要 GPU/本地权重，仍依赖 <code>notebooks/</code> 那条线。</p></blockquote>
+<h2 id="当前状态">当前状态</h2>
+<p>🔄 进行中。三条线的落地情况：</p>
+<table><thead><tr><th>线</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td><code>pipelines/</code> 调用管线</td><td>✅ <strong>已真实跑通</strong></td><td>6 个模块真实运行，6 张终端截图 + 12 份产物</td></tr><tr><td><code>notebooks/p07_colab.ipynb</code> 推理</td><td>⬜ 待跑</td><td>需用户在 Colab 分配 GPU 并回收输出</td></tr><tr><td><code>p07_finetune_java_interview.ipynb</code> 微调</td><td>⬜ 待跑</td><td>需用户在 Colab 跑 QLoRA SFT</td></tr></tbody></table>
+<h2 id="当前版本">当前版本</h2>
+<p>v0.1 —— <code>pipelines/</code> 调用管线 6 个模块全部真实跑通（含手算参数量对账、显存账本、RAG-lite 检索评测）， 产出 6 张真实终端截图。</p>
+<h2 id="项目结构">项目结构</h2>
+<pre><code>projects/07-open-source-llm/
+├── README.md                     # 本文件
+├── data/
+│   └── java_interview.json       # 59 条真实 Java 面试问答（SFT 训练集）
+├── scripts/                      # Colab 侧脚本（由 notebook wget 后调用）
+│   ├── colab_download_model.py   # 下载基座模型 Qwen2.5-1.5B
+│   ├── colab_prepare.py          # 数据集下载 + 注册 + 训练/合并 YAML
+│   └── colab_eval.py             # 微调前后对比评测
+├── notebooks/
+│   ├── p07_colab.ipynb                   # 推理路线：M01-M09 全覆盖（待用户 Colab 跑）
+│   ├── p07_finetune_java_interview.ipynb # 微调路线：QLoRA SFT 全流程（待用户 Colab 跑）
+│   ├── build_p07_notebook.py             # 推理 notebook 生成脚本
+│   └── README.md                         # Colab 使用 + 输出回收说明
+├── pipelines/                   # 【主线】本地驱动的调用管线，已真实跑通
+│   ├── README.md                # 路线说明 + 数据可信度分级 + 6 张真实截图
+│   ├── data/open_models_weights.json  # 真实抓取的 HF config.json（fetch_status: all_ok）
+│   ├── llm_client/              # 零依赖客户端（client.py）+ 资源算术（baselines.py）
+│   ├── demos/ + demos/out/      # 6 个 demo + 12 份真实运行产物
+│   └── assets/term-0X-*.png     # 6 张真实终端截图
+├── src/                         # （后续可放可复用封装）
+├── demos/out/                   # 回收的 Colab 真实输出（colab_Mxx.txt / 微调前后对比）
+├── assets/                      # Colab 路线截图
+└── milestones/                  # 01-09 文档（待 Colab 跑通后撰写）</code></pre>
+<h2 id="已掌握能力">已掌握能力</h2>
+<ul class="lvl"><li>Project 01-06 的所有能力</li></ul>
+<h2 id="下一步">下一步</h2>
+<p>完成 Project 06，然后进入开源模型生态。</p>
+<p><strong>前置项目</strong>：<a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</a></p>
+</main>
+</body>
+</html>

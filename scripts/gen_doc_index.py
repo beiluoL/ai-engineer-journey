@@ -3,9 +3,10 @@
 """
 扫描 ai-engineer-journey 仓库里的全部 Markdown 文档，生成一个自包含的 index.html 索引页。
 - 按「主题 → 子分组」两级组织，左侧固定导航 + 右侧列表
-- 每个文档显示标题（取自首个 # 标题）与相对路径，点击直接打开 .md
+- **每个条目默认指向「渲染后的 HTML」**（publishing/html/docs/<相对路径>.html），
+  由 scripts/build_docs_html.py 批量生成；若某篇还没转换，则自动回退到 .md，不会死链
+- 每个条目附一个次级「.md」链接，给想看源码的人
 - 纯内联 CSS + 原生 JS，零外部依赖，双击即可离线浏览
-- 已渲染成 HTML 的文档（publishing/html/*.html）附「HTML 版」次级链接
 
 用法：
     python3 scripts/gen_doc_index.py
@@ -33,11 +34,17 @@ THEMES = [
     ("mistakes",           "审计与复盘",      "仓库体检与错误复盘"),
 ]
 
-# 已渲染成单文件 HTML 的文档（相对 ROOT 的 .md 路径 -> 对应的 .html 文件名）
-RENDERED = {
-    os.path.join("python-practice", "07-延伸阅读.md"): "07-延伸阅读.html",
-    os.path.join("llm-fundamentals", "12-tutorials-and-agent.md"): "12-tutorials-and-agent.html",
-}
+DOCS_DIR = os.path.join(OUT_DIR, "docs")
+
+
+def rendered_html_path(rel_md):
+    """某篇 .md 对应的渲染页路径；未转换则返回 None。
+
+    索引**不写死**「哪几篇已渲染」——那张表一旦有人新增文档就会腐烂。
+    改为每次生成时现查 docs/ 里有没有产物，没有就回退到 .md。
+    """
+    p = os.path.join(DOCS_DIR, rel_md[:-3] + ".html")
+    return p if os.path.exists(p) else None
 
 H1_RE = re.compile(r"^\s*#\s+(.+?)\s*#*\s*$", re.M)
 NUM_RE = re.compile(r"(\d+)")
@@ -113,6 +120,7 @@ def collect():
 
 def build_html(data):
     total = 0
+    total_rendered = 0
     theme_blocks = []
     nav_items = []
 
@@ -130,19 +138,30 @@ def build_html(data):
         sub_keys = sorted(groups.keys(), key=natural_key)
         groups_html = []
         theme_count = 0
+        theme_rendered = 0
         for sk in sub_keys:
             rows = sorted(groups[sk], key=lambda x: x[0])
             rows_html = []
             for _, fn, rel, title, _ in rows:
                 total += 1
                 theme_count += 1
-                # 链接相对 index.html 所在目录（publishing/html/），需回退到仓库根
-                href = urllib.parse.quote(os.path.relpath(os.path.join(ROOT, rel), OUT_DIR), safe="/")
-                extra = ""
-                rendered = RENDERED.get(rel.replace(os.sep, "/"))
+                rel_fwd = rel.replace(os.sep, "/")
+                # 链接相对 index.html 所在目录（publishing/html/），优先指向渲染页
+                rendered = rendered_html_path(rel_fwd)
                 if rendered:
-                    extra = (f'<a class="html-link" href="{html.escape(urllib.parse.quote(rendered, safe="/"))}"'
-                             f'title="已渲染的单文件 HTML 版本">HTML 版 ↗</a>')
+                    href = urllib.parse.quote(
+                        os.path.relpath(rendered, OUT_DIR), safe="/")
+                    # 次级 .md 链接要退回仓库根（index 在 publishing/html/ 下）
+                    href_md = urllib.parse.quote(
+                        os.path.relpath(os.path.join(ROOT, rel_fwd), OUT_DIR), safe="/")
+                    extra = (
+                        f'<a class="md-link" href="{href_md}"'
+                        f'title="原始 Markdown 源文档">.md</a>')
+                    theme_rendered += 1
+                    total_rendered += 1
+                else:
+                    href = urllib.parse.quote(rel_fwd, safe="/")
+                    extra = '<span class="md-link pending" title="尚未转换，暂显示原文">待转换</span>'
                 rows_html.append(
                     f'      <li>\n'
                     f'        <a class="doc" href="{html.escape(href)}">{html.escape(title)}</a>\n'
@@ -157,12 +176,13 @@ def build_html(data):
                 f'    </details>')
         theme_blocks.append(
             f'  <section id="{sec_id}">\n'
-            f'    <h2>{html.escape(name)} <span class="cnt">{theme_count}</span></h2>\n'
+            f'    <h2>{html.escape(name)} <span class="cnt">{theme_rendered}/{theme_count} 已渲染</span></h2>\n'
             f'    <p class="desc">{html.escape(desc)}</p>\n'
             + "\n".join(groups_html) +
             f'\n  </section>')
         nav_items.append(
-            f'      <li><a href="#{sec_id}">{html.escape(name)} <span class="cnt">{theme_count}</span></a></li>')
+            f'      <li><a href="#{sec_id}">{html.escape(name)} '
+            f'<span class="cnt">{theme_rendered}/{theme_count}</span></a></li>')
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     nav = "\n".join(nav_items)
@@ -230,8 +250,9 @@ def build_html(data):
   a.doc {{ color:var(--accent); text-decoration:none; font-size:14px; font-weight:500; }}
   a.doc:hover {{ text-decoration:underline; }}
   .path {{ color:var(--muted); font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }}
-  a.html-link {{ font-size:12px; color:#0f766e; text-decoration:none; border:1px solid #99f6e4; background:#f0fdfa; padding:1px 7px; border-radius:999px; }}
-  a.html-link:hover {{ background:#ccfbf1; }}
+  a.md-link, span.md-link {{ font-size:12px; color:#6b7280; text-decoration:none;
+    border:1px solid var(--line); background:#f9fafb; padding:1px 7px; border-radius:999px; white-space:nowrap; }}
+  a.md-link:hover {{ background:#eef2f7; color:var(--ink); }}
   .empty {{ color:var(--muted); font-size:14px; padding:30px; text-align:center; }}
   @media (max-width:760px) {{
     .layout {{ grid-template-columns:1fr; }}
@@ -242,7 +263,7 @@ def build_html(data):
 <body>
 <header class="top">
   <h1>AI 工程师之旅 · 文档索引</h1>
-  <div class="sub">ai-engineer-journey 仓库全部 Markdown 文档 · 按主题与目录层级组织 · 点击直接打开</div>
+  <div class="sub">ai-engineer-journey 仓库全部文档 · 按主题与目录层级组织 · 点击打开<b>渲染后的页面</b>（{total_rendered}/{total} 篇已生成）</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="过滤文档（按标题或路径，例如 12、rag、微调）…" oninput="filterDocs()"/>
     <span class="meta" id="counter">共 {total} 篇</span>

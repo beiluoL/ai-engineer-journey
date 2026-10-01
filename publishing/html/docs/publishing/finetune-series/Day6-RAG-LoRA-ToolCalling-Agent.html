@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day6：实现完整 Agent（RAG + LoRA + Tool Calling）</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day6实现完整-agentrag-lora-tool-calling">大模型微调实战 Day6：实现完整 Agent（RAG + LoRA + Tool Calling）</h1>
+<h1 id="实现完整-agentrag-lora-tool-calling">实现完整 Agent：RAG + LoRA + Tool Calling</h1>
+<p>今天是整个项目的一个重要升级。</p>
+<p>前面：</p>
+<ul class="lvl"><li>Day1～Day3：你完成了 <strong>模型微调</strong></li></ul>
+<ul class="lvl"><li>Day4：理解 <strong>RAG + LoRA</strong></li></ul>
+<ul class="lvl"><li>Day5：实现 <strong>Spring Boot + LangChain4j + Milvus RAG Pipeline</strong></li></ul>
+<p>但是现在你的系统还是：</p>
+<pre><code>用户问题
+
+↓
+
+RAG检索
+
+↓
+
+LLM回答</code></pre>
+<p>这叫：</p>
+<blockquote><p>RAG Application【RAG 应用】</p></blockquote>
+<p>还不是完整 Agent。</p>
+<p>今天升级：</p>
+<pre><code>用户
+
+↓
+
+Agent【智能体】
+
+↓
+
+判断任务
+
+↓
+
+选择工具
+
+↓
+
+调用工具
+
+↓
+
+获取结果
+
+↓
+
+LLM综合推理
+
+↓
+
+回答</code></pre>
+<hr/>
+<h1 id="一什么是真正-agent">一、什么是真正 Agent？</h1>
+<p>先理解：</p>
+<h2 id="普通-chat">普通 Chat</h2>
+<p>用户：</p>
+<blockquote><p>HashMap为什么线程不安全？</p></blockquote>
+<p>流程：</p>
+<pre><code>用户
+
+↓
+
+LLM
+
+↓
+
+回答</code></pre>
+<p>模型自己猜。</p>
+<hr/>
+<h2 id="agent">Agent</h2>
+<p>用户：</p>
+<blockquote><p>根据我的简历，模拟一次 Java 高级面试，并指出我的不足。</p></blockquote>
+<p>流程：</p>
+<pre><code>用户
+
+↓
+
+Agent
+
+↓
+
+分析需求
+
+↓
+
+需要哪些能力？
+
+↓
+
+调用工具：
+
+1. 简历分析工具
+
+2. 知识库搜索工具
+
+3. 面试评分工具
+
+↓
+
+组合结果
+
+↓
+
+回答</code></pre>
+<hr/>
+<h1 id="二你的-java-ai-interview-agent-设计">二、你的 Java AI Interview Agent 设计</h1>
+<p>最终目标：</p>
+<h2 id="java-ai-interview-agent-v4">Java AI Interview Agent V4</h2>
+<p>功能：</p>
+<h3 id="1-面试模式">1. 面试模式</h3>
+<p>输入：</p>
+<pre><code>开始模拟Java高级面试</code></pre>
+<p>Agent：</p>
+<p>调用：</p>
+<pre><code>InterviewQuestionTool</code></pre>
+<p>生成问题。</p>
+<hr/>
+<h3 id="2-知识查询">2. 知识查询</h3>
+<p>输入：</p>
+<pre><code>解释ConcurrentHashMap扩容</code></pre>
+<p>Agent：</p>
+<p>调用：</p>
+<pre><code>KnowledgeSearchTool</code></pre>
+<p>查询 Milvus。</p>
+<hr/>
+<h3 id="3-简历分析">3. 简历分析</h3>
+<p>输入：</p>
+<pre><code>分析我的简历</code></pre>
+<p>Agent：</p>
+<p>调用：</p>
+<pre><code>ResumeAnalyzerTool</code></pre>
+<hr/>
+<h3 id="4-面试评分">4. 面试评分</h3>
+<p>输入：</p>
+<pre><code>评价我的回答</code></pre>
+<p>Agent：</p>
+<p>调用：</p>
+<pre><code>AnswerScoreTool</code></pre>
+<hr/>
+<h1 id="三整体架构">三、整体架构</h1>
+<pre><code>                    User
+
+                     |
+
+                     ↓
+
+
+              Spring Boot API
+
+
+                     |
+
+                     ↓
+
+
+              Interview Agent
+
+
+                     |
+
+        +------------+-------------+
+
+        |            |             |
+
+
+        ↓            ↓             ↓
+
+
+ Knowledge      Resume       Evaluation
+
+ Tool            Tool          Tool
+
+
+        |            |             |
+
+
+        ↓            ↓             ↓
+
+
+    Milvus       PDF解析       Score
+
+
+        |
+
+        ↓
+
+
+     Prompt
+
+
+        |
+
+        ↓
+
+
+    Qwen + LoRA
+
+
+        |
+
+        ↓
+
+
+     Answer</code></pre>
+<hr/>
+<h1 id="四核心tool-calling">四、核心：Tool Calling</h1>
+<p>你之前已经学习过。</p>
+<p>这里真正落地。</p>
+<p>核心思想：</p>
+<blockquote><p>LLM 不直接执行 Java 方法，只决定调用哪个工具。</p></blockquote>
+<p>例如：</p>
+<p>用户：</p>
+<pre><code>查询HashMap源码</code></pre>
+<p>LLM返回：</p>
+<pre><code>{
+ &quot;tool&quot;:&quot;searchKnowledge&quot;,
+ &quot;arguments&quot;:{
+    &quot;query&quot;:&quot;HashMap源码&quot;
+ }
+}</code></pre>
+<p>Java收到：</p>
+<p>执行：</p>
+<pre><code>searchKnowledge(
+&quot;HashMap源码&quot;
+)</code></pre>
+<p>返回：</p>
+<pre><code>{
+&quot;result&quot;:
+&quot;HashMap JDK8采用数组+链表+红黑树&quot;
+}</code></pre>
+<p>再给LLM：</p>
+<p>生成最终答案。</p>
+<hr/>
+<h1 id="五langchain4j实现agent">五、LangChain4j实现Agent</h1>
+<h2 id="1-引入-agent-依赖">1. 引入 Agent 依赖</h2>
+<p>Maven：</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;dev.langchain4j&lt;/groupId&gt;
+    &lt;artifactId&gt;langchain4j&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+<hr/>
+<h1 id="六创建第一个-tool">六、创建第一个 Tool</h1>
+<p>例如：</p>
+<p>知识库搜索。</p>
+<p>创建：</p>
+<pre><code>@Component
+public class KnowledgeTool {
+
+
+    private final Retriever retriever;
+
+
+    public KnowledgeTool(
+        Retriever retriever
+    ){
+        this.retriever=retriever;
+    }
+
+
+
+    @Tool(
+      &quot;搜索Java技术知识库&quot;
+    )
+    public String searchKnowledge(
+        String query
+    ){
+
+        return retriever
+            .findRelevant(query);
+
+    }
+
+}</code></pre>
+<hr/>
+<p>注意：</p>
+<p>这里：</p>
+<pre><code>@Tool</code></pre>
+<p>非常关键。</p>
+<p>它告诉：</p>
+<p>LLM：</p>
+<blockquote><p>我有一个可以调用的能力。</p></blockquote>
+<hr/>
+<h1 id="七创建-agent-service">七、创建 Agent Service</h1>
+<p>定义：</p>
+<pre><code>public interface InterviewAgent {
+
+
+    String chat(
+        String message
+    );
+
+}</code></pre>
+<hr/>
+<p>绑定：</p>
+<pre><code>InterviewAgent agent =
+AiServices.builder(
+    InterviewAgent.class
+)
+
+.chatLanguageModel(model)
+
+.tools(
+    knowledgeTool
+)
+
+.build();</code></pre>
+<hr/>
+<p>现在：</p>
+<p>你的 Agent：</p>
+<p>拥有：</p>
+<pre><code>能力1：
+
+回答问题
+
+
+能力2：
+
+搜索知识库</code></pre>
+<hr/>
+<h1 id="八测试-tool-calling">八、测试 Tool Calling</h1>
+<p>用户：</p>
+<pre><code>ConcurrentHashMap为什么线程安全？</code></pre>
+<p>Agent判断：</p>
+<p>需要知识库。</p>
+<p>调用：</p>
+<pre><code>KnowledgeTool</code></pre>
+<p>获取：</p>
+<pre><code>ConcurrentHashMap源码资料</code></pre>
+<p>然后：</p>
+<p>Qwen：</p>
+<p>生成：</p>
+<pre><code>面试回答：
+JDK8采用CAS+synchronized...</code></pre>
+<hr/>
+<h1 id="九加入简历分析-tool">九、加入简历分析 Tool</h1>
+<p>创建：</p>
+<pre><code>@Component
+public class ResumeTool {
+
+
+@Tool(
+&quot;分析Java工程师简历&quot;
+)
+public String analyzeResume(
+String resume
+){
+
+return &quot;分析结果&quot;;
+
+}
+
+}</code></pre>
+<hr/>
+<p>Agent拥有：</p>
+<pre><code>Tools:
+
+├── searchKnowledge()
+
+├── analyzeResume()
+
+└── scoreAnswer()</code></pre>
+<hr/>
+<h1 id="十加入-mcp-思想">十、加入 MCP 思想</h1>
+<p>你之前学习 MCP：</p>
+<p><strong>Model Context Protocol【模型上下文协议】</strong></p>
+<p>本质：</p>
+<p>标准化工具连接。</p>
+<p>现在：</p>
+<p>你的 Agent：</p>
+<pre><code>Agent
+
+ |
+
+ MCP Server
+
+ |
+
+Tools
+
+ |
+ 
+├── Milvus
+
+├── GitHub
+
+├── 文件系统
+
+└── 数据库</code></pre>
+<p>以后可以扩展：</p>
+<p>查询：</p>
+<p>GitHub源码</p>
+<p>数据库</p>
+<p>Jira</p>
+<p>Notion</p>
+<hr/>
+<h1 id="十一加入-memory记忆">十一、加入 Memory【记忆】</h1>
+<p>现在：</p>
+<p>每次聊天：</p>
+<pre><code>问题
+
+↓
+
+回答
+
+↓
+
+结束</code></pre>
+<p>加入：</p>
+<p>Conversation Memory【对话记忆】</p>
+<p>保存：</p>
+<pre><code>用户：
+
+6年Java经验
+
+薄弱：
+
+AQS
+
+喜欢：
+
+源码分析</code></pre>
+<p>以后：</p>
+<p>Agent知道：</p>
+<pre><code>继续训练AQS</code></pre>
+<hr/>
+<h1 id="十二最终-agent-链路面试话术">十二、最终 Agent 链路（面试话术）</h1>
+<p>面试官：</p>
+<blockquote><p>你如何设计一个 Java AI Agent？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>我的设计采用 Spring Boot + LangChain4j 构建 Agent 服务。用户请求进入系统后，Agent 首先通过 LLM 判断当前任务是否需要调用工具。如果需要，例如查询技术知识，则通过 Tool Calling 调用知识库检索工具，从 Milvus 获取相关文档片段，然后将工具结果和上下文重新输入大模型，最终由经过 LoRA 微调的 Qwen 模型生成符合 Java 面试场景的回答。</p></blockquote>
+<p>链路：</p>
+<pre><code>User
+
+↓
+
+Spring Boot
+
+↓
+
+LangChain4j Agent
+
+↓
+
+LLM决策
+
+↓
+
+Tool Calling
+
+↓
+
+Knowledge Tool
+
+↓
+
+Milvus
+
+↓
+
+Tool Result
+
+↓
+
+Qwen LoRA
+
+↓
+
+Answer</code></pre>
+<hr/>
+<h1 id="十三今天你的项目能力">十三、今天你的项目能力</h1>
+<p>现在你的项目：</p>
+<h2 id="java-ai-interview-agent-v4">Java AI Interview Agent V4</h2>
+<p>技术：</p>
+<pre><code>Spring Boot
+
+LangChain4j
+
+Qwen
+
+QLoRA
+
+LoRA
+
+RAG
+
+Milvus
+
+Embedding
+
+Tool Calling
+
+Agent
+
+MCP
+
+Ollama</code></pre>
+<p>已经覆盖：</p>
+<p>企业 AI 应用开发核心链路。</p>
+<hr/>
+<h1 id="下一步-day7">下一步 Day7</h1>
+<h2 id="day7把-agent-工程化">Day7：把 Agent 工程化</h2>
+<p>进入生产级：</p>
+<h3 id="增加">增加：</h3>
+<ul class="lvl"><li>Streaming SSE【流式输出】</li></ul>
+<ul class="lvl"><li>用户会话管理</li></ul>
+<ul class="lvl"><li>Prompt管理</li></ul>
+<ul class="lvl"><li>Agent日志</li></ul>
+<ul class="lvl"><li>Tool权限控制</li></ul>
+<ul class="lvl"><li>Token成本统计</li></ul>
+<ul class="lvl"><li>Evaluation【评测系统】</li></ul>
+<ul class="lvl"><li>Docker部署</li></ul>
+<p>最终形成：</p>
+<blockquote><p>一个可以放简历、面试演示、继续扩展的 Java AI Agent 项目。</p></blockquote>
+<p>下一节开始做：</p>
+<p><strong>Day7：Spring Boot + LangChain4j Agent 生产级工程化。</strong></p>
+</main>
+</body>
+</html>

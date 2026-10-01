@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 02 — Benchmark：任务定义、统一打分与排行</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-02-benchmark任务定义统一打分与排行">Milestone 02 — Benchmark：任务定义、统一打分与排行</h1>
+<p>M01 建立了<strong>指标</strong>：PPL、Token Acc、ECE。但指标只描述&quot;模型在某个数据集上的表现&quot;，还没回答&quot;我要拿它干什么&quot;。</p>
+<p>这一层把评估升级成 <strong>Benchmark</strong>：一组<strong>任务</strong>（task），每个任务有 prompt、参考答案、关键词、主题；一个统一的<strong>打分函数</strong>；一张<strong>可排序的排行榜</strong>。</p>
+<p>M01 的指标和 M02 的 benchmark 是两件事：</p>
+<table><thead><tr><th></th><th>M01 Evaluation</th><th>M02 Benchmark</th></tr></thead><tbody><tr><td>单位</td><td>token</td><td>任务（task）</td></tr><tr><td>打分</td><td>概率分布层面的统计量</td><td>可读答案的多维规则评分</td></tr><tr><td>可比性</td><td>同一分词器、同一数据</td><td>同一任务集 + 同一评分函数 + 同一汇总口径</td></tr></tbody></table>
+<p><strong>纯 numpy 手写</strong>：任务集、评分器、汇总、排行全部自己实现（<code>src/ie/benchmark.py</code>、<code>src/ie/autoeval.py</code>），不引入任何评测框架。</p>
+<hr/>
+<h2 id="1-why为什么排行榜必须有三个同一">1. Why：为什么&quot;排行榜&quot;必须有三个&quot;同一&quot;</h2>
+<p>一个 benchmark 分数只有在<strong>三个东西都固定</strong>的时候才可比较：</p>
+<ul class="lvl"><li><strong>同一任务</strong> —— prompt 必须一字不差（否则测的是 prompt 工程，不是模型）。</li><li><strong>同一评分函数</strong> —— 参数、权重、阈值都不能变。</li><li><strong>同一汇总口径</strong> —— 每题打分后怎么平均（本项目用简单算术平均，<code>aggregate_scores</code>）。</li></ul>
+<p>违反任何一条，排行榜就是噪音。现实中大量&quot;某某模型超越 GPT-4&quot;的结论，问题都出在第三条 —— 换个汇总方式（macro vs micro、去极值与否）结论就翻。</p>
+<p>本项目刻意<strong>不碰</strong> MMLU / HumanEval 这类真实榜单：它们需要真实大模型才能跑出有意义的结果。这里的价值是<strong>把排行榜的骨架做对</strong> —— 任务集抽象、评分器接口、可复现的排行，这些换到任何榜单上都一样。</p>
+<h2 id="2-design三个对象">2. Design：三个对象</h2>
+<pre><code>BenchmarkTask(task_id, prompt, reference, keywords, topic)   # 一个任务
+Benchmark(name, tasks).evaluate(model_name, predictor)        # 一个模型跑完所有任务
+Benchmark.compare({name: predictor})                          # 多个模型 → 排行榜</code></pre>
+<ul class="lvl"><li><code>predictor: Callable[[str], str]</code> —— <strong>模型被抽象成一个函数</strong>。这是整个设计的核心：不管背后是 7B 还是规则拼字符串，只要 <code>prompt → answer</code>，就能进排行榜。本项目三个&quot;模型&quot;里有两个就是规则函数。</li><li><code>tasks_from_records(records)</code> —— 直接把 M03 的 held-out 记录转成任务（<code>instruction → prompt</code>，<code>output → reference</code>，<code>topic</code> 由 <code>infer_topic</code> 推断）。<strong>评估集和 benchmark 用同一批数据</strong>，避免&quot;两套数据各说各话&quot;。</li><li><code>Benchmark.compare</code> 按 <code>(-total, model)</code> 排序 —— <strong>分数相同时按名字排序</strong>，保证排行榜在不同机器上完全一样（可复现性细节，但很重要）。</li></ul>
+<p>打分函数来自 M04 的 <code>evaluate_answer</code>（关键词 40% + 格式 15% + 长度 15% + 忠实度 20% + 去重复 10%），这里只做<strong>汇总与排行</strong>。</p>
+<figure class="figure"><img alt="M02 Benchmark 流水线：任务集 → 多个 predictor → 统一评分 → 汇总排行" src="../../../../../../projects/09-evaluation-inference/assets/benchmark.svg" loading="lazy"/><figcaption>M02 Benchmark 流水线：任务集 → 多个 predictor → 统一评分 → 汇总排行</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_02_benchmark_terminal.txt</code>）</h2>
+<p>任务集 <strong>Java held-out v1</strong>，6 个任务 / 4 个主题（从 M03 的 held-out 前 6 条构造）。三个&quot;模型&quot;全是规则函数：</p>
+<table><thead><tr><th>模型</th><th>做法</th></tr></thead><tbody><tr><td>参考答案</td><td>直接返回 <code>record[&quot;output&quot;]</code>（理论上界）</td></tr><tr><td>首句摘要</td><td>只返回参考答案的第一句</td></tr><tr><td>弱基线</td><td>无论问什么都回答「Java 中需要根据具体情况分析。」</td></tr></tbody></table>
+<pre><code>── 总分排行（全部由规则评分真实计算） ─────────────────────────────
+  排名  模型    总分     关键词    格式     长度     忠实度    去重复
+  --  ----  -----  -----  -----  -----  -----  -----
+   1  参考答案  94.38  1.000  0.700  1.000  1.000  0.888
+   2  首句摘要  75.56  0.667  0.650  0.639  1.000  0.955
+   3  弱基线   21.87  0.000  0.600  0.171  0.015  1.000
+
+  第一名                                参考答案（94.38）</code></pre>
+<p>四个读数：</p>
+<ul class="lvl"><li><strong>参考答案 94.38，不是 100</strong>。这是最有信息量的一行：连&quot;把参考答案原样交上去&quot;都拿不到满分，说明评分函数<strong>不是&quot;跟参考答案比对&quot;</strong>，而是在独立地衡量答案质量。<code>0.700</code>（格式）和 <code>0.888</code>（去重复）是参考答案自己丢的分 —— 参考答案里有重复的 3-gram，格式也不完全符合&quot;有列表/有冒号&quot;的加分项。</li><li><strong>首句摘要 75.56，忠实度却是满分 1.000</strong>。因为忠实度的定义是 <code>|answer_terms ∩ reference_terms| / |answer_terms|</code> —— <strong>分母是答案自己的词</strong>，所以&quot;少说&quot;完全不被惩罚，只惩罚&quot;多说&quot;。这是本评分器的已知偏向，见 4.1。</li><li><strong>弱基线 21.87，其中去重复 1.000（满分）</strong>。一个 13 个字的车轱辘话，在&quot;去重复&quot;这一项上拿了满分 —— 因为它根本没重复。<strong>单一维度完全不能判优劣</strong>，必须看加权总分和各分项。</li><li><strong>弱基线忠实度 0.015</strong>，几乎为 0。它说的「Java」「根据」「具体」「情况」「分析」几乎都不是参考答案里的词。<strong>这一项才是真正把废话答案区分出来的东西</strong>（权重 20%，仅次于关键词）。</li></ul>
+<figure class="figure"><img alt="M02 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-02-benchmark.png" loading="lazy"/><figcaption>M02 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-忠实度是查准率不是查全率-越短越容易满分">4.1 忠实度是&quot;查准率&quot;，不是&quot;查全率&quot;—— 越短越容易满分</h3>
+<pre><code>faithfulness = |answer_terms ∩ reference_terms| / |answer_terms|     # src/ie/autoeval.py:97</code></pre>
+<p>分母是<strong>答案自己的词数</strong>。后果：</p>
+<ul class="lvl"><li>只回答一个词且这个词在参考答案里 → 忠实度 <strong>1.000</strong>（首句摘要实测 1.000）。</li><li>回答很长但大部分不在参考答案里 → 忠实度很低（弱基线 0.015）。</li></ul>
+<p>所以忠实度单项<strong>惩罚&quot;胡说&quot;，不惩罚&quot;不说&quot;</strong>。必须和 <code>length_reasonableness</code>（权重 15%）配对使用 —— 后者在 <code>ratio &lt; 0.6</code> 时按 <code>ratio / 0.6</code> 线性扣分，专门治&quot;少说&quot;。</p>
+<p>实测印证：首句摘要长度项 0.639（被扣了），忠实度 1.000（被奖励了），两项合起来才给出合理的 75.56。</p>
+<blockquote><p>可迁移的经验：<strong>任何一个&quot;比值型&quot;指标，先问分母是什么</strong>。分母是自己 → 越短越占便宜；分母是参考答案 → 越长越占便宜。两种都不是质量度量，必须配对。</p></blockquote>
+<h3 id="42-参考答案自己拿不到-100-分-这是特性不是-bug">4.2 参考答案自己拿不到 100 分 —— 这是特性不是 bug</h3>
+<p>参考答案 94.38 分，丢了 5.62 分（格式 0.700、去重复 0.888）。</p>
+<p>这不是评分器写错了。<strong>&quot;参考答案&quot;只是一个参考，不是唯一正确答案</strong>。评分函数衡量的是&quot;这个答案像不像一个好的回答&quot;（有关键词、有格式、长度合适、不复读），参考答案在这些维度上本来就不一定完美。</p>
+<p>真正要警惕的是反过来：如果某个评分器给参考答案 100 分，<strong>那它一定在跟答案做字符串比对</strong>，也就失去了评估&quot;没见过的好答案&quot;的能力。</p>
+<h3 id="43-三个模型都是规则函数-这不是偷懒">4.3 三个&quot;模型&quot;都是规则函数 —— 这不是偷懒</h3>
+<p>排行榜上的三项全是不调模型的规则函数。这看起来像&quot;没测模型&quot;，但实际上是最有价值的一类对照实验：</p>
+<ul class="lvl"><li><strong>参考答案 = 上界</strong>（94.38）</li><li><strong>首句摘要 = 信息量的消融</strong>（砍掉 2/3 内容，掉 18.82 分）</li><li><strong>弱基线 = 下界</strong>（21.87）</li></ul>
+<p><strong>先把评分器的动态范围标定出来，再往里放真模型。</strong> 如果你不知道&quot;废话&quot;该得多少分、&quot;完美&quot;该得多少分，真模型拿到的 60 分你也不知道该高兴还是该难过。</p>
+<p>本项目后续各章（M05 的 adapter / INT8 比较）走的都是这条路线：<strong>先有可解释的对照组，再放真模型</strong>。</p>
+<h3 id="44-排序键必须全序否则排行榜不可复现">4.4 排序键必须全序，否则排行榜不可复现</h3>
+<pre><code>rows.sort(key=lambda row: (-row[&quot;total&quot;], row[&quot;model&quot;]))    # src/ie/benchmark.py:54</code></pre>
+<p>只按 <code>-total</code> 排序时，Python 的 <code>sort</code> 是稳定的 —— 相同分数会保持<strong>输入字典的顺序</strong>，而 dict 顺序依赖于插入顺序。加上 <code>model</code> 作为第二键，排序变成<strong>全序</strong>，任何机器上跑出同一张表。</p>
+<p>这类&quot;可复现性细节&quot;在 P08 已经踩过一次（<code>Tensor._prev</code> 是 set 导致跨进程不可复现）。本项目在排序、抽样（M03 的 seed）、指标汇总处都做了同样的处理。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>Benchmark = <strong>任务集 + 评分函数 + 汇总口径</strong>；三者任一变化，分数就不可比。</li><li><code>predictor: str → str</code> 是核心抽象：<strong>模型只是一个函数</strong>，规则函数也能进排行榜当对照组。</li><li>实测排行：<strong>参考答案 94.38 &gt; 首句摘要 75.56 &gt; 弱基线 21.87</strong>（6 任务 / 4 主题，全部由规则评分真实计算）。</li><li><strong>参考答案只拿 94.38</strong>（格式 0.700、去重复 0.888）—— 评分器衡量的是&quot;像不像好答案&quot;，不是&quot;像不像参考答案&quot;。</li><li><strong>忠实度是查准率不是查全率</strong>：首句摘要忠实度 1.000 却只拿 75.56，靠长度项 0.639 兜底。比值型指标必须先问分母是什么。</li><li><strong>弱基线去重复满分 1.000 却总分 21.87</strong> —— 单一维度不能判优劣，必须看加权总分 + 分项表。</li><li>手写实现的意义：因为评分器是自己写的，我才知道&quot;参考答案为什么不是 100 分&quot;；用 <code>lm-eval-harness</code> 这类框架只能拿到一个分数，解释不了它。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/benchmark.py</code></td><td><code>BenchmarkTask</code>（task_id/prompt/reference/keywords/topic）/ <code>Benchmark.evaluate</code>（单模型跑全任务）/ <code>Benchmark.compare</code>（多模型排行，<code>(-total, model)</code> 全序排序）/ <code>tasks_from_records</code>（把 held-out 记录转成任务）</td></tr><tr><td><code>src/ie/autoeval.py</code></td><td>提供 <code>evaluate_answer</code> 与 <code>aggregate_scores</code>（本章的打分与汇总口径来源，详见 M04）</td></tr><tr><td><code>src/ie/evalset.py</code></td><td><code>infer_topic</code>：给任务打主题标签，供&quot;主题数&quot;统计</td></tr><tr><td><code>demos/demo_02_benchmark.py</code></td><td>3 节：任务集构造 / 三个 predictor / 总分排行</td></tr><tr><td><code>demos/out/demo_02_benchmark_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/benchmark.svg</code></td><td>本章 benchmark 流水线图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.1 → <strong>v0.2</strong>，M02 Benchmark 落地。实测（Java held-out v1，6 任务 / 4 主题）：排行 <strong>参考答案 94.38 &gt; 首句摘要 75.56 &gt; 弱基线 21.87</strong>；分项显示参考答案格式 0.700 / 去重复 0.888（拿不到满分），首句摘要忠实度 1.000 但长度仅 0.639，弱基线去重复 1.000 而忠实度仅 0.015。并诚实记录「忠实度分母是答案自身 → 惩罚胡说不惩罚少说」「三个&quot;模型&quot;均为规则函数，用于标定评分器动态范围」。纯 numpy、无评测框架。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

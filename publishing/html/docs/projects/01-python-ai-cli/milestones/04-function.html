@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="lesson-04-function把-ai-cli-assistant-从能跑变成可维护">Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”</h1>
+<blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   主线项目：Python AI CLI Assistant   本章目标：通过重构已有项目，理解函数、参数、返回值、作用域，并建立最基本的代码模块化思维。</p></blockquote>
+<hr/>
+<h1 id="1-这一次我们遇到了什么问题">1. 这一次我们遇到了什么问题？</h1>
+<p>上一章，我们让 AI CLI Assistant 真正“跑起来”。</p>
+<p>现在程序已经支持：</p>
+<pre><code>/help
+/history
+/clear
+/exit</code></pre>
+<p>代码大概会变成：</p>
+<pre><code>while True:
+    user_input = input(&quot;You: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        ...
+    
+    if user_input == &quot;/help&quot;:
+        ...
+
+    if user_input == &quot;/history&quot;:
+        ...
+
+    if user_input == &quot;/clear&quot;:
+        ...
+
+    ...</code></pre>
+<p>现在如果继续增加：</p>
+<pre><code>/size
+/last
+/save
+/load
+/model
+/config</code></pre>
+<p>会发生什么？</p>
+<p>代码会越来越长。</p>
+<p>最终可能变成：</p>
+<pre><code>main.py
+│
+├── 输入
+├── /help
+├── /history
+├── /clear
+├── /exit
+├── /size
+├── /last
+├── /save
+├── /load
+├── 模型调用
+├── 错误处理
+└── 输出</code></pre>
+<p>这时候问题已经不是“代码能不能运行”。</p>
+<p>而是：</p>
+<blockquote><p><strong>代码还能不能维护？</strong></p></blockquote>
+<hr/>
+<h1 id="2-项目需求把不同职责拆开">2. 项目需求：把不同职责拆开</h1>
+<p>我们希望把：</p>
+<pre><code>显示帮助
+显示历史
+清空历史
+保存消息
+读取消息</code></pre>
+<p>拆成独立的功能。</p>
+<p>于是我们需要：</p>
+<h1 id="function函数">Function【函数】</h1>
+<p>可以先把函数理解成：</p>
+<blockquote><p><strong>给一段有明确职责的代码起一个名字，让它可以重复调用。</strong></p></blockquote>
+<hr/>
+<h1 id="3-先从一个真实需求开始">3. 先从一个真实需求开始</h1>
+<p>我们的 Assistant 经常需要打印欢迎信息。</p>
+<p>现在可能写：</p>
+<pre><code>print(&quot;====================================&quot;)
+print(&quot; AI Engineer CLI Assistant&quot;)
+print(&quot; 输入 /help 查看帮助&quot;)
+print(&quot;====================================&quot;)</code></pre>
+<p>假设以后程序启动很多地方都要显示这个欢迎界面。</p>
+<p>我们可以把它变成：</p>
+<pre><code>def show_banner():
+    print(&quot;====================================&quot;)
+    print(&quot; AI Engineer CLI Assistant&quot;)
+    print(&quot; 输入 /help 查看帮助&quot;)
+    print(&quot;====================================&quot;)</code></pre>
+<p>然后：</p>
+<pre><code>show_banner()</code></pre>
+<p>运行：</p>
+<pre><code>====================================
+ AI Engineer CLI Assistant
+ 输入 /help 查看帮助
+====================================</code></pre>
+<p>这就是我们的第一个函数。</p>
+<hr/>
+<h1 id="4-def-是什么">4. <code>def</code> 是什么？</h1>
+<p>Python：</p>
+<pre><code>def show_banner():
+    ...</code></pre>
+<p><code>def</code>：</p>
+<blockquote><p><strong>define【定义】</strong></p></blockquote>
+<p>表示：</p>
+<blockquote><p>我要定义一个函数。</p></blockquote>
+<p>结构：</p>
+<pre><code>def 函数名():
+    函数内部代码</code></pre>
+<p>例如：</p>
+<pre><code>def say_hello():
+    print(&quot;Hello&quot;)</code></pre>
+<p>调用：</p>
+<pre><code>say_hello()</code></pre>
+<hr/>
+<h1 id="5-函数最重要的思想职责">5. 函数最重要的思想：职责</h1>
+<p>一个好的函数通常解决一个明确问题。</p>
+<p>例如：</p>
+<pre><code>show_banner()</code></pre>
+<p>负责：</p>
+<blockquote><p>显示欢迎信息。</p></blockquote>
+<pre><code>show_help()</code></pre>
+<p>负责：</p>
+<blockquote><p>显示帮助。</p></blockquote>
+<pre><code>show_history()</code></pre>
+<p>负责：</p>
+<blockquote><p>显示聊天历史。</p></blockquote>
+<pre><code>clear_history()</code></pre>
+<p>负责：</p>
+<blockquote><p>清空聊天历史。</p></blockquote>
+<p>于是原来的大程序逐渐变成：</p>
+<pre><code>AI CLI Assistant
+│
+├── show_banner()
+├── show_help()
+├── show_history()
+├── clear_history()
+└── main_loop()</code></pre>
+<p>这就是最基础的：</p>
+<h1 id="modularity模块化">Modularity【模块化】</h1>
+<p>虽然我们现在还没有正式拆成多个 Python 文件，但已经开始建立模块化思维。</p>
+<hr/>
+<h1 id="6-第一个函数showhelp">6. 第一个函数：<code>show_help()</code></h1>
+<p>现在项目需求：</p>
+<pre><code>/help</code></pre>
+<p>显示：</p>
+<pre><code>可用命令：
+/help
+/history
+/clear
+/size
+/last
+/exit</code></pre>
+<p>直接写：</p>
+<pre><code>def show_help():
+    print(&quot;&quot;&quot;
+可用命令：
+
+/help
+/history
+/clear
+/size
+/last
+/exit
+&quot;&quot;&quot;)</code></pre>
+<p>然后：</p>
+<pre><code>show_help()</code></pre>
+<hr/>
+<h1 id="7-把-history-变成函数">7. 把 <code>/history</code> 变成函数</h1>
+<p>上一章：</p>
+<pre><code>if user_input == &quot;/history&quot;:
+    for message in messages:
+        print(
+            f&quot;{message[&#x27;role&#x27;]}: &quot;
+            f&quot;{message[&#x27;content&#x27;]}&quot;
+        )
+
+    continue</code></pre>
+<p>现在改成：</p>
+<pre><code>def show_history(messages):
+    print(&quot;\n========== Conversation ==========&quot;)
+
+    for message in messages:
+        print(
+            f&quot;{message[&#x27;role&#x27;]}: &quot;
+            f&quot;{message[&#x27;content&#x27;]}&quot;
+        )
+
+    print(&quot;===================================&quot;)</code></pre>
+<p>调用：</p>
+<pre><code>show_history(messages)</code></pre>
+<p>这里出现了函数非常重要的东西：</p>
+<h1 id="parameter参数">Parameter【参数】</h1>
+<hr/>
+<h1 id="8-为什么需要参数">8. 为什么需要参数？</h1>
+<p>看看：</p>
+<pre><code>def show_history(messages):</code></pre>
+<p>这里的：</p>
+<pre><code>messages</code></pre>
+<p>就是参数。</p>
+<p>因为 <code>show_history()</code> 不知道：</p>
+<blockquote><p>你到底要显示哪个聊天记录？</p></blockquote>
+<p>所以调用时：</p>
+<pre><code>show_history(messages)</code></pre>
+<p>把当前的 <code>messages</code> 传进去。</p>
+<p>可以理解：</p>
+<pre><code>messages
+   ↓
+show_history()
+   ↓
+遍历
+   ↓
+输出</code></pre>
+<hr/>
+<h1 id="9-java-开发者怎么理解参数">9. Java 开发者怎么理解参数？</h1>
+<p>Java：</p>
+<pre><code>void showHistory(List&lt;Map&lt;String, String&gt;&gt; messages) {
+    ...
+}</code></pre>
+<p>Python：</p>
+<pre><code>def show_history(messages):
+    ...</code></pre>
+<p>你可以看到：</p>
+<p>Python 的函数参数定义更加简洁。</p>
+<p>后面我们会学类型标注（Type Hint），让它变得更加明确。</p>
+<p>现在先掌握：</p>
+<blockquote><p><strong>函数可以接收数据。</strong></p></blockquote>
+<hr/>
+<h1 id="10-参数可以有多个">10. 参数可以有多个</h1>
+<p>例如我们的 Assistant 想打印：</p>
+<pre><code>[USER] 你好</code></pre>
+<p>可以：</p>
+<pre><code>def print_message(role, content):
+    print(f&quot;[{role}] {content}&quot;)</code></pre>
+<p>调用：</p>
+<pre><code>print_message(&quot;user&quot;, &quot;你好&quot;)
+print_message(&quot;assistant&quot;, &quot;你好，有什么可以帮助你？&quot;)</code></pre>
+<p>输出：</p>
+<pre><code>[user] 你好
+[assistant] 你好，有什么可以帮助你？</code></pre>
+<p>所以：</p>
+<pre><code>函数
+ ↓
+可以接收一个参数
+ ↓
+也可以接收多个参数</code></pre>
+<figure class="figure"><img alt="真实运行：默认参数、*args/**kwargs、可变默认参数陷阱与 lambda 排序" src="../../../../../../projects/01-python-ai-cli/assets/term-function.png" loading="lazy"/><figcaption>真实运行：默认参数、*args/**kwargs、可变默认参数陷阱与 lambda 排序</figcaption></figure>
+<figure class="figure"><img alt="真实运行：第 5-6 节——可变默认参数陷阱（两次调用共用同一个 list）与 lambda + sorted(key=)" src="../../../../../../projects/01-python-ai-cli/assets/term-function-trap.png" loading="lazy"/><figcaption>真实运行：第 5-6 节——可变默认参数陷阱（两次调用共用同一个 list）与 lambda + sorted(key=)</figcaption></figure>
+<hr/>
+<h1 id="11-一个非常重要的区别参数-vs-实际传入值">11. 一个非常重要的区别：参数 vs 实际传入值</h1>
+<p>例如：</p>
+<pre><code>def print_message(role, content):
+    ...</code></pre>
+<p>这里：</p>
+<pre><code>role
+content</code></pre>
+<p>是：</p>
+<blockquote><p>参数（Parameter）</p></blockquote>
+<p>调用：</p>
+<pre><code>print_message(&quot;user&quot;, &quot;你好&quot;)</code></pre>
+<p>这里：</p>
+<pre><code>&quot;user&quot;
+&quot;你好&quot;</code></pre>
+<p>是：</p>
+<blockquote><p>实际参数值 / Arguments【实参】</p></blockquote>
+<p>现在先简单记：</p>
+<pre><code>定义时：
+参数
+
+调用时：
+传入值</code></pre>
+<hr/>
+<h1 id="12-项目又遇到了一个问题">12. 项目又遇到了一个问题</h1>
+<p>现在：</p>
+<pre><code>def show_history(messages):
+    ...</code></pre>
+<p>这个函数做完事情后：</p>
+<blockquote><p>它只是打印。</p></blockquote>
+<p>但是有时候我们希望函数：</p>
+<blockquote><p><strong>处理完数据后，把结果交给别人。</strong></p></blockquote>
+<p>例如：</p>
+<pre><code>messages
+ ↓
+统计消息数量
+ ↓
+返回数量</code></pre>
+<p>于是出现：</p>
+<h1 id="return返回值">return【返回值】</h1>
+<hr/>
+<h1 id="13-第一个返回值函数">13. 第一个返回值函数</h1>
+<p>需求：</p>
+<blockquote><p>获取当前聊天记录有多少条消息。</p></blockquote>
+<p>写：</p>
+<pre><code>def get_message_count(messages):
+    return len(messages)</code></pre>
+<p>调用：</p>
+<pre><code>count = get_message_count(messages)
+
+print(count)</code></pre>
+<p>例如：</p>
+<pre><code>3</code></pre>
+<p>这里发生了：</p>
+<pre><code>messages
+ ↓
+get_message_count()
+ ↓
+计算
+ ↓
+return
+ ↓
+count</code></pre>
+<hr/>
+<h1 id="14-return-到底做了什么">14. <code>return</code> 到底做了什么？</h1>
+<pre><code>def add(a, b):
+    return a + b</code></pre>
+<p>调用：</p>
+<pre><code>result = add(10, 20)</code></pre>
+<p>那么：</p>
+<pre><code>a = 10
+b = 20
+ ↓
+10 + 20
+ ↓
+30
+ ↓
+return
+ ↓
+result = 30</code></pre>
+<p>所以：</p>
+<blockquote><p><code>return</code> 把函数计算得到的结果交给调用者。</p></blockquote>
+<hr/>
+<h1 id="15-print-和-return-不一样">15. <code>print()</code> 和 <code>return</code> 不一样</h1>
+<p>这是非常重要的区别。</p>
+<h3 id="print"><code>print()</code></h3>
+<pre><code>def add(a, b):
+    print(a + b)</code></pre>
+<p>调用：</p>
+<pre><code>result = add(10, 20)</code></pre>
+<p>屏幕可能看到：</p>
+<pre><code>30</code></pre>
+<p>但是：</p>
+<pre><code>result</code></pre>
+<p>实际上没有得到 <code>30</code>。</p>
+<hr/>
+<h3 id="return"><code>return</code></h3>
+<pre><code>def add(a, b):
+    return a + b</code></pre>
+<p>调用：</p>
+<pre><code>result = add(10, 20)</code></pre>
+<p>现在：</p>
+<pre><code>result = 30</code></pre>
+<p>所以：</p>
+<blockquote><p><code>print()</code> 是展示结果，<code>return</code> 是把结果交给程序继续处理。</p></blockquote>
+<p>这个区别以后开发 AI 应用非常重要。</p>
+<hr/>
+<h1 id="16-真实-ai-项目里的区别">16. 真实 AI 项目里的区别</h1>
+<p>例如：</p>
+<pre><code>def generate_answer():
+    answer = &quot;你好&quot;
+    print(answer)</code></pre>
+<p>这个函数只能显示答案。</p>
+<p>但如果：</p>
+<pre><code>def generate_answer():
+    answer = &quot;你好&quot;
+    return answer</code></pre>
+<p>那么调用方可以：</p>
+<pre><code>answer = generate_answer()
+
+save_to_history(answer)
+send_to_frontend(answer)
+evaluate_answer(answer)</code></pre>
+<p>这就是为什么工程代码更依赖 <code>return</code>。</p>
+<hr/>
+<h1 id="17-项目升级保存消息的函数">17. 项目升级：保存消息的函数</h1>
+<p>现在我们每次都写：</p>
+<pre><code>message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: user_input
+}
+
+messages.append(message)</code></pre>
+<p>可以封装：</p>
+<pre><code>def add_message(messages, role, content):
+    message = {
+        &quot;role&quot;: role,
+        &quot;content&quot;: content
+    }
+
+    messages.append(message)</code></pre>
+<p>调用：</p>
+<pre><code>add_message(
+    messages,
+    &quot;user&quot;,
+    &quot;你好&quot;
+)</code></pre>
+<p>现在整个职责非常明确：</p>
+<blockquote><p><code>add_message()</code> 负责向消息列表添加一条消息。</p></blockquote>
+<hr/>
+<h1 id="18-为什么函数让项目变得更好">18. 为什么函数让项目变得更好？</h1>
+<p>以前：</p>
+<pre><code>while
+ ↓
+if
+ ↓
+创建 dict
+ ↓
+append</code></pre>
+<p>现在：</p>
+<pre><code>while
+ ↓
+add_message()</code></pre>
+<p>代码阅读变成：</p>
+<pre><code>用户输入
+ ↓
+add_message()</code></pre>
+<p>这就是：</p>
+<h1 id="abstraction抽象">Abstraction【抽象】</h1>
+<p>你暂时不需要关心：</p>
+<pre><code>Dict 怎么创建？
+append 怎么调用？</code></pre>
+<p>只需要知道：</p>
+<blockquote><p><code>add_message()</code> 的职责是“添加一条消息”。</p></blockquote>
+<hr/>
+<h1 id="19-这就是函数真正的价值">19. 这就是函数真正的价值</h1>
+<p>不是：</p>
+<blockquote><p>“代码少了几行。”</p></blockquote>
+<p>真正的价值是：</p>
+<pre><code>把复杂实现
+隐藏在
+一个有意义的名字后面</code></pre>
+<p>例如：</p>
+<pre><code>show_history(messages)</code></pre>
+<p>比：</p>
+<pre><code>一大堆 for + print</code></pre>
+<p>更容易理解。</p>
+<hr/>
+<h1 id="20-现在重构整个项目">20. 现在重构整个项目</h1>
+<p>我们已经拥有：</p>
+<pre><code>show_banner()
+show_help()
+show_history(messages)
+clear_history(messages)
+add_message(messages, role, content)
+get_message_count(messages)</code></pre>
+<p>接下来把主程序重新组织。</p>
+<hr/>
+<h1 id="21-clearhistory">21. <code>clear_history()</code></h1>
+<pre><code>def clear_history(messages):
+    messages.clear()</code></pre>
+<p>调用：</p>
+<pre><code>clear_history(messages)</code></pre>
+<p>职责：</p>
+<blockquote><p>清空历史。</p></blockquote>
+<hr/>
+<h1 id="22-getmessagecount">22. <code>get_message_count()</code></h1>
+<pre><code>def get_message_count(messages):
+    return len(messages)</code></pre>
+<p>调用：</p>
+<pre><code>count = get_message_count(messages)
+
+print(f&quot;当前共有 {count} 条消息。&quot;)</code></pre>
+<hr/>
+<h1 id="23-showlastmessage">23. <code>show_last_message()</code></h1>
+<p>上一章 Challenge 要实现：</p>
+<pre><code>/last</code></pre>
+<p>现在正好用函数。</p>
+<pre><code>def show_last_message(messages):
+    if not messages:
+        print(&quot;AI: 当前没有聊天记录。&quot;)
+        return
+
+    last_message = messages[-1]
+
+    print(
+        f&quot;AI: 最后一条消息：&quot;
+        f&quot;{last_message[&#x27;role&#x27;]}: &quot;
+        f&quot;{last_message[&#x27;content&#x27;]}&quot;
+    )</code></pre>
+<p>这里出现了：</p>
+<pre><code>if not messages:</code></pre>
+<p>它的意思是：</p>
+<blockquote><p>如果 <code>messages</code> 为空。</p></blockquote>
+<p>暂时先把它理解为：</p>
+<pre><code>空列表
+→ False
+
+有内容的列表
+→ True</code></pre>
+<p>后面会系统学习 Python 的真假判断。</p>
+<hr/>
+<h1 id="24-messages1-是什么">24. <code>messages[-1]</code> 是什么？</h1>
+<p>如果：</p>
+<pre><code>messages = [
+    &quot;A&quot;,
+    &quot;B&quot;,
+    &quot;C&quot;
+]</code></pre>
+<p>那么：</p>
+<pre><code>messages[-1]</code></pre>
+<p>得到：</p>
+<pre><code>C</code></pre>
+<p>因为 Python 支持：</p>
+<blockquote><p><strong>负数索引【Negative Index】</strong></p></blockquote>
+<pre><code>-1 → 最后一个
+-2 → 倒数第二个
+-3 → 倒数第三个</code></pre>
+<p>这个能力以后处理消息历史非常有用。</p>
+<hr/>
+<h1 id="25-开始重构主程序">25. 开始重构主程序</h1>
+<p>现在我们的代码逻辑可以变成：</p>
+<pre><code>messages = []
+
+show_banner()
+
+while True:
+    user_input = input(&quot;You: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        print(&quot;AI: 再见！&quot;)
+        break
+
+    if user_input == &quot;/help&quot;:
+        show_help()
+        continue
+
+    if user_input == &quot;/history&quot;:
+        show_history(messages)
+        continue
+
+    if user_input == &quot;/clear&quot;:
+        clear_history(messages)
+        print(&quot;AI: 聊天记录已清空。&quot;)
+        continue
+
+    if user_input == &quot;/size&quot;:
+        count = get_message_count(messages)
+        print(f&quot;AI: 当前共有 {count} 条消息。&quot;)
+        continue
+
+    if user_input == &quot;/last&quot;:
+        show_last_message(messages)
+        continue
+
+    add_message(
+        messages,
+        &quot;user&quot;,
+        user_input
+    )
+
+    print(&quot;AI: 我收到你的消息了。&quot;)</code></pre>
+<p>你会发现：</p>
+<blockquote><p><strong>主流程突然变得非常容易读。</strong></p></blockquote>
+<hr/>
+<h1 id="26-这就是所谓控制层和实现层">26. 这就是所谓“控制层”和“实现层”</h1>
+<p>现在可以粗略理解为：</p>
+<pre><code>主循环
+ ↓
+决定“做什么”
+
+函数
+ ↓
+具体“怎么做”</code></pre>
+<p>例如：</p>
+<pre><code>/history
+ ↓
+show_history()</code></pre>
+<p>主循环只负责判断：</p>
+<blockquote><p>用户执行了 <code>/history</code>。</p></blockquote>
+<p>具体怎么展示历史：</p>
+<blockquote><p><code>show_history()</code> 自己负责。</p></blockquote>
+<p>这是非常重要的软件设计思想。</p>
+<hr/>
+<h1 id="27-java-开发者可以这样理解">27. Java 开发者可以这样理解</h1>
+<p>Java 项目里面通常不会把所有代码都写进：</p>
+<pre><code>public static void main(String[] args)</code></pre>
+<p>而是：</p>
+<pre><code>main
+ ↓
+service
+ ↓
+repository
+ ↓
+utils</code></pre>
+<p>Python 现在也开始建立类似思想：</p>
+<pre><code>main loop
+ ↓
+function
+ ↓
+function
+ ↓
+function</code></pre>
+<p>后面继续学习：</p>
+<pre><code>module
+package
+class</code></pre>
+<p>之后，我们会真正拆成：</p>
+<pre><code>main.py
+llm.py
+conversation.py
+config.py</code></pre>
+<p>所以：</p>
+<blockquote><p><strong>Lesson 04 是从“写 Python 脚本”走向“写 Python 工程”的第一步。</strong></p></blockquote>
+<hr/>
+<h1 id="28-一个新问题函数里的变量去哪了">28. 一个新问题：函数里的变量去哪了？</h1>
+<p>例如：</p>
+<pre><code>def show_banner():
+    title = &quot;AI Engineer CLI Assistant&quot;
+    print(title)</code></pre>
+<p>外面：</p>
+<pre><code>print(title)</code></pre>
+<p>可能会报错。</p>
+<p>为什么？</p>
+<p>因为：</p>
+<blockquote><p><code>title</code> 是在函数内部创建的变量。</p></blockquote>
+<p>这涉及：</p>
+<h1 id="scope作用域">Scope【作用域】</h1>
+<hr/>
+<h1 id="29-暂时只掌握最基本的作用域">29. 暂时只掌握最基本的作用域</h1>
+<p>例如：</p>
+<pre><code>def test():
+    x = 10
+    print(x)</code></pre>
+<p>函数内部：</p>
+<pre><code>print(x)</code></pre>
+<p>可以。</p>
+<p>外部：</p>
+<pre><code>print(x)</code></pre>
+<p>不一定可以，因为：</p>
+<blockquote><p><code>x</code> 属于函数内部作用域。</p></blockquote>
+<p>你现在先记住：</p>
+<pre><code>函数内部定义的变量
+→ 默认只在函数内部使用</code></pre>
+<p>后面学习模块和类时，我们会继续深入。</p>
+<hr/>
+<h1 id="30-参数为什么能解决这个问题">30. 参数为什么能解决这个问题？</h1>
+<p>看看：</p>
+<pre><code>def show_history(messages):
+    ...</code></pre>
+<p>虽然 <code>messages</code> 是函数内部使用的名字：</p>
+<p>但它来自外部：</p>
+<pre><code>show_history(messages)</code></pre>
+<p>所以参数提供了一条数据进入函数的通道：</p>
+<pre><code>外部数据
+ ↓
+参数
+ ↓
+函数内部</code></pre>
+<p>而：</p>
+<pre><code>return result</code></pre>
+<p>则是一条从函数内部出去的通道：</p>
+<pre><code>函数内部
+ ↓
+return
+ ↓
+外部</code></pre>
+<p>于是可以把函数理解成：</p>
+<pre><code>        Function
+    ┌──────────────┐
+数据 →  参数       │
+    │              │
+    │   处理        │
+    │              ↓
+    │           return
+    └──────────────┘</code></pre>
+<p>这个模型非常值得记住。</p>
+<hr/>
+<h1 id="31-项目里的真实应用">31. 项目里的真实应用</h1>
+<p>例如：</p>
+<pre><code>def build_message(role, content):
+    return {
+        &quot;role&quot;: role,
+        &quot;content&quot;: content
+    }</code></pre>
+<p>调用：</p>
+<pre><code>message = build_message(
+    &quot;user&quot;,
+    &quot;什么是 Python？&quot;
+)</code></pre>
+<p>得到：</p>
+<pre><code>{
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 Python？&quot;
+}</code></pre>
+<p>然后：</p>
+<pre><code>messages.append(message)</code></pre>
+<p>于是：</p>
+<pre><code>用户输入
+ ↓
+build_message()
+ ↓
+Dict
+ ↓
+return
+ ↓
+messages.append()</code></pre>
+<p>这已经非常接近未来 LLM API 的代码结构。</p>
+<hr/>
+<h1 id="32-第二个重要项目实验assistant-模拟回答">32. 第二个重要项目实验：Assistant 模拟回答</h1>
+<p>现在可以写：</p>
+<pre><code>def generate_mock_response(user_input):
+    return f&quot;我收到你的问题了：{user_input}&quot;</code></pre>
+<p>调用：</p>
+<pre><code>answer = generate_mock_response(user_input)</code></pre>
+<p>然后：</p>
+<pre><code>add_message(
+    messages,
+    &quot;assistant&quot;,
+    answer
+)</code></pre>
+<p>这样聊天记录就不再只有：</p>
+<pre><code>user
+user
+user</code></pre>
+<p>而是：</p>
+<pre><code>user
+assistant
+user
+assistant
+user
+assistant</code></pre>
+<hr/>
+<h1 id="33-完整的-v04-版本">33. 完整的 v0.4 版本</h1>
+<p>现在组合起来：</p>
+<pre><code>def show_banner():
+    print(&quot;====================================&quot;)
+    print(&quot; AI Engineer CLI Assistant&quot;)
+    print(&quot; 输入 /help 查看帮助&quot;)
+    print(&quot;====================================&quot;)
+
+
+def show_help():
+    print(&quot;&quot;&quot;
+可用命令：
+
+/help
+/history
+/clear
+/size
+/last
+/exit
+&quot;&quot;&quot;)
+
+
+def show_history(messages):
+    print(&quot;\n========== Conversation ==========&quot;)
+
+    if not messages:
+        print(&quot;暂无消息。&quot;)
+    else:
+        for message in messages:
+            print(
+                f&quot;{message[&#x27;role&#x27;]}: &quot;
+                f&quot;{message[&#x27;content&#x27;]}&quot;
+            )
+
+    print(&quot;===================================&quot;)
+
+
+def clear_history(messages):
+    messages.clear()
+
+
+def get_message_count(messages):
+    return len(messages)
+
+
+def show_last_message(messages):
+    if not messages:
+        print(&quot;AI: 当前没有聊天记录。&quot;)
+        return
+
+    last_message = messages[-1]
+
+    print(
+        f&quot;AI: 最后一条消息：&quot;
+        f&quot;{last_message[&#x27;role&#x27;]}: &quot;
+        f&quot;{last_message[&#x27;content&#x27;]}&quot;
+    )
+
+
+def add_message(messages, role, content):
+    message = {
+        &quot;role&quot;: role,
+        &quot;content&quot;: content
+    }
+
+    messages.append(message)
+
+
+def generate_mock_response(user_input):
+    return f&quot;我收到你的问题了：{user_input}&quot;
+
+
+messages = []
+
+show_banner()
+
+while True:
+    user_input = input(&quot;\nYou: &quot;)
+
+    if user_input == &quot;/exit&quot;:
+        print(&quot;AI: 再见！&quot;)
+        break
+
+    if user_input == &quot;/help&quot;:
+        show_help()
+        continue
+
+    if user_input == &quot;/history&quot;:
+        show_history(messages)
+        continue
+
+    if user_input == &quot;/clear&quot;:
+        clear_history(messages)
+        print(&quot;AI: 聊天记录已清空。&quot;)
+        continue
+
+    if user_input == &quot;/size&quot;:
+        count = get_message_count(messages)
+        print(f&quot;AI: 当前共有 {count} 条消息。&quot;)
+        continue
+
+    if user_input == &quot;/last&quot;:
+        show_last_message(messages)
+        continue
+
+    add_message(
+        messages,
+        &quot;user&quot;,
+        user_input
+    )
+
+    answer = generate_mock_response(user_input)
+
+    add_message(
+        messages,
+        &quot;assistant&quot;,
+        answer
+    )
+
+    print(f&quot;AI: {answer}&quot;)</code></pre>
+<hr/>
+<h1 id="34-运行效果">34. 运行效果</h1>
+<pre><code>====================================
+ AI Engineer CLI Assistant
+ 输入 /help 查看帮助
+====================================
+
+You: 你好
+AI: 我收到你的问题了：你好
+
+You: 我正在学习 Python
+AI: 我收到你的问题了：我正在学习 Python
+
+You: /size
+AI: 当前共有 4 条消息。
+
+You: /last
+AI: 最后一条消息：assistant: 我收到你的问题了：我正在学习 Python
+
+You: /history
+
+========== Conversation ==========
+user: 你好
+assistant: 我收到你的问题了：你好
+user: 我正在学习 Python
+assistant: 我收到你的问题了：我正在学习 Python
+===================================</code></pre>
+<p>注意：</p>
+<blockquote><p>这里的 <code>generate_mock_response()</code> 还不是大模型。</p></blockquote>
+<p>它只是一个：</p>
+<h1 id="mock-response模拟响应">Mock Response【模拟响应】</h1>
+<p>我们故意这样做。</p>
+<p>因为现在的重点是：</p>
+<pre><code>Python 函数</code></pre>
+<p>下一阶段再把：</p>
+<pre><code>generate_mock_response()</code></pre>
+<p>替换成：</p>
+<pre><code>LLM API</code></pre>
+<p>这样知识不会跳跃。</p>
+<hr/>
+<h1 id="35-一个非常重要的工程思想替换实现">35. 一个非常重要的工程思想：替换实现</h1>
+<p>现在：</p>
+<pre><code>def generate_mock_response(user_input):
+    return f&quot;我收到你的问题了：{user_input}&quot;</code></pre>
+<p>以后：</p>
+<pre><code>def generate_response(user_input):
+    # 调用 LLM API
+    ...</code></pre>
+<p>主循环可能基本不用改：</p>
+<pre><code>answer = generate_response(user_input)</code></pre>
+<p>这就是函数带来的一个巨大价值：</p>
+<blockquote><p><strong>调用方不需要知道内部实现。</strong></p></blockquote>
+<p>今天：</p>
+<pre><code>Mock</code></pre>
+<p>明天：</p>
+<pre><code>OpenAI-compatible API</code></pre>
+<p>后天：</p>
+<pre><code>本地 Ollama</code></pre>
+<p>再后来：</p>
+<pre><code>vLLM</code></pre>
+<p>调用接口都可以尽量保持稳定。</p>
+<p>这就是：</p>
+<h1 id="abstraction抽象">Abstraction【抽象】</h1>
+<hr/>
+<h1 id="36-本章知识地图">36. 本章知识地图</h1>
+<pre><code>AI CLI Assistant
+      │
+      ↓
+   main loop
+      │
+      ├── show_banner()
+      │
+      ├── show_help()
+      │
+      ├── show_history(messages)
+      │
+      ├── clear_history(messages)
+      │
+      ├── get_message_count(messages)
+      │
+      ├── show_last_message(messages)
+      │
+      ├── add_message(...)
+      │
+      └── generate_mock_response(...)</code></pre>
+<h3 id="联系描述">联系描述</h3>
+<p>主循环负责控制程序运行和决定当前需要执行哪个动作，而每个函数只负责一个明确职责。外部数据通过参数进入函数，函数处理完成后可以通过 <code>return</code> 把结果交给调用者。这样主循环不需要知道每个功能内部的实现细节，程序开始具备基本的模块化和抽象能力。以后接入真正的 LLM API 时，只需要替换模型响应相关函数，而不用把整个 CLI 程序重新写一遍。</p>
+<hr/>
+<h1 id="37-本章几个核心概念">37. 本章几个核心概念</h1>
+<h2 id="function函数">Function【函数】</h2>
+<p>一段具有明确职责、可以重复调用的代码。</p>
+<hr/>
+<h2 id="parameter参数">Parameter【参数】</h2>
+<p>函数接收外部数据的入口。</p>
+<pre><code>def show_history(messages):</code></pre>
+<p><code>messages</code> 就是参数。</p>
+<hr/>
+<h2 id="argument实参">Argument【实参】</h2>
+<p>调用函数时真正传进去的数据：</p>
+<pre><code>show_history(messages)</code></pre>
+<hr/>
+<h2 id="return返回值">Return【返回值】</h2>
+<p>函数将结果交给调用者：</p>
+<pre><code>return result</code></pre>
+<hr/>
+<h2 id="scope作用域">Scope【作用域】</h2>
+<p>决定变量在哪些代码范围内可以访问。</p>
+<p>本章先掌握：</p>
+<blockquote><p>函数内部变量默认属于函数内部。</p></blockquote>
+<hr/>
+<h2 id="abstraction抽象">Abstraction【抽象】</h2>
+<p>隐藏复杂实现，只暴露清晰的功能接口。</p>
+<p>例如：</p>
+<pre><code>generate_response(user_input)</code></pre>
+<p>调用方只关心：</p>
+<blockquote><p>“帮我生成回答。”</p></blockquote>
+<p>不需要关心里面到底是 Mock、API 还是本地模型。</p>
+<hr/>
+<h1 id="38-java-python-对照">38. Java → Python 对照</h1>
+<table><thead><tr><th>Java</th><th>Python</th></tr></thead><tbody><tr><td>方法 <code>method()</code></td><td>函数 <code>function()</code></td></tr><tr><td>参数</td><td>parameter</td></tr><tr><td>返回值</td><td><code>return</code></td></tr><tr><td><code>void</code></td><td>可以没有 <code>return</code>，默认返回 <code>None</code></td></tr><tr><td>方法体 <code>{}</code></td><td>缩进代码块</td></tr><tr><td>方法重载</td><td>Python 不采用 Java 式传统方法重载</td></tr><tr><td>局部变量</td><td>函数内部局部变量</td></tr></tbody></table>
+<p>注意：</p>
+<p>Python 的函数机制比 Java 方法简单很多，但后面会逐渐学：</p>
+<pre><code>默认参数
+关键字参数
+可变参数
+lambda
+高阶函数
+类型标注</code></pre>
+<p>现在不要提前展开。</p>
+<hr/>
+<h1 id="39-本章主动回忆">39. 本章主动回忆</h1>
+<p>不要回头看正文，先自己回答。</p>
+<h3 id="q1">Q1</h3>
+<p>为什么我们的 AI CLI Assistant 需要函数？</p>
+<p>不要回答：</p>
+<blockquote><p>“因为函数可以复用。”</p></blockquote>
+<p>请结合项目具体说明。</p>
+<hr/>
+<h3 id="q2">Q2</h3>
+<p>下面：</p>
+<pre><code>def show_history(messages):</code></pre>
+<p><code>messages</code> 是什么？</p>
+<hr/>
+<h3 id="q3">Q3</h3>
+<p>下面：</p>
+<pre><code>count = get_message_count(messages)</code></pre>
+<p>为什么需要 <code>return</code>？</p>
+<p>如果 <code>get_message_count()</code> 里面只有：</p>
+<pre><code>print(len(messages))</code></pre>
+<p>会发生什么？</p>
+<hr/>
+<h3 id="q4">Q4</h3>
+<p>解释：</p>
+<pre><code>message = build_message(
+    &quot;user&quot;,
+    &quot;你好&quot;
+)</code></pre>
+<p>数据是怎么进入函数，又怎么出来的？</p>
+<hr/>
+<h3 id="q5">Q5</h3>
+<p>为什么我们现在故意使用：</p>
+<pre><code>generate_mock_response()</code></pre>
+<p>而不是立刻连接大模型 API？</p>
+<hr/>
+<h3 id="q6">Q6</h3>
+<p>结合本项目解释：</p>
+<pre><code>Function
+Parameter
+Return
+Scope
+Abstraction</code></pre>
+<p>分别解决什么问题？</p>
+<hr/>
+<h1 id="40-本章-challenge自己重构">40. 本章 Challenge：自己重构</h1>
+<p>不要复制上面的最终代码。</p>
+<p>从上一章的 <code>v0.3</code> 开始自己重构。</p>
+<p>至少拆出：</p>
+<pre><code>show_banner()
+show_help()
+show_history()
+clear_history()
+add_message()
+get_message_count()</code></pre>
+<p>然后增加：</p>
+<pre><code>/last</code></pre>
+<p>要求 <code>/last</code> 使用独立函数。</p>
+<hr/>
+<h1 id="41-challenge-2增加用户消息-模拟-ai-回复">41. Challenge 2：增加“用户消息 + 模拟 AI 回复”</h1>
+<p>普通输入：</p>
+<pre><code>You: 什么是 Python？</code></pre>
+<p>程序：</p>
+<pre><code>AI: 我收到你的问题了：什么是 Python？</code></pre>
+<p>要求：</p>
+<pre><code>user message
++
+assistant message</code></pre>
+<p>都进入：</p>
+<pre><code>messages</code></pre>
+<p>所以最终：</p>
+<pre><code>user
+assistant
+user
+assistant</code></pre>
+<p>而不是只保存 User Message。</p>
+<hr/>
+<h1 id="42-challenge-3让函数真正返回结果">42. Challenge 3：让函数真正返回结果</h1>
+<p>写：</p>
+<pre><code>def generate_mock_response(user_input):
+    ...</code></pre>
+<p>要求：</p>
+<blockquote><p>函数内部不要直接 <code>print()</code> 最终答案，而是使用 <code>return</code>。</p></blockquote>
+<p>外部：</p>
+<pre><code>answer = generate_mock_response(user_input)</code></pre>
+<p>再：</p>
+<pre><code>print(f&quot;AI: {answer}&quot;)</code></pre>
+<p>这样你可以亲手理解：</p>
+<pre><code>Function
+ ↓
+return
+ ↓
+调用方
+ ↓
+继续处理</code></pre>
+<hr/>
+<h1 id="43-本章完成标准">43. 本章完成标准</h1>
+<h3 id="level-1">Level 1</h3>
+<p>知道什么是函数。</p>
+<h3 id="level-2">Level 2</h3>
+<p>能够自己写：</p>
+<pre><code>def hello():
+    print(&quot;Hello&quot;)</code></pre>
+<h3 id="level-3">Level 3</h3>
+<p>能够传参数：</p>
+<pre><code>def hello(name):
+    print(f&quot;Hello {name}&quot;)</code></pre>
+<h3 id="level-4">Level 4</h3>
+<p>能够返回：</p>
+<pre><code>def add(a, b):
+    return a + b</code></pre>
+<h3 id="level-5">Level 5</h3>
+<p>能够把 AI CLI Assistant 的重复逻辑拆成多个函数。</p>
+<h3 id="level-6">Level 6</h3>
+<p>能够解释：</p>
+<blockquote><p>为什么 <code>return</code> 比直接 <code>print()</code> 更适合工程代码？</p></blockquote>
+<h3 id="level-7">Level 7</h3>
+<p>不看答案，自己完成：</p>
+<blockquote><p><strong>AI CLI Assistant v0.4</strong></p></blockquote>
+<p>并保留：</p>
+<pre><code>v0.3
+→ 控制流
+
+v0.4
+→ 函数化</code></pre>
+<hr/>
+<h1 id="44-本章与下一章的连接">44. 本章与下一章的连接</h1>
+<p>现在项目已经从：</p>
+<pre><code>一个大脚本</code></pre>
+<p>变成：</p>
+<pre><code>main loop
+ ↓
+多个函数</code></pre>
+<p>但问题又出现了：</p>
+<blockquote><p><strong>这些函数全部写在一个 <code>main.py</code> 里，还是越来越长。</strong></p></blockquote>
+<p>于是下一章自然进入：</p>
+<h1 id="lesson-05-module-package把-ai-cli-assistant-拆成真正的-python-项目">Lesson 05 — Module / Package：把 AI CLI Assistant 拆成真正的 Python 项目</h1>
+<p>我们会把：</p>
+<pre><code>main.py</code></pre>
+<p>逐步拆成：</p>
+<pre><code>main.py
+config.py
+conversation.py
+assistant.py</code></pre>
+<p>理解：</p>
+<pre><code>Module【模块】
+Package【包】
+import
+from ... import ...</code></pre>
+<p>同时你会第一次真正感受到：</p>
+<blockquote><p><strong>Python 从“写脚本”开始进入“做工程”。</strong></p></blockquote>
+<p>再下一步，我们就可以继续学习：</p>
+<pre><code>文件
+JSON
+环境变量
+HTTP
+API</code></pre>
+<p>然后把现在的：</p>
+<pre><code>generate_mock_response()</code></pre>
+<p>替换成真正的：</p>
+<blockquote><p><strong>LLM API 调用。</strong></p></blockquote>
+<p>所以从 Lesson 01 到现在，你的路线其实一直没有断：</p>
+<pre><code>学习档案
+ ↓
+List / Dict
+ ↓
+Messages
+ ↓
+while / if
+ ↓
+Function
+ ↓
+Module
+ ↓
+HTTP
+ ↓
+LLM API</code></pre>
+<p>这就是我们整个 <strong>AI Engineer Journey</strong> 的“项目驱动”主线。</p>
+</main>
+</body>
+</html>

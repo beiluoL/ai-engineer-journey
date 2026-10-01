@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 05 — Multi-Head Attention：把 d_model 切成 h 份并行看</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-05-multihead-attention把-dmodel-切成-h-份并行看">Milestone 05 — Multi-Head Attention：把 d_model 切成 h 份并行看</h1>
+<p>Milestone 04 写通了单头注意力：每个位置学<strong>一种</strong>「该看哪里」的模式。但语言里要同时关注的东西很多 —— 语法依存、指代、远近、语义相似。单头注意力一次只能学一个模式。Multi-Head Attention 的解法很朴素：<strong>把 <code>d_model</code> 切成 <code>h</code> 份，每份各自算一次注意力，再拼回去</strong>。</p>
+<p>在 Project 05 里 <code>nn.MultiheadAttention</code> 一行搞定；这里我必须自己写「线性投影 → 切头 → 逐头注意力 → 拼回 → 输出投影」整个过程，而且要保证<strong>每个 reshape/transpose 都有正确的反向</strong>，否则 <code>Wq</code> 的梯度回不来。</p>
+<hr/>
+<h2 id="1-what-why为什么要多头而不是把单头做大">1. What / Why：为什么要多头，而不是把单头做大</h2>
+<p>单头注意力只有一个 <code>(seq, d_k)</code> 的「注意力视角」。多头让模型在<strong>不同的子空间</strong>并行学不同的关系：头 0 可能盯着就近的语法、头 1 盯着远距离指代…… 实现上不用 <code>h</code> 套独立权重 —— 一份大 <code>Wq</code> 切分即可，参数没变多，只是「看的角度」多了。</p>
+<p>关键工程点：<strong>切头/拼头全是 reshape + transpose，这些算子必须带反向</strong>，否则拼回去之后梯度对不上。本项目所有 reshape/transpose 都挂在 autograd 上（<code>src/model/autograd.py</code> 里 <code>reshape</code>/<code>transpose</code> 都写了 <code>_backward</code>）。</p>
+<h2 id="2-design一份大权重切-h-份">2. Design：一份大权重，切 h 份</h2>
+<p><code>src/model/multihead.py</code> 的 <code>MultiHeadAttention</code>：</p>
+<ul class="lvl"><li>构造时检查 <code>d_model % n_heads == 0</code>，否则直接 <code>ValueError</code>（下游维度就对齐不了）。</li><li>四个线性投影 <code>Wq/Wk/Wv/Wo</code>，都是 <code>Parameter(np.random.randn(d_model, d_model) * 0.02)</code>（共享一份大权重，再切头）。</li><li><code>_split_heads</code>：<code>(B, seq, d_model) → (B, n_heads, seq, d_k)</code>，先 reshape 再 transpose；未批处理时先补 batch 维。</li><li><code>_merge_heads</code>：反过来，<code>(B, n_heads, seq, d_k) → (B, seq, d_model)</code>。</li><li><code>forward</code>：<code>q = split(linear(x, Wq))</code> → 对每头 <code>scaled_dot_product_attention</code> → <code>merge</code> → <code>linear(ctx, Wo)</code>。</li></ul>
+<figure class="figure"><img alt="多头注意力数据流：X → 投影 → 切头 → 逐头并行 → 拼回 → 输出投影" src="../../../../../../projects/06-mini-transformer-llm/assets/multihead.svg" loading="lazy"/><figcaption>多头注意力数据流：X → 投影 → 切头 → 逐头并行 → 拼回 → 输出投影</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo05multiheadtxt">3. Real-run evidence（来自 <code>demos/out/demo_05_multihead.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
+<pre><code>d_model = 16, n_heads = 4, d_k = D/H = 4
+线性投影权重形状（Wq/Wk/Wv/Wo 各 16x16）
+参数个数 : 4  （应为 4）
+
+未批处理输入 (seq, d_model) → (seq, d_model)
+  输入形状   : (7, 16)
+  输出形状   : (7, 16)  （应等于 (seq, d_model)）
+  输出是否有限 : True
+
+批处理输入 (B, seq, d_model) → (B, seq, d_model)
+  批输入形状 : (2, 7, 16)
+  批输出形状 : (2, 7, 16)</code></pre>
+<p>切头后 <code>Q</code> 形状 <code>(4, 7, 4)</code>，且<strong>每个头各自学到一份注意力分布（每行和为 1）</strong>：</p>
+<pre><code>切头后 Q 形状 : (4, 7, 4)  (n_heads, seq, d_k)
+  head 0: 各行权重之和 = [1. 1. 1. 1. 1. 1. 1.]
+  head 1: 各行权重之和 = [1. 1. 1. 1. 1. 1. 1.]
+  head 2: 各行权重之和 = [1. 1. 1. 1. 1. 1. 1.]
+  head 3: 各行权重之和 = [1. 1. 1. 1. 1. 1. 1.]
+→ 每个头各自学到一份注意力分布，并行、互不干扰。</code></pre>
+<p>最重要的是 —— <strong>梯度真的流回了 <code>Wq</code></strong>：</p>
+<pre><code>Wq.grad 形状   : (16, 16)
+Wq.grad 有梯度 : True
+Wq.grad 有限   : True</code></pre>
+<p>这说明切头/拼头的 reshape+transpose 反向写对了：反向传播能一路乘回 <code>Wq</code>，训练时这层才学得到东西。</p>
+<figure class="figure"><img alt="Multi-Head Attention demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-05-multihead.png" loading="lazy"/><figcaption>Multi-Head Attention demo 真实运行输出</figcaption></figure>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<p>本 milestone demo 没有暴露真实运行 bug。一个<strong>设计层面要注意的坑</strong>：切头前必须保证 <code>d_model</code> 能被 <code>n_heads</code> 整除。源码在 <code>__init__</code> 里直接 <code>raise ValueError</code>，而不是让它静默算出一个怪形状 —— 否则 <code>(B, T, n_heads, d_k)</code> 的 reshape 会数组长度对不上，报一个很难定位的 <code>ValueError</code>。把这条约束<strong>前置到构造期</strong>而不是前向期，排查成本最低。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>多头 = 「把 <code>d_model</code> 切成 <code>h</code> 份，各自看一种关系」，参数没多，视角多了。</li><li>不需要 <code>h</code> 套独立权重：一份大 <code>Wq</code> 切分即可，拼回靠 reshape+transpose。</li><li>reshape/transpose <strong>必须带反向</strong>，否则 <code>Wq</code> 梯度回不来 —— 这里 <code>Wq.grad</code> 有限且非零，证明反向写对了。</li><li><code>d_model % n_heads != 0</code> 要在构造期就报错，别拖到前向 reshape 才炸。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/multihead.py</code></td><td><code>MultiHeadAttention</code>（4 个投影 Parameter + <code>_split_heads</code> / <code>_merge_heads</code> + <code>forward</code>）</td></tr><tr><td><code>src/model/attention.py</code></td><td>复用 <code>scaled_dot_product_attention</code> / <code>causal_mask</code></td></tr><tr><td><code>demos/demo_05_multihead.py</code></td><td>5 节演示：构造 / 未批处理 / 批处理 / 逐头权重 / 梯度，输出落 <code>demos/out/demo_05_multihead.txt</code></td></tr><tr><td><code>assets/multihead.svg</code></td><td>本章数据流图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.3 → <strong>v0.4</strong>，多头注意力落地（切头/拼头 reshape+transpose 反向正确，梯度可回写 <code>Wq</code>），演示真实跑通并核对每头分布与梯度，配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

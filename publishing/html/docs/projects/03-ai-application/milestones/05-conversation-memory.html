@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 03 — Chapter 05：Conversation Memory【对话记忆】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-03-chapter-05conversation-memory对话记忆">Project 03 — Chapter 05：Conversation Memory【对话记忆】</h1>
+<blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/memory.py</code>、<code>src/assistant/tokens.py</code></p></blockquote>
+<hr/>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<p>Chapter 02 解决了「怎么把历史发出去」，这一章解决：</p>
+<blockquote><p><strong>历史越来越长，怎么办？</strong></p></blockquote>
+<p>现在的实现是全量累积：</p>
+<pre><code>self._turns.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: content})     # 只增不减</code></pre>
+<p>20 轮对话之后，每次请求都要带上 40 条消息。三个后果同时发生：</p>
+<pre><code>1. 变贵 —— token 数随轮数线性增长，成本随轮数平方增长
+2. 变慢 —— 上下文越长，首字延迟越高
+3. 会炸 —— 超过上下文窗口，API 直接报错</code></pre>
+<p>本章目标：</p>
+<blockquote><p><strong>在「记得住」和「装得下」之间做工程取舍：预算裁剪 + 摘要压缩。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>「记忆」是 AI 应用最容易被低估的复杂度。它不像写代码，错了会报错——<strong>记忆出错的表现是模型慢慢变笨</strong>：</p>
+<pre><code>第 5 轮：  回答精准
+第 15 轮： 开始忘记开头说过的要求
+第 25 轮： 把用户 A 的偏好答给用户 B（如果共享了会话）</code></pre>
+<p>而且成本是隐性的：一个每天 1000 次调用的应用，如果每次都带 8000 token 的历史，一个月的光是历史部分就是一笔真金白银。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-记忆的三个层次">3.1 记忆的三个层次</h3>
+<table><thead><tr><th>层次</th><th>放什么</th><th>实现</th><th>对应章节</th></tr></thead><tbody><tr><td>短期记忆</td><td>最近若干轮原文</td><td>滑动窗口 / token 预算裁剪</td><td>本章</td></tr><tr><td>中期记忆</td><td>较早内容的压缩摘要</td><td>让模型总结历史</td><td>本章</td></tr><tr><td>长期记忆</td><td>知识库、用户画像</td><td>向量检索（RAG）</td><td>Project 04</td></tr></tbody></table>
+<h3 id="32-策略一按-token-预算裁剪">3.2 策略一：按 token 预算裁剪</h3>
+<pre><code>def trim_to_budget(turns: list[dict], budget: int) -&gt; list[dict]:
+    kept: list[dict] = []
+    used = 0
+    for msg in reversed(turns):          # 从最近的往前留
+        cost = estimate_tokens(msg[&quot;content&quot;])
+        if used + cost &gt; budget:
+            break
+        kept.append(msg)
+        used += cost
+    return list(reversed(kept))</code></pre>
+<p>三条铁律：</p>
+<pre><code>1. system 永远保留（它是人设和规则）
+2. 最后一轮用户输入永远保留（这是当前问题）
+3. 按「轮」剪切，不要切在工具调用的中间（见 Chapter 02 坑 5）</code></pre>
+<figure class="figure"><img alt="真实运行：预算裁剪的逐轮前后对比（FakeClient 离线，8 轮后历史停止增长）" src="../../../../../../projects/03-ai-application/assets/term-memory.png" loading="lazy"/><figcaption>真实运行：预算裁剪的逐轮前后对比（FakeClient 离线，8 轮后历史停止增长）</figcaption></figure>
+<figure class="figure"><img alt="真实运行：裁剪前 10 条 885 token → 裁剪后 8 条 786 token（system 仍在首位、本轮 user 仍保留）；trim_to_budget() 一次裁到位（24 条 → 8 条）；两个 session 互不串台" src="../../../../../../projects/03-ai-application/assets/term-memory-trim.png" loading="lazy"/><figcaption>真实运行：裁剪前 10 条 885 token → 裁剪后 8 条 786 token（system 仍在首位、本轮 user 仍保留）；trim_to_budget() 一次裁到位（24 条 → 8 条）；两个 session 互不串台</figcaption></figure>
+<h3 id="33-策略二摘要压缩">3.3 策略二：摘要压缩</h3>
+<p>裁剪是「丢掉」，摘要是「压缩」。做法：</p>
+<pre><code>历史超过阈值
+    ↓
+让模型把「第 1 ~ 第 N 轮」总结成一段话
+    ↓
+用这条 summary 替换掉那 N 轮原文
+    ↓
+之后的历史在 summary 基础上继续累积</code></pre>
+<pre><code>SUMMARY_PROMPT = (
+    &quot;请把下面的对话压缩成一段不超过 {max_words} 字的摘要，&quot;
+    &quot;保留：用户的关键事实、已确认的结论、未完成的请求。\n\n{dialog}&quot;
+)</code></pre>
+<p>摘要的代价是<strong>细节丢失</strong>。适合「用户说了自己是谁、想要什么」这类事实，不适合「用户让你改的那段代码原文」。</p>
+<h3 id="34-会话必须隔离">3.4 会话必须隔离</h3>
+<pre><code># ❌ 全局单例：所有用户共享一段历史
+_conversation = Conversation()
+
+# ✅ 按会话 ID 隔离
+_sessions: dict[str, Conversation] = {}</code></pre>
+<p>多用户共享一个会话对象，会出现「用户 A 问的问题出现在用户 B 的回答里」——这是<strong>数据泄漏级别</strong>的 bug。</p>
+<p>FastAPI 侧按 <code>session_id</code> 建会话：</p>
+<pre><code>def get_conversation(session_id: str) -&gt; Conversation:
+    if session_id not in _sessions:
+        _sessions[session_id] = Conversation(system_prompt=DEFAULT_SYSTEM)
+    return _sessions[session_id]</code></pre>
+<p>生产环境要把 <code>_sessions</code> 换成 Redis（进程重启不丢、多副本共享）。</p>
+<h3 id="35-成本随轮数平方增长">3.5 成本随轮数平方增长</h3>
+<p>这一点很多人没意识到：</p>
+<pre><code>第 n 轮请求携带的历史长度 ≈ n × 单轮长度
+总消耗 ≈ 1 + 2 + 3 + ... + n = O(n²)</code></pre>
+<p>30 轮对话的总 token 消耗，大约是单轮的 465 倍（30×31/2）。所以<strong>裁剪不是优化，是必需</strong>。</p>
+<hr/>
+<h2 id="4-项目代码">4. 项目代码</h2>
+<pre><code>src/assistant/
+├── memory.py     # Conversation：add_* / to_messages() / trim_to_budget() / summarize()
+├── tokens.py     # estimate_tokens() / TokenBudget
+└── service.py    # 每次调用前按预算裁剪，超阈值时先摘要</code></pre>
+<p>调用链：</p>
+<pre><code>add_user(本轮输入)
+    ↓
+if estimate(turns) &gt; budget:
+        trim_to_budget()             ← 先裁
+    ↓
+if estimate(turns) &gt; hard_limit:      ← 还超就摘要
+        summarize(oldest_half)
+    ↓
+to_messages()  →  client.chat()
+    ↓
+add_assistant(reply)</code></pre>
+<hr/>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>HttpSession</code></td><td><code>Conversation</code> 对象</td><td>都是会话状态</td></tr><tr><td><code>@SessionAttributes</code></td><td><code>session_id → Conversation</code> 字典</td><td>同</td></tr><tr><td>Redis 存 session</td><td>Redis 存会话 JSON</td><td>生产环境都走外部存储</td></tr><tr><td>LRU <code>LinkedHashMap</code></td><td><code>trim_to_budget()</code></td><td>同是「保留最近」</td></tr><tr><td>分页（丢掉旧页）</td><td>滑动窗口</td><td>同</td></tr><tr><td>对象序列化 <code>Serializable</code></td><td><code>to_messages()</code> → JSON</td><td>同</td></tr><tr><td>Ehcache / Caffeine 淘汰策略</td><td>token 预算裁剪</td><td>目标一致：有界内存</td></tr></tbody></table>
+<p>一个提醒：</p>
+<blockquote><p><strong>Java 里 session 存多了是内存问题；AI 应用里历史存多了是钱的问题。</strong> 后者更容易被忽视，因为账单是月底才来的。</p></blockquote>
+<hr/>
+<h2 id="6-常见坑">6. 常见坑</h2>
+<h3 id="坑-1裁剪时把-system-裁掉了">坑 1：裁剪时把 system 裁掉了</h3>
+<p>裁剪逻辑从后往前保留，很容易连开头的 system 一起丢掉，结果是「聊了几轮后人设没了」。</p>
+<p>修法：system 不参与裁剪，单独保存、单独拼装（Chapter 02 已埋好这个设计）。</p>
+<h3 id="坑-2切在工具调用中间">坑 2：切在工具调用中间</h3>
+<p><code>assistant(tool_calls)</code> 被裁掉、但 <code>tool</code> 结果还在 → API 直接报协议错误。</p>
+<p>修法：裁剪单位是一轮完整交互（user → [assistant → tool]* → assistant）。</p>
+<h3 id="坑-3多用户共享会话">坑 3：多用户共享会话</h3>
+<p>见 3.4。这是<strong>数据泄漏</strong>，优先级高于其他所有坑。</p>
+<h3 id="坑-4摘要太频繁反而更贵">坑 4：摘要太频繁，反而更贵</h3>
+<p>每轮都做摘要 = 每轮多一次模型调用。合理阈值：</p>
+<pre><code>软阈值（比如 4000 token）：触发裁剪，免费
+硬阈值（比如 12000 token）：触发摘要，付费但必要</code></pre>
+<h3 id="坑-5用-len字符串-当-token-数">坑 5：用 <code>len(字符串)</code> 当 token 数</h3>
+<p>中文场景下 <code>len()</code> 和实际 token 差得很远（详见 Chapter 07）。用估算函数而不是字符数。</p>
+<h3 id="坑-6进程重启后会话全丢">坑 6：进程重启后会话全丢</h3>
+<p><code>dict</code> 在内存里，服务重启 = 所有人失忆。开发环境无所谓，生产环境必须外部化（Redis / 数据库）。</p>
+<hr/>
+<h2 id="7-实战挑战">7. 实战挑战</h2>
+<p><strong>挑战 1</strong>：实现 <code>trim_to_budget()</code>，保证 system 和最后一轮输入一定保留。</p>
+<p><strong>挑战 2</strong>：实现两级阈值——软阈值裁剪、硬阈值摘要，并在日志里记录触发了哪一级。</p>
+<p><strong>挑战 3（进阶）</strong>：实现多会话隔离（<code>session_id</code> → <code>Conversation</code>），并写一个测试：<strong>两个会话交替提问，验证历史不会串味</strong>。</p>
+<hr/>
+<h2 id="8-主动回忆">8. 主动回忆</h2>
+<ul class="lvl"><li>为什么对话成本是 O(n²) 而不是 O(n)？</li><li>裁剪的三条铁律是什么？</li><li>裁剪和摘要的区别与各自的适用场景？</li><li>什么时候该用摘要而不是直接丢掉？</li><li>多用户共享一个 Conversation 会造成什么级别的后果？</li><li>为什么裁剪要以「轮」为单位而不是「条」？</li></ul>
+<hr/>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<ul class="lvl"><li>[ ] <code>Conversation</code> 有 token 预算裁剪，system 与最后一轮输入必留</li><li>[ ] 有软/硬两级阈值，硬阈值触发摘要压缩</li><li>[ ] 多会话隔离：并发交替提问不会串味（有测试覆盖）</li><li>[ ] 每次调用能在日志里看到历史的 token 数与是否触发裁剪</li><li>[ ] 连续 20 轮对话不会报上下文超长错误</li></ul>
+<p>上一章：<a href="04-streaming.html">04-streaming.md</a> 下一章：<a href="06-model-parameters.html">06-model-parameters.md</a> —— 给模型调参。</p>
+</main>
+</body>
+</html>

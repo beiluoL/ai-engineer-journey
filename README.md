@@ -96,7 +96,14 @@ ai-engineer-journey/
 | `audit.py` | 全仓库体检：骨架完整性 / 证据链 / 配图 / 文档漂移 / 密钥；`--tests` 可实跑全部测试 |
 | `check_repos.py` | **学习资源体检**：把文档里推荐的 GitHub 仓库逐个探测（可访问 / 星标 / 是否归档 / 是否搬家 / 最近提交 / 是否维护模式）。不需要 API token |
 | `render_terminal.py` | 把真实 stdout 渲染成终端风格 PNG（截图有据可依） |
-| `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版
+| `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版 |
+| `build_docs_html.py` | **批量渲染**：把全部（或指定子集）Markdown 转成 `publishing/html/docs/` 下的 HTML 树，并自校验链接 |
+| `gen_doc_index.py` | 扫描全部文档生成 `publishing/html/index.html` 索引，条目默认指向渲染页 |
+| `md_to_book_html.py` | 单篇「自包含」HTML：图片 base64 内嵌，单文件拷走也能看（重点文档用） |
+
+**本地阅读**：`publishing/html/index.html` 是入口，209 篇文档全部以渲染后的页面打开
+（`publishing/html/docs/…`，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。
+只想拷走单篇看重点文档的，用 `md_to_book_html.py` 生成 base64 内嵌的单文件版。
 
 ## 单一事实源
 

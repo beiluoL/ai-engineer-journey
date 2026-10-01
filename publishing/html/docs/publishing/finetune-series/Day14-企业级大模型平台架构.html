@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day14 企业级大模型平台架构</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day14-企业级大模型平台架构">Day14 企业级大模型平台架构</h1>
+<h1 id="从单模型到-ai-platformllm-gateway多模型路由成本控制自动扩缩容">从单模型到 AI Platform：LLM Gateway、多模型路由、成本控制、自动扩缩容</h1>
+<p>前面 Day1～Day13，你已经完成了一条完整链路：</p>
+<pre><code> id=&quot;2w1a6b&quot;
+模型选择
+ ↓
+模型下载
+ ↓
+GPU部署
+ ↓
+vLLM推理服务
+ ↓
+Spring Boot调用
+ ↓
+RAG
+ ↓
+Agent
+ ↓
+LoRA微调
+ ↓
+模型上线</code></pre>
+<p>但是企业真实环境还有一个问题：</p>
+<blockquote><p>一个模型服务不够。</p></blockquote>
+<p>为什么？</p>
+<p>因为企业不会只有：</p>
+<pre><code> id=&quot;w6z8vw&quot;
+用户
+
+↓
+
+Qwen
+
+↓
+
+回答</code></pre>
+<p>真实情况：</p>
+<pre><code> id=&quot;n8h5do&quot;
+                 用户
+
+                  |
+
+                  ↓
+
+             AI Gateway
+
+                  |
+
+      +-----------+------------+
+
+      |           |            |
+
+      ↓           ↓            ↓
+
+
+    Qwen       DeepSeek       GPT
+
+
+   私有模型     推理模型       商业模型
+</code></pre>
+<p>今天学习：</p>
+<blockquote><p>如何设计一个企业级 LLM Platform【大语言模型平台】。</p></blockquote>
+<hr/>
+<h1 id="一为什么需要-llm-gateway">一、为什么需要 LLM Gateway？</h1>
+<h2 id="先看没有-gateway-的问题">先看没有 Gateway 的问题</h2>
+<p>你的系统：</p>
+<pre><code> id=&quot;5f7rj8&quot;
+Spring Boot
+
+      |
+
+      ↓
+
+Qwen vLLM</code></pre>
+<p>假设：</p>
+<p>用户增加：</p>
+<p>100人</p>
+<p>1000人</p>
+<p>10000人</p>
+<p>问题：</p>
+<hr/>
+<h2 id="1-模型压力">1. 模型压力</h2>
+<p>Qwen GPU：</p>
+<p>只能处理：</p>
+<p>100请求/s</p>
+<p>超过：</p>
+<p>怎么办？</p>
+<hr/>
+<h2 id="2-成本问题">2. 成本问题</h2>
+<p>不同任务：</p>
+<p>需求不同。</p>
+<p>例如：</p>
+<p>简单：</p>
+<blockquote><p>总结一句话</p></blockquote>
+<p>不需要：</p>
+<p>70B模型。</p>
+<hr/>
+<p>复杂：</p>
+<blockquote><p>分析代码架构</p></blockquote>
+<p>需要强模型。</p>
+<hr/>
+<h2 id="3-模型切换">3. 模型切换</h2>
+<p>今天：</p>
+<p>Qwen</p>
+<p>明天：</p>
+<p>DeepSeek</p>
+<p>后天：</p>
+<p>GPT</p>
+<p>业务代码：</p>
+<p>不能全部修改。</p>
+<hr/>
+<p>所以：</p>
+<p>增加：</p>
+<h1 id="llm-gateway">LLM Gateway</h1>
+<hr/>
+<h1 id="二llm-gateway是什么">二、LLM Gateway是什么？</h1>
+<p>简单理解：</p>
+<blockquote><p>AI世界的 API Gateway。</p></blockquote>
+<p>传统：</p>
+<pre><code> id=&quot;6u3xk5&quot;
+用户
+
+↓
+
+Nginx
+
+↓
+
+服务</code></pre>
+<p>AI：</p>
+<pre><code> id=&quot;i4u7k8&quot;
+用户
+
+↓
+
+LLM Gateway
+
+↓
+
+模型</code></pre>
+<hr/>
+<p>它负责：</p>
+<ul class="lvl"><li>模型路由</li></ul>
+<ul class="lvl"><li>鉴权</li></ul>
+<ul class="lvl"><li>限流</li></ul>
+<ul class="lvl"><li>成本控制</li></ul>
+<ul class="lvl"><li>日志</li></ul>
+<ul class="lvl"><li>监控</li></ul>
+<ul class="lvl"><li>失败转移</li></ul>
+<hr/>
+<h1 id="三企业-ai-架构">三、企业 AI 架构</h1>
+<p>最终：</p>
+<pre><code> id=&quot;8t1u0w&quot;
+                           用户
+
+                            |
+
+                            ↓
+
+
+                     API Gateway
+
+
+                            |
+
+                            ↓
+
+
+                    LLM Gateway
+
+
+                            |
+
+        +-------------------+-------------------+
+
+        |                   |                   |
+
+
+        ↓                   ↓                   ↓
+
+
+     Qwen                DeepSeek              GPT
+
+
+    vLLM                 API                  API
+
+
+        |                   |                   |
+
+        +-------------------+-------------------+
+
+                            |
+
+                            ↓
+
+
+                     Spring Boot Agent
+
+
+                            |
+
+                            ↓
+
+
+                        用户结果</code></pre>
+<hr/>
+<h1 id="四llm-gateway核心能力">四、LLM Gateway核心能力</h1>
+<hr/>
+<h1 id="1-model-routing模型路由">1. Model Routing【模型路由】</h1>
+<p>核心：</p>
+<blockquote><p>根据请求选择模型。</p></blockquote>
+<p>例如：</p>
+<p>用户：</p>
+<pre><code>解释HashMap</code></pre>
+<p>路由：</p>
+<pre><code> id=&quot;s4y2tj&quot;
+简单知识问答
+
+↓
+
+Qwen7B</code></pre>
+<hr/>
+<p>用户：</p>
+<pre><code>分析百万行代码</code></pre>
+<p>路由：</p>
+<pre><code> id=&quot;f8x8jm&quot;
+复杂任务
+
+↓
+
+DeepSeek-R1</code></pre>
+<hr/>
+<h1 id="五模型路由策略">五、模型路由策略</h1>
+<p>企业常见：</p>
+<hr/>
+<h2 id="策略1规则路由">策略1：规则路由</h2>
+<p>最简单。</p>
+<p>例如：</p>
+<pre><code>if(question.length()&lt;100){
+
+ model=&quot;qwen7b&quot;;
+
+}else{
+
+ model=&quot;deepseek&quot;;
+
+}</code></pre>
+<hr/>
+<h2 id="策略2分类模型">策略2：分类模型</h2>
+<p>增加：</p>
+<p>Intent Classifier【意图分类器】</p>
+<p>流程：</p>
+<pre><code> id=&quot;w2x1gt&quot;
+用户问题
+
+↓
+
+分类模型
+
+↓
+
+判断类型
+
+
+技术问题
+
+代码生成
+
+总结
+
+复杂推理
+
+↓
+
+选择模型</code></pre>
+<hr/>
+<h2 id="策略3llm-router">策略3：LLM Router</h2>
+<p>让模型自己判断。</p>
+<p>例如：</p>
+<p>System:</p>
+<pre><code>你负责选择最佳模型</code></pre>
+<p>输出：</p>
+<pre><code>{
+&quot;model&quot;:&quot;deepseek-r1&quot;,
+&quot;reason&quot;:&quot;复杂推理&quot;
+}</code></pre>
+<hr/>
+<h1 id="六你的-java-ai-interview-agent-路由设计">六、你的 Java AI Interview Agent 路由设计</h1>
+<p>你的场景：</p>
+<p>不同任务：</p>
+<hr/>
+<h2 id="面试聊天">面试聊天</h2>
+<p>模型：</p>
+<pre><code>Qwen2.5-7B</code></pre>
+<p>原因：</p>
+<p>快。</p>
+<hr/>
+<h2 id="代码分析">代码分析</h2>
+<p>模型：</p>
+<pre><code>DeepSeek-Coder</code></pre>
+<hr/>
+<h2 id="复杂技术方案设计">复杂技术方案设计</h2>
+<p>模型：</p>
+<pre><code>DeepSeek-R1</code></pre>
+<hr/>
+<h2 id="图片理解">图片理解</h2>
+<p>模型：</p>
+<pre><code>Qwen-VL</code></pre>
+<hr/>
+<p>架构：</p>
+<pre><code> id=&quot;z4aq0t&quot;
+用户
+
+↓
+
+Agent Router
+
+↓
+
+判断任务
+
+
+        |
+
+ +------+------+
+
+
+ |             |
+
+
+面试        代码分析
+
+
+ |             |
+
+
+Qwen        DeepSeek
+</code></pre>
+<hr/>
+<h1 id="七openai兼容接口设计">七、OpenAI兼容接口设计</h1>
+<p>企业喜欢统一接口。</p>
+<p>例如：</p>
+<p>所有模型：</p>
+<p>统一：</p>
+<pre><code>POST /v1/chat/completions</code></pre>
+<p>请求：</p>
+<pre><code>{
+&quot;model&quot;:&quot;java-interviewer&quot;,
+
+&quot;messages&quot;:[
+
+{
+&quot;role&quot;:&quot;user&quot;,
+
+&quot;content&quot;:&quot;解释HashMap&quot;
+}
+
+]
+}</code></pre>
+<p>Gateway：</p>
+<p>内部转换：</p>
+<pre><code> id=&quot;7t2g5n&quot;
+java-interviewer
+
+↓
+
+Qwen vLLM</code></pre>
+<hr/>
+<h1 id="八成本控制">八、成本控制</h1>
+<p>这是企业非常关注的。</p>
+<p>因为：</p>
+<p>大模型费用最高。</p>
+<hr/>
+<h1 id="1-token统计">1. Token统计</h1>
+<p>每次请求：</p>
+<p>记录：</p>
+<pre><code>{
+&quot;user&quot;:&quot;10001&quot;,
+
+&quot;model&quot;:&quot;qwen&quot;,
+
+&quot;input_tokens&quot;:1200,
+
+&quot;output_tokens&quot;:500,
+
+&quot;cost&quot;:0.02
+}</code></pre>
+<hr/>
+<h1 id="2-token预算">2. Token预算</h1>
+<p>例如：</p>
+<p>普通用户：</p>
+<p>每天：</p>
+<p>100万Token。</p>
+<p>超过：</p>
+<p>限制。</p>
+<hr/>
+<h1 id="3-prompt压缩">3. Prompt压缩</h1>
+<p>例如：</p>
+<p>原：</p>
+<p>10000 Token</p>
+<p>优化：</p>
+<p>3000 Token。</p>
+<p>方法：</p>
+<ul class="lvl"><li>删除历史无用聊天</li></ul>
+<ul class="lvl"><li>Chunk优化</li></ul>
+<ul class="lvl"><li>摘要Memory</li></ul>
+<hr/>
+<h1 id="4-缓存">4. 缓存</h1>
+<p>相同问题：</p>
+<p>不要重复调用。</p>
+<p>例如：</p>
+<p>用户：</p>
+<pre><code>HashMap为什么线程不安全？</code></pre>
+<p>第一次：</p>
+<p>调用模型。</p>
+<p>保存：</p>
+<p>Redis。</p>
+<p>第二次：</p>
+<p>直接返回。</p>
+<hr/>
+<p>架构：</p>
+<pre><code> id=&quot;0cc4eg&quot;
+用户
+
+↓
+
+Redis Cache
+
+↓
+
+存在?
+
+↓
+
+返回
+
+↓
+
+不存在
+
+↓
+
+LLM</code></pre>
+<hr/>
+<h1 id="九自动扩缩容">九、自动扩缩容</h1>
+<p>企业最大问题：</p>
+<p>流量变化。</p>
+<p>例如：</p>
+<p>白天：</p>
+<p>1000用户。</p>
+<p>晚上：</p>
+<p>10用户。</p>
+<p>不能：</p>
+<p>一直开10张GPU。</p>
+<hr/>
+<p>解决：</p>
+<p>Auto Scaling【自动扩缩容】。</p>
+<hr/>
+<p>架构：</p>
+<pre><code> id=&quot;6k5m3s&quot;
+用户增加
+
+↓
+
+请求增加
+
+↓
+
+GPU利用率80%
+
+↓
+
+Kubernetes扩容
+
+↓
+
+增加vLLM实例</code></pre>
+<hr/>
+<h1 id="十kubernetes部署">十、Kubernetes部署</h1>
+<p>企业：</p>
+<p>不用单机Docker。</p>
+<p>使用：</p>
+<p>K8s。</p>
+<p>结构：</p>
+<pre><code> id=&quot;s7ukmc&quot;
+Kubernetes Cluster
+
+
+        |
+
+        |
+
++-------+-------+
+
+|               |
+
+
+vLLM Pod1     vLLM Pod2
+
+
+GPU             GPU
+</code></pre>
+<hr/>
+<h1 id="十一vllm多实例部署">十一、vLLM多实例部署</h1>
+<p>例如：</p>
+<p>3个GPU：</p>
+<pre><code> id=&quot;n2l1xy&quot;
+GPU1
+
+vLLM-Qwen
+
+
+GPU2
+
+vLLM-Qwen
+
+
+GPU3
+
+vLLM-Qwen</code></pre>
+<p>前面：</p>
+<p>Load Balancer。</p>
+<hr/>
+<h1 id="十二健康检查">十二、健康检查</h1>
+<p>不能：</p>
+<p>服务挂了还发送请求。</p>
+<p>增加：</p>
+<p>Health Check。</p>
+<p>例如：</p>
+<pre><code>GET /health</code></pre>
+<p>返回：</p>
+<pre><code>{
+&quot;status&quot;:&quot;UP&quot;
+}</code></pre>
+<hr/>
+<h1 id="十三失败降级">十三、失败降级</h1>
+<p>例如：</p>
+<p>Qwen挂了。</p>
+<p>自动：</p>
+<pre><code> id=&quot;58v8wb&quot;
+Qwen
+
+↓
+
+DeepSeek API
+
+↓
+
+GPT API</code></pre>
+<hr/>
+<h1 id="十四模型版本管理">十四、模型版本管理</h1>
+<p>企业：</p>
+<p>不能直接覆盖。</p>
+<p>例如：</p>
+<pre><code> id=&quot;jzq7fo&quot;
+models/
+
+
+qwen-java-v1
+
+
+qwen-java-v2
+
+
+qwen-java-v3</code></pre>
+<hr/>
+<p>记录：</p>
+<pre><code>{
+&quot;version&quot;:&quot;v2&quot;,
+
+&quot;dataset&quot;:&quot;java-interview-2026-09&quot;,
+
+&quot;lora_rank&quot;:16,
+
+&quot;score&quot;:92
+}</code></pre>
+<hr/>
+<h1 id="十五ab测试">十五、A/B测试</h1>
+<p>新模型上线：</p>
+<p>不能全部切换。</p>
+<p>例如：</p>
+<pre><code> id=&quot;y8g2cr&quot;
+用户
+
+100%
+
+↓
+
+Gateway
+
+
+90%
+
+v1
+
+
+10%
+
+v2</code></pre>
+<p>比较：</p>
+<ul class="lvl"><li>回答质量</li></ul>
+<ul class="lvl"><li>延迟</li></ul>
+<ul class="lvl"><li>成本</li></ul>
+<hr/>
+<h1 id="十六你的-java-ai-项目升级">十六、你的 Java AI 项目升级</h1>
+<p>现在：</p>
+<p>V5：</p>
+<pre><code> id=&quot;1j9p7c&quot;
+Spring Boot
+
++
+
+LangChain4j
+
++
+
+Qwen LoRA
+
++
+
+Milvus</code></pre>
+<p>升级：</p>
+<p>V6：</p>
+<pre><code> id=&quot;c6p3u8&quot;
+Java AI Platform
+
+
+Spring Boot
+
++
+
+LLM Gateway
+
++
+
+Model Router
+
++
+
+vLLM Cluster
+
++
+
+RAG
+
++
+
+Agent
+
++
+
+Evaluation
+
++
+
+Monitoring</code></pre>
+<hr/>
+<h1 id="十七面试回答">十七、面试回答</h1>
+<p>面试官：</p>
+<blockquote><p>如果用户量增加100倍，你的AI系统如何扩展？</p></blockquote>
+<p>标准回答：</p>
+<blockquote><p>我会将模型服务和业务服务解耦，通过 LLM Gateway 统一管理模型调用。推理层使用 vLLM 提供高性能服务，通过 Kubernetes 部署多个模型实例，根据GPU利用率和请求量进行自动扩缩容。同时增加缓存、Token统计、限流和模型路由，根据任务复杂度选择不同模型，降低成本并提升系统稳定性。</p></blockquote>
+<hr/>
+<h1 id="十八现在你的-ai-工程能力地图">十八、现在你的 AI 工程能力地图</h1>
+<p>已经达到：</p>
+<pre><code>             AI Application Engineer
+
+
+                    |
+
+        +-----------+------------+
+
+        |                        |
+
+
+    应用开发                  模型工程
+
+
+        |                        |
+
+
+ Spring Boot              QLoRA
+
+
+ LangChain4j             LLaMA-Factory
+
+
+ RAG                     vLLM
+
+
+ Agent                   GPU部署
+
+
+ Tool Calling            模型优化
+
+
+        |
+
+        ↓
+
+
+ 企业AI平台设计</code></pre>
+<hr/>
+<h1 id="下一节-day15">下一节 Day15</h1>
+<p>建议进入：</p>
+<h1 id="day15企业级-rag-深度优化hybrid-search-rerank-agentic-rag-evaluation">《Day15：企业级 RAG 深度优化：Hybrid Search + Rerank + Agentic RAG + Evaluation》</h1>
+<p>因为真实企业项目中：</p>
+<blockquote><p>80%的 RAG 项目效果不好，不是模型问题，而是检索系统问题。</p></blockquote>
+<p>下一节会做：</p>
+<pre><code>普通RAG
+
+↓
+
+Hybrid Search
+关键词 + 向量
+
+↓
+
+Rerank
+
+↓
+
+Agentic RAG
+
+↓
+
+自动评测
+
+↓
+
+生产级知识库</code></pre>
+<p>这部分是目前 Java AI 岗位面试非常高频的内容。</p>
+</main>
+</body>
+</html>

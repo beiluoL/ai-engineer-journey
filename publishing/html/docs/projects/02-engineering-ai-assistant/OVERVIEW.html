@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 02 — 总纲：从 Python Script 到 Python Application</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-02-总纲从-python-script-到-python-application">Project 02 — 总纲：从 Python Script 到 Python Application</h1>
+<blockquote><p>本篇是 Project 02 的<strong>总纲</strong>：讲清楚「为什么要工程化」以及 10 个 Milestone 的完整路线。 具体每一章的知识点在各 <code>milestones/NN-*.md</code> 里，代码在 <code>src/</code>。 从 <code>00-classes-and-oop.md</code> 中拆出（原文件混装了总纲与 Chapter 01）。</p></blockquote>
+<hr/>
+<h2 id="一项目定位">一、项目定位</h2>
+<p>上一阶段：</p>
+<blockquote><p>Project 01 — Python AI CLI Assistant</p></blockquote>
+<p>我们已经完成：</p>
+<pre><code>Python 基础
+↓
+数据结构
+↓
+控制流
+↓
+函数
+↓
+模块
+↓
+异常
+↓
+持久化
+↓
+虚拟环境
+↓
+HTTP API
+↓
+真实 LLM API</code></pre>
+<p>现在进入：</p>
+<blockquote><p><strong>Project 02 — Python Engineering【Python 工程化】</strong></p></blockquote>
+<p>核心任务：</p>
+<blockquote><p><strong>把一个“能运行的 AI CLI 程序”，升级成“真正的 Python AI 工程”。</strong></p></blockquote>
+<hr/>
+<h2 id="二为什么需要这个项目">二、为什么需要这个项目</h2>
+<p>Project 01 可以运行，但继续开发后会遇到新的问题：</p>
+<pre><code>请求一多
+↓
+程序被阻塞
+
+代码一复杂
+↓
+类型越来越混乱
+
+配置一多
+↓
+环境难以管理
+
+程序一出问题
+↓
+不知道发生在哪里
+
+功能越来越多
+↓
+修改一个地方可能影响其他地方
+
+代码完成
+↓
+却不知道是不是正确</code></pre>
+<p>所以 Python Engineering 这一阶段，不再主要解决：</p>
+<blockquote><p>“Python 语法怎么写？”</p></blockquote>
+<p>而是解决：</p>
+<blockquote><p><strong>“Python 项目怎么工程化？”</strong></p></blockquote>
+<hr/>
+<h2 id="三项目目标">三、项目目标</h2>
+<p>最终把：</p>
+<pre><code>Python CLI Script</code></pre>
+<p>升级成：</p>
+<pre><code>Engineering AI Assistant</code></pre>
+<p>具备：</p>
+<pre><code>异步能力
++
+可靠 HTTP Client
++
+类型系统
++
+结构化数据
++
+配置管理
++
+日志
++
+测试
++
+Debugging【调试】
++
+Packaging【打包】
++
+FastAPI</code></pre>
+<p>最终架构：</p>
+<pre><code>CLI / HTTP Request
+        ↓
+Application Layer
+        ↓
+AI Service
+        ↓
+Async HTTP Client
+        ↓
+LLM API
+        ↓
+Response
+        ↓
+Logging / Error Handling
+        ↓
+Response</code></pre>
+<hr/>
+<h2 id="四chapter-milestone-正式路线">四、Chapter / Milestone 正式路线</h2>
+<pre><code>Project 02
+Engineering AI Assistant
+
+Chapter 01
+Async / Await【异步 / 等待】
+
+Chapter 02
+Async HTTP Client【异步 HTTP 客户端】
+
+Chapter 03
+Type Hints【类型提示】
+
+Chapter 04
+Dataclass【数据类】
+
+Chapter 05
+Config / Environment【配置 / 环境变量】
+
+Chapter 06
+Logging【日志】
+
+Chapter 07
+Testing / Debugging【测试 / 调试】
+
+Chapter 08
+Packaging【打包】
+
+Chapter 09
+FastAPI【Python Web 框架】
+
+                ↓
+
+Final Project
+Engineering AI Assistant</code></pre>
+<hr/>
+<h2 id="五项目演进关系">五、项目演进关系</h2>
+<p>Project 01：</p>
+<pre><code>用户
+↓
+CLI
+↓
+LLM API
+↓
+返回结果</code></pre>
+<p>Project 02：</p>
+<pre><code>用户 / HTTP
+↓
+API Layer
+↓
+Application Service
+↓
+Async HTTP Client
+↓
+LLM API
+↓
+Response
+↓
+Logging
+↓
+Testing
+↓
+Service</code></pre>
+<p>联系描述：</p>
+<p>Project 01 主要让程序“能调用模型”。</p>
+<p>Project 02 开始解决真实工程中的并发、可维护性、配置、日志、测试和服务化问题。</p>
+<p>因此 Project 02 并不是重新学一套 Python，而是在 <strong>Project 01 的代码基础上持续重构</strong>。</p>
+<hr/>
+</main>
+</body>
+</html>

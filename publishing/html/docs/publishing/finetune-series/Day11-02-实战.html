@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day11 实战</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day11-实战">Day11 实战</h1>
+<h1 id="从-0-租-gpu-服务器-ubuntu-初始化-docker-nvidia-环境-下载-qwen-vllm-部署-spring-boot-调用">从 0 租 GPU 服务器 → Ubuntu 初始化 → Docker → NVIDIA 环境 → 下载 Qwen → vLLM 部署 → Spring Boot 调用</h1>
+<p>今天我们做真正企业部署第一遍。</p>
+<p>目标：</p>
+<p>最终实现：</p>
+<pre><code> id=&quot;9r4f3k&quot;
+Mac电脑
+
+    ↓ SSH
+
+GPU服务器(Ubuntu)
+
+    ↓
+
+Docker
+
+    ↓
+
+NVIDIA CUDA
+
+    ↓
+
+vLLM
+
+    ↓
+
+Qwen2.5-7B
+
+    ↓
+
+OpenAI兼容API
+
+    ↓
+
+Spring Boot
+
+    ↓
+
+LangChain4j
+
+    ↓
+
+Java AI Agent</code></pre>
+<p>完成后，你就具备：</p>
+<blockquote><p>“我可以独立部署开源大模型推理服务”</p></blockquote>
+<p>这个能力。</p>
+<hr/>
+<h1 id="一先确定第一次部署方案">一、先确定第一次部署方案</h1>
+<p>我们不要一上来搞企业生产。</p>
+<p>第一次目标：</p>
+<h2 id="小型企业-demo-环境">小型企业 Demo 环境</h2>
+<p>选择：</p>
+<pre><code>模型：
+
+Qwen2.5-7B-Instruct
+
+
+部署：
+
+vLLM
+
+
+GPU：
+
+RTX4090 24GB
+
+
+系统：
+
+Ubuntu 22.04
+
+
+接口：
+
+OpenAI API
+
+
+业务：
+
+Spring Boot调用</code></pre>
+<hr/>
+<h1 id="二租-gpu-服务器">二、租 GPU 服务器</h1>
+<h2 id="推荐平台">推荐平台</h2>
+<p>国内：</p>
+<ul class="lvl"><li>AutoDL</li></ul>
+<ul class="lvl"><li>阿里云 GPU</li></ul>
+<ul class="lvl"><li>腾讯云 GPU</li></ul>
+<ul class="lvl"><li>华为云 GPU</li></ul>
+<p>海外：</p>
+<ul class="lvl"><li>RunPod</li></ul>
+<ul class="lvl"><li>Lambda</li></ul>
+<ul class="lvl"><li>Vast.ai</li></ul>
+<p>第一次建议：</p>
+<p>AutoDL。</p>
+<p>原因：</p>
+<ul class="lvl"><li>中文环境友好</li></ul>
+<ul class="lvl"><li>新手教程多</li></ul>
+<ul class="lvl"><li>按小时计费</li></ul>
+<hr/>
+<h1 id="三服务器配置选择">三、服务器配置选择</h1>
+<p>创建实例：</p>
+<p>选择：</p>
+<h2 id="gpu">GPU</h2>
+<p>推荐：</p>
+<h3 id="rtx4090">RTX4090</h3>
+<p>参数：</p>
+<pre><code>显存：
+
+24GB
+
+
+CUDA：
+
+支持
+
+
+价格：
+
+约1～3元/小时</code></pre>
+<p>或者：</p>
+<p>A10：</p>
+<pre><code>24GB显存</code></pre>
+<hr/>
+<h2 id="cpu">CPU</h2>
+<p>选择：</p>
+<pre><code>8核</code></pre>
+<hr/>
+<h2 id="内存">内存</h2>
+<p>最低：</p>
+<pre><code>32GB</code></pre>
+<p>推荐：</p>
+<pre><code>64GB</code></pre>
+<hr/>
+<h2 id="硬盘">硬盘</h2>
+<p>模型：</p>
+<p>Qwen7B：</p>
+<p>约15GB</p>
+<p>建议：</p>
+<pre><code>系统盘：
+
+50GB
+
+
+数据盘：
+
+100GB</code></pre>
+<hr/>
+<h1 id="四创建-ubuntu-服务器">四、创建 Ubuntu 服务器</h1>
+<p>系统：</p>
+<p>选择：</p>
+<pre><code>Ubuntu 22.04</code></pre>
+<p>不要选：</p>
+<p>Windows。</p>
+<hr/>
+<p>创建完成后，你会获得：</p>
+<p>例如：</p>
+<pre><code>IP:
+
+123.45.67.89
+
+
+用户名:
+
+root
+
+
+密码:
+
+xxxx</code></pre>
+<hr/>
+<h1 id="五ssh连接服务器">五、SSH连接服务器</h1>
+<p>你的 Mac Terminal：</p>
+<p>执行：</p>
+<pre><code>ssh root@你的服务器IP</code></pre>
+<p>例如：</p>
+<pre><code>ssh root@123.45.67.89</code></pre>
+<p>第一次：</p>
+<p>输入：</p>
+<pre><code>yes</code></pre>
+<p>然后：</p>
+<p>输入密码。</p>
+<p>成功：</p>
+<p>看到：</p>
+<pre><code>root@gpu-server:~#</code></pre>
+<p>说明：</p>
+<p>你已经进入云GPU。</p>
+<hr/>
+<h1 id="六服务器基础初始化">六、服务器基础初始化</h1>
+<h2 id="1-查看系统">1. 查看系统</h2>
+<pre><code>cat /etc/os-release</code></pre>
+<p>应该：</p>
+<pre><code>Ubuntu 22.04</code></pre>
+<hr/>
+<h2 id="2-更新系统">2. 更新系统</h2>
+<pre><code>apt update
+
+apt upgrade -y</code></pre>
+<hr/>
+<h1 id="七安装-nvidia-环境">七、安装 NVIDIA 环境</h1>
+<h2 id="1-查看gpu">1. 查看GPU</h2>
+<p>执行：</p>
+<pre><code>nvidia-smi</code></pre>
+<p>正常：</p>
+<p>类似：</p>
+<pre><code>+----------------+
+
+NVIDIA RTX 4090
+
+Memory:
+
+0MiB / 24576MiB
+
+CUDA Version: 12.x
+
++----------------+</code></pre>
+<p>如果看到：</p>
+<p>GPU信息</p>
+<p>说明：</p>
+<p>驱动已经安装。</p>
+<hr/>
+<h1 id="八安装-docker">八、安装 Docker</h1>
+<h2 id="安装">安装</h2>
+<pre><code>curl -fsSL https://get.docker.com | bash</code></pre>
+<p>启动：</p>
+<pre><code>systemctl start docker
+
+systemctl enable docker</code></pre>
+<p>检查：</p>
+<pre><code>docker version</code></pre>
+<hr/>
+<h1 id="九安装-nvidia-docker支持">九、安装 NVIDIA Docker支持</h1>
+<p>Docker默认不能使用GPU。</p>
+<p>需要：</p>
+<p>NVIDIA Container Toolkit。</p>
+<p>安装：</p>
+<pre><code>apt install nvidia-container-toolkit -y</code></pre>
+<p>重启 Docker：</p>
+<pre><code>systemctl restart docker</code></pre>
+<hr/>
+<p>测试：</p>
+<pre><code>docker run \
+--gpus all \
+nvidia/cuda:12.2.0-base \
+nvidia-smi</code></pre>
+<p>成功：</p>
+<p>看到：</p>
+<pre><code>RTX4090</code></pre>
+<p>说明：</p>
+<p>Docker已经可以调用GPU。</p>
+<hr/>
+<h1 id="十安装-python环境">十、安装 Python环境</h1>
+<p>虽然生产推荐Docker，但第一次可以直接部署。</p>
+<p>安装：</p>
+<pre><code>apt install python3-pip -y</code></pre>
+<p>升级：</p>
+<pre><code>pip install --upgrade pip</code></pre>
+<hr/>
+<h1 id="十一安装-vllm">十一、安装 vLLM</h1>
+<p>安装：</p>
+<pre><code>pip install vllm</code></pre>
+<p>检查：</p>
+<pre><code>vllm --version</code></pre>
+<hr/>
+<h1 id="十二下载-qwen-模型">十二、下载 Qwen 模型</h1>
+<p>这里有两种方式。</p>
+<hr/>
+<h2 id="方法1huggingface">方法1：HuggingFace</h2>
+<p>安装：</p>
+<pre><code>pip install huggingface_hub</code></pre>
+<p>登录：</p>
+<pre><code>huggingface-cli login</code></pre>
+<p>输入Token。</p>
+<hr/>
+<p>下载：</p>
+<pre><code>huggingface-cli download \
+Qwen/Qwen2.5-7B-Instruct \
+--local-dir /data/models/qwen2.5-7b</code></pre>
+<p>目录：</p>
+<pre><code>/data/models/
+
+└── qwen2.5-7b
+
+    ├── config.json
+
+    ├── model.safetensors
+
+    └── tokenizer</code></pre>
+<hr/>
+<h2 id="方法2modelscope">方法2：ModelScope</h2>
+<p>国内更快。</p>
+<p>安装：</p>
+<pre><code>pip install modelscope</code></pre>
+<p>下载：</p>
+<pre><code>modelscope download \
+--model Qwen/Qwen2.5-7B-Instruct \
+--local_dir /data/models/qwen2.5-7b</code></pre>
+<hr/>
+<h1 id="十三第一次启动-vllm">十三、第一次启动 vLLM</h1>
+<p>启动：</p>
+<pre><code>vllm serve \
+/data/models/qwen2.5-7b \
+--host 0.0.0.0 \
+--port 8000</code></pre>
+<p>等待：</p>
+<p>看到：</p>
+<pre><code>Application startup complete</code></pre>
+<p>成功。</p>
+<hr/>
+<h1 id="十四理解-vllm">十四、理解 vLLM</h1>
+<p>现在：</p>
+<p>你的服务器：</p>
+<p>变成：</p>
+<p>一个AI服务。</p>
+<p>结构：</p>
+<pre><code>客户端
+
+↓
+
+HTTP请求
+
+↓
+
+vLLM
+
+↓
+
+Qwen模型
+
+↓
+
+生成结果</code></pre>
+<p>接口：</p>
+<pre><code>http://服务器IP:8000/v1/chat/completions</code></pre>
+<hr/>
+<h1 id="十五测试api">十五、测试API</h1>
+<p>服务器内部：</p>
+<pre><code>curl http://localhost:8000/v1/chat/completions \
+-H &quot;Content-Type: application/json&quot; \
+-d &#x27;
+{
+&quot;model&quot;:&quot;/data/models/qwen2.5-7b&quot;,
+&quot;messages&quot;:[
+{
+&quot;role&quot;:&quot;user&quot;,
+&quot;content&quot;:&quot;解释HashMap&quot;
+}
+]
+}
+&#x27;</code></pre>
+<p>返回：</p>
+<pre><code>{
+&quot;choices&quot;:[
+{
+&quot;message&quot;:{
+&quot;content&quot;:&quot;HashMap是Java中的...&quot;
+}
+}
+]
+}</code></pre>
+<p>成功。</p>
+<hr/>
+<h1 id="十六开放端口">十六、开放端口</h1>
+<p>服务器：</p>
+<p>开放：</p>
+<pre><code>8000</code></pre>
+<p>安全组：</p>
+<p>添加：</p>
+<pre><code>TCP
+
+8000
+
+你的IP</code></pre>
+<p>不要：</p>
+<pre><code>0.0.0.0/0</code></pre>
+<p>生产不安全。</p>
+<hr/>
+<h1 id="十七spring-boot调用">十七、Spring Boot调用</h1>
+<p>你的Java项目：</p>
+<p>现在不用知道：</p>
+<p>GPU在哪里。</p>
+<p>只知道：</p>
+<p>API。</p>
+<hr/>
+<p>application.yml：</p>
+<pre><code>llm:
+  base-url:
+    http://服务器IP:8000/v1
+
+  model:
+    qwen2.5-7b</code></pre>
+<hr/>
+<p>LangChain4j：</p>
+<p>配置：</p>
+<pre><code>OpenAiChatModel model =
+OpenAiChatModel.builder()
+
+.baseUrl(
+&quot;http://服务器IP:8000/v1&quot;
+)
+
+.apiKey(
+&quot;EMPTY&quot;
+)
+
+.modelName(
+&quot;qwen2.5-7b&quot;
+)
+
+.build();</code></pre>
+<p>为什么：</p>
+<p>OpenAI兼容。</p>
+<p>vLLM模拟：</p>
+<p>OpenAI接口。</p>
+<hr/>
+<h1 id="十八完整调用链">十八、完整调用链</h1>
+<p>现在：</p>
+<pre><code>用户
+
+↓
+
+Vue
+
+↓
+
+Spring Boot
+
+↓
+
+LangChain4j
+
+↓
+
+HTTP
+
+↓
+
+vLLM API
+
+↓
+
+Qwen2.5-7B
+
+↓
+
+GPU计算
+
+↓
+
+返回结果</code></pre>
+<hr/>
+<h1 id="十九第一次部署成本">十九、第一次部署成本</h1>
+<p>假设：</p>
+<p>RTX4090：</p>
+<p>2元/小时</p>
+<p>每天运行：</p>
+<p>8小时：</p>
+<pre><code>2 × 8
+
+=16元/天</code></pre>
+<p>一个月：</p>
+<pre><code>约480元</code></pre>
+<p>如果24小时：</p>
+<pre><code>约1500元/月</code></pre>
+<hr/>
+<h1 id="二十企业生产还缺什么">二十、企业生产还缺什么？</h1>
+<p>现在只是：</p>
+<p>“能跑”。</p>
+<p>企业需要：</p>
+<h2 id="1-docker化">1. Docker化</h2>
+<h2 id="2-nginx代理">2. Nginx代理</h2>
+<h2 id="3-https">3. HTTPS</h2>
+<h2 id="4-用户鉴权">4. 用户鉴权</h2>
+<h2 id="5-限流">5. 限流</h2>
+<h2 id="6-日志">6. 日志</h2>
+<h2 id="7-prometheus监控">7. Prometheus监控</h2>
+<h2 id="8-gpu利用率监控">8. GPU利用率监控</h2>
+<h2 id="9-多模型路由">9. 多模型路由</h2>
+<h2 id="10-自动扩容">10. 自动扩容</h2>
+<hr/>
+<h1 id="二十一今天完成能力">二十一、今天完成能力</h1>
+<p>完成：</p>
+<p>✅ 租GPU</p>
+<p>✅ Linux操作</p>
+<p>✅ NVIDIA环境</p>
+<p>✅ Docker GPU</p>
+<p>✅ 下载模型</p>
+<p>✅ vLLM部署</p>
+<p>✅ OpenAI API</p>
+<p>✅ Spring Boot调用</p>
+<p>这一步是：</p>
+<p><strong>AI Application Engineer 和普通调用API开发者的区别。</strong></p>
+<hr/>
+<h1 id="下一节-day12">下一节 Day12</h1>
+<h2 id="企业级部署升级docker-compose-vllm-nginx-https-api鉴权-监控">《企业级部署升级：Docker Compose + vLLM + Nginx + HTTPS + API鉴权 + 监控》</h2>
+<p>我们会把现在：</p>
+<pre><code>一台能跑的GPU机器</code></pre>
+<p>升级成：</p>
+<pre><code>接近生产环境的大模型服务平台</code></pre>
+<p>然后再进入：</p>
+<h2 id="day13企业级-lora-微调部署">Day13：企业级 LoRA 微调部署</h2>
+<p>包括：</p>
+<ul class="lvl"><li>数据准备</li></ul>
+<ul class="lvl"><li>GPU训练服务器</li></ul>
+<ul class="lvl"><li>LLaMA-Factory</li></ul>
+<ul class="lvl"><li>QLoRA</li></ul>
+<ul class="lvl"><li>模型合并</li></ul>
+<ul class="lvl"><li>vLLM加载LoRA</li></ul>
+<ul class="lvl"><li>A/B测试</li></ul>
+<p>这才是完整的大模型工程闭环。</p>
+</main>
+</body>
+</html>

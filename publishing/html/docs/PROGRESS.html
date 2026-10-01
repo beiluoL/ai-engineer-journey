@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI Engineer Journey — Progress</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="ai-engineer-journey-progress">AI Engineer Journey — Progress</h1>
+<blockquote><p><strong>双轨制</strong>：「内容生产」（仓库里写了什么）与「学习进度」（我是否真正掌握）分开记录。 铁律：<strong>文档就绪 ≠ 已学习</strong>。内容标记 📝 草稿 / ✅ 已校对 / 🎓 已学习。</p></blockquote>
+<h2 id="学习进度track-1-以我是否掌握为准">学习进度（Track 1 — 以「我是否掌握」为准）</h2>
+<h3 id="current">Current</h3>
+<p><strong>Project 01 — Python AI CLI Assistant</strong> · Milestone 02 已学习</p>
+<pre><code>✅ 01 — Variables（已学习：亲手敲过 Demo + 练习）
+🎓 02 — List / Dict / JSON（已学习：参考答案已跑通并判卷 8/8）
+⬜ 03 — Condition / Loop
+⬜ 04 — Function
+⬜ 05 — Module / Package
+⬜ 06 — Exception
+⬜ 07 — File / JSON Persistence
+⬜ 08 — venv / pip / Environment
+⬜ 09 — HTTP / API
+⬜ 10 — Real LLM API（串起所有知识，v1.0 完成）</code></pre>
+<h3 id="已掌握能力">已掌握能力</h3>
+<ul class="lvl"><li>Python 变量、基础类型、type()、input()、print()、f-string</li><li>List / Dict 嵌套、JSON 序列化、AI messages 数据结构</li><li>能读懂并运行真实 LLM API 调用骨架</li></ul>
+<h3 id="project-02-03-自测清单已就位尚无章节被标记为已学习">Project 02 / 03 —— 自测清单已就位，尚无章节被标记为已学习</h3>
+<blockquote><p>判定规则（写在这里防止自欺）：<strong>参考答案跑通只证明答案没错，不证明我会了。</strong> AI 不替任何一章打勾。做完题 → 能讲清「为什么」→ 才由你本人把 ⬜ 改成 ✅。</p></blockquote>
+<table><thead><tr><th>Chapter</th><th>自测清单</th><th>状态</th></tr></thead><tbody><tr><td>P02 M00–M09（10 章）</td><td><a href="projects/02-engineering-ai-assistant/LEARNING.html">LEARNING.md</a> + 29 题</td><td>⬜ 未开始</td></tr><tr><td>P03 M01–M09（9 章）</td><td><a href="projects/03-ai-application/LEARNING.html">LEARNING.md</a> + 32 题</td><td>⬜ 未开始</td></tr></tbody></table>
+<h2 id="内容生产track-2-以仓库里有什么为准">内容生产（Track 2 — 以「仓库里有什么」为准）</h2>
+<table><thead><tr><th>部分</th><th>状态</th></tr></thead><tbody><tr><td>Project 01 milestones 01-10</td><td>✅ 全部成文；每章 2 张真实运行截图（assets 共 22 张，新增 08/09 两个真实可跑 demo）</td></tr><tr><td>Project 01 src + tests</td><td>✅ v0.2 骨架，6 个 unittest 全绿（已实测真实调用 DeepSeek API 成功）</td></tr><tr><td>Project 01 exercises</td><td>✅ 01-basic 8 题参考答案已跑通并判卷 8/8 🎓；02 / 03 / 04 已播种（待做）</td></tr><tr><td>Project 02 milestones</td><td>✅ 10/10 全部已校对；每章 2 张真实运行截图（assets 共 23 张，新增 async-http / config / logging / fastapi 四个真实 demo）</td></tr><tr><td>Project 02 src</td><td>✅ v0.2 完整落地：async CLI + FastAPI（/chat、SSE 流式、/health），33 项 pytest 离线全绿，真实调通 DeepSeek</td></tr><tr><td>Project 03 milestones</td><td>✅ 9/9 全部成文；每章 2 张真实运行截图（assets 共 18 张，新增 prompt / structured / stream / agent / architecture 五个真实 demo）</td></tr><tr><td>Project 03 src + tests</td><td>✅ v0.2 落地：cli/api/service/agent + 五层代码，61 项 pytest 离线全绿，4 条路径配真实运行截图</td></tr><tr><td>Project 04 milestones</td><td>✅ 17/17 全部成文（ingestion → … → fastapi-web-api → real-rag-evaluation → observability → real-reranker-and-calibration → chat-ui-and-session-history）</td></tr><tr><td>Project 04 src</td><td>✅ v0.8 落地：19 个模块 + <code>web/</code> 原生前端，197 项 pytest 全绿，Fake + InMemory/Chroma 离线链路、DashScope 真实 embedding + DeepSeek 真实 LLM + FastAPI Web API（SSE）+ 真实 RAG 评估 + 可观测性 + LLMReranker 真实精排与阈值校准 + 前端 Chat UI / 会话历史 / 多轮追问均已跑通，17 章每章 2+ 张真实运行截图（assets 共 44 张）</td></tr><tr><td>Project 02 exercises</td><td>✅ LEARNING.md 自测清单（10 章）+ 29 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 29/29（<strong>这是参考答案成绩，不代表用户已掌握</strong>）</td></tr><tr><td>Project 03 exercises</td><td>✅ LEARNING.md 自测清单（9 章）+ 32 道实操题 + 参考答案 + 离线判卷工具；判卷真实跑通 32/32（同上，不代用户勾选）</td></tr><tr><td>Project 05 milestones</td><td>✅ 10/10 已成文（tool → tool-schema → function-calling → agent → agent-loop → multi-step → mcp → mcp-server → mcp-client → workflow）</td></tr><tr><td>Project 05 src + tests</td><td>✅ v1.0 落地：11 个模块 + <code>agent/mcp/</code> 子包（<code>src/agent/</code>）+ <code>ReActAgent</code> 循环，244 项 pytest 全绿，离线剧本（FakeLLM/ScriptedLLM/RecordingLLM）+ DeepSeek 真实双链路，「检索即工具」已跑通；M05 工作记忆（trim_history token 预算 + 协议配对裁剪）、Scratchpad 草稿纸、第三道闸门 max_repeats；M06 显式 Plan + 依赖拓扑 + 失败传播；M07-09 MCP 协议/Server/Client 跨进程工具桥接；M10 多 Worker 编排 + 上下文隔离；CLI 支持 <code>--notes</code>，28 张真实运行截图</td></tr><tr><td>Project 08 milestones</td><td>✅ 9/9 已成文（fine-tuning → dataset-preparation → instruction-tuning → lora → qlora → training-configuration → checkpoint → merge-adapter → evaluation）</td></tr><tr><td>Project 08 src + tests</td><td>✅ v1.0 落地：<code>src/ft/</code> 12 个手写模块（LoRA / NF4 分位量化 + 双量化 / QLoRA / 指令数据答案区 mask / 只训 adapter 的训练器 / 断点续训 / Adapter 合并 / 评估），189 项 pytest 全绿；主线叙事「通用基座 → 冻结 → 注入 LoRA → Java 面试领域 SFT → 评估」；实测：B 零初始化等价性误差 0.000e+00、grad_check 6.585e-05、基座改动 0/28、LoRA 可训练 10.53%、NF4 压缩 7.75×、域内困惑度 3649.9→421.1；9 张真实终端截图 + 9 张手写架构图 SVG</td></tr><tr><td>Project 09 milestones</td><td>✅ 11/11 已成文（evaluation → benchmark → evaluation-dataset → automatic-evaluation → model-comparison → quantization → inference-engine → paged-attention → batching → kv-cache → model-serving）</td></tr><tr><td>Project 09 src + tests</td><td>✅ v1.0 落地：<code>src/ie/</code> 13 个手写模块（评估指标含 ECE 校准 / 防泄漏评估集 / 零 LLM 规则评分 / 多种子配对比较 / INT8·INT4·NF4 量化 / 手写自回归引擎 / PagedAttention 分块 KV / Continuous Batching 仿真 / KV 显存账本 / 标准库 HTTP 服务含 SSE），229 项 pytest 全绿；实测：KV Cache 6.155→2.794 ms（2.20×）、PagedAttention 浪费率 76.4%→16.0%、Continuous Batching 吞吐 1.52×、4 并发 4/4（p95 3.311 ms）；关键反直觉结论「权重 MSE 最小 ≠ 端到端最优」；11 张真实终端截图 + 11 张手写架构图 SVG</td></tr><tr><td>Project 10 milestones</td><td>✅ 11/11 已成文（architecture → tokenizer → dataset → embedding → transformer-block → training → evaluation → inference → optimization → serving → complete-system）</td></tr><tr><td>Project 10 src + tests</td><td>✅ v1.0 落地：<code>src/tiny/</code> 12 个手写模块（唯一配置入口 <code>TinyConfig</code> + BPE 分词含归因报告 / 防泄漏数据集 + 滑动窗口打包 / 手写 Transformer Decoder / 训练闭环含早停回滚与断点续训 / 三层评估 + 配对显著性 / 采样四旋钮 + 真·流式 + KV Cache / 量化 ΔPPL + 显存账本 / OpenAI 兼容服务 + 冒烟 + 压测 / 八段流水线），71 项 pytest 全绿；<strong>三层复用 P06/P08/P09</strong>（手写 autograd + 确定性补丁 + 评估/量化/服务）；实测：BPE 压缩 1.445 字/token、UNK 0.33%、val roundtrip 失败 14/14 全归因 OOV；因果自检过去误差 0.000e+00 / 未来 1.191e+01、确定性 0.000e+00；train 7.1547→3.6882 / val 6.2283→5.7551（第 800 步）→5.8234，<strong>早停回滚</strong>；跨进程重训/续训误差 0.000e+00；PPL 315.79 / token_acc 0.1736 / ECE 0.0662；KV Cache 等价 3.442e-15、TTFT 0.20 ms vs 总耗时 4.73 ms；INT8 3.85×/ΔPPL +0.08%、INT4 7.42×/+2.66%、NF4 7.75×/+4.01%；全链路有缓存 0.928 s；11 张真实终端截图 + 11 张手写架构图 SVG</td></tr><tr><td>llm-fundamentals（基础理论层）</td><td>✅ 12 章正文 + 8 个纯 numpy 可运行 demo（全部跑通）+ 14 张可复现配图（7 张真实终端截图 + 6 张公式计算图 + 1 张资源体检截图）+ 各章内嵌 Mermaid/ASCII 图；正文每个数字都由 demo 现场算出（LoRA r=8 占 0.39% 参数、KV Cache 省 99.0% 矩阵乘等）；第 11/12 章推荐的所有仓库由 <code>scripts/check_repos.py</code> 当场核验（星标 / 归档 / 迁移 / 最近提交）；check_links 全绿</td></tr><tr><td>python-practice（练手层）</td><td>✅ 6 个练手项目成文：01 待办清单 / 02 Excel 报表 / 03 爬虫 / 04 FastAPI 博客均为<strong>可运行代码 + 一键 demo + 真实终端截图</strong>（11 张配图 = 8 张练习终端截图 + 1 张 Traceback 讲解图 + 2 张 matplotlib 报表图）；05 AI 命令助手 / 06 RAG 问答为指路页（→ projects/01、projects/04，<strong>不重复实现</strong>）；<strong>07 延伸阅读</strong>为书单与读法（Python 补系统性 + 读生产代码四阶梯 + Java 对照表 + 脚本实测的避坑清单）；另含 00 练手方法论与 requirements.txt（版本已锚定）。4 个 demo 全部真实跑通，04 的 12 项 pytest 全绿</td></tr><tr><td>publishing/tutorials</td><td>✅ 8 篇图文教程已发布（md + html）；新增 08《Spring Boot 怎么调 Python》（五方案对比 + HTTP/子进程两条真实跑通链路 + 故障演练 + 避坑清单，10 张配图，完整可复现 demo 工程在 tutorials/demos/08-springboot-python/）</td></tr><tr><td>publishing/finetune-series</td><td>📝 35 篇草稿（命名已规范化，内容未校对，择优转正 tutorials；已转正 Day1/3/4/5）</td></tr><tr><td>publishing/articles</td><td>📝 2 篇</td></tr><tr><td>CI</td><td>✅ GitHub Actions：单测 + 死链坏图扫描 + 密钥文件检查</td></tr></tbody></table>
+<h2 id="10-项目状态总览">10 项目状态总览</h2>
+<table><thead><tr><th>#</th><th>项目</th><th>学习进度</th><th>内容状态</th></tr></thead><tbody><tr><td>01</td><td>Python AI CLI Assistant</td><td>🎓 M02</td><td>✅ v0.2</td></tr><tr><td>02</td><td>Engineering AI Assistant</td><td>⬜</td><td>✅ v0.2 CLI + API 双形态</td></tr><tr><td>03</td><td>AI Application</td><td>⬜</td><td>✅ v0.2 文档+代码+测试</td></tr><tr><td>04</td><td>AI Knowledge Base / RAG</td><td>⬜</td><td>✅ v0.8 文档+代码+测试+真实服务截图+真实 LLM+忠实度审计+FastAPI Web API+真实 RAG 评估+可观测性+真实精排与阈值校准+前端 Chat UI / 会话历史 / 多轮追问</td></tr><tr><td>05</td><td>Research Agent / MCP</td><td>⬜</td><td>✅ v1.0 文档+代码+测试(244)+真实 LLM 双链路+MCP 跨进程工具+Workflow 多 Worker 编排+M01-10 全成+28 张真实截图</td></tr><tr><td>06</td><td>Mini Transformer / LLM</td><td>⬜</td><td>✅ v1.0 文档+代码+测试(150：51 分词器+99 模型，含梯度校验)+从零 autograd+真实训练 loss 6.21→4.75+M01-10 全成+11 张手写 SVG+10 张真实终端截图</td></tr><tr><td>07</td><td>Open Source LLM</td><td>⬜</td><td>🔄 v0.1 <code>pipelines/</code> 调用管线 6 模块真实跑通：真实调 DeepSeek API（TTFT 占比 39.33%、净生成 284.77 tok/s）+ 手算参数量对账（0.494/1.544/7.615B 对上标称）+ 显存账本（7B bf16 14.18 / int4 3.55 GiB，KV 57,344 B/token）+ RAG-lite 检索评测（recall@1 87.5%、recall@3 100%、全库 11.59ms）+ 6 张真实终端截图；模型加载/量化线待 Colab GPU</td></tr><tr><td>08</td><td>LoRA / QLoRA Fine-Tuning</td><td>⬜</td><td>✅ v1.0 从零手写 LoRA/QLoRA（纯 numpy，复用 P06 手写 autograd）+ 测试 189 passed + 9 个真实 demo（域内困惑度 3649.9→421.1）+ 9 张真实终端截图 + 9 张手写 SVG + M01-09 全成</td></tr><tr><td>09</td><td>LLM Evaluation / Inference</td><td>⬜</td><td>✅ v1.0 从零手写评估体系 + 量化 + 推理引擎（纯 numpy + 标准库 http.server）+ 测试 229 passed + 11 个真实 demo（KV Cache 2.20×、PagedAttention 浪费率 76.4%→16.0%、Continuous Batching 1.52×）+ 11 张真实终端截图 + 11 张手写 SVG + M01-11 全成</td></tr><tr><td>10</td><td>Tiny LLM Capstone</td><td>⬜</td><td>✅ v1.0 从零串起 LLM 全链路（BPE 分词 → 数据集 → Transformer Decoder → 训练闭环 → 三层评估 → 推理 → 量化 → 服务 → 八段流水线）+ 71 项 pytest 全绿 + 11 个真实 demo（PPL 315.79、早停回滚到第 800 步、KV Cache 等价 3.442e-15、INT8 3.85×/ΔPPL +0.08%、全链路 0.928 s）+ 11 张真实终端截图 + 11 张手写 SVG + M01-11 全成</td></tr></tbody></table>
+<h2 id="next">Next</h2>
+<ul class="lvl"><li>动手复现 <code>exercises/01-basic</code> 8 题：先自己敲，再对照 <code>answers.py</code>，把 🎓 从「参考答案已判卷」变成「我真的会了」</li><li>Project 04 下一步：有 cross-encoder 权限后替换 LLMReranker 并重扫阈值；前端 UI 可继续打磨（Markdown 渲染、深色模式、移动端）</li><li>P02 学习进度推进：读完 <code>OVERVIEW.md</code> + 10 章，对着 <code>src/</code> 逐文件看</li></ul>
+<h2 id="维护工具">维护工具</h2>
+<pre><code>python3 scripts/check_links.py --strict   # 死链 + 坏图体检（CI 也在跑）
+python3 scripts/audit.py                  # 全仓库体检：骨架 / 证据链 / 配图 / 漂移 / 密钥
+python3 scripts/audit.py --tests          # 额外实跑全部项目测试（1180 项）
+python3 scripts/check_repos.py            # 学习资源体检：推荐的 GitHub 仓库是否归档 / 搬家 / 停滞
+cd projects/01-python-ai-cli/src &amp;&amp; python3 -m unittest discover -s tests</code></pre>
+<p>体检档案与历次结论见 <a href="audit/README.html"><code>audit/</code></a>（最近一期：<a href="audit/2026-09-30-health-check.html">2026-09-30 全仓库体检</a>）。</p>
+</main>
+</body>
+</html>

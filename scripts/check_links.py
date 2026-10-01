@@ -21,9 +21,15 @@ IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 # `REGISTRY[name](**args)` 这种代码会被误报成死链。
 FENCE_RE = re.compile(r"```.*?```", re.S)
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+# HTML 里的代码块是 <pre><code>，不是 ``` 围栏。两者语法完全不同，
+# 混用会漏报：扫 .html 时若只按围栏剥，<pre> 里的 `[x](y)` 会被当成真链接，
+# 于是像 f"return fn(**args)" 这种代码文本被误报成死链。
+HTML_CODE_RE = re.compile(r"<pre[^>]*>.*?</pre>|<code[^>]*>.*?</code>", re.S)
 
 
-def strip_code(text: str) -> str:
+def strip_code(text: str, is_html: bool = False) -> str:
+    if is_html:
+        return HTML_CODE_RE.sub("", text)
     return INLINE_CODE_RE.sub("", FENCE_RE.sub("", text))
 
 
@@ -40,8 +46,9 @@ def scan(roots):
                 if not name.endswith((".md", ".html")):
                     continue
                 path = os.path.join(dirpath, name)
+                is_html = name.endswith(".html")
                 text = open(path, encoding="utf-8", errors="ignore").read()
-                text = strip_code(text)
+                text = strip_code(text, is_html=is_html)
 
                 for m in LINK_RE.finditer(text):
                     target = m.group(1).strip().split("#")[0].strip()

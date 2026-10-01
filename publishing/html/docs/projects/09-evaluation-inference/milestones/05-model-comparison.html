@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 05 — Model Comparison：多种子配对比较</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-05-model-comparison多种子配对比较">Milestone 05 — Model Comparison：多种子配对比较</h1>
+<p>前四层把&quot;怎么评&quot;做完了（指标 → benchmark → 评估集 → 评分器）。现在回答 AI 工程里最高频也最容易做错的问题：<strong>A 模型和 B 模型，哪个更好？</strong></p>
+<p>难点在于：本项目的 held-out 只有 <strong>8 条</strong>。在 8 条样本上算出&quot;adapter 的 CE 是 6.5349、基座是 8.6637&quot;，你能下结论吗？</p>
+<p>不能直接下。<strong>单点估计没有不确定性，就没有比较。</strong> 这一层做的是：</p>
+<ul class="lvl"><li>用 <strong>bootstrap 重采样</strong>把单点估计变成分布（10 个 seed）；</li><li>用<strong>配对设计</strong>（同一 seed 用同一组重采样下标）抵消共同噪声；</li><li>用<strong>胜/负/平</strong>计数而不是&quot;均值谁小&quot;来下结论 —— 因为均值差可能只是噪声。</li></ul>
+<p><strong>纯 numpy 手写</strong>：bootstrap、配对比较、稳定性判定全在 <code>src/ie/compare.py</code>，不引入 scipy。</p>
+<hr/>
+<h2 id="1-why为什么均值更小不等于更好">1. Why：为什么&quot;均值更小&quot;不等于&quot;更好&quot;</h2>
+<p>三个真实的陷阱：</p>
+<p><strong>陷阱一：样本量太小。</strong> 8 条样本上，换一组样本可能结论就翻。bootstrap 回答的是&quot;如果换一批同分布的样本，结论还成立吗&quot;。</p>
+<p><strong>陷阱二：两组比较各自独立采样，噪声会淹没信号。</strong> 这是本章最关键的一点。实测：</p>
+<ul class="lvl"><li>adapter 的 bootstrap 标准差 <strong>±0.046898</strong></li><li>INT8 与 adapter 的均值差只有 <strong>0.000195</strong></li></ul>
+<p>差值只有标准差的 <strong>0.42%</strong>。如果两组各自独立重采样，这个差异 100% 会被噪声淹掉。但<strong>配对设计</strong>下它稳定出现 10/0/0 —— 因为两组用的是<strong>同一组下标</strong>，抽样带来的偏差是<strong>共模</strong>的，在相减时抵消了。</p>
+<p><strong>陷阱三：用 <code>mean_a &lt; mean_b</code> 下结论，会掩盖&quot;有时赢有时输&quot;。</strong> <code>paired_compare</code> 输出 <code>noise_flip</code> 标志：只要既有胜又有负，就说明结论在噪声内翻转 —— 这时候&quot;均值更小&quot;是假信号。</p>
+<h2 id="2-design三层结构">2. Design：三层结构</h2>
+<pre><code>summarize(values)                       # 均值 / 样本标准差(std ddof=1) / min / max
+paired_compare(baseline, challenger)    # 逐 seed 相减 → sign → 胜/负/平 + stable + noise_flip
+evaluate_models(models, seeds, evaluator, baseline=..., lower_is_better=True)</code></pre>
+<p>关键设计点：</p>
+<ul class="lvl"><li><strong><code>lower_is_better</code> 统一符号</strong>（<code>src/ie/compare.py:37</code>）：<code>improvement = -raw_delta if lower_is_better else raw_delta</code>。<strong><code>improvement &gt; 0</code> 永远表示 challenger 更好</strong>，调用方不用记方向。本项目比较的是交叉熵（越低越好）。</li><li><strong><code>atol</code> 判平，不是 <code>==</code></strong>（<code>src/ie/compare.py:38</code>）：<code>np.where(improvement &gt; atol, 1, np.where(improvement &lt; -atol, -1, 0))</code>。浮点运算必然有 ~1e-16 的噪声，用严格等于会假报&quot;负&quot;。M05 里 adapter vs merge 特意用 <code>atol=1e-10</code>。</li><li><strong><code>stable</code> 的定义</strong>（<code>src/ie/compare.py:41</code>）：<code>无平局</code> 且 <code>符号全一致</code>。<strong>有平局就判不稳定</strong> —— 这是刻意的保守。</li><li><strong><code>evaluator: (model, seed) -&gt; float</code></strong>：把&quot;怎么算一个数&quot;注入进来。M05 注入的是&quot;按 seed 重采样 8 条样本的 mean_ce&quot;。</li></ul>
+<p class="nav-footer"><strong>为什么比较的是 CE 而不是 PPL</strong>（<code>demos/demo_05_model_comparison.py:27</code>）：<code>_example_losses</code> 返回每条样本的 <code>mean_ce</code>，bootstrap 后<strong>对 CE 取平均</strong>。如果对 PPL 取平均，由 Jensen 不等式 <code>E[exp(X)] &gt; exp(E[X])</code>，会把均值系统性高估 —— <strong>PPL 不可直接平均</strong>，这是它作为比较指标的固有缺陷。</p>
+<figure class="figure"><img alt="M05 多模型配对比较：每条样本 CE → 10 seed 配对 bootstrap → 胜/负/平" src="../../../../../../projects/09-evaluation-inference/assets/model-comparison.svg" loading="lazy"/><figcaption>M05 多模型配对比较：每条样本 CE → 10 seed 配对 bootstrap → 胜/负/平</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo05modelcomparisonterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_model_comparison_terminal.txt</code>）</h2>
+<p>held-out <strong>8 条</strong>（与 adapter 训练集 instruction 交集为 0），<strong>10 个 seed</strong>，同一 seed 使用同一组 bootstrap 下标。adapter 本次新训练（24 步，<code>lr=3e-3</code>，<code>r=4</code>，<code>alpha=8</code>）。</p>
+<pre><code>  held-out                           8   与 adapter 训练集 instruction 交集为 0
+  重复 seed                            10   同一 seed 使用同一组 bootstrap 下标
+  本次是否新训练                            True
+  adapter 训练 loss                    8.4440 → 6.4789
+  INT8 权重 MSE                        6.34410385e-08</code></pre>
+<pre><code>── 答案区交叉熵：均值 ± 样本标准差（越低越好） ────────────────────────────
+  排名  模型          mean      std       相对基座胜/负/平  稳定
+  --  ----------  --------  --------  ---------  --
+   1  加载 adapter  6.534930  0.046898     10/0/0  是
+   2  合并后         6.534930  0.046898     10/0/0  是
+   3  INT8 量化后    6.535125  0.046844     10/0/0  是
+   4  基座          8.663687  0.246029          -  基线
+
+── 配对结论 ────────────────────────────────────────────────────────────
+  adapter vs 合并后                     胜/负/平 = 0/0/10
+  是否稳定翻盘                             否
+  发生噪声内翻转的比较                         无
+  merge 与 adapter 理论等价；配对中的平局不是缺数据，而是等价性的实测证据。</code></pre>
+<p>五个读数：</p>
+<ul class="lvl"><li><strong>adapter / merge / INT8 三者相对基座都是 10 胜 0 负 0 平，判定&quot;稳定&quot;。</strong> 差距是 <code>8.663687 − 6.534930 = 2.128757</code>，相当于 adapter 标准差（0.0469）的 <strong>45 倍</strong> —— 这是&quot;不需要统计检验也能信&quot;的量级。</li><li><strong>基座的 std 是 0.246029，是 adapter 的 5.2 倍。</strong> 未微调的基座在 8 条样本上的表现<strong>更不稳定</strong>（逐条 CE 差异更大），微调不仅降低了均值，也降低了方差。这一行容易被忽略，但它本身就是&quot;微调有效&quot;的独立证据。</li><li><strong>INT8 与 adapter 只差 0.000195</strong>（<code>6.535125 − 6.534930</code>），只有 std 的 <strong>0.42%</strong>，却在配对设计下稳定 10/0/0。<strong>这就是配对设计的价值</strong>：共模噪声抵消后，能分辨远小于标准差的系统性差异。</li><li><strong><code>adapter vs 合并后 = 0/0/10</code> 全平</strong> —— 这是<strong>正面的等价性证据</strong>，不是数据缺失（见 4.1）。</li><li><strong>&quot;发生噪声内翻转的比较：无&quot;</strong> —— 三个对比里都没有&quot;有胜有负&quot;的情况，说明排序在所有重采样下一致。</li></ul>
+<figure class="figure"><img alt="M05 真实运行输出" src="../../../../../../projects/09-evaluation-inference/assets/term-05-model-comparison.png" loading="lazy"/><figcaption>M05 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-0010-全平是等价性的正面证据不是数据不够">4.1 <code>0/0/10</code> 全平是等价性的正面证据，不是&quot;数据不够&quot;</h3>
+<p>这是本章最容易被误读的一行，必须说清楚。</p>
+<p><code>merge_lora</code> 做的事是把 LoRA 的增量折进基座权重：<code>W&#x27; = W + (alpha/r) · A · B</code>。而 <code>LoRALinear</code> 在前向时是<strong>即时合成</strong> <code>.data = W + (alpha/r)·A·B</code>。两者<strong>数学上完全等价</strong> —— 合并只是把运行时的加法提前做掉。</p>
+<p>所以&quot;全平&quot;是<strong>理论预测的必然结果</strong>。实测 10 个 seed 全部落在 <code>atol=1e-10</code> 以内，说明：</p>
+<ul class="lvl"><li><code>merge_lora</code> 的实现没有引入额外的数值误差；</li><li>合并前后前向计算路径一致（<code>LoRALinear</code> 伪装成 Tensor 的技巧没有副作用）。</li></ul>
+<blockquote><p><strong>怎么读这张表</strong>：<code>0/0/10</code> 在这里是 <code>merge_lora</code> 正确性的<strong>回归测试</strong>，而不是&quot;两个模型差不多，随便选&quot;。如果哪天它变成 <code>5/5/0</code>（噪声内翻转），那说明合并引入了浮点级别的偏差；如果变成 <code>10/0/0</code> 或 <code>0/10/0</code>，那就是<strong>合并写错了</strong>。</p></blockquote>
+<p>要强调的是：<strong>表格里&quot;合并后&quot;那一行的 <code>10/0/0</code> 是相对基座的结果，底部单独打印的 <code>0/0/10</code> 是 adapter 与 merge 之间的直接对比。两个数字口径不同，别混着读。</strong></p>
+<h3 id="42-配对设计能测出比标准差小-240-倍的差异">4.2 配对设计能测出比标准差小 240 倍的差异</h3>
+<table><thead><tr><th></th><th>数值</th></tr></thead><tbody><tr><td>INT8 与 adapter 的均值差</td><td><strong>0.000195</strong></td></tr><tr><td>adapter 的 bootstrap 标准差</td><td><strong>0.046898</strong></td></tr><tr><td>比值</td><td><strong>0.42%</strong>（约 1/240）</td></tr></tbody></table>
+<p>如果两组各自独立重采样（不同下标），差值会被两组噪声叠加淹没，结论一定是&quot;无显著差异&quot;。<strong>配对</strong>（同一 seed 同一组下标）让抽样偏差变成共模项，在 <code>b − a</code> 里被减掉。</p>
+<blockquote><p>可迁移的经验：<strong>比较两个模型时，一定要在完全相同的数据子集上比。</strong> 这条既适用于 bootstrap，也适用于&quot;用同一个 held-out 跑所有模型&quot;—— 换一批数据就等于把噪声翻倍。本项目的 <code>evaluate_models</code> 把所有模型放在同一个 <code>evaluator(model, seed)</code> 下、用同一个 seed 序列，正是为此。</p></blockquote>
+<h3 id="43-用-atol-判平不要用">4.3 用 <code>atol</code> 判平，不要用 <code>==</code></h3>
+<pre><code>signs = np.where(improvement &gt; atol, 1, np.where(improvement &lt; -atol, -1, 0))   # src/ie/compare.py:38</code></pre>
+<p>浮点合并必然产生 ~1e-16 量级的差异。如果用 <code>improvement &gt; 0</code> 判胜，adapter vs merge 会变成 <code>10/0/0</code>（adapter&quot;胜&quot;，因为合并后的数在浮点上恰好大了一点点）—— <strong>一个纯粹的浮点噪声会被报成&quot;adapter 显著更好&quot;</strong>。</p>
+<p><code>atol=1e-10</code> 的选择：远大于 fp64 的舍入噪声（~1e-16），远小于任何有意义的模型差异（本项目最小有意义差异是 INT8 的 1.95e-4）。<strong>阈值要卡在&quot;噪声量级&quot;和&quot;信号量级&quot;之间。</strong></p>
+<h3 id="44-stablefalse-有一种情况是太好了">4.4 <code>stable=False</code> 有一种情况是&quot;太好了&quot;</h3>
+<pre><code>stable = non_ties.size &gt; 0 and np.all(non_ties == non_ties[0]) and not np.any(signs == 0)</code></pre>
+<p>注意最后的 <code>not np.any(signs == 0)</code>：<strong>只要有任何一个平局，<code>stable</code> 就是 <code>False</code></strong>。所以 adapter vs merge 的 <code>0/0/10</code> 会让 <code>stable=False</code> —— 但这个 <code>False</code> 的含义是&quot;无法判断优劣方向&quot;（因为没有非平局样本），<strong>不是&quot;结论不可信&quot;</strong>。</p>
+<p>这是刻意保守的设计：<code>stable</code> 的语义是&quot;<strong>在所有重采样下，胜负方向完全一致且没有平局</strong>&quot;。用它的时候要知道它在平局时会保守地返回否。本项目在排行榜里只展示 <code>stable</code>，而在底部单独打印 adapter vs merge 的胜/负/平计数 —— <strong>两个口径分开呈现，避免误读</strong>。</p>
+<h3 id="45-诚实标注adapter-只训了-24-步">4.5 诚实标注：adapter 只训了 24 步</h3>
+<pre><code>  adapter 训练 loss                    8.4440 → 6.4789</code></pre>
+<p>24 步（<code>demos/_common.py:45</code> 的 <code>steps=24</code>）是为了让 demo 在几秒内跑完、图快速可复现。<strong>绝对指标很难看</strong>：CE 6.53 对应 PPL 约 690，基座 8.66 对应 PPL 约 5,760 —— 一个仍然&quot;说不出人话&quot;的模型。</p>
+<p>但<strong>比较结论是有效的</strong>：三者相对基座 <code>10/0/0</code> 稳定，<code>noise_flip</code> 为无。这是因为 <strong>bias-variance 里的 bias 部分</strong>（模型好不好）和 <strong>variance 部分</strong>（评估不确定性）是分开的：24 步训练让 bias 只降了一部分，但 8 条样本的 bootstrap 把 variance 量化清楚了。</p>
+<blockquote><p>一句话：<strong>绝对数字别看，相对排序可信。</strong> 这是小样本评估的正确读法。</p></blockquote>
+<h3 id="46-p06-的-adam-动量从不累积-本章训练的-24-步其实是-signsgd">4.6 ⚠ P06 的 <code>Adam</code> 动量从不累积 —— 本章训练的 24 步其实是 SignSGD</h3>
+<p>本章的 adapter 由 P08 的 <code>LoRATrainer</code> 训练，而它用的是 <strong>P06 的 <code>Adam</code></strong>（<code>projects/08-fine-tuning/src/ft/trainer.py:73</code>）。读 P06 的源码会发现一个真实缺陷：</p>
+<pre><code># projects/06-mini-transformer-llm/src/model/training.py:53
+m, v = self.state[id(p)]              # 只读
+m = b1 * m + (1 - b1) * p.grad        # 局部重绑定
+v = b2 * v + (1 - b2) * (p.grad ** 2)  # 局部重绑定
+...                                    # 从未写回 self.state[id(p)]</code></pre>
+<p><code>self.state</code> 里的 <code>m, v</code> <strong>永远是 <code>__init__</code> 时建的零数组</strong>。于是每一步实际用的是：</p>
+<pre><code>m = 0.1·g          v = 0.001·g²
+m̂ = 0.1·g / (1 − 0.9^t)      v̂ = 0.001·g² / (1 − 0.999^t)
+update = lr · m̂ / (√v̂ + eps)  ≈  lr · c(t) · sign(g)</code></pre>
+<p><strong>即退化为「带衰减系数的 SignSGD」</strong>：<code>t=1</code> 时 <code>c≈1.0</code>，<code>t=24</code> 时 <code>c≈0.53</code>（<code>0.1/0.9202 ÷ √(0.001/0.0237)</code>）。</p>
+<p><strong>本项目不改 P06</strong>（那是前一个项目的交付物，改了就失去了跨项目复用的意义），所以这里如实记录它对本 chapter 数字的影响：</p>
+<ul class="lvl"><li>训练<strong>仍然有效</strong>（实测 loss 8.4440 → 6.4789），SignSGD 在 LoRA 低秩参数上本来就不算差；</li><li>但 <strong>loss 曲线的形状不等于真 Adam 的形状</strong>，不能拿它去调学习率或推断收敛速度；</li><li>M05 的比较结论（10/0/0 稳定）<strong>不受影响</strong> —— 四个模型用的是同一套评估流程，训练器缺陷只影响 adapter 的绝对水平，不影响四者之间的相对排序。</li></ul>
+<blockquote><p>可迁移的经验：<strong>复用上游项目的优化器之前，先看它的 state 有没有被写回。</strong> 这类 bug 不会报错、loss 照样下降，只有通过&quot;对比真 Adam&quot;或读源码才能发现。</p></blockquote>
+<h3 id="47-m05-的-int8-mse6344e08和-m06-的7673e08不是同一个东西">4.7 M05 的 INT8 MSE（6.344e-08）和 M06 的（7.673e-08）不是同一个东西</h3>
+<p>本章打印的 <code>INT8 权重 MSE = 6.34410385e-08</code> 来自 <code>quantize_model(merged, bits=8, granularity=&quot;per_channel&quot;)</code>，是对<strong>所有 ndim≥2 的参数</strong>做加权平均（含词嵌入和所有线性层）。</p>
+<p>M06 打印的 <code>7.67262816e-08</code> 只针对<strong>单个矩阵 <code>decoder.proj</code></strong>（65,536 个参数）。</p>
+<p>两者分母不同、覆盖范围不同，<strong>不可直接比较</strong>。引用时必须带上范围说明 —— 这也是为什么 M06 的表格标题专门写了&quot;对比权重 decoder.proj (64, 1024)&quot;。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><strong>小样本上不能用单点估计下结论</strong>：8 条 held-out → 10 seed bootstrap → 均值 ± 样本标准差。</li><li><strong>配对设计是本章的核心</strong>：同一 seed 同一组下标，共模噪声相减抵消。实测分辨出 <strong>0.000195</strong> 的差异（仅 std 的 0.42%，约 1/240）。</li><li>实测：加载 adapter <strong>6.534930 ± 0.046898</strong>、合并后 <strong>6.534930 ± 0.046898</strong>、INT8 <strong>6.535125 ± 0.046844</strong>、基座 <strong>8.663687 ± 0.246029</strong>；三者相对基座 <strong>10/0/0，稳定</strong>，<code>noise_flip</code> 为无。</li><li><strong><code>adapter vs merge = 0/0/10</code> 是等价性的正面证据</strong>（<code>merge_lora</code> 数学等价 + <code>atol=1e-10</code> 内严格相等），不是数据缺失；表格里的 <code>10/0/0</code> 是相对基座的另一口径，别混读。</li><li><strong>基座的 std 是 adapter 的 5.2 倍</strong>（0.246029 vs 0.046898）—— 微调同时降低了均值和方差，这是&quot;有效&quot;的独立证据。</li><li><strong>用 <code>atol</code> 判平不用 <code>==</code></strong>，阈值卡在噪声量级（~1e-16）与信号量级（1.95e-4）之间；<code>stable</code> 在存在平局时保守返回 <code>False</code>。</li><li><strong>比较用 CE 不用 PPL</strong>：<code>E[exp(X)] &gt; exp(E[X])</code>，PPL 直接平均会因 Jensen 不等式系统性高估。</li><li>诚实标注：<strong>adapter 只训 24 步</strong>（loss 8.4440 → 6.4789），绝对指标难看但<strong>相对排序可信</strong>；M05 的 INT8 MSE 覆盖全部 2D 参数，与 M06 单矩阵口径不同。</li><li>⚠ <strong>P06 的 <code>Adam</code> 动量从不累积</strong>（state 只读不写回），本章 24 步训练实际是「带衰减的 SignSGD」（<code>c</code> 从 1.0 衰减到 0.53）。不改 P06，如实标注；结论的相对排序不受影响。</li><li>手写实现的意义：因为 bootstrap 的下标是自己用 <code>default_rng(seed)</code> 生成的，我才能<strong>让所有模型共享同一组下标</strong> —— 这是配对设计能生效的前提，也是任何现成 <code>bootstrapped</code> 库不会替你做的事。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/compare.py</code></td><td><code>summarize</code>（均值/std(ddof=1)/min/max）/ <code>paired_compare</code>（逐 seed 相减、<code>atol</code> 判平、<code>lower_is_better</code> 统一符号、<code>stable</code> / <code>noise_flip</code> / <code>sign_consistency</code>）/ <code>evaluate_models</code>（多模型 × 多 seed，共用 evaluator 与 seed 序列）</td></tr><tr><td><code>src/ie/compare.py:38</code></td><td><code>atol</code> 判平而非 <code>==</code> —— 防止浮点噪声假报胜负</td></tr><tr><td><code>src/ie/quantize.py</code></td><td><code>quantize_model(bits=8, granularity=&quot;per_channel&quot;)</code>：生成本章的 INT8 对照组（遍历 <code>ft.inject.named_parameters</code>，见 4.6）</td></tr><tr><td><code>src/ie/metrics.py</code></td><td><code>evaluate()[&quot;mean_ce&quot;]</code>：每条样本的交叉熵，bootstrap 的数据源</td></tr><tr><td><code>demos/_common.py</code></td><td><code>adapter_bundle</code>：<strong>先切 held-out 再训 adapter</strong>，<code>steps=24</code></td></tr><tr><td><code>demos/demo_05_model_comparison.py</code></td><td>5 节：配置 / 四模型逐条 CE / 10 seed bootstrap 排行 / adapter vs merge 配对 / 结论</td></tr><tr><td><code>demos/out/demo_05_model_comparison_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/model-comparison.svg</code></td><td>本章多模型配对比较图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.4 → <strong>v0.5</strong>，M05 多种子配对比较落地。实测（held-out 8 条、10 seed、同下标配对）：加载 adapter <strong>6.534930±0.046898</strong>、合并后 <strong>6.534930±0.046898</strong>、INT8 <strong>6.535125±0.046844</strong>、基座 <strong>8.663687±0.246029</strong>；三者相对基座 <strong>10/0/0 稳定</strong>、<code>noise_flip</code> 无；<strong>adapter vs 合并后 0/0/10 全平</strong>（<code>atol=1e-10</code>，等价性的正面证据）；adapter 训练 loss <strong>8.4440 → 6.4789</strong>（24 步）；INT8 全模型权重 MSE <strong>6.34410385e-08</strong>。并诚实记录「配对设计分辨出 0.000195 = std 的 0.42% 的差异」「<code>stable</code> 遇平局保守返回 False」「adapter 只训 24 步，绝对指标难看但相对排序可信」「<strong>P06 的 Adam 动量从不累积，本章训练实为带衰减 SignSGD（c: 1.0 → 0.53），不改 P06</strong>」「本章 INT8 MSE 覆盖全部 2D 参数，与 M06 单矩阵 7.673e-08 口径不同」。纯 numpy、无 scipy。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

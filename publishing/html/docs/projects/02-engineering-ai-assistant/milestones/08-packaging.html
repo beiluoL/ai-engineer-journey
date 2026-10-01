@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 02 — Chapter 08：Packaging【打包与发布】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-02-chapter-08packaging打包与发布">Project 02 — Chapter 08：Packaging【打包与发布】</h1>
+<blockquote><p>状态：✅ 已校对 对应代码：<code>pyproject.toml</code></p></blockquote>
+<hr/>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<p>到目前为止，运行项目的方式是：</p>
+<pre><code>cd projects/02-engineering-ai-assistant/src
+python3 main.py &quot;问题&quot;</code></pre>
+<p>这有三个问题：</p>
+<pre><code>问题 1：必须在 src/ 目录下才能跑（否则 import assistant 失败）
+问题 2：别人 clone 下来，不知道要先装什么
+问题 3：想复用这个包到别的项目，只能复制粘贴</code></pre>
+<p>本章目标：</p>
+<blockquote><p><strong>用 <code>pyproject.toml</code> 把项目变成「可安装的包」，装完后在任意目录都能用 <code>ai-assistant</code> 命令。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>打包解决的是<strong>交付</strong>问题：</p>
+<pre><code>给自己     —— 装一次，之后在任何目录都能用，不用 cd
+给同事     —— pip install -e . 之后依赖自动装齐
+给用户     —— pip install ai-assistant 一条命令
+给生产     —— Docker 镜像里 pip install . 是标准动作</code></pre>
+<p>而且从这一章开始，你的项目才真正符合「Python 工程」的定义：</p>
+<blockquote><p><strong>能被安装、能被依赖、有明确的入口点、依赖被显式声明。</strong></p></blockquote>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-pyprojecttoml-是什么">3.1 <code>pyproject.toml</code> 是什么</h3>
+<p>它是 Python 官方（PEP 621）指定的<strong>项目元数据文件</strong>，取代了老的 <code>setup.py</code>。</p>
+<p>类比：</p>
+<table><thead><tr><th>Java</th><th>Python</th></tr></thead><tbody><tr><td><code>pom.xml</code></td><td><code>pyproject.toml</code></td></tr><tr><td><code>&lt;groupId&gt;:&lt;artifactId&gt;:&lt;version&gt;</code></td><td><code>name</code> + <code>version</code></td></tr><tr><td><code>&lt;dependencies&gt;</code></td><td><code>dependencies = [...]</code></td></tr><tr><td><code>&lt;build&gt;&lt;plugins&gt;</code></td><td><code>[build-system]</code></td></tr><tr><td><code>mvn package</code> → jar</td><td><code>pip wheel .</code> → whl</td></tr><tr><td><code>mvn install</code></td><td><code>pip install -e .</code></td></tr></tbody></table>
+<h3 id="32-src-layout源码布局">3.2 src layout【源码布局】</h3>
+<p>推荐的目录结构（本项目采用）：</p>
+<pre><code>projects/02-engineering-ai-assistant/
+├── pyproject.toml
+├── src/
+│   └── assistant/          # 真正的包在这里
+│       ├── __init__.py
+│       ├── client.py
+│       └── ...
+└── tests/</code></pre>
+<p>为什么多一层 <code>src/</code>？</p>
+<pre><code>不用 src/ 时：在项目根目录下 import assistant 会拿到「本地目录」而不是「安装的包」
+              测试通过但线上失败 —— 因为本地目录里可能混进了没提交的文件
+用了 src/  ：必须先安装才能 import，测试环境 = 生产环境</code></pre>
+<p>这个坑很隐蔽，业界共识是用 <code>src/</code> layout 规避。</p>
+<h3 id="33-最小可用的-pyprojecttoml">3.3 最小可用的 pyproject.toml</h3>
+<pre><code>[build-system]
+requires = [&quot;setuptools&gt;=68&quot;]
+build-backend = &quot;setuptools.build_meta&quot;
+
+[project]
+name = &quot;engineering-ai-assistant&quot;
+version = &quot;0.1.0&quot;
+description = &quot;一个工程化的 Python AI 助手：异步、类型安全、可测试、带 Web API&quot;
+readme = &quot;README.md&quot;
+requires-python = &quot;&gt;=3.11&quot;
+dependencies = [
+    &quot;httpx&gt;=0.27&quot;,
+    &quot;python-dotenv&gt;=1.0&quot;,
+]
+
+[project.optional-dependencies]
+dev = [
+    &quot;pytest&gt;=8.0&quot;,
+    &quot;pytest-asyncio&gt;=0.23&quot;,
+    &quot;pytest-cov&gt;=5.0&quot;,
+]
+api = [
+    &quot;fastapi&gt;=0.115&quot;,
+    &quot;uvicorn&gt;=0.30&quot;,
+]
+
+[project.scripts]
+ai-assistant = &quot;assistant.cli:main&quot;
+
+[tool.setuptools.packages.find]
+where = [&quot;src&quot;]</code></pre>
+<p>关键点逐个解释：</p>
+<table><thead><tr><th>字段</th><th>作用</th></tr></thead><tbody><tr><td><code>requires-python</code></td><td>声明最低版本，别人装的时候 pip 会检查</td></tr><tr><td><code>dependencies</code></td><td>运行时依赖（不写死版本，用 <code>&gt;=</code>）</td></tr><tr><td><code>optional-dependencies</code></td><td>分组可选依赖：<code>pip install -e &quot;.[dev,api]&quot;</code></td></tr><tr><td><code>[project.scripts]</code></td><td><strong>生成命令行命令</strong>：装完后直接敲 <code>ai-assistant</code></td></tr><tr><td><code>packages.find where</code></td><td>配合 src layout 告诉 setuptools 去哪找包</td></tr></tbody></table>
+<h3 id="34-projectscripts-的魔法">3.4 <code>[project.scripts]</code> 的魔法</h3>
+<pre><code>[project.scripts]
+ai-assistant = &quot;assistant.cli:main&quot;</code></pre>
+<p>意思是：装完后生成一个 <code>ai-assistant</code> 可执行文件，运行它 = 执行 <code>assistant.cli</code> 模块里的 <code>main()</code> 函数。</p>
+<p>前提是你的 CLI 入口有 <code>main</code> 函数：</p>
+<pre><code># src/assistant/cli.py
+def main() -&gt; None:
+    ...
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+<p>对应 Java 的：<code>java -jar app.jar</code> 里的 <code>Main-Class</code>，或者 Maven 生成的启动脚本。</p>
+<h3 id="35-editable-install可编辑安装">3.5 editable install【可编辑安装】</h3>
+<pre><code>pip install -e &quot;.[dev,api]&quot;</code></pre>
+<p><code>-e</code>（editable）的效果：</p>
+<pre><code>不是把代码复制进 site-packages
+而是在 site-packages 里放一个「指向你源码目录」的链接
+所以你改代码立刻生效，不用重装</code></pre>
+<p><strong>开发期间必须用 <code>-e</code></strong>，否则你改一行代码就要重装一次。</p>
+<h3 id="36-依赖版本怎么写">3.6 依赖版本怎么写</h3>
+<pre><code>httpx&gt;=0.27          ✅ 下限即可，允许升级
+httpx==0.27.0        ⚠️  锁死：应用项目可以，库项目不该
+httpx~=0.27          ✅ 兼容 0.27.x，不含 0.28
+httpx                ❌ 完全不约束，某天上游 breaking change 你就崩了</code></pre>
+<p>规则：</p>
+<blockquote><p><strong>给的约束能有多松就多松，但不能没有。</strong></p></blockquote>
+<hr/>
+<h2 id="4-项目代码">4. 项目代码</h2>
+<p>完整安装与使用流程：</p>
+<pre><code>cd projects/02-engineering-ai-assistant
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e &quot;.[dev,api]&quot;
+cp .env.example .env      # 填入 DEEPSEEK_API_KEY
+
+ai-assistant &quot;用一句话解释 GIL&quot;        # 命令行入口
+ai-assistant --interactive             # 多轮对话
+pytest -v                              # 测试</code></pre>
+<p>依赖分组的意义：</p>
+<pre><code>只跑 CLI  → pip install -e .              （只装 httpx + dotenv）
+要开发    → pip install -e &quot;.[dev]&quot;       （+ pytest）
+要起服务  → pip install -e &quot;.[api]&quot;       （+ fastapi + uvicorn）</code></pre>
+<p>为什么 FastAPI 放进可选依赖？因为<strong>只用 CLI 的人不该被迫装 Web 框架</strong>。</p>
+<hr/>
+<figure class="figure"><img alt="真实运行：解析 pyproject.toml 的每个字段、用 importlib.metadata 读回元数据与控制台入口点、真的打出一个 wheel，并验证 python -m assistant.cli 可用" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-packaging.png" loading="lazy"/><figcaption>真实运行：解析 pyproject.toml 的每个字段、用 importlib.metadata 读回元数据与控制台入口点、真的打出一个 wheel，并验证 python -m assistant.cli 可用</figcaption></figure>
+<p>![真实运行：真的打出一个 wheel（18.7 KB）并列出里面的文件，以及 [project.scripts] 生成的 ai-assistant 控制台入口点](../assets/term-packaging-wheel.png)</p>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<table><thead><tr><th>概念</th><th>Java / Maven</th><th>Python</th></tr></thead><tbody><tr><td>项目描述文件</td><td><code>pom.xml</code></td><td><code>pyproject.toml</code></td></tr><tr><td>坐标</td><td><code>groupId:artifactId:version</code></td><td><code>name</code> + <code>version</code>（无 group，全局唯一）</td></tr><tr><td>依赖声明</td><td><code>&lt;dependency&gt;</code></td><td><code>dependencies = [...]</code></td></tr><tr><td>依赖作用域</td><td><code>&lt;scope&gt;test&lt;/scope&gt;</code></td><td><code>optional-dependencies.dev</code></td></tr><tr><td>构建</td><td><code>mvn package</code></td><td><code>python -m build</code></td></tr><tr><td>产物</td><td><code>.jar</code></td><td><code>.whl</code> / <code>.tar.gz</code></td></tr><tr><td>安装到仓库</td><td><code>mvn install</code></td><td><code>pip install .</code></td></tr><tr><td>本地开发模式</td><td>IDE 自动</td><td><code>pip install -e .</code></td></tr><tr><td>可执行入口</td><td><code>Main-Class</code></td><td><code>[project.scripts]</code></td></tr><tr><td>版本锁定</td><td><code>pom</code> 里写死</td><td><code>requirements.txt</code> / <code>uv.lock</code> / <code>poetry.lock</code></td></tr></tbody></table>
+<p>最大的文化差异：</p>
+<blockquote><p><strong>Java 的依赖版本默认是锁死的，Python 默认给下限。</strong> 所以 Python 项目要发布上线时，通常会额外用 <code>pip freeze &gt; requirements.txt</code> 或 <code>uv</code> 生成锁文件。</p></blockquote>
+<hr/>
+<h2 id="6-常见坑">6. 常见坑</h2>
+<h3 id="坑-1忘了-toolsetuptoolspackagesfind-where-src">坑 1：忘了 <code>[tool.setuptools.packages.find] where = [&quot;src&quot;]</code></h3>
+<p>用 src layout 却没配这一句，结果是<strong>装上一个空包</strong>，<code>import assistant</code> 报 <code>ModuleNotFoundError</code>，但 <code>pip install</code> 显示成功。</p>
+<p>排查：<code>pip show -f engineering-ai-assistant</code> 看装进去的文件列表。</p>
+<h3 id="坑-2每个目录都要-initpy">坑 2：每个目录都要 <code>__init__.py</code></h3>
+<pre><code>src/assistant/
+├── __init__.py      ← 必须有（除非用 namespace packages）
+├── client.py
+└── service.py</code></pre>
+<p>少了它，setuptools 可能找不到包，或者 import 行为诡异。</p>
+<h3 id="坑-3忘了装-e改代码不生效">坑 3：忘了装 <code>-e</code>，改代码不生效</h3>
+<pre><code>pip install .        # ❌ 复制了一份，改源码没用
+pip install -e .     # ✅ 链接到源码</code></pre>
+<p>症状：「我明明改了，怎么运行结果还是老的」——99% 是这个。</p>
+<h3 id="坑-4命令找不到aiassistant-command-not-found">坑 4：命令找不到（<code>ai-assistant: command not found</code>）</h3>
+<p>原因：没激活虚拟环境，或者装到了别的 Python 里。</p>
+<p>排查：</p>
+<pre><code>which ai-assistant        # 应该在 .venv/bin/ 下
+which python3             # 确认当前用的是哪个
+pip show engineering-ai-assistant</code></pre>
+<h3 id="坑-5把-tests-也打包进去">坑 5：把 <code>tests/</code> 也打包进去</h3>
+<pre><code>[tool.setuptools.packages.find]
+where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不会被打包 ✅</code></pre>
+<p>如果 tests 也在 src 下，要显式 <code>exclude = [&quot;tests*&quot;]</code>。</p>
+<h3 id="坑-6env-被打进包">坑 6：<code>.env</code> 被打进包</h3>
+<p><code>.env</code> 不在 <code>packages.find</code> 的范围内，不会被打包。但<strong>如果你用了 <code>MANIFEST.in</code> 手动包含文件</strong>，务必排除 <code>.env</code>。</p>
+<hr/>
+<h2 id="7-实战挑战">7. 实战挑战</h2>
+<p><strong>挑战 1</strong>：给项目加 <code>pyproject.toml</code>，用 <code>pip install -e &quot;.[dev,api]&quot;</code> 安装，验证在<strong>任意目录</strong>敲 <code>ai-assistant --help</code> 都能用。</p>
+<p><strong>挑战 2</strong>：加一个 <code>--version</code> 参数，从 <code>importlib.metadata.version(&quot;engineering-ai-assistant&quot;)</code> 读取版本号输出。</p>
+<p><strong>挑战 3（进阶）</strong>：用 <code>python -m build</code> 打出 wheel，然后在一个全新的 venv 里 <code>pip install dist/*.whl</code> 验证干净安装可用。</p>
+<hr/>
+<h2 id="8-主动回忆">8. 主动回忆</h2>
+<ul class="lvl"><li><code>pyproject.toml</code> 取代了什么老文件？</li><li>为什么要 src layout？不用会有什么隐蔽的坑？</li><li><code>[project.scripts]</code> 做了什么？</li><li><code>pip install -e .</code> 和 <code>pip install .</code> 的区别？</li><li>依赖版本为什么「能松就松，但不能没有」？</li><li>为什么把 FastAPI 放进可选依赖？</li></ul>
+<hr/>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<ul class="lvl"><li>[ ] 有 <code>pyproject.toml</code>，<code>pip install -e &quot;.[dev,api]&quot;</code> 成功</li><li>[ ] 装完后在任意目录可执行 <code>ai-assistant</code></li><li>[ ] 用 src layout，且 <code>[tool.setuptools.packages.find] where = [&quot;src&quot;]</code> 已配</li><li>[ ] 依赖分组：核心 / dev / api 三档</li><li>[ ] <code>.gitignore</code> 含 <code>.venv/</code>、<code>dist/</code>、<code>*.egg-info/</code></li></ul>
+<p>下一章：<a href="09-fastapi.html">09-fastapi.md</a> —— 把 CLI 变成 HTTP 服务。</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 04 — Chapter 04：Vector Database【向量数据库】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-04-chapter-04vector-database向量数据库">Project 04 — Chapter 04：Vector Database【向量数据库】</h1>
+<blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/vector_store.py</code>（<code>BaseVectorStore</code> + <code>InMemoryVectorStore</code> + <code>ChromaVectorStore</code>）</p></blockquote>
+<hr/>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<p>Chapter 03 结束时，每个 <code>Chunk</code> 都有了自己的向量。现在用户提问，query 也变成了向量——<strong>接下来要在几百上千条文档向量里，找出和 query 向量最近的那几条</strong>。</p>
+<p>第一反应往往是：这有什么难的？数据库里存了向量字段，<code>SELECT ... WHERE ... LIKE</code> 或者写个循环算相似度不就行了？</p>
+<pre><code>你以为：  向量检索就是把所有向量都比一遍，选最近的
+实际上：  全量比对是 O(N × d)（N 条向量 × d 维），
+          10 万条 × 1024 维的库，每次查询都是几千万次浮点运算，
+          用户等不起，服务器也算不起</code></pre>
+<p>用 <code>LIKE</code> 更不行——它匹配的是<strong>字符串</strong>，而我们的相似度在<strong>几何空间</strong>里，SQL 的 WHERE 子句根本表达不了&quot;余弦距离最近&quot;。这是向量数据库作为一个独立品类存在的根本原因。</p>
+<p>本章目标：</p>
+<blockquote><p><strong>设计可替换的向量存储层：先手写暴力检索吃透原理，再切到 Chroma 获得持久化与 ANN 能力。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h3 id="为什么普通数据库做不了从-on-到-ann">为什么普通数据库做不了：从 O(N) 到 ANN</h3>
+<p>向量检索的本质是<strong>最近邻搜索</strong>【Nearest Neighbor Search】。精确解只有暴力比对 O(N)，于是工业界的答案是 ANN【Approximate Nearest Neighbor，近似最近邻】：<strong>放弃&quot;绝对最近&quot;，换取快几个数量级的检索</strong>——召回 top-10 时偶尔漏掉真正第 3 名，但对 RAG 来说&quot;差不多最近的几条&quot;完全够用。</p>
+<p>主流索引算法里，Chroma 默认使用的 <strong>HNSW</strong>【Hierarchical Navigable Small World，分层可导航小世界图】的直觉一句话就能讲：<strong>把向量组织成一张&quot;跳表层&quot;的图——最上层稀疏边长，像高速公路；往下每层更稠密、边更短，像城市道路。查询从高速公路粗定位，再逐层下钻精确逼近，不用遍历所有点就能到达近邻。</strong> 和跳表（skip list）的分层思想同源，数学细节本章不展开。</p>
+<h3 id="三阶段路线">三阶段路线</h3>
+<p>学习路线和工程路线在这里是同一条：</p>
+<table><thead><tr><th>阶段</th><th>方案</th><th>定位</th></tr></thead><tbody><tr><td>① 纯 Python：dict + NumPy 暴力余弦</td><td><code>InMemoryVectorStore</code></td><td><strong>先懂原理</strong>。几百条文档完全够用，且每一步都透明可见</td></tr><tr><td>② Chroma</td><td><code>ChromaVectorStore</code></td><td><code>pip install</code> 即用、本地持久化、自带 HNSW。<strong>个人知识库首选</strong></td></tr><tr><td>③ Milvus</td><td>生产级</td><td>分布式、十亿级向量，需要单独部署集群——本章提一句即可，不落地</td></tr></tbody></table>
+<p>先写阶段 ① 的理由和 P02/P03 一脉相承：<strong>框架当黑盒之前，先用 50 行代码把白盒拆开看一遍。</strong> 否则 Chroma 报一个&quot;dimension mismatch&quot;，你连报错在说什么都不知道。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-存储抽象basevectorstore">3.1 存储抽象：BaseVectorStore</h3>
+<p><strong>Java 里你天天写 Repository 接口</strong>：<code>interface ChunkRepository { void save(...); List&lt;Chunk&gt; search(...); }</code>，内存实现给测试，JPA 实现给生产。Python 里同一个模式，一个 ABC 三个实现：</p>
+<pre><code># src/rag/vector_store.py
+from abc import ABC, abstractmethod
+
+from .chunker import Chunk
+
+
+class BaseVectorStore(ABC):
+    &quot;&quot;&quot;向量存储抽象：存 (Chunk, vector)，查 top-k。&quot;&quot;&quot;
+
+    @abstractmethod
+    def add(self, chunks: list[Chunk], vectors: list[list[float]],
+            model: str = &quot;&quot;) -&gt; None:
+        &quot;&quot;&quot;入库。model 记录嵌入模型名，供查询时校验（Chapter 03 坑 1）。&quot;&quot;&quot;
+        ...
+
+    @abstractmethod
+    def search(self, query_vector: list[float], top_k: int = 5,
+               filter: dict | None = None) -&gt; list[dict]:
+        &quot;&quot;&quot;返回 [{chunk, score}, ...]，按相似度降序。filter 为 metadata 过滤。&quot;&quot;&quot;
+        ...
+
+    @abstractmethod
+    def count(self) -&gt; int: ...
+
+    @abstractmethod
+    def clear(self) -&gt; None: ...
+
+    @abstractmethod
+    def delete_document(self, doc_id: str) -&gt; None:
+        &quot;&quot;&quot;删除一个文档的所有 chunk 及其向量。&quot;&quot;&quot;
+        ...</code></pre>
+<p>注意 <code>search</code> 的返回是 <code>chunk + score</code> 的组合——检索结果必须带相似度分数，下游（Chapter 05 的 rerank 和阈值过滤）都要用。</p>
+<h3 id="32-阶段-①numpy-暴力余弦">3.2 阶段 ①：NumPy 暴力余弦</h3>
+<p>把余弦相似度亲手算一遍，这个知识就永远是你的了：</p>
+<pre><code>import numpy as np
+
+
+class InMemoryVectorStore(BaseVectorStore):
+    model_name = &quot;&quot;          # 记录入库时用的嵌入模型
+
+    def __init__(self) -&gt; None:
+        self._chunks: dict[str, Chunk] = {}            # chunk_id -&gt; Chunk
+        self._matrix: np.ndarray | None = None         # (N, dim) 矩阵
+        self._ids: list[str] = []                      # 矩阵第 i 行对应的 chunk_id
+        self._meta: list[dict] = []                    # 与矩阵行对齐的元数据
+
+    def add(self, chunks, vectors, model: str = &quot;&quot;) -&gt; None:
+        new_rows = np.asarray(vectors, dtype=np.float32)
+        self._matrix = new_rows if self._matrix is None else np.vstack([self._matrix, new_rows])
+        for c in chunks:
+            self._chunks[c.chunk_id] = c
+            self._ids.append(c.chunk_id)
+            self._meta.append(dict(c.metadata))
+        self.model_name = model or self.model_name
+
+    def search(self, query_vector, top_k: int = 5, filter: dict | None = None):
+        if self._matrix is None or len(self._ids) == 0:
+            return []
+
+        q = np.asarray(query_vector, dtype=np.float32)
+        # 归一化后点积 == 余弦相似度
+        q = q / (np.linalg.norm(q) or 1.0)
+        m = self._matrix / (np.linalg.norm(self._matrix, axis=1, keepdims=True) + 1e-9)
+        scores = m @ q                                   # (N,) 一次矩阵乘算完全部相似度
+
+        order = np.argsort(-scores)
+        results = []
+        for i in order:
+            meta = self._meta[i]
+            if filter and not all(meta.get(k) == v for k, v in filter.items()):
+                continue                                  # 先过滤后搜，见 3.3
+            results.append({
+                &quot;chunk&quot;: self._chunks[self._ids[i]],
+                &quot;score&quot;: float(scores[i]),
+            })
+            if len(results) &gt;= top_k:
+                break
+        return results
+
+    def count(self) -&gt; int:
+        return len(self._ids)
+
+    def clear(self) -&gt; None:
+        self._chunks.clear(); self._ids.clear(); self._meta.clear(); self._matrix = None
+
+    def delete_document(self, doc_id: str) -&gt; None:
+        keep = [i for i, cid in enumerate(self._ids)
+                if self._chunks[cid].doc_id != doc_id]
+        self._matrix = self._matrix[keep]
+        self._ids = [self._ids[i] for i in keep]
+        self._meta = [self._meta[i] for i in keep]
+        for cid in [c for c, chk in self._chunks.items() if chk.doc_id == doc_id]:
+            del self._chunks[cid]</code></pre>
+<p>读懂三个点，这段代码就没白写：</p>
+<ul class="lvl"><li><code>m @ q</code> 一行就是&quot;全部向量与 query 的余弦相似度&quot;——NumPy 把 O(N) 次点积压成一次矩阵乘，这就是几百条文档时&quot;暴力也够快&quot;的原因。</li><li>归一化之后点积等价于余弦相似度（Chapter 03 讲过的归一化红利）。</li><li><code>filter</code> 在<strong>取 top_k 之前</strong>逐行检查——这正是 3.3 要对比的&quot;先过滤后搜&quot;。</li></ul>
+<h3 id="33-metadata-过滤先过滤后搜-vs-先搜后过滤">3.3 metadata 过滤：先过滤后搜 vs 先搜后过滤</h3>
+<p>需求：只在&quot;某个 PDF&quot;里检索。两种做法：</p>
+<table><thead><tr><th>顺序</th><th>做法</th><th>问题</th></tr></thead><tbody><tr><td>先搜后过滤</td><td>全库搜 top-50，再按 metadata 筛</td><td>筛完可能只剩 1 条甚至 0 条——top-50 里根本没有目标文档的内容</td></tr><tr><td><strong>先过滤后搜</strong></td><td>先把候选集缩到目标文档，在子集内搜 top-5</td><td>正确：top-5 一定来自过滤后的集合</td></tr></tbody></table>
+<p>所以抽象层的约定是：<strong><code>filter</code> 语义 = 先过滤后搜</strong>。Chroma 的 <code>where</code> 参数也是这个语义。</p>
+<p><strong>Java 里这就像 SQL 的 <code>WHERE</code> 在 <code>ORDER BY ... LIMIT</code> 之前生效——你不会先 <code>LIMIT 5</code> 再 WHERE，同样的直觉。</strong></p>
+<figure class="figure"><img alt="真实运行：InMemoryVectorStore 的 add / count / search，以及 filter「先过滤后搜」" src="../../../../../../projects/04-rag/assets/term-store.png" loading="lazy"/><figcaption>真实运行：InMemoryVectorStore 的 add / count / search，以及 filter「先过滤后搜」</figcaption></figure>
+<h3 id="34-阶段-②chromavectorstore">3.4 阶段 ②：ChromaVectorStore</h3>
+<pre><code>import chromadb
+
+
+class ChromaVectorStore(BaseVectorStore):
+    def __init__(self, persist_directory: str = &quot;./data/chroma&quot;,
+                 collection_name: str = &quot;rag_chunks&quot;):
+        self._client = chromadb.PersistentClient(path=persist_directory)
+        self._collection = self._client.get_or_create_collection(
+            name=collection_name,
+            metadata={&quot;hnsw:space&quot;: &quot;cosine&quot;},       # 指定余弦距离
+        )
+
+    def add(self, chunks, vectors, model: str = &quot;&quot;) -&gt; None:
+        self._collection.upsert(
+            ids=[c.chunk_id for c in chunks],
+            embeddings=[[float(x) for x in v] for v in vectors],
+            documents=[c.text for c in chunks],
+            metadatas=[{**c.metadata, &quot;_model&quot;: model, &quot;doc_id&quot;: c.doc_id,
+                        &quot;index&quot;: c.index} for c in chunks],
+        )
+
+    def search(self, query_vector, top_k: int = 5, filter: dict | None = None):
+        kwargs: dict = {
+            &quot;query_embeddings&quot;: [[float(x) for x in query_vector]],
+            &quot;n_results&quot;: top_k,
+            &quot;include&quot;: [&quot;documents&quot;, &quot;metadatas&quot;, &quot;distances&quot;],
+        }
+        if filter:
+            kwargs[&quot;where&quot;] = filter                  # 先过滤后搜
+        res = self._collection.query(**kwargs)
+        out = []
+        for cid, doc, meta, dist in zip(res[&quot;ids&quot;][0], res[&quot;documents&quot;][0],
+                                        res[&quot;metadatas&quot;][0], res[&quot;distances&quot;][0]):
+            chunk = Chunk(chunk_id=cid, doc_id=meta.get(&quot;doc_id&quot;, &quot;&quot;),
+                          text=doc, index=meta.get(&quot;index&quot;, 0), metadata=meta)
+            out.append({&quot;chunk&quot;: chunk, &quot;score&quot;: 1.0 - float(dist)})  # 距离 → 相似度
+        return out
+
+    def count(self) -&gt; int:
+        return self._collection.count()
+
+    def clear(self) -&gt; None:
+        cid = self._collection.name
+        self._client.delete_collection(cid)
+        self._collection = self._client.get_or_create_collection(
+            name=cid, metadata={&quot;hnsw:space&quot;: &quot;cosine&quot;})
+
+    def delete_document(self, doc_id: str) -&gt; None:
+        self._collection.delete(where={&quot;doc_id&quot;: doc_id})</code></pre>
+<p>值得注意的两处：<code>upsert</code>（而不是 <code>add</code>）让重复入库变成覆盖，呼应 Chapter 01 的内容哈希幂等设计；Chroma 返回的是<strong>距离</strong>，<code>score = 1 - distance</code> 换算回相似度，和 <code>InMemoryVectorStore</code> 的语义对齐——<strong>这正是先定义抽象层的红利：上层代码对两个实现零感知。</strong></p>
+<hr/>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<p>以下代码将在 <code>src/rag/vector_store.py</code> 落地时实现。目标结构：</p>
+<pre><code>src/rag/
+├── vector_store.py   # BaseVectorStore / InMemoryVectorStore / ChromaVectorStore
+└── ...</code></pre>
+<p>关键实现思路：</p>
+<ul class="lvl"><li><strong>存储工厂</strong>，与 Chapter 03 的 embedding 工厂呼应：</li></ul>
+<pre><code>def create_vector_store(config: dict) -&gt; BaseVectorStore:
+    backend = config.get(&quot;backend&quot;, &quot;memory&quot;)
+    if backend == &quot;memory&quot;:
+        return InMemoryVectorStore()
+    if backend == &quot;chroma&quot;:
+        return ChromaVectorStore(persist_directory=config.get(&quot;persist_directory&quot;,
+                                                              &quot;./data/chroma&quot;))
+    raise ValueError(f&quot;未知向量库 backend: {backend!r}&quot;)</code></pre>
+<ul class="lvl"><li><strong>查询侧的模型校验</strong>（Chapter 03 坑 1 的防线落地）：入库时模型名存进 metadata 的 <code>_model</code> 字段，查询前取出比对，不一致抛 <code>ValueError</code>。</li></ul>
+<ul class="lvl"><li><strong>端到端串联自测</strong>（用 Fake，不需要 API key）：<code>ingest → chunk → FakeEmbeddingClient.embed → store.add → store.search(query_vector, filter={&quot;format&quot;: &quot;md&quot;})</code>，断言结果非空且分数降序。整条链路离线可跑，是后面 05 章真实检索的地基。</li></ul>
+<ul class="lvl"><li><strong>依赖</strong>：<code>pip install chromadb numpy</code>。</li></ul>
+<ul class="lvl"><li><strong>Milvus 提一句</strong>：当向量到千万级、需要多副本和标量混合索引时再上 Milvus（独立部署、gRPC 接入）。个人知识库和单机服务，Chroma 的上限远比想象中高，不要提前优化。</li></ul>
+<hr/>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h3 id="坑-1chroma-collection-名字不符合规范报错信息看不懂">坑 1：Chroma collection 名字不符合规范，报错信息看不懂</h3>
+<ul class="lvl"><li><strong>现象</strong>：<code>get_or_create_collection(name=&quot;我的 知识库!&quot;)</code> 报 <code>ValueError: Expected collection name ... (3-63 characters, ...)</code>，一长串正则让人摸不着头脑。</li><li><strong>原因</strong>：Chroma 的 collection 名要求：3~63 字符、只允许字母数字和 <code>-</code>/<code>_</code>、必须以字母或数字开头结尾——中文名、空格、<code>!</code>、以 <code>-</code> 开头都不行。</li><li><strong>正确做法</strong>：用固定英文 snake_case（如 <code>rag_chunks</code>），要区分多知识库时用配置里的英文 key 拼接，不要用用户输入的任意字符串当 collection 名。</li></ul>
+<h3 id="坑-2持久化目录被-gitignore-漏掉仓库里塞了半-gb-的向量数据">坑 2：持久化目录被 .gitignore 漏掉，仓库里塞了半 GB 的向量数据</h3>
+<ul class="lvl"><li><strong>现象</strong>：<code>git status</code> 里冒出 <code>data/chroma/</code> 几百个文件；或者反过来，同事 clone 下来发现向量库是空的，&quot;检索怎么没结果&quot;。</li><li><strong>原因</strong>：默认 <code>persist_directory=&quot;./data/chroma&quot;</code> 落在项目根目录，而 <code>.gitignore</code> 可能没覆盖到（数据被误提交），或覆盖过头把 <code>data/</code> 全局忽略导致误以为程序坏了。</li><li><strong>正确做法</strong>：把持久化目录约定为 <code>./data/</code> 并加入 <code>.gitignore</code>；入库写一个&quot;重建脚本&quot;（从原始文档全量重建索引）代替提交数据本身——<strong>向量库永远是可再生的派生数据，源文档才是 source of truth，和 Java 项目不把 target/ 提交进 git 是同一个道理。</strong></li></ul>
+<h3 id="坑-3维度不一致报错发生在查询而不是入库">坑 3：维度不一致，报错发生在查询而不是入库</h3>
+<ul class="lvl"><li><strong>现象</strong>：<code>InvalidDimensionException: Embedding dimension 1536 does not match collection dimensionality 1024</code>。更隐蔽的变体：换了 embedding 模型重建索引但没清空旧 collection，检索结果里混着两个模型的向量，分数全是垃圾。</li><li><strong>原因</strong>：collection 在第一次写入时就固定了维度；同一模型空间校验通过、跨模型混存时 Chroma 不会替你校验&quot;是不是同一个模型&quot;。</li><li><strong>正确做法</strong>：入库和查询前都校验模型一致性（见 4.2）；换模型 = 换 collection 名（如 <code>rag_chunks_bge_m3</code>）或先 <code>clear()</code> 再全量重建。<strong>就像 Java 里改了实体字段结构，老表必须跑 migration——向量空间变了，库必须重建。</strong></li></ul>
+<h3 id="坑-4删除文档时向量和-chunk-元数据不同步">坑 4：删除文档时向量和 chunk 元数据不同步</h3>
+<ul class="lvl"><li><strong>现象</strong>：删除某文档后再检索，top 结果里出现&quot;幽灵 chunk&quot;——<code>self._chunks</code> 里查不到对应的 Chunk，直接 <code>KeyError</code>；或者 <code>count()</code> 显示的条数和能检索到的条数对不上。</li><li><strong>原因</strong>：删除时只删了向量矩阵的行、忘了同步删 <code>chunks</code> 字典（或反过来）；自研存储里这种双结构不同步是最常见 bug。</li><li><strong>正确做法</strong>：<code>delete_document</code> 里对矩阵行、<code>_ids</code>、<code>_meta</code>、<code>_chunks</code> <strong>四处一起删</strong>（见 3.2 实现），并写一个不变量断言测试：<code>count() == len(_ids) == len(_chunks)</code>，任何时刻三者必须相等。</li></ul>
+<h3 id="坑-5把先搜后过滤当成了正确语义">坑 5：把&quot;先搜后过滤&quot;当成了正确语义</h3>
+<ul class="lvl"><li><strong>现象</strong>：指定&quot;只检索某 PDF&quot;后，10 次里有 3 次结果为空或混入其他文档——数据明明都在库里。</li><li><strong>原因</strong>：实现成了&quot;全库 top-k 再按 metadata 筛&quot;（3.3 表格里的第一种），目标文档的内容根本没进 top-k 候选。</li><li><strong>正确做法</strong>：过滤条件下沉到检索层（自研实现在打分循环里跳过不匹配行；Chroma 用 <code>where</code> 参数），保证 top-k 来自过滤后的子集。</li></ul>
+<hr/>
+<h2 id="6-自检清单">6. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能说清 <code>LIKE</code>/全表扫描为什么做不了向量检索，ANN 用什么换了什么</li><li>[ ] 能用&quot;高速公路 + 城市道路&quot;讲一遍 HNSW 的直觉</li><li>[ ] 亲手实现过 NumPy 版余弦检索，并能解释 <code>m @ q</code> 那一行在算什么</li><li>[ ] 能说清&quot;先过滤后搜&quot;和&quot;先搜后过滤&quot;的区别及各自的后果</li><li>[ ] 两个实现（InMemory / Chroma）能在同一个 <code>BaseVectorStore</code> 抽象下互换</li><li>[ ] 知道换 embedding 模型时向量库必须重建，以及 collection 命名规范</li></ul>
+<hr/>
+<h2 id="7-真实运行截图第十一章补充">7. 真实运行截图（第十一章补充）</h2>
+<p>第十一章用 <code>ChromaVectorStore</code> 把向量库从内存换成了持久化落盘。两张截图分别展示「Chroma 落盘与重启恢复」和「换模型时的护栏」：</p>
+<figure class="figure"><img alt="Chroma 落盘、重启恢复与语义检索" src="../../../../../../projects/04-rag/assets/real-chroma.png" loading="lazy"/><figcaption>Chroma 落盘、重启恢复与语义检索</figcaption></figure>
+<figure class="figure"><img alt="Fake vs 真实与换模型护栏" src="../../../../../../projects/04-rag/assets/real-guard.png" loading="lazy"/><figcaption>Fake vs 真实与换模型护栏</figcaption></figure>
+<blockquote><p>关键结论：持久化目录里出现 <code>_model</code> sidecar 文件，专门用来在进程重启后恢复 <code>model_name</code>，否则 <code>check_model()</code> 这道换模型护栏会失效；Chroma 的 metadata 也不收 <code>list</code>，入库前要把 <code>headings</code> 这类列表压成字符串。</p></blockquote>
+<hr/>
+<p>上一章：<a href="03-embedding.html">03-embedding.md</a> —— 文本变成了向量，语义第一次可以被计算</p>
+<p>下一章：<a href="05-retrieval.html">05-retrieval.md</a> —— 库建好了，检索链路怎么把&quot;最近的几条&quot;变成模型的上下文？</p>
+<p>回到项目主页：<a href="../README.html">../README.md</a></p>
+</main>
+</body>
+</html>

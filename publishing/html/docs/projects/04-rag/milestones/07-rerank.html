@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 04 — Chapter 07：Rerank【重排序】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-04-chapter-07rerank重排序">Project 04 — Chapter 07：Rerank【重排序】</h1>
+<blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/reranker.py</code>（代码落地时实现）</p></blockquote>
+<hr/>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<p>Chapter 06 的结尾留了一个尖锐的问题：向量检索的相似度只衡量「语义像不像」，判断不了「能不能回答」。导致的结果是——top-k 里<strong>真正的答案经常排在第 3、第 5 名</strong>，而第 1、2 名是「语义很像但答非所问」的段落。生成模型读 context 是有位置偏好的（开头和结尾的内容更被重视，中间容易被忽略），答案排在第 5 名，效果就打折。</p>
+<p>有没有办法把那 k 条候选<strong>重新排一次序</strong>，让真正的答案浮到最上面？有，这就是 rerank（重排序）。它不是靠调相似度公式，而是换一个<strong>更强但更慢的模型</strong>，只对少量候选做精细判断。</p>
+<p>先破除一个流程误解：</p>
+<pre><code>你以为：  rerank 是在检索之前给所有文档&quot;打更准的分&quot;
+实际上：  rerank 永远在召回之后——先粗筛出 20 条，
+          再对这 20 条精排。顺序反了性能直接爆炸（见踩坑 4）</code></pre>
+<p>本章目标：</p>
+<blockquote><p><strong>理解两阶段检索架构（bi-encoder 粗召回 + cross-encoder 精排），并实现可插拔的 Reranker 抽象。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>核心是理解两种架构的根本差异，以及由此换来的「快」与「准」：</p>
+<p><strong>bi-encoder（双塔，Chapter 03 的 embedding 模型就是它）</strong>：query 和 doc 各自独立过一遍编码器，得到两个向量，再算余弦。两座「塔」互不通信。好处是 doc 向量可以<strong>离线批量算好存进向量库</strong>，在线查询只编码一次 query——这就是向量库毫秒级响应的原因。</p>
+<p><strong>cross-encoder（交叉编码）</strong>：把 query 和 doc <strong>拼成一段文本</strong> <code>[CLS] query [SEP] doc [SEP]</code> 一起送进模型。每个 query 的 token 都能对每个 doc 的 token 做 attention（注意力交互），模型能判断出「这一段确实在回答这个问题」这种双塔永远看不到的细粒度对应关系。代价是：每对 (query, doc) 都要跑一次完整的前向推理，<strong>无法预计算</strong>——1000 个候选就是 1000 次推理。</p>
+<pre><code>你以为：  既然 cross-encoder 更准，干脆用它检索全部文档
+实际上：  它每对 (query, doc) 都要一次前向推理，没法预计算。
+          10 万文档 × 每秒几十对 = 用户等几分钟
+          所以只能用它精排少量候选</code></pre>
+<p>于是有了两阶段架构——<strong>Java 里这就是「先 <code>LIMIT 20</code> 粗筛再精确 join」的查询优化</strong>，或「一级缓存批量粗筛 + 二级缓存逐条精确查」的组合：</p>
+<pre><code>用户 query
+  ↓ bi-encoder 粗召回：快（毫秒级），从全库捞 20 条（宁多勿漏）
+  ↓ cross-encoder 精排：慢（几百毫秒），只对这 20 条逐对打分
+  ↓ 取 top_n（如 5）交给 Chapter 08 拼 context</code></pre>
+<p>一句话：<strong>召回阶段用快模型保证不漏，精排阶段用准模型保证排序对</strong>。两阶段的预算分配（20 → 5）见 3.3。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-rerank-模型与两种接入方式">3.1 Rerank 模型与两种接入方式</h3>
+<p>常用的 rerank 模型是 <code>bge-reranker-v2-m3</code>（BAAI 出品，多语言、轻量，和 Chapter 03 用过的 bge 系列 embedding 是一家）。接入方式两种：</p>
+<table><thead><tr><th></th><th>API 方式（SiliconFlow / Jina / Cohere rerank 接口）</th><th>本地方式（sentence-transformers <code>CrossEncoder</code>）</th></tr></thead><tbody><tr><td>部署成本</td><td>零（HTTP 调用）</td><td>需下载模型 + 本机推理资源</td></tr><tr><td>延迟</td><td>网络往返 + 服务端推理</td><td>无网络开销，但受本机算力限制</td></tr><tr><td>费用</td><td>按 token / 按次计费</td><td>免费</td></tr><tr><td>教学价值</td><td>学真实生产接口契约</td><td>能看到 cross-encoder 的实际输出形态</td></tr><tr><td>依赖</td><td><code>httpx</code></td><td><code>sentence-transformers</code> + torch</td></tr></tbody></table>
+<p>本项目两种都实现，用抽象基类统一契约；本地方式作为可选依赖（机器跑不动 torch 时能整体跳过）。</p>
+<h3 id="32-reranker-的接口契约">3.2 Reranker 的接口契约</h3>
+<p>延续 Chapter 03/04 的 ABC（抽象基类）+ Fake 模式：</p>
+<pre><code>class BaseReranker(ABC):
+    @abstractmethod
+    def rerank(self, query: str, chunks: list[ScoredChunk], top_n: int = 5) -&gt; list[ScoredChunk]:
+        &quot;&quot;&quot;按 query 相关性重新排序，返回前 top_n 条（rerank_score 覆写 chunk.score）&quot;&quot;&quot;</code></pre>
+<p>三个实现：</p>
+<pre><code>@dataclass
+class SiliconFlowReranker(BaseReranker):
+    &quot;&quot;&quot;HTTP API 精排。bge-reranker-v2-m3 走 SiliconFlow rerank 接口&quot;&quot;&quot;
+    api_key: str
+    model: str = &quot;BAAI/bge-reranker-v2-m3&quot;
+    base_url: str = &quot;https://api.siliconflow.cn/v1/rerank&quot;
+
+    def rerank(self, query, chunks, top_n=5) -&gt; list[ScoredChunk]:
+        if not chunks:
+            return []
+        resp = httpx.post(
+            self.base_url,
+            headers={&quot;Authorization&quot;: f&quot;Bearer {self.api_key}&quot;},
+            json={
+                &quot;model&quot;: self.model,
+                &quot;query&quot;: query,
+                &quot;documents&quot;: [c.text for c in chunks],   # 只送文本，长度上限见踩坑 3
+                &quot;top_n&quot;: top_n,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        results = resp.json()[&quot;results&quot;]          # [{&quot;index&quot;: 3, &quot;relevance_score&quot;: 0.91}, ...]
+        out = []
+        for r in results:                          # API 已按分数降序返回
+            chunk = chunks[r[&quot;index&quot;]]
+            chunk.score = float(r[&quot;relevance_score&quot;])
+            out.append(chunk)
+        return out
+
+
+@dataclass
+class NoopReranker(BaseReranker):
+    &quot;&quot;&quot;直通实现：原样返回前 top_n 条。测试 / 无 rerank 资源时使用。
+
+    Java 类比：NoOp 实现模式——接口不变，行为为空，保证调用方代码统一。
+    &quot;&quot;&quot;
+    def rerank(self, query, chunks, top_n=5) -&gt; list[ScoredChunk]:
+        return chunks[:top_n]</code></pre>
+<p><code>NoopReranker</code> 的意义和 Chapter 03 的 <code>FakeClient</code> 一致：<strong>让 pipeline 代码不感知 rerank 有没有真的发生</strong>，单测里塞一个 Noop 就能把检索逻辑测完整，不需要网络和模型。本地 <code>CrossEncoder</code> 版本落地时按同样契约实现（<code>CrossEncoder(model_name).score([(query, c.text) for c in chunks])</code> 得到分数列表，再排序截断），此处不展开。</p>
+<h3 id="33-什么时候值得上-rerank">3.3 什么时候值得上 rerank</h3>
+<p>rerank 是拿<strong>延迟</strong>换<strong>质量</strong>，值不值看场景：</p>
+<table><thead><tr><th>方案</th><th>召回</th><th>精排</th><th>典型端到端延迟（粗估）</th><th>适用</th></tr></thead><tbody><tr><td>纯向量 top-5</td><td>全库 → 5</td><td>无</td><td>几十~几百 ms</td><td>文档量小、对质量要求一般</td></tr><tr><td>两阶段（召回 20 → 精排 5）</td><td>全库 → 20</td><td>20 次推理</td><td>+数百 ms（API）/ 更久（CPU 本地）</td><td><strong>文档量千级以上、答案质量优先</strong></td></tr><tr><td>精排全部文档</td><td>—</td><td>上万次推理</td><td>分钟级 ❌</td><td>永远不要</td></tr></tbody></table>
+<p>经验法则：</p>
+<ul class="lvl"><li>文档量 &lt; 几百条：embedding 质量好时，rerank 提升有限，先别加；</li><li>文档量千级~万级：<strong>性价比最高区间</strong>，召回 20 条几乎不漏答案，精排只需 20 次推理；</li><li>在线客服等延迟敏感场景：精排候选降到 10、或换更小的 rerank 模型，做延迟预算的取舍。</li></ul>
+<p>延迟的账要这么算：向量库搜索是「一次向量比较 × 全库」（有索引加速），rerank 是「一次完整 Transformer 前向 × 候选数」——后者单次成本高两个数量级，所以候选数必须严格控制，这就是「先粗召回 k=20 再精排」的由来（Chapter 05 的 <code>fetch_k</code> 参数在这里兑现价值）。</p>
+<hr/>
+<figure class="figure"><img alt="真实运行：向量粗召回 top-5，精排重打分取 top-2，粗排第 3 名被提到第 2" src="../../../../../../projects/04-rag/assets/term-rerank.png" loading="lazy"/><figcaption>真实运行：向量粗召回 top-5，精排重打分取 top-2，粗排第 3 名被提到第 2</figcaption></figure>
+<figure class="figure"><img alt="真实运行：精排前后名次对照（粗排第 3 名→第 2 名）；NoopReranker 只截断不改分" src="../../../../../../projects/04-rag/assets/term-rerank-compare.png" loading="lazy"/><figcaption>真实运行：精排前后名次对照（粗排第 3 名→第 2 名）；NoopReranker 只截断不改分</figcaption></figure>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<blockquote><p>以下代码将在 <code>src/rag/reranker.py</code> 落地时实现，这里先当设计稿读。目标：pipeline 侧一行切换「有/无 rerank」。</p></blockquote>
+<pre><code>&quot;&quot;&quot;src/rag/reranker.py — 重排序抽象：BaseReranker + API 实现 + Noop 直通&quot;&quot;&quot;
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+import httpx
+
+from rag.vector_store import ScoredChunk
+
+
+class BaseReranker(ABC):
+    &quot;&quot;&quot;rerank 契约：输入 query + 候选 chunks，输出按相关性降序的前 top_n 条。
+
+    实现纪律：① 必须截断到 top_n；② 分数覆写进 chunk.score；
+    ③ 不修改传入列表的顺序（返回新列表）。
+    &quot;&quot;&quot;
+
+    @abstractmethod
+    def rerank(
+        self, query: str, chunks: list[ScoredChunk], top_n: int = 5
+    ) -&gt; list[ScoredChunk]: ...
+
+
+@dataclass
+class SiliconFlowReranker(BaseReranker):
+    api_key: str
+    model: str = &quot;BAAI/bge-reranker-v2-m3&quot;
+    base_url: str = &quot;https://api.siliconflow.cn/v1/rerank&quot;
+    max_doc_chars: int = 4000   # 超过 cross-encoder 输入上限会被服务端截断，先主动控住
+
+    def rerank(self, query, chunks, top_n=5) -&gt; list[ScoredChunk]:
+        if not chunks:
+            return []
+        top_n = min(top_n, len(chunks))
+        resp = httpx.post(
+            self.base_url,
+            headers={&quot;Authorization&quot;: f&quot;Bearer {self.api_key}&quot;},
+            json={
+                &quot;model&quot;: self.model,
+                &quot;query&quot;: query,
+                &quot;documents&quot;: [c.text[: self.max_doc_chars] for c in chunks],
+                &quot;top_n&quot;: top_n,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        out: list[ScoredChunk] = []
+        for r in resp.json()[&quot;results&quot;]:
+            chunk = chunks[r[&quot;index&quot;]]
+            chunk.score = float(r[&quot;relevance_score&quot;])   # rerank 分数语义见踩坑 1
+            out.append(chunk)
+        return out[:top_n]      # 双保险：即使 API 忽略 top_n 也截断
+
+
+@dataclass
+class NoopReranker(BaseReranker):
+    &quot;&quot;&quot;测试与降级用：跳过精排，保持 chunk 原有顺序取前 top_n&quot;&quot;&quot;
+
+    def rerank(self, query, chunks, top_n=5) -&gt; list[ScoredChunk]:
+        return chunks[:top_n]</code></pre>
+<p>pipeline 侧的接入方式（Chapter 09 完整实现）：</p>
+<pre><code>reranker: BaseReranker = (
+    SiliconFlowReranker(api_key=settings.api_key)
+    if settings.enable_rerank
+    else NoopReranker()
+)
+hits = retriever.retrieve(query, top_k=20)   # 粗召回，故意取大 k
+final = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context</code></pre>
+<p>有 rerank 和没 rerank，pipeline 代码<strong>一个字都不用改</strong>——只是 <code>BaseReranker</code> 换了个实现。这就是依赖倒置：pipeline 依赖抽象，不依赖具体精排服务。</p>
+<hr/>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h3 id="坑-1rerank-分数与相似度分数混用排序">坑 1：rerank 分数与相似度分数混用排序</h3>
+<p><strong>现象</strong>：把向量检索的余弦分数（0~1）和 rerank 的 relevance_score 放进同一个列表排序，或者用「rerank 分数 &gt; 0.5 就保留」这种照搬相似度的阈值，结果完全不可预期。</p>
+<p><strong>原因</strong>：两种分数语义不同。余弦是「语义夹角」，rerank 分数是「该模型对 query-doc 配对的相关性判断」，两者分布完全不一样（bge-reranker 的输出甚至可能是 logit 形态，不一定压在 0~1）。混用等于把摄氏度和华氏度排在一起。</p>
+<p><strong>正确做法</strong>：rerank 之后<strong>以 rerank 分数为准全盘重排</strong>，向量分数仅保留用于日志/调试。阶段之间只传递排名和最终选中的 chunk，不跨阶段比较分数。</p>
+<h3 id="坑-2rerank-之后忘了截断-topn">坑 2：rerank 之后忘了截断 top_n</h3>
+<p><strong>现象</strong>：pipeline 直接把 <code>rerank()</code> 的返回全部塞进 prompt，chunk 越攒越多，token 消耗翻倍，还把答案稀释在噪音里。</p>
+<p><strong>原因</strong>：部分 rerank 实现的 <code>top_n</code> 参数是可选的，不传或 API 忽略时会返回全部候选；调用方想当然以为「rerank 就是帮我选好了」。</p>
+<p class="nav-footer"><strong>正确做法</strong>：实现侧双保险（<code>SiliconFlowReranker</code> 里先 <code>min(top_n, len(chunks))</code>、返回前再 <code>[:top_n]</code>），调用侧相信契约但契约本身必须兜底。<strong>截断是 rerank 的职责，不是 pipeline 的善后工作。</strong></p>
+<h3 id="坑-3长-chunk-超出-crossencoder-输入上限被静默截断">坑 3：长 chunk 超出 cross-encoder 输入上限被静默截断</h3>
+<p><strong>现象</strong>：某些 chunk 长达 8000 字符，rerank 结果里它们无一例外排最后——看起来像「模型判定它们不相关」，实际是输入被截断只送进了前半段，答案在截掉的后半段里。</p>
+<p><strong>原因</strong>：cross-encoder 的输入上限（如 512 或 8192 token）远小于很多 embedding 模型；超长文本被服务端或库静默剪掉，剪掉的恰好可能是答案。</p>
+<p><strong>正确做法</strong>：① 发送前主动截断到安全长度（<code>max_doc_chars</code>，且截断前确认 chunking 阶段的块大小与此匹配）；② chunk 里如果带标题/来源等结构性前缀，保证前缀不被截掉；③ 观察「某类长文档永远排不进 top_n」这一异常信号时，先怀疑截断而不是模型能力。</p>
+<h3 id="坑-4把-rerank-用在召回之前顺序反了">坑 4：把 rerank 用在召回之前，顺序反了</h3>
+<p><strong>现象</strong>：对全库几万条文档先跑 rerank 再排序，接口从 200ms 劣化到几十秒甚至超时。</p>
+<p><strong>原因</strong>：cross-encoder 无法预计算（每次 query 都要和每条 doc 配对推理），候选数不控制就没有意义。rerank 的定位是「精排少量候选」，不是「更强的检索引擎」。</p>
+<p><strong>正确做法</strong>：固定两阶段顺序——<strong>bi-encoder 粗召回（fetch_k=20）→ cross-encoder 精排（top_n=5）</strong>。rerank 永远只见到几十条候选，见不到全库。</p>
+<hr/>
+<h2 id="6-自检清单">6. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能画出两阶段架构图，并解释 bi-encoder 为什么快、cross-encoder 为什么准</li><li>[ ] 能说出「无法预计算」这一条如何直接推导出 rerank 必须在召回之后</li><li>[ ] <code>BaseReranker</code> / <code>SiliconFlowReranker</code> / <code>NoopReranker</code> 三者的职责划分能对上号</li><li>[ ] 能算一笔延迟账：为什么粗召回 k=20 而不是 k=200</li><li>[ ] 能说出至少两种「rerank 分数不能与相似度分数混用」的理由</li><li>[ ] 知道自己项目里 rerank 的开关在哪个配置项、降级路径是什么（NoopReranker）</li></ul>
+<hr/>
+<p>上一章：<a href="06-similarity-search.html">06-similarity-search.md</a> —— 相似度判断不了「能不能回答」，本章用 cross-encoder 让 query 和文档真正见了一面。</p>
+<p>下一章：<a href="08-context-assembly.html">08-context-assembly.md</a> —— 精排出的 5 条好材料，怎么拼成一段模型爱读的上下文。</p>
+</main>
+</body>
+</html>

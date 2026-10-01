@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 02 — Tool Schema：模型看到的「函数说明书」</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-02-tool-schema模型看到的函数说明书">Milestone 02 — Tool Schema：模型看到的「函数说明书」</h1>
+<blockquote><p>Milestone 01 把工具建出来了。但<strong>模型不知道这些工具长什么样</strong>，它只看到一组 JSON。这一章讲清三件事：一段合格的 schema 长什么样、模型给错参数时怎么办、以及「声明」和「代码」怎么保持一致。</p></blockquote>
+<h2 id="1-模型真正看到的东西">1. 模型真正看到的东西</h2>
+<pre><code>{
+  &quot;type&quot;: &quot;function&quot;,
+  &quot;function&quot;: {
+    &quot;name&quot;: &quot;calculator&quot;,
+    &quot;description&quot;: &quot;计算算术表达式（支持 + - * / // % 与括号，不支持变量和函数）。&quot;,
+    &quot;parameters&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;properties&quot;: {
+        &quot;expression&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;算术表达式，例如 (12+8)*3/7&quot;}
+      },
+      &quot;required&quot;: [&quot;expression&quot;]
+    }
+  }
+}</code></pre>
+<p>四层结构，一层都不能少：工具对象 → <code>type: &quot;function&quot;</code> → <code>function</code> 对象 → <code>parameters</code>。</p>
+<p><code>description</code> 不是装饰。它直接决定模型会不会用这个工具——写成「算数」的工具，模型问「今天几号」时也可能去调它；写成「返回当前 UTC 时间」的精确描述，误调用会明显下降。<strong>工具描述是提示词的一部分。</strong></p>
+<h2 id="2-两种手写错误框架直接拦">2. 两种手写错误，框架直接拦</h2>
+<pre><code>function_schema(&quot;broken1&quot;, &quot;描述&quot;, {&quot;type&quot;: &quot;string&quot;})
+# → ToolSchemaError: parameters.type 必须是 object
+
+function_schema(&quot;broken2&quot;, &quot;描述&quot;, {&quot;type&quot;: &quot;object&quot;, &quot;properties&quot;: {}, &quot;required&quot;: [&quot;nope&quot;]})
+# → ToolSchemaError: required 里的「nope」没有对应的 property</code></pre>
+<p>第二条尤其关键：<code>required</code> 里写了一个不存在的字段，在离线测试里<strong>永远测不出来</strong>，只有真调服务时才会 400。放在构造阶段拦，是最便宜的位置。</p>
+<figure class="figure"><img alt="真实运行：两种非法声明在构造阶段被拒" src="../../../../../../projects/05-agent-mcp/assets/term-02-schema-validation.png" loading="lazy"/><figcaption>真实运行：两种非法声明在构造阶段被拒</figcaption></figure>
+<h2 id="3-签名推导消灭改了代码忘了改-schema">3. 签名推导：消灭「改了代码忘了改 schema」</h2>
+<pre><code>def search_old(k: int) -&gt; str: ...          # required = [&#x27;k&#x27;]
+def search_new(k: int, mode: str = &quot;fast&quot;) -&gt; str: ...   # required = [&#x27;k&#x27;]，新增 mode 且非必填</code></pre>
+<p><code>function_to_schema()</code> 用 <code>inspect.signature</code> 读注解，映射规则：</p>
+<table><thead><tr><th>Python 注解</th><th>JSON type</th></tr></thead><tbody><tr><td><code>str</code></td><td><code>string</code></td></tr><tr><td><code>int</code></td><td><code>integer</code></td></tr><tr><td><code>float</code></td><td><code>number</code></td></tr><tr><td><code>bool</code></td><td><code>boolean</code></td></tr><tr><td><code>list</code> / <code>list[str]</code></td><td><code>array</code></td></tr></tbody></table>
+<p><strong>有默认值的参数自动不进 <code>required</code>。</strong> 手写 schema 时最常见的疏漏就是把所有参数都写进 <code>required</code>，导致模型被要求填一个明明有默认值的字段。</p>
+<h2 id="4-参数纠偏小模型的高频失误">4. 参数纠偏：小模型的高频失误</h2>
+<p>模型给的参数不总是对的。真实项目里最常见的修法是<strong>自动纠偏</strong>，而不是报错：</p>
+<pre><code>[✓]     &#x27;3&#x27; + type=integer  → 3
+[✓]     3.0 + type=integer  → 3
+[✓]    &#x27;12&#x27; + type=number   → 12.0
+[✓]  &#x27;true&#x27; + type=boolean  → True
+[✓]       1 + type=boolean  → True
+[✗]     &#x27;x&#x27; + type=integer  → None  期望整数，收到字符串 &#x27;x&#x27;</code></pre>
+<p>为什么纠偏比报错划算：模型把整数写成 <code>&quot;3&quot;</code> 时，如果直接抛错，它会陷入「重试—报错—重试」的空转，把步数烧光；而纠偏是<strong>不改变语义</strong>的修复，一次就过。</p>
+<p>两个必须注意的边界：</p>
+<ul class="lvl"><li><strong>布尔不是整数。</strong> <code>True</code> 是 <code>int</code> 的子类，不拦的话 <code>True</code> 会被纠偏成 <code>1</code>。</li><li><strong>纠不动就报类型错误</strong>，不要猜。猜错的参数比不猜更糟。</li></ul>
+<figure class="figure"><img alt="真实运行：参数纠偏对照表" src="../../../../../../projects/05-agent-mcp/assets/term-02-argument-coercion.png" loading="lazy"/><figcaption>真实运行：参数纠偏对照表</figcaption></figure>
+<h2 id="5-真实派发纠偏发生在-run-之前">5. 真实派发：纠偏发生在 run() 之前</h2>
+<pre><code>result = reg.call(ToolCall(id=&quot;c&quot;, name=&quot;add&quot;, arguments={&quot;a&quot;: &quot;4&quot;, &quot;b&quot;: 6}))
+#   ↳ run() 拿到的类型：a=int, b=int
+#   [✓] {&quot;a&quot;: &quot;4&quot;, &quot;b&quot;: 6}          → ok=True  10
+#   [✗] {&quot;a&quot;: 1}                    → ok=False 缺少必填参数「b」
+#   [✗] {&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3}    → ok=False 参数「c」不存在于 add 的声明中</code></pre>
+<p>三类失败各有各的回灌文案，因为它们对模型的含义不同：</p>
+<table><thead><tr><th>情况</th><th>回灌文案</th><th>模型该怎么做</th></tr></thead><tbody><tr><td>未知工具</td><td><code>未知工具「x」。当前可用：…</code></td><td>换成真实工具名</td></tr><tr><td>缺必填</td><td><code>缺少必填参数「b」</code></td><td>补上</td></tr><tr><td>参数不存在</td><td><code>参数「c」不存在于 add 的声明中</code></td><td>删掉，别编</td></tr></tbody></table>
+<p><strong>文案里带上「当前可用工具列表」是关键</strong>——否则模型只能瞎猜。</p>
+<h2 id="6-坑与结论">6. 坑与结论</h2>
+<p><strong>坑 1：<code>schemas()</code> 返回的是工具对象，不是内层 function。</strong> 早期实现里 <code>schema_of()</code> 返回的是内层 <code>{name, description, parameters}</code>，<code>schemas()</code> 直接把它当数组发出去。服务端一直回 <code>422 missing field &#x27;type&#x27;</code>，而且<strong>离线 mock 完全复现不出来</strong>。修法：</p>
+<pre><code>def schemas(self):
+    return [{&quot;type&quot;: &quot;function&quot;, &quot;function&quot;: self.schema_of(n)} for n in self.names()]</code></pre>
+<p><strong>坑 2：中文检索不能用 <code>\w+</code> 切词。</strong> <code>\w</code> 在 Python 里能匹配汉字，所以「会话怎么落盘」会被当成<strong>一个整串</strong>，和语料里的「会话与多轮」永远对不上。本项目对连续汉字段额外切<strong>二元组</strong>（会话/话怎/怎么/么落/落盘），命中一个即部分相关。这是不引入分词库时的最小可行方案。</p>
+<p><strong>坑 3：英文词要做前缀匹配，但不能子串匹配。</strong> 输入 <code>project</code> 要能命中 <code>project01</code> 这类标记；但查询里的 <code>in</code> 绝不能被 <code>em**bedding**</code> 命中——否则任何噪声查询都永远有结果，检索工具就废了。</p>
+<p><strong>结论：</strong></p>
+<ul class="lvl"><li>schema 是给模型看的说明书，<code>description</code> 属于提示词的一部分。</li><li>参数纠偏优先于报错，但布尔 ≠ 整数。</li><li>自动推导 schema 让「代码和声明不一致」从根上消失。</li></ul>
+<h2 id="7-代码位置">7. 代码位置</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/tools.py</code></td><td><code>function_schema()</code> / <code>function_to_schema()</code></td></tr><tr><td><code>src/agent/registry.py</code></td><td><code>_coerce()</code> / <code>_prepare_kwargs()</code> / <code>assert_valid_schema()</code></td></tr></tbody></table>
+<h2 id="8-版本">8. 版本</h2>
+<p>v0.2 → <strong>v0.3</strong>，新增 12 项 schema 与纠偏相关测试，截图 2 张。</p>
+</main>
+</body>
+</html>

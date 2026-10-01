@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 03 — Embedding：把 id 变成「带位置的向量」</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-03-embedding把-id-变成带位置的向量">Milestone 03 — Embedding：把 id 变成「带位置的向量」</h1>
+<p>Milestone 02 把文本变成了 id 序列，<code>vocab_size = 500</code>。但 id 对模型来说还是一堆整数 —— 模型不会算 <code>334 &gt; 12</code>，它只懂向量。Embedding 这一层就是<strong>把每个 id 映射到一行 <code>d_model</code> 维的向量</strong>，再叠上一个让模型知道「这是第几个位置」的位置编码。</p>
+<p>在 Project 05 里，模型内部对我完全黑盒；到了这里，我第一次亲手把 <code>id → 向量</code> 这步写出来 —— 而且关键不是「查表」本身，而是<strong>查表也要能回传梯度</strong>，否则后面训练时 Embedding 这层永远学不动。</p>
+<hr/>
+<h2 id="1-what-whyid-为什么不能直接进-transformer">1. What / Why：id 为什么不能直接进 Transformer</h2>
+<p>Transformer 里一切都是矩阵乘法。整数 id 没法参与 <code>QKᵀ</code>，它必须变成连续向量。两个必须回答的问题：</p>
+<ul class="lvl"><li><strong>怎么从 id 拿到向量？</strong> —— 一张 <code>(V, d_model)</code> 的查找表 <code>W_e</code>，按 id 取行。</li><li><strong>怎么让它知道位置？</strong> —— 自注意力本身对顺序无感（把输入打乱，注意力权重只跟着打乱，模型分不清「猫吃鱼」和「鱼吃猫」）。所以要给每个位置加一个唯一指纹。</li></ul>
+<p>本项目的项目规则是<strong>纯 numpy，不用 torch</strong>。所以这张查找表不是 <code>nn.Embedding</code>，而是手写 <code>one-hot(id) @ W_e</code>。</p>
+<h2 id="2-designonehot-查表-固定正弦位置编码">2. Design：one-hot 查表 + 固定正弦位置编码</h2>
+<p><code>src/model/embedding.py</code> 里三样东西：</p>
+<ul class="lvl"><li><code>TokenEmbedding</code>：<code>W_e</code> 是 <code>Parameter(np.random.randn(V, d_model) * 0.02)</code>，<strong>小初始化</strong>避免一上来 softmax 就饱和。前向用 <code>one_hot(ids) @ W_e</code>，而不是 <code>W_e[id]</code> 花式索引 —— 因为 one-hot 是常量、<code>W_e</code> 是参数，反向时梯度自动「scatter 回那一行」，正是 Embedding 该有的行为，还不用手写 gather/scatter。</li><li><code>PositionalEncoding</code>：<code>pe[pos, 2i] = sin(pos/10000^(2i/d))</code>，<code>pe[pos, 2i+1] = cos(...)</code>。<strong>这是常量 Tensor，不进 <code>parameters()</code></strong> —— 它只是位置指纹，不该被训练改掉。整张表预计算好，用时切片。</li><li><code>combine</code>：<code>x = TokenEmb(ids) + PosEnc(len(ids))</code>。位置编码是 <code>(seq, d_model)</code>、token 嵌入是 <code>(B, seq, d_model)</code>，<code>add</code> 会自然把位置编码<strong>广播</strong>到整个 batch。</li></ul>
+<figure class="figure"><img alt="Embedding 数据流：id → one-hot → 查表 → 加位置编码" src="../../../../../../projects/06-mini-transformer-llm/assets/embedding.svg" loading="lazy"/><figcaption>Embedding 数据流：id → one-hot → 查表 → 加位置编码</figcaption></figure>
+<p>形状约定（和 Milestone 01 契约一致）：<code>(V, d_model)</code> 的 <code>W_e</code>，输出 <code>(n, d_model)</code>，批处理 <code>(B, T, d_model)</code>。</p>
+<h2 id="3-realrun-evidence来自-demosoutdemo03embeddingtxt">3. Real-run evidence（来自 <code>demos/out/demo_03_embedding.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
+<pre><code>vocab_size = 500
+d_model    = 16
+词表里前 6 个 token：[&#x27;&lt;pad&gt;&#x27;, &#x27;&lt;unk&gt;&#x27;, &#x27;&lt;bos&gt;&#x27;, &#x27;&lt;eos&gt;&#x27;, &#x27;\n&#x27;, &#x27; &#x27;]
+
+权重形状 W_e         : (500, 16)  (V, d_model)
+输入 ids（前 8）      : [334]
+输出形状             : (1, 16)  (seq, d_model)
+查表正确性：out[0] 是否等于 W_e[ids[0]] : True
+
+第 0 个 token 的嵌入向量（前 8 维）：
+  -0.039 +0.006 -0.025 +0.010 -0.002 +0.015 +0.028 -0.007</code></pre>
+<p>位置编码的「第 0 位恒为 0、第 1 位恒为 1」被正确验证：</p>
+<pre><code>位置编码形状          : (8, 16)  (seq, d_model)
+pe[0,0] = +0.0000  (期望 ≈ 0)
+pe[0,1] = +1.0000  (期望 ≈ 1)
+pe[1,0] = +0.8415  (= sin(1/10000^(0/d)))
+pe[0] 前 8 维：
+  +0.000 +1.000 +0.000 +1.000 +0.000 +1.000 +0.000 +1.000</code></pre>
+<p>combine 确实是逐位相加（token + pos），并且<strong>批处理形状自洽</strong>：</p>
+<pre><code>combine 输出形状      : (1, 16)  (seq, d_model)
+combine == token + pos : True
+combine 后第 0 个位置向量（前 8 维）：
+  -0.039 +1.006 -0.025 +1.010 -0.002 +1.015 +0.028 +0.993
+
+两个不同长度句子补齐后 ids 形状 : (2, 1)
+combine 批处理输出形状          : (2, 1, 16)  (B, T, d_model)</code></pre>
+<p>可以核对：<code>-0.039 + 0.000 = -0.039</code>、<code>+0.006 + 1.000 = +1.006</code>、<code>+0.028 + 0.000 = +0.028</code>、<code>-0.007 + 1.000 = +0.993</code>，和打印的 combine 值逐位吻合 —— 加法没算错，广播也没错位。</p>
+<figure class="figure"><img alt="Embedding demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-03-embedding.png" loading="lazy"/><figcaption>Embedding demo 真实运行输出</figcaption></figure>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<p>这一版 demo 没有暴露真实 bug（查表、位置编码、combine 三项断言全绿，且数值可手算核对）。一个<strong>设计层面的注意点</strong>值得记下来：位置编码用 <code>requires_grad=False</code> 的常量 Tensor，否则它会被 <code>model.parameters()</code> 捞进优化器、被 Adam 改掉 —— 那模型就失去了「这是第几个位置」的锚点。代码里 <code>PositionalEncoding.forward</code> 显式传了 <code>requires_grad=False</code>，这条没漏。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>id 必须变成向量才能进 Transformer；查表用 <code>one-hot @ W_e</code> 而不是 <code>W[id]</code>，是为了<strong>让梯度能 scatter 回 <code>W_e</code> 那一行</strong>。</li><li>位置编码是<strong>固定常量</strong>，不进参数表 —— 它只负责告诉模型「第几个位置」，不该被训练。</li><li><code>combine = token + pos</code> 用广播自然贴合 batch，无需手动循环。</li><li>小初始化（0.02）不是随便选的：避免 Embedding 一上来就进 softmax 饱和区，下游梯度才流得动。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/embedding.py</code></td><td><code>TokenEmbedding</code>（查找表 + 梯度友好的查表）、<code>PositionalEncoding</code>（固定正弦）、<code>combine</code>（相加广播）</td></tr><tr><td><code>src/model/embedding.py::_one_hot</code></td><td>id → one-hot（保留 batch 维）</td></tr><tr><td><code>demos/demo_03_embedding.py</code></td><td>6 节演示：词表尺寸 / 查表 / 位置编码 / combine / 批处理，输出落 <code>demos/out/demo_03_embedding.txt</code></td></tr><tr><td><code>assets/embedding.svg</code></td><td>本章数据流图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.1 → <strong>v0.2</strong>，Embedding 层落地（<code>TokenEmbedding</code> + <code>PositionalEncoding</code> + <code>combine</code>），纯 numpy，演示真实跑通并核对数值，配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

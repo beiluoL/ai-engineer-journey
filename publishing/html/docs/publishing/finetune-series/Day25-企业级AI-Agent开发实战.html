@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day25：企业级 AI Agent 开发实战</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day25企业级-ai-agent-开发实战">Day25：企业级 AI Agent 开发实战</h1>
+<h1 id="langgraph-langchain4j-构建可控-agent">LangGraph / LangChain4j 构建可控 Agent</h1>
+<p>前面 Day24，你学习了 Agent 的高级能力：</p>
+<pre><code>Agent
+
+↓
+
+Memory
+
+↓
+
+Planning
+
+↓
+
+Reflection
+
+↓
+
+Self-Improvement</code></pre>
+<p>但是企业真正开发时，面试官不会只问：</p>
+<blockquote><p>“你知道 Agent 吗？”</p></blockquote>
+<p>而会问：</p>
+<blockquote><p>“你怎么实现一个可控、可维护、可上线的 Agent？”</p></blockquote>
+<p>今天进入工程实现。</p>
+<hr/>
+<h1 id="一为什么需要-agent-framework">一、为什么需要 Agent Framework？</h1>
+<p>先看最简单实现。</p>
+<p>自己写：</p>
+<pre><code>while(true){
+
+    response = llm.chat(prompt);
+
+
+    if(response.needTool()){
+
+        executeTool();
+
+    }
+
+}</code></pre>
+<p>Demo 可以。</p>
+<p>企业不行。</p>
+<p>问题：</p>
+<hr/>
+<h2 id="1-状态混乱">1. 状态混乱</h2>
+<p>复杂任务：</p>
+<pre><code>
+用户需求
+
+↓
+
+任务1
+
+↓
+
+任务2
+
+↓
+
+失败
+
+↓
+
+恢复</code></pre>
+<p>需要保存状态。</p>
+<hr/>
+<h2 id="2-流程不可控">2. 流程不可控</h2>
+<p>LLM：</p>
+<p>可能：</p>
+<pre><code>
+调用工具A
+
+↓
+
+调用工具B
+
+↓
+
+无限循环</code></pre>
+<hr/>
+<h2 id="3-无法观察">3. 无法观察</h2>
+<p>不知道：</p>
+<p>为什么失败。</p>
+<hr/>
+<p>所以需要：</p>
+<h1 id="agent-framework智能体框架">Agent Framework【智能体框架】</h1>
+<hr/>
+<h1 id="二目前主流-agent-框架">二、目前主流 Agent 框架</h1>
+<h2 id="1-langgraph">1. LangGraph</h2>
+<p>定位：</p>
+<blockquote><p>用图(Graph)方式构建 Agent。</p></blockquote>
+<p>语言：</p>
+<p>Python。</p>
+<p>特点：</p>
+<ul class="lvl"><li>状态管理</li></ul>
+<ul class="lvl"><li>节点编排</li></ul>
+<ul class="lvl"><li>条件分支</li></ul>
+<ul class="lvl"><li>循环</li></ul>
+<ul class="lvl"><li>Human Approval</li></ul>
+<hr/>
+<h2 id="2-langchain4j">2. LangChain4j</h2>
+<p>定位：</p>
+<blockquote><p>Java生态的大模型应用框架。</p></blockquote>
+<p>适合：</p>
+<p>Java开发者。</p>
+<p>支持：</p>
+<ul class="lvl"><li>ChatModel</li></ul>
+<ul class="lvl"><li>Tools</li></ul>
+<ul class="lvl"><li>Memory</li></ul>
+<ul class="lvl"><li>RAG</li></ul>
+<ul class="lvl"><li>Agent</li></ul>
+<hr/>
+<p>你的路线：</p>
+<p>Java + AI。</p>
+<p>重点：</p>
+<h1 id="langchain4j">LangChain4j</h1>
+<hr/>
+<h1 id="三什么是-graph-agent">三、什么是 Graph Agent？</h1>
+<p>传统流程：</p>
+<p>线性：</p>
+<pre><code>
+A
+
+↓
+
+B
+
+↓
+
+C</code></pre>
+<hr/>
+<p>Agent任务：</p>
+<p>可能：</p>
+<pre><code>
+        A
+
+       / \
+
+      B   C
+
+       \ /
+
+        D</code></pre>
+<hr/>
+<p>Graph：</p>
+<p>节点 + 边。</p>
+<hr/>
+<h1 id="四langgraph思想">四、LangGraph思想</h1>
+<p>核心：</p>
+<p>State Graph【状态图】。</p>
+<p>一个Agent：</p>
+<p>由：</p>
+<h2 id="node节点">Node【节点】</h2>
+<p>执行任务。</p>
+<h2 id="edge边">Edge【边】</h2>
+<p>决定下一步。</p>
+<h2 id="state状态">State【状态】</h2>
+<p>保存上下文。</p>
+<hr/>
+<p>例如：</p>
+<p>AI文章生成：</p>
+<pre><code>
+Start
+
+
+ ↓
+
+
+Research Node
+
+
+ ↓
+
+
+Write Node
+
+
+ ↓
+
+
+Review Node
+
+
+ ↓
+
+
+Publish
+</code></pre>
+<hr/>
+<h1 id="五企业-agent-标准结构">五、企业 Agent 标准结构</h1>
+<pre><code>
+                 User
+
+
+                  |
+
+                  ↓
+
+
+             Supervisor
+
+
+                  |
+
+        +---------+----------+
+
+        |                    |
+
+
+        ↓                    ↓
+
+
+    Research              Writer
+
+
+        |                    |
+
+
+        +---------+----------+
+
+                  |
+
+                  ↓
+
+
+             Reviewer
+
+
+                  |
+
+                  ↓
+
+
+               Result</code></pre>
+<hr/>
+<h1 id="六使用-langchain4j-创建第一个-agent">六、使用 LangChain4j 创建第一个 Agent</h1>
+<p>项目：</p>
+<p>Spring Boot 3。</p>
+<p>依赖：</p>
+<p>Maven：</p>
+<pre><code>id=&quot;1m8xq5&quot;
+&lt;dependency&gt;
+
+    &lt;groupId&gt;
+    dev.langchain4j
+    &lt;/groupId&gt;
+
+    &lt;artifactId&gt;
+    langchain4j-spring-boot-starter
+    &lt;/artifactId&gt;
+
+&lt;/dependency&gt;</code></pre>
+<hr/>
+<h1 id="七配置模型">七、配置模型</h1>
+<p>application.yml</p>
+<pre><code>id=&quot;q4k9s2&quot;
+langchain4j:
+
+ open-ai:
+
+  chat-model:
+
+   base-url:
+    http://localhost:11434/v1
+
+
+   model-name:
+    qwen2.5:7b
+
+
+   api-key:
+    none</code></pre>
+<hr/>
+<p>这里：</p>
+<p>Spring Boot</p>
+<p>↓</p>
+<p>LangChain4j</p>
+<p>↓</p>
+<p>Ollama</p>
+<p>↓</p>
+<p>Qwen</p>
+<hr/>
+<h1 id="八第一个-ai-service">八、第一个 AI Service</h1>
+<p>创建：</p>
+<pre><code>id=&quot;x8m2q6&quot;
+public interface InterviewAssistant {
+
+
+String chat(String message);
+
+
+}</code></pre>
+<hr/>
+<p>绑定：</p>
+<pre><code>id=&quot;p7n4k1&quot;
+@AiService
+
+
+public interface InterviewAssistant{
+
+
+String chat(String message);
+
+
+}</code></pre>
+<hr/>
+<p>调用：</p>
+<pre><code>id=&quot;k5q8m3&quot;
+assistant.chat(
+&quot;解释ConcurrentHashMap&quot;
+);</code></pre>
+<hr/>
+<p>现在：</p>
+<p>Java调用LLM。</p>
+<hr/>
+<h1 id="九加入-tool-calling">九、加入 Tool Calling</h1>
+<p>Agent核心：</p>
+<p>不是聊天。</p>
+<p>是：</p>
+<p>调用工具。</p>
+<hr/>
+<p>例如：</p>
+<p>查询用户能力。</p>
+<p>创建：</p>
+<pre><code>id=&quot;r9x3m7&quot;
+public class UserTool {
+
+
+@Tool(&quot;查询用户技术能力&quot;)
+
+
+public String querySkill(
+String userId
+){
+
+return &quot;Java 80分&quot;;
+
+}
+
+
+}</code></pre>
+<hr/>
+<p>注册：</p>
+<pre><code>id=&quot;z4m8q2&quot;
+AiServices.builder()
+
+.chatModel(model)
+
+.tools(new UserTool())
+
+.build();</code></pre>
+<hr/>
+<p>调用链：</p>
+<pre><code>
+用户
+
+↓
+
+Agent
+
+↓
+
+LLM判断需要工具
+
+↓
+
+Tool Call
+
+↓
+
+Java方法
+
+↓
+
+Tool Result
+
+↓
+
+LLM生成答案</code></pre>
+<hr/>
+<h1 id="十agent-state设计">十、Agent State设计</h1>
+<p>企业Agent必须保存状态。</p>
+<p>例如：</p>
+<p>任务：</p>
+<p>生成技术报告。</p>
+<p>State：</p>
+<pre><code>id=&quot;c7m2q9&quot;
+public class AgentState {
+
+
+String taskId;
+
+
+String goal;
+
+
+List&lt;String&gt; steps;
+
+
+String currentStep;
+
+
+String result;
+
+
+}</code></pre>
+<hr/>
+<p>状态变化：</p>
+<pre><code>
+INIT
+
+
+ ↓
+
+
+RESEARCHING
+
+
+ ↓
+
+
+WRITING
+
+
+ ↓
+
+
+REVIEWING
+
+
+ ↓
+
+
+DONE</code></pre>
+<hr/>
+<h1 id="十一workflow-agent实现">十一、Workflow Agent实现</h1>
+<p>例如：</p>
+<p>面试训练。</p>
+<p>流程：</p>
+<pre><code>
+Start
+
+
+ ↓
+
+
+GenerateQuestion
+
+
+ ↓
+
+
+UserAnswer
+
+
+ ↓
+
+
+Evaluate
+
+
+ ↓
+
+
+SaveMemory
+
+
+ ↓
+
+
+GeneratePlan
+
+
+ ↓
+
+
+End</code></pre>
+<hr/>
+<p>不要：</p>
+<p>让LLM自己决定全部。</p>
+<hr/>
+<h1 id="十二reflection-agent实现">十二、Reflection Agent实现</h1>
+<p>设计两个Agent。</p>
+<hr/>
+<h2 id="generator">Generator</h2>
+<p>生成答案。</p>
+<hr/>
+<h2 id="critic">Critic</h2>
+<p>检查。</p>
+<hr/>
+<p>流程：</p>
+<pre><code>
+Question
+
+
+↓
+
+Generator
+
+
+↓
+
+Answer
+
+
+↓
+
+Critic
+
+
+↓
+
+Score
+
+
+↓
+
+Improve?
+</code></pre>
+<hr/>
+<p>Java：</p>
+<pre><code>id=&quot;t3m7q9&quot;
+critic.evaluate(answer);</code></pre>
+<hr/>
+<h1 id="十三memory实现">十三、Memory实现</h1>
+<h2 id="短期记忆">短期记忆</h2>
+<p>Redis。</p>
+<p>保存：</p>
+<pre><code>id=&quot;v9k2m5&quot;
+{
+sessionId:&quot;1001&quot;,
+
+messages:[]
+}</code></pre>
+<hr/>
+<h2 id="长期记忆">长期记忆</h2>
+<p>Milvus。</p>
+<p>保存：</p>
+<pre><code>用户历史回答
+
+薄弱点
+
+学习记录</code></pre>
+<hr/>
+<p>查询：</p>
+<pre><code>用户今天练习AQS
+
+↓
+
+搜索历史
+
+↓
+
+生成个性化问题</code></pre>
+<hr/>
+<h1 id="十四mcp接入">十四、MCP接入</h1>
+<p>企业：</p>
+<p>Agent：</p>
+<p>不要直接连接系统。</p>
+<p>结构：</p>
+<pre><code>
+LangChain4j Agent
+
+
+        |
+
+        ↓
+
+
+      MCP Client
+
+
+        |
+
+        ↓
+
+
+      MCP Server
+
+
+        |
+
+        ↓
+
+
+ CRM / ERP / DB</code></pre>
+<hr/>
+<h1 id="十五一个企业级-agent-项目结构">十五、一个企业级 Agent 项目结构</h1>
+<p>你的项目：</p>
+<p>AI Interview Platform</p>
+<p>升级：</p>
+<pre><code>ai-agent-platform
+
+
+├── agent-core
+
+│
+├── state
+
+│
+├── workflow
+
+│
+├── memory
+
+│
+├── tools
+
+│
+├── mcp
+
+│
+├── rag
+
+│
+├── evaluation
+
+│
+└── monitoring</code></pre>
+<hr/>
+<h1 id="十六agent可观测性">十六、Agent可观测性</h1>
+<p>企业必须知道：</p>
+<p>Agent为什么这么做。</p>
+<p>记录：</p>
+<pre><code>id=&quot;j7q4m9&quot;
+{
+
+taskId:&quot;001&quot;,
+
+
+steps:[
+
+&quot;search knowledge&quot;,
+
+&quot;call evaluator&quot;,
+
+&quot;generate answer&quot;
+
+],
+
+
+toolCalls:2,
+
+
+cost:0.03
+
+}</code></pre>
+<hr/>
+<h1 id="十七agent失败处理">十七、Agent失败处理</h1>
+<p>必须设计：</p>
+<hr/>
+<h2 id="timeout">Timeout</h2>
+<p>工具超过：</p>
+<p>5秒。</p>
+<p>停止。</p>
+<hr/>
+<h2 id="retry">Retry</h2>
+<p>失败：</p>
+<p>重新调用。</p>
+<hr/>
+<h2 id="fallback">Fallback</h2>
+<p>模型A失败：</p>
+<p>↓</p>
+<p>模型B。</p>
+<hr/>
+<h2 id="human-approval">Human Approval</h2>
+<p>危险操作：</p>
+<p>人工确认。</p>
+<hr/>
+<h1 id="十八面试回答">十八、面试回答</h1>
+<h2 id="q1">Q1：</h2>
+<blockquote><p>为什么企业Agent需要Workflow？</p></blockquote>
+<p>标准回答：</p>
+<blockquote><p>Agent负责理解目标和动态决策，但是企业业务流程需要稳定和可控，因此通常使用Agent进行任务规划，Workflow负责关键流程编排，通过状态管理保证可追踪和可恢复。</p></blockquote>
+<hr/>
+<h2 id="q2">Q2：</h2>
+<blockquote><p>LangGraph和LangChain4j有什么区别？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>LangGraph更偏向通过状态图方式构建复杂Agent流程，适合Python生态；LangChain4j针对Java生态，方便Java开发者集成LLM、RAG和Tool Calling。在企业Java项目中，我会优先使用LangChain4j。</p></blockquote>
+<hr/>
+<h2 id="q3">Q3：</h2>
+<blockquote><p>如何避免Agent无限循环？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>通过限制最大执行步骤、保存Agent状态、增加工具调用次数限制，并结合Workflow控制关键路径，同时通过监控记录Agent执行轨迹。</p></blockquote>
+<hr/>
+<h1 id="十九day25能力升级">十九、Day25能力升级</h1>
+<p>你的能力：</p>
+<p>从：</p>
+<pre><code>会调用LLM</code></pre>
+<p>升级：</p>
+<pre><code>
+设计Agent
+
+↓
+
+开发Agent
+
+↓
+
+管理Agent状态
+
+↓
+
+控制Agent流程
+
+↓
+
+上线Agent系统</code></pre>
+<hr/>
+<h1 id="二十下一节-day26">二十、下一节 Day26</h1>
+<p>建议进入：</p>
+<h1 id="day26企业级-ai-agent-平台实战搭建你的-multiagent-mcp-rag-项目">《Day26：企业级 AI Agent 平台实战：搭建你的 Multi-Agent + MCP + RAG 项目》</h1>
+<p>下一节开始真正组合：</p>
+<pre><code>
+Spring Boot
+
++
+
+LangChain4j
+
++
+
+Multi-Agent
+
++
+
+Memory
+
++
+
+Workflow
+
++
+
+MCP
+
++
+
+RAG
+
++
+
+Milvus
+
++
+
+vLLM</code></pre>
+<p>完成一个：</p>
+<p><strong>企业数字员工级 Agent 平台。</strong></p>
+<p>这会接近真实：</p>
+<ul class="lvl"><li>AI Agent Engineer</li></ul>
+<ul class="lvl"><li>Java AI Engineer</li></ul>
+<ul class="lvl"><li>LLM Application Engineer</li></ul>
+<p>岗位要求。</p>
+</main>
+</body>
+</html>

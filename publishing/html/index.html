@@ -60,8 +60,9 @@
   a.doc { color:var(--accent); text-decoration:none; font-size:14px; font-weight:500; }
   a.doc:hover { text-decoration:underline; }
   .path { color:var(--muted); font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-  a.html-link { font-size:12px; color:#0f766e; text-decoration:none; border:1px solid #99f6e4; background:#f0fdfa; padding:1px 7px; border-radius:999px; }
-  a.html-link:hover { background:#ccfbf1; }
+  a.md-link, span.md-link { font-size:12px; color:#6b7280; text-decoration:none;
+    border:1px solid var(--line); background:#f9fafb; padding:1px 7px; border-radius:999px; white-space:nowrap; }
+  a.md-link:hover { background:#eef2f7; color:var(--ink); }
   .empty { color:var(--muted); font-size:14px; padding:30px; text-align:center; }
   @media (max-width:760px) {
     .layout { grid-template-columns:1fr; }
@@ -72,7 +73,7 @@
 <body>
 <header class="top">
   <h1>AI 工程师之旅 · 文档索引</h1>
-  <div class="sub">ai-engineer-journey 仓库全部 Markdown 文档 · 按主题与目录层级组织 · 点击直接打开</div>
+  <div class="sub">ai-engineer-journey 仓库全部文档 · 按主题与目录层级组织 · 点击打开<b>渲染后的页面</b>（209/209 篇已生成）</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="过滤文档（按标题或路径，例如 12、rag、微调）…" oninput="filterDocs()"/>
     <span class="meta" id="counter">共 209 篇</span>
@@ -82,26 +83,26 @@
   <nav class="side">
     <h3>主题导航</h3>
     <ul>
-      <li><a href="#sec-llm-fundamentals">大模型理论基础 <span class="cnt">13</span></a></li>
-      <li><a href="#sec-python-practice">Python 练手层 <span class="cnt">9</span></a></li>
-      <li><a href="#sec-projects">实践项目 <span class="cnt">129</span></a></li>
-      <li><a href="#sec-publishing">发布产物（派生） <span class="cnt">49</span></a></li>
-      <li><a href="#sec-audit">审计与复盘 <span class="cnt">2</span></a></li>
-      <li><a href="#sec-mistakes">审计与复盘 <span class="cnt">2</span></a></li>
-      <li><a href="#sec--other-">其他 <span class="cnt">5</span></a></li>
+      <li><a href="#sec-llm-fundamentals">大模型理论基础 <span class="cnt">13/13</span></a></li>
+      <li><a href="#sec-python-practice">Python 练手层 <span class="cnt">9/9</span></a></li>
+      <li><a href="#sec-projects">实践项目 <span class="cnt">129/129</span></a></li>
+      <li><a href="#sec-publishing">发布产物（派生） <span class="cnt">49/49</span></a></li>
+      <li><a href="#sec-audit">审计与复盘 <span class="cnt">2/2</span></a></li>
+      <li><a href="#sec-mistakes">审计与复盘 <span class="cnt">2/2</span></a></li>
+      <li><a href="#sec--other-">其他 <span class="cnt">5/5</span></a></li>
     </ul>
   </nav>
   <main>
   <section id="sec-llm-fundamentals">
-    <h2>大模型理论基础 <span class="cnt">13</span></h2>
+    <h2>大模型理论基础 <span class="cnt">13/13 已渲染</span></h2>
     <p class="desc">11 章理论 + 配套 demo 证据</p>
     <details class="group" open>
       <summary>第 01 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/01-basics-language-model.md">01 · 语言模型基础：一个 token 的一生</a>
+        <a class="doc" href="docs/llm-fundamentals/01-basics-language-model.html">01 · 语言模型基础：一个 token 的一生</a>
         <span class="path">llm-fundamentals/01-basics-language-model.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/01-basics-language-model.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -109,9 +110,9 @@
       <summary>第 02 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/02-attention.md">02 · 注意力机制：让每个 token 自己决定&quot;看哪里&quot;</a>
+        <a class="doc" href="docs/llm-fundamentals/02-attention.html">02 · 注意力机制：让每个 token 自己决定&quot;看哪里&quot;</a>
         <span class="path">llm-fundamentals/02-attention.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/02-attention.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -119,9 +120,9 @@
       <summary>第 03 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/03-transformer.md">03 · Transformer 架构：一个 decoder block 里到底有什么</a>
+        <a class="doc" href="docs/llm-fundamentals/03-transformer.html">03 · Transformer 架构：一个 decoder block 里到底有什么</a>
         <span class="path">llm-fundamentals/03-transformer.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/03-transformer.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -129,9 +130,9 @@
       <summary>第 04 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/04-pretraining.md">04 · 预训练：把互联网压缩进参数</a>
+        <a class="doc" href="docs/llm-fundamentals/04-pretraining.html">04 · 预训练：把互联网压缩进参数</a>
         <span class="path">llm-fundamentals/04-pretraining.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/04-pretraining.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -139,9 +140,9 @@
       <summary>第 05 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/05-finetuning.md">05 · 微调：在预训练模型上做减法</a>
+        <a class="doc" href="docs/llm-fundamentals/05-finetuning.html">05 · 微调：在预训练模型上做减法</a>
         <span class="path">llm-fundamentals/05-finetuning.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/05-finetuning.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -149,9 +150,9 @@
       <summary>第 06 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/06-scaling-and-emergence.md">06 · 涌现能力与缩放定律：规模到底买到了什么</a>
+        <a class="doc" href="docs/llm-fundamentals/06-scaling-and-emergence.html">06 · 涌现能力与缩放定律：规模到底买到了什么</a>
         <span class="path">llm-fundamentals/06-scaling-and-emergence.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/06-scaling-and-emergence.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -159,9 +160,9 @@
       <summary>第 07 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/07-decoding-and-inference.md">07 · 解码与推理：一个 token 是怎么被&quot;吐&quot;出来的</a>
+        <a class="doc" href="docs/llm-fundamentals/07-decoding-and-inference.html">07 · 解码与推理：一个 token 是怎么被&quot;吐&quot;出来的</a>
         <span class="path">llm-fundamentals/07-decoding-and-inference.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/07-decoding-and-inference.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -169,9 +170,9 @@
       <summary>第 08 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/08-alignment-rlhf.md">08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</a>
+        <a class="doc" href="docs/llm-fundamentals/08-alignment-rlhf.html">08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</a>
         <span class="path">llm-fundamentals/08-alignment-rlhf.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/08-alignment-rlhf.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -179,9 +180,9 @@
       <summary>第 09 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/09-math-foundations.md">09 · 数学基础：关键公式与推导思路</a>
+        <a class="doc" href="docs/llm-fundamentals/09-math-foundations.html">09 · 数学基础：关键公式与推导思路</a>
         <span class="path">llm-fundamentals/09-math-foundations.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/09-math-foundations.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -189,9 +190,9 @@
       <summary>第 10 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/10-glossary.md">10 · 术语表：中英文对照与简明定义</a>
+        <a class="doc" href="docs/llm-fundamentals/10-glossary.html">10 · 术语表：中英文对照与简明定义</a>
         <span class="path">llm-fundamentals/10-glossary.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/10-glossary.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -199,9 +200,9 @@
       <summary>第 11 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/11-open-source-projects.md">11 · 开源项目推荐：从&quot;读懂&quot;到&quot;跑通&quot;</a>
+        <a class="doc" href="docs/llm-fundamentals/11-open-source-projects.html">11 · 开源项目推荐：从&quot;读懂&quot;到&quot;跑通&quot;</a>
         <span class="path">llm-fundamentals/11-open-source-projects.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/11-open-source-projects.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -209,9 +210,9 @@
       <summary>第 12 章 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/12-tutorials-and-agent.md">12 · 教程、微调与 Agent 开发：从「看懂」到「做出来」</a>
+        <a class="doc" href="docs/llm-fundamentals/12-tutorials-and-agent.html">12 · 教程、微调与 Agent 开发：从「看懂」到「做出来」</a>
         <span class="path">llm-fundamentals/12-tutorials-and-agent.md</span>
-        <a class="html-link" href="12-tutorials-and-agent.html"title="已渲染的单文件 HTML 版本">HTML 版 ↗</a>
+        <a class="md-link" href="../../llm-fundamentals/12-tutorials-and-agent.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -219,23 +220,23 @@
       <summary>概览 / 其他 <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../llm-fundamentals/README.md">LLM Fundamentals — 大语言模型基础理论笔记</a>
+        <a class="doc" href="docs/llm-fundamentals/README.html">LLM Fundamentals — 大语言模型基础理论笔记</a>
         <span class="path">llm-fundamentals/README.md</span>
-        
+        <a class="md-link" href="../../llm-fundamentals/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
   </section>
   <section id="sec-python-practice">
-    <h2>Python 练手层 <span class="cnt">9</span></h2>
+    <h2>Python 练手层 <span class="cnt">9/9 已渲染</span></h2>
     <p class="desc">6 个动手练习 + 延伸阅读</p>
     <details class="group" open>
       <summary>00-how-to-practice.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/00-how-to-practice.md">练手方法：怎么练才不是「抄代码」</a>
+        <a class="doc" href="docs/python-practice/00-how-to-practice.html">练手方法：怎么练才不是「抄代码」</a>
         <span class="path">python-practice/00-how-to-practice.md</span>
-        
+        <a class="md-link" href="../../python-practice/00-how-to-practice.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -243,9 +244,9 @@
       <summary>01-todo-cli <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/01-todo-cli/README.md">01 命令行待办清单</a>
+        <a class="doc" href="docs/python-practice/01-todo-cli/README.html">01 命令行待办清单</a>
         <span class="path">python-practice/01-todo-cli/README.md</span>
-        
+        <a class="md-link" href="../../python-practice/01-todo-cli/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -253,9 +254,9 @@
       <summary>02-excel-automation <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/02-excel-automation/README.md">02 Excel 报表自动化</a>
+        <a class="doc" href="docs/python-practice/02-excel-automation/README.html">02 Excel 报表自动化</a>
         <span class="path">python-practice/02-excel-automation/README.md</span>
-        
+        <a class="md-link" href="../../python-practice/02-excel-automation/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -263,9 +264,9 @@
       <summary>03-web-crawler <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/03-web-crawler/README.md">03 网站内容爬虫</a>
+        <a class="doc" href="docs/python-practice/03-web-crawler/README.html">03 网站内容爬虫</a>
         <span class="path">python-practice/03-web-crawler/README.md</span>
-        
+        <a class="md-link" href="../../python-practice/03-web-crawler/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -273,9 +274,9 @@
       <summary>04-fastapi-blog <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/04-fastapi-blog/README.md">04 FastAPI 博客 API</a>
+        <a class="doc" href="docs/python-practice/04-fastapi-blog/README.html">04 FastAPI 博客 API</a>
         <span class="path">python-practice/04-fastapi-blog/README.md</span>
-        
+        <a class="md-link" href="../../python-practice/04-fastapi-blog/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -283,9 +284,9 @@
       <summary>05-ai-command-assistant.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/05-ai-command-assistant.md">05 AI 命令助手</a>
+        <a class="doc" href="docs/python-practice/05-ai-command-assistant.html">05 AI 命令助手</a>
         <span class="path">python-practice/05-ai-command-assistant.md</span>
-        
+        <a class="md-link" href="../../python-practice/05-ai-command-assistant.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -293,9 +294,9 @@
       <summary>06-rag-qa.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/06-rag-qa.md">06 RAG 知识库问答</a>
+        <a class="doc" href="docs/python-practice/06-rag-qa.html">06 RAG 知识库问答</a>
         <span class="path">python-practice/06-rag-qa.md</span>
-        
+        <a class="md-link" href="../../python-practice/06-rag-qa.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -303,9 +304,9 @@
       <summary>07-延伸阅读.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/07-%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB.md">07 · 延伸阅读：从「会写 Python」到「读得懂生产代码」</a>
+        <a class="doc" href="docs/python-practice/07-%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB.html">07 · 延伸阅读：从「会写 Python」到「读得懂生产代码」</a>
         <span class="path">python-practice/07-延伸阅读.md</span>
-        <a class="html-link" href="07-%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB.html"title="已渲染的单文件 HTML 版本">HTML 版 ↗</a>
+        <a class="md-link" href="../../python-practice/07-%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -313,93 +314,93 @@
       <summary>README.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../python-practice/README.md">Python 练手项目</a>
+        <a class="doc" href="docs/python-practice/README.html">Python 练手项目</a>
         <span class="path">python-practice/README.md</span>
-        
+        <a class="md-link" href="../../python-practice/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
   </section>
   <section id="sec-projects">
-    <h2>实践项目 <span class="cnt">129</span></h2>
+    <h2>实践项目 <span class="cnt">129/129 已渲染</span></h2>
     <p class="desc">10 个可交付项目（milestones / exercises）</p>
     <details class="group" open>
       <summary>01-python-ai-cli <span class="cnt">15</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/exercises/01-basic/README.md">Exercises 01-basic — Milestone 01-02 配套练习</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/exercises/01-basic/README.html">Exercises 01-basic — Milestone 01-02 配套练习</a>
         <span class="path">projects/01-python-ai-cli/exercises/01-basic/README.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/exercises/01-basic/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/exercises/02-practice/README.md">Exercises 02-practice — Milestone 03-06 配套练习</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/exercises/02-practice/README.html">Exercises 02-practice — Milestone 03-06 配套练习</a>
         <span class="path">projects/01-python-ai-cli/exercises/02-practice/README.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/exercises/02-practice/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/exercises/03-project/README.md">Exercises 03-project — Milestone 07-09 配套练习</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/exercises/03-project/README.html">Exercises 03-project — Milestone 07-09 配套练习</a>
         <span class="path">projects/01-python-ai-cli/exercises/03-project/README.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/exercises/03-project/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/exercises/04-challenge/README.md">Exercises 04-challenge — Milestone 10 综合挑战</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/exercises/04-challenge/README.html">Exercises 04-challenge — Milestone 10 综合挑战</a>
         <span class="path">projects/01-python-ai-cli/exercises/04-challenge/README.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/exercises/04-challenge/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/01-variables.md">Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/01-variables.html">Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器</a>
         <span class="path">projects/01-python-ai-cli/milestones/01-variables.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/01-variables.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/02-list-dict-json.md">Lesson 02 — List / Dict → JSON → AI Messages</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/02-list-dict-json.html">Lesson 02 — List / Dict → JSON → AI Messages</a>
         <span class="path">projects/01-python-ai-cli/milestones/02-list-dict-json.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/02-list-dict-json.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/03-condition-loop.md">Lesson 03 — Condition / Loop：让 AI CLI Assistant 开始运行起来</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/03-condition-loop.html">Lesson 03 — Condition / Loop：让 AI CLI Assistant 开始运行起来</a>
         <span class="path">projects/01-python-ai-cli/milestones/03-condition-loop.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/03-condition-loop.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/04-function.md">Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/04-function.html">Lesson 04 — Function：把 AI CLI Assistant 从“能跑”变成“可维护”</a>
         <span class="path">projects/01-python-ai-cli/milestones/04-function.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/04-function.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/05-module-package.md">Lesson 05 — Module / Package：把 AI CLI Assistant 从脚本变成 Python 项目</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/05-module-package.html">Lesson 05 — Module / Package：把 AI CLI Assistant 从脚本变成 Python 项目</a>
         <span class="path">projects/01-python-ai-cli/milestones/05-module-package.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/05-module-package.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/06-exception.md">Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/06-exception.html">Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误</a>
         <span class="path">projects/01-python-ai-cli/milestones/06-exception.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/06-exception.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/07-file-json.md">Lesson 07 — File / JSON：让 AI CLI Assistant 记住历史</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/07-file-json.html">Lesson 07 — File / JSON：让 AI CLI Assistant 记住历史</a>
         <span class="path">projects/01-python-ai-cli/milestones/07-file-json.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/07-file-json.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/08-venv-pip.md">Lesson 08 — venv / pip / Environment：给 AI CLI Assistant 建立真正的 Python 开发环境</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/08-venv-pip.html">Lesson 08 — venv / pip / Environment：给 AI CLI Assistant 建立真正的 Python 开发环境</a>
         <span class="path">projects/01-python-ai-cli/milestones/08-venv-pip.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/08-venv-pip.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/09-http-api.md">Lesson 09 — HTTP / API：让 Python AI CLI Assistant 第一次连接外部世界</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/09-http-api.html">Lesson 09 — HTTP / API：让 Python AI CLI Assistant 第一次连接外部世界</a>
         <span class="path">projects/01-python-ai-cli/milestones/09-http-api.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/09-http-api.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/milestones/10-real-llm-api.md">Lesson 10 — Real LLM API：让 Python AI CLI Assistant 真正成为 AI Assistant</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/milestones/10-real-llm-api.html">Lesson 10 — Real LLM API：让 Python AI CLI Assistant 真正成为 AI Assistant</a>
         <span class="path">projects/01-python-ai-cli/milestones/10-real-llm-api.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/milestones/10-real-llm-api.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/01-python-ai-cli/README.md">Project 01 — Python AI CLI Assistant</a>
+        <a class="doc" href="docs/projects/01-python-ai-cli/README.html">Project 01 — Python AI CLI Assistant</a>
         <span class="path">projects/01-python-ai-cli/README.md</span>
-        
+        <a class="md-link" href="../../projects/01-python-ai-cli/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -407,89 +408,89 @@
       <summary>02-engineering-ai-assistant <span class="cnt">17</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/exercises/01-oop-dataclass-typehints/README.md">Exercises 01-oop-dataclass-typehints — M00 / M03 / M04 / M05 配套练习</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/exercises/01-oop-dataclass-typehints/README.html">Exercises 01-oop-dataclass-typehints — M00 / M03 / M04 / M05 配套练习</a>
         <span class="path">projects/02-engineering-ai-assistant/exercises/01-oop-dataclass-typehints/README.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/exercises/01-oop-dataclass-typehints/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/exercises/02-async-http-and-config/README.md">Exercises 02-async-http-and-config — M01 / M02 / M05 配套练习</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/exercises/02-async-http-and-config/README.html">Exercises 02-async-http-and-config — M01 / M02 / M05 配套练习</a>
         <span class="path">projects/02-engineering-ai-assistant/exercises/02-async-http-and-config/README.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/exercises/02-async-http-and-config/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/exercises/03-service-and-ops/README.md">Exercises 03-service-and-ops — M06 / M07 / M08 / M09 配套练习</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/exercises/03-service-and-ops/README.html">Exercises 03-service-and-ops — M06 / M07 / M08 / M09 配套练习</a>
         <span class="path">projects/02-engineering-ai-assistant/exercises/03-service-and-ops/README.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/exercises/03-service-and-ops/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/exercises/README.md">Exercises — Project 02 配套练习题与判卷工具</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/exercises/README.html">Exercises — Project 02 配套练习题与判卷工具</a>
         <span class="path">projects/02-engineering-ai-assistant/exercises/README.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/exercises/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/LEARNING.md">LEARNING — Project 02 Engineering AI Assistant</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/LEARNING.html">LEARNING — Project 02 Engineering AI Assistant</a>
         <span class="path">projects/02-engineering-ai-assistant/LEARNING.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/LEARNING.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/00-classes-and-oop.md">Project 02 — Chapter 00：Classes and OOP【类与面向对象】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/00-classes-and-oop.html">Project 02 — Chapter 00：Classes and OOP【类与面向对象】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/00-classes-and-oop.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/00-classes-and-oop.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/01-async-await.md">Project 02 — Chapter 01：Async / Await【异步 / 等待】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/01-async-await.html">Project 02 — Chapter 01：Async / Await【异步 / 等待】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/01-async-await.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/01-async-await.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/02-async-http-client.md">Project 02 — Chapter 02：Async HTTP Client【异步 HTTP 客户端】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/02-async-http-client.html">Project 02 — Chapter 02：Async HTTP Client【异步 HTTP 客户端】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/02-async-http-client.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/02-async-http-client.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/03-type-hints.md">Project 02 — Chapter 03：Type Hints【类型提示】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/03-type-hints.html">Project 02 — Chapter 03：Type Hints【类型提示】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/03-type-hints.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/03-type-hints.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/04-dataclass.md">Project 02 — Chapter 04：Dataclass【数据类】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/04-dataclass.html">Project 02 — Chapter 04：Dataclass【数据类】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/04-dataclass.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/04-dataclass.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/05-config-and-environment.md">Project 02 — Chapter 05：Config / Environment【配置与环境】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/05-config-and-environment.html">Project 02 — Chapter 05：Config / Environment【配置与环境】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/05-config-and-environment.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/05-config-and-environment.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/06-logging.md">Project 02 — Chapter 06：Logging【日志】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/06-logging.html">Project 02 — Chapter 06：Logging【日志】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/06-logging.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/06-logging.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/07-testing-and-debugging.md">Project 02 — Chapter 07：Testing / Debugging【测试与调试】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/07-testing-and-debugging.html">Project 02 — Chapter 07：Testing / Debugging【测试与调试】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/07-testing-and-debugging.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/07-testing-and-debugging.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/08-packaging.md">Project 02 — Chapter 08：Packaging【打包与发布】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/08-packaging.html">Project 02 — Chapter 08：Packaging【打包与发布】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/08-packaging.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/08-packaging.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/milestones/09-fastapi.md">Project 02 — Chapter 09：FastAPI【Web 服务】</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/milestones/09-fastapi.html">Project 02 — Chapter 09：FastAPI【Web 服务】</a>
         <span class="path">projects/02-engineering-ai-assistant/milestones/09-fastapi.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/milestones/09-fastapi.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/OVERVIEW.md">Project 02 — 总纲：从 Python Script 到 Python Application</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/OVERVIEW.html">Project 02 — 总纲：从 Python Script 到 Python Application</a>
         <span class="path">projects/02-engineering-ai-assistant/OVERVIEW.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/OVERVIEW.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/02-engineering-ai-assistant/README.md">Project 02 — Engineering AI Assistant</a>
+        <a class="doc" href="docs/projects/02-engineering-ai-assistant/README.html">Project 02 — Engineering AI Assistant</a>
         <span class="path">projects/02-engineering-ai-assistant/README.md</span>
-        
+        <a class="md-link" href="../../projects/02-engineering-ai-assistant/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -497,79 +498,79 @@
       <summary>03-ai-application <span class="cnt">15</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/03-ai-application/exercises/01-prompt-and-messages/README.md">01 Prompt 与 Messages — M01 / M02 配套练习</a>
+        <a class="doc" href="docs/projects/03-ai-application/exercises/01-prompt-and-messages/README.html">01 Prompt 与 Messages — M01 / M02 配套练习</a>
         <span class="path">projects/03-ai-application/exercises/01-prompt-and-messages/README.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/exercises/01-prompt-and-messages/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/exercises/02-structured-and-streaming/README.md">02 结构化输出、流式与模型参数 — M03 / M04 / M06 配套练习</a>
+        <a class="doc" href="docs/projects/03-ai-application/exercises/02-structured-and-streaming/README.html">02 结构化输出、流式与模型参数 — M03 / M04 / M06 配套练习</a>
         <span class="path">projects/03-ai-application/exercises/02-structured-and-streaming/README.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/exercises/02-structured-and-streaming/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/exercises/03-memory-tokens-tools/README.md">03 Memory、Token、Tools 与应用架构 — M05 / M07 / M08 / M09 配套练习</a>
+        <a class="doc" href="docs/projects/03-ai-application/exercises/03-memory-tokens-tools/README.html">03 Memory、Token、Tools 与应用架构 — M05 / M07 / M08 / M09 配套练习</a>
         <span class="path">projects/03-ai-application/exercises/03-memory-tokens-tools/README.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/exercises/03-memory-tokens-tools/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/exercises/README.md">Exercises — Project 03 学习验证与离线判卷</a>
+        <a class="doc" href="docs/projects/03-ai-application/exercises/README.html">Exercises — Project 03 学习验证与离线判卷</a>
         <span class="path">projects/03-ai-application/exercises/README.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/exercises/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/LEARNING.md">LEARNING — Project 03 AI Application</a>
+        <a class="doc" href="docs/projects/03-ai-application/LEARNING.html">LEARNING — Project 03 AI Application</a>
         <span class="path">projects/03-ai-application/LEARNING.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/LEARNING.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/01-prompt.md">Project 03 — Chapter 01：Prompt【提示词】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/01-prompt.html">Project 03 — Chapter 01：Prompt【提示词】</a>
         <span class="path">projects/03-ai-application/milestones/01-prompt.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/01-prompt.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/02-messages.md">Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/02-messages.html">Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</a>
         <span class="path">projects/03-ai-application/milestones/02-messages.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/02-messages.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/03-structured-output.md">Project 03 — Chapter 03：Structured Output【结构化输出】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/03-structured-output.html">Project 03 — Chapter 03：Structured Output【结构化输出】</a>
         <span class="path">projects/03-ai-application/milestones/03-structured-output.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/03-structured-output.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/04-streaming.md">Project 03 — Chapter 04：Streaming【流式输出】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/04-streaming.html">Project 03 — Chapter 04：Streaming【流式输出】</a>
         <span class="path">projects/03-ai-application/milestones/04-streaming.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/04-streaming.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/05-conversation-memory.md">Project 03 — Chapter 05：Conversation Memory【对话记忆】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/05-conversation-memory.html">Project 03 — Chapter 05：Conversation Memory【对话记忆】</a>
         <span class="path">projects/03-ai-application/milestones/05-conversation-memory.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/05-conversation-memory.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/06-model-parameters.md">Project 03 — Chapter 06：Model Parameters【模型参数】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/06-model-parameters.html">Project 03 — Chapter 06：Model Parameters【模型参数】</a>
         <span class="path">projects/03-ai-application/milestones/06-model-parameters.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/06-model-parameters.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/07-token-context-window.md">Project 03 — Chapter 07：Token / Context Window【词元与上下文窗口】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/07-token-context-window.html">Project 03 — Chapter 07：Token / Context Window【词元与上下文窗口】</a>
         <span class="path">projects/03-ai-application/milestones/07-token-context-window.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/07-token-context-window.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/08-function-calling.md">Project 03 — Chapter 08：Function Calling【函数调用】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/08-function-calling.html">Project 03 — Chapter 08：Function Calling【函数调用】</a>
         <span class="path">projects/03-ai-application/milestones/08-function-calling.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/08-function-calling.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/milestones/09-application-architecture.md">Project 03 — Chapter 09：AI Application Architecture【应用架构】</a>
+        <a class="doc" href="docs/projects/03-ai-application/milestones/09-application-architecture.html">Project 03 — Chapter 09：AI Application Architecture【应用架构】</a>
         <span class="path">projects/03-ai-application/milestones/09-application-architecture.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/milestones/09-application-architecture.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/03-ai-application/README.md">Project 03 — AI Application</a>
+        <a class="doc" href="docs/projects/03-ai-application/README.html">Project 03 — AI Application</a>
         <span class="path">projects/03-ai-application/README.md</span>
-        
+        <a class="md-link" href="../../projects/03-ai-application/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -577,119 +578,119 @@
       <summary>04-rag <span class="cnt">23</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/04-rag/data/llm-retrieval.md">llm-retrieval.md</a>
+        <a class="doc" href="docs/projects/04-rag/data/llm-retrieval.html">llm-retrieval.md</a>
         <span class="path">projects/04-rag/data/llm-retrieval.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/data/llm-retrieval.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/data/llm-tokenization.md">Token 与分词：文本是怎么变成数字的</a>
+        <a class="doc" href="docs/projects/04-rag/data/llm-tokenization.html">Token 与分词：文本是怎么变成数字的</a>
         <span class="path">projects/04-rag/data/llm-tokenization.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/data/llm-tokenization.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/data/python-decorators.md">Python 装饰器与闭包</a>
+        <a class="doc" href="docs/projects/04-rag/data/python-decorators.html">Python 装饰器与闭包</a>
         <span class="path">projects/04-rag/data/python-decorators.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/data/python-decorators.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/data/python-generators.md">Python 生成器：惰性计算与内存</a>
+        <a class="doc" href="docs/projects/04-rag/data/python-generators.html">Python 生成器：惰性计算与内存</a>
         <span class="path">projects/04-rag/data/python-generators.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/data/python-generators.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/data/python-gil.md">Python 的 GIL 与多线程</a>
+        <a class="doc" href="docs/projects/04-rag/data/python-gil.html">Python 的 GIL 与多线程</a>
         <span class="path">projects/04-rag/data/python-gil.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/data/python-gil.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/01-document-ingestion.md">Project 04 — Chapter 01：Document Ingestion【文档摄入】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/01-document-ingestion.html">Project 04 — Chapter 01：Document Ingestion【文档摄入】</a>
         <span class="path">projects/04-rag/milestones/01-document-ingestion.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/01-document-ingestion.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/02-chunking.md">Project 04 — Chapter 02：Chunking【文档切分】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/02-chunking.html">Project 04 — Chapter 02：Chunking【文档切分】</a>
         <span class="path">projects/04-rag/milestones/02-chunking.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/02-chunking.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/03-embedding.md">Project 04 — Chapter 03：Embedding【文本向量化】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/03-embedding.html">Project 04 — Chapter 03：Embedding【文本向量化】</a>
         <span class="path">projects/04-rag/milestones/03-embedding.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/03-embedding.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/04-vector-database.md">Project 04 — Chapter 04：Vector Database【向量数据库】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/04-vector-database.html">Project 04 — Chapter 04：Vector Database【向量数据库】</a>
         <span class="path">projects/04-rag/milestones/04-vector-database.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/04-vector-database.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/05-retrieval.md">Project 04 — Chapter 05：Retrieval【检索流程】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/05-retrieval.html">Project 04 — Chapter 05：Retrieval【检索流程】</a>
         <span class="path">projects/04-rag/milestones/05-retrieval.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/05-retrieval.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/06-similarity-search.md">Project 04 — Chapter 06：Similarity Search【相似度度量】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/06-similarity-search.html">Project 04 — Chapter 06：Similarity Search【相似度度量】</a>
         <span class="path">projects/04-rag/milestones/06-similarity-search.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/06-similarity-search.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/07-rerank.md">Project 04 — Chapter 07：Rerank【重排序】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/07-rerank.html">Project 04 — Chapter 07：Rerank【重排序】</a>
         <span class="path">projects/04-rag/milestones/07-rerank.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/07-rerank.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/08-context-assembly.md">Project 04 — Chapter 08：Context Assembly【上下文组装】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/08-context-assembly.html">Project 04 — Chapter 08：Context Assembly【上下文组装】</a>
         <span class="path">projects/04-rag/milestones/08-context-assembly.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/08-context-assembly.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/09-rag-pipeline.md">Project 04 — Chapter 09：RAG Pipeline【完整流水线】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/09-rag-pipeline.html">Project 04 — Chapter 09：RAG Pipeline【完整流水线】</a>
         <span class="path">projects/04-rag/milestones/09-rag-pipeline.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/09-rag-pipeline.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/10-rag-evaluation.md">Project 04 — Chapter 10：RAG Evaluation【RAG 效果评估】</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/10-rag-evaluation.html">Project 04 — Chapter 10：RAG Evaluation【RAG 效果评估】</a>
         <span class="path">projects/04-rag/milestones/10-rag-evaluation.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/10-rag-evaluation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/11-real-service-integration.md">第十一章：接真实服务</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/11-real-service-integration.html">第十一章：接真实服务</a>
         <span class="path">projects/04-rag/milestones/11-real-service-integration.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/11-real-service-integration.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/12-real-llm-integration.md">Milestone 12 — 真实 LLM 接入与忠实度审计</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/12-real-llm-integration.html">Milestone 12 — 真实 LLM 接入与忠实度审计</a>
         <span class="path">projects/04-rag/milestones/12-real-llm-integration.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/12-real-llm-integration.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/13-fastapi-web-api.md">Milestone 13：给 RAG 加上 FastAPI Web API（复用 P03 的 SSE 模式）</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/13-fastapi-web-api.html">Milestone 13：给 RAG 加上 FastAPI Web API（复用 P03 的 SSE 模式）</a>
         <span class="path">projects/04-rag/milestones/13-fastapi-web-api.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/13-fastapi-web-api.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/14-real-rag-evaluation.md">Milestone 14：真实 RAG 评估（30 条 EvalCase：Hit Rate / MRR / 忠实度）</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/14-real-rag-evaluation.html">Milestone 14：真实 RAG 评估（30 条 EvalCase：Hit Rate / MRR / 忠实度）</a>
         <span class="path">projects/04-rag/milestones/14-real-rag-evaluation.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/14-real-rag-evaluation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/15-observability.md">15 — Observability（可观测性）</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/15-observability.html">15 — Observability（可观测性）</a>
         <span class="path">projects/04-rag/milestones/15-observability.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/15-observability.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/16-real-reranker-and-calibration.md">Milestone 16 — 真实 Reranker 与阈值校准</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/16-real-reranker-and-calibration.html">Milestone 16 — 真实 Reranker 与阈值校准</a>
         <span class="path">projects/04-rag/milestones/16-real-reranker-and-calibration.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/16-real-reranker-and-calibration.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/milestones/17-chat-ui-and-session-history.md">Milestone 17 — Chat UI / 会话历史 / 多轮追问</a>
+        <a class="doc" href="docs/projects/04-rag/milestones/17-chat-ui-and-session-history.html">Milestone 17 — Chat UI / 会话历史 / 多轮追问</a>
         <span class="path">projects/04-rag/milestones/17-chat-ui-and-session-history.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/milestones/17-chat-ui-and-session-history.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/04-rag/README.md">Project 04 — AI Knowledge Base / RAG Assistant</a>
+        <a class="doc" href="docs/projects/04-rag/README.html">Project 04 — AI Knowledge Base / RAG Assistant</a>
         <span class="path">projects/04-rag/README.md</span>
-        
+        <a class="md-link" href="../../projects/04-rag/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -697,59 +698,59 @@
       <summary>05-agent-mcp <span class="cnt">11</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/01-tool.md">Milestone 01 — Tool：工具就是能被模型调用的 Python 函数</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/01-tool.html">Milestone 01 — Tool：工具就是能被模型调用的 Python 函数</a>
         <span class="path">projects/05-agent-mcp/milestones/01-tool.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/01-tool.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/02-tool-schema.md">Milestone 02 — Tool Schema：模型看到的「函数说明书」</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/02-tool-schema.html">Milestone 02 — Tool Schema：模型看到的「函数说明书」</a>
         <span class="path">projects/05-agent-mcp/milestones/02-tool-schema.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/02-tool-schema.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/03-function-calling.md">Milestone 03 — Function Calling：模型提出调用，宿主决定执行</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/03-function-calling.html">Milestone 03 — Function Calling：模型提出调用，宿主决定执行</a>
         <span class="path">projects/05-agent-mcp/milestones/03-function-calling.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/03-function-calling.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/04-agent.md">Milestone 04 — Agent：把「想」和「做」放进同一个循环</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/04-agent.html">Milestone 04 — Agent：把「想」和「做」放进同一个循环</a>
         <span class="path">projects/05-agent-mcp/milestones/04-agent.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/04-agent.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/05-agent-loop.md">Milestone 05 — Agent Loop：循环之外的状态管理</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/05-agent-loop.html">Milestone 05 — Agent Loop：循环之外的状态管理</a>
         <span class="path">projects/05-agent-mcp/milestones/05-agent-loop.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/05-agent-loop.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/06-multi-step-task.md">Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/06-multi-step-task.html">Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</a>
         <span class="path">projects/05-agent-mcp/milestones/06-multi-step-task.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/06-multi-step-task.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/07-mcp.md">Milestone 07 — MCP 协议：把工具从进程里拿出来</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/07-mcp.html">Milestone 07 — MCP 协议：把工具从进程里拿出来</a>
         <span class="path">projects/05-agent-mcp/milestones/07-mcp.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/07-mcp.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/08-mcp-server.md">Milestone 08 — MCP Server：把工具提供出去</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/08-mcp-server.html">Milestone 08 — MCP Server：把工具提供出去</a>
         <span class="path">projects/05-agent-mcp/milestones/08-mcp-server.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/08-mcp-server.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/09-mcp-client.md">Milestone 09 — MCP Client：让 Agent 用上别人的工具</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/09-mcp-client.html">Milestone 09 — MCP Client：让 Agent 用上别人的工具</a>
         <span class="path">projects/05-agent-mcp/milestones/09-mcp-client.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/09-mcp-client.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/milestones/10-agent-workflow.md">Milestone 10 — Agent Workflow：把计划派给多个 Worker</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/milestones/10-agent-workflow.html">Milestone 10 — Agent Workflow：把计划派给多个 Worker</a>
         <span class="path">projects/05-agent-mcp/milestones/10-agent-workflow.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/milestones/10-agent-workflow.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/05-agent-mcp/README.md">Project 05 — Research Agent / MCP Assistant</a>
+        <a class="doc" href="docs/projects/05-agent-mcp/README.html">Project 05 — Research Agent / MCP Assistant</a>
         <span class="path">projects/05-agent-mcp/README.md</span>
-        
+        <a class="md-link" href="../../projects/05-agent-mcp/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -757,59 +758,59 @@
       <summary>06-mini-transformer-llm <span class="cnt">11</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/01-project-architecture.md">Milestone 01 — 项目架构：把「黑盒」拆成五层契约</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/01-project-architecture.html">Milestone 01 — 项目架构：把「黑盒」拆成五层契约</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/01-project-architecture.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/01-project-architecture.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/02-tokenizer.md">Milestone 02 — Tokenizer：文本变成 id 的那一步</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/02-tokenizer.html">Milestone 02 — Tokenizer：文本变成 id 的那一步</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/02-tokenizer.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/02-tokenizer.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/03-embedding.md">Milestone 03 — Embedding：把 id 变成「带位置的向量」</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/03-embedding.html">Milestone 03 — Embedding：把 id 变成「带位置的向量」</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/03-embedding.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/03-embedding.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/04-attention.md">Milestone 04 — Attention：Transformer 的心脏</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/04-attention.html">Milestone 04 — Attention：Transformer 的心脏</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/04-attention.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/04-attention.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/05-multi-head-attention.md">Milestone 05 — Multi-Head Attention：把 d_model 切成 h 份并行看</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/05-multi-head-attention.html">Milestone 05 — Multi-Head Attention：把 d_model 切成 h 份并行看</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/05-multi-head-attention.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/05-multi-head-attention.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/06-transformer-block.md">Milestone 06 — Transformer Block：注意力 + 残差 + FFN</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/06-transformer-block.html">Milestone 06 — Transformer Block：注意力 + 残差 + FFN</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/06-transformer-block.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/06-transformer-block.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/07-decoder-stack.md">Milestone 07 — DecoderStack：把 N 层堆起来，输出 logits</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/07-decoder-stack.html">Milestone 07 — DecoderStack：把 N 层堆起来，输出 logits</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/07-decoder-stack.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/07-decoder-stack.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/08-dataset-dataloader.md">Milestone 08 — Dataset / DataLoader：把语料变成自回归训练批次</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/08-dataset-dataloader.html">Milestone 08 — Dataset / DataLoader：把语料变成自回归训练批次</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/08-dataset-dataloader.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/08-dataset-dataloader.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/09-training-loop.md">Milestone 09 — Training Loop：从零 autograd 反传，loss 肉眼可见地下降</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/09-training-loop.html">Milestone 09 — Training Loop：从零 autograd 反传，loss 肉眼可见地下降</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/09-training-loop.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/09-training-loop.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/milestones/10-inference-sampling.md">Milestone 10 — Inference：一个 token 一个 token 地采样</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/milestones/10-inference-sampling.html">Milestone 10 — Inference：一个 token 一个 token 地采样</a>
         <span class="path">projects/06-mini-transformer-llm/milestones/10-inference-sampling.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/milestones/10-inference-sampling.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/06-mini-transformer-llm/README.md">Project 06 — Mini Transformer / LLM</a>
+        <a class="doc" href="docs/projects/06-mini-transformer-llm/README.html">Project 06 — Mini Transformer / LLM</a>
         <span class="path">projects/06-mini-transformer-llm/README.md</span>
-        
+        <a class="md-link" href="../../projects/06-mini-transformer-llm/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -817,19 +818,19 @@
       <summary>07-open-source-llm <span class="cnt">3</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/07-open-source-llm/notebooks/README.md">P07 Colab 使用说明（Open Source LLM）</a>
+        <a class="doc" href="docs/projects/07-open-source-llm/notebooks/README.html">P07 Colab 使用说明（Open Source LLM）</a>
         <span class="path">projects/07-open-source-llm/notebooks/README.md</span>
-        
+        <a class="md-link" href="../../projects/07-open-source-llm/notebooks/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/07-open-source-llm/pipelines/README.md">pipelines —— 本地驱动的开源 LLM 调用管线</a>
+        <a class="doc" href="docs/projects/07-open-source-llm/pipelines/README.html">pipelines —— 本地驱动的开源 LLM 调用管线</a>
         <span class="path">projects/07-open-source-llm/pipelines/README.md</span>
-        
+        <a class="md-link" href="../../projects/07-open-source-llm/pipelines/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/07-open-source-llm/README.md">Project 07 — Open Source LLM</a>
+        <a class="doc" href="docs/projects/07-open-source-llm/README.html">Project 07 — Open Source LLM</a>
         <span class="path">projects/07-open-source-llm/README.md</span>
-        
+        <a class="md-link" href="../../projects/07-open-source-llm/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -837,54 +838,54 @@
       <summary>08-fine-tuning <span class="cnt">10</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/01-fine-tuning.md">Milestone 01 — Fine-Tuning：同一个基座，两条路的代价差多少</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/01-fine-tuning.html">Milestone 01 — Fine-Tuning：同一个基座，两条路的代价差多少</a>
         <span class="path">projects/08-fine-tuning/milestones/01-fine-tuning.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/01-fine-tuning.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/02-dataset-preparation.md">Milestone 02 — Dataset Preparation：59 条问答，是怎么变成 `(X, Y, M)` 的</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/02-dataset-preparation.html">Milestone 02 — Dataset Preparation：59 条问答，是怎么变成 `(X, Y, M)` 的</a>
         <span class="path">projects/08-fine-tuning/milestones/02-dataset-preparation.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/02-dataset-preparation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/03-instruction-tuning.md">Milestone 03 — Instruction Tuning：mask 落在哪，模型就学什么</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/03-instruction-tuning.html">Milestone 03 — Instruction Tuning：mask 落在哪，模型就学什么</a>
         <span class="path">projects/08-fine-tuning/milestones/03-instruction-tuning.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/03-instruction-tuning.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/04-lora.md">Milestone 04 — LoRA：`W&#x27; = W + ΔW`，以及证明它真的没动基座</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/04-lora.html">Milestone 04 — LoRA：`W&#x27; = W + ΔW`，以及证明它真的没动基座</a>
         <span class="path">projects/08-fine-tuning/milestones/04-lora.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/04-lora.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/05-qlora.md">Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/05-qlora.html">Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少</a>
         <span class="path">projects/08-fine-tuning/milestones/05-qlora.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/05-qlora.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/06-training-configuration.md">Milestone 06 — Training Configuration：r / lr / alpha，三个旋钮各管什么</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/06-training-configuration.html">Milestone 06 — Training Configuration：r / lr / alpha，三个旋钮各管什么</a>
         <span class="path">projects/08-fine-tuning/milestones/06-training-configuration.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/06-training-configuration.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/07-checkpoint.md">Milestone 07 — Checkpoint：一百多 KB 一个任务，以及&quot;假续训&quot;长什么样</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/07-checkpoint.html">Milestone 07 — Checkpoint：一百多 KB 一个任务，以及&quot;假续训&quot;长什么样</a>
         <span class="path">projects/08-fine-tuning/milestones/07-checkpoint.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/07-checkpoint.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/08-merge-adapter.md">Milestone 08 — Merge / Load Adapter：合并是免费的，但收益测不出来</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/08-merge-adapter.html">Milestone 08 — Merge / Load Adapter：合并是免费的，但收益测不出来</a>
         <span class="path">projects/08-fine-tuning/milestones/08-merge-adapter.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/08-merge-adapter.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/milestones/09-fine-tuned-evaluation.md">Milestone 09 — Fine-Tuned Model Evaluation：学会了，但忘了吗</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/milestones/09-fine-tuned-evaluation.html">Milestone 09 — Fine-Tuned Model Evaluation：学会了，但忘了吗</a>
         <span class="path">projects/08-fine-tuning/milestones/09-fine-tuned-evaluation.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/milestones/09-fine-tuned-evaluation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/08-fine-tuning/README.md">Project 08 — LoRA / QLoRA Fine-Tuning</a>
+        <a class="doc" href="docs/projects/08-fine-tuning/README.html">Project 08 — LoRA / QLoRA Fine-Tuning</a>
         <span class="path">projects/08-fine-tuning/README.md</span>
-        
+        <a class="md-link" href="../../projects/08-fine-tuning/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -892,64 +893,64 @@
       <summary>09-evaluation-inference <span class="cnt">12</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/01-evaluation.md">Milestone 01 — Evaluation：困惑度之外</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/01-evaluation.html">Milestone 01 — Evaluation：困惑度之外</a>
         <span class="path">projects/09-evaluation-inference/milestones/01-evaluation.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/01-evaluation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/02-benchmark.md">Milestone 02 — Benchmark：任务定义、统一打分与排行</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/02-benchmark.html">Milestone 02 — Benchmark：任务定义、统一打分与排行</a>
         <span class="path">projects/09-evaluation-inference/milestones/02-benchmark.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/02-benchmark.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/03-evaluation-dataset.md">Milestone 03 — Evaluation Dataset：held-out、分层与防泄漏</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/03-evaluation-dataset.html">Milestone 03 — Evaluation Dataset：held-out、分层与防泄漏</a>
         <span class="path">projects/09-evaluation-inference/milestones/03-evaluation-dataset.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/03-evaluation-dataset.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/04-automatic-evaluation.md">Milestone 04 — Automatic Evaluation：零 LLM 的规则化评分</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/04-automatic-evaluation.html">Milestone 04 — Automatic Evaluation：零 LLM 的规则化评分</a>
         <span class="path">projects/09-evaluation-inference/milestones/04-automatic-evaluation.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/04-automatic-evaluation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/05-model-comparison.md">Milestone 05 — Model Comparison：多种子配对比较</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/05-model-comparison.html">Milestone 05 — Model Comparison：多种子配对比较</a>
         <span class="path">projects/09-evaluation-inference/milestones/05-model-comparison.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/05-model-comparison.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/06-quantization.md">Milestone 06 — Quantization：INT8 / INT4 / NF4</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/06-quantization.html">Milestone 06 — Quantization：INT8 / INT4 / NF4</a>
         <span class="path">projects/09-evaluation-inference/milestones/06-quantization.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/06-quantization.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/07-inference-engine.md">Milestone 07 — Inference Engine：KV Cache 到底快多少</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/07-inference-engine.html">Milestone 07 — Inference Engine：KV Cache 到底快多少</a>
         <span class="path">projects/09-evaluation-inference/milestones/07-inference-engine.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/07-inference-engine.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/08-paged-attention.md">Milestone 08 — PagedAttention：按需分配 KV 物理块</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/08-paged-attention.html">Milestone 08 — PagedAttention：按需分配 KV 物理块</a>
         <span class="path">projects/09-evaluation-inference/milestones/08-paged-attention.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/08-paged-attention.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/09-batching.md">Milestone 09 — Batching：Static vs Continuous</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/09-batching.html">Milestone 09 — Batching：Static vs Continuous</a>
         <span class="path">projects/09-evaluation-inference/milestones/09-batching.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/09-batching.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/10-kv-cache.md">Milestone 10 — KV Cache：显存账本</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/10-kv-cache.html">Milestone 10 — KV Cache：显存账本</a>
         <span class="path">projects/09-evaluation-inference/milestones/10-kv-cache.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/10-kv-cache.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/milestones/11-model-serving.md">Milestone 11 — Model Serving：http.server + OpenAI API + SSE</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/milestones/11-model-serving.html">Milestone 11 — Model Serving：http.server + OpenAI API + SSE</a>
         <span class="path">projects/09-evaluation-inference/milestones/11-model-serving.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/milestones/11-model-serving.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/09-evaluation-inference/README.md">Project 09 — LLM Evaluation / Inference Platform</a>
+        <a class="doc" href="docs/projects/09-evaluation-inference/README.html">Project 09 — LLM Evaluation / Inference Platform</a>
         <span class="path">projects/09-evaluation-inference/README.md</span>
-        
+        <a class="md-link" href="../../projects/09-evaluation-inference/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -957,88 +958,88 @@
       <summary>10-tiny-llm-capstone <span class="cnt">12</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/01-architecture.md">Milestone 01 — Project Architecture：一个配置、八段链路、三层复用</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/01-architecture.html">Milestone 01 — Project Architecture：一个配置、八段链路、三层复用</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/01-architecture.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/01-architecture.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/02-tokenizer.md">Milestone 02 — Tokenizer：BPE 的「合并」，以及往返失败的「归因」</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/02-tokenizer.html">Milestone 02 — Tokenizer：BPE 的「合并」，以及往返失败的「归因」</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/02-tokenizer.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/02-tokenizer.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/03-dataset.md">Milestone 03 — Dataset：切分必须发生在训词表之前</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/03-dataset.html">Milestone 03 — Dataset：切分必须发生在训词表之前</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/03-dataset.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/03-dataset.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/04-embedding.md">Milestone 04 — Embedding：查表 + 正弦位置编码，以及参数都花在哪了</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/04-embedding.html">Milestone 04 — Embedding：查表 + 正弦位置编码，以及参数都花在哪了</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/04-embedding.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/04-embedding.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/05-transformer-block.md">Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/05-transformer-block.html">Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/05-transformer-block.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/05-transformer-block.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/06-training.md">Milestone 06 — Training：过拟合是被量出来的，不是猜的</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/06-training.html">Milestone 06 — Training：过拟合是被量出来的，不是猜的</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/06-training.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/06-training.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/07-evaluation.md">Milestone 07 — Evaluation：把「训完了」和「训好了」分开</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/07-evaluation.html">Milestone 07 — Evaluation：把「训完了」和「训好了」分开</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/07-evaluation.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/07-evaluation.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/08-inference.md">Milestone 08 — Inference：采样策略 / KV Cache 等价性 / 真·流式</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/08-inference.html">Milestone 08 — Inference：采样策略 / KV Cache 等价性 / 真·流式</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/08-inference.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/08-inference.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/09-optimization.md">Milestone 09 — Optimization：收益与代价必须一起量</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/09-optimization.html">Milestone 09 — Optimization：收益与代价必须一起量</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/09-optimization.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/09-optimization.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/10-serving.md">Milestone 10 — Serving：OpenAI 兼容接口 / SSE 流式 / 健康检查 / 并发压测</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/10-serving.html">Milestone 10 — Serving：OpenAI 兼容接口 / SSE 流式 / 健康检查 / 并发压测</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/10-serving.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/10-serving.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/milestones/11-complete-system.md">Milestone 11 — Complete AI Engineer System：一条命令跑完 Tokenizer → Serving</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/milestones/11-complete-system.html">Milestone 11 — Complete AI Engineer System：一条命令跑完 Tokenizer → Serving</a>
         <span class="path">projects/10-tiny-llm-capstone/milestones/11-complete-system.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/milestones/11-complete-system.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../projects/10-tiny-llm-capstone/README.md">Project 10 — Tiny LLM / AI Engineer Capstone</a>
+        <a class="doc" href="docs/projects/10-tiny-llm-capstone/README.html">Project 10 — Tiny LLM / AI Engineer Capstone</a>
         <span class="path">projects/10-tiny-llm-capstone/README.md</span>
-        
+        <a class="md-link" href="../../projects/10-tiny-llm-capstone/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
   </section>
   <section id="sec-publishing">
-    <h2>发布产物（派生） <span class="cnt">49</span></h2>
+    <h2>发布产物（派生） <span class="cnt">49/49 已渲染</span></h2>
     <p class="desc">由 projects 派生的文章 / 教程 / 微调系列</p>
     <details class="group" open>
       <summary>articles <span class="cnt">3</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../articles/00-python-foundation/01-python-variables.md">从 Java 到 Python：我的第一行 AI 工程代码</a>
+        <a class="doc" href="docs/publishing/articles/00-python-foundation/01-python-variables.html">从 Java 到 Python：我的第一行 AI 工程代码</a>
         <span class="path">publishing/articles/00-python-foundation/01-python-variables.md</span>
-        
+        <a class="md-link" href="../articles/00-python-foundation/01-python-variables.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../articles/00-python-foundation/02-python-list-dict-messages.md">List + Dict = LLM Messages：Python 数据结构如何接上 AI</a>
+        <a class="doc" href="docs/publishing/articles/00-python-foundation/02-python-list-dict-messages.html">List + Dict = LLM Messages：Python 数据结构如何接上 AI</a>
         <span class="path">publishing/articles/00-python-foundation/02-python-list-dict-messages.md</span>
-        
+        <a class="md-link" href="../articles/00-python-foundation/02-python-list-dict-messages.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../articles/README.md">Articles</a>
+        <a class="doc" href="docs/publishing/articles/README.html">Articles</a>
         <span class="path">publishing/articles/README.md</span>
-        
+        <a class="md-link" href="../articles/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1046,184 +1047,184 @@
       <summary>finetune-series <span class="cnt">36</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../finetune-series/Day0.5-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%90%8D%E8%AF%8D%E4%B8%8E%E7%A1%AC%E4%BB%B6%E8%B5%84%E6%BA%90%E5%AE%8C%E5%85%A8%E8%A7%A3%E9%87%8A.md">AI 工程师基础认知 Day0.5</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day0.5-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%90%8D%E8%AF%8D%E4%B8%8E%E7%A1%AC%E4%BB%B6%E8%B5%84%E6%BA%90%E5%AE%8C%E5%85%A8%E8%A7%A3%E9%87%8A.html">AI 工程师基础认知 Day0.5</a>
         <span class="path">publishing/finetune-series/Day0.5-大模型名词与硬件资源完全解释.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day0.5-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%90%8D%E8%AF%8D%E4%B8%8E%E7%A1%AC%E4%BB%B6%E8%B5%84%E6%BA%90%E5%AE%8C%E5%85%A8%E8%A7%A3%E9%87%8A.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day0.6-%E8%87%AA%E5%B7%B1%E9%87%87%E8%B4%AD%E7%A1%AC%E4%BB%B6.md">一、先明确：个人买服务器能做到什么？</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day0.6-%E8%87%AA%E5%B7%B1%E9%87%87%E8%B4%AD%E7%A1%AC%E4%BB%B6.html">一、先明确：个人买服务器能做到什么？</a>
         <span class="path">publishing/finetune-series/Day0.6-自己采购硬件.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day0.6-%E8%87%AA%E5%B7%B1%E9%87%87%E8%B4%AD%E7%A1%AC%E4%BB%B6.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day0.7-%E4%BC%81%E4%B8%9A%E7%BA%A7%E7%A1%AC%E4%BB%B6%E9%87%87%E8%B4%AD%E8%A7%86%E8%A7%92.md">一、先定义企业 AI 平台目标</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day0.7-%E4%BC%81%E4%B8%9A%E7%BA%A7%E7%A1%AC%E4%BB%B6%E9%87%87%E8%B4%AD%E8%A7%86%E8%A7%92.html">一、先定义企业 AI 平台目标</a>
         <span class="path">publishing/finetune-series/Day0.7-企业级硬件采购视角.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day0.7-%E4%BC%81%E4%B8%9A%E7%BA%A7%E7%A1%AC%E4%BB%B6%E9%87%87%E8%B4%AD%E8%A7%86%E8%A7%92.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day1-Colab%E8%B7%91%E9%80%9AQwen-LLaMA-Factory.md">大模型微调实战 Day1：Colab 跑通 Qwen + LLaMA-Factory</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day1-Colab%E8%B7%91%E9%80%9AQwen-LLaMA-Factory.html">大模型微调实战 Day1：Colab 跑通 Qwen + LLaMA-Factory</a>
         <span class="path">publishing/finetune-series/Day1-Colab跑通Qwen-LLaMA-Factory.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day1-Colab%E8%B7%91%E9%80%9AQwen-LLaMA-Factory.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day2-01-%E6%95%B0%E6%8D%AE%E9%9B%86%E6%B3%A8%E5%86%8C-dataset-info.md">大模型微调实战 Day2-01：把 java_interview.json 注册进 LLaMA-Factory 数据集系统</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day2-01-%E6%95%B0%E6%8D%AE%E9%9B%86%E6%B3%A8%E5%86%8C-dataset-info.html">大模型微调实战 Day2-01：把 java_interview.json 注册进 LLaMA-Factory 数据集系统</a>
         <span class="path">publishing/finetune-series/Day2-01-数据集注册-dataset-info.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day2-01-%E6%95%B0%E6%8D%AE%E9%9B%86%E6%B3%A8%E5%86%8C-dataset-info.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day2-02-QLoRA%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE-train-yaml.md">大模型微调实战 Day2-02：创建 QLoRA 训练配置 train.yaml</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day2-02-QLoRA%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE-train-yaml.html">大模型微调实战 Day2-02：创建 QLoRA 训练配置 train.yaml</a>
         <span class="path">publishing/finetune-series/Day2-02-QLoRA训练配置-train-yaml.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day2-02-QLoRA%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE-train-yaml.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day2-03-%E5%90%AF%E5%8A%A8QLoRA%E8%AE%AD%E7%BB%83.md">大模型微调实战 Day2-03：正式启动第一次 QLoRA 训练</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day2-03-%E5%90%AF%E5%8A%A8QLoRA%E8%AE%AD%E7%BB%83.html">大模型微调实战 Day2-03：正式启动第一次 QLoRA 训练</a>
         <span class="path">publishing/finetune-series/Day2-03-启动QLoRA训练.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day2-03-%E5%90%AF%E5%8A%A8QLoRA%E8%AE%AD%E7%BB%83.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day3-LoRA%E6%8E%A5%E5%85%A5Ollama-SpringBoot.md">大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day3-LoRA%E6%8E%A5%E5%85%A5Ollama-SpringBoot.html">大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot</a>
         <span class="path">publishing/finetune-series/Day3-LoRA接入Ollama-SpringBoot.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day3-LoRA%E6%8E%A5%E5%85%A5Ollama-SpringBoot.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day4-RAG%E7%BB%93%E5%90%88LoRA%E6%9E%84%E5%BB%BAAgent.md">大模型微调实战 Day4：RAG + LoRA 结合，构建可用的 Java AI Interview Agent</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day4-RAG%E7%BB%93%E5%90%88LoRA%E6%9E%84%E5%BB%BAAgent.html">大模型微调实战 Day4：RAG + LoRA 结合，构建可用的 Java AI Interview Agent</a>
         <span class="path">publishing/finetune-series/Day4-RAG结合LoRA构建Agent.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day4-RAG%E7%BB%93%E5%90%88LoRA%E6%9E%84%E5%BB%BAAgent.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day5-SpringBoot-Milvus-RAG.md">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day5-SpringBoot-Milvus-RAG.html">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</a>
         <span class="path">publishing/finetune-series/Day5-SpringBoot-Milvus-RAG.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day5-SpringBoot-Milvus-RAG.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day6-RAG-LoRA-ToolCalling-Agent.md">大模型微调实战 Day6：实现完整 Agent（RAG + LoRA + Tool Calling）</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day6-RAG-LoRA-ToolCalling-Agent.html">大模型微调实战 Day6：实现完整 Agent（RAG + LoRA + Tool Calling）</a>
         <span class="path">publishing/finetune-series/Day6-RAG-LoRA-ToolCalling-Agent.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day6-RAG-LoRA-ToolCalling-Agent.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day7-Agent%E7%94%9F%E4%BA%A7%E7%BA%A7%E5%B7%A5%E7%A8%8B%E5%8C%96.md">大模型微调实战 Day7：Spring Boot + LangChain4j Agent 生产级工程化</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day7-Agent%E7%94%9F%E4%BA%A7%E7%BA%A7%E5%B7%A5%E7%A8%8B%E5%8C%96.html">大模型微调实战 Day7：Spring Boot + LangChain4j Agent 生产级工程化</a>
         <span class="path">publishing/finetune-series/Day7-Agent生产级工程化.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day7-Agent%E7%94%9F%E4%BA%A7%E7%BA%A7%E5%B7%A5%E7%A8%8B%E5%8C%96.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day8-%E5%8C%85%E8%A3%85%E6%88%90%E6%B1%82%E8%81%8C%E9%A1%B9%E7%9B%AE.md">大模型微调实战 Day8：把 Agent 包装成真实求职项目</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day8-%E5%8C%85%E8%A3%85%E6%88%90%E6%B1%82%E8%81%8C%E9%A1%B9%E7%9B%AE.html">大模型微调实战 Day8：把 Agent 包装成真实求职项目</a>
         <span class="path">publishing/finetune-series/Day8-包装成求职项目.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day8-%E5%8C%85%E8%A3%85%E6%88%90%E6%B1%82%E8%81%8C%E9%A1%B9%E7%9B%AE.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day9-%E6%A8%A1%E6%8B%9FAI%E5%B7%A5%E7%A8%8B%E5%B8%88%E9%9D%A2%E8%AF%95.md">大模型微调实战 Day9：模拟真实 AI 工程师面试</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day9-%E6%A8%A1%E6%8B%9FAI%E5%B7%A5%E7%A8%8B%E5%B8%88%E9%9D%A2%E8%AF%95.html">大模型微调实战 Day9：模拟真实 AI 工程师面试</a>
         <span class="path">publishing/finetune-series/Day9-模拟AI工程师面试.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day9-%E6%A8%A1%E6%8B%9FAI%E5%B7%A5%E7%A8%8B%E5%B8%88%E9%9D%A2%E8%AF%95.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day10-%E9%9D%A2%E8%AF%95100%E9%97%AE%E4%B8%8E%E9%A1%B9%E7%9B%AE%E7%AD%94%E8%BE%A9.md">大模型微调实战 Day10：AI 工程师面试 100 问 + 项目答辩</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day10-%E9%9D%A2%E8%AF%95100%E9%97%AE%E4%B8%8E%E9%A1%B9%E7%9B%AE%E7%AD%94%E8%BE%A9.html">大模型微调实战 Day10：AI 工程师面试 100 问 + 项目答辩</a>
         <span class="path">publishing/finetune-series/Day10-面试100问与项目答辩.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day10-%E9%9D%A2%E8%AF%95100%E9%97%AE%E4%B8%8E%E9%A1%B9%E7%9B%AE%E7%AD%94%E8%BE%A9.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day11-01-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2%E5%AE%8C%E6%95%B4%E8%B7%AF%E7%BA%BF.md">Day11：企业级大模型部署完整路线</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day11-01-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2%E5%AE%8C%E6%95%B4%E8%B7%AF%E7%BA%BF.html">Day11：企业级大模型部署完整路线</a>
         <span class="path">publishing/finetune-series/Day11-01-企业级大模型部署完整路线.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day11-01-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2%E5%AE%8C%E6%95%B4%E8%B7%AF%E7%BA%BF.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day11-02-%E5%AE%9E%E6%88%98.md">Day11 实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day11-02-%E5%AE%9E%E6%88%98.html">Day11 实战</a>
         <span class="path">publishing/finetune-series/Day11-02-实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day11-02-%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day12-%E4%BC%81%E4%B8%9A%E7%BA%A7%E9%83%A8%E7%BD%B2%E5%8D%87%E7%BA%A7.md">Day12 企业级部署升级</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day12-%E4%BC%81%E4%B8%9A%E7%BA%A7%E9%83%A8%E7%BD%B2%E5%8D%87%E7%BA%A7.html">Day12 企业级部署升级</a>
         <span class="path">publishing/finetune-series/Day12-企业级部署升级.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day12-%E4%BC%81%E4%B8%9A%E7%BA%A7%E9%83%A8%E7%BD%B2%E5%8D%87%E7%BA%A7.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day13-%E4%BC%81%E4%B8%9A%E7%BA%A7LoRA%E5%BE%AE%E8%B0%83%E9%83%A8%E7%BD%B2%E5%AE%9E%E6%88%98.md">Day13 企业级 LoRA 微调部署实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day13-%E4%BC%81%E4%B8%9A%E7%BA%A7LoRA%E5%BE%AE%E8%B0%83%E9%83%A8%E7%BD%B2%E5%AE%9E%E6%88%98.html">Day13 企业级 LoRA 微调部署实战</a>
         <span class="path">publishing/finetune-series/Day13-企业级LoRA微调部署实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day13-%E4%BC%81%E4%B8%9A%E7%BA%A7LoRA%E5%BE%AE%E8%B0%83%E9%83%A8%E7%BD%B2%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day14-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E6%9E%B6%E6%9E%84.md">Day14 企业级大模型平台架构</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day14-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E6%9E%B6%E6%9E%84.html">Day14 企业级大模型平台架构</a>
         <span class="path">publishing/finetune-series/Day14-企业级大模型平台架构.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day14-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E6%9E%B6%E6%9E%84.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day15-%E4%BC%81%E4%B8%9A%E7%BA%A7RAG%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%8C%96.md">Day15 企业级 RAG 深度优化</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day15-%E4%BC%81%E4%B8%9A%E7%BA%A7RAG%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%8C%96.html">Day15 企业级 RAG 深度优化</a>
         <span class="path">publishing/finetune-series/Day15-企业级RAG深度优化.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day15-%E4%BC%81%E4%B8%9A%E7%BA%A7RAG%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%8C%96.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day16-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E7%A8%B3%E5%AE%9A%E6%80%A7.md">Day16 企业级大模型安全与稳定性</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day16-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E7%A8%B3%E5%AE%9A%E6%80%A7.html">Day16 企业级大模型安全与稳定性</a>
         <span class="path">publishing/finetune-series/Day16-企业级大模型安全与稳定性.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day16-%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E7%A8%B3%E5%AE%9A%E6%80%A7.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day17-MLOps%E5%AE%9E%E6%88%98.md">Day17 MLOps 实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day17-MLOps%E5%AE%9E%E6%88%98.html">Day17 MLOps 实战</a>
         <span class="path">publishing/finetune-series/Day17-MLOps实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day17-MLOps%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day18-%E4%BC%81%E4%B8%9A%E7%BA%A7AI%E7%B3%BB%E7%BB%9F%E5%AE%8C%E6%95%B4%E8%AE%BE%E8%AE%A1%E7%AD%94%E8%BE%A9.md">Day18 企业级 AI 系统完整设计答辩</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day18-%E4%BC%81%E4%B8%9A%E7%BA%A7AI%E7%B3%BB%E7%BB%9F%E5%AE%8C%E6%95%B4%E8%AE%BE%E8%AE%A1%E7%AD%94%E8%BE%A9.html">Day18 企业级 AI 系统完整设计答辩</a>
         <span class="path">publishing/finetune-series/Day18-企业级AI系统完整设计答辩.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day18-%E4%BC%81%E4%B8%9A%E7%BA%A7AI%E7%B3%BB%E7%BB%9F%E5%AE%8C%E6%95%B4%E8%AE%BE%E8%AE%A1%E7%AD%94%E8%BE%A9.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day19-%E4%BB%8EAI%E5%B7%A5%E7%A8%8B%E5%B8%88%E5%88%B0AI%E4%BA%A7%E5%93%81%E5%B7%A5%E7%A8%8B%E5%B8%88.md">Day19：从 AI 工程师到 AI 产品工程师</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day19-%E4%BB%8EAI%E5%B7%A5%E7%A8%8B%E5%B8%88%E5%88%B0AI%E4%BA%A7%E5%93%81%E5%B7%A5%E7%A8%8B%E5%B8%88.html">Day19：从 AI 工程师到 AI 产品工程师</a>
         <span class="path">publishing/finetune-series/Day19-从AI工程师到AI产品工程师.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day19-%E4%BB%8EAI%E5%B7%A5%E7%A8%8B%E5%B8%88%E5%88%B0AI%E4%BA%A7%E5%93%81%E5%B7%A5%E7%A8%8B%E5%B8%88.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day20-%E6%89%93%E9%80%A0%E4%BD%A0%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAAI-SaaS-MVP.md">Day20：打造你的第一个 AI SaaS MVP</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day20-%E6%89%93%E9%80%A0%E4%BD%A0%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAAI-SaaS-MVP.html">Day20：打造你的第一个 AI SaaS MVP</a>
         <span class="path">publishing/finetune-series/Day20-打造你的第一个AI-SaaS-MVP.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day20-%E6%89%93%E9%80%A0%E4%BD%A0%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAAI-SaaS-MVP.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day21-%E4%BC%81%E4%B8%9AAI%E5%B9%B3%E5%8F%B0%E8%90%BD%E5%9C%B0%E5%AE%9E%E6%88%98.md">Day21：企业 AI 平台落地实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day21-%E4%BC%81%E4%B8%9AAI%E5%B9%B3%E5%8F%B0%E8%90%BD%E5%9C%B0%E5%AE%9E%E6%88%98.html">Day21：企业 AI 平台落地实战</a>
         <span class="path">publishing/finetune-series/Day21-企业AI平台落地实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day21-%E4%BC%81%E4%B8%9AAI%E5%B9%B3%E5%8F%B0%E8%90%BD%E5%9C%B0%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day22-%E6%89%93%E9%80%A0%E4%BC%81%E4%B8%9A%E7%BA%A7AI-Agent%E5%B9%B3%E5%8F%B0.md">Day22：打造企业级 AI Agent 平台</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day22-%E6%89%93%E9%80%A0%E4%BC%81%E4%B8%9A%E7%BA%A7AI-Agent%E5%B9%B3%E5%8F%B0.html">Day22：打造企业级 AI Agent 平台</a>
         <span class="path">publishing/finetune-series/Day22-打造企业级AI-Agent平台.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day22-%E6%89%93%E9%80%A0%E4%BC%81%E4%B8%9A%E7%BA%A7AI-Agent%E5%B9%B3%E5%8F%B0.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day23-%E4%BC%81%E4%B8%9AAI%E8%87%AA%E5%8A%A8%E5%8C%96%E5%B9%B3%E5%8F%B0%E5%AE%9E%E6%88%98.md">Day23：企业 AI 自动化平台实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day23-%E4%BC%81%E4%B8%9AAI%E8%87%AA%E5%8A%A8%E5%8C%96%E5%B9%B3%E5%8F%B0%E5%AE%9E%E6%88%98.html">Day23：企业 AI 自动化平台实战</a>
         <span class="path">publishing/finetune-series/Day23-企业AI自动化平台实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day23-%E4%BC%81%E4%B8%9AAI%E8%87%AA%E5%8A%A8%E5%8C%96%E5%B9%B3%E5%8F%B0%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day24-AI-Agent%E5%B7%A5%E7%A8%8B%E5%8C%96%E8%BF%9B%E9%98%B6.md">Day24：AI Agent 工程化进阶</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day24-AI-Agent%E5%B7%A5%E7%A8%8B%E5%8C%96%E8%BF%9B%E9%98%B6.html">Day24：AI Agent 工程化进阶</a>
         <span class="path">publishing/finetune-series/Day24-AI-Agent工程化进阶.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day24-AI-Agent%E5%B7%A5%E7%A8%8B%E5%8C%96%E8%BF%9B%E9%98%B6.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day25-%E4%BC%81%E4%B8%9A%E7%BA%A7AI-Agent%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98.md">Day25：企业级 AI Agent 开发实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day25-%E4%BC%81%E4%B8%9A%E7%BA%A7AI-Agent%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98.html">Day25：企业级 AI Agent 开发实战</a>
         <span class="path">publishing/finetune-series/Day25-企业级AI-Agent开发实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day25-%E4%BC%81%E4%B8%9A%E7%BA%A7AI-Agent%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day27-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E4%B8%8E%E5%BE%AE%E8%B0%83%E5%AE%8C%E6%95%B4%E5%AE%9E%E6%88%98.md">Day27：大模型训练与微调完整实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day27-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E4%B8%8E%E5%BE%AE%E8%B0%83%E5%AE%8C%E6%95%B4%E5%AE%9E%E6%88%98.html">Day27：大模型训练与微调完整实战</a>
         <span class="path">publishing/finetune-series/Day27-大模型训练与微调完整实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day27-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E4%B8%8E%E5%BE%AE%E8%B0%83%E5%AE%8C%E6%95%B4%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day28-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E7%8E%AF%E5%A2%83%E5%AE%9E%E6%88%98.md">Day28：大模型训练环境实战</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day28-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E7%8E%AF%E5%A2%83%E5%AE%9E%E6%88%98.html">Day28：大模型训练环境实战</a>
         <span class="path">publishing/finetune-series/Day28-大模型训练环境实战.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day28-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E7%8E%AF%E5%A2%83%E5%AE%9E%E6%88%98.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day29-%E6%A8%A1%E5%9E%8B%E8%AF%84%E6%B5%8B%E4%B8%8E%E7%94%9F%E4%BA%A7%E4%B8%8A%E7%BA%BF.md">Day29：模型评测与生产上线</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day29-%E6%A8%A1%E5%9E%8B%E8%AF%84%E6%B5%8B%E4%B8%8E%E7%94%9F%E4%BA%A7%E4%B8%8A%E7%BA%BF.html">Day29：模型评测与生产上线</a>
         <span class="path">publishing/finetune-series/Day29-模型评测与生产上线.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day29-%E6%A8%A1%E5%9E%8B%E8%AF%84%E6%B5%8B%E4%B8%8E%E7%94%9F%E4%BA%A7%E4%B8%8A%E7%BA%BF.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/Day30-Java-AI-Engineer%E5%AE%8C%E6%95%B4%E8%83%BD%E5%8A%9B%E9%97%AD%E7%8E%AF.md">Day30：Java AI Engineer 完整能力闭环</a>
+        <a class="doc" href="docs/publishing/finetune-series/Day30-Java-AI-Engineer%E5%AE%8C%E6%95%B4%E8%83%BD%E5%8A%9B%E9%97%AD%E7%8E%AF.html">Day30：Java AI Engineer 完整能力闭环</a>
         <span class="path">publishing/finetune-series/Day30-Java-AI-Engineer完整能力闭环.md</span>
-        
+        <a class="md-link" href="../finetune-series/Day30-Java-AI-Engineer%E5%AE%8C%E6%95%B4%E8%83%BD%E5%8A%9B%E9%97%AD%E7%8E%AF.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../finetune-series/README.md">Finetune Series — 大模型微调与企业级部署系列（草稿库）</a>
+        <a class="doc" href="docs/publishing/finetune-series/README.html">Finetune Series — 大模型微调与企业级部署系列（草稿库）</a>
         <span class="path">publishing/finetune-series/README.md</span>
-        
+        <a class="md-link" href="../finetune-series/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1231,9 +1232,9 @@
       <summary>README.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../README.md">Publishing — 对外发布内容</a>
+        <a class="doc" href="docs/publishing/README.html">Publishing — 对外发布内容</a>
         <span class="path">publishing/README.md</span>
-        
+        <a class="md-link" href="../README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1241,101 +1242,101 @@
       <summary>tutorials <span class="cnt">9</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../tutorials/01-python-origin-history-ecosystem.md">Python 从哪里来，凭什么这么火？</a>
+        <a class="doc" href="docs/publishing/tutorials/01-python-origin-history-ecosystem.html">Python 从哪里来，凭什么这么火？</a>
         <span class="path">publishing/tutorials/01-python-origin-history-ecosystem.md</span>
-        
+        <a class="md-link" href="../tutorials/01-python-origin-history-ecosystem.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/02-python-install-usage-roadmap.md">Python 安装与上手：从装环境到跑通第一个 AI 项目</a>
+        <a class="doc" href="docs/publishing/tutorials/02-python-install-usage-roadmap.html">Python 安装与上手：从装环境到跑通第一个 AI 项目</a>
         <span class="path">publishing/tutorials/02-python-install-usage-roadmap.md</span>
-        
+        <a class="md-link" href="../tutorials/02-python-install-usage-roadmap.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/03-llm-finetune-day1-colab-llamafactory-qwen.md">第一次微调实战 Day1：从 0 到跑通 Qwen + LLaMA-Factory + 第一份 Java 面试训练数据</a>
+        <a class="doc" href="docs/publishing/tutorials/03-llm-finetune-day1-colab-llamafactory-qwen.html">第一次微调实战 Day1：从 0 到跑通 Qwen + LLaMA-Factory + 第一份 Java 面试训练数据</a>
         <span class="path">publishing/tutorials/03-llm-finetune-day1-colab-llamafactory-qwen.md</span>
-        
+        <a class="md-link" href="../tutorials/03-llm-finetune-day1-colab-llamafactory-qwen.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/04-enterprise-llm-deploy-gpu-vllm-springboot.md">企业级大模型部署从 0 到 1：租 GPU 服务器 → Ubuntu → Docker → Qwen → vLLM → Spring Boot</a>
+        <a class="doc" href="docs/publishing/tutorials/04-enterprise-llm-deploy-gpu-vllm-springboot.html">企业级大模型部署从 0 到 1：租 GPU 服务器 → Ubuntu → Docker → Qwen → vLLM → Spring Boot</a>
         <span class="path">publishing/tutorials/04-enterprise-llm-deploy-gpu-vllm-springboot.md</span>
-        
+        <a class="md-link" href="../tutorials/04-enterprise-llm-deploy-gpu-vllm-springboot.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/05-llm-finetune-day3-lora-ollama-springboot.md">大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j</a>
+        <a class="doc" href="docs/publishing/tutorials/05-llm-finetune-day3-lora-ollama-springboot.html">大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j</a>
         <span class="path">publishing/tutorials/05-llm-finetune-day3-lora-ollama-springboot.md</span>
-        
+        <a class="md-link" href="../tutorials/05-llm-finetune-day3-lora-ollama-springboot.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/06-rag-lora-agent.md">大模型微调实战 Day4：RAG + LoRA 结合，构建带工具调用的 Agent</a>
+        <a class="doc" href="docs/publishing/tutorials/06-rag-lora-agent.html">大模型微调实战 Day4：RAG + LoRA 结合，构建带工具调用的 Agent</a>
         <span class="path">publishing/tutorials/06-rag-lora-agent.md</span>
-        
+        <a class="md-link" href="../tutorials/06-rag-lora-agent.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/07-springboot-langchain4j-milvus-rag.md">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline</a>
+        <a class="doc" href="docs/publishing/tutorials/07-springboot-langchain4j-milvus-rag.html">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline</a>
         <span class="path">publishing/tutorials/07-springboot-langchain4j-milvus-rag.md</span>
-        
+        <a class="md-link" href="../tutorials/07-springboot-langchain4j-milvus-rag.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/08-springboot-calls-python.md">Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单</a>
+        <a class="doc" href="docs/publishing/tutorials/08-springboot-calls-python.html">Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单</a>
         <span class="path">publishing/tutorials/08-springboot-calls-python.md</span>
-        
+        <a class="md-link" href="../tutorials/08-springboot-calls-python.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../tutorials/README.md">Tutorials — 图文教程</a>
+        <a class="doc" href="docs/publishing/tutorials/README.html">Tutorials — 图文教程</a>
         <span class="path">publishing/tutorials/README.md</span>
-        
+        <a class="md-link" href="../tutorials/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
   </section>
   <section id="sec-audit">
-    <h2>审计与复盘 <span class="cnt">2</span></h2>
+    <h2>审计与复盘 <span class="cnt">2/2 已渲染</span></h2>
     <p class="desc">仓库体检与错误复盘</p>
     <details class="group" open>
       <summary>audit <span class="cnt">2</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../audit/2026-09-30-health-check.md">全仓库体检报告 · 2026-09-30</a>
+        <a class="doc" href="docs/audit/2026-09-30-health-check.html">全仓库体检报告 · 2026-09-30</a>
         <span class="path">audit/2026-09-30-health-check.md</span>
-        
+        <a class="md-link" href="../../audit/2026-09-30-health-check.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../audit/README.md">Audit — 仓库体检档案</a>
+        <a class="doc" href="docs/audit/README.html">Audit — 仓库体检档案</a>
         <span class="path">audit/README.md</span>
-        
+        <a class="md-link" href="../../audit/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
   </section>
   <section id="sec-mistakes">
-    <h2>审计与复盘 <span class="cnt">2</span></h2>
+    <h2>审计与复盘 <span class="cnt">2/2 已渲染</span></h2>
     <p class="desc">仓库体检与错误复盘</p>
     <details class="group" open>
       <summary>mistakes <span class="cnt">2</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../mistakes/2026-09-15-package-init-export-miss.md">包 `__init__.py` 漏导出异常类：单测全绿，运行即炸</a>
+        <a class="doc" href="docs/mistakes/2026-09-15-package-init-export-miss.html">包 `__init__.py` 漏导出异常类：单测全绿，运行即炸</a>
         <span class="path">mistakes/2026-09-15-package-init-export-miss.md</span>
-        
+        <a class="md-link" href="../../mistakes/2026-09-15-package-init-export-miss.md"title="原始 Markdown 源文档">.md</a>
       </li>
       <li>
-        <a class="doc" href="../../mistakes/README.md">Mistakes — 错误记录系统</a>
+        <a class="doc" href="docs/mistakes/README.html">Mistakes — 错误记录系统</a>
         <span class="path">mistakes/README.md</span>
-        
+        <a class="md-link" href="../../mistakes/README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
   </section>
   <section id="sec--other-">
-    <h2>其他 <span class="cnt">5</span></h2>
+    <h2>其他 <span class="cnt">5/5 已渲染</span></h2>
     <p class="desc">未分类文档</p>
     <details class="group" open>
       <summary>CONTRIBUTING.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../CONTRIBUTING.md">Contributing — 仓库维护规范</a>
+        <a class="doc" href="docs/CONTRIBUTING.html">Contributing — 仓库维护规范</a>
         <span class="path">CONTRIBUTING.md</span>
-        
+        <a class="md-link" href="../../CONTRIBUTING.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1343,9 +1344,9 @@
       <summary>KNOWLEDGE-MAP.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../KNOWLEDGE-MAP.md">AI Engineer Journey — Knowledge Map</a>
+        <a class="doc" href="docs/KNOWLEDGE-MAP.html">AI Engineer Journey — Knowledge Map</a>
         <span class="path">KNOWLEDGE-MAP.md</span>
-        
+        <a class="md-link" href="../../KNOWLEDGE-MAP.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1353,9 +1354,9 @@
       <summary>PROGRESS.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../PROGRESS.md">AI Engineer Journey — Progress</a>
+        <a class="doc" href="docs/PROGRESS.html">AI Engineer Journey — Progress</a>
         <span class="path">PROGRESS.md</span>
-        
+        <a class="md-link" href="../../PROGRESS.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1363,9 +1364,9 @@
       <summary>README.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../README.md">AI Engineer Journey</a>
+        <a class="doc" href="docs/README.html">AI Engineer Journey</a>
         <span class="path">README.md</span>
-        
+        <a class="md-link" href="../../README.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>
@@ -1373,9 +1374,9 @@
       <summary>ROADMAP.md <span class="cnt">1</span></summary>
       <ul class="docs">
       <li>
-        <a class="doc" href="../../ROADMAP.md">AI Engineer Journey — Roadmap</a>
+        <a class="doc" href="docs/ROADMAP.html">AI Engineer Journey — Roadmap</a>
         <span class="path">ROADMAP.md</span>
-        
+        <a class="md-link" href="../../ROADMAP.md"title="原始 Markdown 源文档">.md</a>
       </li>
       </ul>
     </details>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 01 — Python AI CLI Assistant</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-01-python-ai-cli-assistant">Project 01 — Python AI CLI Assistant</h1>
+<h2 id="项目目标">项目目标</h2>
+<p>通过持续升级一个 AI CLI Assistant，学习 Python 基础，并最终接入真实 LLM API。</p>
+<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<p>AI 项目全是 Python 写的。不理解 Python，就看不懂、写不出、改不动 AI 代码。 但 Python 内容太多——标准库、Web 框架、数据处理……有经验的开发者不需要从零学完整 Python 教程，而是直接从 AI 项目切入，<strong>项目缺什么能力就学什么</strong>。</p>
+<h2 id="解决什么问题">解决什么问题</h2>
+<ul class="lvl"><li>没有 Python 基础，看不懂 AI 项目代码</li><li>不理解 AI 项目特有的数据结构（messages / JSON / List / Dict）</li><li>不知道怎么从 0 开始构建一个 Python AI 项目</li></ul>
+<h2 id="最终能力">最终能力</h2>
+<p>完成后你会得到：</p>
+<ul class="lvl"><li>一个命令行交互的 AI Assistant</li><li>多轮对话 + 消息历史</li><li>可配置 API Key</li><li>真实调用 LLM API</li><li>完整 Python 基础（变量 → HTTP → LLM）</li></ul>
+<h2 id="技术栈">技术栈</h2>
+<ul class="lvl"><li>Python 3.x</li><li>标准库 <code>urllib</code>（HTTP；v0.1 刻意零依赖，后续里程碑引入 requests/httpx 时会对比&quot;框架解决了什么&quot;）</li><li><code>json</code>（标准库）</li><li><code>os</code>（环境变量）</li><li>主流 LLM API（OpenAI / 兼容接口）</li></ul>
+<h2 id="项目演进">项目演进</h2>
+<pre><code>v0.1  Variables — 程序能保存和打印数据
+  ↓
+v0.2  List / Dict / JSON — AI 项目最常见的数据结构
+  ↓
+v0.3  Condition / Loop — 程序有逻辑分支
+  ↓
+v0.4  Function — 代码可复用
+  ↓
+v0.5  Module / Package — 项目有结构
+  ↓
+v0.6  Exception — 程序能处理错误
+  ↓
+v0.7  File / JSON Persistence — 程序能读写数据
+  ↓
+v0.8  venv / pip / Environment — 项目可独立管理依赖
+  ↓
+v0.9  HTTP / API — 程序能和外部通信
+  ↓
+v1.0  Real LLM API — 项目接入真实 AI</code></pre>
+<h2 id="milestones">Milestones</h2>
+<table><thead><tr><th>#</th><th>Milestone</th><th>状态</th><th>核心能力</th></tr></thead><tbody><tr><td>01</td><td><a href="milestones/01-variables.html">Variables</a></td><td>✅</td><td>变量 / 5 种基础类型 / type() / input() / print() / f-string</td></tr><tr><td>02</td><td><a href="milestones/02-list-dict-json.html">List / Dict / JSON</a></td><td>✅</td><td>List / Dict 嵌套 / JSON 序列化 / AI messages 数据结构</td></tr><tr><td>03</td><td><a href="milestones/03-condition-loop.html">Condition / Loop</a></td><td>⬜</td><td>if / for / while / break / continue</td></tr><tr><td>04</td><td><a href="milestones/04-function.html">Function</a></td><td>⬜</td><td>def / 参数 / 返回值 / 作用域</td></tr><tr><td>05</td><td><a href="milestones/05-module-package.html">Module / Package</a></td><td>⬜</td><td>import / 包结构 / __init__.py</td></tr><tr><td>06</td><td><a href="milestones/06-exception.html">Exception</a></td><td>⬜</td><td>try / except / raise / 自定义异常</td></tr><tr><td>07</td><td><a href="milestones/07-file-json.html">File / JSON Persistence</a></td><td>⬜</td><td>文件读写 / JSON 文件 / 持久化消息</td></tr><tr><td>08</td><td><a href="milestones/08-venv-pip.html">venv / pip / Environment</a></td><td>⬜</td><td>venv / pip / requirements.txt</td></tr><tr><td>09</td><td><a href="milestones/09-http-api.html">HTTP / API</a></td><td>⬜</td><td>urllib / HTTP 基础 / REST API</td></tr><tr><td>10</td><td><a href="milestones/10-real-llm-api.html">Real LLM API</a></td><td>⬜</td><td>真实 LLM 调用 / 串起所有知识</td></tr></tbody></table>
+<h2 id="当前状态">当前状态</h2>
+<pre><code>Completed:
+✅ 01 — Variables（完整 Project First 模板）
+✅ 02 — List / Dict / JSON（有实质内容）
+
+In Progress:
+🔄 项目代码已有真实 LLM API 骨架
+
+Next:
+⬜ 03 — Condition / Loop
+⬜ 04 — Function
+...
+⬜ 10 — Real LLM API（串起所有知识）</code></pre>
+<h2 id="当前版本">当前版本</h2>
+<p><strong>v0.2</strong> — 有真实 LLM API 调用骨架，10 个 Milestone 完成 2 个。</p>
+<h2 id="运行效果">运行效果</h2>
+<p>以下是本仓库当前代码的<strong>真实运行输出</strong>（不是效果图）。</p>
+<p>接入真实 LLM API 后，一行命令就能问答：</p>
+<figure class="figure"><img alt="真实调用 LLM API" src="../../../../../projects/01-python-ai-cli/assets/term-real-llm-call.png" loading="lazy"/><figcaption>真实调用 LLM API</figcaption></figure>
+<p>单元测试保持全绿（每次改代码后都会跑）：</p>
+<figure class="figure"><img alt="单元测试 6/6 通过" src="../../../../../projects/01-python-ai-cli/assets/term-unittest.png" loading="lazy"/><figcaption>单元测试 6/6 通过</figcaption></figure>
+<p>没配 Key 时不会崩溃，而是给出修复指引（异常层在起作用）：</p>
+<figure class="figure"><img alt="缺 Key 时的友好报错" src="../../../../../projects/01-python-ai-cli/assets/term-config-error.png" loading="lazy"/><figcaption>缺 Key 时的友好报错</figcaption></figure>
+<h2 id="项目结构">项目结构</h2>
+<pre><code>src/
+├── main.py               # 入口，已实现真实 API 调用骨架
+├── .env.example          # API Key 模板
+├── assistant/
+│   ├── __init__.py
+│   ├── client.py         # LLM 客户端
+│   ├── config.py         # 配置
+│   └── errors.py         # 自定义异常
+└── tests/
+    └── test_all.py
+
+exercises/                 # 配套练习（做完打 ✅，每题亲手敲）
+├── 01-basic/             # M01-02 · 8 道题 + 参考答案 answers.py
+├── 02-practice/          # M03-06 · 条件循环 / 函数 / 模块包 / 异常（已播种）
+├── 03-project/           # M07-09 · 往 src/ 里加功能的实战题（已播种）
+└── 04-challenge/         # M10 · v1.0 综合挑战（已播种）</code></pre>
+<p>运行：</p>
+<pre><code>cd src/
+cp .env.example .env   # 填入真实 API Key
+python3 main.py</code></pre>
+<h2 id="已掌握能力">已掌握能力</h2>
+<p><strong>当前已掌握：</strong></p>
+<ul class="lvl"><li>Python 变量、5 种基础类型、type()、input()、print()、f-string</li><li>List / Dict 嵌套、JSON 序列化、AI messages 数据结构</li><li>真实 LLM API 调用骨架</li></ul>
+<h2 id="下一步">下一步</h2>
+<p>完成 Milestone 03-10，让项目从 v0.2 升级到 v1.0 真正可用的 AI CLI。</p>
+<p>然后进入 <a href="../../../../../projects/02-engineering-ai-assistant">Project 02 — Engineering AI Assistant</a>。</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 06 — Training：过拟合是被量出来的，不是猜的</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-06-training过拟合是被量出来的不是猜的">Milestone 06 — Training：过拟合是被量出来的，不是猜的</h1>
+<p>M05 证明了这个结构是<strong>可用的</strong>（因果正确、确定性成立）。这一章让它<strong>真的学起来</strong>，并且回答一个训练里最容易自欺的问题：<strong>你交出去的那份权重，是不是&quot;最好&quot;的那份？</strong></p>
+<p>本章的结论有点扎心：train loss 从 7.1547 一路降到 3.6882，看着是个成功故事；但 <strong>val loss 在第 800 步触底后开始回升</strong>。如果不监控验证集，你交付的会是&quot;第 1200 步&quot;而不是&quot;第 800 步&quot;——前者更差。</p>
+<hr/>
+<h2 id="1-why训练里三个看着对其实错的地方">1. Why：训练里三个&quot;看着对、其实错&quot;的地方</h2>
+<ul class="lvl"><li><strong>train loss 单调下降 = 过拟合正在发生。</strong> 它不是好消息，是一个警报。唯一能发现它的手段是<strong>每次评估都在验证集上量一遍</strong>——也就是必须有一套独立、未参与训练的数据。</li><li><strong>检查点只存权重是不够的。</strong> Adam 有动量（一阶、二阶），它们携带&quot;过去梯度方向&quot;的信息。只恢复权重、把动量清零，等价于让优化器&quot;失忆&quot;——续训的前几十步会明显偏离不中断训练。</li><li><strong>&quot;可复现&quot;必须跨进程验证。</strong> 同一进程里重跑一遍，往往因为内存地址复用而&quot;看起来&quot;一致。真正的判据是<strong>两个独立进程</strong>跑出逐位相同的权重——这正是 P08 那个补丁的来源。</li></ul>
+<h2 id="2-design一条完整的训练闭环">2. Design：一条完整的训练闭环</h2>
+<pre><code>for step in range(n_steps):
+    lr = cosine_with_warmup(step)        # 预热 20 步 → 升到 1e-3 → 余弦衰减到 5e-5
+    batch = next(batch_iter(...))        # 滑动窗口打包过的 (x, y, mask)
+    loss = forward + backward(batch)
+    clip_global_norm(grad, max_norm=1.0) # 全局范数超阈就整体缩放
+    optimizer.step()
+    if step % eval_every == 0:
+        val_loss = evaluate(val_examples)
+        if val_loss &lt; best:  snapshot()  # 记住&quot;最好那一刻&quot;的权重
+        elif patience_exceeded: break    # 连续 4 次无改善 → 早停
+restore_best()                           # 关键：回滚到最优步，而不是停在最后一步</code></pre>
+<p>三个组件各自解决一个问题：</p>
+<ul class="lvl"><li><strong>预热 + 余弦调度</strong>：开局梯度大，直接上 <code>1e-3</code> 容易震荡，所以先线性升；后期余弦平滑降，避免在最优附近来回跳。</li><li><strong>全局范数裁剪</strong>：把所有参数的梯度拼成一个向量，算它的 L2 范数，超阈就整体按比例缩。<strong>&quot;全局&quot;是关键</strong>——按单个张量裁会破坏各层之间的相对尺度。</li><li><strong>早停 + 回滚</strong>：早停不是&quot;停下就算完&quot;，而是<strong>回滚到最优检查点</strong>。停在哪一步和交付哪一份权重，是两件事。</li></ul>
+<p><code>batch_iter</code> 用的是 M03 的滑动窗口打包：<code>y = x</code> 右移一位、样本间插 <code>&lt;eos&gt;</code>、padding 位 <code>mask=0</code>。所以每次 <code>train_step</code> 拿到的都是 <code>(B, T)</code> 的 id 和对应 mask。</p>
+<figure class="figure"><img alt="M06 Training：过拟合曲线 + 调度/裁剪/检查点" src="../../../../../../projects/10-tiny-llm-capstone/assets/training.svg" loading="lazy"/><figcaption>M06 Training：过拟合曲线 + 调度/裁剪/检查点</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo06trainingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_06_training_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M06 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-06-training.png" loading="lazy"/><figcaption>M06 真实运行</figcaption></figure>
+<h3 id="31-训练配置">3.1 训练配置</h3>
+<pre><code>batch_size    8
+n_steps       1200
+eval_every    100
+patience      4
+optimizer     adam lr=0.001
+warmup / min_lr  20 步 / lr×0.05
+grad_clip     1.0
+seed          0</code></pre>
+<h3 id="32-train-与-val-的分道扬镳">3.2 train 与 val 的分道扬镳</h3>
+<pre><code>step  train_loss  val_loss  val_ppl
+----  ----------  --------  -------
+ 100      6.0185    6.2283   506.87
+ 200      5.6096    6.0365   418.44
+ 300      5.3811    5.9389   379.53
+ 400      4.9767    5.9923   400.32
+ 500      5.1438    5.8172   336.04
+ 600      4.4712    5.8596   350.58
+ 700      4.5881    5.7790   323.44
+ 800      4.0234    5.7551   315.79   ← 验证最优
+ 900      3.9646    5.7610   317.67
+1000      3.8552    5.8022   331.03
+1100      3.6491    5.8138   334.88
+1200      3.6882    5.8234   338.13
+train loss 首 → 末    7.1547 → 3.6882
+前 10% 均值 → 后 10% 均值  6.4260 → 3.6980
+验证最优出现在第几步      800
+验证最优 / 最后一步       5.7551 / 5.8234</code></pre>
+<p><strong>两个数字差得越大，过拟合越严重。</strong> train 降了 7.1547 → 3.6882（降幅 3.47），val 只从 6.2283 降到 5.7551（降幅 0.47），然后回升到 5.8234。<strong>第 800 步到第 1200 步这 400 步，train 还在降（4.0234 → 3.6882），但 val 反而涨了（5.7551 → 5.8234）——这段时间模型不是在学语言，是在背语料。</strong></p>
+<p>换句话说：<strong>如果只看 train loss 选检查点，你会交出去一份 PPL 338.13 的模型，而不是 PPL 315.79 的那一份。</strong> 差 7% 的困惑度，纯粹因为&quot;选错了交付时机&quot;。</p>
+<p>为什么会过拟合得这么快？语料只有 <strong>206 个训练样本</strong>，训 <strong>1200 步 × batch 8 = 9600 次采样</strong>，等于<strong>把同一份数据看了约 46.2 遍</strong>（9600 / 206）。在这个数据量下，230K 参数的模型几遍就能背下来。</p>
+<h3 id="33-早停与回滚">3.3 早停与回滚</h3>
+<pre><code>是否触发早停       True   patience=4
+回滚到最优步       800
+最优验证困惑度      315.79
+训练耗时 / 速度     25.8 s / 46.5 step/s</code></pre>
+<p><code>patience=4</code> 意味着&quot;连续 4 次评估（即 400 步）没有刷新最优就停&quot;。第 800 步之后，900/1000/1100/1200 四次评估都没能低于 5.7551，早停在第 1200 步触发，然后<strong>回滚到第 800 步</strong>。</p>
+<p><strong>&quot;早停&quot;这个词容易误导</strong>：它真正干的事不是&quot;提前结束训练&quot;，而是&quot;<strong>结束训练并把权重退回到最好那一刻</strong>&quot;。这两件事的差别就是 §3.2 里那 7% 的困惑度。</p>
+<h3 id="34-学习率调度与梯度裁剪">3.4 学习率调度与梯度裁剪</h3>
+<pre><code>step  lr
+----  --------
+   0  0.000050
+   1  0.000100
+  20  0.001000      ← 预热结束，到达峰值
+ 600  0.000538      ← 余弦衰减到约一半
+1199  0.000050      ← 回到 min_lr_ratio 下限
+梯度全局范数 均值 / 中位 / 最大   2.5506 / 2.6670 / 6.2911
+被裁剪的步数（&gt; clip）        1050
+裁剪阈值                  1.0
+loss 是否出现过 nan        False</code></pre>
+<p>两处值得看：</p>
+<ul class="lvl"><li><strong>调度确实按预想在跑</strong>：0 → 5e-5、20 步升到 1e-3 峰值、600 步衰减到 5.38e-4（约一半）、1199 步回到 5e-5。<strong>预热是一条 20 步的直线，不是&quot;第 20 步突然跳上去&quot;</strong> —— step 0 是 5e-5 而不是 0，因为分母里加了 1 防止除零。</li><li><strong>87.5%（1050/1200）的步都被裁剪了。</strong> 全局范数中位数 2.6670，是阈值 1.0 的 2.67 倍。这说明 <strong>clip=1.0 对这个模型偏紧</strong>。但它是&quot;无害的紧&quot;——loss 全程无 nan、最终收敛正常。这是个真实的工程取舍：宁可裁得狠一点保稳定，也不为了&quot;让裁剪率好看&quot;把阈值调大而冒发散风险。<strong>记录这个数字的意义在于：以后换模型/换优化器时，能一眼看出&quot;裁剪是不是在过度干预&quot;。</strong></li></ul>
+<h3 id="35-检查点存盘-改坏-读回">3.5 检查点：存盘 → 改坏 → 读回</h3>
+<pre><code>恢复的张量数          28 / 28
+读回后最大绝对误差       0.000e+00
+检查点体积           5421.6 KB   demo06_probe.npz
+元数据里记录的步数        1200
+是否含优化器状态         True   Adam 的动量也是训练进度的一部分</code></pre>
+<p>这个实验的做法是故意破坏性的：<strong>先把 28 个张量全部置 0</strong>，再从检查点读回，看能不能逐位还原。</p>
+<p>误差 <strong>0.000e+00</strong>（28/28 全恢复），说明检查点是完整的。<strong>但更关键的是最后一行</strong>：检查点里含优化器状态。§3.6 会证明为什么这行不是可有可无。</p>
+<p>体积 5.4 MB——对一个 230,400 参数的模型（约 0.88 MB fp64 权重）来说明显偏大，因为<strong>优化器存了两份同尺寸的动量</strong>（m 和 v），加起来就是三份权重。</p>
+<h3 id="36-跨进程可复现-断点续训">3.6 跨进程可复现 + 断点续训</h3>
+<pre><code>两次独立进程训练的权重最大绝对误差    0.000e+00
+续训 30 步后最大绝对误差          0.000e+00
+落盘前已还原到最优步（逐位误差）      0.000e+00</code></pre>
+<p>三条 0.000e+00 各自对应一件事：</p>
+<ul class="lvl"><li><strong>跨进程 0</strong>：<code>Tensor._prev</code> 如果是 <code>set</code>，反向传播里&quot;先加谁的梯度&quot;取决于对象地址，两个进程就不一致。P08 把它换成<strong>有序 list</strong> 之后，两个独立进程跑出逐位相同的权重。</li><li><strong>续训 0</strong>：从检查点恢复（权重 + 动量 + 步数）后接着训 30 步，与&quot;不中断直接训 30 步&quot;完全一致。<strong>前提是三样一起恢复，并且 batch 顺序也要对齐</strong>（demo 里显式保存/恢复了 <code>rng.getstate()</code>）。少恢复动量、或 batch 顺序变了，这个数字就不会是 0。</li><li><strong>落盘前还原 0</strong>：这是本章最容易被忽略的一处工程细节。为了做对照实验，分支 A 在真实模型上<strong>原地</strong>多训了 30 步，模型已经不在第 800 步了。但 <code>tiny_lm_best.npz</code> 是给<strong>后续所有章节</strong>复用的——如果带着&quot;800+30 步&quot;的权重落盘，M07 的 PPL、M11 的评估就全对不上了。所以落盘前先 <code>load_checkpoint</code> 把权重+动量+步数还原到起点，<strong>并且验证还原后逐位相同</strong>（0.000e+00），再写盘。</li></ul>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>train loss 降得越顺，越该警惕。</strong> 7.1547 → 3.6882 是一条漂亮曲线，但它和&quot;模型变强&quot;没有必然关系。<strong>判据只有 val</strong>：同期的 val 只降了 0.47 就开始回升。</li><li><strong>&quot;早停&quot;= 停下 + </strong>回滚<strong>。</strong> 只停不回滚，交出去的就是&quot;最后一步&quot;（PPL 338.13）而不是&quot;最好一步&quot;（PPL 315.79）。<strong>两个动作少一个都是错的。</strong></li><li><strong>检查点必须含优化器状态，否则续训会有肉眼可见的偏移。</strong> 这不是&quot;多存了点东西&quot;，是命门。demo 里 5.4 MB 里有约 3/4 是动量。</li><li><strong>跨进程复现是检验确定性补丁的唯一方法。</strong> 同进程内重跑&quot;看起来&quot;一致可能只是地址复用。<strong>必须开两个进程</strong>，这才是 P08 补丁真正的验收方式。</li><li><strong>87.5% 的步被裁剪，模型照样收敛。</strong> &quot;裁剪率高&quot;不等于&quot;配置错了&quot;——它可能只是阈值保守。<strong>要看的是 loss 有没有发散/NaN</strong>（本次全程 False），而不是裁剪率本身。</li><li><strong>落盘前&quot;多余的&quot;那一次还原，是跨章节一致性的保险。</strong> 对照实验污染了内存里的模型，如果直接落盘，后面 5 个章节的数字会集体偏掉。这个坑在写完 demo 后才发现并补上——<strong>凡是 demo 之间共享产物，就必须在写盘前确认内存状态是&quot;该被共享的那个&quot;</strong>。</li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>train loss <strong>7.1547 → 3.6882</strong>（前 10% 均值 6.4260 → 后 10% 均值 3.6980）；val <strong>6.2283 → 5.7551（最优，第 800 步）→ 5.8234（回升）</strong>。</li><li><strong>过拟合被量出来了</strong>：语料 206 样本训 1200 步 ≈ <strong>46.2 遍</strong>；第 800→1200 步 train 继续降（4.0234 → 3.6882）而 val 反向上升（5.7551 → 5.8234）。</li><li>早停触发（patience=4），<strong>回滚到第 800 步</strong>，最优验证困惑度 <strong>315.79</strong>。不监控 val 会把 PPL 338.13 当作交付物。</li><li>调度按预期：预热 20 步到峰值 1e-3，600 步衰减到 5.38e-4，1199 步回落到 5e-5。梯度全局范数均值 <strong>2.5506</strong>、<strong>1050/1200 步被裁剪</strong>、全程无 NaN。</li><li>检查点 28/28 张量读回误差 <strong>0.000e+00</strong>，含优化器状态；<strong>跨进程重训误差 0.000e+00</strong>、<strong>断点续训 30 步误差 0.000e+00</strong>、<strong>落盘前还原到最优步误差 0.000e+00</strong>。</li><li>训练速度 46.5 step/s，1200 步耗时 25.8 s。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/train.py</code></td><td><code>LMTrainer</code>（<code>train_step</code> / <code>evaluate</code> / <code>lr_at</code> / <code>_snapshot_best</code> / <code>_restore_best</code>）/ <code>evaluate_loss</code> / <code>Checkpoint</code> / <code>save_checkpoint</code> / <code>load_checkpoint</code></td></tr><tr><td><code>src/tiny/model.py</code></td><td><code>build_optimizer</code> / <code>set_seed</code></td></tr><tr><td><code>src/tiny/data.py</code></td><td><code>batch_iter</code>（滑动窗口打包的批次供应）/ <code>pad_batch</code></td></tr><tr><td>P08 <code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>（<code>_prev</code> set → 有序 list，跨进程可复现的前提）</td></tr><tr><td><code>demos/demo_06_training.py</code></td><td>7 节：配置 / 真训 / 曲线 / 调度与裁剪 / 检查点 / 跨进程 / 断点续训</td></tr><tr><td><code>demos/out/demo_06_training_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/training.svg</code></td><td>train/val 曲线 + 过拟合机制 + 调度/裁剪/检查点三卡</td></tr><tr><td><code>assets/term-06-training.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.5 → <strong>v0.6</strong>，训练闭环落地并被逐项验真。实测：train loss <strong>7.1547 → 3.6882</strong>、val <strong>6.2283 → 5.7551（最优，第 800 步）→ 5.8234</strong>；1200 步 ≈ <strong>46.2 遍</strong>（206 训练样本）⇒ 早停触发（patience=4）<strong>回滚到第 800 步</strong>，最优验证困惑度 <strong>315.79</strong>（若取最后一步则为 338.13）；调度 20 步预热到 1e-3、1199 步回到 5e-5；梯度全局范数均值 <strong>2.5506</strong>、<strong>1050/1200 步被裁剪</strong>、全程无 NaN；检查点 28/28 张量读回误差 <strong>0.000e+00</strong>、跨进程重训 <strong>0.000e+00</strong>、断点续训 30 步 <strong>0.000e+00</strong>、落盘前还原最优步 <strong>0.000e+00</strong>；训练速度 46.5 step/s。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

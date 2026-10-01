@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-05-transformer-blockpreln-残差-ffn以及因果性必须被证明">Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</h1>
+<p>M04 把 id 变成了 <code>(B, T, 64)</code> 的向量。这一章把这堆向量送进<strong>真正干活的那一层</strong>：<code>ln → 注意力 → 残差 → ln → FFN → 残差</code>。</p>
+<p>本章的核心不是&quot;把结构画出来&quot;，而是<strong>证明一个几乎无法用肉眼发现的错误不存在</strong>：因果掩码。它写错了，模型照样能训、loss 照样会降、验证集指标照样好看——只是它在偷偷看答案。所以这里把它做成一条硬性自检。</p>
+<hr/>
+<h2 id="1-why三个必须被证明的不变量">1. Why：三个必须被证明的不变量</h2>
+<p>一个 Decoder Block 里有三处&quot;写错了也不会崩&quot;的地方：</p>
+<ul class="lvl"><li><strong>因果性。</strong> 位置 <code>t</code> 的输出只能依赖 <code>≤ t</code> 的输入。判据很干净：<strong>把第 <code>t</code> 个位置之后的 token 全改掉，第 <code>t</code> 个及之前的 logits 必须逐位不变</strong>。误差是精确的 0，不是&quot;很小&quot;。</li><li><strong>确定性。</strong> 同一输入跑两次必须逐位相同。这是 P08 那个确定性补丁生效的前提——<code>Tensor._prev</code> 如果是 <code>set</code>，反向传播的加法顺序随对象地址变，跨进程就不可复现。</li><li><strong>多头拆分的可逆性。</strong> 把 <code>d_model</code> 切成 <code>h</code> 份再拼回来，必须还原。这一步错了不会报错，只会让每个头学到&quot;残缺的、交错的信息&quot;。</li></ul>
+<p>三条都不靠&quot;我读代码看对了&quot;，靠<strong>对着数字验</strong>。</p>
+<h2 id="2-designpreln-的顺序是有代价的">2. Design：Pre-LN 的顺序是有代价的</h2>
+<pre><code>x (B, T, d_model)
+  ├─ h = x
+  ├─ h = ln1(h)                    # LN 在子层**之前**
+  ├─ h = MultiHeadAttention(h)     # ← 因果掩码在这一层里加
+  ├─ x = x + h                     # 残差：直连通路，梯度不经过 LN
+  ├─ h = ln2(x)
+  ├─ h = FFN(h)                    # 64 → 128 → 64
+  └─ x = x + h                     # 残差 → 下一层</code></pre>
+<p><strong>为什么是 Pre-LN（LN 放子层前面）而不是 Post-LN</strong>：Post-LN 里梯度要先穿过 LN 才回到残差，深模型上训练初期容易不稳；Pre-LN 让残差通路<strong>完全不经过归一化</strong>，梯度可以直连到最底层。代价是每层输出的量级会随深度累积，所以最后需要一个 <code>ln_f</code> 兜底——这就是输出投影前那个 LayerNorm 存在的理由。</p>
+<p>多头拆分的形状变换（<code>P06</code> 的 <code>MultiHeadAttention</code>）：</p>
+<pre><code>(B, T, d_model)  →  reshape  →  (B, T, h, d/h)  →  transpose  →  (B, h, T, d/h)</code></pre>
+<p><code>head_dim = d_model / n_heads = 64 / 4 = 16</code>。<strong>拆的是&quot;通道维&quot;，不是&quot;批次维&quot;</strong> —— 所以 reshape 之后必须 transpose，让 <code>h</code> 和 <code>T</code> 换个位置，之后才能对 <code>T</code> 做 softmax。</p>
+<figure class="figure"><img alt="M05 Transformer Block：Pre-LN 结构 + 参数账 + 因果性自检" src="../../../../../../projects/10-tiny-llm-capstone/assets/transformer-block.svg" loading="lazy"/><figcaption>M05 Transformer Block：Pre-LN 结构 + 参数账 + 因果性自检</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_transformer_block_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M05 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-05-transformer-block.png" loading="lazy"/><figcaption>M05 真实运行</figcaption></figure>
+<h3 id="31-结构树">3.1 结构树</h3>
+<pre><code>Embedding + 位置编码    (1280, 64) + (64, 64)
+DecoderStack 层数       2
+Block 组成              ln1 → MultiHeadAttention → 残差 → ln2 → FFN → 残差
+注意力头数 / head_dim    4 / 16
+FFN 升维               64 → 128 → 64
+输出投影                (64, 1280)
+最终 LayerNorm          decoder.ln_f</code></pre>
+<h3 id="32-单-block-的参数账注意力与-ffn-几乎平分">3.2 单 Block 的参数账：注意力与 FFN 几乎平分</h3>
+<pre><code>子层         参数量     占比
+---------  ------  -----
+ffn        16,576  49.9%
+attention  16,384  49.3%
+layernorm     256   0.8%
+单 Block 合计    33,216
+全部 Block 合计  66,432</code></pre>
+<p>这一条值得停一下：<strong>在大模型上 FFN 通常占绝大多数参数（往往是注意力的 2 倍以上），但在这里两者几乎相等（49.9% vs 49.3%）。</strong></p>
+<p>原因是 FFN 的参数量按 <code>2 × d_model × d_ff</code> 算，注意力按 <code>4 × d_model²</code> 算。令两者相等，解出 <code>d_ff = 2 × d_model</code>。当前配置恰好是 <code>d_ff = 128 = 2 × 64</code> —— 所以它们必然平分。<strong>大模型之所以 FFN 占大头，是因为它们的 <code>d_ff/d_model</code> 通常取 4</strong>（GPT 系列），4 &gt; 2，FFN 自然翻倍。</p>
+<p>也就是说，&quot;参数都在 FFN&quot;这个直觉<strong>不是普遍规律，而是 <code>d_ff/d_model = 4</code> 这个具体选择的后果</strong>。在 <code>d_ff = 2×d_model</code> 的配置下，两者就是平手。这也是本章唯一一处会改变你对&quot;模型长什么样&quot;的认知的地方。</p>
+<h3 id="33-多头拆分拆了还能拼回去">3.3 多头拆分：拆了还能拼回去</h3>
+<pre><code>输入形状        (2, 8, 64)     (B, T, d_model)
+分头后形状      (2, 4, 8, 16)  (B, h, T, d/h)
+拼回去是否还原   0.000e+00</code></pre>
+<p>还原误差是<strong>精确的 0</strong>。<code>transpose → reshape</code> 这一步看似只是搬数据，但顺序错了（比如漏了 transpose 就 reshape）就是另一套语义，而它不会报错。</p>
+<h3 id="34-因果性自检改未来-过去必须逐位不变">3.4 因果性自检：改未来 → 过去必须逐位不变</h3>
+<pre><code>logits 形状                   (2, 16, 1280)
+形状正确 / 数值有限             True / True
+改未来后：过去位置最大绝对误差     0.000e+00   必须为 0
+改未来后：未来位置最大绝对误差     1.191e+01   必须 &gt; 0
+同输入两次前向最大绝对误差        0.000e+00
+三项自检是否全部通过             True</code></pre>
+<p>自检的做法是：取一段 16 长度的输入，把<strong>后 8 个位置</strong>的 token 全部加 7 再取模（换成完全不同的词），然后比较前后两次前向：</p>
+<ul class="lvl"><li><strong>前 8 个位置的 logits 误差 0.000e+00</strong> —— 改未来完全不影响过去。这是因果掩码正确的<strong>判据</strong>。</li><li><strong>后 8 个位置的 logits 误差 1.191e+01</strong> —— 未来<strong>必须</strong>变。如果这里也是 0，说明注意力压根没起作用（比如权重全 0、或者残差把子层短路了），那是另一种坏掉。</li></ul>
+<p><strong>两条都要满足，只看一条会漏。</strong> 只验&quot;过去不变&quot;，一个把注意力输出全置 0 的实现也能通过。</p>
+<h3 id="35-反例把掩码去掉会发生什么">3.5 反例：把掩码去掉会发生什么</h3>
+<p>只验上面两条还不够——万一掩码本来就&quot;全开&quot;，过去不变也可能碰巧成立（比如序列很短）。所以做一个反向实验：<strong>用全 0 掩码</strong>（谁都能看谁）跑同一批 id。</p>
+<pre><code>带因果掩码 vs 不带掩码，最后一位 logits 最大差    0.6892
+带掩码 / 不带掩码 的 argmax                 676 / 676</code></pre>
+<p><strong>两个数字要连起来读</strong>：logits 的数值差到了 0.6892（确实被作弊影响了），<strong>但 argmax 是同一个 676</strong>。</p>
+<p>这就是最阴的地方：<strong>如果只检查&quot;预测出来的那个 token 对不对&quot;，这个错误会被完全漏掉。</strong> 数值全错了，结论却没变。所以自检必须比 <strong>logits 的数值</strong>，不能比 argmax。掩码一旦失效，模型在训练时会持续看到&quot;答案&quot;，损失会降得更快、验证指标会虚高，而你在推理时用不到那些未来信息——<strong>训练和推理之间就断了一根线</strong>。</p>
+<h3 id="36-层数对照深度换来的参数与耗时">3.6 层数对照：深度换来的参数与耗时</h3>
+<pre><code>n_layers  参数量      前向耗时 (4×32)
+--------  -------  -----------
+       1  197,184      0.88 ms
+       2  230,400      1.39 ms
+       4  296,832      2.23 ms
+当前配置    n_layers=2</code></pre>
+<p>每加一层恒增 <strong>33,216</strong> 参数（即单 Block 参数量），耗时增加约 0.5 ms。<strong>参数是线性长的，耗时也是线性长的</strong>——在纯 numpy 的 CPU 实现上，没有 GPU 那种&quot;深度几乎免费、宽度很贵&quot;的特性。这也是后面 M09 量化能拿到 3.85× 加速的原因：算力瓶颈就在这些矩阵乘上，而它们可以被压到低精度。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>&quot;参数都在 FFN&quot;不是规律，是 <code>d_ff/d_model = 4</code> 的后果。</strong> 令 <code>2·d·d_ff = 4·d²</code> 得 <code>d_ff = 2d</code>。当前 <code>d_ff = 2d</code>，所以 FFN 与注意力参数几乎相等（49.9% vs 49.3%）。换成 GPT 的 <code>d_ff = 4d</code>，FFN 立刻翻倍。<strong>记住这个比例，比记住&quot;FFN 大&quot;有用。</strong></li><li><strong>因果性自检必须双向验证。</strong> 只验&quot;过去不变&quot;是不够的——一个注意力恒输出 0 的实现也能过。必须同时要求&quot;未来<strong>必须变</strong>&quot;（实测 1.191e+01），两条一起才锁死。</li><li><strong>argmax 相等 ≠ 模型没被污染。</strong> 去掉掩码后，最后一位 logits 最大差 0.6892，但 argmax 依然是 676。<strong>这就是为什么自检要比数值。</strong> 任何&quot;只看最终预测对不对&quot;的测试，在掩码这类结构错误面前都是盲的。</li><li><strong>多头拆分错在 transpose 上，不会报错。</strong> <code>(B,T,h,d/h)</code> 直接 reshape 回 <code>(B,T,d_model)</code> 在形状上完全合法，但语义已经变了（相当于把不同头的通道交错混在一起）。只有&quot;拆完再拼、误差是否为 0&quot;这一个检查能抓住它——这就是 3.3 那一行存在的意义。</li><li><strong>Pre-LN 需要 <code>ln_f</code> 收尾，Post-LN 不需要。</strong> 因为残差通路不经过 LN，输出量级会随层数累积。这不是&quot;多加一层更保险&quot;，是结构选择的必然配套。</li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>结构：<strong>2 层 × (4 头 × d_model 64)，d_ff = 128</strong>，单 Block <strong>33,216</strong> 参数（注意力 16,384 / FFN 16,576 / LN 256），全部 Block 合计 66,432。</li><li><strong>注意力与 FFN 参数几乎相等（49.3% vs 49.9%）</strong>，因为 <code>d_ff = 2 × d_model</code>。这是配置的后果，不是普遍规律。</li><li>多头拆分还原误差 <strong>0.000e+00</strong>；<code>head_dim = 16</code>。</li><li>因果性：<strong>过去位置误差 0.000e+00（必须为 0），未来位置误差 1.191e+01（必须 &gt; 0）</strong>；同输入两次前向 <strong>0.000e+00</strong>；三项自检全部通过。</li><li>反例证明：去掉掩码后最后一位 logits 最大差 <strong>0.6892</strong>，但 argmax 仍为 <strong>676</strong> ⇒ <strong>只比 argmax 会漏掉这类错误，必须比数值</strong>。</li><li>层的代价是线性的：每层 +33,216 参数、+0.5 ms（4×32 前向）。当前 230,400 参数、1.39 ms。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/model.py</code></td><td><code>forward_sanity</code>（三条不变量：形状 / 因果 / 确定）/ <code>build_model</code> / <code>walk_parameters</code> / <code>parameter_report</code></td></tr><tr><td>P06 <code>model/decoder.py</code></td><td><code>DecoderStack</code> / <code>Block</code>（Pre-LN + 残差）/ <code>ln_f</code></td></tr><tr><td>P06 <code>model/attention.py</code></td><td><code>MultiHeadAttention</code>（拆头 reshape + 因果掩码在此生效）</td></tr><tr><td>P08 <code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>（把 <code>_prev</code> 从 set 改成有序 list）</td></tr><tr><td><code>demos/demo_05_transformer_block.py</code></td><td>6 节：结构树 / 参数账 / 多头拆分 / 因果自检 / 掩码反例 / 层数对照</td></tr><tr><td><code>demos/out/demo_05_transformer_block_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/transformer-block.svg</code></td><td>Pre-LN 结构 + 参数账 + 因果自检 + 反例</td></tr><tr><td><code>assets/term-05-transformer-block.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.4 → <strong>v0.5</strong>，Transformer Block 结构落地并被逐项验真。实测：2 层 × 4 头 × d_model 64、d_ff=128；单 Block <strong>33,216</strong> 参数（attention 16,384 / FFN 16,576 / LN 256），<strong>注意力与 FFN 平手（49.3% vs 49.9%）</strong>，因为 <code>d_ff = 2·d_model</code>；多头拆分还原误差 <strong>0.000e+00</strong>；因果性过去位置 <strong>0.000e+00</strong> / 未来位置 <strong>1.191e+01</strong> / 确定性 <strong>0.000e+00</strong>，三项自检全过；掩码反例：最后一位 logits 最大差 <strong>0.6892</strong> 但 argmax 同为 <strong>676</strong>（⇒ 必须比数值）；深度 1/2/4 层 → 197,184 / 230,400 / 296,832 参数与 0.88 / 1.39 / 2.23 ms。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

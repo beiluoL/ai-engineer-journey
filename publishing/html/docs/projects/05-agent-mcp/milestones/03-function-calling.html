@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 03 — Function Calling：模型提出调用，宿主决定执行</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-03-function-calling模型提出调用宿主决定执行">Milestone 03 — Function Calling：模型提出调用，宿主决定执行</h1>
+<blockquote><p>Milestone 01/02 建好了工具。<strong>但工具不会自己被调用</strong>——它们只是死在注册表里的一段代码。这一章讲清「谁决定执行」这个问题。</p><p>答案是：<strong>模型只提出要求，宿主负责执行。</strong> 模型返回的是一段 <code>tool_calls</code> 声明，它不知道、也不需要知道这个工具怎么实现。</p></blockquote>
+<h2 id="1-一个完整的往返">1. 一个完整的往返</h2>
+<pre><code>[0] role=user        &#x27;Project 04 的会话是怎么落盘的？&#x27;
+[1] role=assistant   &quot;I&#x27;ll look that up in the project knowledge base.&quot;  tool_calls=rag_search
+
+   → 宿主解析出调用：id=&#x27;call_00_ffDb…&#x27; name=&#x27;rag_search&#x27; arguments={&quot;query&quot;: &quot;Project 04 的会话是怎么落盘的？&quot;, &quot;k&quot;: 5}
+
+[2] role=tool        &#x27;[1] Project 04 会话与多轮（p04-session）：Turn 不可变…&#x27;  tool_call_id=call_00_ffDb…
+
+[3] role=assistant   &#x27;Project 04 的会话落盘方式（来自知识库笔记 `p04-session`）：核心机制：原子写 …&#x27;</code></pre>
+<p>上面是<strong>真实 DeepSeek</strong> 跑出来的结果。注意几个细节：</p>
+<ul class="lvl"><li>模型的思考是英文的，答案是中文的——它自由决定用哪种语言思考。</li><li><code>k: 5</code> 是模型自己加的参数，schema 里声明了所以它可以填。</li><li><code>id</code> 由模型侧生成，宿主必须原样带回。</li></ul>
+<h2 id="2-tool-消息三个字段缺一不可">2. tool 消息：三个字段缺一不可</h2>
+<pre><code>LLMMessage(role=&quot;tool&quot;, content=result.render(),
+           tool_call_id=call.id, name=call.name).to_dict()
+# → {&quot;role&quot;: &quot;tool&quot;, &quot;content&quot;: …, &quot;tool_call_id&quot;: …, &quot;name&quot;: …}</code></pre>
+<p><code>role</code> / <code>tool_call_id</code> / <code>name</code> 一个都不能少。少 <code>tool_call_id</code> 服务端直接 400，而且这种错误<strong>在离线 mock 里永远复现不出来</strong>——这是本项目坚持「离线测试 + 真实链路 demo」两条腿的原因之一。</p>
+<h2 id="3-关键顺序assistant-必须在-tool-之前">3. 关键顺序：assistant 必须在 tool 之前</h2>
+<pre><code>role 序列 = [&#x27;user&#x27;, &#x27;assistant&#x27;, &#x27;tool&#x27;, &#x27;assistant&#x27;]
+assistant 在索引 1，tool 在索引 2 → 顺序正确 ✓</code></pre>
+<p>协议对 tool 消息的前置条件是有对应的 assistant tool_calls。实现上就是<strong>先追加 assistant，再追加工具结果</strong>：</p>
+<pre><code>messages.append(LLMMessage(role=ASSISTANT, content=reply.content, tool_calls=reply.tool_calls))
+for call in reply.tool_calls:
+    result = registry.call(call)
+    messages.append(LLMMessage(role=TOOL, content=result.render(),
+                               tool_call_id=call.id, name=call.name))</code></pre>
+<p>顺序写反的话，真实服务会报错——<strong>离线剧本一条都测不出来</strong>，因为它压根不发请求。</p>
+<figure class="figure"><img alt="真实运行：一轮完整的 Function Calling 往返" src="../../../../../../projects/05-agent-mcp/assets/term-03-tool-call-roundtrip.png" loading="lazy"/><figcaption>真实运行：一轮完整的 Function Calling 往返</figcaption></figure>
+<h2 id="4-真实链路一次工具失败不该打死整轮任务">4. 真实链路：一次工具失败不该打死整轮任务</h2>
+<p>模型偶尔会编一个不存在的工具。正确处理是把它当成工具的一次「说话」：</p>
+<pre><code>ok = False
+回灌给模型 → [工具执行失败] search_online: 未知工具「search_online」。当前可用：calculator, now, rag_search</code></pre>
+<p>模型下一轮自己会换成 <code>rag_search</code>。Milestone 04 会看到这条路径真的被用起来——连续失败三次后 Agent 才主动放弃。</p>
+<h2 id="5-llm-抽象为什么必须有-fakellm">5. LLM 抽象：为什么必须有 FakeLLM</h2>
+<p>Agent 循环里最需要确定性的是「少调用几次模型」，而不是「调用得有多酷」。如果代码里直接 <code>requests.post(...)</code>，离线测试就只能靠 mock 网络，而 mock 出来的路径和真实路径往往不是同一条。</p>
+<p>所以这一层只定一个极小的接口：</p>
+<pre><code>class LLM(ABC):
+    def chat(self, messages, tools=None) -&gt; LLMMessage</code></pre>
+<p>两个实现：<code>FakeLLM</code>（纯离线、脚本驱动，测试用它）和 <code>DeepSeekLLM</code>（真实 HTTP）。Agent 只认接口，换实现不动一行代码。</p>
+<p><code>FakeLLM</code> 会把每次输入记进 <code>self.calls</code>，这是断言「工具结果确实回灌了」的唯一依据——<strong>接口通不等于链路对</strong>，不记录就永远证明不了。</p>
+<h2 id="6-真实调用踩到的三个坑">6. 真实调用踩到的三个坑</h2>
+<p><strong>坑 1：忘了带 Authorization 头。</strong> 服务端回 <code>401 Authentication Fails</code>。修复后加了断言，防止再犯：</p>
+<pre><code>assert client.calls[0][&quot;headers&quot;].get(&quot;Authorization&quot;, &quot;&quot;).startswith(&quot;Bearer sk-test&quot;)</code></pre>
+<p><strong>坑 2：把 <code>tools</code> 拆掉外层再发。</strong> 本来想「简化」成 <code>[t[&quot;function&quot;] for t in tools]</code>，服务端回 <code>422 missing field &#x27;type&#x27;</code>。正确做法是<strong>原样透传</strong>：</p>
+<pre><code>payload[&quot;tools&quot;] = [dict(t) for t in tools]   # 保留 {&quot;type&quot;: &quot;function&quot;, &quot;function&quot;: {...}}</code></pre>
+<p><strong>坑 3：<code>schemas()</code> 返回内层对象。</strong> 这和上面那条是同一个问题的两面。工具声明必须完整经过 <code>{&quot;type&quot;: &quot;function&quot;, &quot;function&quot;: {...}}</code> 两层外壳。</p>
+<p>三个坑有同一个特征：<strong>都是真实 HTTP 才暴露的，本地 mock 全绿</strong>。</p>
+<figure class="figure"><img alt="真实运行：真实 DeepSeek Function Calling 链路" src="../../../../../../projects/05-agent-mcp/assets/term-03-real-function-calling.png" loading="lazy"/><figcaption>真实运行：真实 DeepSeek Function Calling 链路</figcaption></figure>
+<h2 id="7-结论">7. 结论</h2>
+<ul class="lvl"><li>Function Calling 的分工是「模型声明意图，宿主执行」——模型拿不到执行权。</li><li>tool 消息的三个字段和 assistant/tool 的先后顺序，是协议硬约束。</li><li>离线测试负责「链路对」，真实链路负责「协议对」，两条都不能省。</li></ul>
+<h2 id="8-代码位置">8. 代码位置</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/llm.py</code></td><td><code>LLMMessage</code> / <code>LLM</code> / <code>FakeLLM</code> / <code>ScriptedLLM</code> / <code>DeepSeekLLM</code></td></tr><tr><td><code>demos/demo_03_function_calling.py</code></td><td>离线剧本 + <code>--real</code> 真实链路对照</td></tr></tbody></table>
+<h2 id="9-版本">9. 版本</h2>
+<p>v0.3 → <strong>v0.4</strong>，真实链路跑通（DeepSeek <code>deepseek-chat</code>），截图 2 张。</p>
+</main>
+</body>
+</html>

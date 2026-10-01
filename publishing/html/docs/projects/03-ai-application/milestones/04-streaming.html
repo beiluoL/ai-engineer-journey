@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 03 — Chapter 04：Streaming【流式输出】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-03-chapter-04streaming流式输出">Project 03 — Chapter 04：Streaming【流式输出】</h1>
+<blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/client.py</code>（<code>astream</code>）、<code>src/assistant/api.py</code>（<code>/chat/stream</code>）</p></blockquote>
+<hr/>
+<h2 id="1-项目要增加什么能力">1. 项目要增加什么能力</h2>
+<p>现在的调用是「憋大招」：</p>
+<pre><code>reply = await client.chat(messages)     # 等 8 秒，一次拿到全部
+print(reply)</code></pre>
+<p>用户视角：点了发送 → 白屏 8 秒 → 一整段文字突然出现。</p>
+<p>本章目标：</p>
+<blockquote><p><strong>让文字一个字一个字地出现（打字机效果），把「等待 8 秒」变成「0.4 秒后开始有反馈」。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>这不是锦上添花，是<strong>感知性能</strong>的质变：</p>
+<pre><code>非流式：  TTFB 8s  ────────────────► 全部内容
+流式：    TTFB 0.4s ► 持续吐字 ────► 全部内容</code></pre>
+<p>总时间一样，但用户的感受完全不同。ChatGPT 之所以「感觉很快」，很大一部分功劳在流式。</p>
+<p>第二个理由更实际：<strong>长回答可能被 <code>max_tokens</code> 截断或中途超时</strong>，流式至少能把已经生成的部分给用户。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-底层sseserversent-events">3.1 底层：SSE（Server-Sent Events）</h3>
+<p>SSE 就是一个约定格式的 HTTP 响应：</p>
+<pre><code>Content-Type: text/event-stream
+Cache-Control: no-cache</code></pre>
+<p>报文体：</p>
+<pre><code>data: {&quot;delta&quot;: &quot;你&quot;}
+
+data: {&quot;delta&quot;: &quot;好&quot;}
+
+data: [DONE]
+</code></pre>
+<p>三条规则：</p>
+<pre><code>1. 每个事件以 data: 开头，以空行（\n\n）结束
+2. 一个 data 里必须是合法 JSON（多行要用多个 data 行）
+3. 用一个约定的结束标记收尾（OpenAI 系是 data: [DONE]）</code></pre>
+<h3 id="32-服务端怎么吐">3.2 服务端怎么吐</h3>
+<pre><code>async def astream(self, messages: list[dict]) -&gt; AsyncIterator[str]:
+    payload = {&quot;model&quot;: self._settings.model, &quot;messages&quot;: messages, &quot;stream&quot;: True}
+    async with self._client.stream(&quot;POST&quot;, url, json=payload, headers=headers) as resp:
+        resp.raise_for_status()
+        async for line in resp.aiter_lines():
+            if not line.startswith(&quot;data:&quot;):
+                continue
+            data = line[5:].strip()
+            if data == &quot;[DONE]&quot;:
+                break
+            chunk = json.loads(data)
+            delta = chunk[&quot;choices&quot;][0][&quot;delta&quot;].get(&quot;content&quot;)
+            if delta:
+                yield delta</code></pre>
+<p>FastAPI 侧：</p>
+<pre><code>@router.post(&quot;/chat/stream&quot;)
+async def chat_stream(req: ChatRequest, request: Request):
+    service = get_service(request)
+    async def gen():
+        async for delta in service.astream(req.message):
+            yield f&quot;data: {json.dumps({&#x27;delta&#x27;: delta}, ensure_ascii=False)}\n\n&quot;
+        yield &quot;data: [DONE]\n\n&quot;
+    return StreamingResponse(gen(), media_type=&quot;text/event-stream&quot;)</code></pre>
+<h3 id="33-消费端浏览器">3.3 消费端（浏览器）</h3>
+<p><code>EventSource</code> 只能发 GET。要 POST（携带长消息体）就得用 <code>fetch</code> + <code>ReadableStream</code>：</p>
+<pre><code>const res = await fetch(&quot;/chat/stream&quot;, {
+  method: &quot;POST&quot;,
+  headers: {&quot;Content-Type&quot;: &quot;application/json&quot;},
+  body: JSON.stringify({message: &quot;你好&quot;}),
+});
+const reader = res.body.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const {done, value} = await reader.read();
+  if (done) break;
+  const text = decoder.decode(value, {stream: true});
+  for (const line of text.split(&quot;\n\n&quot;)) {
+    if (!line.startsWith(&quot;data: &quot;)) continue;
+    const data = line.slice(6);
+    if (data === &quot;[DONE]&quot;) return;
+    appendChunk(JSON.parse(data).delta);
+  }
+}</code></pre>
+<p>注意 <code>decoder.decode(value, {stream: true})</code>：<strong>一个 chunk 可能在多字节的中文字符中间断开</strong>，不加 <code>stream: true</code> 会出现乱码。</p>
+<h3 id="34-流式的两个硬约束">3.4 流式的两个硬约束</h3>
+<pre><code>1. 一旦开始吐字，HTTP 状态码就已经发出去了
+   → 中途出错不能改成 500，只能在流里发一个 error 事件，前端自己处理
+
+2. 已经吐出去的没法收回
+   → 中途发现内容违规时只能截断，不能&quot;撤销&quot;</code></pre>
+<p>所以协议里要预留错误事件：</p>
+<pre><code>data: {&quot;error&quot;: &quot;上游超时&quot;, &quot;code&quot;: &quot;upstream_timeout&quot;}
+
+data: [DONE]</code></pre>
+<hr/>
+<h2 id="4-项目代码">4. 项目代码</h2>
+<pre><code>src/assistant/
+├── client.py     # astream()：httpx 的 stream + aiter_lines 解析 SSE
+├── service.py    # astream()：业务层只转发 delta，结束时补一条 assistant 消息
+└── api.py        # /chat/stream —— StreamingResponse + [DONE]</code></pre>
+<p>一个容易漏的点：<strong>流式结束后要把完整内容补进 Conversation</strong>。</p>
+<pre><code>async def astream(self, text: str):
+    buf: list[str] = []
+    async for delta in self._client.astream(self._conversation.to_messages_with(text)):
+        buf.append(delta)
+        yield delta
+    self._conversation.add_user(text)
+    self._conversation.add_assistant(&quot;&quot;.join(buf))   # ← 别漏</code></pre>
+<p>漏了这一句，下一轮对话就会「失忆」——而且只在流式模式下失忆，非流式正常，非常难查。</p>
+<hr/>
+<h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2>
+<table><thead><tr><th>Java</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td>Spring <code>SseEmitter</code></td><td>FastAPI <code>StreamingResponse</code></td><td>同</td></tr><tr><td>WebFlux <code>Flux&lt;String&gt;</code></td><td><code>AsyncIterator[str]</code></td><td>都是异步序列</td></tr><tr><td><code>Flux.map()</code></td><td><code>async for</code> + <code>yield</code></td><td>生成器 ≈ 响应式流</td></tr><tr><td>Reactor 背压</td><td><code>await</code> 天然背压</td><td>Python 消费者不消费就不拉取</td></tr><tr><td><code>MediaType.TEXT_EVENT_STREAM</code></td><td><code>media_type=&quot;text/event-stream&quot;</code></td><td>同</td></tr><tr><td>OkHttp 流式响应体</td><td><code>httpx</code> <code>client.stream()</code></td><td>同</td></tr><tr><td><code>CharsetDecoder</code> 处理截断</td><td><code>TextDecoder(stream: true)</code></td><td><strong>中文截断乱码是同一个坑</strong></td></tr></tbody></table>
+<hr/>
+<h2 id="6-常见坑">6. 常见坑</h2>
+<h3 id="坑-1nginx-网关缓冲了响应">坑 1：Nginx / 网关缓冲了响应</h3>
+<p>症状：本地开发流式正常，上线后变成卡 8 秒一次性出来。</p>
+<p>原因：反向代理默认会缓冲上游响应。</p>
+<pre><code>proxy_buffering off;
+proxy_read_timeout 300s;
+gzip off;                 # gzip 也会缓冲</code></pre>
+<h3 id="坑-2忘了-flush">坑 2：忘了 <code>flush</code></h3>
+<p>Python 侧用 <code>yield</code> 通常没问题，但如果中间套了自定义 buffer（比如手动拼字符串再发），就会退化成非流式。</p>
+<h3 id="坑-3中文乱码">坑 3：中文乱码</h3>
+<pre><code>decoder.decode(value)                      // ❌ 可能乱码
+decoder.decode(value, {stream: true})      // ✅</code></pre>
+<p>服务端也一样：读取 SSE 行时如果按字节切，可能切在多字节字符中间。</p>
+<h3 id="坑-4eventsource-发不了-post">坑 4：<code>EventSource</code> 发不了 POST</h3>
+<p>标准的 <code>EventSource</code> API 只支持 GET。带历史消息的请求体太大，不能放 URL 里——用 <code>fetch</code> + <code>ReadableStream</code>（见 3.3），或者拆成「先 POST 创建会话，再 GET 订阅」。</p>
+<h3 id="坑-5流式-结构化输出天然冲突">坑 5：流式 + 结构化输出天然冲突</h3>
+<p>流式是「半个 JSON 也要显示」，结构化是「必须完整才能 <code>json.loads</code>」。</p>
+<p>解法：</p>
+<pre><code>界面上流式展示原始文本（给用户看）
+同时后台缓冲完整字符串，流结束后再一次性 parse（给程序用）</code></pre>
+<p>两者并存，不要试图边流边 parse。</p>
+<h3 id="坑-6客户端断开后服务端还在烧钱">坑 6：客户端断开后服务端还在烧钱</h3>
+<p>用户关了页面，服务端还在等模型吐完。要用请求级取消：<code>asyncio.CancelledError</code> 捕获后关闭上游连接。</p>
+<hr/>
+<h2 id="7-实战挑战">7. 实战挑战</h2>
+<p><strong>挑战 1</strong>：给 <code>/chat/stream</code> 加一个错误事件格式，上游失败时发 <code>{&quot;error&quot;: ...}</code> 而不是静默断流。</p>
+<p><strong>挑战 2</strong>：实现一个命令行流式效果——<code>--stream</code> 时逐字打印，并统计首字延迟（TTFB）与总耗时。</p>
+<p><strong>挑战 3（进阶）</strong>：流式 + 结构化并存：界面流式展示，流结束后用 Chapter 03 的 <code>structured()</code> 解析完整内容；解析失败时提示用户「内容不完整」。</p>
+<hr/>
+<h2 id="8-主动回忆">8. 主动回忆</h2>
+<ul class="lvl"><li>SSE 报文的三条格式规则是什么？</li><li>为什么流式能改善体验，但总耗时不变？</li><li>流式结束后要补做什么，漏了会有什么症状？</li><li>为什么 <code>EventSource</code> 不够用，要用 <code>fetch</code> + <code>ReadableStream</code>？</li><li>中文乱码的根因是什么？怎么修？</li><li>流式和结构化输出为什么冲突？怎么共存？</li></ul>
+<hr/>
+<h2 id="9-本节完成标准">9. 本节完成标准</h2>
+<ul class="lvl"><li>[ ] <code>--stream</code> 命令行能看到逐字输出，并打印首字延迟</li><li>[ ] <code>/chat/stream</code> 返回 <code>text/event-stream</code>，以 <code>data: [DONE]</code> 收尾</li><li>[ ] 流式结束后完整内容已回灌进 Conversation（下一轮不失忆）</li><li>[ ] 上游出错时流里能发出 error 事件</li><li>[ ] 用 <code>curl -N</code> 实测过（<code>-N</code> 关闭 curl 自己的缓冲）</li></ul>
+<p>上一章：<a href="03-structured-output.html">03-structured-output.md</a> 下一章：<a href="05-conversation-memory.html">05-conversation-memory.md</a> —— 历史越来越长怎么办。</p>
+<h2 id="真实运行">真实运行</h2>
+<p>流式路径（<code>ai-app &quot;...&quot; --stream</code>），token 边生成边打印，呈现「打字机」效果：</p>
+<figure class="figure"><img alt="流式输出" src="../../../../../../projects/03-ai-application/assets/term-stream.png" loading="lazy"/><figcaption>流式输出</figcaption></figure>
+<figure class="figure"><img alt="真实运行：65 块增量累加严格等于一次性答案（应进 CI 的断言）；反例——若分块发累积前缀，前端按追加消费会把同一段重复显示" src="../../../../../../projects/03-ai-application/assets/term-stream-chunks.png" loading="lazy"/><figcaption>真实运行：65 块增量累加严格等于一次性答案（应进 CI 的断言）；反例——若分块发累积前缀，前端按追加消费会把同一段重复显示</figcaption></figure>
+</main>
+</body>
+</html>

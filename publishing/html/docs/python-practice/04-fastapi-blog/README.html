@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>04 FastAPI 博客 API</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="04-fastapi-博客-api">04 FastAPI 博客 API</h1>
+<blockquote><p><strong>难度</strong> ●●○ 进阶 ｜ <strong>预计</strong> 1 周 ｜ <strong>依赖</strong> fastapi、uvicorn、pytest 上级目录：<a href="../README.html">练手项目总览</a></p></blockquote>
+<h2 id="你要做的东西">你要做的东西</h2>
+<p>一个 REST 风格的博客 API：文章的<strong>增删改查 + 搜索 + 参数校验 + 自动文档 + 单元测试</strong>。</p>
+<p>对写 Java 的人来说这个项目最舒服——<strong>它和你熟悉的那套东西几乎一一对应</strong>，只是代码量少一个数量级：</p>
+<table><thead><tr><th>Spring Boot</th><th>FastAPI（本项目）</th></tr></thead><tbody><tr><td><code>@RestController</code></td><td><code>app = FastAPI(...)</code></td></tr><tr><td><code>@GetMapping(&quot;/posts/{id}&quot;)</code></td><td><code>@app.get(&quot;/posts/{post_id}&quot;)</code></td></tr><tr><td><code>@PathVariable Long id</code></td><td><code>def read(post_id: int)</code> ← <strong>类型即校验</strong></td></tr><tr><td><code>@RequestBody @Valid PostDTO</code></td><td><code>def create(payload: PostCreate)</code></td></tr><tr><td><code>@ResponseStatus(HttpStatus.CREATED)</code></td><td><code>status_code=201</code></td></tr><tr><td><code>throw new ResponseStatusException(404)</code></td><td><code>raise HTTPException(404, ...)</code></td></tr><tr><td><code>@Autowired PostRepository</code></td><td><code>store: PostStore = Depends(get_store)</code></td></tr><tr><td><code>@PostConstruct</code> / <code>@PreDestroy</code></td><td><code>lifespan</code> 异步上下文管理器</td></tr><tr><td>springdoc + Swagger UI（要加依赖）</td><td><code>/docs</code>（<strong>自带</strong>，不用引任何东西）</td></tr><tr><td><code>@SpringBootTest</code> + MockMvc</td><td><code>TestClient(app)</code></td></tr><tr><td>JPA / MyBatis</td><td>这里用标准库 <code>sqlite3</code>（<strong>故意不上 ORM</strong>）</td></tr></tbody></table>
+<h2 id="先看结果">先看结果</h2>
+<p><strong>截图 A：主线流程</strong>（起真服务 → 增 → 查 → 改 → 搜）</p>
+<figure class="figure"><img alt="FastAPI 主线流程真实运行" src="../../../../../python-practice/04-fastapi-blog/assets/term-04-api.png" loading="lazy"/><figcaption>FastAPI 主线流程真实运行</figcaption></figure>
+<p>几个值得盯住的点：</p>
+<ul class="lvl"><li><strong><code>HTTP/1.1 201 Created</code> + <code>location: /posts/1</code></strong> 创建成功不只是返回 201，还要用 <code>Location</code> 头告诉客户端「新资源在哪儿」。这是 REST 的约定，很多教程会漏掉。</li><li><strong><code>$ curl -sG --data-urlencode &#x27;q=爬虫&#x27; ...</code></strong> 第一次写这个 demo 时，我直接写 <code>curl &quot;.../posts?q=爬虫&quot;</code>，uvicorn 回了 <code>Invalid HTTP request received.</code>——<strong>URL 里的中文必须 percent-encode</strong>，<code>-G --data-urlencode</code> 就是干这个的。</li><li><strong><code>PUT</code> 只传了 <code>title</code>，返回体里 <code>content</code> / <code>author</code> / <code>tags</code> 原封不动</strong> 这证明后端做的是<strong>局部更新</strong>（<code>PATCH</code> 语义），而不是「用默认值把没传的字段覆盖掉」。这是新手最容易写错的地方。</li></ul>
+<p><strong>截图 B：边界情况 + 自动文档</strong></p>
+<figure class="figure"><img alt="FastAPI 边界情况真实运行" src="../../../../../python-practice/04-fastapi-blog/assets/term-04-errors.png" loading="lazy"/><figcaption>FastAPI 边界情况真实运行</figcaption></figure>
+<ul class="lvl"><li><strong><code>HTTP 422</code> + 结构化的 <code>detail</code></strong> 空标题不是 500，也不是 400，而是 <strong>422 Unprocessable Content</strong>，并且告诉你是哪个字段（<code>loc: [&quot;body&quot;,&quot;title&quot;]</code>）因为什么原因（<code>string_too_short</code> / <code>min_length: 1</code>）失败。<strong>你没写一行校验代码</strong>——这就是 pydantic + 类型注解的回报。</li><li><strong><code>HTTP/1.1 204 No Content</code></strong>：删除成功不返回 body（也不该返回）。</li><li><strong>删掉之后再查 → <code>HTTP 404</code> + <code>{&quot;detail&quot;: &quot;没有 id=2 的文章&quot;}</code></strong> 注意这个 404 是<strong>你自己 <code>raise</code></strong> 的。如果不写这段判断，接口会对不存在的 id 返回 <code>200 null</code>——这是最典型的 REST 设计错误。</li><li><strong>最后一段：<code>openapi.json</code> 里列出 7 个端点，标题、summary 全在</strong> 这些不是手写的文档，是装饰器自动注册的。所以 <code>/docs</code> 页面永远和代码同步——<strong>不会过期</strong>。</li></ul>
+<p><strong>测试</strong>（<code>pytest -q</code>，12 个用例）</p>
+<figure class="figure"><img alt="接口测试" src="../../../../../python-practice/04-fastapi-blog/assets/term-04-tests.png" loading="lazy"/><figcaption>接口测试</figcaption></figure>
+<p><code>TestClient</code> 直接打 ASGI 应用，<strong>不需要真的监听端口</strong>，所以 12 个用例 0.66 秒跑完。</p>
+<h2 id="你要学到的-python">你要学到的 Python</h2>
+<table><thead><tr><th>知识点</th><th>在本项目里落在哪</th></tr></thead><tbody><tr><td>类型注解 + pydantic 校验</td><td><code>PostCreate</code> / <code>PostUpdate</code> 的 <code>Field(...)</code> 约束</td></tr><tr><td>装饰器路由</td><td><code>@app.get</code> / <code>@app.post</code> / <code>@app.put</code> / <code>@app.delete</code></td></tr><tr><td>依赖注入</td><td><code>Depends(get_store)</code>，对应 Spring 的 <code>@Autowired</code></td></tr><tr><td><code>lifespan</code> 生命周期</td><td>启动时建连接、关闭时释放</td></tr><tr><td>HTTP 状态码语义</td><td>201 + Location / 204 / 404 / 422</td></tr><tr><td><code>HTTPException</code></td><td>把业务判断映射成协议层错误</td></tr><tr><td>参数校验（query）</td><td><code>Query(default=20, ge=1, le=100)</code></td></tr><tr><td><code>sqlite3</code> 参数化查询</td><td><code>execute(sql, (a, b))</code>，<strong>不拼字符串</strong></td></tr><tr><td>上下文管理器</td><td><code>with TestClient(app) as c</code> 触发 lifespan</td></tr><tr><td>pytest 参数化</td><td><code>@pytest.mark.parametrize</code> 一次测 4 种非法输入</td></tr><tr><td><code>include_router</code> 之外的自动文档</td><td><code>/openapi.json</code> 是真数据源，不是渲染图</td></tr></tbody></table>
+<h2 id="怎么跑起来">怎么跑起来</h2>
+<pre><code>cd python-practice/04-fastapi-blog
+
+# 装依赖
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r ../requirements.txt
+
+# 起服务（--reload 会改代码自动重启，开发时很香）
+python3 -m uvicorn app:app --reload --port 8130
+# 浏览器打开 http://127.0.0.1:8130/docs ← 可以直接在页面上点按钮发请求
+
+# 跑测试
+python3 -m pytest -q
+
+# 跑演示（会自己起服务、打一轮请求、最后关掉）
+bash demo.sh</code></pre>
+<blockquote><p>本机如果用 <code>curl</code> 访问 <code>127.0.0.1</code> 遇到代理问题，加 <code>--noproxy &#x27;*&#x27;</code>。演示脚本里已经带了。</p></blockquote>
+<h2 id="代码结构">代码结构</h2>
+<pre><code>04-fastapi-blog/
+├── app.py            # 路由 + pydantic 模型 + 依赖注入（≈ Controller + DTO）
+├── store.py          # SQLite 数据访问（≈ Repository），所有 SQL 只在这里出现
+├── test_api.py       # 12 个 pytest 用例
+├── jsonpp.py         # 把 curl 返回的 JSON 美化打印（不转义中文）
+├── list_endpoints.py # 从 openapi.json 里读端点清单
+├── demo.sh           # 起服务 + curl 打一轮 + 关服务（输出就是截图）
+└── assets/           # 截图 + run.txt + tests.txt（原始输出都入库）</code></pre>
+<h2 id="关键代码拆解">关键代码拆解</h2>
+<p><strong>① 校验是「声明」出来的，不是「if 出来」的</strong></p>
+<pre><code>class PostCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=120, description=&quot;标题，1~120 字&quot;)
+    content: str = Field(min_length=1, description=&quot;正文，不能为空&quot;)
+    tags: list[str] = Field(default_factory=list, max_length=TAGS_MAX)</code></pre>
+<p>写下这些约束之后，FastAPI 自动帮你：请求体不是合法 JSON → 422；<code>title</code> 是空串 → 422；<code>tags</code> 有 6 个 → 422。<strong>而且 <code>/docs</code> 页面上的参数说明也是从这些 Field 生成的。</strong></p>
+<p>对比一下手写 Java 的样子：<code>@NotBlank @Size(min = 1, max = 120) private String title;</code>——思路完全一样，区别只在 FastAPI 把「校验」和「文档」都绑在同一处声明上。</p>
+<p><strong>② 404 是你自己抛的</strong></p>
+<pre><code>post = store.get(post_id)
+if post is None:
+    raise HTTPException(status_code=404, detail=f&quot;没有 id={post_id} 的文章&quot;)</code></pre>
+<p><strong>不写这个判断，接口就会返回 <code>200 null</code>。</strong> 这不是「能用」，这是错的——客户端无法区分「这个 id 不存在」和「存在但是空的」。</p>
+<p><strong>③ SQL 永远用占位符</strong></p>
+<pre><code>self._conn.execute(
+    &quot;INSERT INTO posts (title, content, author, tags, created_at, updated_at)&quot;
+    &quot; VALUES (?, ?, ?, ?, ?, ?)&quot;,
+    (title, content, author, json.dumps(tags, ensure_ascii=False), now, now),
+)</code></pre>
+<p><code>?</code> 占位符 + 参数元组。<strong>绝不要</strong>写成：</p>
+<pre><code>f&quot;INSERT INTO posts (title) VALUES (&#x27;{title}&#x27;)&quot;   # ← 注入漏洞，别这么写</code></pre>
+<p>后者只要有人把标题写成 <code>&#x27;); DROP TABLE posts; --</code>，你的表就没了。</p>
+<p><strong>④ 局部更新要显式判断「传了没有」</strong></p>
+<pre><code>fields: dict[str, object] = {}
+if title is not None:
+    fields[&quot;title&quot;] = title
+...
+if fields:
+    assignments = &quot;, &quot;.join(f&quot;{k} = ?&quot; for k in fields)
+    self._conn.execute(f&quot;UPDATE posts SET {assignments} WHERE id = ?&quot;, (*fields.values(), post_id))</code></pre>
+<p>这里 <code>f&quot;{k} = ?&quot;</code> 里拼的是<strong>列名</strong>，而且列名来自代码里写死的白名单（不来自用户输入），所以安全。<strong>拼列名和拼值是两回事</strong>——值必须走参数。</p>
+<p><strong>⑤ 测试用例之间必须互不干扰</strong></p>
+<pre><code>@pytest.fixture()
+def client():
+    with TestClient(app) as c:
+        c.app.state.store.clear()   # 每个用例从干净的表开始
+        yield c</code></pre>
+<p>不写 <code>clear()</code> 的话，<code>test_create_returns_201_and_location</code> 里断言的 <code>id == 1</code> 会在别人先跑过之后变成 <code>id == 2</code>——这种「单独跑能过、一起跑就挂」的测试最恶心。</p>
+<h2 id="常见坑">常见坑</h2>
+<table><thead><tr><th>坑</th><th>现象</th><th>怎么破</th></tr></thead><tbody><tr><td>忘了返回 404</td><td>不存在的 id 返回 <code>200 null</code></td><td><code>raise HTTPException(404, ...)</code></td></tr><tr><td>SQL 字符串拼接</td><td>注入漏洞</td><td><code>?</code> 占位 + 参数元组</td></tr><tr><td><code>sqlite3</code> 跨线程</td><td>报 <code>SQLite objects created in a thread...</code></td><td><code>check_same_thread=False</code>（练习级够用）</td></tr><tr><td>URL 带中文</td><td>uvicorn 回 <code>Invalid HTTP request received.</code></td><td><code>curl -G --data-urlencode &#x27;q=中文&#x27;</code></td></tr><tr><td>测试互相污染</td><td>单独跑过、一起跑挂</td><td>autouse fixture 里清表</td></tr><tr><td>在 import 时才读环境变量</td><td>测试改不动 DB 路径</td><td>必须在 <code>import app</code> <strong>之前</strong>设 <code>BLOG_DB</code></td></tr><tr><td>用 <code>json.tool</code> 看响应</td><td>中文变 <code>\uXXXX</code></td><td>自己写 3 行 <code>ensure_ascii=False</code></td></tr></tbody></table>
+<h2 id="验收标准做完自检">验收标准（做完自检）</h2>
+<ul class="lvl"><li>[ ] <code>curl -si -X POST /posts</code> 返回 <strong>201</strong>，响应头里有 <code>location: /posts/N</code></li><li>[ ] 空标题提交返回 <strong>422</strong>，且 <code>detail[0].loc == [&quot;body&quot;,&quot;title&quot;]</code></li><li>[ ] <code>PUT /posts/{id}</code> 只传 <code>title</code> 时，响应体里的 <code>content</code> 不变</li><li>[ ] 删除返回 <strong>204</strong> 且无响应体；删除后再查返回 <strong>404</strong></li><li>[ ] <code>GET /posts?limit=0</code> 返回 <strong>422</strong>（<code>ge=1</code> 生效）</li><li>[ ] 浏览器打开 <code>/docs</code> 能看到 7 个端点，且可以直接点「Try it out」发请求</li><li>[ ] <code>pytest -q</code> 全绿（12 个用例）</li></ul>
+<h2 id="进阶挑战">进阶挑战</h2>
+<ul class="lvl"><li><strong>加分页响应体</strong> —— 现在分页信息放在 <code>X-Total-Count</code> 响应头里。改成返回 <code>{&quot;total&quot;: n, &quot;items&quot;: [...]}</code>，并解释两种设计的取舍。</li><li><strong>加用户与鉴权</strong> —— 引入 <code>Authorization: Bearer &lt;token&gt;</code>，只有作者本人能改/删自己的文章（练习 <code>Depends</code> 链式依赖）。</li><li><strong>换成 SQLAlchemy</strong> —— 体会 ORM 帮你省了什么，又藏起了什么（尤其是 N+1 查询）。</li><li><strong>加数据库迁移</strong> —— 用简单的 <code>user_version</code> 或者 <code>alembic</code> 管理表结构变更。</li><li><strong>加限流</strong> —— 用内存计数器限制每 IP 每分钟的写请求数，返回 429。</li><li><strong>补齐测试</strong> —— 现在没测并发和超长输入。加上 <code>title</code> 长度 121 的边界用例、以及 <code>limit=101</code> 的 422 用例。</li><li><strong>打包成镜像</strong> —— 写 <code>Dockerfile</code>（<code>python:3.13-slim</code> + <code>uvicorn</code>），把 <code>blog.db</code> 用 volume 挂出来。</li></ul>
+</main>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Finetune Series — 大模型微调与企业级部署系列（草稿库）</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="finetune-series-大模型微调与企业级部署系列草稿库">Finetune Series — 大模型微调与企业级部署系列（草稿库）</h1>
+<blockquote><p><strong>状态：草稿（未人工校对）</strong>。本目录是从对话/笔记导入的原始学习材料，内容尚未逐篇核实， 不属于 <code>projects/</code> 单一事实源，也不是正式 tutorial。校对通过后择优改写进 <a href="../../../../tutorials">tutorials/</a>（参考：Day1 已改写为 <a href="../tutorials/03-llm-finetune-day1-colab-llamafactory-qwen.html">教程 03</a>）。</p></blockquote>
+<h2 id="内容分级约定">内容分级约定</h2>
+<table><thead><tr><th>标记</th><th>含义</th></tr></thead><tbody><tr><td>📝 草稿</td><td>AI 生成 / 笔记原始态，未校对，可能有事实错误</td></tr><tr><td>✅ 已校对</td><td>人工核实过事实与代码</td></tr><tr><td>🎓 已学习</td><td>亲手操作过并能复述（计入 PROGRESS 学习进度）</td></tr></tbody></table>
+<p>当前：<strong>全部 35 篇均为 📝 草稿</strong>。</p>
+<h2 id="索引">索引</h2>
+<h3 id="基础认知">基础认知</h3>
+<table><thead><tr><th>篇</th><th>文件</th></tr></thead><tbody><tr><td>Day0.5</td><td><a href="Day0.5-大模型名词与硬件资源完全解释.html">大模型名词与硬件资源完全解释</a></td></tr><tr><td>Day0.6</td><td><a href="Day0.6-自己采购硬件.html">自己采购硬件</a></td></tr><tr><td>Day0.7</td><td><a href="Day0.7-企业级硬件采购视角.html">企业级硬件采购视角</a></td></tr></tbody></table>
+<blockquote><p>Day1–Day10 已修复：文件名与文首 H1 均已改为可区分的主题标题。</p></blockquote>
+<h3 id="第一次微调实战day110">第一次微调实战（Day1-10）</h3>
+<table><thead><tr><th>篇</th><th>文件</th></tr></thead><tbody><tr><td>Day1</td><td><a href="Day1-Colab跑通Qwen-LLaMA-Factory.html">第一次微调实战</a>（已改写为教程 03）</td></tr><tr><td>Day2</td><td><a href="Day2-01-数据集注册-dataset-info.html">01</a> · <a href="Day2-02-QLoRA训练配置-train-yaml.html">02</a> · <a href="Day2-03-启动QLoRA训练.html">03</a></td></tr><tr><td>Day3-10</td><td><a href="Day3-LoRA接入Ollama-SpringBoot.html">Day3</a> · <a href="Day4-RAG结合LoRA构建Agent.html">Day4</a> · <a href="Day5-SpringBoot-Milvus-RAG.html">Day5</a> · <a href="Day6-RAG-LoRA-ToolCalling-Agent.html">Day6</a> · <a href="Day7-Agent生产级工程化.html">Day7</a> · <a href="Day8-包装成求职项目.html">Day8</a> · <a href="Day9-模拟AI工程师面试.html">Day9</a> · <a href="Day10-面试100问与项目答辩.html">Day10</a></td></tr></tbody></table>
+<h3 id="企业级部署与平台day1130">企业级部署与平台（Day11-30）</h3>
+<table><thead><tr><th>篇</th><th>文件</th></tr></thead><tbody><tr><td>Day11</td><td><a href="Day11-01-企业级大模型部署完整路线.html">01 部署完整路线</a> · <a href="Day11-02-实战.html">02 实战</a></td></tr><tr><td>Day12-16</td><td><a href="Day12-企业级部署升级.html">Day12 部署升级</a> · <a href="Day13-企业级LoRA微调部署实战.html">Day13 LoRA微调部署</a> · <a href="Day14-企业级大模型平台架构.html">Day14 平台架构</a> · <a href="Day15-企业级RAG深度优化.html">Day15 RAG优化</a> · <a href="Day16-企业级大模型安全与稳定性.html">Day16 安全稳定</a></td></tr><tr><td>Day17-20</td><td><a href="Day17-MLOps实战.html">Day17 MLOps</a> · <a href="Day18-企业级AI系统完整设计答辩.html">Day18 设计答辩</a> · <a href="Day19-从AI工程师到AI产品工程师.html">Day19 AI产品工程师</a> · <a href="Day20-打造你的第一个AI-SaaS-MVP.html">Day20 AI SaaS MVP</a></td></tr><tr><td>Day21-25</td><td><a href="Day21-企业AI平台落地实战.html">Day21 平台落地</a> · <a href="Day22-打造企业级AI-Agent平台.html">Day22 AI Agent平台</a> · <a href="Day23-企业AI自动化平台实战.html">Day23 自动化平台</a> · <a href="Day24-AI-Agent工程化进阶.html">Day24 Agent工程化</a> · <a href="Day25-企业级AI-Agent开发实战.html">Day25 Agent开发</a></td></tr><tr><td>Day26</td><td>缺（编号跳过）</td></tr><tr><td>Day27-30</td><td><a href="Day27-大模型训练与微调完整实战.html">Day27 训练微调实战</a> · <a href="Day28-大模型训练环境实战.html">Day28 训练环境</a> · <a href="Day29-模型评测与生产上线.html">Day29 评测上线</a> · <a href="Day30-Java-AI-Engineer完整能力闭环.html">Day30 能力闭环</a></td></tr></tbody></table>
+<h2 id="维护规则">维护规则</h2>
+<ul class="lvl"><li>校对一篇就把状态表里的 📝 改成 ✅，并在文首加一行 <code>&gt; 状态：已校对（YYYY-MM-DD）</code></li><li>事实性内容（价格 / 版本号 / API）校对时必须联网核实</li><li>与 <code>projects/</code> 或已有 tutorial 重复的内容，保留 tutorials / projects 版本为准，此处仅存档</li></ul>
+</main>
+</body>
+</html>

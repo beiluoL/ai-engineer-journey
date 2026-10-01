@@ -11,10 +11,22 @@ md_to_book_html.py —— 把仓库里的图文教程 Markdown 转换成「自�
 
 用法：
     python3 scripts/md_to_book_html.py <input.md> <output.html> [--title 标题]
+    python3 scripts/md_to_book_html.py <input.md> <output.html> --relative-images
+    python3 scripts/md_to_book_html.py <input.md> <output.html> --rewrite-md-links
+
+两种图片策略（务必按场景选一个）：
+- 默认 base64 内嵌：产出「单个文件、可随便拷走」——代价是体积膨胀约 1.33 倍，
+  而本仓库 339 张图合计 56.7 MB，全量内嵌会让仓库多出 ~76 MB。只适合少数重点文档。
+- --relative-images：图片按相对路径引用。**必须配合「输出目录镜像源目录结构」使用**，
+  这样 `assets/x.png` 才在浏览器里真的存在。批量转换 200+ 篇文档一律用这个。
+
+两种链接策略：
+- 默认：`.md` 链接原样保留（适合单文件版，接收方是 GitHub 这类 md 渲染器）。
+- --rewrite-md-links：把相对链接里的 `.md` 后缀改成 `.html`（含锚点），
+  用于「已批量生成 HTML 树」的站点——否则点进去又回到原始 Markdown 文本。
 
 约定：
-- 图片：相对路径解析到 input.md 同目录，转 base64 内嵌。
-- 跨文档链接：若指向 07-延伸阅读.md / 12-tutorials-and-agent.md，改为同目录 .html。
+- 跨文档链接：默认仅映射 KNOWN_MD_TO_HTML 那几张已知文档。
 - Mermaid：本仓库只用 flowchart，已为 3 张已知图手绘内联 SVG；未知图降级为可读列表。
 """
 
@@ -24,6 +36,10 @@ import html
 import os
 import re
 from html.parser import HTMLParser
+
+# 全局转换开关（--relative-images / --rewrite-md-links 时置位）
+RELATIVE_IMAGES = False
+REWRITE_MD_LINKS = False
 
 KNOWN_MD_TO_HTML = {
     "python-practice/07-延伸阅读.md": "07-延伸阅读.html",
@@ -58,11 +74,29 @@ def slug(text: str) -> str:
 # ----------------------------------------------------------------------------
 # 行内元素：代码 / 链接 / 粗体 / 斜体
 # ----------------------------------------------------------------------------
+def rewrite_md_link(url: str) -> str:
+    """把相对链接里的 .md 后缀改成 .html（锚点保留）。
+
+    仅在 REWRITE_MD_LINKS 开启时调用。之所以只改「相对」链接：
+    外链（http/mailto/data）本就不是文档，页内锚点（#）没有后缀可改。
+    """
+    frag = ""
+    if "#" in url:
+        url, frag = url.split("#", 1)
+        frag = "#" + frag
+    if url.lower().endswith(".md"):
+        url = url[:-3] + ".html"
+    return url + frag
+
+
 def link_html(text: str, url: str) -> str:
     raw = url
     base = raw.rsplit("/", 1)[-1]
     if base in KNOWN_MD_TO_HTML:
         raw = raw[: len(raw) - len(base)] + KNOWN_MD_TO_HTML[base]
+    # 批量生成 HTML 树时，站内文档链接应指向渲染后的页面
+    if REWRITE_MD_LINKS and not raw.startswith(("http", "mailto:", "data:", "#")):
+        raw = rewrite_md_link(raw)
     # 外链新窗口打开，站内/相对链接原窗口
     target = ' target="_blank" rel="noopener"' if raw.startswith("http") else ""
     return f'<a href="{raw}"{target}>{text}</a>'
@@ -79,16 +113,24 @@ def inline(text: str) -> str:
     text = re.sub(r"`([^`]+)`", coderepl, text)
     # 2) 转义剩余文本
     text = escape(text)
-    # 3) 链接 [text](url)
+    # 3) 粗体 / 斜体 —— 必须**早于**链接渲染，否则这里的规则会去改写
+    #    链接已经生成的 <a href="..."> 属性本身。踩过的坑：文件名 `_offline_guard.py`
+    #    里的下划线被当成斜体标记，href 被改成 "<em>offline</em>guard.py"，链接直接失效。
+    text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
+    text = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", text)
+    # 下划线遵循 CommonMark：夹在字母数字之间的下划线不产生强调
+    # （否则 p07_finetune_java_interview.ipynb 这类文件名会被啃掉一半）
+    text = re.sub(
+        r"(?<![A-Za-z0-9_])_(?=\S)([^\s_]+)_(?![A-Za-z0-9])",
+        r"<em>\1</em>",
+        text,
+    )
+    # 4) 链接 [text](url)
     text = re.sub(
         r"\[([^\]]+)\]\(([^)]+)\)",
         lambda m: link_html(m.group(1), m.group(2)),
         text,
     )
-    # 4) 粗体 / 斜体
-    text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
-    text = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", text)
-    text = re.sub(r"(?<!_)_([^_]+)_(?!_)", r"<em>\1</em>", text)
     # 5) 还原代码
     def coderest(m):
         idx = int(m.group(1))
@@ -249,6 +291,13 @@ def embed_image(alt: str, path: str, base_dir: str) -> str:
     p = path
     if not os.path.isabs(p):
         p = os.path.join(base_dir, p)
+    if RELATIVE_IMAGES:
+        # 相对路径引用：输出目录必须镜像源目录结构，否则图会 404
+        return (
+            f'<figure class="figure"><img alt="{escape(alt)}" src="{escape(path)}" '
+            f'loading="lazy"/>'
+            f'<figcaption>{escape(alt)}</figcaption></figure>'
+        )
     try:
         with open(p, "rb") as f:
             data = base64.b64encode(f.read()).decode()
@@ -494,7 +543,14 @@ def main():
     ap.add_argument("input")
     ap.add_argument("output")
     ap.add_argument("--title", default=None)
+    ap.add_argument("--relative-images", action="store_true",
+                    help="图片按相对路径引用（须配合镜像目录结构），而非 base64 内嵌")
+    ap.add_argument("--rewrite-md-links", action="store_true",
+                    help="把站内 .md 链接改写成 .html")
     args = ap.parse_args()
+
+    globals()["RELATIVE_IMAGES"] = args.relative_images
+    globals()["REWRITE_MD_LINKS"] = args.rewrite_md_links
 
     with open(args.input, encoding="utf-8") as f:
         md_text = f.read()

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 04 — Embedding：查表 + 正弦位置编码，以及参数都花在哪了</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-04-embedding查表-正弦位置编码以及参数都花在哪了">Milestone 04 — Embedding：查表 + 正弦位置编码，以及参数都花在哪了</h1>
+<p>M03 把文本变成了 <code>(64,)</code> 的 id 序列。这一章把它变成 <code>(B, T, 64)</code> 的向量：<strong>token embedding 一次查表 + 位置编码一次相加</strong>。</p>
+<p>本章的结论是定量的，而且会直接影响后续调参方向：<strong>词嵌入与输出投影合计占掉 71.1% 的参数</strong>。在 23 万参数的小模型上，&quot;先看词表&quot;比&quot;先动 d_model&quot;更有效。</p>
+<hr/>
+<h2 id="1-why两件事必须被证明而不是被相信">1. Why：两件事必须被证明，而不是被相信</h2>
+<ul class="lvl"><li><strong>&quot;查表&quot;和&quot;one-hot × W&quot;必须数学等价。</strong> 这是 embedding 层的定义。如果不等价，说明有人在查表逻辑里动了手脚（缩放、归一化），而模型学到的东西就和你以为的不一样。</li><li><strong>位置编码不能进优化器。</strong> 正弦位置编码是<strong>常量表</strong>，不是可训练参数。如果它被误当成参数交给 Adam，模型会去&quot;学习位置&quot;，而它本来已经有一个正确的解析解 —— 更糟的是，它还会被算进参数量，让你对模型规模判断失误。</li></ul>
+<h2 id="2-design一次查表-一次相加">2. Design：一次查表 + 一次相加</h2>
+<p><strong>前向</strong>（<code>P06</code> 的 <code>TokenEmbedding</code>）：</p>
+<pre><code>x: (B, T) int64
+  → token_emb.weight[x]          # (B, T, d_model)，一次花 O(d) 的查表
+  → + pos_enc[:T]                # (T, d_model)，常量表，直接相加
+  = (B, T, d_model)</code></pre>
+<p><strong>为什么&quot;查表 ≠ one-hot × W&quot;要专门证明</strong>：one-hot 矩阵是 <code>(V, V)</code>，乘一次是 <code>O(V·d)</code>；查表是 <code>O(d)</code>。V=1280 时差 1280 倍。这不是&quot;优化技巧&quot;，是<strong>为什么 embedding 层能存在</strong>的原因。</p>
+<figure class="figure"><img alt="M04 Embedding 查表 + 位置编码 + 参数占比" src="../../../../../../projects/10-tiny-llm-capstone/assets/embedding.svg" loading="lazy"/><figcaption>M04 Embedding 查表 + 位置编码 + 参数占比</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo04embeddingterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_04_embedding_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M04 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-04-embedding.png" loading="lazy"/><figcaption>M04 真实运行</figcaption></figure>
+<h3 id="31-token-embedding-就是一张查找表">3.1 Token Embedding 就是一张查找表</h3>
+<pre><code>词表大小 V     1280
+d_model      64
+权重形状       (1280, 64)
+参数量        81,920
+示例 token → id   [&#x27;什么是&#x27;, &#x27; &#x27;, &#x27;LoRA&#x27;, &#x27;？&#x27;] → [861, 5, 970, 857]
+查表结果形状    (4, 64)
+同一 id 两次查表是否一致  True
+不同 id 向量是否不同      True</code></pre>
+<h3 id="32-查表-onehot-矩阵等价性实测">3.2 查表 = one-hot × 矩阵（等价性实测）</h3>
+<pre><code>one-hot @ W 与查表最大绝对误差   0.000e+00
+乘法次数：矩阵版 / 查表版        81,920 / 0</code></pre>
+<p>误差是<strong>精确的 0</strong>（fp64 下逐位相同），乘法次数差 81,920 倍。这两行加起来才说明&quot;查表是同一件事的正确实现&quot;。</p>
+<h3 id="33-正弦位置编码不训练也能表达顺序">3.3 正弦位置编码：不训练也能表达顺序</h3>
+<pre><code>pe 形状                      (64, 64)   (max_len, d_model)
+可训练参数                    0          位置编码是常量表，不进优化器
+每个位置的向量范数 均值/标准差    5.6569 / 0.000000
+范数是否恒定                   True       正弦构造 ⇒ 与位置无关
+位置 0 与位置 1 的余弦相似度      0.9662
+位置 0 与位置 8 的余弦相似度      0.7004
+位置 0 与位置 32 的余弦相似度     0.6111
+前 4 维（高频）                +0.841 +0.540 +0.682 +0.732
+后 4 维（低频）                +0.000 +1.000 +0.000 +1.000
+高频维 vs 低频维 的相邻位置变化    0.8415 / 0.0000</code></pre>
+<p>三条可验证的性质：</p>
+<ul class="lvl"><li><strong>范数恒定 5.6569</strong>（= √32，2 个 1.0 加上其余正弦分量的合成）且标准差恰好 0 —— 位置不改变向量的长度，只改变方向。</li><li><strong>相似度随距离单调下降</strong>（0.9662 → 0.7004 → 0.6111）：位置越远，编码越不相似。</li><li><strong>高频维的变化远大于低频维</strong>（0.8415 vs 0.0000）：这正是&quot;多分辨率&quot;设计的目的 —— 低频维给粗粒度绝对位置，高频维给细粒度相对差异。</li></ul>
+<h3 id="34-combineembedding-位置编码直接相加">3.4 combine：Embedding + 位置编码直接相加</h3>
+<pre><code>combine 输出形状          (1, 4, 64)
+是否等于 emb + pe         0.000e+00
+相加前 token 向量范数      1.1910
+相加后向量范数            5.6030</code></pre>
+<p><strong>相加前 1.19 → 相加后 5.60</strong>：位置信号改变了向量的量级，所以这不是装饰，是<strong>信息注入</strong>。也所以&quot;位置编码的幅度&quot;会和 embedding 初始化尺度耦合 —— 这是后面所有 LN 存在的理由之一。</p>
+<h3 id="35-参数大头在哪">3.5 参数大头在哪</h3>
+<pre><code>token_embedding      81,920  35.6%
+output_projection    81,920  35.6%
+transformer_blocks   66,432  28.8%
+final_layernorm         128   0.1%
+
+Embedding 参数 = V × d_model = 1280 × 64 = 81,920
+词表减半可省参数 = 40,960（但 OOV 会上升，见 M02）
+两者合计 71.1%</code></pre>
+<h3 id="36-位置编码不在参数表里">3.6 位置编码不在参数表里</h3>
+<pre><code>张量总数        28
+是否含 pos_enc  False
+前 3 个张量      token_emb.weight, decoder.blocks.0.ln1.gamma, decoder.blocks.0.ln1.beta</code></pre>
+<p>28 个张量里没有 <code>pos_enc</code> —— 这是&quot;它不进优化器&quot;的<strong>可执行证据</strong>，而不是口头承诺。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>词表是&quot;参数预算&quot;里的隐形大头。</strong> 大模型上 FFN 会主导参数量，所以很多人形成了&quot;参数都在 FFN&quot;的直觉。但在 23 万参数的小模型上，<code>V × d_model</code> 一项就占 35.6%。<strong>词表大小是一个可以调的超参</strong>，而且它同时影响参数量、压缩率、OOV 率三件事。</li><li><strong>位置编码的幅度会改变向量量级。</strong> 实测范数从 1.19 跳到 5.60。如果 embedding 初始化尺度很大，位置信号会被淹没；如果很小，位置会主导。这也是 Transformer 必须在每个子层前做 LN 的原因之一。</li><li><strong>&quot;每个位置的范数恒定&quot;是正弦构造的副产品，不是设计目标。</strong> 但它让不同位置的编码&quot;可比&quot; —— 这是一个几乎白拿的性质，也是它比&quot;可学习位置编码&quot;更抗过拟合的地方（0 个参数 vs <code>max_len × d_model</code> 个参数）。</li><li><strong>低频维在相邻位置上几乎不变（0.0000）。</strong> 初看像缺陷，实际上是设计：那几维负责区分&quot;远距离的位置段&quot;，高频维负责区分&quot;相邻位置&quot;。用一条&quot;相邻变化量&quot;去看整体，会得出错误结论。</li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><code>(1280, 64)</code> 的查找表 = 81,920 参数，占全模型 <strong>35.6%</strong>；与输出投影合计 <strong>71.1%</strong>。</li><li>查表与 <code>one-hot @ W</code> 最大绝对误差 <strong>0.000e+00</strong>，乘法次数 81,920 → 0。</li><li>位置编码 <code>(64, 64)</code>、<strong>0 个可训练参数</strong>、每位置范数恒定 <strong>5.6569</strong>，且相似度随距离单调下降（0.9662 → 0.7004 → 0.6111）。</li><li>Embedding 与位置编码直接相加（误差 0.000e+00），相加后向量范数 1.1910 → 5.6030。</li><li>遍历到的 28 个张量<strong>不含</strong> <code>pos_enc</code> ⇒ 常量表确实没进优化器。</li><li>直接结论：<strong>在 Tiny LLM 上，先动词表比先动 d_model 更有效</strong>（词表减半即可省 40,960 参数），但代价是 OOV 上升 —— 这是一个真实的权衡，不是单向优化。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/model.py</code></td><td><code>build_model</code>（唯一构造入口）/ <code>walk_parameters</code>（递归遍历，<strong>不漏词嵌入</strong>）/ <code>parameter_report</code>（分组参数账）/ <code>forward_sanity</code>（因果性自检）<code>/ set_seed</code></td></tr><tr><td>P06 <code>model/embeddings.py</code></td><td><code>TokenEmbedding</code>（查表）+ 正弦 <code>pos_enc</code>（常量表，不注册为 Parameter）</td></tr><tr><td><code>demos/demo_04_embedding.py</code></td><td>6 节：查表 / 等价性 / 位置编码性质 / combine / 参数占比 / 张量清单</td></tr><tr><td><code>demos/out/demo_04_embedding_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/embedding.svg</code></td><td>查表 + 位置编码 + 参数占比条</td></tr><tr><td><code>assets/term-04-embedding.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.3 → <strong>v0.4</strong>，Embedding 层落地并被量化。实测：<code>(1280, 64)</code> = 81,920 参数占 35.6%，与输出投影合计 <strong>71.1%</strong>；查表 vs <code>one-hot @ W</code> 误差 <strong>0.000e+00</strong>（乘法 81,920 → 0）；位置编码 0 个可训练参数、每位置范数恒为 5.6569、位置 0↔1/8/32 相似度 0.9662 / 0.7004 / 0.6111；<code>combine</code> 后范数 1.1910 → 5.6030；28 个张量中不含 <code>pos_enc</code>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

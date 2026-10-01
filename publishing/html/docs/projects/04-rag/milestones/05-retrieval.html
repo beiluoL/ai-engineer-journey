@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 04 — Chapter 05：Retrieval【检索流程】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-04-chapter-05retrieval检索流程">Project 04 — Chapter 05：Retrieval【检索流程】</h1>
+<blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/retriever.py</code>（代码落地时实现）</p></blockquote>
+<hr/>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<p>Chapter 04 结束时，我们已经有一个装满向量的数据库：文档被切好块（Chapter 02）、算好嵌入（Chapter 03）、存进了向量库（Chapter 04）。看起来万事俱备——但实际上<strong>什么检索都还没发生</strong>。用户敲进来一句「怎么配置重试策略？」，这条 query 还是自然语言，向量库里存的还是一堆 float，两者之间需要一条完整的流水线把它们接起来。</p>
+<p><strong>先划清两章的边界</strong>：本章（05）讲的是检索的<strong>流程与策略</strong>——query 怎么预处理、取多少条、向量检索和关键词检索怎么配合、怎么避免取回来的全是同义重复；下一章（06）讲的才是<strong>度量原理</strong>——「两个向量有多相似」这件事在数学上到底怎么算。一个是工程流水线，一个是流水线上最核心的那个度量件。本章在用到「相似度」时只当黑盒调用，细节留给 06。</p>
+<p>一个常见误解：</p>
+<pre><code>你以为：  向量库里&quot;搜&quot;一下，最相关的段落就自动排好队出来了
+实际上：  检索是一整条策略流水线——k 取多少、单路还是混合、
+          要不要过滤、要不要打散，每一步都是设计决策</code></pre>
+<p>本章目标：</p>
+<blockquote><p><strong>用 Retriever 把「query → 相关 chunk 列表」封装成一步可靠调用，并让 top-k、混合检索、多样性这些策略变成可调参数。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<p>RAG 的效果上限，在生成之前就被检索锁死了。这条链路是这样的：</p>
+<pre><code>检索质量 = RAG 上限
+生成模型再强，也只是在&quot;喂给它的材料&quot;里作答
+材料里没有答案 → 模型要么瞎编，要么回答&quot;文档里没有&quot;</code></pre>
+<p>这和 Java 里的分层很像：<code>Service</code> 逻辑写得再漂亮，DAO 层查错了表，出来的结果照样是错的。检索就是 RAG 的 DAO 层。</p>
+<p>而且检索错误有个阴险的特点：<strong>它是静默的</strong>。向量库永远会返回 k 条结果——哪怕这 k 条和问题毫无关系。没有异常、没有日志、没有空指针，只有一段看起来一本正经但答非所问的生成结果。所以检索层的每一步策略都必须<strong>显式设计</strong>，而不是依赖默认值。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-检索的完整流程">3.1 检索的完整流程</h3>
+<p>一条 query 从用户输入到变成 chunk 列表，经过五步：</p>
+<pre><code>用户 query
+  ↓ ① 预处理：截断/清洗（query 长度受 embedding 模型输入上限约束）
+  ↓ ② embed：query → 向量（必须用和入库时同一个 embedding 模型！）
+  ↓ ③ 向量库 top-k：按相似度取 k 条最近的 chunk
+  ↓ ④ 可选 metadata 过滤：如 {&quot;source&quot;: &quot;python-doc&quot;, &quot;lang&quot;: &quot;zh&quot;}
+  ↓ ⑤ 返回 list[ScoredChunk]：chunk 文本 + 相似度分数 + 元数据</code></pre>
+<p>两个最容易忽略的点：</p>
+<ul class="lvl"><li><strong>② 和入库必须用同一模型、同一维度</strong>。用模型 A 编码的库，拿模型 B 的 query 向量去搜，等于拿身高去比体重，结果完全是噪声。</li><li><strong>④ 过滤发生在向量搜索之后（post-filter）还是搜索时（pre-filter）取决于向量库实现</strong>，但对你来说 API 语义是一致的：先缩小范围再排序。</li></ul>
+<h3 id="32-topk-的权衡">3.2 top-k 的权衡</h3>
+<p>k 不是越大越好，它是<strong>召回率 vs 噪音</strong>的跷跷板：</p>
+<table><thead><tr><th>k 值</th><th>好处</th><th>代价</th></tr></thead><tbody><tr><td>太小（1~2）</td><td>上下文干净、省 token</td><td>真正相关的段落可能不在其中（漏召回）</td></tr><tr><td>适中（4~8）</td><td>覆盖率与噪音的平衡点</td><td>—</td></tr><tr><td>太大（&gt;20）</td><td>几乎不漏</td><td>噪音淹没重点；挤占上下文窗口预算；模型被无关内容带偏</td></tr></tbody></table>
+<p>还有一笔隐形的账：<strong>上下文预算</strong>。第 08 章拼 context 时，每个 chunk 几百 token，k=20 就是上万 token，可能直接顶到模型上限，还稀释了真正的答案。工程上有个经典组合拳：</p>
+<blockquote><p><strong>粗召回取大 k（如 20），精排后只留前 5</strong>——这就是 Chapter 07 rerank 的入场券。本章先在 <code>Retriever</code> 里把「召回 k」和「最终 n」分成两个参数，为它留好接口。</p></blockquote>
+<h3 id="33-混合检索与-rrf">3.3 混合检索与 RRF</h3>
+<p>纯向量检索有软肋：它擅长<strong>语义</strong>（「怎么让程序等一会」→ 能召回「sleep / 延迟执行」），但搞不定<strong>精确符号</strong>——函数名 <code>setTimeout</code>、类名 <code>BaseVectorStore</code>、报错码 <code>ECONNRESET</code> 这种专有名词，被 embedding 压成向量后反而被「泛化」掉了。</p>
+<p>反过来，BM25 关键词检索（一种经典的词频打分算法）正好相反：精确匹配是强项，同义改写就抓瞎。两边互补：</p>
+<table><thead><tr><th></th><th>向量检索</th><th>BM25 关键词检索</th></tr></thead><tbody><tr><td>同义改写（&quot;卡住了&quot; → &quot;阻塞&quot;）</td><td>✅ 强</td><td>❌ 弱</td></tr><tr><td>精确词/专有名词/代码标识符</td><td>❌ 弱（被语义泛化稀释）</td><td>✅ 强</td></tr><tr><td>跨语言语义</td><td>✅ 可</td><td>❌ 基本不行</td></tr><tr><td>索引构建</td><td>需 embedding（贵、慢）</td><td>分词即可（便宜）</td></tr></tbody></table>
+<p>两路各取 top-k，怎么合并排名？<strong>分数不能直接相加</strong>（原因见踩坑 3），业界标准做法是 RRF（Reciprocal Rank Fusion，倒数排名融合）：</p>
+<pre><code>RRF_score(doc) = Σ  1 / (k + rank_i)      # k 是平滑常数（常取 60），rank_i 是它在第 i 路的排名（从 1 开始）</code></pre>
+<p>它只看<strong>排名</strong>不看<strong>分数</strong>，天然规避了两路分数量纲不同的问题。实现只需要十几行：</p>
+<pre><code>def rrf_fuse(rankings: list[list[str]], k: int = 60) -&gt; list[str]:
+    &quot;&quot;&quot;rankings: 每一路检索返回的 id 有序列表；返回融合后的 id 有序列表&quot;&quot;&quot;
+    scores: dict[str, float] = {}
+    for ranking in rankings:
+        for rank, doc_id in enumerate(ranking, start=1):
+            scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank)
+    return [doc_id for doc_id, _ in sorted(scores.items(), key=lambda x: -x[1])]</code></pre>
+<p>在两路都出现的文档会拿到两份加分，自然浮到最上面——这正是我们想要的：<strong>语义和关键词都认可的文档，最可能是答案</strong>。</p>
+<h3 id="34-mmr别让-topk-全是同义重复">3.4 MMR：别让 top-k 全是同义重复</h3>
+<p>还有一个隐蔽的浪费：向量检索的 top-k 经常是<strong>同一段内容的三种说法</strong>。查询「Python 列表怎么追加元素」，返回的可能是「append 用法」「在列表末尾添加元素」「list 添加项」三个几乎一样的段落——3 个名额花在了 1 个信息点上。</p>
+<p>MMR（Maximal Marginal Relevance，最大边际相关性）在选每一条时同时考虑两点：</p>
+<pre><code>MMR = λ × 与 query 的相似度 − (1−λ) × 与已选结果的最大相似度</code></pre>
+<ul class="lvl"><li>λ=1：退化为普通 top-k（只顾相关）；</li><li>λ=0：只顾彼此最不相似（太散）；</li><li>实践常取 0.5~0.7：<strong>既要相关，也要互不重复</strong>。</li></ul>
+<p>Java 里这就像给 <code>LinkedHashSet</code> 去重，只是这里的「重复」是向量夹角意义上的重复，需要边选边算。</p>
+<hr/>
+<figure class="figure"><img alt="真实运行：同一个问题在 vector / hybrid(RRF) / mmr 三种模式下的召回差异" src="../../../../../../projects/04-rag/assets/term-retrieve.png" loading="lazy"/><figcaption>真实运行：同一个问题在 vector / hybrid(RRF) / mmr 三种模式下的召回差异</figcaption></figure>
+<figure class="figure"><img alt="真实运行：换一个问题（GIL）再跑一遍，三种模式的差异不是巧合" src="../../../../../../projects/04-rag/assets/term-retrieve-gil.png" loading="lazy"/><figcaption>真实运行：换一个问题（GIL）再跑一遍，三种模式的差异不是巧合</figcaption></figure>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<blockquote><p>以下代码将在 <code>src/rag/retriever.py</code> 落地时实现，这里先当设计稿读。它组合前几章的两个抽象：<code>BaseEmbeddingClient</code>（Chapter 03）和 <code>BaseVectorStore</code>（Chapter 04）。</p></blockquote>
+<pre><code>&quot;&quot;&quot;src/rag/retriever.py — 检索门面：把 embed + 向量库搜索封装成一步调用&quot;&quot;&quot;
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from rag.embedding_client import BaseEmbeddingClient
+from rag.vector_store import BaseVectorStore, ScoredChunk, SearchFilter
+
+
+@dataclass
+class Retriever:
+    &quot;&quot;&quot;检索门面。
+
+    Java 类比：一个 @Service 聚合了 EmbeddingDao 和 VectorStoreDao，
+    对上层只暴露一个 retrieve() 方法。
+    &quot;&quot;&quot;
+    embedding_client: BaseEmbeddingClient
+    vector_store: BaseVectorStore
+    rrf_k: int = 60           # RRF 平滑常数
+    mmr_lambda: float = 0.7   # 1.0 = 纯相关性；0.5~0.7 兼顾多样性
+
+    def retrieve(
+        self,
+        query: str,
+        top_k: int = 5,
+        filter: SearchFilter | None = None,
+        mode: str = &quot;vector&quot;,       # &quot;vector&quot; | &quot;hybrid&quot;
+        mmr: bool = False,
+        fetch_k: int = 20,          # 粗召回数量（mmr / rerank 场景取大值）
+    ) -&gt; list[ScoredChunk]:
+        if not query or not query.strip():
+            raise ValueError(&quot;query 不能为空&quot;)
+
+        query = self._truncate(query)                      # ① 预处理：截断
+        query_vec = self.embedding_client.embed(query)     # ② 单条嵌入
+
+        if mode == &quot;vector&quot;:
+            hits = self.vector_store.search(query_vec, top_k=fetch_k, filter=filter)
+        elif mode == &quot;hybrid&quot;:
+            hits = self._hybrid_search(query, query_vec, fetch_k, filter)
+        else:
+            raise ValueError(f&quot;未知 mode: {mode!r}（可选 vector / hybrid）&quot;)
+
+        if mmr and len(hits) &gt; top_k:
+            hits = self._mmr_select(query_vec, hits, top_k)
+        return hits[:top_k]                                # 粗召回 → 最终 top_k
+
+    # ---- 内部方法 ----
+
+    def _truncate(self, query: str, max_chars: int = 1024) -&gt; str:
+        &quot;&quot;&quot;embedding 模型有输入上限，超长 query 静默截断会丢失语义，这里显式处理&quot;&quot;&quot;
+        return query[:max_chars]
+
+    def _hybrid_search(self, query: str, query_vec, fetch_k, filter):
+        # 向量路：语义召回
+        vec_hits = self.vector_store.search(query_vec, top_k=fetch_k, filter=filter)
+        # 关键词路：BM25 精确召回（BM25Index 由 Chapter 04 附带提供）
+        kw_hits = self.bm25.search(query, top_k=fetch_k, filter=filter)
+        # RRF 只认排名不认分数 → 两路安全融合
+        fused_ids = rrf_fuse(
+            [[h.chunk_id for h in vec_hits], [h.chunk_id for h in kw_hits]],
+            k=self.rrf_k,
+        )
+        by_id = {h.chunk_id: h for h in vec_hits + kw_hits}
+        return [by_id[i] for i in fused_ids]
+
+    def _mmr_select(self, query_vec, hits, top_k) -&gt; list[ScoredChunk]:
+        &quot;&quot;&quot;贪心 MMR：每轮选出 lambda*sim(query) - (1-lambda)*max_sim(已选) 最大的那条&quot;&quot;&quot;
+        selected: list[ScoredChunk] = []
+        candidates = list(hits)
+        while candidates and len(selected) &lt; top_k:
+            best, best_score = None, float(&quot;-inf&quot;)
+            for cand in candidates:
+                rel = self.vector_store.similarity(query_vec, cand.vector)
+                if selected:
+                    max_div = max(
+                        self.vector_store.similarity(s.vector, cand.vector)
+                        for s in selected
+                    )
+                else:
+                    max_div = 0.0
+                score = self.mmr_lambda * rel - (1 - self.mmr_lambda) * max_div
+                if score &gt; best_score:
+                    best, best_score = cand, score
+            selected.append(best)
+            candidates.remove(best)
+        return selected</code></pre>
+<p>设计要点：</p>
+<ul class="lvl"><li><strong>一个方法对外</strong>：上层（第 09 章的 pipeline）只需要 <code>retriever.retrieve(query, top_k=5)</code>，策略全部带默认值——Java 里「门面 Service 聚合多个 DAO」的同款思路。</li><li><strong>策略是参数不是类</strong>：<code>mode</code> / <code>mmr</code> 用参数切换而不是搞出 <code>HybridMmrRetriever</code> 子类，避免类爆炸。</li><li><strong>错误显式化</strong>：空 query 直接抛 <code>ValueError</code>，不静默返回空列表——检索错误本来就是静默的，能提前炸的都提前炸。</li></ul>
+<blockquote><p>为什么不用 LangChain 的 <code>VectorStore.as_retriever()</code>？框架把这些策略都封装好了，但封装也意味着你看不见「RRF 为什么用排名不用分数」「MMR 的 λ 怎么影响结果」。手写一遍，框架在你眼里就从黑盒变成透明盒。</p></blockquote>
+<hr/>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h3 id="坑-1query-太长超出-embedding-模型输入上限">坑 1：query 太长，超出 embedding 模型输入上限</h3>
+<p><strong>现象</strong>：长问题（比如用户把整段报错日志贴进搜索框）检索结果莫名其妙，或 API 直接报 413/超长错误；更阴险的是某些实现<strong>静默截断</strong>，日志里毫无异常，只是结果越来越差。</p>
+<p><strong>原因</strong>：embedding 模型有输入 token 上限（如 512 或 8192），超限部分被截掉。你贴的日志里真正有信息量的报错码恰好排在后面，全被剪没了。</p>
+<p><strong>正确做法</strong>：在 <code>Retriever</code> 入口显式截断（如 <code>_truncate</code>），或做「日志提纯」——只取报错信息那几行再检索。原则：<strong>宁可显式截断并打日志，也不要让底层静默剪</strong>。</p>
+<h3 id="坑-2metadata-过滤条件写错字段名静默返回空">坑 2：metadata 过滤条件写错字段名，静默返回空</h3>
+<p><strong>现象</strong>：加了个过滤 <code>filter={&quot;sorce&quot;: &quot;python-doc&quot;}</code>（source 拼错），检索永远返回 0 条，但程序不报错，你以为是「库里没资料」排查了半天。</p>
+<p><strong>原因</strong>：很多向量库对不存在的过滤字段做「不匹配」处理而不是报错，属于静默失败。</p>
+<p><strong>正确做法</strong>：① 过滤字段名集中定义为常量或 dataclass（<code>SearchFilter(source=...)</code>），杜绝裸 dict 手写；② 首次接入某批数据时，先不带 filter 验证有结果，再逐步加 filter 验证每一步结果集不为空。</p>
+<h3 id="坑-3hybrid-两路分数直接相加">坑 3：hybrid 两路分数直接相加</h3>
+<p><strong>现象</strong>：把向量相似度（0~1）和 BM25 分数（可能是 3.7、15.2 这种没上限的值）直接加权求和，结果关键词路永远碾压向量路，混合检索退化成纯 BM25。</p>
+<p><strong>原因</strong>：两路分数<strong>量纲完全不同</strong>，BM25 没有归一化到固定区间，直接相加等于拿米和斤做加法。</p>
+<p><strong>正确做法</strong>：用 RRF——它只消费<strong>排名</strong>（第 1 名、第 2 名……），排名天然无量纲。除非你能保证两路分数都做了统一的 min-max 归一化，否则不要碰加权求和。</p>
+<h3 id="坑-4查询时换了-embedding-模型">坑 4：查询时换了 embedding 模型</h3>
+<p><strong>现象</strong>：换了新的 embedding 模型重新生成 query 向量，但库里的向量还是老模型生成的，检索结果像随机数。</p>
+<p><strong>原因</strong>：不同模型的向量空间互不相通，维度都可能对不上。</p>
+<p><strong>正确做法</strong>：向量库里记录 embedding 模型名（Chapter 04 的 collection metadata），查询时校验一致；换模型必须全量重建索引。</p>
+<hr/>
+<h2 id="6-自检清单">6. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能不看笔记说出检索五步：预处理 → embed → top-k → 过滤 → 返回</li><li>[ ] 能解释 k 太小和 k 太大各会出什么问题，以及「粗召回 20 + 精排 5」的动机</li><li>[ ] 能说出向量检索和 BM25 各自的强弱场景，并解释为什么混合检索用 RRF 而不是分数相加</li><li>[ ] 能手写 <code>rrf_fuse()</code> 并解释常数 60 的作用</li><li>[ ] 能解释 MMR 的 λ 从 0 到 1 变化时，结果会发生什么</li><li>[ ] <code>Retriever.retrieve()</code> 的参数含义（top_k / filter / mode / mmr / fetch_k）全部能对上号</li></ul>
+<hr/>
+<p>上一章：<a href="04-vector-database.html">04-vector-database.md</a> —— 向量已经存进库里，就差一条查询指令。</p>
+<p>下一章：<a href="06-similarity-search.html">06-similarity-search.md</a> —— 本章调用的「相似度」黑盒，是时候打开看里面的数学了。</p>
+</main>
+</body>
+</html>

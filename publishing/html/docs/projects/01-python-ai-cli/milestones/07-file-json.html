@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lesson 07 — File / JSON：让 AI CLI Assistant 记住历史</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="lesson-07-file-json让-ai-cli-assistant-记住历史">Lesson 07 — File / JSON：让 AI CLI Assistant 记住历史</h1>
+<blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   主线项目：Python AI CLI Assistant   本章目标：通过给 AI CLI Assistant 增加“保存聊天记录”和“恢复聊天记录”能力，学习文件操作、JSON 持久化、路径、上下文管理器，以及文件相关异常处理。</p></blockquote>
+<hr/>
+<h1 id="1-这一章我们遇到了什么问题">1. 这一章我们遇到了什么问题？</h1>
+<p>上一章结束时，我们的 AI CLI Assistant 已经可以：</p>
+<pre><code>/help
+/history
+/clear
+/size
+/last
+/exit</code></pre>
+<p>而且：</p>
+<pre><code>messages</code></pre>
+<p>已经能够保存聊天记录。</p>
+<p>例如：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    },
+    {
+        &quot;role&quot;: &quot;assistant&quot;,
+        &quot;content&quot;: &quot;你好，我是 AI Engineer Assistant。&quot;
+    }
+]</code></pre>
+<p>程序运行期间完全没问题。</p>
+<p>但是：</p>
+<pre><code>You: 你好
+AI: 你好！
+
+You: 我正在学习 Python
+
+You: /exit</code></pre>
+<p>然后程序关闭。</p>
+<p>再次运行：</p>
+<pre><code>python main.py</code></pre>
+<p>输入：</p>
+<pre><code>You: /history</code></pre>
+<p>结果：</p>
+<pre><code>暂无消息。</code></pre>
+<p>为什么？</p>
+<p>因为：</p>
+<blockquote><p><code>messages</code> 只存在于程序运行期间的内存中。</p></blockquote>
+<p>程序退出：</p>
+<pre><code>Python 进程结束
+        ↓
+内存中的 messages 消失</code></pre>
+<p>所以我们需要：</p>
+<h1 id="persistence持久化">Persistence【持久化】</h1>
+<p>让数据离开内存后仍然存在。</p>
+<hr/>
+<h1 id="2-先理解一个重要区别内存-vs-持久化">2. 先理解一个重要区别：内存 vs 持久化</h1>
+<p>现在：</p>
+<pre><code>messages
+ ↓
+Python 内存
+ ↓
+程序运行期间存在</code></pre>
+<p>这种数据：</p>
+<blockquote><p><strong>Memory State【内存状态】</strong></p></blockquote>
+<p>程序退出后就没了。</p>
+<p>而如果：</p>
+<pre><code>messages
+ ↓
+JSON 文件
+ ↓
+磁盘</code></pre>
+<p>即使 Python 进程结束，文件依然存在。</p>
+<p>这种能力：</p>
+<blockquote><p><strong>Persistence【持久化】</strong></p></blockquote>
+<hr/>
+<h1 id="3-先做一个最简单的文件项目">3. 先做一个最简单的文件项目</h1>
+<p>现在我们暂时不碰聊天。</p>
+<p>需求：</p>
+<blockquote><p>程序运行时让用户写一句话，然后保存到文件。</p></blockquote>
+<p>例如：</p>
+<pre><code>请输入一句话：今天开始学习 Python</code></pre>
+<p>最终创建：</p>
+<pre><code>note.txt</code></pre>
+<p>内容：</p>
+<pre><code>今天开始学习 Python</code></pre>
+<hr/>
+<h1 id="4-python-如何创建文件">4. Python 如何创建文件？</h1>
+<p>最基本：</p>
+<pre><code>file = open(
+    &quot;note.txt&quot;,
+    &quot;w&quot;,
+    encoding=&quot;utf-8&quot;
+)</code></pre>
+<p>然后：</p>
+<pre><code>file.write(&quot;今天开始学习 Python&quot;)</code></pre>
+<p>最后：</p>
+<pre><code>file.close()</code></pre>
+<p>现在：</p>
+<pre><code>Python
+ ↓
+open()
+ ↓
+note.txt
+ ↓
+write()
+ ↓
+close()</code></pre>
+<p>文件就保存下来了。</p>
+<hr/>
+<h1 id="5-open-是什么">5. <code>open()</code> 是什么？</h1>
+<p>：</p>
+<pre><code>open()</code></pre>
+<p>用于：</p>
+<blockquote><p>打开一个文件。</p></blockquote>
+<p>最简单的形式：</p>
+<pre><code>open(&quot;文件名&quot;, &quot;模式&quot;)</code></pre>
+<p>常见模式先掌握：</p>
+<pre><code>&quot;r&quot; → read【读取】
+&quot;w&quot; → write【写入】
+&quot;a&quot; → append【追加】</code></pre>
+<hr/>
+<h1 id="6-w-的坑">6. <code>&quot;w&quot;</code> 的坑</h1>
+<p>例如：</p>
+<pre><code>open(&quot;note.txt&quot;, &quot;w&quot;)</code></pre>
+<p>如果文件不存在：</p>
+<blockquote><p>创建文件。</p></blockquote>
+<p>如果文件已经存在：</p>
+<blockquote><p><strong>默认会覆盖原来的内容。</strong></p></blockquote>
+<p>例如原本：</p>
+<pre><code>第一句话
+第二句话</code></pre>
+<p>再次：</p>
+<pre><code>open(&quot;note.txt&quot;, &quot;w&quot;)</code></pre>
+<p>然后写：</p>
+<pre><code>file.write(&quot;第三句话&quot;)</code></pre>
+<p>文件可能只剩：</p>
+<pre><code>第三句话</code></pre>
+<p>所以以后使用 <code>&quot;w&quot;</code> 必须有意识。</p>
+<hr/>
+<h1 id="7-a追加">7. <code>&quot;a&quot;</code>：追加</h1>
+<p>如果想在文件后面继续添加：</p>
+<pre><code>open(&quot;note.txt&quot;, &quot;a&quot;)</code></pre>
+<p>例如：</p>
+<pre><code>file.write(&quot;第三句话\n&quot;)</code></pre>
+<p>原本：</p>
+<pre><code>第一句话
+第二句话</code></pre>
+<p>变成：</p>
+<pre><code>第一句话
+第二句话
+第三句话</code></pre>
+<hr/>
+<h1 id="8-但是这里马上出现一个工程问题">8. 但是这里马上出现一个工程问题</h1>
+<p>刚才：</p>
+<pre><code>file = open(...)
+file.write(...)
+file.close()</code></pre>
+<p>如果：</p>
+<pre><code>file.write()</code></pre>
+<p>过程中发生异常呢？</p>
+<p>可能：</p>
+<pre><code>打开文件
+↓
+发生异常
+↓
+程序中断
+↓
+close() 没有执行</code></pre>
+<p>所以 Python 提供更安全的方式：</p>
+<h1 id="with"><code>with</code></h1>
+<hr/>
+<h1 id="9-with-open">9. <code>with open(...)</code></h1>
+<p>推荐写：</p>
+<pre><code>with open(
+    &quot;note.txt&quot;,
+    &quot;w&quot;,
+    encoding=&quot;utf-8&quot;
+) as file:
+    file.write(&quot;今天开始学习 Python&quot;)</code></pre>
+<p>这里不需要手动：</p>
+<pre><code>file.close()</code></pre>
+<p>Python 会在代码块结束时处理资源关闭。</p>
+<hr/>
+<h1 id="10-with-是什么">10. <code>with</code> 是什么？</h1>
+<p>先不要急着深入语法底层。</p>
+<p>现在把：</p>
+<pre><code>with open(...) as file:</code></pre>
+<p>理解为：</p>
+<blockquote><p><strong>我准备在这个代码块里使用这个文件，代码块结束后自动处理资源清理。</strong></p></blockquote>
+<p>所以：</p>
+<pre><code>with
+ ↓
+获取资源
+ ↓
+使用资源
+ ↓
+离开代码块
+ ↓
+清理资源</code></pre>
+<p>后面学习数据库连接、网络连接、锁等资源时，还会再次看到类似思想。</p>
+<hr/>
+<h1 id="11-项目第一次加入文件">11. 项目第一次加入文件</h1>
+<p>现在创建：</p>
+<pre><code>projects/01-python-ai-cli/</code></pre>
+<p>先做一个实验：</p>
+<pre><code>def save_note(text):
+    with open(
+        &quot;note.txt&quot;,
+        &quot;w&quot;,
+        encoding=&quot;utf-8&quot;
+    ) as file:
+        file.write(text)
+
+
+save_note(&quot;今天开始学习 Python&quot;)</code></pre>
+<p>运行后：</p>
+<pre><code>note.txt</code></pre>
+<p>存在。</p>
+<hr/>
+<h1 id="12-读取文件">12. 读取文件</h1>
+<p>现在问题变成：</p>
+<blockquote><p>程序启动以后怎么把内容读出来？</p></blockquote>
+<p>使用：</p>
+<pre><code>with open(
+    &quot;note.txt&quot;,
+    &quot;r&quot;,
+    encoding=&quot;utf-8&quot;
+) as file:
+    content = file.read()</code></pre>
+<p>然后：</p>
+<pre><code>print(content)</code></pre>
+<p>得到：</p>
+<pre><code>今天开始学习 Python</code></pre>
+<p>所以：</p>
+<pre><code>写入：
+
+Python
+ ↓
+open(&quot;w&quot;)
+ ↓
+write()
+
+
+读取：
+
+open(&quot;r&quot;)
+ ↓
+read()
+ ↓
+Python</code></pre>
+<hr/>
+<h1 id="13-现在回到-ai-cli-assistant">13. 现在回到 AI CLI Assistant</h1>
+<p>我们的真正需求是：</p>
+<blockquote><p><strong>程序退出后保存 messages，下一次启动自动恢复。</strong></p></blockquote>
+<p>例如：</p>
+<pre><code>第一次运行
+
+You: 你好
+You: 我正在学习 Python
+You: /exit</code></pre>
+<p>保存：</p>
+<pre><code>messages.json</code></pre>
+<p>第二次运行：</p>
+<pre><code>程序启动
+ ↓
+读取 messages.json
+ ↓
+恢复 messages
+ ↓
+继续聊天</code></pre>
+<p>这才是我们真正需要的功能。</p>
+<hr/>
+<h1 id="14-为什么不用普通-txt">14. 为什么不用普通 TXT？</h1>
+<p>当然可以。</p>
+<p>例如：</p>
+<pre><code>user: 你好
+assistant: 你好
+user: 什么是 Python
+assistant: ...</code></pre>
+<p>但是以后我们还需要：</p>
+<pre><code>role
+content
+timestamp
+metadata</code></pre>
+<p>结构越来越复杂。</p>
+<p>所以：</p>
+<blockquote><p><strong>结构化聊天记录更适合使用 JSON。</strong></p></blockquote>
+<hr/>
+<h1 id="15-json-回顾">15. JSON 回顾</h1>
+<p>上一章我们已经学过：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    },
+    {
+        &quot;role&quot;: &quot;assistant&quot;,
+        &quot;content&quot;: &quot;你好！&quot;
+    }
+]</code></pre>
+<p>这是：</p>
+<blockquote><p>Python <code>list</code> + <code>dict</code></p></blockquote>
+<p>现在我们需要：</p>
+<pre><code>Python 对象
+ ↓
+JSON
+ ↓
+文件</code></pre>
+<p>所以：</p>
+<pre><code>json.dump()</code></pre>
+<p>就派上用场了。</p>
+<hr/>
+<h1 id="16-jsondump-vs-jsondumps">16. <code>json.dump()</code> vs <code>json.dumps()</code></h1>
+<p>这是现在必须搞清楚的一个区别。</p>
+<h3 id="jsondumps"><code>json.dumps()</code></h3>
+<pre><code>json_text = json.dumps(messages)</code></pre>
+<p>作用：</p>
+<blockquote><p>Python 对象 → JSON 字符串</p></blockquote>
+<p>也就是：</p>
+<pre><code>Python
+ ↓
+JSON String</code></pre>
+<hr/>
+<h3 id="jsondump"><code>json.dump()</code></h3>
+<pre><code>json.dump(messages, file)</code></pre>
+<p>作用：</p>
+<blockquote><p>Python 对象 → JSON 文件</p></blockquote>
+<p>也就是：</p>
+<pre><code>Python
+ ↓
+JSON
+ ↓
+File</code></pre>
+<p>简单记：</p>
+<pre><code>dumps
+↓
+s = string
+
+dump
+↓
+文件</code></pre>
+<p>严格来说，<code>dump()</code> 的核心是写入类文件对象，而不只是某一个具体文件，但现在这样记忆足够。</p>
+<hr/>
+<h1 id="17-第一次实现保存历史">17. 第一次实现保存历史</h1>
+<p>创建：</p>
+<pre><code>import json
+
+
+def save_messages(messages):
+    with open(
+        &quot;messages.json&quot;,
+        &quot;w&quot;,
+        encoding=&quot;utf-8&quot;
+    ) as file:
+
+        json.dump(
+            messages,
+            file,
+            ensure_ascii=False,
+            indent=2
+        )</code></pre>
+<p>调用：</p>
+<pre><code>save_messages(messages)</code></pre>
+<p>结果：</p>
+<pre><code>messages.json</code></pre>
+<p>内容：</p>
+<pre><code>[
+  {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;你好&quot;
+  },
+  {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;你好！&quot;
+  }
+]</code></pre>
+<hr/>
+<h1 id="18-ensureasciifalse">18. <code>ensure_ascii=False</code></h1>
+<p>为什么写：</p>
+<pre><code>ensure_ascii=False</code></pre>
+<p>因为我们的内容可能有中文。</p>
+<p>否则某些情况下 JSON 输出可能出现 Unicode 转义形式。</p>
+<p>使用：</p>
+<pre><code>ensure_ascii=False</code></pre>
+<p>可以让中文更容易直接查看。</p>
+<hr/>
+<h1 id="19-indent2">19. <code>indent=2</code></h1>
+<pre><code>indent=2</code></pre>
+<p>表示：</p>
+<blockquote><p>使用缩进格式化 JSON。</p></blockquote>
+<p>没有它可能是一行：</p>
+<pre><code>[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;你好&quot;},{&quot;role&quot;:&quot;assistant&quot;,&quot;content&quot;:&quot;你好！&quot;}]</code></pre>
+<p>有：</p>
+<pre><code>[
+  {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;你好&quot;
+  },
+  {
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;content&quot;: &quot;你好！&quot;
+  }
+]</code></pre>
+<p>对于开发和调试更友好。</p>
+<figure class="figure"><img alt="真实运行：open w/a 模式、json.dump(indent=2) 持久化 messages 并读回校验" src="../../../../../../projects/01-python-ai-cli/assets/term-file-json.png" loading="lazy"/><figcaption>真实运行：open w/a 模式、json.dump(indent=2) 持久化 messages 并读回校验</figcaption></figure>
+<figure class="figure"><img alt="真实运行：第 6-8 节——json.load() 读回来、读的时候可能出问题、清理临时文件" src="../../../../../../projects/01-python-ai-cli/assets/term-file-persist.png" loading="lazy"/><figcaption>真实运行：第 6-8 节——json.load() 读回来、读的时候可能出问题、清理临时文件</figcaption></figure>
+<hr/>
+<h1 id="20-读取历史">20. 读取历史</h1>
+<p>现在：</p>
+<pre><code>import json
+
+
+def load_messages():
+    with open(
+        &quot;messages.json&quot;,
+        &quot;r&quot;,
+        encoding=&quot;utf-8&quot;
+    ) as file:
+
+        return json.load(file)</code></pre>
+<p>调用：</p>
+<pre><code>messages = load_messages()</code></pre>
+<p>这时候：</p>
+<pre><code>messages.json
+ ↓
+json.load()
+ ↓
+Python list + dict</code></pre>
+<p>重新恢复到内存。</p>
+<hr/>
+<h1 id="21-jsonload-vs-jsonloads">21. <code>json.load()</code> vs <code>json.loads()</code></h1>
+<p>和之前一模一样：</p>
+<h3 id="jsonloads"><code>json.loads()</code></h3>
+<pre><code>json.loads(json_text)</code></pre>
+<p>JSON 字符串：</p>
+<pre><code>JSON String
+ ↓
+Python Object</code></pre>
+<h3 id="jsonload"><code>json.load()</code></h3>
+<pre><code>json.load(file)</code></pre>
+<p>文件：</p>
+<pre><code>File
+ ↓
+JSON
+ ↓
+Python Object</code></pre>
+<p>所以：</p>
+<pre><code>dump
+load</code></pre>
+<p>通常和文件相关。</p>
+<pre><code>dumps
+loads</code></pre>
+<p>通常和字符串相关。</p>
+<hr/>
+<h1 id="22-现在遇到第一个真实问题文件可能不存在">22. 现在遇到第一个真实问题：文件可能不存在</h1>
+<p>第一次启动：</p>
+<pre><code>messages = load_messages()</code></pre>
+<p>但是：</p>
+<pre><code>messages.json</code></pre>
+<p>可能根本不存在。</p>
+<p>于是：</p>
+<pre><code>FileNotFoundError</code></pre>
+<p>这就刚好连接到上一章：</p>
+<h1 id="exception-handling异常处理">Exception Handling【异常处理】</h1>
+<hr/>
+<h1 id="23-安全加载历史">23. 安全加载历史</h1>
+<p>修改：</p>
+<pre><code>import json
+
+
+def load_messages():
+    try:
+        with open(
+            &quot;messages.json&quot;,
+            &quot;r&quot;,
+            encoding=&quot;utf-8&quot;
+        ) as file:
+            return json.load(file)
+
+    except FileNotFoundError:
+        return []</code></pre>
+<p>这样：</p>
+<pre><code>第一次运行
+ ↓
+messages.json 不存在
+ ↓
+FileNotFoundError
+ ↓
+返回 []
+ ↓
+程序正常启动</code></pre>
+<p>这就是：</p>
+<blockquote><p><strong>文件持久化和异常处理第一次真正组合。</strong></p></blockquote>
+<hr/>
+<h1 id="24-还有第二种错误json-文件损坏">24. 还有第二种错误：JSON 文件损坏</h1>
+<p>假设某天：</p>
+<pre><code>messages.json</code></pre>
+<p>被手动修改成：</p>
+<pre><code>hello world</code></pre>
+<p>这不是合法 JSON。</p>
+<p>那么：</p>
+<pre><code>json.load(file)</code></pre>
+<p>可能出现：</p>
+<pre><code>JSONDecodeError</code></pre>
+<p>所以我们的加载函数应该考虑：</p>
+<pre><code>except FileNotFoundError:
+    return []
+
+except json.JSONDecodeError:
+    return []</code></pre>
+<hr/>
+<h1 id="25-这两个异常有什么区别">25. 这两个异常有什么区别？</h1>
+<pre><code>FileNotFoundError</code></pre>
+<p>意思：</p>
+<blockquote><p>文件根本不存在。</p></blockquote>
+<p>而：</p>
+<pre><code>JSONDecodeError</code></pre>
+<p>意思：</p>
+<blockquote><p>文件存在，但内容不是合法 JSON。</p></blockquote>
+<p>这就是为什么：</p>
+<blockquote><p><strong>不同异常应该区别处理。</strong></p></blockquote>
+<hr/>
+<h1 id="26-更合理的-loadmessages">26. 更合理的 load_messages()</h1>
+<pre><code>import json
+
+
+def load_messages():
+    try:
+        with open(
+            &quot;messages.json&quot;,
+            &quot;r&quot;,
+            encoding=&quot;utf-8&quot;
+        ) as file:
+            return json.load(file)
+
+    except FileNotFoundError:
+        return []
+
+    except json.JSONDecodeError:
+        print(&quot;AI: 聊天记录文件格式损坏，将从空记录开始。&quot;)
+        return []</code></pre>
+<hr/>
+<h1 id="27-保存也可能失败">27. 保存也可能失败</h1>
+<p>例如：</p>
+<pre><code>磁盘权限
+路径错误
+磁盘空间不足</code></pre>
+<p>因此：</p>
+<pre><code>def save_messages(messages):
+    try:
+        with open(
+            &quot;messages.json&quot;,
+            &quot;w&quot;,
+            encoding=&quot;utf-8&quot;
+        ) as file:
+            json.dump(
+                messages,
+                file,
+                ensure_ascii=False,
+                indent=2
+            )
+
+    except OSError as error:
+        print(f&quot;AI: 保存聊天记录失败：{error}&quot;)</code></pre>
+<p>这里出现：</p>
+<h1 id="oserror">OSError</h1>
+<p>这是 Python 中处理很多操作系统 / 文件系统相关错误的基础异常类型。</p>
+<p>现在不用深入异常继承体系。</p>
+<p>先理解：</p>
+<pre><code>文件操作失败
+ ↓
+OSError</code></pre>
+<hr/>
+<h1 id="28-项目第一次拥有-persistence-layer持久化层">28. 项目第一次拥有 Persistence Layer【持久化层】</h1>
+<p>现在我们的代码可以变成：</p>
+<pre><code>conversation.py
+│
+├── add_message()
+├── clear_history()
+├── show_history()
+├── get_message_count()
+└── show_last_message()
+
+storage.py
+│
+├── save_messages()
+└── load_messages()</code></pre>
+<p>注意：</p>
+<blockquote><p><code>storage.py</code> 是新角色。</p></blockquote>
+<p>它负责：</p>
+<blockquote><p><strong>数据保存与读取。</strong></p></blockquote>
+<p>而不是聊天逻辑。</p>
+<hr/>
+<h1 id="29-为什么要单独创建-storagepy">29. 为什么要单独创建 <code>storage.py</code>？</h1>
+<p>因为现在有：</p>
+<pre><code>Conversation</code></pre>
+<p>和：</p>
+<pre><code>Persistence</code></pre>
+<p>两个不同职责。</p>
+<p>所以：</p>
+<pre><code>conversation.py
+ ↓
+聊天记录在内存里怎么操作
+
+storage.py
+ ↓
+聊天记录怎么保存到磁盘</code></pre>
+<p>这就是上一章学习的：</p>
+<h1 id="separation-of-concerns关注点分离">Separation of Concerns【关注点分离】</h1>
+<p>再次被项目需求验证。</p>
+<hr/>
+<h1 id="30-项目结构升级">30. 项目结构升级</h1>
+<p>现在：</p>
+<pre><code>projects/
+└── 01-python-ai-cli/
+    ├── README.md
+    │
+    └── src/
+        └── ai_cli/
+            ├── __init__.py
+            ├── main.py
+            ├── config.py
+            ├── conversation.py
+            ├── assistant.py
+            ├── formatter.py
+            └── storage.py</code></pre>
+<p>职责：</p>
+<pre><code>main.py
+↓
+程序入口和主流程
+
+conversation.py
+↓
+内存中的消息管理
+
+assistant.py
+↓
+助手响应
+
+storage.py
+↓
+文件持久化
+
+config.py
+↓
+配置
+
+formatter.py
+↓
+输出格式</code></pre>
+<hr/>
+<h1 id="31-storagepy">31. <code>storage.py</code></h1>
+<p>可以先写：</p>
+<pre><code>import json
+
+
+HISTORY_FILE = &quot;messages.json&quot;
+
+
+def save_messages(messages):
+    try:
+        with open(
+            HISTORY_FILE,
+            &quot;w&quot;,
+            encoding=&quot;utf-8&quot;
+        ) as file:
+            json.dump(
+                messages,
+                file,
+                ensure_ascii=False,
+                indent=2
+            )
+
+    except OSError as error:
+        print(f&quot;AI: 保存聊天记录失败：{error}&quot;)
+
+
+def load_messages():
+    try:
+        with open(
+            HISTORY_FILE,
+            &quot;r&quot;,
+            encoding=&quot;utf-8&quot;
+        ) as file:
+            return json.load(file)
+
+    except FileNotFoundError:
+        return []
+
+    except json.JSONDecodeError:
+        print(
+            &quot;AI: 聊天记录文件格式损坏，&quot;
+            &quot;将从空记录开始。&quot;
+        )
+        return []</code></pre>
+<p>注意：</p>
+<blockquote><p>这只是当前教学阶段的实现，后面我们会进一步改造路径、配置和数据校验。</p></blockquote>
+<hr/>
+<h1 id="32-mainpy-开始变得非常简单">32. main.py 开始变得非常简单</h1>
+<p>主程序：</p>
+<pre><code>from assistant import generate_mock_response
+from conversation import (
+    add_message,
+    clear_history,
+    get_message_count,
+    show_history,
+)
+from storage import (
+    load_messages,
+    save_messages,
+)
+
+
+def main():
+    messages = load_messages()
+
+    print(&quot;AI Engineer CLI Assistant&quot;)
+
+    while True:
+        user_input = input(&quot;\nYou: &quot;)
+
+        if user_input == &quot;/exit&quot;:
+            save_messages(messages)
+            print(&quot;AI: 再见！&quot;)
+            break
+
+        if user_input == &quot;/history&quot;:
+            show_history(messages)
+            continue
+
+        if user_input == &quot;/clear&quot;:
+            clear_history(messages)
+            save_messages(messages)
+            print(&quot;AI: 聊天记录已清空。&quot;)
+            continue
+
+        if user_input == &quot;/size&quot;:
+            count = get_message_count(messages)
+            print(
+                f&quot;AI: 当前共有 {count} 条消息。&quot;
+            )
+            continue
+
+        try:
+            add_message(
+                messages,
+                &quot;user&quot;,
+                user_input
+            )
+
+            answer = generate_mock_response(
+                user_input
+            )
+
+            add_message(
+                messages,
+                &quot;assistant&quot;,
+                answer
+            )
+
+            save_messages(messages)
+
+            print(f&quot;AI: {answer}&quot;)
+
+        except ValueError as error:
+            print(f&quot;AI: 输入错误：{error}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+<p>这里有一个很重要的变化：</p>
+<pre><code>程序启动
+ ↓
+load_messages()
+ ↓
+恢复历史</code></pre>
+<p>以及：</p>
+<pre><code>消息产生
+ ↓
+save_messages()
+ ↓
+磁盘</code></pre>
+<hr/>
+<h1 id="33-现在第一次真正拥有记忆">33. 现在第一次真正拥有“记忆”</h1>
+<p>运行：</p>
+<pre><code>You: 你好
+AI: 我收到你的问题了：你好
+
+You: 我正在学习 Python
+AI: 我收到你的问题了：我正在学习 Python
+
+You: /exit
+AI: 再见！</code></pre>
+<p>磁盘：</p>
+<pre><code>messages.json</code></pre>
+<p>再次：</p>
+<pre><code>python main.py</code></pre>
+<p>然后：</p>
+<pre><code>You: /history</code></pre>
+<p>仍然能够看到之前的：</p>
+<pre><code>user: 你好
+assistant: 我收到你的问题了：你好
+user: 我正在学习 Python
+assistant: 我收到你的问题了：我正在学习 Python</code></pre>
+<p>这就是：</p>
+<h1 id="persistence持久化">Persistence【持久化】</h1>
+<hr/>
+<h1 id="34-记忆到底是什么">34. “记忆”到底是什么？</h1>
+<p>现在开始建立一个很重要的 AI 工程概念。</p>
+<p>这个阶段的记忆其实不是：</p>
+<blockquote><p>大模型自己记住了。</p></blockquote>
+<p>而是：</p>
+<pre><code>程序
+ ↓
+保存 messages
+ ↓
+磁盘 JSON
+ ↓
+重新启动
+ ↓
+读取 JSON
+ ↓
+恢复 messages</code></pre>
+<p>所以：</p>
+<blockquote><p><strong>我们现在做的是应用层 Memory【应用层记忆】。</strong></p></blockquote>
+<p>以后 Agent 的 Memory、Conversation Memory 都会继续建立在类似思想上，只是实现会复杂很多。</p>
+<hr/>
+<h1 id="35-内存记忆-vs-持久化记忆">35. 内存记忆 vs 持久化记忆</h1>
+<p>现在可以画成：</p>
+<pre><code>               Chat History
+                    │
+          ┌─────────┴─────────┐
+          ↓                   ↓
+      Runtime             Persistence
+      运行时状态            持久化状态
+          │                   │
+          ↓                   ↓
+      Python List          JSON File
+          │                   │
+          └─────────┬─────────┘
+                    ↓
+              AI Assistant</code></pre>
+<h3 id="联系描述">联系描述</h3>
+<p>运行过程中，聊天消息保存在 Python 内存中的 <code>messages</code> List 里，程序可以快速读取和修改；为了让程序关闭后历史仍然存在，我们在需要时把 <code>messages</code> 序列化成 JSON 并写入磁盘。程序重新启动时，再从 JSON 文件读取并恢复到内存。因此，内存负责运行时操作，JSON 文件负责跨进程、跨启动保存状态。</p>
+<hr/>
+<h1 id="36-一个非常重要的项目设计问题">36. 一个非常重要的项目设计问题</h1>
+<p>什么时候保存？</p>
+<p>我们目前采用：</p>
+<pre><code>每次消息处理成功
+ ↓
+save_messages()</code></pre>
+<p>退出时：</p>
+<pre><code>/exit
+ ↓
+save_messages()</code></pre>
+<p>这样即使程序异常退出：</p>
+<blockquote><p>最近一次已经成功保存的消息仍然存在。</p></blockquote>
+<p>如果只在 <code>/exit</code> 时保存：</p>
+<pre><code>聊天很多
+ ↓
+程序崩溃
+ ↓
+没有保存
+ ↓
+全部丢失</code></pre>
+<p>所以：</p>
+<blockquote><p><strong>持久化时机本身也是工程设计问题。</strong></p></blockquote>
+<hr/>
+<h1 id="37-现在加入一个小实验自动保存失败">37. 现在加入一个小实验：自动保存失败</h1>
+<p>你可以暂时故意：</p>
+<pre><code>HISTORY_FILE = &quot;/invalid/path/messages.json&quot;</code></pre>
+<p>然后保存。</p>
+<p>你会看到：</p>
+<pre><code>保存聊天记录失败</code></pre>
+<p>而程序不会因为保存失败而直接崩溃。</p>
+<p>这就是上一章异常处理的实际价值。</p>
+<hr/>
+<h1 id="38-这里开始建立分层的概念">38. 这里开始建立“分层”的概念</h1>
+<p>现在我们的 Python AI CLI Assistant 有：</p>
+<pre><code>┌───────────────────────────────┐
+│ main.py                       │
+│ 程序入口 / 用户交互 / 流程     │
+└──────────────┬────────────────┘
+               │
+       ┌───────┼────────┐
+       ↓       ↓        ↓
+conversation assistant storage
+   对话管理     AI行为     持久化</code></pre>
+<p>联系描述：</p>
+<blockquote><p><code>main.py</code> 负责协调整个流程；<code>conversation.py</code> 管理运行时的消息；<code>assistant.py</code> 负责产生助手回复；<code>storage.py</code> 负责把运行时消息保存到磁盘和重新加载。各模块通过函数调用协作，但每个模块只负责自己的问题。</p></blockquote>
+<p>这就是我们从 Python 基础走向工程设计的过程。</p>
+<hr/>
+<h1 id="39-文件读取还有一个新问题相对路径">39. 文件读取还有一个新问题：相对路径</h1>
+<p>我们现在：</p>
+<pre><code>open(&quot;messages.json&quot;, ...)</code></pre>
+<p>这个路径到底在哪里？</p>
+<p>答案是：</p>
+<blockquote><p><strong>相对于当前工作目录（Current Working Directory，CWD）</strong>，不一定是 <code>storage.py</code> 所在目录。</p></blockquote>
+<p>例如你在：</p>
+<pre><code>projects/01-python-ai-cli/</code></pre>
+<p>执行：</p>
+<pre><code>python src/ai_cli/main.py</code></pre>
+<p>和你在：</p>
+<pre><code>projects/01-python-ai-cli/src/</code></pre>
+<p>执行：</p>
+<pre><code>python ai_cli/main.py</code></pre>
+<p>当前工作目录不同。</p>
+<p>于是：</p>
+<pre><code>open(&quot;messages.json&quot;)</code></pre>
+<p>可能写到不同位置。</p>
+<p>这是一个非常典型的 Python 项目路径问题。</p>
+<hr/>
+<h1 id="40-现在先不急着解决">40. 现在先不急着解决</h1>
+<p>这是一个重要问题，但我们先记下来：</p>
+<blockquote><p><strong>文件路径应该由项目明确管理，而不是随便写一个字符串。</strong></p></blockquote>
+<p>未来学习：</p>
+<pre><code>pathlib</code></pre>
+<p>时再正式解决。</p>
+<p>今天先知道：</p>
+<blockquote><p><code>open(&quot;messages.json&quot;)</code> 的路径是相对于当前工作目录，而不是简单相对于当前 <code>.py</code> 文件。</p></blockquote>
+<p>这个认识非常重要。</p>
+<hr/>
+<h1 id="41-pathlib-先认识名字">41. <code>pathlib</code> 先认识名字</h1>
+<p>Python 更现代的路径处理方式：</p>
+<pre><code>from pathlib import Path</code></pre>
+<p>例如：</p>
+<pre><code>path = Path(&quot;messages.json&quot;)</code></pre>
+<p>检查：</p>
+<pre><code>print(path.exists())</code></pre>
+<p>暂时不用系统学习 <code>pathlib</code>。</p>
+<p>这里只是先知道：</p>
+<blockquote><p>后面我们会用更可靠的方式管理文件路径。</p></blockquote>
+<hr/>
+<h1 id="42-本章项目升级">42. 本章项目升级</h1>
+<pre><code>Project 01 — Python AI CLI Assistant
+
+v0.1
+输入 / 输出
+✅
+
+v0.2
+List / Dict / JSON / Messages
+✅
+
+v0.3
+Condition / Loop
+✅
+
+v0.4
+Function
+✅
+
+v0.5
+Module / Package
+✅
+
+v0.6
+Exception / Validation
+✅
+
+v0.7
+File / JSON Persistence
+🔄
+
+v0.8
+venv / pip / Environment
+⬜
+
+v0.9
+HTTP / API
+⬜
+
+v1.0
+Real LLM CLI Assistant
+⬜</code></pre>
+<hr/>
+<h1 id="43-本章知识地图">43. 本章知识地图</h1>
+<pre><code>Python AI CLI Assistant
+          │
+          ↓
+      messages
+          │
+          ↓
+      Python List
+          │
+          ↓
+      json.dump()
+          │
+          ↓
+     messages.json
+          │
+          ↓
+       磁盘
+          │
+          ↓
+     程序重新启动
+          │
+          ↓
+      json.load()
+          │
+          ↓
+      Python List
+          │
+          ↓
+      messages</code></pre>
+<p>旁边还有异常处理：</p>
+<pre><code>File
+ │
+ ├── FileNotFoundError
+ │
+ ├── JSONDecodeError
+ │
+ └── OSError</code></pre>
+<hr/>
+<h1 id="44-本章的核心概念">44. 本章的核心概念</h1>
+<h2 id="file文件">File【文件】</h2>
+<p>程序与磁盘之间保存数据的基本方式。</p>
+<hr/>
+<h2 id="persistence持久化">Persistence【持久化】</h2>
+<p>让数据在程序结束后仍然存在。</p>
+<hr/>
+<h2 id="serialization序列化">Serialization【序列化】</h2>
+<p>把程序中的对象转换成适合保存 / 传输的形式。</p>
+<pre><code>Python
+ ↓
+JSON</code></pre>
+<hr/>
+<h2 id="deserialization反序列化">Deserialization【反序列化】</h2>
+<p>把保存 / 传输的数据重新变成程序对象。</p>
+<pre><code>JSON
+ ↓
+Python</code></pre>
+<hr/>
+<h2 id="context-manager上下文管理器">Context Manager【上下文管理器】</h2>
+<p>我们本章通过：</p>
+<pre><code>with open(...) as file:</code></pre>
+<p>学习了资源使用完成后的自动处理。</p>
+<hr/>
+<h1 id="45-主动回忆">45. 主动回忆</h1>
+<p>不要回头看正文。</p>
+<h3 id="q1">Q1</h3>
+<p>为什么上一章的：</p>
+<pre><code>messages = [...]</code></pre>
+<p>程序退出以后会消失？</p>
+<hr/>
+<h3 id="q2">Q2</h3>
+<p>什么是 Persistence【持久化】？</p>
+<p>请结合我们的 AI CLI Assistant 解释，不要背定义。</p>
+<hr/>
+<h3 id="q3">Q3</h3>
+<p><code>json.dump()</code> 和 <code>json.dumps()</code> 有什么区别？</p>
+<hr/>
+<h3 id="q4">Q4</h3>
+<p><code>json.load()</code> 和 <code>json.loads()</code> 有什么区别？</p>
+<hr/>
+<h3 id="q5">Q5</h3>
+<p>为什么：</p>
+<pre><code>with open(...) as file:</code></pre>
+<p>通常比手动：</p>
+<pre><code>file = open(...)
+...
+file.close()</code></pre>
+<p>更推荐？</p>
+<hr/>
+<h3 id="q6">Q6</h3>
+<p>如果：</p>
+<pre><code>messages.json</code></pre>
+<p>不存在，会出现什么问题？</p>
+<p>应该怎么处理？</p>
+<hr/>
+<h3 id="q7">Q7</h3>
+<p>如果文件存在，但是内容：</p>
+<pre><code>hello world</code></pre>
+<p>不是合法 JSON，会发生什么？</p>
+<hr/>
+<h3 id="q8">Q8</h3>
+<p>为什么我们把：</p>
+<pre><code>save_messages()
+load_messages()</code></pre>
+<p>放到 <code>storage.py</code>，而不是继续堆进 <code>conversation.py</code>？</p>
+<hr/>
+<h1 id="46-实战-challenge-1保存聊天历史">46. 实战 Challenge 1：保存聊天历史</h1>
+<p>不看上面的实现，自己写：</p>
+<pre><code>save_messages(messages)</code></pre>
+<p>要求：</p>
+<pre><code>Python List
+ ↓
+JSON
+ ↓
+messages.json</code></pre>
+<p>格式化 JSON：</p>
+<pre><code>ensure_ascii=False
+indent=2</code></pre>
+<hr/>
+<h1 id="47-实战-challenge-2恢复聊天历史">47. 实战 Challenge 2：恢复聊天历史</h1>
+<p>写：</p>
+<pre><code>load_messages()</code></pre>
+<p>要求：</p>
+<pre><code>文件不存在
+→ []
+
+JSON 损坏
+→ []
+
+正常
+→ 返回 messages</code></pre>
+<p>至少区分：</p>
+<pre><code>FileNotFoundError
+JSONDecodeError</code></pre>
+<hr/>
+<h1 id="48-实战-challenge-3完整启动恢复">48. 实战 Challenge 3：完整启动恢复</h1>
+<p>让：</p>
+<pre><code>main()</code></pre>
+<p>启动时自动：</p>
+<pre><code>load_messages()</code></pre>
+<p>用户退出时：</p>
+<pre><code>save_messages()</code></pre>
+<hr/>
+<h1 id="49-实战-challenge-4自动保存">49. 实战 Challenge 4：自动保存</h1>
+<p>不要只在 <code>/exit</code> 保存。</p>
+<p>每次成功添加一组：</p>
+<pre><code>user
+assistant</code></pre>
+<p>之后：</p>
+<pre><code>save_messages()</code></pre>
+<p>验证：</p>
+<pre><code>聊天
+↓
+强制结束程序
+↓
+重新启动
+↓
+历史仍然存在</code></pre>
+<p>思考：</p>
+<blockquote><p>为什么自动保存比只在退出时保存更可靠？</p></blockquote>
+<hr/>
+<h1 id="50-实战-challenge-5损坏文件">50. 实战 Challenge 5：损坏文件</h1>
+<p>手动把：</p>
+<pre><code>messages.json</code></pre>
+<p>改成：</p>
+<pre><code>hello</code></pre>
+<p>然后启动程序。</p>
+<p>要求：</p>
+<pre><code>不要崩溃
+提示文件损坏
+使用空消息列表启动</code></pre>
+<p>这一次你应该真正看到：</p>
+<blockquote><p>Exception Handling + File + JSON 是如何组合起来的。</p></blockquote>
+<hr/>
+<h1 id="51-本章完成标准">51. 本章完成标准</h1>
+<h3 id="level-1">Level 1</h3>
+<p>知道：</p>
+<pre><code>文件怎么打开
+文件怎么读取
+文件怎么写入</code></pre>
+<h3 id="level-2">Level 2</h3>
+<p>能使用：</p>
+<pre><code>with open(...)</code></pre>
+<h3 id="level-3">Level 3</h3>
+<p>会使用：</p>
+<pre><code>json.dump()
+json.load()</code></pre>
+<h3 id="level-4">Level 4</h3>
+<p>能够区分：</p>
+<pre><code>dump
+dumps
+load
+loads</code></pre>
+<h3 id="level-5">Level 5</h3>
+<p>能够自己完成：</p>
+<blockquote><p><code>save_messages()</code></p></blockquote>
+<p>和：</p>
+<blockquote><p><code>load_messages()</code></p></blockquote>
+<h3 id="level-6">Level 6</h3>
+<p>能够处理：</p>
+<pre><code>FileNotFoundError
+JSONDecodeError
+OSError</code></pre>
+<h3 id="level-7">Level 7</h3>
+<p>能够解释：</p>
+<blockquote><p>为什么 <code>messages</code> 是“运行时记忆”，而 <code>messages.json</code> 是“持久化记忆”？</p></blockquote>
+<hr/>
+<h1 id="52-项目架构现在已经开始像真正的软件了">52. 项目架构现在已经开始像真正的软件了</h1>
+<pre><code>             AI CLI Assistant
+                    │
+                 main.py
+                    │
+        ┌───────────┼───────────┐
+        ↓           ↓           ↓
+ conversation   assistant    storage
+        │           │           │
+        ↓           ↓           ↓
+ messages       response      JSON
+        │                       │
+        └──────────┬────────────┘
+                   ↓
+               persistence</code></pre>
+<p>这条路线描述：</p>
+<blockquote><p><code>main.py</code> 负责程序入口和流程协调，<code>conversation.py</code> 管理内存中的聊天状态，<code>assistant.py</code> 提供当前的助手响应，<code>storage.py</code> 将聊天状态序列化到 JSON 文件并在程序启动时恢复。内存解决程序运行时的快速操作，文件负责跨程序启动保存状态。</p></blockquote>
+<hr/>
+<h1 id="53-下一章为什么不是马上接-llm">53. 下一章为什么不是马上接 LLM？</h1>
+<p>现在你可能会问：</p>
+<blockquote><p>“既然 messages 已经有了，为什么不马上调用大模型？”</p></blockquote>
+<p>因为还有一个真实问题：</p>
+<pre><code>项目依赖怎么安装？
+Python 环境怎么隔离？
+API Key 放哪里？
+不同项目怎么使用不同版本？</code></pre>
+<p>所以我们下一章先解决：</p>
+<h1 id="lesson-08-venv-pip-environment给-ai-cli-assistant-建立真正的-python-开发环境">Lesson 08 — venv / pip / Environment：给 AI CLI Assistant 建立真正的 Python 开发环境</h1>
+<p>继续围绕同一个项目学习：</p>
+<pre><code>Python
+ ↓
+Virtual Environment【虚拟环境】
+ ↓
+pip
+ ↓
+依赖管理
+ ↓
+环境变量
+ ↓
+.env
+ ↓
+配置</code></pre>
+<p>然后我们就能够比较正式地开始：</p>
+<pre><code>HTTP
+ ↓
+LLM API</code></pre>
+<p>并第一次真正把：</p>
+<p>替换成真实的大模型请求。</p>
+<hr/>
+<h1 id="54-本章一句话总结">54. 本章一句话总结</h1>
+<blockquote><p><strong>AI CLI Assistant 在运行时把聊天记录保存在 Python 内存中，而通过 JSON 文件把这些消息持久化到磁盘，程序重新启动时再加载回来；文件操作过程可能失败，因此必须结合 <code>try / except</code> 处理文件不存在、JSON 损坏和系统级文件错误，从而让程序具备真正的持久化能力和更可靠的运行方式。</strong></p></blockquote>
+</main>
+</body>
+</html>

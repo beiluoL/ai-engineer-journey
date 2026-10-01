@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>02 Excel 报表自动化</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="02-excel-报表自动化">02 Excel 报表自动化</h1>
+<blockquote><p><strong>难度</strong> ●●○ 进阶 ｜ <strong>预计</strong> 2–3 天 ｜ <strong>依赖</strong> pandas、openpyxl、matplotlib 上级目录：<a href="../README.html">练手项目总览</a></p></blockquote>
+<h2 id="你要做的东西">你要做的东西</h2>
+<p>三家门店各自导出一份 CSV，你要把它们变成<strong>一份可以直接发出去的多 sheet 报表</strong>：</p>
+<pre><code>data/sales-beijing.csv  ┐
+data/sales-shanghai.csv ├─→ 合并 → 清洗 → 统计 → assets/sales-report.xlsx（6 个 sheet）
+data/sales-shenzhen.csv ┘                              └→ 两张图（折线 + 条形）</code></pre>
+<p>这就是「每周一手工复制粘贴两小时」这件事的标准解法。它的价值不在技术难度，而在于<strong>从此以后这个活不需要人</strong>——这才是自动化。</p>
+<h2 id="先看结果">先看结果</h2>
+<p><strong>第一步：造数据</strong>（顺手埋了三处真实的脏数据，见下）</p>
+<figure class="figure"><img alt="生成样本数据" src="../../../../../python-practice/02-excel-automation/assets/term-02-data.png" loading="lazy"/><figcaption>生成样本数据</figcaption></figure>
+<p><strong>第二步：报表流水线</strong>（合并 → 清洗 → 统计 → 写 Excel → 画图）</p>
+<figure class="figure"><img alt="报表流水线真实运行" src="../../../../../python-practice/02-excel-automation/assets/term-02-report.png" loading="lazy"/><figcaption>报表流水线真实运行</figcaption></figure>
+<p>注意图里这几行，它们是这个项目真正教你的东西：</p>
+<ul class="lvl"><li><code>合并后 1715 行</code> → <code>丢弃 重复行 8 / 日期非法 0 / 数量为空 8</code> → <code>清洗后 1699 行（保留率 99.1%）</code> <strong>每一步丢了多少行都必须打印出来。</strong> 报表自动化最致命的 bug 不是报错，而是「悄悄少了几百行」而没人发现。</li><li><code>日期非法 0</code> —— 源数据里 430 行用的是 <code>2026/01/26</code> 这种斜杠格式，靠 <code>pd.to_datetime(..., format=&quot;mixed&quot;)</code> 全部救回来了。</li><li><code>月份 × 品类</code> 透视表最后一行/列是 <code>All</code>，这是 <code>pivot_table(margins=True)</code> 自动加的小计。</li></ul>
+<p>报表本身长这样（<code>assets/sales-report.xlsx</code>，6 个 sheet）：</p>
+<table><thead><tr><th>sheet</th><th>内容</th><th>行 × 列</th></tr></thead><tbody><tr><td><code>清洗后明细</code></td><td>全部可用交易，销售额列带红绿色阶</td><td>1700 × 7</td></tr><tr><td><code>门店汇总</code></td><td>订单数 / 销售额 / 销量 / 客单价，按销售额降序</td><td>4 × 5</td></tr><tr><td><code>品类汇总</code></td><td>销售额 / 销量 / 占比</td><td>4 × 4</td></tr><tr><td><code>月份×品类</code></td><td>透视表（带 All 小计）</td><td>8 × 5</td></tr><tr><td><code>SKU 排行</code></td><td>全部 9 个 SKU 的销售额排名</td><td>10 × 4</td></tr><tr><td><code>月份×门店</code></td><td>画折线图用的数据源</td><td>7 × 4</td></tr></tbody></table>
+<p>两张图（也都是脚本现场画出来的，不是手绘）：</p>
+<figure class="figure"><img alt="各门店月度销售额" src="../../../../../python-practice/02-excel-automation/assets/chart-monthly-revenue.png" loading="lazy"/><figcaption>各门店月度销售额</figcaption></figure>
+<figure class="figure"><img alt="品类销售额占比" src="../../../../../python-practice/02-excel-automation/assets/chart-category-share.png" loading="lazy"/><figcaption>品类销售额占比</figcaption></figure>
+<h2 id="你要学到的-python-pandas">你要学到的 Python / pandas</h2>
+<table><thead><tr><th>知识点</th><th>在本项目里落在哪</th></tr></thead><tbody><tr><td><code>pd.read_csv</code></td><td>读三个 CSV，注意 <code>encoding=&quot;utf-8-sig&quot;</code>（带 BOM）</td></tr><tr><td><code>pd.concat</code></td><td>把三张结构相同的表纵向拼成一张</td></tr><tr><td><code>pd.to_datetime(..., format=&quot;mixed&quot;)</code></td><td>处理混排日期格式（真实数据的头号坑）</td></tr><tr><td><code>drop_duplicates</code> / <code>dropna</code> / <code>to_numeric(errors=&quot;coerce&quot;)</code></td><td>清洗三件套</td></tr><tr><td>派生列</td><td><code>df[&quot;revenue&quot;] = df[&quot;qty&quot;] * df[&quot;unit_price&quot;]</code>、<code>dt.to_period(&quot;M&quot;)</code></td></tr><tr><td><code>groupby().agg(命名聚合)</code></td><td>一次算出订单数/销售额/销量/客单价</td></tr><tr><td><code>pivot_table(margins=True)</code></td><td>二维透视 + 自动小计</td></tr><tr><td><code>ExcelWriter</code> 多 sheet</td><td>一个文件写 6 个表</td></tr><tr><td>openpyxl 二次加工</td><td>冻结首行、表头配色、列宽自适应、数字格式、色阶</td></tr><tr><td>matplotlib 中文字体</td><td>不设字体就全是「豆腐块」方框</td></tr><tr><td>固定随机种子</td><td><code>random.Random(42)</code> 让数据可复现</td></tr></tbody></table>
+<h2 id="怎么跑起来">怎么跑起来</h2>
+<pre><code>cd python-practice/02-excel-automation
+
+# 装依赖（第一次）
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r ../requirements.txt
+
+python3 make_sample_data.py    # 生成 data/*.csv
+python3 report.py              # 生成 assets/sales-report.xlsx 与两张图
+
+bash demo.sh                   # 或者一次跑完上面两步，输出就是截图里的内容</code></pre>
+<h2 id="代码结构">代码结构</h2>
+<pre><code>02-excel-automation/
+├── make_sample_data.py   # 造数据（固定 seed=42，可复现）+ 注入三类脏数据
+├── report.py             # 主流程：合并→清洗→统计→写 Excel→画图
+├── demo.sh               # 可复现演示脚本
+├── data/                 # 三份样本 CSV（入库，作为证据）
+├── assets/               # 报表 xlsx、两张图、终端截图、原始运行输出 run.txt
+└── README.md</code></pre>
+<h2 id="关键代码拆解">关键代码拆解</h2>
+<p><strong>① 为什么脏数据要「故意埋」</strong></p>
+<p>真实项目里，<code>df.drop_duplicates()</code> 这行代码你写完不知道对不对——因为真实数据可能本来就没重复。所以这里<strong>主动注入</strong>了 5 行完全重复、8 行数量为空、430 行斜杠日期：</p>
+<pre><code>for r in rng.sample(rows, 8):
+    r[&quot;qty&quot;] = &quot;&quot;           # 数量为空
+for r in rng.sample(rows, 5):
+    rows.append(dict(r))    # 完全重复</code></pre>
+<p>跑完你能对着 <code>丢弃 重复行 8 / 数量为空 8</code> 验证你的清洗逻辑真的生效了。<strong>能验证，才叫会了。</strong></p>
+<p><strong>② 清洗顺序有讲究</strong></p>
+<pre><code>df[&quot;date&quot;] = pd.to_datetime(df[&quot;date&quot;], format=&quot;mixed&quot;, errors=&quot;coerce&quot;)  # 先转类型
+df = df.dropna(subset=[&quot;date&quot;])                                          # 再丢坏的
+df = df.drop_duplicates()                                                # 后去重
+df[&quot;qty&quot;] = pd.to_numeric(df[&quot;qty&quot;], errors=&quot;coerce&quot;)                    # 空值变 NaN
+df = df.dropna(subset=[&quot;qty&quot;])</code></pre>
+<p>先转类型再去重，是因为 <code>&quot;6&quot;</code> 和 <code>6</code> 在 pandas 眼里不是同一个值——如果先去重，类型不一致的「重复行」会漏网。这类顺序问题只有真跑过才记得住。</p>
+<p><strong>③ 中文字体：不做这一步，图全是方块</strong></p>
+<pre><code>installed = {f.name for f in font_manager.fontManager.ttflist}
+for name in (&quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Heiti SC&quot;, &quot;Arial Unicode MS&quot;):
+    if name in installed:
+        plt.rcParams[&quot;font.sans-serif&quot;] = [name]
+        plt.rcParams[&quot;axes.unicode_minus&quot;] = False   # 负号别变方块
+        break</code></pre>
+<p><code>axes.unicode_minus = False</code> 这一行最容易被忽略：字体设对了中文能显示，但坐标轴上的负号仍然会是方块——因为它用的是另一套数学符号字形。</p>
+<p><strong>④ 列宽要用「显示宽度」而不是「字符数」</strong></p>
+<pre><code>def disp_width(text: str) -&gt; int:
+    return sum(2 if unicodedata.east_asian_width(ch) in &quot;WF&quot; else 1 for ch in text)</code></pre>
+<p><code>len(&quot;门店&quot;)</code> 是 2，但在 Excel 里它占 <strong>4 格宽</strong>。直接用 <code>len()</code> 算列宽，中英混排的表就会挤成一团。</p>
+<p><strong>⑤ pandas 管数据，openpyxl 管颜面</strong></p>
+<p>pandas 的 <code>to_excel</code> 只能写内容，写不了颜色/列宽/冻结窗格。所以流程是「pandas 写完 → openpyxl 打开再加工」：</p>
+<pre><code>with pd.ExcelWriter(XLSX, engine=&quot;openpyxl&quot;) as writer:
+    ...
+wb = load_workbook(XLSX)     # 重新打开
+ws.freeze_panes = &quot;A2&quot;       # 冻结首行
+...
+wb.save(XLSX)</code></pre>
+<h2 id="常见坑">常见坑</h2>
+<table><thead><tr><th>坑</th><th>现象</th><th>怎么破</th></tr></thead><tbody><tr><td>读带 BOM 的 CSV 没指定编码</td><td>第一列列名变成 <code>\ufeffdate</code>，<code>df[&quot;date&quot;]</code> 报 KeyError</td><td><code>encoding=&quot;utf-8-sig&quot;</code></td></tr><tr><td>日期格式混排</td><td><code>to_datetime</code> 抛 <code>ValueError</code> 或整列变 NaT</td><td><code>format=&quot;mixed&quot;</code> 或先 <code>str.replace(&quot;/&quot;, &quot;-&quot;)</code></td></tr><tr><td><code>dropna</code> 把整个数据集清空</td><td>有一列全空，<code>dropna()</code> 不传 subset 会删掉所有行</td><td>永远写 <code>dropna(subset=[...])</code></td></tr><tr><td>在循环里 <code>df.append(row)</code></td><td>pandas 3.x 已删除该方法，直接 AttributeError</td><td>先收集到 list，最后 <code>pd.concat</code> 一次</td></tr><tr><td><code>pivot_table</code> 默认 <code>aggfunc=&quot;mean&quot;</code></td><td>销售额算成了平均值（少了一个数量级）</td><td>显式写 <code>aggfunc=&quot;sum&quot;</code></td></tr><tr><td>matplotlib 中文乱码</td><td>标题全是 □□□</td><td>设置 <code>font.sans-serif</code></td></tr><tr><td>图表纵轴刻度写成 <code>.0f</code></td><td>1.5 万显示成「2万」，刻度全一样</td><td>保留一位小数</td></tr></tbody></table>
+<h2 id="验收标准做完自检">验收标准（做完自检）</h2>
+<ul class="lvl"><li>[ ] <code>report.py</code> 打印的「丢弃 重复行 / 数量为空」与 <code>make_sample_data.py</code> 报告的注入数量对得上</li><li>[ ] <code>assets/sales-report.xlsx</code> 有 6 个 sheet，每个 sheet 首行冻结、表头是深蓝底白字</li><li>[ ] 三个门店的销售额相加（<code>114960 + 111703 + 91118 = 317781</code>）= 透视表里 <code>All</code> 行的总计</li><li>[ ] 两张图里的中文正常显示，没有方块</li><li>[ ] 删掉 <code>data/</code> 目录重跑 <code>demo.sh</code>，输出与截图完全一致（可复现性）</li></ul>
+<h2 id="进阶挑战">进阶挑战</h2>
+<ul class="lvl"><li><strong>加一列「环比」</strong> —— 每个门店当月销售额相对上月的增长百分比，正增长标红、负增长标绿（中国习惯）。</li><li><strong>换成从 Excel 读</strong> —— 把输入从 CSV 换成 <code>.xlsx</code>（<code>pd.read_excel</code>），并处理「一份文件里多个 sheet」的情况。</li><li><strong>加自动邮件</strong> —— 报表生成后用 <code>smtplib</code> 发出去（练习异常处理与超时重试）。<strong>注意</strong>：不要把邮箱密码写进代码，用环境变量。</li><li><strong>性能对比</strong> —— 把样本量放大到 100 万行，对比 <code>iterrows()</code> 逐行处理与向量化操作的耗时差（提示：会差几个数量级）。</li><li><strong>写测试</strong> —— 给 <code>load_and_clean()</code> 写 <code>pytest</code>：构造一小段已知数据，断言清洗后的行数与销售额。这也是 <code>04-fastapi-blog</code> 里要用的技能。</li></ul>
+</main>
+</body>
+</html>

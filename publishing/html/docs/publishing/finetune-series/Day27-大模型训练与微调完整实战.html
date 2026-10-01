@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day27：大模型训练与微调完整实战</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day27大模型训练与微调完整实战">Day27：大模型训练与微调完整实战</h1>
+<h1 id="transformer-sft-lora-qlora-llamafactory">Transformer → SFT → LoRA → QLoRA → LLaMA-Factory</h1>
+<p>前面 Day26 解决了：</p>
+<blockquote><p><strong>模型是什么、怎么下载、怎么部署。</strong></p></blockquote>
+<p>你现在知道：</p>
+<pre><code>Hugging Face
+
+↓
+
+Safetensors
+
+↓
+
+Transformers
+
+↓
+
+Ollama
+
+↓
+
+vLLM</code></pre>
+<p>但是还有一个核心问题：</p>
+<blockquote><p>一个大模型是怎么从“通用模型”变成“企业专用模型”的？</p></blockquote>
+<p>例如：</p>
+<p>原始：</p>
+<pre><code>Qwen2.5-7B</code></pre>
+<p>它会：</p>
+<ul class="lvl"><li>中文聊天</li></ul>
+<ul class="lvl"><li>写代码</li></ul>
+<ul class="lvl"><li>总结文章</li></ul>
+<p>但是企业想要：</p>
+<pre><code>Java面试专家模型
+
+客服专家模型
+
+法律助手模型
+
+医疗助手模型</code></pre>
+<p>怎么办？</p>
+<p>答案：</p>
+<h1 id="model-finetuning模型微调">Model Fine-tuning【模型微调】</h1>
+<hr/>
+<h1 id="一先理解训练-微调">一、先理解：训练 ≠ 微调</h1>
+<p>很多小白误解：</p>
+<blockquote><p>我要训练一个ChatGPT。</p></blockquote>
+<p>实际上企业99%：</p>
+<p>不是从0训练。</p>
+<p>而是：</p>
+<pre><code>基础模型
+
++
+
+企业数据
+
+↓
+
+领域模型</code></pre>
+<hr/>
+<h1 id="二大模型训练路线">二、大模型训练路线</h1>
+<p>完整流程：</p>
+<pre><code>
+海量文本数据
+
+↓
+
+Pre-training【预训练】
+
+↓
+
+Base Model【基础模型】
+
+↓
+
+SFT【监督微调】
+
+↓
+
+RLHF/DPO【偏好优化】
+
+↓
+
+Chat Model【聊天模型】</code></pre>
+<hr/>
+<h1 id="三pretraining预训练">三、Pre-training【预训练】</h1>
+<h2 id="什么是预训练">什么是预训练？</h2>
+<p>让模型学习：</p>
+<p>语言规律。</p>
+<p>例如：</p>
+<p>输入：</p>
+<pre><code>Java中的HashMap底层采用</code></pre>
+<p>模型预测：</p>
+<pre><code>数组+链表+红黑树</code></pre>
+<hr/>
+<p>训练数据：</p>
+<p>非常大：</p>
+<p>例如：</p>
+<ul class="lvl"><li>网页</li></ul>
+<ul class="lvl"><li>书籍</li></ul>
+<ul class="lvl"><li>代码</li></ul>
+<ul class="lvl"><li>文档</li></ul>
+<p>规模：</p>
+<p>TB级。</p>
+<hr/>
+<h2 id="预训练目标">预训练目标</h2>
+<p>本质：</p>
+<p>预测下一个Token。</p>
+<p>例如：</p>
+<p>输入：</p>
+<pre><code>我喜欢吃</code></pre>
+<p>模型预测：</p>
+<pre><code>苹果
+香蕉
+米饭</code></pre>
+<hr/>
+<p>公式：</p>
+<pre><code>
+P(next token | previous tokens)</code></pre>
+<hr/>
+<h1 id="四transformer是什么">四、Transformer是什么？</h1>
+<p>Transformer：</p>
+<p>大模型核心结构。</p>
+<p>2017年论文：</p>
+<p>《Attention Is All You Need》</p>
+<hr/>
+<p>简单理解：</p>
+<p>Transformer：</p>
+<p>一个超级语言处理架构。</p>
+<hr/>
+<p>核心：</p>
+<p>Attention【注意力机制】。</p>
+<p>作用：</p>
+<p>让模型知道：</p>
+<p>一句话中哪些词重要。</p>
+<hr/>
+<p>例如：</p>
+<pre><code>小明把苹果给小红，因为她喜欢吃水果。</code></pre>
+<p>Attention：</p>
+<p>知道：</p>
+<p>“她”</p>
+<p>指：</p>
+<p>小红。</p>
+<hr/>
+<h1 id="五transformer结构">五、Transformer结构</h1>
+<p>简化：</p>
+<pre><code>
+输入文本
+
+
+↓
+
+Tokenizer
+
+
+↓
+
+Embedding
+
+
+↓
+
+Transformer Layers
+
+
+↓
+
+Output
+
+
+↓
+
+预测Token
+</code></pre>
+<hr/>
+<p>每一层：</p>
+<p>包含：</p>
+<pre><code>
+Attention
+
++
+
+Feed Forward Network
+
++
+
+Normalization</code></pre>
+<hr/>
+<h1 id="六参数parameter是什么">六、参数(Parameter)是什么？</h1>
+<p>例如：</p>
+<p>Qwen2.5-7B。</p>
+<p>7B：</p>
+<p>70亿参数。</p>
+<p>参数：</p>
+<p>就是模型训练过程中学习出来的数字。</p>
+<hr/>
+<p>例如：</p>
+<p>简单神经网络：</p>
+<pre><code>y = wx+b</code></pre>
+<p>w：</p>
+<p>就是参数。</p>
+<hr/>
+<p>大模型：</p>
+<p>几十亿个w。</p>
+<hr/>
+<h1 id="七为什么不能直接训练">七、为什么不能直接训练？</h1>
+<p>假设：</p>
+<p>Qwen 7B。</p>
+<p>重新训练：</p>
+<p>需要：</p>
+<p>巨大GPU。</p>
+<p>原因：</p>
+<p>不仅存模型。</p>
+<p>还需要：</p>
+<ul class="lvl"><li>梯度</li></ul>
+<ul class="lvl"><li>优化器</li></ul>
+<ul class="lvl"><li>激活值</li></ul>
+<p>显存需求：</p>
+<p>可能几十GB到几百GB。</p>
+<hr/>
+<p>所以：</p>
+<p>企业采用：</p>
+<h1 id="finetuning微调">Fine-tuning【微调】</h1>
+<hr/>
+<h1 id="八sft是什么">八、SFT是什么？</h1>
+<h2 id="sft">SFT</h2>
+<p>英文：</p>
+<p>Supervised Fine-Tuning</p>
+<p>中文：</p>
+<p>监督微调。</p>
+<hr/>
+<p>作用：</p>
+<p>让模型学会：</p>
+<p>按照指令回答。</p>
+<hr/>
+<p>例如：</p>
+<p>训练前：</p>
+<p>用户：</p>
+<pre><code>解释HashMap</code></pre>
+<p>模型：</p>
+<p>可能：</p>
+<p>普通介绍。</p>
+<hr/>
+<p>SFT后：</p>
+<pre><code>面试回答：
+
+1. 数据结构
+
+2. put流程
+
+3. resize
+
+4. 并发问题
+
+5. 优化方案</code></pre>
+<hr/>
+<h1 id="九sft训练数据格式">九、SFT训练数据格式</h1>
+<p>最常见：</p>
+<p>Instruction格式。</p>
+<p>例如：</p>
+<p>json：</p>
+<pre><code>{
+&quot;instruction&quot;:
+&quot;你是Java高级面试官&quot;,
+
+&quot;input&quot;:
+&quot;ConcurrentHashMap为什么线程安全?&quot;,
+
+&quot;output&quot;:
+&quot;JDK8通过CAS+synchronized...&quot;
+}</code></pre>
+<hr/>
+<p>这就是你之前创建的：</p>
+<pre><code>java_interview.json</code></pre>
+<hr/>
+<h1 id="十lora是什么">十、LoRA是什么？</h1>
+<h2 id="lowrank-adaptation">Low-Rank Adaptation</h2>
+<p>中文：</p>
+<p>低秩适配。</p>
+<hr/>
+<p>核心思想：</p>
+<p>不要修改整个模型。</p>
+<p>冻结：</p>
+<p>原模型。</p>
+<p>增加：</p>
+<p>小模块。</p>
+<hr/>
+<p>原模型：</p>
+<pre><code>
+Qwen
+
+70亿参数</code></pre>
+<hr/>
+<p>加入：</p>
+<pre><code>
+LoRA Adapter
+
+几千万参数</code></pre>
+<hr/>
+<p>结构：</p>
+<pre><code>
+输入
+
+ |
+
+ ↓
+
+
+原模型(W)
+
+
+ +
+
+LoRA(A,B)
+
+
+ ↓
+
+
+输出
+</code></pre>
+<hr/>
+<h1 id="十一为什么lora有效">十一、为什么LoRA有效？</h1>
+<p>研究发现：</p>
+<p>模型参数变化：</p>
+<p>其实集中在低维空间。</p>
+<p>所以：</p>
+<p>不用修改全部。</p>
+<hr/>
+<p>优势：</p>
+<h2 id="显存低">显存低</h2>
+<p>全量训练：</p>
+<p>几十GB显存。</p>
+<p>LoRA：</p>
+<p>几GB～几十GB。</p>
+<hr/>
+<h2 id="速度快">速度快</h2>
+<p>训练参数少。</p>
+<hr/>
+<h2 id="多任务">多任务</h2>
+<p>一个模型：</p>
+<p>多个Adapter。</p>
+<p>例如：</p>
+<pre><code>
+Qwen
+
+
++
+
+Java LoRA
+
+
++
+
+客服 LoRA
+
+
++
+
+法律 LoRA</code></pre>
+<hr/>
+<h1 id="十二qlora是什么">十二、QLoRA是什么？</h1>
+<h2 id="quantized-lora">Quantized LoRA</h2>
+<p>中文：</p>
+<p>量化低秩适配。</p>
+<hr/>
+<p>LoRA：</p>
+<p>基础模型：</p>
+<p>FP16。</p>
+<hr/>
+<p>QLoRA：</p>
+<p>基础模型：</p>
+<p>4bit量化。</p>
+<hr/>
+<p>区别：</p>
+<pre><code>
+LoRA:
+
+Qwen FP16
+
++
+
+LoRA
+
+
+QLoRA:
+
+Qwen INT4
+
++
+
+LoRA</code></pre>
+<hr/>
+<h1 id="十三为什么qlora重要">十三、为什么QLoRA重要？</h1>
+<p>以前：</p>
+<p>7B模型微调：</p>
+<p>需要：</p>
+<p>A100。</p>
+<hr/>
+<p>QLoRA：</p>
+<p>4090：</p>
+<p>24GB显存。</p>
+<p>也可以。</p>
+<hr/>
+<p>所以：</p>
+<p>个人学习首选：</p>
+<p>QLoRA。</p>
+<hr/>
+<h1 id="十四llamafactory是什么">十四、LLaMA-Factory是什么？</h1>
+<h2 id="llamafactory">LLaMA-Factory</h2>
+<p>一个开源微调框架。</p>
+<p>作用：</p>
+<p>简化：</p>
+<p>大模型训练。</p>
+<hr/>
+<p>以前：</p>
+<p>自己写：</p>
+<ul class="lvl"><li>Dataset</li></ul>
+<ul class="lvl"><li>Trainer</li></ul>
+<ul class="lvl"><li>LoRA</li></ul>
+<ul class="lvl"><li>Quantization</li></ul>
+<p>很复杂。</p>
+<hr/>
+<p>现在：</p>
+<p>配置：</p>
+<p>yaml。</p>
+<p>运行：</p>
+<pre><code>llamafactory-cli train config.yaml</code></pre>
+<hr/>
+<h1 id="十五llamafactory训练流程">十五、LLaMA-Factory训练流程</h1>
+<p>完整：</p>
+<pre><code>
+准备数据
+
+
+↓
+
+准备模型
+
+
+↓
+
+配置训练参数
+
+
+↓
+
+加载Tokenizer
+
+
+↓
+
+加载模型
+
+
+↓
+
+插入LoRA
+
+
+↓
+
+训练
+
+
+↓
+
+保存Adapter
+</code></pre>
+<hr/>
+<h1 id="十六一次完整微调案例">十六、一次完整微调案例</h1>
+<p>目标：</p>
+<p>Java Interview Model。</p>
+<hr/>
+<h2 id="step1-数据">Step1 数据</h2>
+<p>准备：</p>
+<p>5000条：</p>
+<pre><code>{
+question:
+&quot;HashMap为什么线程不安全?&quot;,
+
+answer:
+&quot;...&quot;
+}</code></pre>
+<hr/>
+<h2 id="step2-基础模型">Step2 基础模型</h2>
+<p>下载：</p>
+<pre><code>Qwen2.5-7B-Instruct</code></pre>
+<hr/>
+<h2 id="step3-配置">Step3 配置</h2>
+<p>yaml：</p>
+<pre><code>model_name_or_path:
+Qwen2.5-7B
+
+
+stage:
+sft
+
+
+finetuning_type:
+lora
+
+
+quantization_bit:
+4
+
+
+lora_rank:
+16</code></pre>
+<hr/>
+<h2 id="step4-训练">Step4 训练</h2>
+<p>执行：</p>
+<pre><code>llamafactory-cli train</code></pre>
+<hr/>
+<h2 id="step5-输出">Step5 输出</h2>
+<p>得到：</p>
+<pre><code>java-lora/
+
+
+adapter_model.safetensors
+
+adapter_config.json</code></pre>
+<hr/>
+<h1 id="十七adapter是什么">十七、Adapter是什么？</h1>
+<p>LoRA训练产生：</p>
+<p>不是完整模型。</p>
+<p>例如：</p>
+<p>原：</p>
+<pre><code>Qwen:
+
+15GB</code></pre>
+<hr/>
+<p>LoRA：</p>
+<pre><code>adapter:
+
+100MB</code></pre>
+<hr/>
+<p>运行：</p>
+<p>需要：</p>
+<pre><code>
+Qwen
+
++
+
+Adapter</code></pre>
+<hr/>
+<h1 id="十八合并模型">十八、合并模型</h1>
+<p>生产：</p>
+<p>可能合并。</p>
+<p>流程：</p>
+<pre><code>
+Qwen
+
++
+
+LoRA
+
+
+↓
+
+Merge
+
+
+↓
+
+完整模型
+
+
+↓
+
+vLLM部署</code></pre>
+<hr/>
+<h1 id="十九微调后如何部署">十九、微调后如何部署？</h1>
+<p>方式1：</p>
+<p>加载Adapter。</p>
+<p>方式2：</p>
+<p>合并。</p>
+<p>然后：</p>
+<pre><code>vllm serve \
+java-qwen-model</code></pre>
+<hr/>
+<p>调用：</p>
+<p>Spring Boot：</p>
+<pre><code>
+用户
+
+↓
+
+Java
+
+↓
+
+vLLM
+
+↓
+
+Java专家模型</code></pre>
+<hr/>
+<h1 id="二十rag和微调区别">二十、RAG和微调区别</h1>
+<p>这是面试必问。</p>
+<table><thead><tr><th></th><th>RAG</th><th>微调</th></tr></thead><tbody><tr><td>解决</td><td>知识问题</td><td>能力问题</td></tr><tr><td>改变模型</td><td>否</td><td>是</td></tr><tr><td>数据变化</td><td>容易更新</td><td>需要训练</td></tr><tr><td>成本</td><td>低</td><td>高</td></tr><tr><td>适合</td><td>企业知识库</td><td>领域能力</td></tr></tbody></table>
+<hr/>
+<p>例子：</p>
+<p>公司制度：</p>
+<p>用RAG。</p>
+<p>让模型：</p>
+<p>学会客服语气。</p>
+<p>用微调。</p>
+<hr/>
+<h1 id="二十一企业真实组合">二十一、企业真实组合</h1>
+<p>不是二选一。</p>
+<p>企业：</p>
+<pre><code>
+基础模型
+
+↓
+
+RAG
+
+↓
+
+LoRA
+
+↓
+
+Agent
+
+↓
+
+业务系统</code></pre>
+<hr/>
+<p>例如：</p>
+<p>客服AI：</p>
+<p>Qwen</p>
+<p>客服LoRA</p>
+<p>产品知识RAG</p>
+<p>订单Agent</p>
+<hr/>
+<h1 id="二十二你的-java-ai-项目升级">二十二、你的 Java AI 项目升级</h1>
+<p>之前：</p>
+<pre><code>Spring Boot
+
++
+
+LangChain4j
+
++
+
+Qwen
+
++
+
+Milvus</code></pre>
+<p>升级：</p>
+<pre><code>
+Spring Boot
+
+
++
+
+LangChain4j
+
+
++
+
+Java Interview Qwen
+
+
++
+
+LoRA
+
+
++
+
+RAG
+
+
++
+
+Agent</code></pre>
+<hr/>
+<h1 id="二十三面试回答">二十三、面试回答</h1>
+<h2 id="q1">Q1：</h2>
+<blockquote><p>为什么不用从零训练模型？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>从零训练大模型需要大量数据、GPU资源和训练成本，企业更多采用基于开源基础模型进行领域微调，通过SFT和LoRA/QLoRA降低成本，同时结合RAG解决实时知识问题。</p></blockquote>
+<hr/>
+<h2 id="q2">Q2：</h2>
+<blockquote><p>LoRA为什么能降低训练成本？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>LoRA冻结基础模型参数，只训练新增的低秩矩阵参数，大幅减少需要更新的参数数量，因此降低显存占用和训练时间。</p></blockquote>
+<hr/>
+<h2 id="q3">Q3：</h2>
+<blockquote><p>RAG和微调怎么选择？</p></blockquote>
+<p>回答：</p>
+<blockquote><p>如果问题主要是知识更新，例如企业文档、产品资料，优先使用RAG；如果需要改变模型行为、表达风格或领域能力，则考虑微调。实际企业通常结合RAG和LoRA。</p></blockquote>
+<hr/>
+<h1 id="二十四day27知识地图">二十四、Day27知识地图</h1>
+<p>现在你理解：</p>
+<pre><code>
+Transformer
+
+↓
+
+Pre-training
+
+↓
+
+Base Model
+
+↓
+
+SFT
+
+↓
+
+LoRA
+
+↓
+
+QLoRA
+
+↓
+
+Adapter
+
+↓
+
+Merge
+
+↓
+
+vLLM
+
+↓
+
+Production</code></pre>
+<hr/>
+<h1 id="下一节-day28">下一节 Day28</h1>
+<p>建议进入：</p>
+<h1 id="day28大模型训练环境实战gpu服务器-cuda-pytorch-llamafactory-qlora第一次训练">《Day28：大模型训练环境实战：GPU服务器 → CUDA → PyTorch → LLaMA-Factory → QLoRA第一次训练》</h1>
+<p>下一节开始真正操作：</p>
+<p>从：</p>
+<p>购买/租GPU服务器</p>
+<p>↓</p>
+<p>Ubuntu</p>
+<p>↓</p>
+<p>CUDA安装</p>
+<p>↓</p>
+<p>显卡检测</p>
+<p>↓</p>
+<p>环境配置</p>
+<p>↓</p>
+<p>第一次训练你的 Java 面试模型。</p>
+<p>目标：</p>
+<p>完成：</p>
+<blockquote><p>你的第一个真正微调出来的 AI 模型。</p></blockquote>
+</main>
+</body>
+</html>

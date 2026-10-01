@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day3把-lora-模型接入-ollama-spring-boot">大模型微调实战 Day3：把 LoRA 模型接入 Ollama / Spring Boot</h1>
+<h1 id="把-lora-模型接入-ollama-spring-boot-langchain4j">把 LoRA 模型接入 Ollama / Spring Boot / LangChain4j</h1>
+<p>今天进入最关键的工程化阶段：</p>
+<blockquote><p>昨天你只是“训练出了一个模型插件”，今天要让 Java 程序真正调用它。</p></blockquote>
+<p>最终目标：</p>
+<p>做出：</p>
+<h1 id="java-ai-interview-agentjava-ai-面试智能体">Java AI Interview Agent【Java AI 面试智能体】</h1>
+<p>架构：</p>
+<pre><code> id=&quot;2e0v8d&quot;
+用户
+ |
+ ↓
+Vue 前端
+ |
+ ↓
+Spring Boot
+ |
+ ↓
+LangChain4j
+ |
+ ↓
+LLM接口
+ |
+ ↓
+Qwen + Java Interview LoRA
+ |
+ ↓
+面试回答</code></pre>
+<hr/>
+<h1 id="一先理解lora-不能直接给-ollama">一、先理解：LoRA 不能直接给 Ollama</h1>
+<p>这是很多新手第一个坑。</p>
+<p>你训练出来：</p>
+<pre><code>java-interview-lora</code></pre>
+<p>它不是完整模型。</p>
+<p>它只是：</p>
+<pre><code>Adapter【适配器】</code></pre>
+<p>类似：</p>
+<p>你买了一台手机：</p>
+<pre><code>Qwen模型 = 手机本体
+
+LoRA = 一个专业插件</code></pre>
+<p>两个组合：</p>
+<pre><code>Qwen
+ +
+Java Interview LoRA
+
+=
+Java面试专家模型</code></pre>
+<hr/>
+<p>所以流程：</p>
+<pre><code>LoRA
+
+↓
+
+合并
+
+↓
+
+完整模型
+
+↓
+
+Ollama加载</code></pre>
+<hr/>
+<h1 id="二day3整体路线">二、Day3整体路线</h1>
+<p>今天：</p>
+<pre><code>Step1
+Colab合并LoRA
+
+
+Step2
+导出HuggingFace模型
+
+
+Step3
+转换GGUF
+
+
+Step4
+导入Ollama
+
+
+Step5
+Spring Boot调用
+
+
+Step6
+LangChain4j接入</code></pre>
+<hr/>
+<h1 id="三step1合并-lora">三、Step1：合并 LoRA</h1>
+<p>回到 Colab。</p>
+<p>假设：</p>
+<p>你的输出：</p>
+<pre><code>output/java-interview-lora</code></pre>
+<p>现在需要：</p>
+<pre><code>Qwen2.5-3B
+
++
+
+adapter
+
+↓
+
+merged model</code></pre>
+<hr/>
+<p>安装：</p>
+<pre><code>!pip install peft transformers accelerate</code></pre>
+<hr/>
+<p>创建：</p>
+<pre><code>merge_lora.py</code></pre>
+<p>内容：</p>
+<pre><code>from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from peft import PeftModel
+
+
+base_model = &quot;Qwen/Qwen2.5-3B-Instruct&quot;
+
+adapter_path = &quot;./output/java-interview-lora&quot;
+
+
+# 加载基础模型
+
+model = AutoModelForCausalLM.from_pretrained(
+    base_model,
+    device_map=&quot;auto&quot;
+)
+
+
+# 加载LoRA
+
+model = PeftModel.from_pretrained(
+    model,
+    adapter_path
+)
+
+
+# 合并
+
+model = model.merge_and_unload()
+
+
+# 保存
+
+model.save_pretrained(
+    &quot;./java-interview-qwen&quot;
+)
+
+
+tokenizer = AutoTokenizer.from_pretrained(
+    base_model
+)
+
+
+tokenizer.save_pretrained(
+    &quot;./java-interview-qwen&quot;
+)
+
+
+print(&quot;merge success&quot;)</code></pre>
+<p>运行：</p>
+<pre><code>python merge_lora.py</code></pre>
+<p>得到：</p>
+<pre><code>java-interview-qwen</code></pre>
+<hr/>
+<h1 id="四step2测试合并后的模型">四、Step2：测试合并后的模型</h1>
+<p>先不用 Ollama。</p>
+<p>Python测试：</p>
+<pre><code>from transformers import pipeline
+
+
+pipe = pipeline(
+    &quot;text-generation&quot;,
+    model=&quot;./java-interview-qwen&quot;
+)
+
+
+result = pipe(
+&quot;&quot;&quot;
+HashMap为什么线程不安全？
+&quot;&quot;&quot;,
+max_new_tokens=300
+)
+
+
+print(result)</code></pre>
+<p>观察：</p>
+<p>有没有你的面试风格。</p>
+<hr/>
+<h1 id="五step3转换-ollama-支持格式">五、Step3：转换 Ollama 支持格式</h1>
+<p>Ollama 推荐：</p>
+<p>GGUF。</p>
+<p>为什么？</p>
+<p>原模型：</p>
+<pre><code>float16
+
+几十GB</code></pre>
+<p>GGUF：</p>
+<pre><code>量化
+
+几GB</code></pre>
+<p>适合个人电脑。</p>
+<hr/>
+<p>安装 llama.cpp：</p>
+<p>Mac：</p>
+<pre><code>brew install llama.cpp</code></pre>
+<p>下载：</p>
+<pre><code>git clone https://github.com/ggerganov/llama.cpp</code></pre>
+<hr/>
+<p>转换：</p>
+<pre><code>python convert_hf_to_gguf.py \
+java-interview-qwen \
+--outfile java-interview.gguf</code></pre>
+<p>得到：</p>
+<pre><code>java-interview.gguf</code></pre>
+<hr/>
+<h1 id="六step4导入-ollama">六、Step4：导入 Ollama</h1>
+<p>你的 Mac 已经有：</p>
+<p>Ollama。</p>
+<p>创建：</p>
+<pre><code>Modelfile</code></pre>
+<p>内容：</p>
+<pre><code>FROM ./java-interview.gguf
+
+
+PARAMETER temperature 0.7
+
+
+SYSTEM &quot;&quot;&quot;
+你是一名Java高级工程师面试官。
+回答需要按照：
+1.核心原理
+2.源码分析
+3.项目实践
+4.面试话术
+输出。
+&quot;&quot;&quot;</code></pre>
+<hr/>
+<p>创建模型：</p>
+<pre><code>ollama create java-interviewer \
+-f Modelfile</code></pre>
+<p>查看：</p>
+<pre><code>ollama list</code></pre>
+<p>应该：</p>
+<pre><code>java-interviewer</code></pre>
+<hr/>
+<h1 id="七测试-ollama">七、测试 Ollama</h1>
+<p>运行：</p>
+<pre><code>ollama run java-interviewer</code></pre>
+<p>输入：</p>
+<pre><code>ConcurrentHashMap为什么线程安全？</code></pre>
+<p>期待：</p>
+<p>类似：</p>
+<pre><code>JDK8取消Segment。
+
+核心：
+
+1.CAS
+2.synchronized
+3.Node
+4.TreeBin
+
+面试回答：
+...</code></pre>
+<hr/>
+<h1 id="八step5spring-boot-接入">八、Step5：Spring Boot 接入</h1>
+<p>你的技术栈：</p>
+<p>你熟悉：</p>
+<pre><code>Spring Boot
++
+LangChain4j</code></pre>
+<p>添加依赖：</p>
+<p>Maven：</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;
+        dev.langchain4j
+    &lt;/groupId&gt;
+
+    &lt;artifactId&gt;
+        langchain4j-ollama-spring-boot-starter
+    &lt;/artifactId&gt;
+
+    &lt;version&gt;
+        最新版本
+    &lt;/version&gt;
+
+&lt;/dependency&gt;</code></pre>
+<hr/>
+<p>配置：</p>
+<p>application.yml</p>
+<pre><code>langchain4j:
+
+  ollama:
+
+    chat-model:
+
+      base-url:
+        http://localhost:11434
+
+
+      model-name:
+        java-interviewer
+
+
+      temperature:
+        0.7</code></pre>
+<hr/>
+<h1 id="九创建-ai-service">九、创建 AI Service</h1>
+<p>Java代码：</p>
+<pre><code>public interface InterviewAssistant {
+
+
+    String answer(
+        String question
+    );
+
+}</code></pre>
+<hr/>
+<p>绑定：</p>
+<pre><code>@Bean
+InterviewAssistant assistant(
+    OllamaChatModel model
+){
+
+return AiServices.create(
+        InterviewAssistant.class,
+        model
+);
+
+}</code></pre>
+<hr/>
+<p>调用：</p>
+<pre><code>assistant.answer(
+&quot;HashMap为什么线程不安全？&quot;
+);</code></pre>
+<p>流程：</p>
+<pre><code>Spring Boot
+
+↓
+
+LangChain4j
+
+↓
+
+Ollama
+
+↓
+
+java-interviewer
+
+↓
+
+Qwen+LoRA
+
+↓
+
+答案</code></pre>
+<hr/>
+<h1 id="十升级成真正-ai-agent">十、升级成真正 AI Agent</h1>
+<p>你现在已经有：</p>
+<p>模型能力：</p>
+<pre><code>Java Interview LLM</code></pre>
+<p>下一步：</p>
+<p>加入：</p>
+<h2 id="rag">RAG</h2>
+<p>查询：</p>
+<pre><code>你的面试笔记
+项目文档
+源码分析</code></pre>
+<p>然后：</p>
+<pre><code>RAG
+ +
+Fine-tuning</code></pre>
+<p>架构：</p>
+<pre><code>用户问题
+
+↓
+
+Retriever
+
+↓
+
+Java知识库
+
+↓
+
+Qwen LoRA
+
+↓
+
+回答</code></pre>
+<hr/>
+<h1 id="十一你最终简历项目">十一、你最终简历项目</h1>
+<p>可以包装成：</p>
+<h2 id="java-ai-interview-agent">Java AI Interview Agent</h2>
+<p>技术：</p>
+<pre><code>Spring Boot
+LangChain4j
+Qwen2.5
+QLoRA
+LoRA
+LLaMA-Factory
+Ollama
+Milvus
+RAG
+Agent</code></pre>
+<p>功能：</p>
+<ul class="lvl"><li>上传简历</li></ul>
+<ul class="lvl"><li>自动生成面试题</li></ul>
+<ul class="lvl"><li>AI模拟面试</li></ul>
+<ul class="lvl"><li>评分</li></ul>
+<ul class="lvl"><li>错题复习</li></ul>
+<ul class="lvl"><li>个性化回答</li></ul>
+<hr/>
+<h1 id="但是这里有一个现实问题">但是这里有一个现实问题</h1>
+<p>你现在的 Mac：</p>
+<pre><code>16G ARM</code></pre>
+<p>可以：</p>
+<p>✅ Ollama运行3B/7B量化模型 ✅ 开发Spring Boot ✅ 做RAG</p>
+<p>但是：</p>
+<p>❌ 不适合长期运行合并后的16bit模型。</p>
+<p>所以生产建议：</p>
+<pre><code>LoRA训练
+        ↓
+云GPU
+
+        ↓
+
+导出GGUF
+
+        ↓
+
+Mac Ollama测试
+
+        ↓
+
+服务器vLLM部署</code></pre>
+<hr/>
+<p>下一步建议进入：</p>
+<h1 id="day4把-rag-lora-结合">Day4：把 RAG + LoRA 结合</h1>
+<p>因为真正企业项目不是：</p>
+<blockquote><p>“训练一个模型”</p></blockquote>
+<p>而是：</p>
+<blockquote><p><strong>RAG 提供企业知识 + Fine-tuning 改变模型行为</strong></p></blockquote>
+<p>下一步我们做：</p>
+<pre><code>Java AI Interview Agent V1
+
+=
+Qwen LoRA
++
+Milvus知识库
++
+LangChain4j
++
+Spring Boot</code></pre>
+<p>这会直接贴近你现在的 Java + AI 求职方向。</p>
+</main>
+</body>
+</html>

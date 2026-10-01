@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>第十一章：接真实服务</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="第十一章接真实服务">第十一章：接真实服务</h1>
+<blockquote><p>目标：把前面十章的「离线替身」换成真实 API，把「内存库」换成持久化向量库。</p><p>这一章不是多写几个类，而是处理只有「真的跑起来」才会撞见的边界问题。</p></blockquote>
+<hr/>
+<h2 id="1-本章目标">1. 本章目标</h2>
+<ul class="lvl"><li>接入真实 embedding：<code>DashScopeEmbeddingClient</code> 调阿里云百炼 <code>text-embedding-v3</code>（1024 维，与 bge-m3 同族）。</li><li>接入持久化向量库：<code>ChromaVectorStore</code> 落盘到 <code>chroma_db/rag_chunks</code>，验证重启后数据还在。</li><li>把这次接线遇到的 6 个真实坑，变成可复现的代码与截图。</li></ul>
+<hr/>
+<h2 id="2-为什么换真实服务不是改个-url那么简单">2. 为什么换真实服务不是「改个 URL」那么简单</h2>
+<p>前十章里：</p>
+<ul class="lvl"><li><code>FakeEmbeddingClient</code> 用字符 n-gram 哈希生成 64 维向量；</li><li><code>InMemoryVectorStore</code> 用 NumPy 暴力算余弦；</li><li>整套链路跑在离线环境里，113 项 pytest 全绿。</li></ul>
+<p>这证明了一件事：<strong>接口契约是对的</strong>。但它没有证明三件事：</p>
+<ul class="lvl"><li>真实 API 的批量上限、响应结构、错误码各家不同；</li><li>真实 embedding 才有语义能力（Fake 靠字面，容易跑偏）；</li><li>真实向量库对 metadata、持久化、模型一致性的要求远高于内存库。</li></ul>
+<p>所以这一章的任务是：<strong>在跑通的同时，把「跑不通」的那些点记录下来。</strong></p>
+<hr/>
+<h2 id="3-技术选型">3. 技术选型</h2>
+<h3 id="31-embedding百炼-textembeddingv3">3.1 Embedding：百炼 text-embedding-v3</h3>
+<p>用户没有配置 <code>SILICONFLOW_API_KEY</code>，本机只有 <code>DASHSCOPE_API_KEY</code>（阿里云百炼）。</p>
+<p>百炼的 <code>text-embedding-v3</code> 关键参数：</p>
+<table><thead><tr><th>参数</th><th>值</th><th>说明</th></tr></thead><tbody><tr><td>默认维度</td><td>1024</td><td>与 <code>BAAI/bge-m3</code> 对齐，向量空间互通</td></tr><tr><td>单批上限</td><td>10 条</td><td><strong>坑 1</strong> 的核心证据</td></tr><tr><td>协议</td><td>OpenAI compatible-mode <code>/v1/embeddings</code></td><td>请求/响应结构与 SiliconFlow 相同</td></tr><tr><td>环境变量</td><td><code>DASHSCOPE_API_KEY</code></td><td>不写代码，只读环境变量</td></tr></tbody></table>
+<blockquote><p>如果你手头是 SiliconFlow key，只需要把 <code>create_embedding_client(&quot;siliconflow&quot;)</code> 即可； 本章抽取了 <code>_OpenAIStyleEmbeddingClient</code> 骨架，就是为了换厂商时只改 3 行。</p></blockquote>
+<h3 id="32-向量库chroma-持久化">3.2 向量库：Chroma 持久化</h3>
+<ul class="lvl"><li><code>ChromaVectorStore</code> 已在第四章写好，但前面十章一直用的是 <code>InMemoryVectorStore</code>（不依赖 <code>chromadb</code> 这个重依赖）。</li><li>本章启用持久化目录 <code>chroma_db/rag_chunks/</code>，并被 <code>.gitignore</code> 排除（向量库是派生数据）。</li></ul>
+<hr/>
+<h2 id="4-代码改动概览">4. 代码改动概览</h2>
+<h3 id="41-embeddingpy抽出-openai-兼容协议骨架">4.1 embedding.py：抽出 OpenAI 兼容协议骨架</h3>
+<pre><code>class _OpenAIStyleEmbeddingClient(BaseEmbeddingClient):
+    &quot;&quot;&quot;OpenAI /v1/embeddings 协议的公共骨架（分批 / 按 index 排序 / 429 退避）。&quot;&quot;&quot;
+    BASE_URL: str = &quot;&quot;
+    ENV_VAR: str = &quot;&quot;          # 兜底环境变量名
+    model_name: str = &quot;&quot;
+    dim: int = 0
+    DEFAULT_BATCH_SIZE: int = 32
+    MAX_RETRIES: int = 3
+
+    def __init__(self, api_key=None, model=&quot;&quot;, batch_size=None):
+        key = api_key or os.getenv(self.ENV_VAR, &quot;&quot;)
+        ...
+
+class SiliconFlowEmbeddingClient(_OpenAIStyleEmbeddingClient):
+    BASE_URL = &quot;https://api.siliconflow.cn/v1/embeddings&quot;
+    ENV_VAR = &quot;SILICONFLOW_API_KEY&quot;
+    model_name = &quot;BAAI/bge-m3&quot;
+    dim = 1024
+    DEFAULT_BATCH_SIZE = 32
+
+class DashScopeEmbeddingClient(_OpenAIStyleEmbeddingClient):
+    BASE_URL = &quot;https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings&quot;
+    ENV_VAR = &quot;DASHSCOPE_API_KEY&quot;
+    model_name = &quot;text-embedding-v3&quot;
+    dim = 1024
+    DEFAULT_BATCH_SIZE = 10   # 坑 1 的修复</code></pre>
+<p><strong>关键设计决策</strong>：不要把「协议细节」和「厂商常量」混在一起写两遍。</p>
+<p>SiliconFlow、百炼、OpenAI、自己用 vLLM 部署的 bge，都是同一套 <code>/v1/embeddings</code> 协议。差异只有：</p>
+<ul class="lvl"><li><code>BASE_URL</code></li><li><code>model_name</code></li><li><code>DEFAULT_BATCH_SIZE</code></li><li><code>ENV_VAR</code></li></ul>
+<p>所以指数退避、按 <code>index</code> 还原顺序、超长截断、错误分层这些逻辑只写一份。子类只需要声明 5 个类属性 —— 这是接入真实服务时最值钱的 20 行代码。</p>
+<h3 id="42-storepychroma-真实落盘的-3-个补丁">4.2 store.py：Chroma 真实落盘的 3 个补丁</h3>
+<table><thead><tr><th>补丁</th><th>坑</th><th>修复</th></tr></thead><tbody><tr><td><code>_to_scalar</code></td><td>Chroma metadata 只接受 <code>str/int/float/bool</code>，但 <code>MdParser</code> 把 <code>headings</code> 存成 <code>list</code></td><td>list → <code>&quot;;&quot;</code> 拼接；<code>None</code> 丢弃；dict → JSON 字符串</td></tr><tr><td><code>_model</code> sidecar 文件</td><td>进程重启后 <code>model_name</code> 为空，<code>check_model</code> 护栏失效</td><td>把模型名写进 <code>chroma_db/&lt;collection&gt;/_model</code>，启动时读回</td></tr><tr><td><code>expand_paths</code> 后缀白名单</td><td>Chroma 落盘目录若放在 <code>data/</code> 下，会被当成待解析文档</td><td>只保留 <code>.md/.txt/.pdf/.docx</code> 后缀</td></tr></tbody></table>
+<hr/>
+<h2 id="5-运行方式">5. 运行方式</h2>
+<pre><code># 1. 安装 chromadb（如果还没装）
+cd projects/04-rag
+.venv/bin/pip install &quot;chromadb&gt;=0.5&quot;
+
+# 2. 配置 key
+export DASHSCOPE_API_KEY=sk-xxxx
+
+# 3. 跑单个探针或全流程
+.venv/bin/python demos/demo_12_real_service.py batch
+.venv/bin/python demos/demo_12_real_service.py</code></pre>
+<blockquote><p>注意：<code>chroma_db/rag_chunks/</code> 是派生数据，不会进 git；但不要把派生目录放在 <code>data/</code> 下，否则会被摄入扫描到。</p></blockquote>
+<hr/>
+<h2 id="6-真实运行截图">6. 真实运行截图</h2>
+<h3 id="61-探测百炼单批上限">6.1 探测百炼单批上限</h3>
+<figure class="figure"><img alt="探测百炼单批上限" src="../../../../../../projects/04-rag/assets/real-batch-limit.png" loading="lazy"/><figcaption>探测百炼单批上限</figcaption></figure>
+<p>这是<strong>真实服务</strong>的第一课：第 11 条文本会直接返回 <code>400</code> —— <code>batch size is invalid, it should not be larger than 10</code>。</p>
+<p>所以 <code>DashScopeEmbeddingClient.DEFAULT_BATCH_SIZE = 10</code>，而 <code>SiliconFlowEmbeddingClient</code> 可以保持 32。</p>
+<blockquote><p>工程纪律：<code>batch_size</code> 不是全局常量，是「厂商 × 模型」的硬约束。</p></blockquote>
+<h3 id="62-真实-embedding-链路">6.2 真实 Embedding 链路</h3>
+<figure class="figure"><img alt="真实 embedding 与批量请求" src="../../../../../../projects/04-rag/assets/real-embed.png" loading="lazy"/><figcaption>真实 embedding 与批量请求</figcaption></figure>
+<p>真实模型信息：</p>
+<ul class="lvl"><li>维度 1024；</li><li>21 个 chunk 只发了 3 次 HTTP 请求（按 batch_size=10 切批）；</li><li>返回顺序与输入一致 —— 这靠响应里的 <code>index</code> 字段重新排序实现。</li></ul>
+<h3 id="63-chroma-落盘-重启恢复-语义检索">6.3 Chroma 落盘 + 重启恢复 + 语义检索</h3>
+<figure class="figure"><img alt="Chroma 落盘、重启恢复与语义检索" src="../../../../../../projects/04-rag/assets/real-chroma.png" loading="lazy"/><figcaption>Chroma 落盘、重启恢复与语义检索</figcaption></figure>
+<p>关键证据：</p>
+<ul class="lvl"><li><code>persist_directory = chroma_db/rag_chunks</code>，落盘产物包括 <code>.bin</code>、<code>.sqlite3</code> 和自定义的 <code>_model</code> sidecar；</li><li>进程重新打开同一目录后 <code>store.count() = 21</code> —— 数据还在；</li><li>查询 <code>&quot;Java 的 Stream 和 Python 的生成器有什么对应关系&quot;</code> 命中 <code>python-generators.md</code>，而且查询与语料几乎没有共享字面词，靠的是语义相似度。</li></ul>
+<h3 id="64-fake-vs-真实-换模型护栏">6.4 Fake vs 真实 + 换模型护栏</h3>
+<figure class="figure"><img alt="Fake vs 真实与换模型护栏" src="../../../../../../projects/04-rag/assets/real-guard.png" loading="lazy"/><figcaption>Fake vs 真实与换模型护栏</figcaption></figure>
+<ul class="lvl"><li><strong>Fake 翻车</strong>：同一查询，真实模型 top1 是 <code>python-generators.md#3</code>（score=0.7897），Fake 替身却排到了 <code>python-decorators.md#0</code>。</li><li><strong>换模型护栏</strong>：<code>store.model_name</code> 从 <code>_model</code> sidecar 文件恢复成 <code>text-embedding-v3</code>，用 <code>BAAI/bge-m3</code> 查询时直接抛错，防止两个向量空间混用。</li></ul>
+<hr/>
+<h2 id="7-六个只有真跑才会踩的坑">7. 六个只有真跑才会踩的坑</h2>
+<h3 id="坑-1厂商单批上限不同">坑 1：厂商单批上限不同</h3>
+<p><strong>现象</strong>：<code>batch_size=32</code> 在百炼直接 400。</p>
+<p><strong>修复</strong>：</p>
+<ul class="lvl"><li><code>DashScopeEmbeddingClient.DEFAULT_BATCH_SIZE = 10</code></li><li>分批逻辑在父类 <code>_OpenAIStyleEmbeddingClient.embed()</code> 里，子类只改数字</li></ul>
+<p><strong>启示</strong>：真实部署时要去读各家文档的 <code>max_batch_size</code>，并把它做成可配置项。</p>
+<h3 id="坑-2真实-embedding-是否归一化">坑 2：真实 embedding 是否归一化</h3>
+<p><strong>现象</strong>：百炼返回的向量 <code>|v| = 1.0</code>。</p>
+<p><strong>修复</strong>：没有修复，但这是一个可验证的事实。输出里打印了模长，证明 <code>cosine_similarity</code> 可以降级成点积。</p>
+<p><strong>启示</strong>：不同厂商的向量归一化策略可能不同，依赖点积当余弦用前要先验证。</p>
+<h3 id="坑-3metadata-里的-list-进不了-chroma">坑 3：metadata 里的 list 进不了 Chroma</h3>
+<p><strong>现象</strong>：</p>
+<pre><code>ValueError: Expected metadata list value for key &#x27;headings&#x27; to be non-empty in upsert.</code></pre>
+<p><strong>根因</strong>：<code>MdParser</code> 把 Markdown 标题存成 <code>headings: [...]</code>，Chroma metadata 只接受标量。</p>
+<p><strong>修复</strong>：</p>
+<pre><code>def _to_scalar(value):
+    if value is None: return None
+    if isinstance(value, (list, tuple)): return &quot;;&quot;.join(str(x) for x in value) or None
+    if isinstance(value, dict): return json.dumps(value)
+    ...</code></pre>
+<h3 id="坑-4模型名必须随库持久化">坑 4：模型名必须随库持久化</h3>
+<p><strong>现象</strong>：进程重启后 <code>store.model_name</code> 为空，用错模型查询不会被拦。</p>
+<p><strong>根因</strong>：上一版把 <code>model_name</code> 只放在实例属性上。</p>
+<p><strong>修复</strong>：</p>
+<ul class="lvl"><li>写 sidecar 文件 <code>chroma_db/rag_chunks/_model</code></li><li>启动时读回</li><li><code>clear()</code> 时删除</li></ul>
+<blockquote><p>为什么不用 <code>collection.modify(metadata=...)</code>：Chroma 把 <code>hnsw:space</code> 当成距离函数，调用 <code>modify</code> 会报 <code>Changing the distance function of a collection ... is not supported</code>。</p></blockquote>
+<h3 id="坑-5落盘目录别被摄入扫描到">坑 5：落盘目录别被摄入扫描到</h3>
+<p><strong>现象</strong>：<code>expand_paths([&quot;data/&quot;])</code> 把 <code>data/chroma-real/&lt;uuid&gt;/data_level0.bin</code> 当成待解析文档，然后报错：</p>
+<pre><code>IngestionError: 不支持的格式: &#x27;.bin&#x27;</code></pre>
+<p><strong>修复</strong>：</p>
+<ul class="lvl"><li>把落盘目录放到 <code>data/</code> 外面：<code>chroma_db/rag_chunks/</code></li><li>给 <code>expand_paths</code> 加后缀白名单过滤，只扫 <code>.md/.txt/.pdf/.docx</code></li></ul>
+<h3 id="坑-6chroma-返回的是-distance不是-similarity">坑 6：Chroma 返回的是 distance，不是 similarity</h3>
+<p><strong>现象</strong>：直接拿 Chroma 的 score 当余弦，排序方向会反。</p>
+<p><strong>修复</strong>：</p>
+<pre><code>similarity_from_distance = lambda d: 1.0 - float(d)</code></pre>
+<p>这在第四章已经写好，本章验证它在真实数据上仍然成立。</p>
+<hr/>
+<h2 id="8-新增测试">8. 新增测试</h2>
+<p>本章新增了 7 项离线测试，全部不触网：</p>
+<pre><code>test_to_scalar_把不能落盘的元数据压成标量
+test_chroma_元数据里的list不再炸
+test_chroma_重启后还记得模型名
+test_expand_paths_按后缀白名单过滤
+test_supported_extensions_来自解析器注册表
+test_dashscope_没有key直接报错
+test_dashscope_单批上限比siliconflow更小</code></pre>
+<p>合计：<code>120 passed in 2.09s</code>。</p>
+<hr/>
+<h2 id="9-本章产出文件">9. 本章产出文件</h2>
+<ul class="lvl"><li><code>src/rag/embedding.py</code> — 抽出 <code>_OpenAIStyleEmbeddingClient</code>，新增 <code>DashScopeEmbeddingClient</code></li><li><code>src/rag/store.py</code> — 元数据降维、<code>_model</code> sidecar、从 sidecar 恢复模型名</li><li><code>src/rag/parsing.py</code> — <code>expand_paths</code> 后缀白名单过滤</li><li><code>demos/demo_12_real_service.py</code> — 真实服务全流程 demo</li><li><code>tests/test_store.py</code> — 覆盖上述 7 条新增行为的单测</li><li><code>milestones/11-real-service-integration.md</code> — 本章文档</li><li><code>assets/real-*.png</code> — 4 张真实运行截图</li></ul>
+<hr/>
+<h2 id="10-下一步">10. 下一步</h2>
+<ul class="lvl"><li><strong>接入真实 LLM</strong>：把 <code>RAGService.ask()</code> 后面的 LLM 从 <code>FakeLLMClient</code> 换成 DeepSeek / Qwen。</li><li><strong>Web API</strong>：复用 Project 03 的 FastAPI + SSE 模式，给 RAG 加上 <code>POST /ask</code> 接口。</li><li><strong>真实评估</strong>：用真实 embedding + Chroma 跑 30 条 EvalCase，计算 Hit Rate@k 与 MRR。</li><li><strong>监控与可观测</strong>：记录每次检索的 latency、召回 top-k 分数分布、调用次数。</li></ul>
+</main>
+</body>
+</html>

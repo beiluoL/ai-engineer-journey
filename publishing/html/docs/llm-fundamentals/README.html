@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LLM Fundamentals — 大语言模型基础理论笔记</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="llm-fundamentals-大语言模型基础理论笔记">LLM Fundamentals — 大语言模型基础理论笔记</h1>
+<blockquote><p>从「模型在算什么」到「为什么要这么算」，把大语言模型的基础理论按一条主线串起来。 每个主题都配<strong>真实运行出来的图</strong>：要么是 demo 脚本的真实输出截图，要么是按公式算出来再画的图，没有示意图凑数。</p></blockquote>
+<hr/>
+<h2 id="这个目录写给谁">这个目录写给谁</h2>
+<table><thead><tr><th>你是谁</th><th>从哪开始</th></tr></thead><tbody><tr><td>会调 API，想知道模型内部发生了什么</td><td><a href="01-basics-language-model.html">第 01 章</a> → <a href="02-attention.html">第 02 章</a></td></tr><tr><td>会写 RAG / Agent，想搞懂原理补短板</td><td><a href="02-attention.html">第 02 章</a> → <a href="03-transformer.html">第 03 章</a> → <a href="07-decoding-and-inference.html">第 07 章</a></td></tr><tr><td>打算自己微调 / 训练小模型</td><td><a href="04-pretraining.html">第 04 章</a> → <a href="05-finetuning.html">第 05 章</a> → <a href="06-scaling-and-emergence.html">第 06 章</a></td></tr><tr><td>面试前速查、术语对不上号</td><td><a href="10-glossary.html">第 10 章 术语表</a></td></tr><tr><td>想动手复现</td><td><a href="11-open-source-projects.html">第 11 章 开源项目推荐</a></td></tr><tr><td>想知道该学哪个课、该用哪个框架</td><td><a href="12-tutorials-and-agent.html">第 12 章 教程、微调与 Agent 开发</a></td></tr></tbody></table>
+<p>目录里所有脚本都可以直接跑，<strong>不需要 GPU、不需要深度学习框架</strong>（只依赖 numpy；生成配图额外需要 matplotlib，见 <a href="../../../../llm-fundamentals/demos/requirements.txt"><code>demos/requirements.txt</code></a>）：</p>
+<pre><code>cd llm-fundamentals
+pip install -r demos/requirements.txt
+python3 demos/02_self_attention.py      # 手算注意力，看清每一步
+python3 demos/make_figures.py           # 重新生成 assets/ 里的所有配图</code></pre>
+<hr/>
+<h2 id="学习路线三个阶段一条主线">学习路线：三个阶段，一条主线</h2>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>P1</code> — 阶段一 · 看懂一个 token 的一生</li><li><code>A1</code> — 01 语言模型基础 token → embedding → logits → 概率 训练目标 = 交叉熵</li><li><code>P2</code> — 阶段二 · 看懂一台机器</li><li><code>A2</code> — 02 注意力机制 QKV / 缩放 / 掩码 / 多头</li><li><code>A3</code> — 03 Transformer 架构 残差 / LayerNorm / FFN / 位置编码</li><li><code>A4</code> — 09 数学基础 公式推导 / 反向传播 / 优化器</li><li><code>P3</code> — 阶段三 · 看懂一条产业链</li><li><code>A5</code> — 04 预训练 数据 / 目标 / 并行 / 算力</li><li><code>A6</code> — 05 微调 SFT / LoRA / QLoRA</li><li><code>A7</code> — 06 涌现与缩放定律 规模带来什么</li><li><code>A8</code> — 08 对齐 RLHF / DPO</li><li><code>A9</code> — 07 解码与推理 KV Cache / 量化 / 批处理</li></ul></div>
+<p>一句话主线：</p>
+<blockquote><p><strong>语言模型 = 用注意力机制在上下文里找相关信息，预测下一个 token。</strong> 预训练让它学会语言，微调让它学会任务，对齐让它学会&quot;好好说话&quot;，推理优化让它跑得动。</p></blockquote>
+<hr/>
+<h2 id="章节地图">章节地图</h2>
+<table><thead><tr><th>章节</th><th>核心问题</th><th>关键配图</th></tr></thead><tbody><tr><td><a href="01-basics-language-model.html">01 语言模型基础</a></td><td>模型到底在算什么？token / embedding / logits / loss 是什么关系</td><td><code>term-01</code>、<code>term-03</code>、<code>softmax-temperature.png</code></td></tr><tr><td><a href="02-attention.html">02 注意力机制</a></td><td>为什么&quot;看哪里&quot;比&quot;看多少&quot;更重要？QKV 是怎么来的</td><td><code>term-02</code>、<code>attention-heatmap.png</code></td></tr><tr><td><a href="03-transformer.html">03 Transformer 架构</a></td><td>一个 decoder block 里到底有哪些零件？为什么这么设计</td><td><code>term-04</code>、<code>positional-encoding.png</code></td></tr><tr><td><a href="04-pretraining.html">04 预训练</a></td><td>几十 T token 是怎么喂进去的？为什么数据比参数更贵</td><td><code>term-07</code>、<code>scaling-law.png</code></td></tr><tr><td><a href="05-finetuning.html">05 微调</a></td><td>SFT 和 LoRA 到底改了什么？显存账怎么算</td><td><code>term-06</code>、<code>lora-params.png</code></td></tr><tr><td><a href="06-scaling-and-emergence.html">06 涌现与缩放定律</a></td><td>规模到了某个点会发生什么？涌现是真相还是错觉</td><td><code>scaling-law.png</code></td></tr><tr><td><a href="07-decoding-and-inference.html">07 解码与推理</a></td><td>为什么生成慢？KV Cache 省了什么、又贵在哪</td><td><code>term-05</code>、<code>kv-cache-memory.png</code></td></tr><tr><td><a href="08-alignment-rlhf.html">08 对齐：RLHF 与 DPO</a></td><td>怎么把&quot;会续写&quot;变成&quot;会听话&quot;</td><td>Mermaid 三阶段流程</td></tr><tr><td><a href="09-math-foundations.html">09 数学基础</a></td><td>关键公式怎么推？符号都是什么意思</td><td>计算图 + 公式推导</td></tr><tr><td><a href="10-glossary.html">10 术语表中英对照</a></td><td>名词太多，快速对齐</td><td>分组大表</td></tr><tr><td><a href="11-open-source-projects.html">11 开源项目推荐</a></td><td>想动手，从哪个仓库开始</td><td>项目表 + 路径图</td></tr><tr><td><a href="12-tutorials-and-agent.html">12 教程、微调与 Agent 开发</a></td><td>教程课程、微调与 Agent 框架怎么选</td><td><code>check_repos.py</code> 真实核验截图 + 决策图</td></tr></tbody></table>
+<hr/>
+<h2 id="每章的结构约定">每章的结构约定</h2>
+<p>每章都按同一套结构写，方便跳读：</p>
+<pre><code>1. 一句话结论         —— 这章解决什么问题
+2. 直觉               —— 先建立&quot;人话版&quot;理解
+3. 机制与公式         —— 公式 + 符号表
+4. 配图               —— Mermaid / 表格 / 真实运行截图
+5. 常被误解的点       —— 面试高频混淆
+6. 动手               —— 对应 demo 脚本
+7. 自查问题           —— 能答上来才算懂</code></pre>
+<hr/>
+<h2 id="配图从哪来可复现">配图从哪来（可复现）</h2>
+<p>本目录<strong>不使用任何来源不明的图片</strong>，图分三类，全部可复现：</p>
+<table><thead><tr><th>类型</th><th>生成方式</th><th>例子</th></tr></thead><tbody><tr><td>真实运行截图</td><td><code>python3 demos/xx.py &gt; out.txt</code> 后由 <code>scripts/render_terminal.py</code> 渲染</td><td><code>assets/term-02_self_attention.png</code></td></tr><tr><td>公式计算后绘图</td><td><code>demos/make_figures.py</code>（matplotlib，数据全部现场算）</td><td><code>assets/attention-heatmap.png</code></td></tr><tr><td>结构示意图</td><td>Markdown 内嵌 Mermaid / ASCII 图</td><td>各章的流程图与张量形状图</td></tr></tbody></table>
+<p>想重建所有图：</p>
+<pre><code>python3 demos/make_figures.py                                     # 6 张数据图
+python3 demos/02_self_attention.py &gt; demos/out/02.txt             # 真实输出
+python3 ../scripts/render_terminal.py demos/out/02.txt \
+        --out assets/term-02_self_attention.png --title &quot;bash — python3 demos/02_self_attention.py&quot;</code></pre>
+<hr/>
+<h2 id="阅读建议">阅读建议</h2>
+<ul class="lvl"><li><strong>不要一上来抠公式</strong>。先把每章的 Mermaid 图和真实运行截图看懂，再回去看公式——公式是对图的翻译，不是前提。</li><li><strong>数学部分可以第二遍再读</strong>。<a href="09-math-foundations.html">第 09 章</a> 是&quot;加工厂&quot;，第 02/03/07 章正文里已经把结论用掉了。</li><li><strong>每章的&quot;自查问题&quot;必须能答</strong>。答不上来就说明这一章只是&quot;读过了&quot;，不是&quot;学会了&quot;。</li></ul>
+<hr/>
+<p class="nav-footer"><a href="../README.html">返回仓库首页</a> · <a href="../ROADMAP.html">路线图</a> · <a href="../KNOWLEDGE-MAP.html">知识地图</a></p>
+</main>
+</body>
+</html>

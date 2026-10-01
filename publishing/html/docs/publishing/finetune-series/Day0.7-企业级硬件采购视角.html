@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>一、先定义企业 AI 平台目标</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<p>这个问题要站在<strong>企业 CTO / AI 基础设施负责人</strong>角度考虑。</p>
+<p>和个人买一台 4090 不一样。</p>
+<p>企业采购关注：</p>
+<ul class="lvl"><li><strong>业务场景</strong></li></ul>
+<ul class="lvl"><li><strong>并发量</strong></li></ul>
+<ul class="lvl"><li><strong>数据安全</strong></li></ul>
+<ul class="lvl"><li><strong>模型规模</strong></li></ul>
+<ul class="lvl"><li><strong>运维成本</strong></li></ul>
+<ul class="lvl"><li><strong>未来扩展</strong></li></ul>
+<p>例如：</p>
+<ul class="lvl"><li>企业知识库</li></ul>
+<ul class="lvl"><li>智能客服</li></ul>
+<ul class="lvl"><li>自动办公 Agent</li></ul>
+<ul class="lvl"><li>图片生成</li></ul>
+<ul class="lvl"><li>视频生成</li></ul>
+<p>这些其实是不同负载，需要不同硬件。</p>
+<hr/>
+<h1 id="一先定义企业-ai-平台目标">一、先定义企业 AI 平台目标</h1>
+<p>假设一个中小企业：</p>
+<p>规模：</p>
+<ul class="lvl"><li>员工：500～5000人</li></ul>
+<ul class="lvl"><li>内部 AI 用户：500～1000人</li></ul>
+<ul class="lvl"><li>客服访问：每天几万请求</li></ul>
+<ul class="lvl"><li>内部知识库：</li></ul>
+<ul class="lvl"><li>PDF</li></ul>
+<ul class="lvl"><li>Word</li></ul>
+<ul class="lvl"><li>ERP</li></ul>
+<ul class="lvl"><li>CRM</li></ul>
+<ul class="lvl"><li>产品文档</li></ul>
+<p>希望实现：</p>
+<pre><code>企业AI平台
+
+├── 企业知识库 RAG
+
+├── AI客服
+
+├── AI办公Agent
+
+├── 图片生成
+
+├── 视频生成
+
+└── 私有大模型</code></pre>
+<hr/>
+<h1 id="二企业完整-ai-架构">二、企业完整 AI 架构</h1>
+<p>不是买一台机器。</p>
+<p>企业通常：</p>
+<pre><code>                 用户
+
+                  |
+
+                  ↓
+
+
+             API Gateway
+
+
+                  |
+
+                  ↓
+
+
+              AI Platform
+
+
+        +---------+---------+
+
+        |         |         |
+
+        ↓         ↓         ↓
+
+
+     RAG       Agent     Content AI
+
+
+        |         |         |
+
+
+        ↓         ↓         ↓
+
+
+   VectorDB   Tools    Image/Video
+
+
+        |
+
+        ↓
+
+
+   LLM Serving
+
+
+        |
+
+        ↓
+
+
+   GPU Cluster</code></pre>
+<hr/>
+<h1 id="三企业需要采购哪些硬件">三、企业需要采购哪些硬件？</h1>
+<p>主要分：</p>
+<ul class="lvl"><li>推理服务器</li></ul>
+<ul class="lvl"><li>训练/微调服务器</li></ul>
+<ul class="lvl"><li>存储服务器</li></ul>
+<ul class="lvl"><li>数据库服务器</li></ul>
+<ul class="lvl"><li>网络设备</li></ul>
+<hr/>
+<h1 id="四第一类llm推理服务器最重要">四、第一类：LLM推理服务器（最重要）</h1>
+<p>用途：</p>
+<p>运行：</p>
+<ul class="lvl"><li>Qwen</li></ul>
+<ul class="lvl"><li>DeepSeek</li></ul>
+<ul class="lvl"><li>Llama</li></ul>
+<p>例如：</p>
+<p>企业知识库：</p>
+<p>员工问：</p>
+<blockquote><p>公司报销流程是什么？</p></blockquote>
+<p>GPU负责：</p>
+<p>生成回答。</p>
+<hr/>
+<h2 id="方案a小企业-ai服务器">方案A：小企业 AI服务器</h2>
+<p>目标：</p>
+<p>100～500人使用。</p>
+<p>配置：</p>
+<h3 id="gpu">GPU</h3>
+<p>推荐：</p>
+<p>NVIDIA RTX 4090 / RTX 6000 Ada / L40S</p>
+<p>RTX 6000 Ada 属于专业工作站 GPU，拥有 48GB 显存，适合企业推理场景。(<a href="https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units?utm_source=chatgpt.com &quot;List of Nvidia graphics processing units&quot;" target="_blank" rel="noopener">维基百科</a>)</p>
+<p>配置：</p>
+<pre><code>GPU:
+RTX 6000 Ada 48GB × 2
+
+
+CPU:
+AMD Threadripper / Xeon
+
+
+内存:
+256GB
+
+
+SSD:
+4TB NVMe
+
+
+电源:
+1600W
+
+
+网络:
+10GbE</code></pre>
+<p>预算：</p>
+<p>约：</p>
+<h2 id="815万元">8～15万元</h2>
+<p>能力：</p>
+<p>运行：</p>
+<pre><code>7B
+14B
+32B量化模型</code></pre>
+<hr/>
+<h1 id="五中型企业-ai服务器">五、中型企业 AI服务器</h1>
+<p>目标：</p>
+<p>1000～5000用户。</p>
+<p>配置：</p>
+<pre><code>GPU:
+
+L40S 48GB ×4
+
+
+CPU:
+
+AMD EPYC
+
+
+内存:
+
+512GB
+
+
+SSD:
+
+8TB
+
+
+网络:
+
+25GbE</code></pre>
+<p>预算：</p>
+<h2 id="50100万元">50～100万元</h2>
+<p>能力：</p>
+<p>可以：</p>
+<ul class="lvl"><li>多模型</li></ul>
+<ul class="lvl"><li>高并发</li></ul>
+<ul class="lvl"><li>Agent服务</li></ul>
+<hr/>
+<h1 id="六大企业-ai集群">六、大企业 AI集群</h1>
+<p>例如：</p>
+<p>银行、互联网公司。</p>
+<p>配置：</p>
+<pre><code>A100/H100
+
+8卡服务器
+
++
+
+高速网络
+
++
+
+存储集群</code></pre>
+<p>H100/A100 属于数据中心级 GPU，通常用于企业级训练和大规模推理；例如 NVIDIA DGX 系统就是面向此类 AI 基础设施。(<a href="https://en.wikipedia.org/wiki/Nvidia_DGX?utm_source=chatgpt.com &quot;Nvidia DGX&quot;" target="_blank" rel="noopener">维基百科</a>)</p>
+<p>预算：</p>
+<h2 id="数百万千万">数百万～千万</h2>
+<hr/>
+<h1 id="七第二类知识库服务器rag">七、第二类：知识库服务器（RAG）</h1>
+<p>很多企业误区：</p>
+<p>以为全部靠GPU。</p>
+<p>实际上：</p>
+<p>企业知识库：</p>
+<p>GPU不是核心。</p>
+<p>需要：</p>
+<hr/>
+<h2 id="1-文档存储">1. 文档存储</h2>
+<p>例如：</p>
+<pre><code>NAS
+
+对象存储
+
+MinIO</code></pre>
+<p>配置：</p>
+<pre><code>存储:
+
+100TB
+
+RAID
+
+SSD缓存</code></pre>
+<p>预算：</p>
+<p>5～20万</p>
+<hr/>
+<h2 id="2-向量数据库">2. 向量数据库</h2>
+<p>例如：</p>
+<pre><code>Milvus
+
+ElasticSearch
+
+PostgreSQL pgvector</code></pre>
+<p>服务器：</p>
+<pre><code>CPU:
+
+32核
+
+内存:
+
+128GB
+
+SSD:
+
+4TB</code></pre>
+<p>预算：</p>
+<p>2～5万。</p>
+<hr/>
+<h1 id="八第三类数据库服务器">八、第三类：数据库服务器</h1>
+<p>保存：</p>
+<p>用户：</p>
+<ul class="lvl"><li>会话</li></ul>
+<ul class="lvl"><li>权限</li></ul>
+<ul class="lvl"><li>Agent记录</li></ul>
+<ul class="lvl"><li>日志</li></ul>
+<p>配置：</p>
+<pre><code>CPU:
+32核
+
+RAM:
+128GB
+
+SSD:
+4TB</code></pre>
+<p>预算：</p>
+<p>2～5万。</p>
+<hr/>
+<h1 id="九第四类图片生成服务器">九、第四类：图片生成服务器</h1>
+<p>你的需求：</p>
+<p>比如：</p>
+<ul class="lvl"><li>自动生成文章配图</li></ul>
+<ul class="lvl"><li>漫画</li></ul>
+<ul class="lvl"><li>海报</li></ul>
+<p>模型：</p>
+<p>例如：</p>
+<ul class="lvl"><li>Stable Diffusion</li></ul>
+<ul class="lvl"><li>Flux</li></ul>
+<ul class="lvl"><li>SDXL</li></ul>
+<p>要求：</p>
+<p>显存比文本模型高。</p>
+<hr/>
+<h2 id="图片ai服务器">图片AI服务器</h2>
+<p>配置：</p>
+<pre><code>GPU:
+
+RTX4090 ×2
+
+
+RAM:
+
+128GB
+
+
+SSD:
+
+4TB</code></pre>
+<p>预算：</p>
+<p>5～8万。</p>
+<hr/>
+<h1 id="十第五类视频生成服务器">十、第五类：视频生成服务器</h1>
+<p>视频生成更吃资源。</p>
+<p>例如：</p>
+<ul class="lvl"><li>AI短视频</li></ul>
+<ul class="lvl"><li>数字人</li></ul>
+<ul class="lvl"><li>视频编辑</li></ul>
+<p>需要：</p>
+<p>大量GPU。</p>
+<hr/>
+<p>小企业：</p>
+<pre><code>RTX4090 ×4
+
+128GB RAM
+
+8TB SSD</code></pre>
+<p>预算：</p>
+<p>15～30万。</p>
+<hr/>
+<p>中大型：</p>
+<pre><code>L40S/A100/H100集群</code></pre>
+<p>几十万～百万。</p>
+<hr/>
+<h1 id="十一企业完整采购方案">十一、企业完整采购方案</h1>
+<h2 id="方案1ai创业公司-mvp">方案1：AI创业公司 MVP</h2>
+<p>目标：</p>
+<p>1000用户以内。</p>
+<p>采购：</p>
+<table><thead><tr><th>设备</th><th>数量</th><th>预算</th></tr></thead><tbody><tr><td>LLM服务器 RTX6000/4090</td><td>1</td><td>10万</td></tr><tr><td>数据库服务器</td><td>1</td><td>3万</td></tr><tr><td>NAS存储</td><td>1</td><td>5万</td></tr><tr><td>网络设备</td><td>1</td><td>2万</td></tr><tr><td>合计</td><td></td><td>20万左右</td></tr></tbody></table>
+<p>能力：</p>
+<p>✅ 企业知识库</p>
+<p>✅ AI客服</p>
+<p>✅ Agent</p>
+<p>✅ 图片生成</p>
+<hr/>
+<h1 id="方案2中型企业">方案2：中型企业</h1>
+<p>目标：</p>
+<p>5000～2万人。</p>
+<p>采购：</p>
+<table><thead><tr><th>设备</th><th>预算</th></tr></thead><tbody><tr><td>GPU服务器×4</td><td>80万</td></tr><tr><td>存储</td><td>20万</td></tr><tr><td>数据库</td><td>10万</td></tr><tr><td>网络</td><td>10万</td></tr><tr><td>运维</td><td>20万</td></tr></tbody></table>
+<p>总：</p>
+<h2 id="100150万">100～150万</h2>
+<hr/>
+<h1 id="方案3大型企业私有ai平台">方案3：大型企业私有AI平台</h1>
+<p>例如：</p>
+<p>金融、制造。</p>
+<p>架构：</p>
+<pre><code>GPU Cluster
+
++
+
+Kubernetes
+
++
+
+AI Gateway
+
++
+
+MLOps
+
++
+
+安全体系</code></pre>
+<p>预算：</p>
+<h2 id="500万千万级">500万～千万级</h2>
+<hr/>
+<h1 id="十二如果实现你的几个场景需要什么">十二、如果实现你的几个场景，需要什么？</h1>
+<h2 id="场景1企业知识库">场景1：企业知识库</h2>
+<p>需求：</p>
+<p>员工问答。</p>
+<p>需要：</p>
+<pre><code>LLM服务器
+
++
+
+Milvus
+
++
+
+Embedding模型
+
++
+
+RAG</code></pre>
+<p>预算：</p>
+<p>10～30万即可。</p>
+<hr/>
+<h2 id="场景2ai客服">场景2：AI客服</h2>
+<p>增加：</p>
+<pre><code>语音识别
+
++
+
+客服Agent
+
++
+
+CRM Tool
+
++
+
+知识库</code></pre>
+<p>预算：</p>
+<p>30～100万。</p>
+<hr/>
+<h2 id="场景3自动化agent">场景3：自动化Agent</h2>
+<p>例如：</p>
+<pre><code>读取邮件
+
+↓
+
+分析合同
+
+↓
+
+生成报告
+
+↓
+
+发送审批</code></pre>
+<p>重点：</p>
+<p>CPU和系统集成。</p>
+<p>需要：</p>
+<pre><code>LLM
+
++
+
+Workflow
+
++
+
+权限系统
+
++
+
+数据库</code></pre>
+<p>预算：</p>
+<p>20～80万。</p>
+<hr/>
+<h2 id="场景4图片生成">场景4：图片生成</h2>
+<p>增加：</p>
+<p>GPU。</p>
+<p>预算：</p>
+<p>5～20万。</p>
+<hr/>
+<h2 id="场景5视频生成">场景5：视频生成</h2>
+<p>最贵。</p>
+<p>预算：</p>
+<p>50万以上。</p>
+<hr/>
+<h1 id="十三企业为什么不一定自己买gpu">十三、企业为什么不一定自己买GPU？</h1>
+<p>这是非常现实的问题。</p>
+<p>GPU采购不是只有硬件成本：</p>
+<p>还有：</p>
+<ul class="lvl"><li>电费</li></ul>
+<ul class="lvl"><li>散热</li></ul>
+<ul class="lvl"><li>运维</li></ul>
+<ul class="lvl"><li>机房</li></ul>
+<ul class="lvl"><li>备件</li></ul>
+<p>很多企业采用：</p>
+<p>混合模式：</p>
+<pre><code>私有GPU
+
++
+
+云GPU
+
++
+
+API模型</code></pre>
+<p>因为 GPU 基础设施成本很高，企业需要根据稳定负载、安全需求和扩展需求决定自建还是租用。(<a href="https://www.itpro.com/cloud/iaas/gpu-as-a-service-should-enterprise-it-rent-or-own-ai-compute?utm_source=chatgpt.com &quot;GPU-as-a-service: Should enterprise IT rent or own AI compute?&quot;" target="_blank" rel="noopener">ITPro</a>)</p>
+<hr/>
+<h1 id="十四如果我是企业-cto我会这样采购">十四、如果我是企业 CTO，我会这样采购</h1>
+<p>第一阶段：</p>
+<p>不要买百万设备。</p>
+<p>先：</p>
+<h2 id="20万元-ai实验生产环境">20万元 AI实验生产环境</h2>
+<p>采购：</p>
+<pre><code>1台GPU服务器
+
++
+
+1台数据库服务器
+
++
+
+1套存储
+
++
+
+网络</code></pre>
+<p>实现：</p>
+<p>✅ 企业知识库</p>
+<p>✅ AI客服</p>
+<p>✅ Agent</p>
+<hr/>
+<p>第二阶段：</p>
+<p>业务验证成功：</p>
+<p>增加：</p>
+<pre><code>GPU节点 ×3
+
+Kubernetes
+
+MLOps</code></pre>
+<hr/>
+<p>第三阶段：</p>
+<p>大规模：</p>
+<p>进入：</p>
+<pre><code>AI数据中心</code></pre>
+<hr/>
+<h1 id="十五结合你的-java-ai-路线">十五、结合你的 Java + AI 路线</h1>
+<p>你未来面试高级 AI 应用岗，应该理解这个层级：</p>
+<pre><code>Level 1
+
+调用API
+
+
+↓
+
+Level 2
+
+RAG应用
+
+
+↓
+
+Level 3
+
+Agent系统
+
+
+↓
+
+Level 4
+
+私有模型部署
+
+
+↓
+
+Level 5
+
+企业AI平台架构</code></pre>
+<p>你现在学习路线已经覆盖：</p>
+<p>Level 1～4。</p>
+<p>Day14～Day18其实就是在补：</p>
+<p>Level 5。</p>
+<hr/>
+<p>下一节建议：</p>
+<h1 id="day21企业-ai-平台落地实战">Day21：企业 AI 平台落地实战</h1>
+<p>主题：</p>
+<p>《从0设计一个企业私有 AI 平台：硬件采购 → 网络规划 → Kubernetes → GPU集群 → RAG → Agent → 运维》</p>
+<p>会更接近真实 CTO / AI架构师设计。</p>
+</main>
+</body>
+</html>

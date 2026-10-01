@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 02 — Tokenizer：文本变成 id 的那一步</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-02-tokenizer文本变成-id-的那一步">Milestone 02 — Tokenizer：文本变成 id 的那一步</h1>
+<p>Milestone 01 把五层契约钉完了，第一块砖就是 Tokenizer。</p>
+<p>在 Project 05 里，token 只是<strong>账单单位</strong> —— 我用 <code>estimate_messages_tokens</code> 估这一轮要花多少钱，历史超预算了就裁。那时候它是个外部概念，模型对我来说是黑盒，token 只是黑盒上的刻度。</p>
+<p>现在不一样了：token 是<strong>模型真正的输入</strong>。Embedding 矩阵的第 <code>i</code> 行就是 id 为 <code>i</code> 的那个 token 的向量。词表错了，后面全部错位，而且这种错位<strong>不会报错</strong> —— loss 照样在降，模型照样在生成，只是生成的东西越来越没道理。</p>
+<p>这一章回答三个问题：字符级和 BPE 怎么取舍、四个特殊 token 各自管什么、以及为什么 <code>decode(encode(s)) == s</code> 是一条不能让步的硬指标。</p>
+<hr/>
+<h2 id="1-三种切法词级-字符级-子词">1. 三种切法：词级 / 字符级 / 子词</h2>
+<table><thead><tr><th>切法</th><th>词表</th><th>序列长度</th><th><code>&lt;unk&gt;</code></th></tr></thead><tbody><tr><td>词级</td><td>几十万起，永远收不住</td><td>最短</td><td>满地都是（没见过的词全废）</td></tr><tr><td>字符级</td><td>很小（= 字符集）</td><td><strong>最长</strong></td><td>几乎没有</td></tr><tr><td>子词（BPE）</td><td>可控（几万）</td><td>中等</td><td>罕见字才出现</td></tr></tbody></table>
+<p>选子词的理由只有一条，但足够硬：<strong>Attention 是 O(n²)</strong>。序列长度翻一倍，计算量翻四倍。字符级那点「词表小」的好处，在序列长度面前根本不够看。</p>
+<p>反过来说，字符级也不是没用 —— 它是<strong>基线</strong>。没有它，「BPE 压缩了 1.74 倍」这句话就没有参照物。所以两个都写了，用同一个 <code>Tokenizer</code> 抽象撑着。</p>
+<h2 id="2-四个特殊-token-各自管什么">2. 四个特殊 token 各自管什么</h2>
+<table><thead><tr><th>token</th><th>id</th><th>管什么</th></tr></thead><tbody><tr><td><code>&lt;pad&gt;</code></td><td>0</td><td>把 batch 里的句子补齐到一样长，<strong>它的位置不计入 loss</strong></td></tr><tr><td><code>&lt;unk&gt;</code></td><td>1</td><td>词表外的字符塌到这里 —— 出现一次就丢一次信息</td></tr><tr><td><code>&lt;bos&gt;</code></td><td>2</td><td>句子开始。没有它，模型不知道「第一个 token 前面没有上下文」</td></tr><tr><td><code>&lt;eos&gt;</code></td><td>3</td><td>句子结束。推理时见到它就停 —— 没有它，模型会一直生成下去</td></tr></tbody></table>
+<p>顺序写死在 <code>base.py</code> 的 <code>SPECIAL_TOKENS</code> 里，子类不许改。理由很笨也很实在：id 是<strong>跨模块共享的常量</strong>，<code>&lt;eos&gt;</code> 在训练侧写进去、在推理侧读出来，两边只要有一边顺序不对，模型就永远学不会停。</p>
+<h2 id="3-往返一致性为什么这条不能让步">3. 往返一致性：为什么这条不能让步</h2>
+<pre><code>assert tok.decode(tok.encode(s)) == s      # 对词表内的输入必须成立</code></pre>
+<p>它不是「顺手加的断言」，它是<strong>唯一能在离线阶段抓住分词器 bug 的指标</strong>。</p>
+<p>理由是分词器的 bug 有一类特别恶心：<strong>它不报错</strong>。少切了一个字符、合并规则应用反了顺序、decode 时漏掉了空白 —— 这些都不会让程序崩，只会让训练数据静默地烂掉。等你在 loss 曲线上看见异常，已经跑了几万步，而且根本不知道该往回查哪一层。</p>
+<p>往返一致性把这件事提前到「写完立刻能验」：</p>
+<pre><code>往返一致性 decode(encode(s)) == s : True
+逐行往返一致性（25 行全部自检）：True</code></pre>
+<p>代价是设计上的两个约束，都写进实现了：</p>
+<ul class="lvl"><li><strong>预切分规则必须覆盖全部字符</strong>。正则最后那个 <code>.</code> 是兜底，任何字符都不许被丢掉 —— 丢一个字符，解码就永远回不去。</li><li><strong>空白单独成 token，绝不参与合并</strong>。所以 <code>merges</code> 里永远不会有含空格的 token，也就不存在「合并把两个词粘成一个」这种事故。</li></ul>
+<h2 id="4-bpe-训练循环">4. BPE 训练循环</h2>
+<p>真从零写的，核心就是一句话：<strong>反复合并出现次数最多的那对相邻符号</strong>。</p>
+<pre><code>while len(vocab) &lt; vocab_size:
+    pairs = cls._count_pairs(symbols)          # 统计相邻 pair 的加权频次
+    if not pairs:
+        break                                  # 没有可合并的了 —— 优雅停止
+    best = min(pairs.items(), key=lambda kv: (-kv[1], kv[0]))[0]
+    vocab[best[0] + best[1]] = len(vocab)      # 新 token 进词表
+    merges.append(best)                        # 顺序写进 merges
+    symbols = cls._merge_everywhere(symbols, best, best[0] + best[1])</code></pre>
+<figure class="figure"><img alt="BPE 训练循环" src="../../../../../../projects/06-mini-transformer-llm/assets/bpe-merge-loop.svg" loading="lazy"/><figcaption>BPE 训练循环</figcaption></figure>
+<p>两个细节值得写下来：</p>
+<ul class="lvl"><li><strong>同频次时按字典序取小的那个</strong>（<code>key=lambda kv: (-kv[1], kv[0])</code>）。不做这个，同一份语料训练两次可能给出两套词表，而「训练不可复现」在排查时是最难的一类问题 —— 因为它只在两次运行之间出现。</li><li><strong><code>merges</code> 必须按学习顺序存</strong>。encode 时是靠「优先级越高越先合并」把字符串拼回去的，顺序存错了，落盘的 JSON 读回来就是另一个分词器。</li></ul>
+<p>真实跑出来的前 4 条合并：</p>
+<pre><code>#0  &#x27;e&#x27; + &#x27;n&#x27;     → &#x27;en&#x27;
+#1  &#x27;k&#x27; + &#x27;en&#x27;    → &#x27;ken&#x27;
+#2  &#x27;o&#x27; + &#x27;ken&#x27;   → &#x27;oken&#x27;
+#3  &#x27;t&#x27; + &#x27;oken&#x27;  → &#x27;token&#x27;</code></pre>
+<p>注意 <code>token</code> 是<strong>四次合并拼出来的</strong>，不是一次到位的 —— 这就是 BPE 的贪心本质：它只看当前最高频的那一对，看不到「这四个字母合起来是个词」。</p>
+<h2 id="5-中英混排的真实-token-片段">5. 中英混排的真实 token 片段</h2>
+<p>同一句样本，两种切法并排（<code>demos/out/demo_01_tokenizer.txt</code> 第 4 节）：</p>
+<pre><code>样本：Transformer 是一种神经网络架构，它在 2017 年被提出。
+
+[字符级] 共 35 个 token
+    T | r | a | n | s | f | o | r | m | e | r |
+    是 | 一 | 种 | 神 | 经 | 网 | 络 | 架 | 构 | ， | 它 | 在
+      | 2 | 0 | 1 | 7 |   | 年 | 被 | 提 | 出 | 。
+
+[BPE] 共 20 个 token
+    Transformer |   | 是 | 一种 | 神 | 经 | 网络 | 架 | 构 | ， | 它 | 在
+      | 2017 |   | 年 | 被 | 提 | 出 | 。</code></pre>
+<p>三个能看出来的东西：</p>
+<ul class="lvl"><li><code>Transformer</code> 和 <code>2017</code> 各自被并成了<strong>一个</strong> token —— 这是 BPE 最值钱的部分，一个 11 字符的词从 11 个位置压到 1 个。</li><li>中文这边 <code>一种</code>、<code>网络</code> 被并起来了，但 <code>神</code>、<code>经</code>、<code>架</code>、<code>构</code> 还是单字 —— 语料只有 1224 字符，出现次数不够，BPE 学不到那么多。<strong>小语料上 BPE 对中文的收益明显不如英文</strong>，这是真实的结论，不是实现没写好。</li><li>空格是独立 token，两个方案都一样 —— 它永远不会被并进别的 token。</li></ul>
+<p>整份语料：<strong>1224 token → 705 token，压缩率 1.74×</strong>。</p>
+<h2 id="6-词表越大序列越短">6. 词表越大，序列越短</h2>
+<p>这是 BPE 唯一的设计旋钮，所以把它量出来了：</p>
+<pre><code>  目标vocab   实际vocab   合并数   语料token   样本token   压缩率
+       299        299        0       1224         35   1.00x
+       350        350       51        917         25   1.33x
+       400        400      101        815         25   1.50x
+       450        450      151        755         21   1.62x
+       500        500      201        705         20   1.74x
+       600        600      301        605         15   2.02x</code></pre>
+<figure class="figure"><img alt="词表增长与序列压缩曲线" src="../../../../../../projects/06-mini-transformer-llm/assets/tokenizer-vocab-growth.svg" loading="lazy"/><figcaption>词表增长与序列压缩曲线</figcaption></figure>
+<p>曲线是<strong>明显边际递减</strong>的：前 51 次合并就把序列砍掉 25%，后面 100 次合并只再砍 15%。所以「词表越大越好」是错的 —— 词表每大一行，Embedding 就多 <code>d_model</code> 个参数，而且输出头的 softmax 也更贵。真实 LLM 选几万的词表，是在<strong>序列长度 × 词表大小</strong>之间取的一个平衡点，不是越大越好。</p>
+<h2 id="7-词表外字符优雅停止落盘">7. 词表外字符、优雅停止、落盘</h2>
+<p><strong>词表外字符只能塌成 <code>&lt;unk&gt;</code></strong>，信息在这里就丢了：</p>
+<pre><code>词表外的句子：GPT-4 在 2023 年发布，参数量约 1.8T，中文支持也不错。
+BPE 编码后 token 数：35，其中 &lt;unk&gt;(id=1) 出现 9 次</code></pre>
+<p>9 个 <code>&lt;unk&gt;</code> 就是 9 个「模型永远看不到的字」。这就是为什么<strong>训练和推理必须用同一份词表</strong> —— 换一份，输入就变成一堆 <code>&lt;unk&gt;</code>，模型还在认真算，算的是垃圾。</p>
+<p><strong>优雅停止</strong>是刻意做成不报错的：</p>
+<pre><code>请求 vocab_size=5000，可合并的 pair 只够用 490 次
+实际 vocab_size=789（小于 5000，不抛异常，安静停下）
+反过来请求 10：直接报错 —— vocab_size=10 太小：光基础字符就有 299 个</code></pre>
+<p>方向不同处理不同：<strong>上限超了就安静停</strong>（小语料上是常态），<strong>下限不够就报错</strong>（说明调用方把参数传错了，静默通过只会让后面的维度对不上）。</p>
+<p><strong>落盘</strong>存两套东西，缺一不可：</p>
+<pre><code>字符级词表 → demos/out/char_vocab.json（4648 字节）
+BPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 merges）
+读回后 vocab_size: 500（与原对象一致：True）
+读回后 merges 顺序一致: True
+读回后编码结果一致    : True</code></pre>
+<hr/>
+<h2 id="8-这一章踩到的坑">8. 这一章踩到的坑</h2>
+<table><thead><tr><th>#</th><th>坑</th><th>怎么发现的</th><th>修法</th></tr></thead><tbody><tr><td>1</td><td>汉字逐字切分 → 中文合并 0 条</td><td>demo 第 3 节打印「中文合并（共 0 条）」，而样本里明明有「模型」</td><td>预切分改成「连续汉字串整体当一个 word」（照 GPT-2 的做法），中文合并 48 条</td></tr><tr><td>2</td><td><code>tmp_path</code> 在沙箱里 PermissionError</td><td>一跑测试就崩，报 <code>/private/var/.../pytest-of-unknown</code> 不可写</td><td>fixture 改用仓库内 <code>tests/.tmp/</code> + 自己 <code>rmtree</code> 清理（沿用 P05 的做法）</td></tr><tr><td>3</td><td><code>vocab_size</code> 在测试里写成常量 260</td><td>语料换成 1224 字符后，基础字符 299 个，<code>train(corpus, 260)</code> 直接 ValueError</td><td>测试改成从 <code>CharTokenizer.build(corpus).vocab_size</code> 动态推导</td></tr><tr><td>4</td><td>合并优先级的同频次分支不确定</td><td>两次 <code>train</code> 结果可能不一致，只在「跑两次」时才出现</td><td><code>min(key=(-频次, 字典序))</code>，同频取小的那个，钉进 <code>test_training_is_deterministic</code></td></tr><tr><td>5</td><td>断言用了语料里没有的字</td><td><code>decode(encode(&quot;你好&quot;))</code> 返回 <code>&lt;unk&gt;好</code> —— 语料里压根没「你」</td><td>测试文本一律取自语料（或先 train 进去），不凭空写字</td></tr></tbody></table>
+<p>坑 1 值得单独说一句：它不是调参问题，是<strong>概念性错误</strong>。我以为「切得越细越稳」，实际是把要学的东西切没了 —— 每个汉字独立成 word，word 内长度恒为 1，压根没有相邻 pair 可统计。这类错误只有<strong>把中间结果打印出来</strong>才会暴露，单测断言「vocab_size 对不对」是抓不到的。</p>
+<h2 id="9-结论">9. 结论</h2>
+<ul class="lvl"><li>LLM 用子词不是为了优雅，是因为 <strong>Attention 是 O(n²)</strong>，序列长度比词表大小贵得多。</li><li><code>decode(encode(s)) == s</code> 是唯一能在离线阶段抓住分词器 bug 的指标，必须钉成测试。</li><li>特殊 token 的 id 是<strong>跨模块共享的常量</strong>，顺序写死，两边不许各写一套。</li><li>BPE 是<strong>贪心的</strong>：<code>token</code> 要 4 次合并才拼得出来，它看不到「这是个词」。</li><li>词表大小是<strong>边际递减</strong>的旋钮，不是越大越好。</li><li><code>&lt;unk&gt;</code> 出现的次数 = 丢掉的信息量。训练和推理必须用同一份词表。</li><li>参数约束要分方向：<strong>上限超了安静停，下限不够就报错</strong>。</li></ul>
+<h2 id="10-代码位置">10. 代码位置</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tokenizer/base.py</code></td><td><code>Tokenizer</code> 抽象（vocab_size / encode / decode / save / load）+ <code>SPECIAL_TOKENS</code> + <code>pieces()</code></td></tr><tr><td><code>src/tokenizer/char_tokenizer.py</code></td><td><code>CharTokenizer.build(corpus, min_freq=)</code>：字符级基线</td></tr><tr><td><code>src/tokenizer/bpe.py</code></td><td><code>BPETokenizer.train(corpus, vocab_size)</code>：预切分 / pair 统计 / 合并循环 / 优雅停止</td></tr><tr><td><code>src/tokenizer/sample_corpus.py</code></td><td>1224 字符的离线中英混排语料（不联网下载）</td></tr><tr><td><code>tests/conftest.py</code></td><td><code>workdir</code> fixture（仓库内临时目录）、共用语料与分词器 fixture</td></tr><tr><td><code>tests/test_char_tokenizer.py</code></td><td>24 项</td></tr><tr><td><code>tests/test_bpe.py</code></td><td>27 项</td></tr><tr><td><code>demos/demo_01_tokenizer.py</code></td><td>8 节演示，输出落 <code>demos/out/demo_01_tokenizer.txt</code></td></tr><tr><td><code>assets/bpe-merge-loop.svg</code></td><td>BPE 训练循环图</td></tr><tr><td><code>assets/tokenizer-vocab-growth.svg</code></td><td>词表增长 / 序列压缩曲线（数据来自 demo 第 5 节）</td></tr></tbody></table>
+<pre><code>cd projects/06-mini-transformer-llm
+.venv/bin/python -m pytest -q                  # 51 passed
+.venv/bin/python demos/demo_01_tokenizer.py    # 输出落 demos/out/demo_01_tokenizer.txt</code></pre>
+<h2 id="11-真实运行截图">11. 真实运行截图</h2>
+<p>截图来自<strong>真实终端</strong>（非伪造）：图 1 是 51 项 pytest 全绿，图 2 是 demo 真实跑通的输出（压缩率 1.74×、BPE 前 4 条合并、词表增长表都来自这里）。</p>
+<figure class="figure"><img alt="Project 06 —— pytest 全绿（51 passed）" src="../../../../../../projects/06-mini-transformer-llm/assets/term-01-pytest.png" loading="lazy"/><figcaption>Project 06 —— pytest 全绿（51 passed）</figcaption></figure>
+<figure class="figure"><img alt="Tokenizer demo 真实运行输出（来自 demos/out/demo_01_tokenizer.txt）" src="../../../../../../projects/06-mini-transformer-llm/assets/term-01-tokenizer.png" loading="lazy"/><figcaption>Tokenizer demo 真实运行输出（来自 demos/out/demo_01_tokenizer.txt）</figcaption></figure>
+<h2 id="12-下一步">12. 下一步</h2>
+<p>Milestone 03 用这里的 id 序列去查 Embedding 矩阵：<code>(V, d_model)</code> 的一张表，加上让模型知道「第几个位置」的位置编码。Tokenizer 决定了 <code>V</code> 是 500，Embedding 那层就得老老实实建 500 行 —— 这就是 Milestone 01 说的「下游形状由上游决定」。</p>
+<h2 id="13-版本">13. 版本</h2>
+<p>v0.0 → <strong>v0.1</strong>，<code>src/tokenizer/</code> 四个文件落地，字符级 + BPE 双实现测试 <strong>51 passed</strong>，demo 真实跑通并落盘，配图 5 张（3 张手写 SVG：架构图 / BPE 循环 / 词表增长曲线 + 2 张真实终端截图：pytest 全绿 / demo 输出）。</p>
+</main>
+</body>
+</html>

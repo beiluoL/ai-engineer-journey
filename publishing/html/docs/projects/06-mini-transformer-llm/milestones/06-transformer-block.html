@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 06 — Transformer Block：注意力 + 残差 + FFN</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-06-transformer-block注意力-残差-ffn">Milestone 06 — Transformer Block：注意力 + 残差 + FFN</h1>
+<p>Milestone 04–05 写通了多头注意力。但光有注意力不够：注意力是「token 之间交换信息」，还需要一个<strong>位置无关的前馈网络</strong>让每个 token 自己过一遍非线性变换；而且两层都要用残差接起来，否则堆深了梯度就断。</p>
+<p>这一层把前面的零件拼成「一个完整的计算单元」。Project 05 里我只知道有个 <code>block</code>；这里我亲自把 Pre-LN 结构写出来 —— 注意力子层、FFN 子层各配一个 LayerNorm + 一条残差捷径。</p>
+<hr/>
+<h2 id="1-what-why残差为什么是必选项">1. What / Why：残差为什么是必选项</h2>
+<p>没有残差，深层网络的反向梯度要连乘很多层 Jacobian，几乎必然消失，训不动。残差 <code>out = sublayer(x) + x</code> 给梯度留了一条「直通高速公路」：即使子层当时什么都没学到（全零），<code>out</code> 仍等于 <code>x</code>，信息不丢、梯度不灭。</p>
+<p>为什么用 <strong>Pre-LN</strong>（先 LayerNorm 再进子层）而不是 Post-LN：Pre-LN 训练更稳，深层也不容易数值炸，玩具规模下尤其友好。</p>
+<h2 id="2-designpreln-双残差">2. Design：Pre-LN + 双残差</h2>
+<p><code>src/model/block.py</code> 三个类：</p>
+<ul class="lvl"><li><code>FeedForward</code>：<code>Linear(d_model → d_ff) → ReLU → Linear(d_ff → d_model)</code>。本项目用 ReLU（论文常用 GELU，玩具规模下 ReLU 更直观、手写更简单）。<code>d_ff</code> 是中间放大倍数。</li><li><code>_LayerNorm</code>：包住 autograd 的 <code>layernorm</code>，<code>gamma/beta</code> 是可学参数。</li><li><code>TransformerBlock</code>：前向就是两行 ——</li></ul>
+<pre><code>h   = x + MHA(LayerNorm(x))      # 子层 1：注意力 + 残差
+out = h + FFN(LayerNorm(h))      # 子层 2：前馈 + 残差</code></pre>
+<figure class="figure"><img alt="Transformer Block（Pre-LN）结构：LN → 子层 → 残差加回" src="../../../../../../projects/06-mini-transformer-llm/assets/block.svg" loading="lazy"/><figcaption>Transformer Block（Pre-LN）结构：LN → 子层 → 残差加回</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo06blocktxt">3. Real-run evidence（来自 <code>demos/out/demo_06_block.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。</p>
+<pre><code>d_model=16, n_heads=4, d_ff=32
+子模块：ln1 / attn / ln2 / ffn
+参数个数 : 12
+
+输入形状   : (7, 16)
+输出形状   : (7, 16)  （应等于 (seq, d_model)）</code></pre>
+<p>残差真的工作 —— 把子层强行置零，输出仍等于输入（信息靠残差捷径保住）：</p>
+<pre><code>子层全零时，输出是否仍有限 : True
+子层全零时，输出与输入是否接近（残差生效）: True</code></pre>
+<p>FFN 中间放大倍数：</p>
+<pre><code>FFN 输入 形状 : (7, 16)
+FFN 输出 形状 : (7, 16)  （d_model → d_ff → d_model）
+FFN 中间放大倍数 d_ff/d_model = 2</code></pre>
+<p>整块所有参数都拿到了梯度（说明残差 + LayerNorm + 注意力的反向链路全通）：</p>
+<pre><code>Block 内所有参数都拿到梯度 : True</code></pre>
+<figure class="figure"><img alt="Transformer Block demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-06-block.png" loading="lazy"/><figcaption>Transformer Block demo 真实运行输出</figcaption></figure>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<p>本 milestone demo 没有暴露真实运行 bug。一个<strong>设计提醒</strong>：残差不是「加了就完」，它要求子层输出和输入<strong>形状完全一致</strong>才能相加（<code>(seq, d_model)</code> 对 <code>(seq, d_model)</code>）。源码里 MHA 和 FFN 都保持 <code>d_model</code> 维不变，残差 <code>add</code> 才成立。若哪天把 FFN 的输出维写错，这条加法不会报错但语义全毁 —— 所以 demo 专门验了「子层全零时 out≈x」这条。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>一个 Block = 注意力子层 + FFN 子层，各配 LayerNorm 与一条残差。</li><li>残差给梯度留了直通路径：子层全零时 <code>out == x</code>，深层才训得动。</li><li>Pre-LN 比 Post-LN 训练更稳，是本项目选它的原因。</li><li>残差成立的前提是「子层输出维 = 输入维」，这条在形状上必须钉死。</li><li><code>d_ff/d_model = 2</code> 是本玩具配置的中间放大倍数（真实模型常取 4）。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/block.py</code></td><td><code>FeedForward</code>（ReLU 两层线性）、<code>_LayerNorm</code>（gamma/beta 可学）、<code>TransformerBlock</code>（Pre-LN 双残差）</td></tr><tr><td><code>src/model/multihead.py</code></td><td>复用的 <code>MultiHeadAttention</code></td></tr><tr><td><code>src/model/autograd.py</code></td><td>复用的 <code>layernorm</code> / <code>linear</code> / <code>relu</code> / <code>add</code>（均带反向）</td></tr><tr><td><code>demos/demo_06_block.py</code></td><td>5 节演示：构造 / 前向 / 残差 / FFN / 梯度，输出落 <code>demos/out/demo_06_block.txt</code></td></tr><tr><td><code>assets/block.svg</code></td><td>本章结构图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.4 → <strong>v0.5</strong>，Transformer Block（Pre-LN + 双残差 + FFN）落地，残差与梯度链路验证通过，演示真实跑通并核对形状/残差/梯度，配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

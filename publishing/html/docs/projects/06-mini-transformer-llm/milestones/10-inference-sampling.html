@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 10 — Inference：一个 token 一个 token 地采样</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-10-inference一个-token-一个-token-地采样">Milestone 10 — Inference：一个 token 一个 token 地采样</h1>
+<p>Milestone 09 训出了权重。最后一步是推理：拿前缀，让模型<strong>自回归地</strong>一个一个吐出后面的 token，直到遇到 <code>&lt;eos&gt;</code> 或达到长度上限。这是 Milestone 01 那条数据流的终点，也是整个 Project 06 的收尾 —— Tokenizer → Embedding → Block → Training → Inference 全链路跑通。</p>
+<p>Project 05 里「模型给我一段文本」是黑盒输出；这里 <code>generate</code> 的每一步我都看得见：取最后一位 logits、按策略选下一个 token、拼回去、再喂。</p>
+<hr/>
+<h2 id="1-what-why为什么是循环采样而不是一次出整句">1. What / Why：为什么是「循环采样」而不是「一次出整句」</h2>
+<p>Transformer 每次只预测「下一个 token」（Milestone 08 的自回归目标决定了）。所以生成就是个循环：喂当前上下文 → 取最后一位 logits → 选下一个 → 拼回 → 再喂。复杂度随生成长度<strong>线性</strong>增长（每步只用到已生成的 token + 新采的 1 个）。</p>
+<p>三种采样策略对应三种「确定性 vs 多样性」的取舍：</p>
+<ul class="lvl"><li><strong>贪心（temperature ≤ 0）</strong>：取 argmax，最确定、最无聊。</li><li><strong>温度采样（temperature &gt; 0）</strong>：用 <code>1/t</code> 缩放 logits 后 softmax 采样；越高越随机。</li><li><strong>top-k</strong>：只在概率最高的 k 个里选，截掉长尾噪声。</li></ul>
+<h2 id="2-designprefill-最后一位-三种策略">2. Design：prefill 最后一位 + 三种策略</h2>
+<p><code>src/model/inference.py</code>：</p>
+<ul class="lvl"><li><code>generate_ids</code>：把 <code>prompt</code> 编码成 id，循环 <code>max_new_tokens</code> 次：只保留最近 <code>ctx_len</code> 个 token（防超位置编码长度）→ 喂模型 → 取 <code>logits[0, -1, :]</code>（最后一位）→ 按策略选 <code>next_id</code> → 若 <code>next_id == EOS_ID</code> 就停，否则 <code>ids.append(next_id)</code>。</li><li><code>generate</code>：<code>generate_ids</code> 的封装，返回 <code>tokenizer.decode(ids, skip_special=True)</code> 文本。</li><li><code>logits_of_prefix</code>：工具函数，返回 prompt 最后一位的 logits（供 demo 看分布）。</li><li>采样实现：<code>temperature &lt;= 0 → argmax</code>；否则 <code>logits/t → top_k 截断 → softmax → rng.choice</code>，全程 numpy。</li></ul>
+<figure class="figure"><img alt="推理采样循环：prompt → 取最后 logits → 策略采样 → 拼回 → 遇 eos 停" src="../../../../../../projects/06-mini-transformer-llm/assets/inference.svg" loading="lazy"/><figcaption>推理采样循环：prompt → 取最后 logits → 策略采样 → 拼回 → 遇 eos 停</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo10inferencetxt">3. Real-run evidence（来自 <code>demos/out/demo_10_inference.txt</code>）</h2>
+<p>真实环境：Python 3.13.12 | numpy 2.5.3。玩具模型（同 Demo 09 配置），<strong>训练后 loss ≈ 4.8517（初始 ≈ 6.2100）</strong>。</p>
+<p>贪心最确定，但玩具模型只会「续空格」（因为训练语料里 <code>&lt;bos&gt;</code> 后常跟空格，且模型没真学会语言）：</p>
+<pre><code>prompt        : &#x27;Transformer&#x27;
+贪心生成文本  : &#x27;Transformer               &#x27;
+生成 token 数 : 15  (≤ 15)
+全部在词表内  : True</code></pre>
+<p>温度采样符合直觉 —— 低温聚焦、高温发散：</p>
+<pre><code>temperature=1.2 : &#x27;Transformer被则  一个分词器符，用生成越token 词表 除&#x27;
+temperature=0.5 : &#x27;Transformer     ，   ，数 用 、&#x27;
+→ 温度低更聚焦、温度高更发散，符合直觉。</code></pre>
+<p>top-k 截掉长尾噪声，生成更干净：</p>
+<pre><code>top_k=20 : &#x27;Transformer是token，  ， ，，    _。&#x27;
+→ top-k 把长尾噪声 token 截掉，生成更干净。</code></pre>
+<p>多 prompt 对照（玩具规模内容重复属正常）：</p>
+<pre><code>prompt=        &#x27;模型&#x27; → &#x27;模型          &#x27;
+prompt= &#x27;Attention&#x27; → &#x27;Attention          &#x27;
+prompt=     &#x27;token&#x27; → &#x27;token          &#x27;</code></pre>
+<p>「全部在词表内 : True」说明生成的 id 都合法、解码不会塌成 <code>&lt;unk&gt;</code> 或越界 —— 推理闭环是自洽的。</p>
+<figure class="figure"><img alt="Inference demo 真实运行输出" src="../../../../../../projects/06-mini-transformer-llm/assets/term-10-inference.png" loading="lazy"/><figcaption>Inference demo 真实运行输出</figcaption></figure>
+<h2 id="4-bugs-lessons">4. Bugs / lessons</h2>
+<p>本 milestone demo 没有暴露真实运行 bug。一个<strong>设计提醒（来自源码）</strong>：拼接上下文时 <code>ctx = ids[-ctx_len:]</code>，避免序列超过 <code>max_len</code> 导致位置编码索引越界（Milestone 03/07 都校验过 <code>seq_len ≤ max_len</code>）。推理循环里这步截断是必须的，否则长生成会直接 <code>ValueError</code>。</p>
+<p>关于「贪心只续空格」：这<strong>不是 bug</strong>，是玩具规模（150 步、280 样本）的真实结果 —— 模型远没学会语言，只是 loss 比随机低。如实记录比假装「生成流畅」更诚实，也呼应 Milestone 09「曲线抖动、整体下行」的结论。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>推理是自回归循环：取上下文最后一位 logits → 按策略采样 → 拼回 → 遇 <code>&lt;eos&gt;</code> 停；长度线性增长。</li><li>贪心最确定但最无聊；温度高更发散、温度低更聚焦；top-k 截长尾噪声更干净。</li><li>玩具模型收敛有限（loss≈4.85），生成的「续空格」是真实结果、非 bug。</li><li><code>ctx = ids[-ctx_len:]</code> 截断防位置编码越界，是推理循环的必要保护。</li><li><strong>全链路闭环</strong>：Tokenizer → Embedding → Block → Training → Inference 真实跑通，每个生成的 token 都在词表内。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/inference.py</code></td><td><code>generate_ids</code>（自回归采样循环）、<code>generate</code>（返回文本）、<code>logits_of_prefix</code>（看分布）；greedy / temperature / top-k 三策略</td></tr><tr><td><code>src/model/decoder.py</code></td><td>复用的 <code>TransformerLM</code></td></tr><tr><td><code>src/tokenizer/base.py</code></td><td>复用的 <code>EOS_ID</code>（遇它则停）、<code>decode</code></td></tr><tr><td><code>demos/demo_10_inference.py</code></td><td>5 节演示：训练 / 贪心 / 温度 / top-k / 多 prompt，输出落 <code>demos/out/demo_10_inference.txt</code></td></tr><tr><td><code>assets/inference.svg</code></td><td>本章采样循环图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.8 → <strong>v0.9</strong>，推理采样落地（贪心 / 温度 / top-k，遇 eos 停止），全链路 Tokenizer→Embedding→Block→Training→Inference 跑通；纯 numpy、无 torch。演示真实跑通并核对三种策略输出与词表内合法性，配图 1 张手写 SVG + 1 张真实终端截图。<strong>Project 06 完结。</strong></p>
+</main>
+</body>
+</html>

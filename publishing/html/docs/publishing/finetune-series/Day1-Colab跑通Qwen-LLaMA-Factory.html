@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day1：Colab 跑通 Qwen + LLaMA-Factory</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day1colab-跑通-qwen-llamafactory">大模型微调实战 Day1：Colab 跑通 Qwen + LLaMA-Factory</h1>
+<h1 id="第一次微调实战-day1">第一次微调实战 Day1</h1>
+<h1 id="从-0-到跑通-qwen-llamafactory-第一份-java-面试训练数据">从 0 到跑通 Qwen + LLaMA-Factory + 第一份 Java 面试训练数据</h1>
+<p>今天的目标非常明确：</p>
+<blockquote><p><strong>不训练大模型，只完成一次完整环境搭建，让你理解大模型微调的第一条链路。</strong></p></blockquote>
+<p>今天结束后，你应该拥有：</p>
+<pre><code>Google Colab GPU环境
+        ↓
+LLaMA-Factory 微调框架
+        ↓
+Qwen基础模型
+        ↓
+Java面试训练数据集
+        ↓
+第一次训练准备完成</code></pre>
+<hr/>
+<h1 id="day1-总览">Day1 总览</h1>
+<p>预计时间：</p>
+<table><thead><tr><th>任务</th><th>时间</th></tr></thead><tbody><tr><td>注册 Google Colab</td><td>10分钟</td></tr><tr><td>开启GPU</td><td>5分钟</td></tr><tr><td>测试环境</td><td>10分钟</td></tr><tr><td>安装LLaMA-Factory</td><td>30分钟</td></tr><tr><td>下载Qwen模型</td><td>20分钟</td></tr><tr><td>准备训练数据</td><td>1小时</td></tr><tr><td>理解流程</td><td>30分钟</td></tr></tbody></table>
+<p>总计：</p>
+<p>约3小时。</p>
+<hr/>
+<h1 id="第一部分准备-google-colab">第一部分：准备 Google Colab</h1>
+<h2 id="1-注册-google-账号">1. 注册 Google 账号</h2>
+<p>打开：</p>
+<p><a href="https://colab.research.google.com/" target="_blank" rel="noopener">https://colab.research.google.com/</a></p>
+<p>登录 Google 账号。</p>
+<p>进入后：</p>
+<p>点击：</p>
+<pre><code>File
+ ↓
+New Notebook</code></pre>
+<p>中文：</p>
+<pre><code>文件
+ ↓
+新建笔记本</code></pre>
+<p>你会看到：</p>
+<pre><code>Untitled0.ipynb</code></pre>
+<p>这就是你的训练环境。</p>
+<hr/>
+<h1 id="第二部分开启-gpu">第二部分：开启 GPU</h1>
+<p>顶部菜单：</p>
+<pre><code>修改
+ ↓
+笔记本设置
+ ↓
+硬件加速器
+ ↓
+GPU</code></pre>
+<p>选择：</p>
+<pre><code>GPU</code></pre>
+<p>保存。</p>
+<hr/>
+<h2 id="检查-gpu">检查 GPU</h2>
+<p>第一个代码：</p>
+<p>复制：</p>
+<pre><code>!nvidia-smi</code></pre>
+<p>点击运行。</p>
+<p>正常应该看到：</p>
+<p>类似：</p>
+<pre><code>+----------------------+
+
+NVIDIA-SMI
+
+Tesla T4
+
+Memory:
+15360MiB
+
++----------------------+</code></pre>
+<p>说明：</p>
+<p>你的云电脑有 NVIDIA GPU。</p>
+<p>![[Pasted image 20260922224924.png]]</p>
+<hr/>
+<h2 id="如果显示">如果显示：</h2>
+<pre><code>/bin/bash: nvidia-smi command not found</code></pre>
+<p>说明：</p>
+<p>没有 GPU。</p>
+<p>重新：</p>
+<pre><code>运行时
+ ↓
+更改运行时类型
+ ↓
+GPU</code></pre>
+<hr/>
+<h1 id="第三部分理解-colab">第三部分：理解 Colab</h1>
+<p>你现在拥有：</p>
+<p>一台临时 Linux 服务器：</p>
+<pre><code>你的Mac浏览器
+
+        ↓
+
+Google服务器
+
+        ↓
+
+Linux
+
+        ↓
+
+NVIDIA GPU
+
+        ↓
+
+训练模型</code></pre>
+<p>你的 Mac 不负责训练。</p>
+<p>只是控制它。</p>
+<hr/>
+<h1 id="第四部分安装-python-环境">第四部分：安装 Python 环境</h1>
+<p>现在开始安装 AI 工具。</p>
+<p>创建一个代码块：</p>
+<pre><code>!python --version</code></pre>
+<p>输出：</p>
+<p>例如：</p>
+<pre><code>Python 3.10.x</code></pre>
+<p>正常。</p>
+<hr/>
+<p>升级 pip：</p>
+<pre><code>!pip install --upgrade pip</code></pre>
+<hr/>
+<h1 id="第五部分安装-llamafactory">第五部分：安装 LLaMA-Factory</h1>
+<h2 id="什么是-llamafactory">什么是 LLaMA-Factory？</h2>
+<p>你可以理解：</p>
+<p>以前训练模型：</p>
+<p>需要自己写：</p>
+<ul class="lvl"><li>数据读取</li></ul>
+<ul class="lvl"><li>模型加载</li></ul>
+<ul class="lvl"><li>LoRA配置</li></ul>
+<ul class="lvl"><li>训练循环</li></ul>
+<ul class="lvl"><li>保存模型</li></ul>
+<p>非常复杂。</p>
+<p>LLaMA-Factory：</p>
+<p>把这些封装好了。</p>
+<p>你的流程：</p>
+<pre><code>数据
+
+↓
+
+yaml配置
+
+↓
+
+一条命令训练</code></pre>
+<hr/>
+<p>安装：</p>
+<p>运行：</p>
+<pre><code>!git clone https://github.com/hiyouga/LLaMA-Factory.git</code></pre>
+<p>完成：</p>
+<p>看到：</p>
+<pre><code>Cloning into &#x27;LLaMA-Factory&#x27;</code></pre>
+<p>![[Pasted image 20260922225213.png]]</p>
+<hr/>
+<p>进入目录：</p>
+<pre><code>%cd LLaMA-Factory</code></pre>
+<hr/>
+<p>安装：</p>
+<pre><code>!pip install -e .</code></pre>
+<p>等待。</p>
+<p>可能需要：</p>
+<p>5-20分钟。</p>
+<hr/>
+<h1 id="第六部分检查-llamafactory">第六部分：检查 LLaMA-Factory</h1>
+<p>运行：</p>
+<pre><code>!llamafactory-cli version</code></pre>
+<p>正常：</p>
+<p>类似：</p>
+<pre><code>LLaMA-Factory version xxx</code></pre>
+<p>成功。</p>
+<hr/>
+<h1 id="第七部分安装模型依赖">第七部分：安装模型依赖</h1>
+<p>安装：</p>
+<pre><code>!pip install transformers datasets accelerate peft bitsandbytes sentencepiece</code></pre>
+<p>作用：</p>
+<table><thead><tr><th>组件</th><th>作用</th></tr></thead><tbody><tr><td>Transformers</td><td>加载Qwen</td></tr><tr><td>Datasets</td><td>读取数据</td></tr><tr><td>PEFT</td><td>LoRA</td></tr><tr><td>Bitsandbytes</td><td>4bit量化</td></tr><tr><td>Accelerate</td><td>GPU训练</td></tr><tr><td>SentencePiece</td><td>Tokenizer</td></tr></tbody></table>
+<hr/>
+<h1 id="第八部分下载第一个-qwen-模型">第八部分：下载第一个 Qwen 模型</h1>
+<p>第一次不要7B。</p>
+<p>选择：</p>
+<h1 id="qwen253binstruct">Qwen2.5-3B-Instruct</h1>
+<p>为什么？</p>
+<p>因为：</p>
+<p>3B：</p>
+<p>约30亿参数。</p>
+<p>适合第一次。</p>
+<hr/>
+<p>测试下载：</p>
+<p>新建代码：</p>
+<pre><code>from transformers import AutoTokenizer
+
+
+model_name=&quot;Qwen/Qwen2.5-3B-Instruct&quot;
+
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+
+print(&quot;下载成功&quot;)</code></pre>
+<p>第一次：</p>
+<p>会下载：</p>
+<p>约几GB。</p>
+<p>看到：</p>
+<pre><code>下载成功</code></pre>
+<p>说明：</p>
+<p>模型可以使用。</p>
+<hr/>
+<h1 id="第九部分准备你的第一份训练数据">第九部分：准备你的第一份训练数据</h1>
+<p>现在开始最重要部分。</p>
+<h2 id="不要训练知识">不要训练知识</h2>
+<p>训练：</p>
+<blockquote><p>行为 + 输出格式</p></blockquote>
+<p>例如：</p>
+<p>不是：</p>
+<pre><code>HashMap是什么？</code></pre>
+<p>而是：</p>
+<pre><code>请使用Java高级面试方式回答HashMap</code></pre>
+<hr/>
+<p>创建：</p>
+<pre><code>java_interview.json</code></pre>
+<p>内容：</p>
+<pre><code>[
+ {
+  &quot;instruction&quot;: &quot;你是一名Java高级工程师面试官，请用面试回答方式回答问题&quot;,
+  &quot;input&quot;: &quot;HashMap为什么线程不安全？&quot;,
+  &quot;output&quot;: &quot;HashMap线程不安全主要原因是多个线程同时修改共享数据结构。JDK8中HashMap采用数组+链表+红黑树结构，但没有加锁。在并发put时可能导致数据覆盖、链表结构异常等问题。因此多线程环境应该使用ConcurrentHashMap。&quot;
+ },
+
+ {
+  &quot;instruction&quot;: &quot;你是一名Java高级工程师面试官，请用面试回答方式回答问题&quot;,
+  &quot;input&quot;: &quot;ConcurrentHashMap JDK8如何保证线程安全？&quot;,
+  &quot;output&quot;: &quot;JDK8 ConcurrentHashMap取消Segment分段锁设计，采用CAS+synchronized实现。空桶插入使用CAS，非空桶锁住头节点，通过Node链表或者TreeBin保证并发安全。同时支持扩容迁移。&quot;
+ }
+]</code></pre>
+<hr/>
+<p>这就是：</p>
+<h2 id="sft数据">SFT数据</h2>
+<p>SFT:</p>
+<p><strong>Supervised Fine-Tuning【监督微调】</strong></p>
+<p>意思：</p>
+<p>告诉模型：</p>
+<pre><code>问题
+
+↓
+
+优秀答案
+
+↓
+
+学习这种回答方式</code></pre>
+<hr/>
+<h1 id="第十部分创建数据目录">第十部分：创建数据目录</h1>
+<p>在 Colab：</p>
+<pre><code>!mkdir -p data</code></pre>
+<p>上传：</p>
+<pre><code>java_interview.json</code></pre>
+<p>放：</p>
+<pre><code>data/java_interview.json</code></pre>
+<hr/>
+<p>检查：</p>
+<pre><code>!ls data</code></pre>
+<p>看到：</p>
+<pre><code>java_interview.json</code></pre>
+<p>成功。</p>
+<hr/>
+<h1 id="第十一部分今天先不要训练">第十一部分：今天先不要训练</h1>
+<p>为什么？</p>
+<p>因为第一次训练前，需要理解：</p>
+<p>完整链路：</p>
+<pre><code>训练数据
+
+{
+问题:
+HashMap为什么线程不安全？
+
+答案:
+xxxx
+}
+
+
+        ↓
+
+
+Tokenizer【分词器】
+
+        ↓
+
+
+Qwen模型
+
+        ↓
+
+
+计算Loss【损失】
+
+        ↓
+
+
+调整LoRA参数
+
+        ↓
+
+
+保存Adapter</code></pre>
+<hr/>
+<h1 id="day1完成标准">Day1完成标准</h1>
+<p>你今天完成：</p>
+<h2 id="环境">环境</h2>
+<p>✅ Google Colab ✅ GPU ✅ Python环境</p>
+<h2 id="工具">工具</h2>
+<p>✅ LLaMA-Factory安装 ✅ Transformers安装</p>
+<h2 id="模型">模型</h2>
+<p>✅ Qwen2.5-3B下载</p>
+<h2 id="数据">数据</h2>
+<p>✅ 第一份Java训练集</p>
+<hr/>
+<h1 id="明天-day2">明天 Day2</h1>
+<p>进入真正训练：</p>
+<p>《第一次 QLoRA 微调实战 Day2：配置 LLaMA-Factory → 训练 Qwen → 查看 Loss → 保存 LoRA → 第一次让模型学会 Java 面试回答》</p>
+<p>内容：</p>
+<ul class="lvl"><li>注册数据集</li></ul>
+<ul class="lvl"><li>写 yaml 配置</li></ul>
+<ul class="lvl"><li>启动训练</li></ul>
+<ul class="lvl"><li>看 GPU 占用</li></ul>
+<ul class="lvl"><li>理解 Loss</li></ul>
+<ul class="lvl"><li>保存 LoRA Adapter</li></ul>
+<ul class="lvl"><li>测试微调前后区别</li></ul>
+<hr/>
+<p>不过在进入 Day2 前，我建议你今天先完成 <strong>Day1 的环境搭建</strong>。</p>
+<p>你可以按照顺序执行，每执行一步把结果截图/复制给我，我帮你判断是否正确。不要跳步骤。</p>
+</main>
+</body>
+</html>

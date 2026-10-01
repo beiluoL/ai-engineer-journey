@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-05-qlora把基座压成-4-bit代价是多少">Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少</h1>
+<p>M04 证明了 LoRA 只动 1/8.5 的参数 —— 但<strong>基座本身没变小</strong>。fp32 的 230,656 个参数还是老老实实躺在显存里。这就是大多数人根本跑不起微调的真正瓶颈：7B 模型光权重就要 28 GB。</p>
+<p>QLoRA 的解法很直接：<strong>把被冻结的基座压成 4 bit，前向时再反量化回 float 参与计算</strong>。</p>
+<pre><code>y = x · dequant(W_nf4)  +  (alpha/r) · x · A · B
+    └── 冻结、4 bit ──┘   └── 可训练、fp32 ──┘</code></pre>
+<p><strong>纯 numpy 手写</strong>：NF4 码本、分块 absmax、最近邻查表、双量化、显存账本，全部自己实现（<code>src/ft/quantize.py</code>）。没有 <code>bitsandbytes</code>。</p>
+<hr/>
+<h2 id="1-why为什么是-nf4-而不是-int4">1. Why：为什么是 NF4 而不是 int4</h2>
+<p>一句话讲清 NF4（4-bit NormalFloat）：</p>
+<blockquote><p>神经网络权重近似服从<strong>零均值正态分布</strong>。既然分布已知，就不需要像 int8 那样把 <code>[-1, 1]</code> 均匀切 256 份，而是<strong>按分位数</strong>切 16 份 —— 让每一份里落进来的权重<strong>数量相同</strong>。信息论上，这让 4 bit 承载的信息量最大。</p></blockquote>
+<p>还有一条不可商榷的约束：<strong>量化只作用于被冻结的基座</strong>。梯度不会流过量化器（那东西不可导），所以<strong>量化误差不会被训练修复</strong>。这也是为什么必须用为&quot;正态分布权重&quot;量身定做的码本，而不是粗暴的 int4。</p>
+<h2 id="2-design三步量化-一步双量化">2. Design：三步量化 + 一步双量化</h2>
+<ul class="lvl"><li><strong>分块 absmax 归一化</strong>：每 <code>block_size</code>（默认 64）个数一组，除以组内绝对值最大值，压到 <code>[-1, 1]</code>。分块是为了挡住离群值 —— 一个特别大的权重参与全局归一化，会把其他所有权重都压成 0。</li><li><strong>映射到 NF4 的 16 个码字</strong>：不是 <code>round</code>，而是<strong>最近邻查找</strong>（<code>argmin |x - c|</code>），因为码字不等距。</li><li><strong>双量化（可选）</strong>：每个块要存一个 fp32 的 absmax，摊到 <code>4/64 = 0.0625</code> 字节/权重，占 NF4（0.5 字节/权重）的 12.5%，很浪费。于是对 absmax <strong>再量化一次</strong>成 8 bit（每 256 个 absmax 共享一个 fp32 scale），压到 1/4。</li></ul>
+<p><strong>存储账：</strong></p>
+<table><thead><tr><th>方案</th><th>每权重字节数</th><th>相对 fp32</th></tr></thead><tbody><tr><td>fp32</td><td>4.0000</td><td>1.00×</td></tr><tr><td>fp16</td><td>2.0000</td><td>2.00×</td></tr><tr><td>NF4（不双量化）</td><td>0.5 + 4/64 = 0.5625</td><td>7.11×</td></tr><tr><td>NF4 + 双量化</td><td>0.5 + (1+4/256)/64 = 0.5159</td><td>7.75×</td></tr></tbody></table>
+<figure class="figure"><img alt="M05 NF4 量化 / 反量化流程" src="../../../../../../projects/08-fine-tuning/assets/qlora.svg" loading="lazy"/><figcaption>M05 NF4 量化 / 反量化流程</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo05qloraterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_05_qlora_terminal.txt</code>）</h2>
+<p><strong>在真实基座权重上量化：13 个线性层，共 163,840 个权重。</strong></p>
+<table><thead><tr><th>指标</th><th>实测值</th></tr></thead><tbody><tr><td>NF4 平均相对误差 <code>‖W−Ŵ‖/‖W‖</code></td><td><strong>0.0914</strong></td></tr><tr><td>NF4 平均 MSE</td><td>8.267e-06</td></tr><tr><td>单层最大绝对误差</td><td>0.024068</td></tr><tr><td>各层相对误差</td><td>Wq 0.0915 / Wk 0.0922 / Wv 0.0911 / Wo 0.0903 / W1 0.0919 / W2 0.0916</td></tr></tbody></table>
+<p><strong>码本（实测打印）：</strong> 16 个值，相邻电平间距最小 0.0796 / 最大 0.3038（中间密、两头疏 = 按正态分位数切），<strong>零在码本里</strong>（否则 0 权重会被量化成非 0）。</p>
+<h3 id="31-blocksize-扫描实测">3.1 block_size 扫描（实测）</h3>
+<table><thead><tr><th>block_size</th><th>相对误差</th><th>字节数</th><th>压缩倍数(vs fp32)</th></tr></thead><tbody><tr><td>32</td><td>0.0873</td><td>102,400</td><td>6.40×</td></tr><tr><td><strong>64</strong></td><td><strong>0.0914</strong></td><td>92,160</td><td><strong>7.11×</strong></td></tr><tr><td>128</td><td>0.0950</td><td>87,040</td><td>7.53×</td></tr><tr><td>256</td><td>0.0971</td><td>84,480</td><td>7.76×</td></tr><tr><td>1024</td><td>0.1024</td><td>82,560</td><td>7.94×</td></tr></tbody></table>
+<p>分块越小越准（离群值被关在小块里），代价是 absmax 变多。<strong>QLoRA 论文默认 64 —— 上表可见 64 已经在拐点附近</strong>（32 只再好 4.5%，却多花 11% 的体积）。</p>
+<h3 id="32-nf4-是信息论最优是真的吗和均匀-int4-对拍实测">3.2 &quot;NF4 是信息论最优&quot;是真的吗？和均匀 int4 对拍（实测）</h3>
+<table><thead><tr><th>码本</th><th>平均相对误差</th><th>相对 NF4</th></tr></thead><tbody><tr><td>NF4（分位数）</td><td><strong>0.0914</strong></td><td>1.000×</td></tr><tr><td>均匀 int4（linspace）</td><td>0.0967</td><td>1.058×</td></tr></tbody></table>
+<p><strong>NF4 误差低 5.45%</strong>。差距不算大，因为本项目的权重是随手初始化 + 120 步预训练出来的，还没长成&quot;标准正态&quot;；<strong>真实大模型上差距更大</strong>（这条是推断，不是本机实测）。</p>
+<h3 id="33-双量化实测划算">3.3 双量化（实测：划算）</h3>
+<table><thead><tr><th>方案</th><th>字节数</th><th>每权重</th><th>压缩倍数</th><th>平均相对误差</th></tr></thead><tbody><tr><td>fp32 原始</td><td>655,360</td><td>4.0000 B</td><td>1.00×</td><td>0.0000</td></tr><tr><td>NF4 单量化</td><td>92,160</td><td>0.5625 B</td><td>7.11×</td><td>0.0914</td></tr><tr><td><strong>NF4 + 双量化</strong></td><td><strong>84,520</strong></td><td><strong>0.5159 B</strong></td><td><strong>7.75×</strong></td><td>0.0915</td></tr></tbody></table>
+<ul class="lvl"><li>额外省 <strong>7,640 B（8.29%）</strong></li><li>误差代价：相对误差 <code>0.091448 → 0.091540</code>（<strong>+0.1012%</strong>）</li></ul>
+<p>absmax 本身是&quot;尺度&quot;，精度要求低，8 bit 足够。<strong>省 8.3% 体积，代价万分之几</strong> —— 这笔买卖很划算。</p>
+<blockquote><p>实现上有个诚实细节（<code>src/ft/quantize.py:177</code>）：双量化后 <code>qt.absmax</code> 存的是<strong>已还原的有损版本</strong>，反量化用它 —— 否则测出来的误差会假装双量化是免费的。</p></blockquote>
+<h3 id="34-显存账本实测">3.4 显存账本（实测）</h3>
+<table><thead><tr><th>项目</th><th>字节</th><th>人类可读</th><th>占 fp32 基座</th></tr></thead><tbody><tr><td>基座 fp32</td><td>655,360</td><td>640.00 KB</td><td>100.00%</td></tr><tr><td>基座 fp16</td><td>327,680</td><td>320.00 KB</td><td>50.00%</td></tr><tr><td>基座 NF4（单量化）</td><td>92,160</td><td>90.00 KB</td><td>14.06%</td></tr><tr><td>基座 NF4 + 双量化</td><td>84,520</td><td><strong>82.54 KB</strong></td><td><strong>12.90%</strong></td></tr><tr><td>adapter fp32 (r=8)</td><td>108,544</td><td>106.00 KB</td><td>16.56%</td></tr></tbody></table>
+<p><code>NF4 相对 fp32 压缩 7.11×</code>（理论上限 8×，被 absmax 摊薄），<code>NF4+双量化 7.75×</code>；NF4 是 fp16 的 <strong>28.12%</strong>。</p>
+<h3 id="35-qlora-真训-vs-lora-真训各-60-步其余完全相同">3.5 QLoRA 真训 vs LoRA 真训（各 60 步，其余完全相同）</h3>
+<table><thead><tr><th>指标</th><th>LoRA（fp32 基座）</th><th>QLoRA（NF4 基座）</th></tr></thead><tbody><tr><td>首步 loss</td><td>8.2909</td><td>8.2502</td></tr><tr><td>末步 loss</td><td>6.1882</td><td><strong>6.1880</strong></td></tr><tr><td>前 10 步均值</td><td>7.3978</td><td>7.3842</td></tr><tr><td>后 10 步均值</td><td>6.0858</td><td>6.0855</td></tr><tr><td>耗时</td><td>3.60 s</td><td>3.60 s</td></tr><tr><td>可训练参数</td><td>27,136</td><td>27,136</td></tr></tbody></table>
+<p><strong>首步 loss 差 −0.0407</strong>（4-bit 基座一开始就更差，这是量化的直接代价）；<strong>末步 loss 差 −0.0002</strong>（QLoRA 反而略好 —— 60 步尺度下属于噪声）。</p>
+<figure class="figure"><img alt="M05 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-05-qlora.png" loading="lazy"/><figcaption>M05 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-小模型上-qlora-根本不划算实测-12842">4.1 小模型上 QLoRA 根本不划算（实测 128.42%）</h3>
+<p>这是本章最重要的负结果：</p>
+<pre><code>adapter 占 NF4 基座                128.42%   ⚠ 小模型上 adapter 比量化后的基座还大</code></pre>
+<p><code>d_model=64</code> 时基座只有 163,840 个权重，量化省下的绝对量有限（640 KB → 82.54 KB），而 adapter 自己就要 106 KB。<strong>你把基座压到 82.54 KB，结果真正的显存大头变成了 adapter。</strong></p>
+<p>量化收益随模型规模<strong>线性增长</strong>。按同一公式外推到 7B（70 亿参数）：这一项会从 <strong>0.66 MB 变成 3.5 GB</strong> —— 那才是 QLoRA 的主场。<strong>注意：7B 的数字是按同一公式外推，不是本机实测</strong>（本机跑不动 7B）。</p>
+<blockquote><p>可迁移的经验：<strong>QLoRA 的收益是&quot;基座越大越值钱&quot;</strong>。在小模型（&lt;1B）上为了 QLoRA 而 QLoRA，通常是净亏。</p></blockquote>
+<h3 id="42-nf4-相对均匀-int4-只赢-545不是碾压实测">4.2 NF4 相对均匀 int4 只赢 5.45%，不是碾压（实测）</h3>
+<p>教科书爱说&quot;NF4 是信息论最优&quot;，实测在本项目上只低 <strong>5.45%</strong>（0.0914 vs 0.0967）。原因是本项目的权重还没长成标准正态（随手初始化 + 120 步预训练）。</p>
+<p>诚实标注：<strong>这个 5.45% 是小规模、欠训练权重上的实测值</strong>；它印证了设计动机（分位数切分确实更优），但<strong>不能外推说&quot;真实大模型上也只有 5.45%&quot;</strong> —— 那里的分布更接近正态，差距应该更大（推断）。</p>
+<h3 id="43-qlora-的末步-loss-反而略低但那是噪声实测-00002">4.3 QLoRA 的末步 loss 反而略低，但那是噪声（实测 −0.0002）</h3>
+<p>末步 6.1880 vs 6.1882，差 0.0002。不要把这个写成&quot;QLoRA 效果更好&quot; —— 60 步尺度下这是浮点噪声。真正稳定的信号是<strong>首步差 −0.0407</strong>：那是量化的直接代价，是真实的、可解释的。</p>
+<h3 id="44-双量化的误差必须算进去不能假装免费实现细节">4.4 双量化的误差必须&quot;算进去&quot;，不能假装免费（实现细节）</h3>
+<p><code>quantize_nf4</code> 在 <code>double_quant=True</code> 时会把 <code>qt.absmax</code> <strong>替换成反量化后的有损值</strong>（<code>dequantize_absmax(ac, asc, size)</code>），而不是继续用无损的 <code>absmax</code>。如果偷懒沿用无损值，测出来的误差会<strong>假装双量化是免费的</strong>（误差仍是 0.0914 而不是 0.0915）。差 0.0001，但这 0.0001 就是全部真相。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li>NF4 = 分块 absmax 归一化 + 最近邻查不等距码本；实测在真实基座上相对误差 <strong>0.0914</strong>（MSE 8.267e-06）。</li><li><strong>block_size 越小越准，64 是拐点</strong>（32 只再好 4.5%，多花 11% 体积）。</li><li>NF4 比均匀 int4 误差低 <strong>5.45%</strong>（实测，欠训练权重上）。</li><li><strong>双量化划算</strong>：额外省 <strong>8.29%</strong> 体积，误差代价 <strong>+0.1012%</strong>；fp32 → NF4+双量化总压缩 <strong>7.75×</strong>（0.5159 B/权重）。</li><li><strong>QLoRA vs LoRA 末步 loss 6.1880 vs 6.1882</strong>，可训练参数相同；首步差 −0.0407 是量化的真实代价。</li><li><strong>⚠ 小模型上 QLoRA 不划算</strong>：adapter 106 KB &gt; NF4 基座 82.54 KB（<strong>128.42%</strong>）。7B 上才是 0.66 MB vs 3.5 GB（<strong>按同一公式外推，非实测</strong>）。</li><li>手写实现的意义：因为码本和 absmax 都是自己管的，你才能做&quot;均匀 int4 vs NF4&quot;&quot;单量化 vs 双量化&quot;这种对拍 —— 用现成库只能拿到一个黑盒数字。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/quantize.py</code></td><td><code>NF4_LEVELS</code> 码本、<code>quantize_nf4</code>（分块 + 最近邻查表）、<code>dequantize_nf4</code>、<code>quantize_absmax</code>/<code>dequantize_absmax</code>（双量化 8-bit）、<code>quantization_error</code>、<code>nf4_storage_bytes</code></td></tr><tr><td><code>src/ft/qlora.py</code></td><td><code>QLoRALinear</code>（NF4 基座 + fp32 adapter，<code>.data</code> 即时反量化合成）、<code>memory_ledger</code>（显存账本）、<code>training_memory</code>、<code>human_bytes</code></td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>inject_lora(kind=&quot;qlora&quot;)</code>：把 target 位置换成 <code>QLoRALinear</code></td></tr><tr><td><code>demos/demo_05_qlora.py</code></td><td>8 节：码本 / 真实权重量化 / block_size 扫描 / NF4 vs int4 / 双量化 / 显存账本 / QLoRA 真训 / 关键数字</td></tr><tr><td><code>demos/out/demo_05_qlora_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/qlora.svg</code></td><td>本章 NF4 量化/反量化流程图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.4 → <strong>v0.5</strong>，M05 QLoRA 落地。实测：NF4 相对误差 <strong>0.0914</strong>，fp32→NF4+双量化压缩 <strong>7.75×</strong>（0.5159 B/权重），双量化额外省 <strong>8.29%</strong>、误差代价 +0.1012%；block_size 32/64/128/256/1024 → 误差 0.0873/0.0914/0.0950/0.0971/0.1024；NF4 比均匀 int4 误差低 5.45%；QLoRA vs LoRA 末步 loss <strong>6.1880 vs 6.1882</strong>。并诚实记录「小模型上 adapter 106 KB &gt; NF4 基座 82.54 KB（128.42%）」这一负结果。纯 numpy、无 bitsandbytes/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

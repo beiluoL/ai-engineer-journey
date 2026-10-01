@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day17 MLOps 实战</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="day17-mlops-实战">Day17 MLOps 实战</h1>
+<h1 id="模型版本管理数据版本管理自动训练-pipeline持续评测">模型版本管理、数据版本管理、自动训练 Pipeline、持续评测</h1>
+<p>前面 Day1～Day16，你已经完成：</p>
+<pre><code>模型选择
+
+↓
+
+模型部署(vLLM)
+
+↓
+
+RAG
+
+↓
+
+Agent
+
+↓
+
+LoRA微调
+
+↓
+
+企业安全</code></pre>
+<p>但是企业上线后有一个现实问题：</p>
+<blockquote><p>模型不是训练一次就结束。</p></blockquote>
+<p>真实情况：</p>
+<p>今天：</p>
+<pre><code>Qwen-Java-v1</code></pre>
+<p>上线。</p>
+<p>一个月后：</p>
+<p>新增：</p>
+<ul class="lvl"><li>5000条面试数据</li></ul>
+<ul class="lvl"><li>新版Spring源码</li></ul>
+<ul class="lvl"><li>新业务知识</li></ul>
+<p>怎么办？</p>
+<p>不能人工：</p>
+<pre><code>重新训练
+
+手动测试
+
+手动部署</code></pre>
+<p>企业需要：</p>
+<h1 id="mlopsmachine-learning-operations机器学习工程运维">MLOps【Machine Learning Operations，机器学习工程运维】</h1>
+<hr/>
+<h1 id="一什么是-mlops">一、什么是 MLOps？</h1>
+<p>传统软件：</p>
+<pre><code>代码
+
+↓
+
+Git
+
+↓
+
+CI/CD
+
+↓
+
+上线</code></pre>
+<hr/>
+<p>AI系统：</p>
+<p>除了代码，还有：</p>
+<ul class="lvl"><li>数据</li></ul>
+<ul class="lvl"><li>模型</li></ul>
+<ul class="lvl"><li>Prompt</li></ul>
+<ul class="lvl"><li>评测</li></ul>
+<p>所以：</p>
+<pre><code>代码
+
++
+
+数据
+
++
+
+模型
+
++
+
+评测
+
+
+↓
+
+自动化发布</code></pre>
+<hr/>
+<h1 id="二企业-ai-生命周期">二、企业 AI 生命周期</h1>
+<p>完整流程：</p>
+<pre><code>数据采集
+
+↓
+
+数据清洗
+
+↓
+
+数据版本管理
+
+↓
+
+训练
+
+↓
+
+模型评测
+
+↓
+
+模型注册
+
+↓
+
+部署
+
+↓
+
+监控
+
+↓
+
+反馈数据
+
+↓
+
+重新训练</code></pre>
+<p>形成闭环：</p>
+<pre><code>        用户反馈
+
+             |
+
+             ↓
+
+        新训练数据
+
+             |
+
+             ↓
+
+          新模型
+
+             |
+
+             ↓
+
+          新版本
+
+             |
+
+             ↓
+
+        线上验证
+
+             |
+
+             ↓
+
+          用户反馈</code></pre>
+<hr/>
+<h1 id="三为什么需要模型版本管理">三、为什么需要模型版本管理？</h1>
+<p>普通软件：</p>
+<pre><code>app-v1.0
+
+app-v1.1
+
+app-v2.0</code></pre>
+<p>模型也一样。</p>
+<p>不能：</p>
+<pre><code>qwen-final-final-new真的最终版</code></pre>
+<p>企业需要：</p>
+<p>规范：</p>
+<pre><code>model:
+
+java-interviewer
+
+
+version:
+
+v1.0.0
+
+v1.1.0
+
+v2.0.0</code></pre>
+<hr/>
+<h1 id="四模型版本包含什么">四、模型版本包含什么？</h1>
+<p>一个模型版本：</p>
+<p>不是只有权重。</p>
+<p>完整信息：</p>
+<pre><code>{
+&quot;name&quot;:
+&quot;java-interviewer&quot;,
+
+&quot;version&quot;:
+&quot;v2.1&quot;,
+
+
+&quot;base_model&quot;:
+&quot;Qwen2.5-7B&quot;,
+
+
+&quot;dataset&quot;:
+&quot;java-interview-dataset-v3&quot;,
+
+
+&quot;lora_rank&quot;:
+16,
+
+
+&quot;training_date&quot;:
+&quot;2026-09-22&quot;,
+
+
+&quot;evaluation_score&quot;:
+0.92
+
+}</code></pre>
+<hr/>
+<h1 id="五model-registry模型注册中心">五、Model Registry【模型注册中心】</h1>
+<p>作用：</p>
+<p>保存：</p>
+<ul class="lvl"><li>模型文件</li></ul>
+<ul class="lvl"><li>元数据</li></ul>
+<ul class="lvl"><li>版本</li></ul>
+<ul class="lvl"><li>状态</li></ul>
+<p>类似：</p>
+<p>GitHub管理代码。</p>
+<hr/>
+<p>常见工具：</p>
+<h2 id="mlflow">MLflow</h2>
+<p>开源。</p>
+<p>功能：</p>
+<ul class="lvl"><li>实验记录</li></ul>
+<ul class="lvl"><li>模型保存</li></ul>
+<ul class="lvl"><li>版本管理</li></ul>
+<p>架构：</p>
+<pre><code>训练
+
+↓
+
+MLflow Tracking
+
+↓
+
+Model Registry
+
+↓
+
+部署</code></pre>
+<hr/>
+<h2 id="hugging-face-hub">Hugging Face Hub</h2>
+<p>也可以：</p>
+<p>保存：</p>
+<ul class="lvl"><li>模型</li></ul>
+<ul class="lvl"><li>Adapter</li></ul>
+<ul class="lvl"><li>Dataset</li></ul>
+<hr/>
+<h1 id="六你的项目模型管理">六、你的项目模型管理</h1>
+<p>目录：</p>
+<pre><code>models/
+
+
+├── java-interviewer-v1
+
+│
+├── java-interviewer-v2
+
+│
+└── java-interviewer-v3</code></pre>
+<hr/>
+<p>例如：</p>
+<p>v1:</p>
+<pre><code>基础Java面试</code></pre>
+<p>v2:</p>
+<p>增加：</p>
+<pre><code>Spring源码</code></pre>
+<p>v3:</p>
+<p>增加：</p>
+<pre><code>AI Agent面试</code></pre>
+<hr/>
+<h1 id="七数据版本管理">七、数据版本管理</h1>
+<p>这是企业非常重要的部分。</p>
+<p>为什么？</p>
+<p>因为：</p>
+<p>模型效果不好。</p>
+<p>你需要知道：</p>
+<p>是不是：</p>
+<ul class="lvl"><li>数据问题？</li></ul>
+<ul class="lvl"><li>模型问题？</li></ul>
+<ul class="lvl"><li>参数问题？</li></ul>
+<hr/>
+<h1 id="八dataset-version数据集版本">八、Dataset Version【数据集版本】</h1>
+<p>例如：</p>
+<pre><code>java-interview-dataset
+
+
+v1
+
+1000条
+
+
+v2
+
+3000条
+
+
+v3
+
+10000条</code></pre>
+<hr/>
+<p>记录：</p>
+<pre><code>{
+&quot;version&quot;:&quot;v3&quot;,
+
+&quot;count&quot;:10000,
+
+&quot;source&quot;:[
+
+&quot;leetcode&quot;,
+
+&quot;内部笔记&quot;,
+
+&quot;源码分析&quot;
+
+]
+}</code></pre>
+<hr/>
+<h1 id="九数据管理工具">九、数据管理工具</h1>
+<h2 id="dvc">DVC</h2>
+<p>Data Version Control【数据版本控制】</p>
+<p>类似：</p>
+<p>Git管理代码。</p>
+<p>DVC管理：</p>
+<ul class="lvl"><li>数据集</li></ul>
+<ul class="lvl"><li>模型文件</li></ul>
+<hr/>
+<p>流程：</p>
+<pre><code>Git
+
+管理代码
+
+
+DVC
+
+管理数据
+</code></pre>
+<hr/>
+<h1 id="十自动训练-pipeline">十、自动训练 Pipeline</h1>
+<p>企业不会：</p>
+<p>SSH进去：</p>
+<pre><code>python train.py</code></pre>
+<p>而是：</p>
+<p>Pipeline。</p>
+<hr/>
+<p>架构：</p>
+<pre><code>数据更新
+
+↓
+
+触发训练
+
+↓
+
+环境准备
+
+↓
+
+QLoRA训练
+
+↓
+
+Evaluation
+
+↓
+
+模型注册
+
+↓
+
+部署</code></pre>
+<hr/>
+<h1 id="十一pipeline工具">十一、Pipeline工具</h1>
+<p>常见：</p>
+<h2 id="airflow">Airflow</h2>
+<p>任务编排。</p>
+<hr/>
+<h2 id="kubeflow">Kubeflow</h2>
+<p>Kubernetes机器学习平台。</p>
+<hr/>
+<h2 id="github-actions">GitHub Actions</h2>
+<p>简单自动化。</p>
+<hr/>
+<h1 id="十二你的训练pipeline设计">十二、你的训练Pipeline设计</h1>
+<p>例如：</p>
+<p>每天凌晨：</p>
+<p>检查：</p>
+<p>是否新增面试数据。</p>
+<p>流程：</p>
+<pre><code>Git Push
+
+↓
+
+Dataset Check
+
+↓
+
+Data Validation
+
+↓
+
+Start QLoRA
+
+↓
+
+Evaluation
+
+↓
+
+Compare Old/New
+
+↓
+
+Deploy</code></pre>
+<hr/>
+<h1 id="十三数据质量检测">十三、数据质量检测</h1>
+<p>训练前：</p>
+<p>不能直接训练。</p>
+<p>检查：</p>
+<hr/>
+<h2 id="格式">格式</h2>
+<p>例如：</p>
+<p>是否：</p>
+<pre><code>instruction
+
+input
+
+output</code></pre>
+<hr/>
+<h2 id="重复">重复</h2>
+<p>检测：</p>
+<p>重复问题。</p>
+<hr/>
+<h2 id="长度">长度</h2>
+<p>例如：</p>
+<p>答案：</p>
+<p>只有：</p>
+<p>&quot;不知道&quot;</p>
+<p>删除。</p>
+<hr/>
+<h2 id="安全">安全</h2>
+<p>检测：</p>
+<p>敏感信息。</p>
+<hr/>
+<h1 id="十四自动评测-pipeline">十四、自动评测 Pipeline</h1>
+<p>模型训练完成：</p>
+<p>不能直接上线。</p>
+<p>流程：</p>
+<pre><code>New Model
+
+↓
+
+Evaluation Dataset
+
+↓
+
+自动测试
+
+↓
+
+评分
+
+↓
+
+是否超过旧模型？</code></pre>
+<hr/>
+<p>例如：</p>
+<p>旧模型：</p>
+<pre><code>score:
+
+85</code></pre>
+<p>新模型：</p>
+<pre><code>score:
+
+92</code></pre>
+<p>允许发布。</p>
+<hr/>
+<h1 id="十五llm-evaluation指标">十五、LLM Evaluation指标</h1>
+<h2 id="1-accuracy准确性">1. Accuracy【准确性】</h2>
+<p>答案是否正确。</p>
+<hr/>
+<h2 id="2-faithfulness忠实性">2. Faithfulness【忠实性】</h2>
+<p>是否依据知识库。</p>
+<hr/>
+<h2 id="3-relevance相关性">3. Relevance【相关性】</h2>
+<p>是否回答问题。</p>
+<hr/>
+<h2 id="4-latency延迟">4. Latency【延迟】</h2>
+<p>响应速度。</p>
+<hr/>
+<h2 id="5-cost成本">5. Cost【成本】</h2>
+<p>Token消耗。</p>
+<hr/>
+<h1 id="十六自动部署">十六、自动部署</h1>
+<p>评测通过：</p>
+<p>进入：</p>
+<p>Deployment。</p>
+<hr/>
+<p>例如：</p>
+<p>Kubernetes：</p>
+<pre><code>Model v1
+
+↓
+
+90%
+
+Model v2
+
+↓
+
+10%</code></pre>
+<hr/>
+<h1 id="十七自动回滚">十七、自动回滚</h1>
+<p>如果：</p>
+<p>新模型：</p>
+<p>错误增加。</p>
+<p>自动：</p>
+<pre><code>v2
+
+↓
+
+error rate ↑
+
+↓
+
+rollback
+
+↓
+
+v1</code></pre>
+<hr/>
+<h1 id="十八完整企业-mlops-架构">十八、完整企业 MLOps 架构</h1>
+<p>最终：</p>
+<pre><code>                     数据源
+
+                       |
+
+                       ↓
+
+
+                Dataset Repository
+
+
+                       |
+
+                       ↓
+
+
+                 Training Pipeline
+
+
+                       |
+
+          +------------+-------------+
+
+          |                          |
+
+
+          ↓                          ↓
+
+
+       MLflow                 Evaluation
+
+
+          |
+
+          ↓
+
+
+      Model Registry
+
+
+          |
+
+          ↓
+
+
+      Deployment
+
+
+          |
+
+          ↓
+
+
+        vLLM
+
+
+          |
+
+          ↓
+
+
+        用户
+</code></pre>
+<hr/>
+<h1 id="十九你的-java-ai-项目升级">十九、你的 Java AI 项目升级</h1>
+<p>现在：</p>
+<p>Java AI Interview Agent V8：</p>
+<p>增加：</p>
+<pre><code>MLOps能力
+
+
+数据版本管理
+
++
+
+模型版本管理
+
++
+
+自动训练
+
++
+
+自动评测
+
++
+
+灰度发布
+
++
+
+自动回滚</code></pre>
+<hr/>
+<h1 id="二十面试回答">二十、面试回答</h1>
+<h2 id="问">问：</h2>
+<blockquote><p>你们模型如何持续优化？</p></blockquote>
+<p>标准回答：</p>
+<blockquote><p>我们建立了完整的 MLOps 流程。首先通过数据版本管理维护训练数据变化，训练阶段使用 LLaMA-Factory 进行 QLoRA 微调，同时记录模型参数和实验结果。训练完成后通过 Evaluation 数据集自动评测模型效果，只有指标超过当前线上版本才进入模型注册和灰度发布。如果线上指标异常，可以快速回滚到稳定版本。</p></blockquote>
+<hr/>
+<h1 id="二十一你的-ai-engineer-能力最终地图">二十一、你的 AI Engineer 能力最终地图</h1>
+<p>现在：</p>
+<pre><code>AI Application Engineer
+
+
+          |
+
++---------+---------+
+
+|                   |
+
+
+AI应用              AI工程基础
+
+
+|                   |
+
+
+RAG                GPU部署
+
+
+Agent              vLLM
+
+
+Tool Calling       LoRA
+
+
+MCP                MLOps
+
+
+Security           Evaluation</code></pre>
+<hr/>
+<h1 id="下一节-day18">下一节 Day18</h1>
+<p>建议进入：</p>
+<h1 id="day18企业级-ai-系统完整设计答辩从需求分析-架构设计-技术选型-上线运维">《Day18：企业级 AI 系统完整设计答辩：从需求分析 → 架构设计 → 技术选型 → 上线运维》</h1>
+<p>这一节模拟：</p>
+<blockquote><p>你作为 AI 应用架构师，设计一个企业大模型系统。</p></blockquote>
+<p>会覆盖真实面试：</p>
+<ul class="lvl"><li>“如果让你设计 ChatGPT 类系统怎么办？”</li></ul>
+<ul class="lvl"><li>“100万用户如何支撑？”</li></ul>
+<ul class="lvl"><li>“为什么选 RAG 不选微调？”</li></ul>
+<ul class="lvl"><li>“GPU成本如何控制？”</li></ul>
+<ul class="lvl"><li>“如何保证安全？”</li></ul>
+<p>这一节会把前面 17 天全部串成一个完整项目。</p>
+</main>
+</body>
+</html>

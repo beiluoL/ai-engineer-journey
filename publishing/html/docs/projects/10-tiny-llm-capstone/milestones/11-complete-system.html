@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 11 — Complete AI Engineer System：一条命令跑完 Tokenizer → Serving</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-11-complete-ai-engineer-system一条命令跑完-tokenizer-serving">Milestone 11 — Complete AI Engineer System：一条命令跑完 Tokenizer → Serving</h1>
+<p>前面 10 章各自证明了一件事。这一章把它们<strong>串成一条流水线</strong>，并且交付一个 Capstone 级别的结论：</p>
+<blockquote><p><strong>Capstone 交付的不是模型，而是一条「可缓存的、可分段重跑的、报告可机读的」流水线。</strong></p></blockquote>
+<p>这句话不是口号——它对应三条<strong>实测过</strong>的工程属性。一个只会&quot;从头跑一遍&quot;的脚本，改一行评估代码就要重训 26 秒，实验迭代直接瘫痪。</p>
+<hr/>
+<h2 id="1-why为什么能跑通远远不够">1. Why：为什么&quot;能跑通&quot;远远不够</h2>
+<p>把 10 个模块串起来，最朴素的写法是一段顺序脚本：<code>import → build → train → eval → serve</code>。它&quot;能跑通&quot;，但一旦进入真实迭代就会暴露三个致命问题：</p>
+<ul class="lvl"><li><strong>每次改动都要重训。</strong> 改一行评估逻辑、调一个服务的日志格式，都得从最贵的训练阶段重来。<strong>实验迭代的成本会被最慢的一步锁死。</strong></li><li><strong>没法只跑一段。</strong> 排查&quot;服务为什么返回 500&quot;，你不想重跑 tokenizer 和训练。</li><li><strong>报告只是文本。</strong> 两次实验的 <code>report.json</code> 是两坨 log，<strong>没法 diff、没法进 CI</strong>。你甚至没法回答&quot;这次超参变化到底带来了多少收益&quot;。</li></ul>
+<p>所以本章的验收标准不是&quot;跑通了&quot;，而是这三条属性<strong>逐条被证明</strong>。</p>
+<h2 id="2-design八段流水线-三层产物">2. Design：八段流水线 + 三层产物</h2>
+<pre><code>config → tokenizer → dataset → model → train → evaluate → optimize → serve
+  │          │           │        │       │        │          │        │
+  └── config.json    tokenizer.json    tiny_lm_best.npz    report.json</code></pre>
+<p><strong>八段各自的产物和缓存策略</strong>：</p>
+<table><thead><tr><th>阶段</th><th>产物</th><th>缓存判据</th></tr></thead><tbody><tr><td>config</td><td><code>config.json</code></td><td>—</td></tr><tr><td>tokenizer</td><td><code>tokenizer.json</code></td><td>文件存在即复用</td></tr><tr><td>dataset</td><td>内存中</td><td>—</td></tr><tr><td>model</td><td>内存中</td><td>—</td></tr><tr><td>train</td><td><code>tiny_lm_best.npz</code></td><td>检查点存在即复用</td></tr><tr><td>evaluate</td><td>写入 <code>report.json</code></td><td>—</td></tr><tr><td>optimize</td><td>写入 <code>report.json</code></td><td>—</td></tr><tr><td>serve</td><td>起服务 + 冒烟 + 压测</td><td>—</td></tr></tbody></table>
+<p><strong>复用的优先级是&quot;最优检查点 &gt; 最后一步检查点&quot;</strong>（<code>tiny_lm_best.npz</code> 优先于 <code>tiny_lm.npz</code>）。这不是&quot;哪个新用哪个&quot;，而是：<strong>早停回滚后的权重才是该上线的那个</strong>（M06/M07 都证明了它逐条优于训练终点）。<strong>如果流水线图省事直接用&quot;最后一步&quot;，M11 的 PPL 就会变成 338.13，和 M06/M07 报告的 315.79 对不上——跨章节的证据链就断了。</strong></p>
+<p>三个 CLI 选项：</p>
+<pre><code>--force     忽略缓存，强制重算
+--steps N   覆盖训练步数
+--only      只跑指定阶段（如 --only config,tokenizer,dataset）
+--no-serve  跳过服务阶段（CI 里没有网络时用）</code></pre>
+<figure class="figure"><img alt="M11 Complete System：八段流水线 + 磁盘产物 + 三条工程属性" src="../../../../../../projects/10-tiny-llm-capstone/assets/complete-system.svg" loading="lazy"/><figcaption>M11 Complete System：八段流水线 + 磁盘产物 + 三条工程属性</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo11completesystemterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_11_complete_system_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M11 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-11-complete-system.png" loading="lazy"/><figcaption>M11 真实运行</figcaption></figure>
+<h3 id="31-真实运行过程输出原样记录">3.1 真实运行（过程输出原样记录）</h3>
+<pre><code>[1/8] 配置
+      name                tiny-llm
+      tokenizer           bpe  vocab_size=1280  min_pair_freq=1
+      model               d_model=64  n_heads=4  d_ff=128  n_layers=2  max_len=64
+      data                val_ratio=0.15  pack=True  stride=32  dedup=True  include_general=True
+      optim               adam  lr=0.001  warmup=20  min_lr_ratio=0.05  grad_clip=1.0
+      train               batch=8  steps=1200  eval_every=100  patience=4
+      gen                 max_new_tokens=24  temperature=0.8  top_k=0  top_p=0.95
+      serve               127.0.0.1:0  max_tokens=32  concurrency=4
+[2/8] 分词器  vocab=1280  缓存命中=True
+[3/8] 数据集  train=206  val=37  泄漏=0
+[4/8] 模型    230,400 参数  1.76 MiB(fp64)  张量=28
+[5/8] 训练    复用检查点 tiny_lm_best.npz（step=800）
+[6/8] 评估    val_ppl=315.79  token_acc=0.1736  ECE=0.0709
+[7/8] 优化    INT8: 压缩3.85×/ppl+0.08%  INT4: 压缩7.42×/ppl+2.66%  NF4: 压缩7.75×/ppl+4.01%
+[8/8] 服务    http://127.0.0.1:51620  冒烟通过=True  并发 4 请求 33ms  吞吐 121.97 req/s</code></pre>
+<p><strong>这一段的每一行都能和前面某一章对上</strong>，这就是流水线的价值：<strong>所有数字是从同一个配置、同一份权重、同一条路径里出来的</strong>，不是十份互不相干的实验数据拼起来的。</p>
+<ul class="lvl"><li><code>[2/8]</code> 的 <code>vocab=1280</code> ↔ M02；</li><li><code>[3/8]</code> 的 <code>train=206 val=37 泄漏=0</code> ↔ M03；</li><li><code>[4/8]</code> 的 <code>230,400 参数 / 28 张量</code> ↔ M04/M05；</li><li><code>[5/8]</code> 的 <code>tiny_lm_best.npz（step=800）</code> ↔ M06（<strong>注意是 best，不是 last</strong>）；</li><li><code>[6/8]</code> 的 <code>val_ppl=315.79</code> ↔ M07；</li><li><code>[7/8]</code> 的三档压缩比 ↔ M09；</li><li><code>[8/8]</code> 的 <code>冒烟通过=True</code> ↔ M10。</li></ul>
+<h3 id="32-各阶段耗时">3.2 各阶段耗时</h3>
+<pre><code>阶段         耗时       说明
+config     0.000 s
+tokenizer        -  复用缓存，未计时
+dataset    0.006 s
+model      0.004 s
+train            -  复用缓存，未计时
+evaluate   0.115 s
+optimize   0.225 s
+serve      0.579 s
+合计        0.928 s
+缓存命中      {&quot;tokenizer&quot;: true, &quot;model&quot;: true}</code></pre>
+<p><strong>有缓存时全程 0.928 秒。</strong> 对比：冷启动需要真训 1200 步，约 26 s（46.5 step/s）。<strong>28 倍的差距，就是&quot;可缓存&quot;值多少。</strong></p>
+<p>耗时分布也说明了各段的性质：<strong><code>serve</code>（0.579 s）是最重的一段</strong>——它是整条链路里唯一有并发与网络的部分。<code>tokenizer</code> 和 <code>train</code> 显示为 <code>-</code>（未计时），因为<strong>缓存命中就直接读回，压根没跑</strong>。</p>
+<h3 id="33-产物清单">3.3 产物清单</h3>
+<pre><code>文件                 体积
+config.json           1.1 KB
+report.json          19.5 KB
+tiny_lm.json          2.3 KB
+tiny_lm.npz        5421.6 KB
+tiny_lm_best.json     2.3 KB
+tiny_lm_best.npz   5421.6 KB
+tokenizer.json       37.2 KB</code></pre>
+<p>两处值得注意：</p>
+<ul class="lvl"><li><strong><code>config.json</code></strong> 的意义是<strong>可追溯</strong>：报告里的每个数字都能对上是哪份配置跑出来的。<strong>没有它，一个月后你看到 <code>PPL 315.79</code> 根本不知道当时用的什么超参。</strong></li><li><strong><code>report.json</code>（19.5 KB）</strong> 把训练 / 评估 / 优化 / 服务<strong>四份报告一次落盘</strong>，便于对比实验。</li></ul>
+<h3 id="34-这一次跑的数据与模型账">3.4 这一次跑的数据与模型账</h3>
+<pre><code>分词器     bpe  vocab=1280  chars/token=1.445  unk=0.0033
+语料       295 行 → 清洗后 295 行（去重 0 / 过短 0）
+切分       train 251 行 / val 44 行（val_ratio=0.15）
+泄漏检查     overlap=0  clean=True
+样本       train 206 / val 37（pack=True, stride=32）
+模型       230,400 参数  28 张量  1.76 MiB(fp64)
+训练       复用检查点 tiny_lm_best.npz（best_step=800）</code></pre>
+<h3 id="35-四份报告的关键字段">3.5 四份报告的关键字段</h3>
+<pre><code>评估 · 语言层    val_loss=5.7551  ppl=315.79  token_acc=0.1736
+评估 · 校准层    ECE=0.0709
+评估 · 生成层    总分 17.85  覆盖 0.000  不重复分 0.165
+优化 · INT8    压缩 3.85×  ΔPPL +0.08%
+优化 · INT4    压缩 7.42×  ΔPPL +2.66%
+优化 · NF4     压缩 7.75×  ΔPPL +4.01%
+优化 · KV Cache  1.18×（logits 误差 3.4e-15）
+服务 · 冒烟      通过=True  http://127.0.0.1:51620
+服务 · 压测      4/4 成功  吞吐 121.97 req/s</code></pre>
+<p><strong>⚠ 这里有一个必须解释的差异：ECE = 0.0709，而 M07 报告的是 0.0662。</strong></p>
+<p>这两个数字都对，差别在<strong>分箱数</strong>：</p>
+<ul class="lvl"><li>M07 的 demo 显式传了 <strong><code>n_bins=5</code></strong> ⇒ ECE = 0.0662；</li><li>流水线里的 <code>evaluate_model</code> 默认是 <strong><code>n_bins=10</code></strong> ⇒ ECE = 0.0709。</li></ul>
+<p><strong>为什么箱数多反而 ECE 更大？</strong> 因为 ECE 是&quot;各箱内 |置信度 − 准确率| 的加权和&quot;。<strong>箱数越多，每个箱越窄、越&quot;纯&quot;，箱内的平均置信度与经验准确率之间的落差反而更明显</strong>（5 箱时粗糙的合并会互相抵消一部分误差，10 箱时抵消得少）。<strong>这是 ECE 这个指标本身的已知性质——它不是一个与分箱无关的量。</strong></p>
+<p><strong>所以凡引用 ECE，必须同时说明箱数</strong>，否则这个数字没有可比性。这条差异在 M07 用的是&quot;演示口径&quot;、M11 用的是&quot;流水线默认口径&quot;，<strong>两者都是诚实的，只是口径不同</strong>。</p>
+<h3 id="36-工程属性-1第二次跑必须复用缓存">3.6 工程属性 1：第二次跑必须复用缓存</h3>
+<pre><code>第二次 cached           {&quot;tokenizer&quot;: true, &quot;model&quot;: true}
+第二次训练阶段耗时          0.000 s   复用检查点，不重训
+与第一次是否同一份权重        是（都从 models/tiny_lm_best.npz 读回）</code></pre>
+<p><strong>&quot;训练阶段耗时 0.000 s&quot;是这条属性的硬证据</strong>——不是&quot;接近 0&quot;，是真的没有跑训练。</p>
+<p><strong>为什么它重要</strong>：不缓存的话，每改一行评估代码就要重训 26 秒。<strong>迭代一次的成本是 26 秒 vs 0 秒，一天迭代 50 次就是 20 分钟的差距。</strong> 工程效率的下限，就是被最慢那一步锁死的。</p>
+<h3 id="37-工程属性-2只跑某几段">3.7 工程属性 2：只跑某几段</h3>
+<pre><code>only=[config, tokenizer, dataset] 后 model 是否为空 True
+跑到的阶段                          config, dataset</code></pre>
+<p><strong><code>model 为 True（是空的）</code></strong> 是关键断言：<strong>没跑到 model 阶段，就不会白白构建一个模型。</strong> 分段执行不是&quot;跑完再丢弃&quot;，而是<strong>真的按需构建</strong>。</p>
+<p><strong>为什么它重要</strong>：改评估逻辑只重跑 <code>evaluate</code>、改服务只重跑 <code>serve</code>——<strong>秒级验证。</strong> 排查问题时不用从头训。</p>
+<h3 id="38-工程属性-3报告可机读">3.8 工程属性 3：报告可机读</h3>
+<pre><code>顶层字段                 cached, config, evaluate, optimize, serve, timings, train
+config.model.d_model   64
+config.optim.lr        0.001
+train 关键字段           from, meta, restored, reused_checkpoint
+evaluate.perplexity    315.79
+evaluate.ece           0.0709
+serve.load.requests_per_sec  121.97
+
+用途  两次实验各留一份 report.json，直接 diff 就知道哪个超参带来了变化</code></pre>
+<p><strong>&quot;能 diff&quot;是这一节的全部价值。</strong> 顶层 7 个字段、嵌套结构固定，所以：</p>
+<pre><code>diff exp_a/report.json exp_b/report.json</code></pre>
+<p>就能回答&quot;我把 <code>lr</code> 从 1e-3 改成 5e-4 之后，PPL 变了吗、变了多少&quot;。<strong>这是&quot;实验&quot;和&quot;试&quot;的分界线</strong>——没有可机读的报告，你只是在试。</p>
+<p>注意 <code>train</code> 段里的 <code>from</code>（从哪个文件复用）、<code>reused_checkpoint</code>（是否命中缓存）、<code>restored</code>（恢复了多少张量）：<strong>把&quot;这次结果是从哪儿来的&quot;直接写进报告</strong>，避免&quot;复用了旧权重却以为是新训的&quot;这类事故。</p>
+<h3 id="39-11-章关键数字汇总capstone-的交付物">3.9 11 章关键数字汇总（Capstone 的交付物）</h3>
+<pre><code>章节             核心指标                关键数字
+M01 架构         唯一配置入口 + 8 段链路      8 个阶段
+M02 分词器        bpe vocab=1280      1.44 字/token，unk 0.33%
+M03 数据集        train 206 / val 37  泄漏 0 条
+M04 Embedding  (1280, 64)          81,920 参数
+M05 Block      2 层 × 4 头           因果性自检误差 0
+M06 训练         loss 5.7551         早停回滚到第 800 步
+M07 评估         PPL 315.79          ECE 0.0709
+M08 推理         KV Cache 1.18×      logits 误差 3.4e-15
+M09 优化         INT8 压缩 3.85×       ΔPPL +0.08%
+M10 服务         冒烟通过=True           122.0 req/s
+M11 全链路        8 段一次跑完             0.93 s</code></pre>
+<p><strong>这张表本身就是 Capstone 的交付物</strong>：11 行、每行一个可复现的数字、每个数字都能顺着 <code>demos/out/*.txt</code> 追到一次真实运行。</p>
+<p>（M08 的加速比这里是 1.18×，而 M08/M09 章节里是 1.34×/1.43×——同一个 KV Cache 优化在不同运行里的实测值会有波动，取决于当时的机器负载。<strong>报告实测值、承认波动，比报告一个&quot;漂亮的理论值&quot;更接近工程真实。</strong>）</p>
+<h3 id="310-收尾磁盘上留下的必须是一份完整报告">3.10 收尾：磁盘上留下的必须是一份完整报告</h3>
+<pre><code>重新跑完整链路       有缓存，约 1 秒
+serve 阶段是否在       True
+evaluate.perplexity  315.79</code></pre>
+<p><strong>这一节的存在本身就是一次踩坑记录。</strong> §3.7 演示了分段跑（<code>--only config,tokenizer,dataset</code>），而分段跑<strong>会覆盖 <code>report.json</code></strong>——跑完之后磁盘上只剩一份残缺报告（没有 <code>perplexity</code> 字段）。</p>
+<p>所以流水线在演示完分段属性后，<strong>必须再跑一次完整链路</strong>，把报告恢复成完整的。否则下一个读 <code>report.json</code> 的人（或 CI）会拿到一份 <code>KeyError: &#x27;perplexity&#x27;</code>。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>复用检查点必须选 <code>best</code> 而不是 <code>last</code>。</strong> 流水线如果图省事用&quot;最后一步&quot;，M11 的 PPL 会变成 <strong>338.13</strong>，和 M06/M07 的 315.79 对不上。<strong>跨章节的一致性，取决于一个&quot;选哪个检查点&quot;的细节。</strong></li><li><strong>分段跑会覆盖 <code>report.json</code>。</strong> 演示 <code>--only</code> 之后必须重跑完整链路，否则磁盘上留的是残缺报告。<strong>这个坑是&quot;演示&quot;和&quot;留证据&quot;之间的矛盾</strong>——demo 要展示分段能力，但最终状态必须是完整的。</li><li><strong>ECE 依赖分箱数，不是一个绝对量。</strong> M07 用 5 箱得 <strong>0.0662</strong>、M11 默认 10 箱得 <strong>0.0709</strong>。<strong>引用 ECE 必须带箱数</strong>，否则两个&quot;都对&quot;的数字看起来像矛盾。</li><li><strong>&quot;训练 0.000 s&quot;是缓存生效的硬证据。</strong> 不要满足于&quot;感觉快了&quot;——<strong>时间戳为 0 才能证明它真的没跑。</strong></li><li><strong><code>--only</code> 之后 model 必须是 <code>None</code>，不是&quot;构建了但没用&quot;。</strong> 真正的分段执行是<strong>按需构建</strong>；如果每段都构建了模型，那分段只省了计算、没省内存和启动时间。</li><li><strong>报告要写&quot;结果从哪来&quot;。</strong> <code>from</code> / <code>reused_checkpoint</code> 字段避免了&quot;复用旧权重但以为在跑新实验&quot;——<strong>这是最容易自欺的一种错误。</strong></li><li><strong>同一个优化在不同运行里的实测值会波动（KV Cache 1.18× vs 1.34× vs 1.43×）。</strong> 这不是 bug，是机器负载噪声。<strong>报告实测中位数、承认波动幅度，比编一个漂亮的固定值可信。</strong></li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><strong>八段流水线</strong>：<code>config → tokenizer → dataset → model → train → evaluate → optimize → serve</code>，一条命令跑完。</li><li><strong>有缓存全程 0.928 s</strong>（冷启动真训 1200 步约 26 s，46.5 step/s）；最重一段是 <code>serve</code>（0.579 s）。</li><li><strong>产物可追溯</strong>：<code>config.json</code> 1.1 KB / <code>report.json</code> 19.5 KB / <code>tokenizer.json</code> 37.2 KB / <code>tiny_lm_best.npz</code> 5421.6 KB。</li><li><strong>复用检查点 = <code>tiny_lm_best.npz</code>（step 800）</strong> ⇒ 流水线 PPL <strong>315.79</strong>，与 M06/M07 一致。</li><li><strong>工程属性 1（可缓存）</strong>：第二次 <code>cached={tokenizer: true, model: true}</code>，<strong>训练阶段耗时 0.000 s</strong>，与第一次同一份权重。</li><li><strong>工程属性 2（可分段）</strong>：<code>only=[config, tokenizer, dataset]</code> 后 <strong>model 为空 True</strong>，确实按需构建。</li><li><strong>工程属性 3（可机读）</strong>：<code>report.json</code> 顶层 7 字段（<code>cached/config/evaluate/optimize/serve/timings/train</code>），可直接 diff 两次实验。</li><li><strong>口径差异（诚实记录）</strong>：ECE 在流水线（10 箱）为 <strong>0.0709</strong>、在 M07 演示（5 箱）为 <strong>0.0662</strong>，两者都对，差别在分箱数。</li><li>一句话结论：<strong>Capstone 交付的不是模型，而是一条可缓存、可分段重跑、报告可机读的流水线。</strong></li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/pipeline.py</code></td><td>八阶段编排 / 产物缓存（含 <code>BEST_NPZ</code> 优先于 <code>MODEL_NPZ</code>）/ <code>--force</code> <code>--steps</code> <code>--only</code> <code>--no-serve</code> / 写 <code>report.json</code></td></tr><tr><td><code>src/tiny/config.py</code></td><td>唯一配置入口 <code>TinyConfig</code> + <code>validate()</code> + <code>from_dict()</code>（拒绝未知键）</td></tr><tr><td><code>src/tiny/__init__.py</code></td><td>门面：11 个子模块 + 扁平导出</td></tr><tr><td><code>src/tiny/paths.py</code></td><td><code>P10_ROOT/SRC/DATA/MODELS/DEMOS</code> 等路径派生 + <code>ensure_deps_importable()</code></td></tr><tr><td><code>demos/_bundle.py</code></td><td>demo 共享 <code>(cfg, tokenizer, dataset, model, report, cache)</code>，三层缓存</td></tr><tr><td><code>demos/_emit.py</code></td><td><code>Printer</code> 双写 stdout + <code>demos/out/*.txt</code>；<code>capture()</code> 记录调用方的 print</td></tr><tr><td><code>demos/demo_11_complete_system.py</code></td><td>11 节：八阶段 / 真跑 / 耗时 / 产物 / 数据账 / 四报告 / 三条工程属性 / 汇总表 / 收尾</td></tr><tr><td><code>demos/out/demo_11_complete_system_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/complete-system.svg</code></td><td>八段流水线 + 产物 + 三条工程属性 + 汇总表</td></tr><tr><td><code>assets/term-11-complete-system.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.10 → <strong>v1.0（Capstone 完成）</strong>。实测：八段流水线一条命令跑完，<strong>有缓存 0.928 s</strong>（最重 serve 0.579 s）；产物 <code>config.json</code> 1.1 KB / <code>report.json</code> 19.5 KB / <code>tokenizer.json</code> 37.2 KB / <code>tiny_lm_best.npz</code> 5421.6 KB；复用 <code>tiny_lm_best.npz</code>（step 800）⇒ PPL <strong>315.79</strong>；三条工程属性全部实测（可缓存：训练 <strong>0.000 s</strong>；可分段：<code>model=None</code>；可机读：<code>report.json</code> 顶层 7 字段）；ECE 流水线 <strong>0.0709</strong>（10 箱）/ M07 演示 <strong>0.0662</strong>（5 箱）。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

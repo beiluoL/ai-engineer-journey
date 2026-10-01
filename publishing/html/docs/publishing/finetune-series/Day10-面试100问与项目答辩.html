@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day10：AI 工程师面试 100 问 + 项目答辩</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day10ai-工程师面试-100-问-项目答辩">大模型微调实战 Day10：AI 工程师面试 100 问 + 项目答辩</h1>
+<h1 id="ai-工程师面试100问-项目答辩模拟">AI 工程师面试100问 + 项目答辩模拟</h1>
+<p>今天进入最后阶段：</p>
+<blockquote><p><strong>把“会做 AI 项目”训练成“能通过 AI 工程师面试”。</strong></p></blockquote>
+<p>你的目标岗位：</p>
+<ul class="lvl"><li>Java AI 应用开发工程师</li></ul>
+<ul class="lvl"><li>大模型应用开发工程师</li></ul>
+<ul class="lvl"><li>Agent 应用开发工程师</li></ul>
+<ul class="lvl"><li>高级 Java（AI方向）</li></ul>
+<p>面试重点不是算法岗，而是：</p>
+<blockquote><p><strong>Java工程能力 + LLM应用能力 + AI系统落地能力</strong></p></blockquote>
+<hr/>
+<h1 id="一ai工程师面试能力地图">一、AI工程师面试能力地图</h1>
+<p>你的项目涉及：</p>
+<pre><code>LLM基础
+   |
+   ├── Token
+   ├── Transformer
+   ├── Attention
+   └── Prompt
+
+
+RAG
+   |
+   ├── Document Loader
+   ├── Chunk
+   ├── Embedding
+   ├── Vector Database
+   ├── Retriever
+   └── Rerank
+
+
+Agent
+   |
+   ├── Tool Calling
+   ├── Planning
+   ├── Memory
+   └── MCP
+
+
+模型优化
+   |
+   ├── SFT
+   ├── LoRA
+   ├── QLoRA
+   └── Evaluation
+
+
+工程化
+   |
+   ├── Spring Boot
+   ├── LangChain4j
+   ├── SSE
+   ├── Redis
+   ├── Docker
+   └── Monitoring</code></pre>
+<hr/>
+<h1 id="第一部分llm基础-20问">第一部分：LLM基础 20问</h1>
+<hr/>
+<h1 id="q1什么是大语言模型-llm">Q1：什么是大语言模型 LLM？</h1>
+<p>标准回答：</p>
+<blockquote><p>LLM（Large Language Model，大语言模型）是一类基于 Transformer 架构，通过大规模文本数据预训练得到的模型。它能够学习语言中的统计规律和语义关系，并完成文本生成、理解、推理等任务。</p></blockquote>
+<hr/>
+<h1 id="q2llm为什么能够生成文本">Q2：LLM为什么能够生成文本？</h1>
+<p>回答：</p>
+<blockquote><p>LLM本质是在预测下一个 Token 的概率。输入文本经过 Tokenizer 转换为 Token，然后模型根据上下文计算每个候选 Token 的概率，选择概率较高的 Token 逐步生成完整文本。</p></blockquote>
+<p>链路：</p>
+<pre><code>文本
+
+↓
+
+Tokenizer
+
+↓
+
+Token
+
+↓
+
+Transformer
+
+↓
+
+概率分布
+
+↓
+
+下一个Token
+
+↓
+
+循环生成</code></pre>
+<hr/>
+<h1 id="q3token是什么">Q3：Token是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Token 是大模型处理文本的基本单位，不一定等于一个字或者一个单词。模型实际处理的是 Token ID，通过 Embedding 转换为向量后进入 Transformer。</p></blockquote>
+<hr/>
+<h1 id="q4token-id-和-embedding有什么区别">Q4：Token ID 和 Embedding有什么区别？</h1>
+<p>高频问题。</p>
+<p>回答：</p>
+<blockquote><p>Token ID 是文本经过分词后的编号，例如一个词对应数字1234；Embedding 是将这个编号映射成高维向量，让模型能够理解语义关系。</p></blockquote>
+<p>关系：</p>
+<pre><code>文本
+
+↓
+
+Tokenizer
+
+↓
+
+Token ID
+
+↓
+
+Embedding
+
+↓
+
+向量
+
+↓
+
+Transformer</code></pre>
+<hr/>
+<h1 id="q5transformer核心是什么">Q5：Transformer核心是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Transformer核心是 Self-Attention（自注意力机制），它能够让模型计算当前 Token 和其他 Token 之间的关联关系，从而理解上下文。</p></blockquote>
+<hr/>
+<h1 id="q6attention解决什么问题">Q6：Attention解决什么问题？</h1>
+<p>回答：</p>
+<blockquote><p>Attention解决传统模型无法很好捕获长距离依赖的问题。例如一句话前面的主语和后面的动作之间可能距离很远，通过Attention可以动态关注相关信息。</p></blockquote>
+<hr/>
+<h1 id="q7为什么llm会产生幻觉">Q7：为什么LLM会产生幻觉？</h1>
+<p>回答：</p>
+<blockquote><p>因为LLM本质是概率生成模型，它优化的是生成概率，而不是事实验证。当训练数据不足或者上下文缺失时，模型可能生成看似合理但错误的信息。</p></blockquote>
+<p>解决：</p>
+<ul class="lvl"><li>RAG</li></ul>
+<ul class="lvl"><li>工具调用</li></ul>
+<ul class="lvl"><li>评测</li></ul>
+<ul class="lvl"><li>Prompt约束</li></ul>
+<hr/>
+<h1 id="q8prompt-engineering是什么">Q8：Prompt Engineering是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Prompt Engineering（提示词工程）是通过设计输入指令、上下文和约束条件，引导模型产生符合目标的输出。</p></blockquote>
+<hr/>
+<h1 id="q9system-prompt和user-prompt区别">Q9：System Prompt和User Prompt区别？</h1>
+<p>回答：</p>
+<p>System：</p>
+<pre><code>定义模型角色和规则</code></pre>
+<p>User：</p>
+<pre><code>具体任务</code></pre>
+<p>例如：</p>
+<p>System：</p>
+<blockquote><p>你是一名Java高级面试官。</p></blockquote>
+<p>User：</p>
+<blockquote><p>解释ConcurrentHashMap。</p></blockquote>
+<hr/>
+<h1 id="q10context-window是什么">Q10：Context Window是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Context Window（上下文窗口）指模型一次能够处理的最大 Token 数量，包括系统提示词、历史消息和当前输入。</p></blockquote>
+<hr/>
+<h1 id="第二部分rag面试30问">第二部分：RAG面试30问</h1>
+<hr/>
+<h1 id="q11什么是rag">Q11：什么是RAG？</h1>
+<p>回答：</p>
+<blockquote><p>RAG（Retrieval Augmented Generation，检索增强生成）是一种结合检索系统和大语言模型的方法。它先从外部知识库检索相关信息，再将这些信息提供给LLM生成答案。</p></blockquote>
+<hr/>
+<h1 id="q12为什么需要rag">Q12：为什么需要RAG？</h1>
+<p>回答：</p>
+<blockquote><p>因为模型参数中的知识存在更新慢、无法访问私有数据的问题。RAG通过外部知识库动态提供信息，不需要重新训练模型。</p></blockquote>
+<hr/>
+<h1 id="q13rag完整流程">Q13：RAG完整流程？</h1>
+<p>标准：</p>
+<pre><code>用户问题
+
+↓
+
+Query Embedding
+
+↓
+
+Vector Search
+
+↓
+
+Retriever
+
+↓
+
+TopK文档
+
+↓
+
+Prompt组合
+
+↓
+
+LLM
+
+↓
+
+答案</code></pre>
+<hr/>
+<h1 id="q14embedding是什么">Q14：Embedding是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Embedding是将文本转换为高维向量的过程，使语义相似的文本在向量空间距离更近，从而支持语义搜索。</p></blockquote>
+<hr/>
+<h1 id="q15为什么不用关键词搜索">Q15：为什么不用关键词搜索？</h1>
+<p>回答：</p>
+<p>关键词：</p>
+<pre><code>字面匹配</code></pre>
+<p>向量：</p>
+<pre><code>语义匹配</code></pre>
+<p>例如：</p>
+<p>问题：</p>
+<blockquote><p>HashMap安全吗？</p></blockquote>
+<p>关键词可能找不到：</p>
+<blockquote><p>ConcurrentHashMap并发控制。</p></blockquote>
+<p>向量可以。</p>
+<hr/>
+<h1 id="q16chunk为什么重要">Q16：Chunk为什么重要？</h1>
+<p>回答：</p>
+<blockquote><p>Chunk决定检索粒度。如果太大，会引入无关内容；如果太小，会丢失上下文。因此需要根据文档类型和检索效果调整。</p></blockquote>
+<hr/>
+<h1 id="q17chunk大小怎么选择">Q17：Chunk大小怎么选择？</h1>
+<p>回答：</p>
+<blockquote><p>通常根据模型上下文长度、文档类型和测试效果决定，没有固定值。一般几百到上千 Token，并结合 overlap 保持上下文连续。</p></blockquote>
+<hr/>
+<h1 id="q18什么是overlap">Q18：什么是Overlap？</h1>
+<p>回答：</p>
+<blockquote><p>Overlap表示相邻Chunk之间重复部分，避免切分导致上下文信息丢失。</p></blockquote>
+<hr/>
+<h1 id="q19vector-database为什么需要">Q19：Vector Database为什么需要？</h1>
+<p>回答：</p>
+<blockquote><p>向量数据库专门用于存储Embedding，并支持高效相似度搜索，例如Milvus、Pinecone、FAISS。</p></blockquote>
+<hr/>
+<h1 id="q20milvus如何实现向量搜索">Q20：Milvus如何实现向量搜索？</h1>
+<p>回答：</p>
+<blockquote><p>Milvus通过索引结构保存向量，例如HNSW、IVF等，根据距离算法计算查询向量和库中向量的相似度，返回最相关结果。</p></blockquote>
+<hr/>
+<h1 id="q21rag如何优化">Q21：RAG如何优化？</h1>
+<p>回答：</p>
+<p>五个方向：</p>
+<ul class="lvl"><li>Chunk优化</li></ul>
+<ul class="lvl"><li>Embedding模型优化</li></ul>
+<ul class="lvl"><li>Metadata过滤</li></ul>
+<ul class="lvl"><li>Rerank排序</li></ul>
+<ul class="lvl"><li>Prompt优化</li></ul>
+<hr/>
+<h1 id="q22什么是rerank">Q22：什么是Rerank？</h1>
+<p>回答：</p>
+<blockquote><p>Rerank（重排序）是在向量召回后，再使用专门模型对候选文档重新排序，提高最终上下文准确性。</p></blockquote>
+<hr/>
+<h1 id="第三部分agent面试30问">第三部分：Agent面试30问</h1>
+<hr/>
+<h1 id="q23什么是agent">Q23：什么是Agent？</h1>
+<p>回答：</p>
+<blockquote><p>Agent是一种能够根据目标自主规划任务，并通过调用工具完成复杂任务的AI系统。</p></blockquote>
+<hr/>
+<h1 id="q24agent和普通chat区别">Q24：Agent和普通Chat区别？</h1>
+<p>回答：</p>
+<p>普通Chat：</p>
+<pre><code>输入 → 输出</code></pre>
+<p>Agent：</p>
+<pre><code>输入
+
+↓
+
+理解任务
+
+↓
+
+规划
+
+↓
+
+调用工具
+
+↓
+
+获取结果
+
+↓
+
+生成答案</code></pre>
+<hr/>
+<h1 id="q25tool-calling是什么">Q25：Tool Calling是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Tool Calling是一种让LLM调用外部工具的方法。LLM负责决定是否调用工具以及生成参数，真正执行工具的是应用程序。</p></blockquote>
+<hr/>
+<h1 id="q26tool-schema是什么">Q26：Tool Schema是什么？</h1>
+<p>回答：</p>
+<blockquote><p>Tool Schema是工具的结构化描述，包括工具名称、功能描述以及参数定义，让模型知道有哪些能力可以调用。</p></blockquote>
+<hr/>
+<h1 id="q27llm为什么不能直接调用java方法">Q27：LLM为什么不能直接调用Java方法？</h1>
+<p>回答：</p>
+<blockquote><p>因为LLM只是生成文本，不具备执行环境。Java程序需要负责权限校验、参数验证、安全控制以及真正执行业务逻辑。</p></blockquote>
+<hr/>
+<h1 id="q28tool-calling完整链路">Q28：Tool Calling完整链路？</h1>
+<p>必须背：</p>
+<pre><code>用户请求
+
+↓
+
+Java发送消息+Tool Schema
+
+↓
+
+LLM判断
+
+↓
+
+返回Tool Call
+
+↓
+
+Java解析
+
+↓
+
+执行方法
+
+↓
+
+Tool Result
+
+↓
+
+再次发送LLM
+
+↓
+
+最终回答</code></pre>
+<hr/>
+<h1 id="q29agent如何避免乱调用工具">Q29：Agent如何避免乱调用工具？</h1>
+<p>回答：</p>
+<ul class="lvl"><li>清晰Tool描述</li></ul>
+<ul class="lvl"><li>参数校验</li></ul>
+<ul class="lvl"><li>权限控制</li></ul>
+<ul class="lvl"><li>最大调用次数</li></ul>
+<ul class="lvl"><li>超时机制</li></ul>
+<hr/>
+<h1 id="第四部分lora微调20问">第四部分：LoRA/微调20问</h1>
+<hr/>
+<h1 id="q30为什么微调">Q30：为什么微调？</h1>
+<p>回答：</p>
+<blockquote><p>微调主要用于让模型适应特定领域、任务或者输出风格，例如让通用模型变成Java面试专家。</p></blockquote>
+<hr/>
+<h1 id="q31rag和微调区别">Q31：RAG和微调区别？</h1>
+<p>核心：</p>
+<table><thead><tr><th></th><th>RAG</th><th>微调</th></tr></thead><tbody><tr><td>解决</td><td>知识</td><td>行为</td></tr><tr><td>数据变化</td><td>频繁</td><td>较稳定</td></tr><tr><td>成本</td><td>低</td><td>高</td></tr></tbody></table>
+<hr/>
+<h1 id="q32lora是什么">Q32：LoRA是什么？</h1>
+<p>回答：</p>
+<blockquote><p>LoRA是一种参数高效微调方法，通过冻结原模型参数，在部分权重旁增加低秩矩阵，只训练新增参数，从而降低训练成本。</p></blockquote>
+<hr/>
+<h1 id="q33qlora是什么">Q33：QLoRA是什么？</h1>
+<p>回答：</p>
+<blockquote><p>QLoRA是在LoRA基础上结合4bit量化，使大模型可以在更低显存环境完成微调。</p></blockquote>
+<hr/>
+<h1 id="q34为什么不用全量微调">Q34：为什么不用全量微调？</h1>
+<p>回答：</p>
+<blockquote><p>全量微调需要更新模型所有参数，成本和显存要求很高，同时容易产生灾难性遗忘。LoRA只训练少量参数，更适合业务场景。</p></blockquote>
+<hr/>
+<h1 id="第五部分项目答辩模拟">第五部分：项目答辩模拟</h1>
+<p>现在进入真实面试。</p>
+<h2 id="面试官">面试官：</h2>
+<p>你的项目里面为什么同时使用 RAG 和 LoRA？</p>
+<p>请你回答。</p>
+<p>要求：</p>
+<p>不要背答案。</p>
+<p>按照：</p>
+<pre><code>业务问题
+↓
+技术选择
+↓
+为什么这样组合
+↓
+效果</code></pre>
+<p>回答。</p>
+<hr/>
+<p>你回答后，我会按照：</p>
+<ul class="lvl"><li>30K Java + AI岗位标准</li></ul>
+<ul class="lvl"><li>是否像真实项目</li></ul>
+<ul class="lvl"><li>技术漏洞</li></ul>
+<ul class="lvl"><li>面试追问</li></ul>
+<p>进行评分。</p>
+<p>下一题继续：</p>
+<p><strong>Q2：请详细讲一下你的 Agent 一次请求的完整执行链路。</strong></p>
+</main>
+</body>
+</html>

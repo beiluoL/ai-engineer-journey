@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 02 — Chapter 03：Type Hints【类型提示】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-02-chapter-03type-hints类型提示">Project 02 — Chapter 03：Type Hints【类型提示】</h1>
+<blockquote><p><strong>本章 ↔ <code>src/</code> 对照</strong>（校对时补：本章概念在真实代码里的落点） - <code>src/assistant/settings.py: Settings</code> — 每个字段都有类型注解，<code>from_env()</code> 负责 <code>str → float/int</code> 转换 - <code>src/assistant/client.py: BaseLLMClient</code> — 抽象基类 + 完整签名类型；<code>DeepSeekClient</code> / <code>FakeClient</code> 都实现它 - <code>src/assistant/conversation.py</code> — 历史统一为 <code>list[dict[str, str]]</code>，与 OpenAI 的 messages 契约对齐 - <code>src/assistant/api.py</code> — FastAPI 用 Pydantic <code>BaseModel</code> 做<strong>运行时</strong>校验（类型提示只管静态，边界还得靠它）</p></blockquote>
+<h2 id="1-项目问题">1. 项目问题</h2>
+<p>上一章我们已经把 AI Assistant 的网络层升级成：</p>
+<pre><code>AI Application
+    ↓
+Assistant
+    ↓
+LLMClient
+    ↓
+AsyncClient
+    ↓
+LLM API</code></pre>
+<p>现在代码虽然越来越工程化，但又出现了一个问题：</p>
+<pre><code>async def chat(messages):
+    ...</code></pre>
+<p>这里的：</p>
+<pre><code>messages</code></pre>
+<p>到底是什么？</p>
+<p>是：</p>
+<pre><code>list</code></pre>
+<p>还是：</p>
+<pre><code>dict</code></pre>
+<p>还是：</p>
+<pre><code>list[dict]</code></pre>
+<p>甚至：</p>
+<pre><code>list[dict[str, str]]</code></pre>
+<p>返回值呢？</p>
+<pre><code>return response.json()</code></pre>
+<p>到底返回：</p>
+<pre><code>dict</code></pre>
+<p>还是某种更复杂的嵌套结构？</p>
+<p>当项目只有几百行代码时，问题可能不明显。</p>
+<p>但 AI 项目继续发展：</p>
+<pre><code>RAG
+↓
+Agent
+↓
+Tool Calling
+↓
+MCP
+↓
+Database
+↓
+API</code></pre>
+<p>数据对象会越来越多。</p>
+<p>如果所有代码都是：</p>
+<pre><code>dict
+list
+str</code></pre>
+<p>很快就会出现：</p>
+<pre><code>字段写错
+↓
+IDE 不知道
+↓
+运行到某个分支才发现
+↓
+定位困难</code></pre>
+<p>所以本章解决：</p>
+<blockquote><p><strong>如何让 Python 代码更明确、更容易被 IDE、类型检查工具和开发者理解。</strong></p></blockquote>
+<hr/>
+<h1 id="2-type-hint类型提示是什么">2. Type Hint【类型提示】是什么</h1>
+<p>最简单的例子：</p>
+<pre><code>def add(a: int, b: int) -&gt; int:
+    return a + b</code></pre>
+<p>这里：</p>
+<pre><code>a: int</code></pre>
+<p>表示：</p>
+<blockquote><p>我期望 <code>a</code> 是整数。</p></blockquote>
+<pre><code>b: int</code></pre>
+<p>表示：</p>
+<blockquote><p>我期望 <code>b</code> 是整数。</p></blockquote>
+<pre><code>-&gt; int</code></pre>
+<p>表示：</p>
+<blockquote><p>我期望这个函数返回整数。</p></blockquote>
+<p>因此：</p>
+<pre><code>def add(a: int, b: int) -&gt; int:</code></pre>
+<p>可以理解为：</p>
+<pre><code>输入：
+a → int
+b → int
+
+输出：
+int</code></pre>
+<hr/>
+<h1 id="3-一个非常重要的误区">3. 一个非常重要的误区</h1>
+<p>Type Hint 不是传统意义上的强制类型系统。</p>
+<p>例如：</p>
+<pre><code>def add(a: int, b: int) -&gt; int:
+    return a + b</code></pre>
+<p>你仍然可能运行：</p>
+<pre><code>add(&quot;1&quot;, &quot;2&quot;)</code></pre>
+<p>Python 本身不一定因为这个类型提示就自动阻止你。</p>
+<p>所以要记住：</p>
+<blockquote><p><strong>Type Hint【类型提示】主要是给开发者、IDE 和静态类型检查工具提供类型信息。</strong></p></blockquote>
+<p>而不是把 Python 自动变成 Java。</p>
+<hr/>
+<h1 id="4-java-python">4. Java ↔ Python</h1>
+<p>你有 Java 背景，可以直接建立这个映射：</p>
+<p>Java：</p>
+<pre><code>public int add(int a, int b) {
+    return a + b;
+}</code></pre>
+<p>Python：</p>
+<pre><code>def add(a: int, b: int) -&gt; int:
+    return a + b</code></pre>
+<p>两者都表达：</p>
+<pre><code>参数类型
++
+返回类型</code></pre>
+<p>但 Python 的类型提示更加偏向：</p>
+<p><strong>Development Aid【开发辅助】</strong></p>
+<p>以及：</p>
+<p><strong>Static Type Checking【静态类型检查】</strong></p>
+<p>而 Java 的类型系统直接参与语言本身的编译和类型约束。</p>
+<hr/>
+<h1 id="5-为什么-ai-项目尤其需要类型提示">5. 为什么 AI 项目尤其需要类型提示</h1>
+<p>因为 AI 应用的数据结构特别多。</p>
+<p>例如一个消息：</p>
+<pre><code>message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;什么是 RAG？&quot;
+}</code></pre>
+<p>看起来很简单。</p>
+<p>但项目继续升级以后：</p>
+<pre><code>Message
+Tool Call
+Tool Result
+Model Response
+Embedding
+Document
+Chunk
+Retriever Result
+Agent State
+MCP Request
+MCP Response</code></pre>
+<p>都会产生结构化数据。</p>
+<p>如果所有代码都这样：</p>
+<pre><code>data[&quot;xxx&quot;][&quot;yyy&quot;]</code></pre>
+<p>很容易出现：</p>
+<pre><code>字段名写错
+↓
+结构理解错误
+↓
+运行时才发现</code></pre>
+<p>类型提示可以让数据结构变得更加明确。</p>
+<hr/>
+<h1 id="6-第一个升级给函数加类型">6. 第一个升级：给函数加类型</h1>
+<p>之前：</p>
+<pre><code>async def chat(messages):
+    ...</code></pre>
+<p>现在：</p>
+<pre><code>async def chat(messages: list[dict[str, str]]) -&gt; dict:
+    ...</code></pre>
+<p>至少表达了：</p>
+<pre><code>messages
+↓
+List【列表】
+↓
+里面是 Dict【字典】
+↓
+字典的 Key 是 String
+↓
+Value 也是 String</code></pre>
+<p>也就是：</p>
+<pre><code>list[dict[str, str]]</code></pre>
+<hr/>
+<h1 id="7-读取这个类型">7. 读取这个类型</h1>
+<p>例如：</p>
+<pre><code>messages: list[dict[str, str]]</code></pre>
+<p>可以拆成：</p>
+<pre><code>list
+  ↓
+多个 dict
+  ↓
+dict 的 key 是 str
+  ↓
+dict 的 value 是 str</code></pre>
+<p>所以：</p>
+<pre><code>messages = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: &quot;你好&quot;
+    }
+]</code></pre>
+<p>符合：</p>
+<pre><code>list[dict[str, str]]</code></pre>
+<hr/>
+<h1 id="8-但是这个设计仍然有问题">8. 但是这个设计仍然有问题</h1>
+<p>想象一下：</p>
+<pre><code>messages: list[dict[str, str]]</code></pre>
+<p>这个定义并没有说明：</p>
+<pre><code>key 必须有哪些？</code></pre>
+<p>实际上我们希望：</p>
+<pre><code>role
+content</code></pre>
+<p>而不是：</p>
+<pre><code>{
+    &quot;hello&quot;: &quot;world&quot;
+}</code></pre>
+<p>也就是说：</p>
+<blockquote><p><code>dict[str, str]</code> 只是说“这是一个字符串到字符串的字典”，并没有真正描述业务对象。</p></blockquote>
+<p>所以我们需要更进一步。</p>
+<hr/>
+<h1 id="9-typeddict类型化字典">9. TypedDict【类型化字典】</h1>
+<p>Python 提供：</p>
+<pre><code>from typing import TypedDict</code></pre>
+<p>例如：</p>
+<pre><code>class Message(TypedDict):
+    role: str
+    content: str</code></pre>
+<p>这样：</p>
+<pre><code>message: Message = {
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;你好&quot;,
+}</code></pre>
+<p>就比：</p>
+<pre><code>dict[str, str]</code></pre>
+<p>更加明确。</p>
+<p>因为现在我们表达的是：</p>
+<pre><code>Message
+├── role: str
+└── content: str</code></pre>
+<hr/>
+<h1 id="10-ai-项目里的-message">10. AI 项目里的 Message</h1>
+<p>于是可以写：</p>
+<pre><code>from typing import TypedDict
+
+
+class Message(TypedDict):
+    role: str
+    content: str</code></pre>
+<p>然后：</p>
+<pre><code>async def chat(
+    messages: list[Message],
+) -&gt; dict:
+    ...</code></pre>
+<p>此时函数含义变得清楚：</p>
+<pre><code>chat()
+输入：
+List[Message]
+
+输出：
+Dict</code></pre>
+<p>这已经比：</p>
+<pre><code>async def chat(messages):</code></pre>
+<p>明确很多。</p>
+<hr/>
+<h1 id="11-为什么这对-agent-特别重要">11. 为什么这对 Agent 特别重要</h1>
+<p>以后进入：</p>
+<pre><code>Function Calling
+Agent
+MCP</code></pre>
+<p>一个请求可能变成：</p>
+<pre><code>Message
+ ├── role
+ ├── content
+ └── tool_calls</code></pre>
+<p>如果没有类型提示：</p>
+<pre><code>message[&quot;tool_calls&quot;][0][&quot;function&quot;][&quot;arguments&quot;]</code></pre>
+<p>这种代码会越来越难维护。</p>
+<p>类型系统可以帮助你把数据结构显式表达出来。</p>
+<p>这也是为什么：</p>
+<blockquote><p><strong>Python Engineering 是后面 Agent 工程化的重要基础。</strong></p></blockquote>
+<hr/>
+<h1 id="12-list-dict-optional">12. List / Dict / Optional</h1>
+<p>常见写法：</p>
+<pre><code>names: list[str]</code></pre>
+<p>表示：</p>
+<pre><code>List【列表】
+└── String【字符串】</code></pre>
+<p>例如：</p>
+<pre><code>names: list[str] = [
+    &quot;Java&quot;,
+    &quot;Python&quot;,
+    &quot;AI&quot;,
+]</code></pre>
+<hr/>
+<p>字典：</p>
+<pre><code>scores: dict[str, float]</code></pre>
+<p>表示：</p>
+<pre><code>Dictionary【字典】
+├── key: str
+└── value: float</code></pre>
+<hr/>
+<p>可选值：</p>
+<pre><code>from typing import Optional
+
+name: Optional[str]</code></pre>
+<p>表示：</p>
+<pre><code>name
+可能是：
+str
+或者
+None</code></pre>
+<p>现代 Python 也经常写：</p>
+<pre><code>name: str | None</code></pre>
+<p>含义一样：</p>
+<pre><code>str
+OR
+None</code></pre>
+<hr/>
+<h1 id="13-默认值和-optional">13. 默认值和 Optional</h1>
+<p>例如：</p>
+<pre><code>def find_user(user_id: str) -&gt; str | None:
+    ...</code></pre>
+<p>表示：</p>
+<pre><code>找到用户
+→ str
+
+没找到
+→ None</code></pre>
+<p>这比：</p>
+<pre><code>def find_user(user_id):</code></pre>
+<p>清晰得多。</p>
+<p>调用者可以提前知道：</p>
+<blockquote><p>这个函数不是一定有结果。</p></blockquote>
+<hr/>
+<h1 id="14-类型提示不只是参数">14. 类型提示不只是参数</h1>
+<p>还可以写变量：</p>
+<pre><code>model_name: str = &quot;qwen&quot;
+temperature: float = 0.7
+max_tokens: int = 1024
+enabled: bool = True</code></pre>
+<p>因此配置对象会更清楚：</p>
+<pre><code>model_name → str
+temperature → float
+max_tokens → int
+enabled → bool</code></pre>
+<hr/>
+<h1 id="15-type-alias类型别名">15. Type Alias【类型别名】</h1>
+<p>有时候一个复杂类型会反复出现：</p>
+<pre><code>list[dict[str, str]]</code></pre>
+<p>如果项目几十处都出现，会很难看。</p>
+<p>可以定义：</p>
+<pre><code>MessageList = list[dict[str, str]]</code></pre>
+<p>以后：</p>
+<pre><code>def chat(messages: MessageList):
+    ...</code></pre>
+<p>但对于业务对象，更推荐把结构本身表达清楚，而不是大量堆类型别名。</p>
+<p>例如：</p>
+<pre><code>class Message(TypedDict):
+    role: str
+    content: str
+
+MessageList = list[Message]</code></pre>
+<p>这样更有语义。</p>
+<hr/>
+<h1 id="16-protocol协议">16. Protocol【协议】</h1>
+<p>现在开始接触一个对大型 Python 项目很重要的概念。</p>
+<p>假设：</p>
+<pre><code>OpenAI Client
+DashScope Client
+Anthropic Client
+Local Model Client</code></pre>
+<p>都提供：</p>
+<pre><code>chat()</code></pre>
+<p>我们希望上层代码不依赖具体供应商。</p>
+<p>可以使用：</p>
+<pre><code>from typing import Protocol
+
+
+class LLMClient(Protocol):
+    async def chat(
+        self,
+        messages: list[Message],
+    ) -&gt; dict:
+        ...</code></pre>
+<p>含义：</p>
+<blockquote><p>只要一个对象具备符合这个接口的方法，就可以被当成 <code>LLMClient</code> 使用。</p></blockquote>
+<hr/>
+<h1 id="17-为什么-protocol-对-ai-工程很重要">17. 为什么 Protocol 对 AI 工程很重要</h1>
+<p>以后你可能拥有：</p>
+<pre><code>OpenAI
+    ↓
+OpenAIClient
+
+DashScope
+    ↓
+DashScopeClient
+
+Local Ollama
+    ↓
+OllamaClient</code></pre>
+<p>但是：</p>
+<pre><code>Assistant</code></pre>
+<p>不应该关心具体是哪一个。</p>
+<p>于是：</p>
+<pre><code>Assistant
+    ↓
+LLMClient Protocol
+    ↓
+┌───────────────┐
+│               │
+OpenAI       DashScope
+│               │
+Local Model     ...</code></pre>
+<p>联系描述：</p>
+<p><code>Assistant</code> 只依赖“能够完成聊天调用的接口能力”，而不是具体供应商。不同 Client 只要满足相同的协议，就可以被替换。这为以后实现 Model Provider【模型供应商】抽象打基础。</p>
+<hr/>
+<h1 id="18-java-对比-protocol">18. Java 对比 Protocol</h1>
+<p>Java 中你可以类比：</p>
+<pre><code>interface LLMClient {
+    Response chat(List&lt;Message&gt; messages);
+}</code></pre>
+<p>然后：</p>
+<pre><code>class OpenAIClient implements LLMClient {}
+class DashScopeClient implements LLMClient {}</code></pre>
+<p>Python 的：</p>
+<pre><code>Protocol</code></pre>
+<p>在设计意图上与这种接口抽象有相似之处。</p>
+<p>但 Python <code>Protocol</code> 属于：</p>
+<p><strong>Structural Typing【结构化类型】</strong></p>
+<p>核心思想是：</p>
+<blockquote><p>不要求显式声明“我实现了这个接口”，只要结构符合要求，就可以被使用。</p></blockquote>
+<hr/>
+<h1 id="19-type-checker类型检查器">19. Type Checker【类型检查器】</h1>
+<p>类型提示真正强大，需要配合工具。</p>
+<p>常见工具：</p>
+<pre><code>Mypy【Python 静态类型检查器】
+Pyright【Python 类型检查器】</code></pre>
+<p>它们可以检查：</p>
+<pre><code>def add(a: int, b: int) -&gt; int:
+    return a + b
+
+result = add(&quot;1&quot;, &quot;2&quot;)</code></pre>
+<p>然后发现：</p>
+<pre><code>str
+↓
+不符合
+↓
+int</code></pre>
+<p>这样错误可以在运行程序之前被发现。</p>
+<hr/>
+<h1 id="20-ide-为什么突然变聪明">20. IDE 为什么突然变聪明</h1>
+<p>你在 IDE 中写：</p>
+<pre><code>message.</code></pre>
+<p>如果类型明确：</p>
+<pre><code>Message</code></pre>
+<p>IDE 就知道这个对象有哪些字段。</p>
+<p>而如果只是：</p>
+<pre><code>dict</code></pre>
+<p>IDE 能知道的信息就少很多。</p>
+<p>因此：</p>
+<pre><code>Type Hint
+↓
+Type Information
+↓
+IDE Support
+↓
+Static Checking
+↓
+Earlier Error Detection</code></pre>
+<p>这就是类型提示在工程中的实际价值。</p>
+<hr/>
+<h1 id="21-把-project-02-的代码升级">21. 把 Project 02 的代码升级</h1>
+<p>当前：</p>
+<pre><code>class LLMClient:
+    async def chat(self, messages):
+        ...</code></pre>
+<p>升级：</p>
+<pre><code>from typing import TypedDict
+
+
+class Message(TypedDict):
+    role: str
+    content: str
+
+
+class LLMResponse(TypedDict):
+    content: str
+
+
+class LLMClient:
+    async def chat(
+        self,
+        messages: list[Message],
+    ) -&gt; LLMResponse:
+        ...</code></pre>
+<p>注意：</p>
+<p>真实供应商 API 返回结构通常比这个复杂。</p>
+<p>这里重点是：</p>
+<blockquote><p><strong>演示如何给业务边界增加明确的类型。</strong></p></blockquote>
+<p>不要把示例类型假装成所有 LLM Provider【模型供应商】都完全一致的真实 API Schema【模式】。</p>
+<hr/>
+<h1 id="22-更进一步不要什么都返回-dict">22. 更进一步：不要什么都返回 dict</h1>
+<p>如果：</p>
+<pre><code>response = {
+    &quot;content&quot;: &quot;...&quot;,
+    &quot;model&quot;: &quot;...&quot;,
+    &quot;usage&quot;: {...},
+}</code></pre>
+<p>继续使用：</p>
+<pre><code>dict</code></pre>
+<p>项目越来越大后，还是会出现：</p>
+<pre><code>response[&quot;content&quot;]
+response[&quot;model&quot;]
+response[&quot;usage&quot;]</code></pre>
+<p>于是下一章：</p>
+<p><strong>Dataclass【数据类】</strong></p>
+<p>就开始有意义了。</p>
+<p>因此本章不是要把所有类型问题解决掉。</p>
+<p>而是完成：</p>
+<pre><code>动态数据
+↓
+类型信息
+↓
+明确的数据边界
+↓
+为 Dataclass 做准备</code></pre>
+<hr/>
+<figure class="figure"><img alt="真实运行：读注解对比 __annotations__ 与 get_type_hints()、泛型 T 的解析、pydantic 在边界上做运行时校验，以及注解被 from __future__ import annotations 变成字符串后的修复办法" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-typehints.png" loading="lazy"/><figcaption>真实运行：读注解对比 __annotations__ 与 get_type_hints()、泛型 T 的解析、pydantic 在边界上做运行时校验，以及注解被 from __future__ import annotations 变成字符串后的修复办法</figcaption></figure>
+<figure class="figure"><img alt="真实运行：写了 int 也拦不住脏数据（真正挡住的是运行时校验）、future import 把注解变成字符串后的 NameError，以及 get_type_hints 的名字不存在时一样会炸" src="../../../../../../projects/02-engineering-ai-assistant/assets/term-typehints-pitfall.png" loading="lazy"/><figcaption>真实运行：写了 int 也拦不住脏数据（真正挡住的是运行时校验）、future import 把注解变成字符串后的 NameError，以及 get_type_hints 的名字不存在时一样会炸</figcaption></figure>
+<h1 id="23-本章知识地图">23. 本章知识地图</h1>
+<pre><code>Type Hint【类型提示】
+        │
+        ├── 基础类型
+        │     ├── str
+        │     ├── int
+        │     ├── float
+        │     └── bool
+        │
+        ├── 容器类型
+        │     ├── list
+        │     ├── dict
+        │     └── tuple
+        │
+        ├── Optional / Union
+        │
+        ├── TypedDict
+        │
+        ├── Type Alias
+        │
+        ├── Protocol
+        │
+        └── Type Checker
+              ├── Mypy
+              └── Pyright</code></pre>
+<p>联系描述：</p>
+<p>基础类型解决“单个值是什么”；容器类型解决“数据集合是什么”；<code>TypedDict</code> 进一步描述字典的业务字段；<code>Protocol</code> 用于抽象不同实现之间共同的能力边界；类型检查器再利用这些类型信息，在运行前帮助发现错误。最终形成的是一套从数据到接口再到工具检查的类型体系。</p>
+<hr/>
+<h1 id="24-项目架构变化">24. 项目架构变化</h1>
+<p>Project 02 到现在：</p>
+<pre><code>main.py
+   ↓
+assistant.py
+   ↓
+LLMClient
+   ↓
+AsyncClient</code></pre>
+<p>现在开始有明确的数据边界：</p>
+<pre><code>main.py
+   ↓
+Assistant
+   ↓
+Message
+   ↓
+LLMClient Protocol
+   ↓
+Concrete LLM Client
+   ↓
+AsyncClient
+   ↓
+HTTP</code></pre>
+<p>更加完整地看：</p>
+<pre><code>┌───────────────┐
+│ Application   │
+└───────┬───────┘
+        ↓
+┌───────────────┐
+│ Typed Models  │
+└───────┬───────┘
+        ↓
+┌───────────────┐
+│ LLM Interface │
+└───────┬───────┘
+        ↓
+┌───────────────┐
+│ HTTP Client   │
+└───────────────┘</code></pre>
+<hr/>
+<h1 id="25-实战任务">25. 实战任务</h1>
+<h2 id="task-1message-类型化">Task 1：Message 类型化</h2>
+<p>创建：</p>
+<pre><code>class Message(TypedDict):
+    role: str
+    content: str</code></pre>
+<p>然后把：</p>
+<pre><code>messages</code></pre>
+<p>全部改成：</p>
+<pre><code>list[Message]</code></pre>
+<hr/>
+<h2 id="task-2配置类型化">Task 2：配置类型化</h2>
+<p>给：</p>
+<pre><code>model_name
+temperature
+max_tokens
+base_url</code></pre>
+<p>添加类型提示。</p>
+<hr/>
+<h2 id="task-3llmclient-类型化">Task 3：LLMClient 类型化</h2>
+<p>至少明确：</p>
+<pre><code>async def chat(
+    messages: list[Message],
+) -&gt; ...</code></pre>
+<p>的参数类型和返回类型。</p>
+<hr/>
+<h2 id="task-4增加-protocol">Task 4：增加 Protocol</h2>
+<p>定义：</p>
+<pre><code>class LLMClientProtocol(Protocol):
+    ...</code></pre>
+<p>尝试让 <code>Assistant</code> 不依赖具体 Provider。</p>
+<hr/>
+<h2 id="task-5类型检查">Task 5：类型检查</h2>
+<p>使用 Mypy 或 Pyright 对项目进行一次类型检查。</p>
+<p>目标不是：</p>
+<blockquote><p>让整个仓库一次性 0 error。</p></blockquote>
+<p>而是：</p>
+<blockquote><p>理解类型检查器发现的问题是什么，以及为什么出现。</p></blockquote>
+<hr/>
+<h1 id="26-实战挑战">26. 实战挑战</h1>
+<p>故意制造错误：</p>
+<pre><code>messages: list[Message] = [
+    {
+        &quot;role&quot;: &quot;user&quot;,
+        &quot;content&quot;: 123,
+    }
+]</code></pre>
+<p>观察类型检查器。</p>
+<p>然后故意：</p>
+<pre><code>messages.append({
+    &quot;name&quot;: &quot;test&quot;,
+})</code></pre>
+<p>观察它能否发现：</p>
+<pre><code>字段不符合 Message</code></pre>
+<p>这个实验比单纯看概念更重要。</p>
+<hr/>
+<h1 id="27-主动回忆">27. 主动回忆</h1>
+<p>不要看上面的内容，先回答：</p>
+<h3 id="q1">Q1</h3>
+<p>Type Hint 到底解决什么问题？</p>
+<h3 id="q2">Q2</h3>
+<p>为什么 Type Hint 不等于 Java 的强类型约束？</p>
+<h3 id="q3">Q3</h3>
+<p><code>list[dict[str, str]]</code> 表达了什么？</p>
+<h3 id="q4">Q4</h3>
+<p>为什么 <code>TypedDict</code> 比 <code>dict[str, str]</code> 更适合描述 AI Message？</p>
+<h3 id="q5">Q5</h3>
+<p><code>Optional[str]</code> 和 <code>str | None</code> 是什么关系？</p>
+<h3 id="q6">Q6</h3>
+<p>Protocol 解决什么问题？</p>
+<h3 id="q7">Q7</h3>
+<p>Python 的 Protocol 和 Java interface 有什么相似点和区别？</p>
+<h3 id="q8">Q8</h3>
+<p>为什么 AI 项目越大，越需要 Type Checker？</p>
+<h3 id="q9">Q9</h3>
+<p>Mypy / Pyright 的作用是什么？</p>
+<h3 id="q10">Q10</h3>
+<p>为什么类型提示能够改善 IDE 的开发体验？</p>
+<hr/>
+<h1 id="28-面试标准话术">28. 面试标准话术</h1>
+<h3 id="问python-为什么需要-type-hint">问：Python 为什么需要 Type Hint？</h3>
+<blockquote><p>Python 本身是动态类型语言，但随着项目规模扩大，函数参数、返回值和业务对象越来越复杂。Type Hint 可以显式描述数据类型，为开发者、IDE 和静态类型检查工具提供类型信息，从而提高代码可读性、自动补全能力和错误发现能力。对于 AI 项目来说，Message、Tool Call、Agent State 等结构越来越复杂，因此类型提示对工程可维护性尤其重要。</p></blockquote>
+<h3 id="问typeddict-是什么">问：TypedDict 是什么？</h3>
+<blockquote><p><code>TypedDict</code> 用来描述字典的预期结构和字段类型。它仍然是字典，但类型检查工具可以根据定义检查字段是否正确，因此比单纯的 <code>dict[str, str]</code> 能表达更明确的业务数据结构。</p></blockquote>
+<h3 id="问protocol-是什么">问：Protocol 是什么？</h3>
+<blockquote><p><code>Protocol</code> 用于定义一种结构化接口。只要对象具有符合协议要求的方法和属性，就可以被视为满足这个协议，而不要求显式继承它。它适合做依赖抽象，例如让 Assistant 依赖统一的 LLM Client 接口，从而方便替换不同模型供应商。</p></blockquote>
+<hr/>
+<h1 id="29-常见坑">29. 常见坑</h1>
+<h2 id="坑-1认为写了类型提示就不会出错">坑 1：认为写了类型提示就不会出错</h2>
+<p>错误。</p>
+<pre><code>age: int = &quot;hello&quot;</code></pre>
+<p>类型提示本身并不会自动阻止所有错误。</p>
+<p>需要：</p>
+<pre><code>Type Hint
++
+Type Checker</code></pre>
+<p>才能发挥静态检查价值。</p>
+<hr/>
+<h2 id="坑-2为了类型而类型">坑 2：为了类型而类型</h2>
+<p>不要把每一行代码都写成复杂泛型。</p>
+<p>目标是：</p>
+<blockquote><p>提高理解和维护能力。</p></blockquote>
+<p>而不是制造类型噪音。</p>
+<hr/>
+<h2 id="坑-3所有东西都写-dict">坑 3：所有东西都写 dict</h2>
+<p>例如：</p>
+<pre><code>response: dict</code></pre>
+<p>这几乎没有提供什么有效信息。</p>
+<p>能描述具体结构时，应尽可能明确。</p>
+<hr/>
+<h2 id="坑-4把第三方-api-的真实-schema-想当然地固定下来">坑 4：把第三方 API 的真实 Schema 想当然地固定下来</h2>
+<p>不同模型供应商的请求和响应结构可能不同。</p>
+<p>应该区分：</p>
+<pre><code>Provider API Schema</code></pre>
+<p>和：</p>
+<pre><code>Internal Application Model【内部应用模型】</code></pre>
+<p>后续工程化时，可以通过适配器把供应商格式转换成自己的内部结构。</p>
+<hr/>
+<h1 id="30-一个非常重要的工程思想">30. 一个非常重要的工程思想</h1>
+<p>本章真正要建立的不是：</p>
+<blockquote><p>“Python 有类型提示。”</p></blockquote>
+<p>而是：</p>
+<blockquote><p><strong>建立清晰的数据边界。</strong></p></blockquote>
+<p>例如：</p>
+<pre><code>External API Response
+        ↓
+Adapter
+        ↓
+Internal Model
+        ↓
+Application</code></pre>
+<p>这样外部世界怎么变化：</p>
+<pre><code>OpenAI
+DashScope
+Anthropic
+Local Model</code></pre>
+<p>内部业务层仍然可以保持稳定。</p>
+<p>这会直接连接到后面的：</p>
+<pre><code>Dataclass
+Configuration
+Dependency Injection【依赖注入】
+Adapter Pattern【适配器模式】
+FastAPI</code></pre>
+<hr/>
+<h1 id="31-project-02-当前进度">31. Project 02 当前进度</h1>
+<pre><code>Project 02 — Engineering AI Assistant
+
+Chapter 01
+Async / Await
+✅
+
+Chapter 02
+Async HTTP Client
+✅
+
+Chapter 03
+Type Hints
+✅
+
+Chapter 04
+Dataclass
+⬜
+
+Chapter 05
+Config / Environment
+⬜
+
+Chapter 06
+Logging
+⬜
+
+Chapter 07
+Testing / Debugging
+⬜
+
+Chapter 08
+Packaging
+⬜
+
+Chapter 09
+FastAPI
+⬜</code></pre>
+<p>当前能力已经从：</p>
+<pre><code>Python Script</code></pre>
+<p>逐步升级为：</p>
+<pre><code>Async Application
+        ↓
+Reusable HTTP Client
+        ↓
+Typed Application Boundary</code></pre>
+<hr/>
+<h1 id="32-本章完成标准">32. 本章完成标准</h1>
+<pre><code>[ ] 理解 Type Hint【类型提示】
+[ ] 理解动态类型 vs 类型提示
+[ ] 会给函数参数增加类型
+[ ] 会给返回值增加类型
+[ ] 会使用 list / dict 类型
+[ ] 理解 Optional
+[ ] 理解 TypedDict
+[ ] 理解 Protocol
+[ ] 了解 Mypy / Pyright
+[ ] 给 Project 02 的 Message 类型化
+[ ] 给 LLM Client 类型化
+[ ] 完成一次类型检查实验
+[ ] 理解“内部模型”和“外部 API Schema”的区别</code></pre>
+<hr/>
+<h1 id="33-联系-project-02-的下一步">33. 联系 Project 02 的下一步</h1>
+<p>现在的数据链路：</p>
+<pre><code>User Input
+   ↓
+Message
+   ↓
+Typed Message
+   ↓
+Assistant
+   ↓
+LLM Client
+   ↓
+Async HTTP
+   ↓
+LLM API</code></pre>
+<p>下一章：</p>
+<blockquote><p><strong>Chapter 04 — Dataclass【数据类】</strong></p></blockquote>
+<p>我们会继续解决一个问题：</p>
+<pre><code>TypedDict
+    ↓
+还是字典
+    ↓
+配置越来越复杂
+    ↓
+数据对象越来越多
+    ↓
+怎么办？</code></pre>
+<p>下一步会把 Project 02 中的配置、请求对象、响应对象逐步从“裸字典”升级成更加明确的 Python 数据对象。</p>
+</main>
+</body>
+</html>

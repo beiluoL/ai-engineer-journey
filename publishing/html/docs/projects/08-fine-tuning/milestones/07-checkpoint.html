@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 07 — Checkpoint：一百多 KB 一个任务，以及&quot;假续训&quot;长什么样</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-07-checkpoint一百多-kb-一个任务以及假续训长什么样">Milestone 07 — Checkpoint：一百多 KB 一个任务，以及&quot;假续训&quot;长什么样</h1>
+<p>M06 扫出了可用的超参组合。接下来是工程上最好用的一环：<strong>adapter 的存 / 取 / 续训</strong>。</p>
+<p>LoRA 在生产里普及的真正原因不是省显存，是<strong>部署形态的改变</strong>：全量微调一个 7B 模型，每个任务都要存一份 28 GB 权重 —— 存不起也传不动。LoRA 之后每个任务只存<strong>一百多 KB</strong>。</p>
+<p><strong>纯 numpy 手写</strong>：<code>np.savez</code> + 一个 json 元信息，78 个数组。没有 <code>save_pretrained</code>，所以每个字段为什么要存、不存会怎样，都得自己想清楚。</p>
+<hr/>
+<h2 id="1-why为什么只存-ab不叫断点续训">1. Why：为什么&quot;只存 A/B&quot;不叫断点续训</h2>
+<p>一个常见误解：adapter 训练是轻量的，丢了就重训。但<strong>只存 A/B 不叫「断点续训」，叫「重新训练」</strong>。Adam 的一阶/二阶动量是<strong>训练状态</strong>的一部分，丢了它们，resume 之后的第一步会像没训过一样大步乱走，loss 会先弹上去再慢慢回落。</p>
+<p>所以本模块落盘两样东西：</p>
+<ul class="lvl"><li><code>xxx.npz</code>：所有 adapter 张量（<code>A::&lt;path&gt;</code> / <code>B::&lt;path&gt;</code>）+ 可选的 Adam 动量</li><li><code>xxx.json</code>：元信息（r / alpha / 注入位置 / 训练步数 / loss 曲线 / 优化器配置）</li></ul>
+<p>并用三组对照实验证明这件事：<strong>A 一次性 100 步</strong>（基准）、<strong>B 真续训</strong>（含训练状态）、<strong>C 假续训</strong>（只加载权重）。</p>
+<h2 id="2-design存什么怎么存">2. Design：存什么、怎么存</h2>
+<p><strong>落盘精度 fp32。</strong> 训练时是 fp64（本项目用 float64 便于数值对拍），落盘转 fp32 —— 工业界惯例，体积减半、精度足够。要做<strong>逐位</strong>往返一致性验证时传 <code>np.float64</code>。</p>
+<p><strong>加载必须就地写入。</strong></p>
+<pre><code>layer.A.data[:] = a.astype(layer.A.data.dtype)   # 就地</code></pre>
+<p>不能替换 <code>Parameter</code> 对象 —— P06 的 <code>Adam</code> 是按 <code>id(p)</code> 建 state 的，换了对象动量就全丢了。</p>
+<p><strong><code>include_optimizer</code> 开关。</strong> 只分发推理权重时关掉，体积立减 2/3（115.76 KB vs 341.68 KB）。</p>
+<figure class="figure"><img alt="M07 Checkpoint 存取与三组对照" src="../../../../../../projects/08-fine-tuning/assets/checkpoint.svg" loading="lazy"/><figcaption>M07 Checkpoint 存取与三组对照</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo07checkpointterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_07_checkpoint_terminal.txt</code>）</h2>
+<p>基座参数量 / fp32 体积 <strong>230,656 / 901.00 KB</strong>；adapter 参数量 <strong>27,136</strong>（注入 r=8 后，占总量 10.53%）。</p>
+<h3 id="31-存盘体积实测">3.1 存盘体积（实测）</h3>
+<table><thead><tr><th>文件</th><th>内容</th><th>体积</th><th>占基座 fp32</th></tr></thead><tbody><tr><td><code>demo07_weights_only.npz</code></td><td>仅 A/B 权重</td><td><strong>115.76 KB</strong></td><td>12.85%</td></tr><tr><td><code>demo07_full.npz</code></td><td>A/B + Adam m/v</td><td><strong>341.68 KB</strong></td><td>37.92%</td></tr><tr><td>（对照）基座权重</td><td>全部基座参数 fp32</td><td>1,007.00 KB</td><td>100.00%</td></tr></tbody></table>
+<p><code>基座 / adapter（仅权重） = 8.70×</code>；若按基座 901.00 KB 计则是 <strong>7.8×</strong> —— 这就是「一个基座 + N 个小 adapter」的底气。</p>
+<p>存盘精度 <strong>float32</strong>（训练 fp64），存盘耗时 <strong>31.4 ms</strong>，存进去 <strong>26 个 A/B + 52 个动量</strong>；元信息记录步数 <strong>50</strong>（Adam 的 <code>t</code> 也存了）；加载耗时 <strong>16.2 ms</strong>。</p>
+<h3 id="32-b-真续训实测曲线接上了">3.2 B 真续训（实测：曲线接上了）</h3>
+<pre><code>加载后 trainer.step / Adam.t              50 / 50   ← 续训从第 51 步接着数
+续训第 1 步（总第 51 步）                  5.9488    基准 A 同时刻 5.9488
+续训第 50 步（总第 100 步）                6.1531    基准 A 同时刻 6.1531
+后 50 步均值                             6.0828    基准 A 6.0828
+B 与 A 的逐点最大差                      1.290e-04  ← loss 曲线接上了
+断点处跳变 |第50步→第51步|                 0.1981    基准 A 在同一点 0.1981 → 完全相同，无额外跳变</code></pre>
+<p><strong>逐点最大差 1.290e-04</strong> —— 这个残差全部来自 fp64→fp32 的落盘精度损失，不是逻辑错误。断点处的跳变也与基准<strong>完全相同</strong>（0.1981），说明续训没有引入额外抖动。</p>
+<h3 id="33-c-假续训实测偏差-3173e01">3.3 C 假续训（实测：偏差 3.173e-01）</h3>
+<pre><code>加载后 trainer.step / Adam.t              0 / 0   ← 状态清零，从 0 重新数
+第 1 步 loss                            6.0574   基准 A 同时刻 5.9488
+第 50 步 loss                           6.1370   基准 A 同时刻 6.1531
+后 50 步均值                            6.0432   基准 A 6.0828
+C 与 A 的逐点最大差                      3.173e-01</code></pre>
+<h3 id="34-三组对比实测">3.4 三组对比（实测）</h3>
+<table><thead><tr><th>方式</th><th>后 50 步均值</th><th>终点 loss</th><th>与 A 逐点最大差</th><th>判定</th></tr></thead><tbody><tr><td>A 一次性 100 步</td><td>6.0828</td><td>6.1531</td><td>0（基准）</td><td>—</td></tr><tr><td>B 续训（含训练状态）</td><td><strong>6.0828</strong></td><td><strong>6.1531</strong></td><td><strong>1.29e-04</strong></td><td>曲线连续</td></tr><tr><td>C 续训（丢训练状态）</td><td>6.0432</td><td>6.1370</td><td><strong>3.17e-01</strong></td><td>假续训</td></tr></tbody></table>
+<p>C 的偏差是 B 的 <strong>约 2500 倍</strong>。</p>
+<h3 id="35-存-取-往返一致性实测">3.5 存 → 取 → 往返一致性（实测）</h3>
+<pre><code>fp32 落盘的往返最大误差       7.449e-09   相对量级 ~1e-7（fp32 精度）
+fp64 落盘的往返最大误差       0.000e+00   逐位一致</code></pre>
+<figure class="figure"><img alt="M07 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-07-checkpoint.png" loading="lazy"/><figcaption>M07 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-p06-的-adam-动量从未累积实测-0-54272">4.1 P06 的 Adam 动量从未累积（实测 0 / 54,272）</h3>
+<p>这是本章最刺眼的发现：</p>
+<pre><code>训了 30 步后 Adam state 里非零元素      0 / 54,272
+即                                  m / v 全是 0 —— 动量从来没有累积过
+原因                                 P06 的 Adam.step() 里 m/v 是局部变量，算完没写回 self.state</code></pre>
+<p><strong>后果：</strong></p>
+<ul class="lvl"><li><strong>断点真正需要恢复的只有步数 <code>t</code></strong> —— 它参与偏置修正 <code>m̂ = m/(1-β₁ᵗ)</code>，即使 m 恒为 0，<code>t</code> 也影响有效步长。</li><li><strong>有效步长随 <code>t</code> 衰减</strong>：<code>m̂ = (1-β₁)g/(1-β₁ᵗ)</code>，<code>t=1</code> 时约为 <code>t=50</code> 时的 <strong>10 倍</strong>。</li></ul>
+<p><strong>本项目不改 P06（只读依赖），照实记录；m/v 仍然落盘</strong> —— 换成正确实现后这份 checkpoint 可以直接用。</p>
+<p>这也解释了 C 组（假续训）的形状：<code>t</code> 归零 → 头几步等效学习率变大 → 曲线先抖一下。在<strong>真正带动量</strong>的 Adam 上，丢掉 m/v 的代价会明显更大、也更难补回来。</p>
+<blockquote><p>可迁移的经验：<strong>checkpoint 里存什么，取决于你的优化器真实维护了什么</strong>。别照抄教程的字段清单 —— 先把 <code>state</code> 打出来数一遍非零元素。</p></blockquote>
+<h3 id="42-只存权重悄悄变成了重新训练实测-3173e01-vs-1290e04">4.2 &quot;只存权重&quot;悄悄变成了&quot;重新训练&quot;（实测 3.173e-01 vs 1.290e-04）</h3>
+<p>C 组的后 50 步均值 <strong>6.0432</strong>，甚至比基准 A 的 6.0828 更低 —— 单看终点指标，C 组&quot;更好&quot;。</p>
+<p>这是典型的<strong>指标陷阱</strong>：C 组的 <code>t</code> 归零让有效学习率变大，等于偷偷做了一次 warm restart，在 50 步的短窗口里损失更低。但它的 loss 曲线与&quot;一次性训 100 步&quot;<strong>根本不是同一条</strong>（逐点差 3.17e-01），你没法把两段训练拼起来，也没法说&quot;我训了 100 步&quot;。</p>
+<p><strong>判定&quot;续训成功&quot;的正确指标是逐点差，不是终点值。</strong></p>
+<h3 id="43-加载必须就地写不能替换-parameter-对象实现约束">4.3 加载必须就地写，不能替换 <code>Parameter</code> 对象（实现约束）</h3>
+<p>P06 的 <code>Adam</code> 用 <code>self.state[id(p)]</code> 存动量。如果 <code>load_adapter</code> 图省事 <code>layer.A = Parameter(a)</code>，优化器里那个 <code>id</code> 就指向了旧对象 —— 动量全丢，且不报错。</p>
+<p>本模块用 <code>layer.A.data[:] = ...</code> 就地写入（<code>src/ft/checkpoint.py:147</code>），并在注释里写明了原因。</p>
+<h3 id="44-体积倍率有两个口径诚实标注">4.4 体积倍率有两个口径（诚实标注）</h3>
+<ul class="lvl"><li>按 <code>demo07_weights_only.npz</code>（115.76 KB）对基座 <strong>1,007.00 KB</strong> → <strong>8.70×</strong></li><li>按基座 <strong>901.00 KB</strong>（纯基座参数，不含 A/B）→ <strong>7.8×</strong></li></ul>
+<p>两个都在本章出现，来源是&quot;分母是否包含注入后的 adapter&quot;。<strong>引用时要说清口径</strong>，我自己就踩过混用的坑。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><strong>adapter 只存权重 115.76 KB，含 Adam 状态 341.68 KB</strong>，基座 901 KB —— <strong>7.8×</strong>（另一口径 8.70×）。</li><li><strong>真续训与一次性训练逐点最大差 1.290e-04</strong>，断点跳变与基准完全相同（0.1981）—— 曲线接上了。</li><li><strong>假续训（丢状态）偏差 3.173e-01</strong>，约为真续训的 2500 倍；但它的终点指标反而更低，是典型陷阱。</li><li><strong>fp64 往返误差 <code>0.000e+00</code></strong>（逐位一致），fp32 往返 <code>7.449e-09</code>。</li><li><strong>⚠ 实测发现 P06 的 Adam 动量从未累积</strong>（state 非零元素 0/54,272），断点真正需要恢复的只有步数 <code>t</code>。本项目不改 P06，照实记录，m/v 仍落盘。</li><li>实践含义：<strong>一个基座常驻，每个下游任务一个一百多 KB 的 adapter 文件，切任务只换 adapter</strong> —— 这是全量微调根本做不到的部署形态。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/checkpoint.py</code></td><td><code>save_adapter</code> / <code>save_checkpoint</code>（A/B + opt_m/opt_v + json 元信息）、<code>load_adapter</code>（<strong>就地</strong>写回 <code>A.data[:]</code>）、<code>load_checkpoint</code>（恢复动量与 step 计数）、<code>adapter_report</code></td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>optimizer_state()</code> / <code>load_optimizer_state()</code>：导出 / 恢复 Adam 的 m/v 与 <code>t</code>；<code>run()</code> 里 <code>start = self.step</code> 保证续训时 batch 顺序连续</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>lora_layers()</code>（按 path 定位，存盘与加载的 path 必须一致）、<code>count_parameters</code></td></tr><tr><td><code>demos/demo_07_checkpoint.py</code></td><td>7 节：基准 A / 真续训 B / 假续训 C / 三组对比 / P06 Adam 发现 / 往返一致性 / 关键数字</td></tr><tr><td><code>demos/out/demo_07_checkpoint_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td>`models/adapters/demo07_*.npz</td><td>.json`</td><td>真实产物（115.76 KB / 341.68 KB）</td></tr><tr><td><code>assets/checkpoint.svg</code></td><td>本章存取流程 + 三组对照图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.6 → <strong>v0.7</strong>，M07 checkpoint 与断点续训落地。实测：adapter 仅权重 <strong>115.76 KB</strong>、含 Adam 状态 <strong>341.68 KB</strong>、基座 901 KB（<strong>7.8×</strong>）；真续训与一次性训练逐点最大差 <strong>1.290e-04</strong>，假续训偏差 <strong>3.173e-01</strong>；fp64 往返误差 <strong>0.000e+00</strong>。并实测记录「P06 的 Adam 动量从未累积（state 非零元素 0/54,272）」—— 不改 P06，照实记录。纯 numpy、无 torch。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

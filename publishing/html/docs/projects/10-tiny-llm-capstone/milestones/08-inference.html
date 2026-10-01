@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 08 — Inference：采样策略 / KV Cache 等价性 / 真·流式</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-08-inference采样策略-kv-cache-等价性-真流式">Milestone 08 — Inference：采样策略 / KV Cache 等价性 / 真·流式</h1>
+<p>M07 判决了这个模型&quot;会拼词、不会答题&quot;。到了推理层，问题变成另一个：<strong>在给定这份权重的前提下，怎么把它的输出变得可控、可回放、可测量</strong>。</p>
+<p>这一章要证明三件事，每件都对应一个容易造假的地方：</p>
+<ul class="lvl"><li><strong>策略可控</strong>：四个旋钮（temperature / top_k / top_p / repetition_penalty）各自到底改了什么；</li><li><strong>结果可回放</strong>：同一 seed 必须逐字相同，否则线上出了问题无法复现；</li><li><strong>KV Cache 的加速是&quot;真&quot;加速</strong>：缓存的输出必须和全量重算<strong>逐位等价</strong>，否则&quot;快&quot;是用&quot;错&quot;换来的。</li></ul>
+<hr/>
+<h2 id="1-why推理层最容易自欺的三个地方">1. Why：推理层最容易自欺的三个地方</h2>
+<ul class="lvl"><li><strong>&quot;KV Cache 加速了&quot;——但你怎么知道算的还是同一个东西？</strong> 缓存写错了（比如忘了更新第 <code>t</code> 步的 key/value），模型照样能出 token，只是它在用一个&quot;残缺的历史&quot;预测。<strong>加速比没意义，除非先证明等价性。</strong></li><li><strong>&quot;流式输出&quot;——但 TTFT 等于总耗时。</strong> 如果实现是&quot;先把整段算完、再逐 token <code>yield</code>&quot;，用户看到的是&quot;卡了 4.7 ms，然后 12 个字瞬间刷出来&quot;。<strong>这不是流式，是延迟交付。</strong> 判据很干净：<strong>TTFT 必须显著小于总耗时</strong>。</li><li><strong>&quot;每次输出都不一样&quot;——那是好事还是坏事？</strong> 对采样是正常的，但<strong>必须有一把&quot;锁&quot;能复现任意一次输出</strong>（seed）。没有可回放性，线上任何一次&quot;答得奇怪&quot;都无法复查。</li></ul>
+<h2 id="2-design解码循环只有一个实现">2. Design：解码循环只有一个实现</h2>
+<p>采样的四步流水线（在 logits 上依次作用）：</p>
+<pre><code>logits (V,)
+  ├─ repetition_penalty    # 已出现过的 token：正 logit 缩小、负 logit 放大
+  ├─ / temperature         # 温度缩放（T≤0 ⇒ 直接 argmax，跳过后面全部）
+  ├─ top_k 过滤            # 只留概率最高的 k 个，其余置 -inf
+  ├─ top_p 过滤            # 按累积概率自适应保留（核采样）
+  └─ softmax → 采样</code></pre>
+<p><strong>顺序很重要</strong>：repetition penalty 必须在 softmax <strong>之前</strong>（它作用在 logits 上）；temperature 必须在 top_k/top_p <strong>之前</strong>（否则&quot;最高的 k 个&quot;会因为温度不同而改变）。</p>
+<p>KV Cache 的做法：prefill 阶段算完整个 prompt，把每层的 <code>K</code>/<code>V</code> 存下来；之后每步只算<strong>新 token</strong> 的 query/key/value，与历史拼接。<strong>关键不变量：第 <code>t</code> 步用缓存算出的 logits，必须与该位置全量重算的 logits 逐位相同。</strong></p>
+<p><strong>真·流式</strong>（本章修过的一个真 bug）：解码循环必须写成<strong>生成器</strong>，<code>stream()</code> 直接消费它：</p>
+<pre><code>def iter_ids(self, prompt, ...):        # 唯一的解码循环
+    ...
+        yield next_id
+
+def generate_ids(self, prompt, **kw):   # 只是把生成器 list 化
+    return list(self.iter_ids(prompt, **kw))
+
+def stream(self, prompt, **kw):         # ⚠ 必须直接消费生成器
+    buf = []
+    for token_id in self.iter_ids(prompt, **kw):
+        buf.append(token_id)
+        yield decode([token_id]), decode(buf)   # 逐 chunk 交付</code></pre>
+<p><strong>不能写成 <code>for t in self.generate_ids(...)</code></strong> —— 那样 <code>generate_ids</code> 会先把 24 个 token 全算完才返回，<code>stream</code> 再遍历它，TTFT 就等于总耗时（实测 4.25 ms vs 5.60 ms，等于没有流式）。改成直接消费生成器后，TTFT 降到 <strong>0.20 ms</strong>。</p>
+<figure class="figure"><img alt="M08 Inference：采样旋钮 + KV Cache 等价性 + 真·流式" src="../../../../../../projects/10-tiny-llm-capstone/assets/inference.svg" loading="lazy"/><figcaption>M08 Inference：采样旋钮 + KV Cache 等价性 + 真·流式</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo08inferenceterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_08_inference_terminal.txt</code>）</h2>
+<figure class="figure"><img alt="M08 真实运行" src="../../../../../../projects/10-tiny-llm-capstone/assets/term-08-inference.png" loading="lazy"/><figcaption>M08 真实运行</figcaption></figure>
+<h3 id="31-推理配置">3.1 推理配置</h3>
+<pre><code>prompt                问：什么是 LoRA？答：
+max_new_tokens        24
+temperature           0.8
+top_k / top_p         0 / 0.95
+repetition_penalty    1.15
+use_kv_cache          True
+seed                  0</code></pre>
+<h3 id="32-单变量对照每行只改一个旋钮">3.2 单变量对照：每行只改一个旋钮</h3>
+<pre><code>策略                 distinct-1  重复率    输出（截断 26 字）
+-----------------  ----------  -----  --------------------------
+贪心（T=0）                 0.110  0.887  什么是 token token token toke
+T=0.3                   0.215  0.714  什么是 是 token token token to
+T=1.2                   0.925  0.000  什么是含SB？答：为什么要给线上答案 裁剪A生成包步
+T=0.8 + top_k=5         0.500  0.364  什么是 个前让问题时能看多的 token token
+T=0.8 + top_p=0.9       0.941  0.000  什么是 K 训练一次能看必之后用户
+T=0.8 + rep=1.5         0.931  0.000  什么是 LB？答：量化把维度ed 上下文L指标到失败</code></pre>
+<p>这张表是<strong>单变量对照</strong>（每行只改一个旋钮），所以能逐行读出每个旋钮的作用：</p>
+<ul class="lvl"><li><strong>temperature 是主导变量</strong>：0 → 0.3 → 1.2，distinct-1 从 <strong>0.110 → 0.215 → 0.925</strong>，单调上升。T=0 时重复率 0.887（复读），T=1.2 时 0.000（完全发散）。</li><li><strong>top_k=5 是&quot;截断器&quot;</strong>：在 T=0.8 基础上把 16 个候选砍到 5 个，distinct-1 反而<strong>从 0.941 掉到 0.500</strong>——<strong>因为它砍掉了长尾，而恰恰是长尾带来了多样性</strong>。这是反直觉的一行。</li><li><strong>top_p=0.9 比 top_k 温柔</strong>：保留 0.941 的多样性（几乎等于不裁的 T=0.8），但去掉了一部分极端低概率的乱码。</li><li><strong>repetition_penalty=1.5 专治复读</strong>：重复率压到 0.000。</li></ul>
+<p><strong>&quot;低温&quot;在欠训练模型上是陷阱</strong>：T=0 / T=0.3 的重复率是 0.887 / 0.714——<strong>降低温度非但没让输出&quot;更聚焦、更正确&quot;，反而直接退化成复读机</strong>。因为模型本来就没有强到&quot;最优 token 是对的&quot;，低温只是让它在同一个错误上卡死。</p>
+<h3 id="33-topk-topp-到底剪掉了什么">3.3 top_k / top_p 到底剪掉了什么</h3>
+<pre><code>候选总数                  16
+top_k=5 保留候选数         5    严格等于 k
+top_p=0.9 保留候选数        7    按概率分布自适应，不是一个固定值
+top_p 保留集合的累计概率      1.0000   ≥ 设定的 0.9
+两种策略是否都保住了 top-1     True</code></pre>
+<p>这一节直接在 logits 上验证，不靠&quot;我觉得&quot;：</p>
+<ul class="lvl"><li><strong>top_k 保留的数严格是 5</strong>，与分布形状无关——它是<strong>固定大小的硬截断</strong>。</li><li><strong>top_p 保留 7 个</strong>——数量随分布自适应（分布越尖保留越少）。<strong>这就是 top_p 比 top_k 更&quot;以人为本&quot;的地方：它不预设&quot;该留几个&quot;，而是说&quot;留到累计概率够 0.9 为止&quot;。</strong></li><li><strong>两者都保住了 top-1</strong>：任何裁剪策略如果连最高概率的 token 都剪掉，那是实现 bug。</li></ul>
+<h3 id="34-kv-cache-与全量重算必须等价">3.4 KV Cache 与全量重算必须等价</h3>
+<pre><code>最后一步 logits 最大绝对误差      3.442e-15
+关缓存 / 开缓存 的输出是否一致      True
+输出   &#x27;什么是 token token token token token token token token token token token &#x27;</code></pre>
+<p>误差 <strong>3.442e-15</strong>——这不是&quot;差不多&quot;，是 fp64 下浮点运算顺序不同导致的最后几位舍入。<strong>判据：误差 ≈ 0 ⇒ 两条路径算的是同一个东西。</strong></p>
+<p><strong>为什么这个数字必须是&quot;近似 0&quot;而不是&quot;完全 0&quot;</strong>：全量重算和缓存路径的矩阵乘法<strong>结合顺序不同</strong>（一个是大矩阵一次乘，一个是拼接后乘），浮点加法不满足结合律，所以最后几位必然有差。<strong>3.4e-15 的量级（相对误差 ~1e-15，接近 fp64 的机器精度 2.2e-16）恰好证明它在数值上是等价的；如果是 1e-3 这种量级，就说明缓存逻辑真错了。</strong></p>
+<p>注意这一次输出是复读的（&quot;token token...&quot;）：因为这里用的是<strong>默认配置</strong>（T=0.8）但为了对照等价性，重点在数值不在文本。</p>
+<h3 id="35-同-seed-逐位复现">3.5 同 seed 逐位复现</h3>
+<pre><code>seed=7 两次是否逐字相同       True
+seed=7 vs seed=8 是否相同    False   不同才说明 seed 真的生效
+seed=7 输出   &#x27;什么是el 价对BPE token 的对器再每步要模型说间走：什么是 越_&#x27;
+seed=8 输出   &#x27;什么是差连抽一个请求回把取U但低。&#x27;</code></pre>
+<p><strong>两个断言都要成立，缺一个就不算可回放</strong>：</p>
+<ul class="lvl"><li><code>seed=7</code> 两次相同 ⇒ <strong>可复现</strong>（线上那份&quot;奇怪输出&quot;能被找回来）；</li><li><code>seed=7</code> 与 <code>seed=8</code> 不同 ⇒ <strong>seed 真的在起作用</strong>（否则实现可能是&quot;忽略了 seed，永远走同一条路径&quot;，那样&quot;可复现&quot;是假的）。</li></ul>
+<h3 id="36-kv-cache-的真实加速比">3.6 KV Cache 的真实加速比</h3>
+<pre><code>无缓存 中位耗时       4.77 ms
+有缓存 中位耗时       3.55 ms
+加速比             1.34×
+两条路径输出是否相同     True
+logits 最大绝对误差   3.442e-15
+prompt token 数 / 生成长度  8 / 24</code></pre>
+<p><strong>1.34× —— 不高，但这是真实数字。</strong> 为什么不是 10×？因为：</p>
+<ul class="lvl"><li><strong>prefill 阶段（算整段 prompt，8 个 token）无法被缓存加速</strong>，它每次都要重算；</li><li>只有 24 步解码中的 attention 那部分被缓存省掉了，<strong>其它算子（FFN、LayerNorm、输出投影）一个都没省</strong>。</li></ul>
+<p>也就是说，1.34× 是&quot;省掉了一部分 attention、但保留了全部 FFN&quot;的结果。<strong>在长 prompt / 长生成的真实场景里这个比例会更高</strong>，但在 <code>8 + 24</code> 这个规模上，1.34× 就是它的真实上限。<strong>记录这个数字，比记录一个漂亮的&quot;理论加速&quot;诚实。</strong></p>
+<h3 id="37-首字延迟ttft与总耗时">3.7 首字延迟（TTFT）与总耗时</h3>
+<pre><code>TTFT 中位       0.20 ms   从发请求到第一个 token
+总耗时 中位        4.73 ms
+每个 token 平均     0.20 ms
+重复次数          5</code></pre>
+<p><strong>TTFT 0.20 ms，总耗时 4.73 ms——两者相差 23.65 倍。</strong> 这正是&quot;真流式&quot;的判据：用户<strong>在 0.2 ms 就看到了第一个字</strong>，而不是等 4.73 ms 才一次性拿到全部。</p>
+<p><strong>回顾那个 bug</strong>：改之前 <code>stream()</code> 是&quot;先算完全部再 yield&quot;，TTFT 会和总耗时<strong>几乎相等</strong>（4.25 ms vs 5.60 ms，差 24%）。<strong>从 4.25 ms 降到 0.20 ms，是这一章最大的收益</strong>——它没有让计算变快，但让<strong>用户感知的延迟</strong>从 4.7 ms 变成了 0.2 ms。</p>
+<h3 id="38-流式输出逐个-token-交付">3.8 流式输出：逐个 token 交付</h3>
+<pre><code>chunk  1  +&#x27; &#x27;      累计=&#x27; &#x27;
+chunk  2  +&#x27;整数&#x27;     累计=&#x27; 整数&#x27;
+chunk  3  +&#x27; &#x27;      累计=&#x27; 整数 &#x27;
+chunk  4  +&#x27;模型的&#x27;    累计=&#x27; 整数 模型的&#x27;
+chunk  5  +&#x27;度&#x27;      累计=&#x27; 整数 模型的度&#x27;
+chunk  6  +&#x27;是&#x27;      累计=&#x27; 整数 模型的度是&#x27;
+总 chunk 数            12
+拼起来是否等于完整输出        整数 模型的度是权重和可_否则对</code></pre>
+<p>每个 chunk 给两个东西：<strong>新增的那个 token</strong>（<code>+&#x27;整数&#x27;</code>）和<strong>累计到现在的全文</strong>（<code>累计=&#x27; 整数&#x27;</code>）。<strong>这两种交付方式服务不同场景</strong>：前者用于&quot;打字机效果&quot;，后者用于&quot;整段重渲染&quot;。</p>
+<p>12 个 chunk 拼起来 == 完整输出（<code>True</code>）——<strong>这是流式实现正确的最后一道验证</strong>：如果逐 chunk 拼出来的东西和一次性算出来的不一样，说明生成器状态有 bug。</p>
+<h2 id="4-踩坑与反直觉发现">4. 踩坑与反直觉发现</h2>
+<ul class="lvl"><li><strong>&quot;假流式&quot;的现象是 TTFT == 总耗时。</strong> 修之前实测 4.25 ms vs 5.60 ms（TTFT 占总耗时 76%），改成真流式后 <strong>0.20 ms vs 4.73 ms（4.2%）</strong>。<strong>判据：TTFT 必须显著小于总耗时</strong>，其它都是话术。</li><li><strong>KV Cache 的加速比只有 1.34×，因为 prefill 和 FFN 省不掉。</strong> 缓存只优化了 attention 的一部分。<strong>别拿&quot;理论加速比&quot;上报告，要报&quot;这个 prompt 长度下的实测中位数&quot;。</strong></li><li><strong>低温在欠训练模型上会退化成复读。</strong> T=0 重复率 0.887、T=0.3 是 0.714。<strong>&quot;降低温度提高质量&quot;这个直觉，在一个本来就没学会的模型上是反的。</strong></li><li><strong>top_k 会让多样性下降，top_p 不会。</strong> top_k=5 把 distinct-1 从 0.941 砍到 0.500——<strong>砍掉的正是带来多样性的长尾</strong>。而 top_p 保留 0.941。这是&quot;固定阈值 vs 自适应阈值&quot;的真实差异。</li><li><strong>KV Cache 等价性误差不是 0，是 3.442e-15。</strong> 因为浮点加法不满足结合律，两条路径的乘法顺序不同。<strong>别追求&quot;误差 = 0&quot;，要判断&quot;误差是否在机器精度量级&quot;</strong>——3.4e-15 相对 fp64 的 2.2e-16 只有约 15 倍，是正常的舍入累积。</li><li><strong>可回放需要两个断言，不是一个。</strong> <code>seed=7 == seed=7</code>（可复现）<strong>和</strong> <code>seed=7 != seed=8</code>（seed 生效）必须同时成立。只验前者，一个&quot;永远忽略 seed&quot;的实现也能通过。</li><li><strong>repetition_penalty 在 softmax 之前、temperature 在 top_k/top_p 之前。</strong> 顺序错了不会报错，只是行为和你以为的不一样（比如先 temperature 再 top_k，&quot;保留 k 个&quot;的集合会随温度变）。</li></ul>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><strong>采样旋钮</strong>：temperature 主导（T=0/0.3/1.2 → distinct-1 0.110/0.215/0.925）；top_k=5 会<strong>降低</strong>多样性（0.941 → 0.500）；top_p=0.9 保留 0.941；rep=1.5 把重复率压到 0.000。</li><li><strong>top_k / top_p 行为</strong>：top_k 保留数<strong>严格等于 k</strong>（5）；top_p 保留 <strong>7</strong> 个（自适应），累计概率 1.0000 ≥ 0.9；两者都保住 top-1。</li><li><strong>KV Cache 等价性</strong>：最后一步 logits 最大绝对误差 <strong>3.442e-15</strong>（fp64 舍入量级）、开关缓存输出一致 <strong>True</strong>。</li><li><strong>加速比 1.34×</strong>（4.77 ms → 3.55 ms，中位数），因为 prefill 与 FFN 不在缓存范围内。</li><li><strong>真·流式</strong>：<strong>TTFT 0.20 ms / 总耗时 4.73 ms</strong>（相差 23.65 倍）；12 个 chunk 拼接 == 完整输出。</li><li><strong>可回放</strong>：同 seed 逐字相同 <strong>True</strong>，不同 seed 不同 <strong>False</strong>。</li><li>一句话结论：<strong>推理层的三件事——策略可控、结果可回放、延迟可测量——缺任何一条都不能上线。</strong></li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/infer.py</code></td><td><code>iter_ids</code>（唯一解码循环，生成器）/ <code>generate_ids</code> / <code>stream</code>（直接消费生成器）/ <code>top_k_filter</code> / <code>top_p_filter</code> / <code>cache_consistency_error</code> / <code>benchmark</code> / <code>timed_generate</code></td></tr><tr><td>P09 <code>src/ie/kvbook.py</code></td><td>KV Cache 的账面与等价性校验逻辑</td></tr><tr><td>P09 <code>src/ie/engine.py</code></td><td><code>benchmark</code>（中位数耗时口径）</td></tr><tr><td>P06 <code>model/decoder.py</code></td><td>带缓存的前向（prefill + 单步 decode）</td></tr><tr><td><code>demos/demo_08_inference.py</code></td><td>8 节：配置 / 单变量对照 / top_k-top_p / KV 等价性 / 复现 / 加速比 / TTFT / 流式</td></tr><tr><td><code>demos/out/demo_08_inference_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/inference.svg</code></td><td>采样旋钮 + top_k/top_p + KV 等价性 + 真流式</td></tr><tr><td><code>assets/term-08-inference.png</code></td><td>真实运行截图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.7 → <strong>v0.8</strong>，推理层落地并被逐项验真。实测：单变量对照 temperature 0/0.3/1.2 → distinct-1 <strong>0.110/0.215/0.925</strong>、重复率 <strong>0.887/0.714/0.000</strong>；top_k=5 多样性降到 <strong>0.500</strong>（保留数严格 5）、top_p=0.9 保留 <strong>7</strong> 个（累计概率 1.0000）；KV Cache 等价性误差 <strong>3.442e-15</strong>、<strong>加速 1.34×</strong>（4.77 → 3.55 ms）；真流式 <strong>TTFT 0.20 ms / 总耗时 4.73 ms</strong>（修复前 4.25 / 5.60 ms）、12 chunk 拼接一致；同 seed 逐字相同 <strong>True</strong>、异 seed 不同 <strong>False</strong>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

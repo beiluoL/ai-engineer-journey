@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 10 — Tiny LLM / AI Engineer Capstone</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-10-tiny-llm-ai-engineer-capstone">Project 10 — Tiny LLM / AI Engineer Capstone</h1>
+<h2 id="项目目标">项目目标</h2>
+<p>把前面所有能力重新串起来，完成最终 AI Engineer Capstone【综合项目】——从零实现一个小型 LLM 工程。</p>
+<h2 id="为什么做这个项目">为什么做这个项目</h2>
+<p>前面 9 个项目都是专项能力。这个项目把它们全部串起来：自己完整实现一个 LLM 从 Tokenizer → 训练 → 推理 → 部署的全链路，并且<strong>每个数字都来自一次真实运行</strong>。</p>
+<h2 id="解决什么问题">解决什么问题</h2>
+<ul class="lvl"><li>能不能从零实现一个完整的 LLM 工程？</li><li>能不能把前面学到的所有能力真正串起来（而不是十个互不相干的 demo）？</li><li>能不能作为 AI Engineer 独立交付完整项目？</li></ul>
+<h2 id="最终能力">最终能力</h2>
+<pre><code>Data
+    ↓
+Tokenizer
+    ↓
+Model
+    ↓
+Training
+    ↓
+Evaluation
+    ↓
+Inference
+    ↓
+Optimization
+    ↓
+Serving
+    ↓
+Application</code></pre>
+<h2 id="技术栈">技术栈</h2>
+<ul class="lvl"><li><strong>纯 numpy + Python 标准库手写</strong>：BPE 分词器、Transformer Decoder、训练闭环、推理引擎、量化、HTTP 服务</li><li>不引入 torch / transformers / fastapi / vllm —— HTTP 服务直接用标准库 <code>http.server</code> + <code>urllib</code></li><li><strong>三层复用</strong>前面项目的已验真能力：<ul class="lvl"><li><strong>P06</strong>（<code>06-mini-transformer-llm/src</code>）：手写 Tensor / autograd、<code>TransformerLM</code>、<code>BPETokenizer</code>/<code>CharTokenizer</code></li><li><strong>P08</strong>（<code>08-fine-tuning/src/ft</code>）：<code>enable_deterministic_autograd()</code>（把 <code>Tensor._prev</code> 从无序 <code>set</code> 改成有序 list）</li><li><strong>P09</strong>（<code>09-evaluation-inference/src/ie</code>）：<code>metrics</code>（含 ECE 校准）、<code>quantize</code>、<code>kvbook</code>、<code>engine</code>、<code>serve</code>、<code>autoeval</code>、<code>compare</code></li></ul></li></ul>
+<h2 id="项目演进">项目演进</h2>
+<pre><code>前面 9 个项目的所有能力
+    ↓ 完整整合
+Tiny LLM v0.1（Tokenizer + Model）
+    ↓ Training + Evaluation
+Tiny LLM v0.2
+    ↓ Inference + Optimization + Serving
+Tiny LLM v1.0   ✅</code></pre>
+<h2 id="milestones">Milestones</h2>
+<table><thead><tr><th>#</th><th>Milestone</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td>Project Architecture</td><td>唯一配置入口（<code>TinyConfig</code> + <code>validate()</code>）/ 八段流水线</td><td>✅ 已落地</td></tr><tr><td>02</td><td>Tokenizer</td><td>BPE 手写 + <strong>带归因的 roundtrip 报告</strong></td><td>✅ 已落地</td></tr><tr><td>03</td><td>Dataset</td><td>清洗 / 切分 / <strong>泄漏检查</strong> / 滑动窗口打包</td><td>✅ 已落地</td></tr><tr><td>04</td><td>Embedding</td><td>查表 + 正弦位置编码（0 可训练参数）+ 参数占比</td><td>✅ 已落地</td></tr><tr><td>05</td><td>Transformer Block</td><td>Pre-LN + 残差 + FFN + <strong>因果性硬性自检</strong></td><td>✅ 已落地</td></tr><tr><td>06</td><td>Training</td><td>调度 / 裁剪 / 早停回滚 / 断点续训</td><td>✅ 已落地</td></tr><tr><td>07</td><td>Evaluation</td><td>语言层 / 校准层 / 生成层 + <strong>两组配对对照</strong></td><td>✅ 已落地</td></tr><tr><td>08</td><td>Inference</td><td>采样四旋钮 / KV Cache 等价性 / <strong>真·流式</strong></td><td>✅ 已落地</td></tr><tr><td>09</td><td>Optimization</td><td>量化（INT8/INT4/NF4）+ KV Cache 显存账本</td><td>✅ 已落地</td></tr><tr><td>10</td><td>Serving</td><td>OpenAI 兼容 HTTP + SSE + 冒烟 + 压测</td><td>✅ 已落地</td></tr><tr><td>11</td><td>Complete System</td><td>八段一条命令跑完，可缓存 / 可分段 / 报告可机读</td><td>✅ 已落地</td></tr></tbody></table>
+<h2 id="当前状态">当前状态</h2>
+<p><strong>v1.0 —— 11/11 Milestone 全部落地，71 项 pytest 全绿，11 个真实 demo，11 张真实终端截图 + 11 张手写架构图。</strong></p>
+<p>主线叙事：<strong>把&quot;能不能跑通&quot;变成&quot;能不能证明它对&quot;。</strong> 从零到一的顺序：Tokenizer → Dataset → Embedding → Block → Training → Evaluation → Inference → Optimization → Serving → 一条命令串起来。</p>
+<h3 id="关键实测数字">关键实测数字</h3>
+<table><thead><tr><th>维度</th><th>实测结果</th></tr></thead><tbody><tr><td>语料 / 分词</td><td>295 行 / 10,651 字符 / 876 个不同字符；<code>bpe vocab=1280</code>（4 特殊 + 854 字符 + 422 合并），压缩 <strong>1.445 字/token</strong>（省 30.79%），UNK 率 <strong>0.33%</strong></td></tr><tr><td>分词 roundtrip</td><td>train <strong>100.00%</strong>；val <strong>68.18%</strong> 且 14/14 失败<strong>全部归因于 OOV</strong>、实现 bug <strong>0</strong></td></tr><tr><td>数据集</td><td>train 251 行 / val 44 行，泄漏 <code>overlap=0</code>；打包后 train <strong>206</strong> / val <strong>37</strong> 样本</td></tr><tr><td>Embedding</td><td><code>(1280, 64)</code> 查找表 = <strong>81,920</strong> 参数（<strong>35.6%</strong>），与输出投影合计 <strong>71.1%</strong>；查表 vs <code>one-hot@W</code> 误差 <strong>0.000e+00</strong>；正弦 PE <strong>0 可训练参数</strong>、每位置范数恒为 <strong>5.6569</strong></td></tr><tr><td>Transformer Block</td><td>2 层 × 4 头 × d_model 64、d_ff=128；单 Block <strong>33,216</strong> 参数（attention 16,384 / FFN 16,576 / LN 256）——<strong>注意力与 FFN 平手</strong>（因为 <code>d_ff = 2·d_model</code>）</td></tr><tr><td>因果性自检</td><td>过去位置误差 <strong>0.000e+00</strong>、未来位置误差 <strong>1.191e+01</strong>、确定性 <strong>0.000e+00</strong>，<strong>三项全过</strong>；掩码反例：logits 最大差 <strong>0.6892</strong> 但 argmax 同为 <strong>676</strong>（⇒ 必须比数值）</td></tr><tr><td>训练</td><td>train loss <strong>7.1547 → 3.6882</strong>、val <strong>6.2283 → 5.7551（最优，第 800 步）→ 5.8234</strong>；1200 步 ≈ <strong>46.2 遍</strong>；<strong>早停触发并回滚到第 800 步</strong>；1050/1200 步被裁剪，全程无 NaN</td></tr><tr><td>确定性</td><td>检查点读回 <strong>28/28</strong> 张量误差 <strong>0.000e+00</strong>；跨进程重训 <strong>0.000e+00</strong>；断点续训 30 步 <strong>0.000e+00</strong></td></tr><tr><td>评估（三层）</td><td>PPL <strong>315.79</strong> / token_acc <strong>0.1736</strong>（相对随机下降 75.3%）；ECE <strong>0.0662</strong>、<strong>4/5 箱过度自信</strong>；生成层贪心 <strong>16.84</strong> / 采样 <strong>31.81</strong>，但<strong>关键词覆盖 0.000</strong></td></tr><tr><td>配对对照</td><td>A（未训练 vs 已训练）<strong>37 胜 0 负 0 平</strong>、一致性 <strong>1.000</strong>；B（早停回滚 vs 不回滚）PPL <strong>低 6.61%</strong>、<strong>24 胜 13 负 0 平</strong></td></tr><tr><td>推理</td><td>KV Cache 等价误差 <strong>3.442e-15</strong>、加速 <strong>1.34×</strong>；<strong>TTFT 0.20 ms / 总耗时 4.73 ms</strong>（修复假流式前是 4.25/5.60 ms）；同 seed 逐字复现 <strong>True</strong></td></tr><tr><td>量化</td><td><strong>INT8 3.85× / ΔPPL +0.08%</strong>、<strong>INT4 7.42× / +2.66%</strong>、<strong>NF4 7.75× / +4.01%</strong>；per-channel 让 INT8/INT4 的 MSE 降低 <strong>48.1% / 47.4%</strong>（NF4 为 0.0%）</td></tr><tr><td>KV 显存账本</td><td>fp32 <strong>1024 B/token</strong>、fp16 <strong>512 B/token</strong>；<code>seq_len=64</code> 占权重 3.56%、<code>seq_len=4096</code> 占 <strong>227.6%</strong>；<strong>1801 token 的 KV = 整个模型</strong></td></tr><tr><td>服务化</td><td>冒烟四项全过（<strong>200/200/200/400</strong>）；并发 4 吞吐 <strong>130.60 req/s</strong>（<strong>6/6 成功</strong>）；平均 <strong>8.14 ms</strong> / P50 <strong>5.41 ms</strong> / <strong>P95 22.88 ms</strong></td></tr><tr><td>全链路</td><td>八段一条命令跑完，<strong>有缓存 0.928 s</strong>（冷启动真训约 26 s）</td></tr></tbody></table>
+<h3 id="最值得记住的三条">最值得记住的三条</h3>
+<ul class="lvl"><li><strong>过拟合是被量出来的，不是猜的。</strong> train loss 7.1547 → 3.6882 看着很成功，但 val 在第 800 步触底后回升。<strong>早停真正干的事不是&quot;提前结束&quot;，而是&quot;结束并把权重退回到最好那一刻&quot;</strong> —— 只停不回滚，交出去的是 PPL 338.13 而不是 315.79。</li><li><strong>PPL 只是入场券，不是判决书。</strong> 相对随机下降 75.3%（看着不错）与关键词覆盖 <strong>0.000</strong>（完全答不了题）<strong>同时成立</strong>。三层评估（语言 / 校准 / 生成）+ 配对显著性，缺一层结论就不成立。<strong>这个 230K 参数的模型会拼词、不会答题——这里的价值是把这个真相量化出来，而不是让 loss 曲线替它遮羞。</strong></li><li><strong>优化必须同时报收益和代价。</strong> 量化是<strong>有损</strong>（代价是 ΔPPL）、KV Cache 是<strong>无损</strong>（代价是显存）。只报压缩比、不报 ΔPPL 的方案不可信；而且<strong>&quot;INT4 基本无损&quot;是小模型上的假命题</strong>——实测 ΔPPL <strong>+2.66%</strong>，是 INT8（+0.08%）的 33 倍。</li></ul>
+<h3 id="其他反直觉发现">其他反直觉发现</h3>
+<ul class="lvl"><li><strong>&quot;参数都在 FFN&quot;不是规律，是 <code>d_ff/d_model = 4</code> 的后果。</strong> 令 <code>2·d·d_ff = 4·d²</code> 得 <code>d_ff = 2d</code>；本项目 <code>d_ff = 2·d_model</code>，所以 FFN 与注意力<strong>平手</strong>（49.9% vs 49.3%）。</li><li><strong>argmax 相等 ≠ 模型没被污染。</strong> 去掉因果掩码后 logits 最大差 0.6892，但 argmax 依然是同一个 —— <strong>只比&quot;最终预测对不对&quot;的测试，在掩码这类结构错误面前是盲的。</strong></li><li><strong>&quot;假流式&quot;的现象是 TTFT == 总耗时。</strong> 先算完整段再逐 token <code>yield</code>，用户感知不到任何流式好处。改成直接消费解码生成器后，TTFT 从 4.25 ms 降到 <strong>0.20 ms</strong>。</li><li><strong>低温在欠训练模型上会退化成复读。</strong> T=0 重复率 <strong>0.887</strong>、T=0.3 是 0.714 —— &quot;降低温度提高质量&quot;这个直觉，在本来就没学会的模型上是反的。</li><li><strong>top_k 会降多样性，top_p 不会。</strong> top_k=5 把 distinct-1 从 0.941 砍到 0.500（砍掉了长尾），top_p=0.9 保留 0.941。</li><li><strong>MSE 最小 ≠ 端到端最优。</strong> NF4 的 MSE 比 INT4 还低，但 ΔPPL 反而更高（+4.01% vs +2.66%）。</li><li><strong>ECE 依赖分箱数，不是一个绝对量。</strong> M07 演示用 5 箱得 0.0662、流水线默认 10 箱得 0.0709 —— <strong>引用 ECE 必须带箱数，否则两个&quot;都对&quot;的数字看起来像矛盾。</strong></li><li><strong>复用检查点必须选 <code>best</code> 而不是 <code>last</code>。</strong> 选错会让全链路 PPL 变成 338.13，和 M06/M07 对不上 —— <strong>跨章节的一致性取决于一个&quot;选哪个检查点&quot;的细节。</strong></li></ul>
+<h2 id="当前版本">当前版本</h2>
+<p>v1.0</p>
+<h2 id="项目结构">项目结构</h2>
+<pre><code>projects/10-tiny-llm-capstone/
+├── README.md                  # 本文件
+├── pyproject.toml
+├── data/
+│   └── corpus.txt             # 领域语料（295 行 / 10,651 字符，问答题格式）
+├── src/tiny/                  # 12 个手写模块
+│   ├── paths.py               # 路径派生 + 跨项目 sys.path 挂载 + 确定性开关
+│   ├── config.py              # 唯一配置入口 TinyConfig（8 个子配置 + validate）
+│   ├── tok.py                 # BPE 分词器封装 + roundtrip 归因报告
+│   ├── data.py                # 清洗 / 切分 / 泄漏检查 / 滑动窗口打包
+│   ├── model.py               # 构建 + 参数账 + forward_sanity（因果/确定性自检）
+│   ├── train.py               # 训练闭环（调度/裁剪/早停回滚/检查点）
+│   ├── evaluate.py            # 三层评估 + 配对对照
+│   ├── infer.py               # 采样四旋钮 + KV Cache + 真·流式
+│   ├── optimize.py            # 量化收益代价 + KV 显存账本
+│   ├── serve.py               # 服务封装 + 冒烟 + 压测
+│   └── pipeline.py            # 八段流水线编排 + 产物缓存
+├── tests/                     # 71 项 pytest 全绿
+├── demos/                     # 11 个真实可跑 demo（01-11 对应 11 个 Milestone）
+│   └── out/*_terminal.txt     # 真实输出（文档里所有数字都来自这里）
+├── assets/                    # 11 张真实终端截图 + 11 张手写架构图 SVG
+├── milestones/                # 01-11 文档
+└── models/                    # 流水线产物（tokenizer.json / tiny_lm_best.npz / report.json）</code></pre>
+<h2 id="运行方式">运行方式</h2>
+<pre><code># 跑测试（71 passed）
+/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python -m pytest -q
+
+# 跑任意一个 demo（输出同时打到终端和 demos/out/*.txt）
+/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python demos/demo_11_complete_system.py
+
+# 一条命令跑完八段流水线
+/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python -m tiny.pipeline
+# 可选：--force（忽略缓存）/ --steps N / --only config,tokenizer / --no-serve</code></pre>
+<blockquote><p>本项目刻意<strong>不建 venv</strong>：统一复用带 numpy 的托管解释器，省磁盘空间。</p></blockquote>
+<h2 id="已掌握能力">已掌握能力</h2>
+<ul class="lvl"><li>Project 01-09 的所有能力</li><li>从零串起一条 LLM 全链路：手写 BPE 分词（含归因）、防泄漏数据集、Transformer Decoder、训练闭环（早停回滚 + 断点续训）</li><li><strong>把&quot;验证&quot;当成一等公民</strong>：因果性自检、确定性对拍、KV Cache 等价性、量化 ΔPPL、断言 argmax 之外的数值</li><li>三层评估（语言 / 校准 / 生成）+ 配对显著性，把&quot;模型到底能不能用&quot;量成数字</li><li>手写采样策略、KV Cache、量化（INT8/INT4/NF4）与显存账本</li><li>用标准库起 OpenAI 兼容服务（SSE 流式 + 冒烟 + 并发压测 + 分位延迟）</li><li>交付一条<strong>可缓存、可分段重跑、报告可机读</strong>的 ML 流水线</li></ul>
+<h2 id="下一步">下一步</h2>
+<p>Project 10 已完成。后续可扩展方向：</p>
+<ul class="lvl"><li>把 <code>include_general=True</code> 的通用语料进一步扩充，观察生成层关键词覆盖能否从 0.000 提起（这是一个可量化的探索）</li><li>用 P07 的模型加载/量化线在 Colab GPU 上把同一套评估流程跑一遍，对比 CPU 版的小模型结论是否仍然成立</li><li>把 <code>pipeline.py</code> 接进 CI：报告可机读 ⇒ 可以直接做&quot;超参改动 → PPL 变化&quot;的自动回归</li></ul>
+<p><strong>前置项目</strong>：<a href="../../../../../projects/09-evaluation-inference">Project 09 — LLM Evaluation / Inference Platform</a> <strong>底座来源</strong>：<a href="../../../../../projects/06-mini-transformer-llm">Project 06 — Mini Transformer / LLM</a> · <a href="../../../../../projects/08-fine-tuning">Project 08 — LoRA / QLoRA Fine-Tuning</a></p>
+</main>
+</body>
+</html>

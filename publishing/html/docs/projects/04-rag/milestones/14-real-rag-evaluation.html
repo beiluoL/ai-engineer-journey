@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 14：真实 RAG 评估（30 条 EvalCase：Hit Rate / MRR / 忠实度）</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-14真实-rag-评估30-条-evalcasehit-rate-mrr-忠实度">Milestone 14：真实 RAG 评估（30 条 EvalCase：Hit Rate / MRR / 忠实度）</h1>
+<p>到 13 章为止，RAG Web API 已经能跑。但一个没人评测过的 RAG 系统跟闭着眼炼丹没有本质区别。这一章用手写 30 条 EvalCase，在<strong>真实 embedding + 真实 DeepSeek</strong> 上跑一遍，看看哪一段链路最拉胯。</p>
+<h2 id="1-目标与评测集">1. 目标与评测集</h2>
+<p>评估要解决的不是「分数高不高」，而是：</p>
+<ul class="lvl"><li>检索段：正确文档有没有被召回（Hit Rate@k / MRR）</li><li>上下文段：正确文档有没有被装进最终 prompt（ctx hit rate）</li><li>生成段：答案是否忠实于资料，是否该拒答的没有硬答（keyword / refusal / 忠实度）</li></ul>
+<p>三段指标解耦之后，优化才有方向：</p>
+<ul class="lvl"><li><strong>Hit Rate 低</strong> → 换 embedding / 调 chunk / 加 rerank，改 prompt 没用。</li><li><strong>Hit Rate 高但答案错</strong> → 资料找对了，模型在自由发挥，改 system 规则 / 降 temperature。</li><li><strong>拒答判错</strong> → 调整拒绝话术识别或提高检索闸门的 <code>min_score</code>。</li></ul>
+<h3 id="11-dataevalcasesjson">1.1 <code>data/eval_cases.json</code></h3>
+<p>30 条手写案例，覆盖仓库里 6 份语料：</p>
+<table><thead><tr><th>expected_source</th><th>数量</th><th>说明</th></tr></thead><tbody><tr><td>python-generators.md</td><td>7</td><td>可回答：yield、惰性、生成器表达式</td></tr><tr><td>python-decorators.md</td><td>5</td><td>可回答：@、闭包、wrapper</td></tr><tr><td>python-gil.md</td><td>4</td><td>可回答：GIL、多线程、多进程</td></tr><tr><td>llm-tokenization.md</td><td>3</td><td>可回答：token、字符换算</td></tr><tr><td>llm-sampling.txt</td><td>2</td><td>可回答：temperature、贪心采样</td></tr><tr><td>llm-retrieval.md</td><td>2</td><td>可回答：向量检索 vs 关键词检索</td></tr><tr><td>not-in-kb.md</td><td>7</td><td>应拒答：知识库里没有的问题</td></tr></tbody></table>
+<p>每条案例的「答案」<strong>不是人工写的</strong>。我们只看：</p>
+<ul class="lvl"><li>正确文档有没有出现在 top_k 里（<code>expected_source</code>）</li><li>答案里有没有出现几个关键信息（<code>expected_keywords</code>）</li><li>没有资料的问题有没有成功拒答（<code>should_refuse=True</code>）</li></ul>
+<p>这是 10 章讲过的「黄金标准不依赖人工答案」原则。</p>
+<h3 id="12-demosdemo15realevalpy">1.2 <code>demos/demo_15_real_eval.py</code></h3>
+<p>demo 分五节：</p>
+<ul class="lvl"><li><strong>口径对照</strong>：同一评测集，top_k=3 vs top_k=5。</li><li><strong>最终报告</strong>：固定 top_k=5 出完整 EvalReport。</li><li><strong>忠实度审计</strong>：抽查非拒答案例，用 <code>check_answer_faithfulness()</code> 逐句核对。</li><li><strong>可复现性</strong>：同一个问题连问 5 次，验证 temperature=0 是否逐字稳定。</li><li><strong>口径纪律</strong>：评测集、评估函数、指标口径三固定。</li></ul>
+<p>报告会落盘到 <code>reports/eval_report.json</code>，保证前后对比是同一份口径。</p>
+<h2 id="2-三段式指标的真实数值">2. 三段式指标的真实数值</h2>
+<p>运行环境：</p>
+<ul class="lvl"><li>embedding：DashScope text-embedding-v3，21 chunks</li><li>LLM：DeepSeek Chat，temperature=0</li><li>评测集：30 条（可回答 23 / 应拒答 7）</li></ul>
+<h3 id="21-口径对照topk3-vs-topk5">2.1 口径对照：top_k=3 vs top_k=5</h3>
+<figure class="figure"><img alt="真实评估口径对照" src="../../../../../../projects/04-rag/assets/eval-metrics.png" loading="lazy"/><figcaption>真实评估口径对照</figcaption></figure>
+<p>关键数字：</p>
+<table><thead><tr><th>指标</th><th>top_k=3</th><th>top_k=5</th><th>含义</th></tr></thead><tbody><tr><td>hit@3</td><td>0.667</td><td>0.667</td><td>正确文档进入前 3 的比例</td></tr><tr><td>hit@5</td><td>0.667</td><td>0.733</td><td>正确文档进入前 5 的比例</td></tr><tr><td>mrr</td><td>0.611</td><td>0.624</td><td>正确文档平均排名的倒数</td></tr><tr><td>ctx</td><td>0.667</td><td>0.733</td><td>正确文档被装进 prompt 的比例</td></tr><tr><td>refuse</td><td>1.000</td><td>1.000</td><td>应拒答案例成功拒答的比例</td></tr></tbody></table>
+<p><strong>结论</strong>：</p>
+<ul class="lvl"><li>top_k 从 3 提到 5，<strong>检索类指标（hit / ctx / mrr）稳定提升</strong>，说明第 4/5 位确实捞进了更多正确文档。</li><li>但 <strong>hit@3 纹丝不动</strong>，说明模型排序质量没变好：正确文档只是从「第 4/5 位」挪到了「被召回」，并没有被推到更前面。</li><li>如果你的目标是 hit@3，单纯加 <code>top_k</code> 没用，该换的是 embedding 或 rerank。</li></ul>
+<h3 id="22-生成质量为什么-keywordpass-这么低">2.2 生成质量：为什么 keyword_pass 这么低</h3>
+<p>上图中最终报告的 <code>kw=0.304</code>，失败明细里 17 条全是「缺关键词」。</p>
+<figure class="figure"><img alt="失败明细：全是缺关键词" src="../../../../../../projects/04-rag/assets/eval-keyword.png" loading="lazy"/><figcaption>失败明细：全是缺关键词</figcaption></figure>
+<p>但这<strong>不是模型在胡说</strong>——检索类指标 0.667/0.733 说明资料找对了。真正原因是：</p>
+<blockquote><p><code>keyword_pass</code> 要求答案里<strong>原样出现</strong>预设关键词。真实 LLM 会用同义词、换一种说法，仍然正确，但触发不了关键词匹配。</p></blockquote>
+<p>例如：</p>
+<ul class="lvl"><li>预设关键词：<code>惰性</code>；模型回答：<code>按需计算</code>。</li><li>预设关键词：<code>暂停</code>；模型回答：<code>挂起</code>。</li></ul>
+<p>所以 <code>keyword_pass</code> 只能当<strong>保守下界</strong>，不能直接当正确率。</p>
+<h3 id="23-忠实度审计抽查-20-条">2.3 忠实度审计：抽查 20 条</h3>
+<figure class="figure"><img alt="忠实度审计 + 可复现性验证" src="../../../../../../projects/04-rag/assets/eval-faithful.png" loading="lazy"/><figcaption>忠实度审计 + 可复现性验证</figcaption></figure>
+<ul class="lvl"><li>平均忠实度 <strong>0.99</strong>，最低 <strong>0.88</strong></li><li>20 条里只有 1 句找不到出处</li><li>最差样本：<code>Token 是什么？为什么大模型按 token 计费？</code></li></ul>
+<p>这说明：资料找对了，模型基本不会瞎编。真正需要优化的是<strong>召回率</strong>，而不是生成规则。</p>
+<h3 id="24-可复现性同一问题连问-5-次">2.4 可复现性：同一问题连问 5 次</h3>
+<p>上图中「连问 5 次，得到 4 种不同答案」，长度分别是 388 / 378 / 466 / 389。</p>
+<p>即使 <code>temperature=0</code>，云端推理节点也会分流，<strong>不保证逐字可复现</strong>。这带来的工程结论是：</p>
+<ul class="lvl"><li><strong>keyword_pass 不适合当 CI 回归门槛</strong>：今天 0.30，明天可能 0.35，不一定代表系统变好。</li><li><strong>检索类指标（hit / ctx / mrr）才适合当回归门槛</strong>：它们只跟 embedding + 索引有关，同一批文档跑出来的结果完全一致。</li></ul>
+<h2 id="3-代码关键点">3. 代码关键点</h2>
+<h3 id="31-evaluate-的拒答口径必须共用-pipeline-的判据">3.1 <code>evaluate()</code> 的拒答口径必须共用 pipeline 的判据</h3>
+<p>13 章把 <code>RAGAnswer.refused</code> 从精确字符串匹配改成了关键词命中（<code>REFUSAL_MARKERS</code>）。<code>evaluate()</code> 也<strong>必须</strong>复用 <code>answer.refused</code>，否则同一套拒答答案会出现两套结果。</p>
+<pre><code>if case.should_refuse:
+    if answer.refused:          # ← 用 pipeline 已经定义好的判据
+        ref_pass += 1
+    else:
+        failed.append(...)</code></pre>
+<p>如果这里写死 <code>&quot;没有相关资料&quot; in answer.answer</code>，真实模型回一句「资料中没有相关内容。」就会被漏判。</p>
+<h3 id="32-忠实度审计用-systemprompt-当参考资料">3.2 忠实度审计用 system_prompt 当参考资料</h3>
+<p><code>check_answer_faithfulness()</code> 复用 <code>RAGAnswer</code> 留档的 <code>system_prompt</code>：</p>
+<pre><code>def check_answer_faithfulness(answer, **kw):
+    return check_faithfulness(answer.answer, answer.system_prompt, **kw)</code></pre>
+<p>这样审的就是「模型实际看到的那一段资料」，而不是索引里的全部 chunk，口径更干净。</p>
+<h2 id="4-坑清单">4. 坑清单</h2>
+<h3 id="坑-1只看-keywordpass-会误判系统好坏">坑 1：只看 keyword_pass 会误判系统好坏</h3>
+<p>keyword_pass 低 = 检索错了吗？<strong>不一定</strong>。这里检索类指标 0.667，模型只是在换说法。把 keyword_pass 当最终指标，会白白去调 prompt。</p>
+<p><strong>修法</strong>：把 keyword_pass 当「信号」；下结论先看 hit / ctx / mrr，再用忠实度做定性复核。</p>
+<h3 id="坑-2temperature0-也不保证可复现">坑 2：temperature=0 也不保证可复现</h3>
+<p>DeepSeek 等大型云服务即使 temperature=0，也可能因为负载均衡到不同节点而返回不同文本。实测同一问题 5 次，4 种答案。</p>
+<p><strong>修法</strong>：</p>
+<ul class="lvl"><li>评估时<strong>至少跑 3 次取平均</strong>，或者只看检索类指标。</li><li>不要把 keyword_pass 设成 hard gate。</li><li>如果需要严格可复现，考虑本地 vLLM（见 04 章）。</li></ul>
+<h3 id="坑-3topk-提升不一定改善答案质量">坑 3：top_k 提升不一定改善答案质量</h3>
+<p>top_k=3→5 让 hit@5 和 ctx 提升了，但 hit@3 没变。这意味着：</p>
+<ul class="lvl"><li>只是召回范围变宽了，排序能力没提升。</li><li>想提升 hit@3，该换 embedding 模型或加 rerank，而不是继续加大 top_k。</li></ul>
+<h3 id="坑-4评测集和评估函数必须三固定">坑 4：评测集和评估函数必须三固定</h3>
+<p>前后对比只允许「同评测集、同评估函数、同指标口径」。一旦悄悄改评测集，分数再高也没意义。</p>
+<h2 id="5-自检清单">5. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能解释 Hit Rate@3 / Hit Rate@5 / MRR 分别衡量什么</li><li>[ ] 能说明为什么 keyword_pass 低不代表系统差</li><li>[ ] 能解释为什么 temperature=0 的 API 调用仍可能返回不同答案</li><li>[ ] 能指出 top_k=3 到 top_k=5 的实验说明了什么</li><li>[ ] 知道忠实度审计和关键词命中率的适用场景区别</li><li>[ ] 能写一条 EvalCase，并知道拒答案例的 expected_source 该怎么填</li></ul>
+<hr/>
+<p>上一章：<a href="13-fastapi-web-api.html">13-fastapi-web-api.md</a> —— FastAPI Web API（SSE 流式）</p>
+<p>回到项目主页：<a href="../README.html">../README.md</a></p>
+</main>
+</body>
+</html>

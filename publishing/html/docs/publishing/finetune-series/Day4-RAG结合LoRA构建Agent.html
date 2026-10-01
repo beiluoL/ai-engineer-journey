@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>大模型微调实战 Day4：RAG + LoRA 结合，构建可用的 Java AI Interview Agent</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="大模型微调实战-day4rag-lora-结合构建可用的-java-ai-interview-agent">大模型微调实战 Day4：RAG + LoRA 结合，构建可用的 Java AI Interview Agent</h1>
+<h1 id="把-rag-lora-结合构建真正可用的-java-ai-interview-agent">把 RAG + LoRA 结合：构建真正可用的 Java AI Interview Agent</h1>
+<p>今天进入一个非常关键的认知升级：</p>
+<blockquote><p>企业里的 AI 应用，很少是“只微调模型”。</p></blockquote>
+<p>更常见架构：</p>
+<blockquote><p><strong>RAG 负责提供知识，LoRA 负责改变模型行为。</strong></p></blockquote>
+<p>也就是：</p>
+<pre><code>RAG = 给模型外挂知识库
+LoRA = 教模型按照你的方式思考和表达</code></pre>
+<hr/>
+<h1 id="一先理解-rag-和-lora-的区别">一、先理解 RAG 和 LoRA 的区别</h1>
+<p>很多初学者会混淆：</p>
+<h2 id="lora-解决什么">LoRA 解决什么？</h2>
+<p>例如：</p>
+<p>原始 Qwen：</p>
+<p>用户：</p>
+<blockquote><p>HashMap 面试怎么回答？</p></blockquote>
+<p>模型：</p>
+<pre><code>HashMap是Java中的Map实现...</code></pre>
+<p>但是你希望：</p>
+<pre><code>面试回答：
+
+1. 先说数据结构
+2. 再说JDK8变化
+3. 再说扩容机制
+4. 最后结合项目</code></pre>
+<p>这个属于：</p>
+<blockquote><p>输出风格、能力偏好改变</p></blockquote>
+<p>所以：</p>
+<pre><code>LoRA
+
+改变：
+
+模型行为
+回答方式
+专业领域习惯</code></pre>
+<hr/>
+<h2 id="rag解决什么">RAG解决什么？</h2>
+<p>例如：</p>
+<p>你公司内部：</p>
+<pre><code>订单系统架构文档
+
+支付流程文档
+
+数据库设计文档
+
+接口文档</code></pre>
+<p>Qwen不知道。</p>
+<p>RAG：</p>
+<p>先检索：</p>
+<pre><code>订单系统文档
+
+↓
+
+找到相关内容
+
+↓
+
+放入Prompt
+
+↓
+
+让模型回答</code></pre>
+<p>所以：</p>
+<pre><code>RAG
+
+补充：
+
+外部知识
+实时数据
+私有数据</code></pre>
+<hr/>
+<h1 id="二企业真实架构">二、企业真实架构</h1>
+<p>你的 Java AI 项目：</p>
+<pre><code>                    用户问题
+
+                       |
+                       ↓
+
+                Spring Boot API
+
+
+                       |
+                       ↓
+
+
+              Query Rewrite
+              查询改写
+
+
+                       |
+                       ↓
+
+
+             Milvus Vector DB
+             向量数据库
+
+
+                       |
+                       ↓
+
+
+          找到Java知识片段
+
+
+                       |
+                       ↓
+
+
+             Prompt组装
+
+
+                       |
+                       ↓
+
+
+          Qwen + Java LoRA
+
+
+                       |
+                       ↓
+
+
+                 最终回答</code></pre>
+<hr/>
+<h1 id="三为什么不是只微调">三、为什么不是只微调？</h1>
+<p>假设：</p>
+<p>你训练：</p>
+<pre><code>Java面试LoRA</code></pre>
+<p>训练数据：</p>
+<p>1000条。</p>
+<p>突然面试官问：</p>
+<blockquote><p>公司订单系统如何保证幂等？</p></blockquote>
+<p>你的LoRA：</p>
+<p>不知道。</p>
+<p>因为：</p>
+<p>训练数据没有。</p>
+<p>如果加入RAG：</p>
+<p>你的知识库：</p>
+<pre><code>项目A
+├──订单设计.md
+├──支付流程.md
+├──Redis方案.md</code></pre>
+<p>检索：</p>
+<p>找到：</p>
+<pre><code>订单幂等方案：
+
+Redis + Token + 唯一索引</code></pre>
+<p>模型：</p>
+<p>结合回答。</p>
+<hr/>
+<h1 id="四你的最终项目架构">四、你的最终项目架构</h1>
+<h2 id="java-ai-interview-agent-v2">Java AI Interview Agent V2</h2>
+<pre><code>                 Vue3
+
+                  |
+
+                  ↓
+
+            Spring Boot
+
+
+                  |
+
+                  ↓
+
+
+          LangChain4j
+
+
+                  |
+
+       +----------+-----------+
+
+       |                      |
+
+       ↓                      ↓
+
+
+    Milvus                 Qwen LoRA
+
+    知识库                  面试模型
+
+
+       |                      |
+
+       +----------+-----------+
+
+                  |
+
+                  ↓
+
+
+              Answer</code></pre>
+<hr/>
+<h1 id="五开始实现">五、开始实现</h1>
+<p>我们分模块。</p>
+<hr/>
+<h1 id="step1准备知识库">Step1：准备知识库</h1>
+<p>你的数据：</p>
+<p>之前：</p>
+<pre><code>java_interview.json</code></pre>
+<p>现在升级：</p>
+<pre><code>knowledge/
+
+├── java
+
+│   ├── hashmap.md
+
+│   ├── concurrenthashmap.md
+
+│   ├── jvm.md
+
+
+├── ai
+
+│   ├── rag.md
+
+│   ├── agent.md
+
+│   └── toolcalling.md
+
+
+└── project
+
+    └── ai-assistant.md</code></pre>
+<hr/>
+<p>例如：</p>
+<p>hashmap.md</p>
+<pre><code># HashMap
+
+
+## 数据结构
+
+JDK8 HashMap采用：
+
+数组 + 链表 + 红黑树。
+
+
+## 为什么线程不安全
+
+原因：
+
+1. put操作没有锁
+
+2. resize并发可能覆盖
+
+3. 数据一致性无法保证
+
+
+## 面试回答
+
+HashMap线程不安全主要原因...</code></pre>
+<hr/>
+<h1 id="step2文档切片-chunk">Step2：文档切片 Chunk</h1>
+<p>RAG不会直接把整个文件给模型。</p>
+<p>例如：</p>
+<p>100页文档：</p>
+<p>↓</p>
+<p>切：</p>
+<pre><code>Chunk1
+
+HashMap数据结构
+
+
+Chunk2
+
+扩容机制
+
+
+Chunk3
+
+线程安全问题</code></pre>
+<hr/>
+<p>通常：</p>
+<p>配置：</p>
+<pre><code>chunk size:
+
+500~1000 tokens
+
+
+overlap:
+
+100 tokens</code></pre>
+<hr/>
+<h1 id="step3embedding向量化">Step3：Embedding向量化</h1>
+<p>文本：</p>
+<pre><code>HashMap为什么线程不安全</code></pre>
+<p>经过：</p>
+<p>Embedding模型</p>
+<p>变成：</p>
+<pre><code>[
+0.123,
+0.562,
+-0.331,
+...
+]</code></pre>
+<p>保存：</p>
+<p>Milvus。</p>
+<hr/>
+<p>你的链路：</p>
+<pre><code>Markdown
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Milvus</code></pre>
+<hr/>
+<h1 id="step4spring-boot接入rag">Step4：Spring Boot接入RAG</h1>
+<p>依赖：</p>
+<p>LangChain4j:</p>
+<pre><code>&lt;dependency&gt;
+
+&lt;groupId&gt;
+dev.langchain4j
+&lt;/groupId&gt;
+
+&lt;artifactId&gt;
+langchain4j-easy-rag
+&lt;/artifactId&gt;
+
+&lt;/dependency&gt;</code></pre>
+<hr/>
+<p>创建：</p>
+<p>Embedding模型：</p>
+<pre><code>@Bean
+EmbeddingModel embeddingModel(){
+
+return new OllamaEmbeddingModel(
+    &quot;nomic-embed-text&quot;
+);
+
+}</code></pre>
+<hr/>
+<p>向量库：</p>
+<pre><code>@Bean
+EmbeddingStore store(){
+
+return new MilvusEmbeddingStore();
+
+}</code></pre>
+<hr/>
+<h1 id="step5检索">Step5：检索</h1>
+<p>用户：</p>
+<pre><code>HashMap为什么线程不安全？</code></pre>
+<p>流程：</p>
+<pre><code>问题
+
+↓
+
+Embedding
+
+↓
+
+向量搜索
+
+↓
+
+Milvus
+
+↓
+
+返回Top K文档</code></pre>
+<p>例如：</p>
+<p>返回：</p>
+<pre><code>hashmap.md
+
+concurrenthashmap.md</code></pre>
+<hr/>
+<h1 id="step6组合-prompt">Step6：组合 Prompt</h1>
+<p>最终发送给模型：</p>
+<p>不是：</p>
+<pre><code>HashMap为什么线程不安全？</code></pre>
+<p>而是：</p>
+<pre><code>你是一名Java高级面试官。
+
+
+参考资料：
+
+---
+HashMap JDK8结构...
+HashMap线程安全问题...
+---
+
+
+问题：
+
+HashMap为什么线程不安全？
+
+
+请按照：
+
+1. 原理
+
+2. 源码
+
+3. 项目
+
+4. 面试回答
+
+输出。</code></pre>
+<hr/>
+<h1 id="step7调用-lora模型">Step7：调用 LoRA模型</h1>
+<p>现在：</p>
+<p>输入：</p>
+<pre><code>Prompt
++
+检索知识</code></pre>
+<p>进入：</p>
+<pre><code>Qwen + Java LoRA</code></pre>
+<p>输出：</p>
+<pre><code>标准面试回答</code></pre>
+<hr/>
+<h1 id="六rag-lora-分工总结">六、RAG + LoRA 分工总结</h1>
+<table><thead><tr><th>能力</th><th>RAG</th><th>LoRA</th></tr></thead><tbody><tr><td>公司知识</td><td>✅</td><td>❌</td></tr><tr><td>最新数据</td><td>✅</td><td>❌</td></tr><tr><td>项目文档</td><td>✅</td><td>❌</td></tr><tr><td>回答格式</td><td>❌</td><td>✅</td></tr><tr><td>语气风格</td><td>❌</td><td>✅</td></tr><tr><td>专业习惯</td><td>❌</td><td>✅</td></tr><tr><td>减少幻觉</td><td>✅</td><td>部分</td></tr></tbody></table>
+<hr/>
+<h1 id="七你的项目升级路线">七、你的项目升级路线</h1>
+<p>现在：</p>
+<h2 id="v1">V1</h2>
+<pre><code>Qwen
++
+LoRA
+
+Java面试模型</code></pre>
+<hr/>
+<p>升级：</p>
+<h2 id="v2">V2</h2>
+<pre><code>Qwen
++
+LoRA
++
+Milvus RAG</code></pre>
+<hr/>
+<p>升级：</p>
+<h2 id="v3">V3</h2>
+<p>加入 Agent：</p>
+<pre><code>Java Interview Agent
+
+
+Tool:
+
+- 查询知识库
+
+- 分析简历
+
+- 生成问题
+
+- 评分
+
+- 记录错题</code></pre>
+<hr/>
+<h1 id="八今天你掌握的企业级认知">八、今天你掌握的企业级认知</h1>
+<p>现在你已经理解：</p>
+<pre><code>基础模型
+
+↓
+
+LoRA
+
+改变模型行为
+
+
++
+
+RAG
+
+提供外部知识
+
+
++
+
+Agent
+
+调用工具完成任务
+
+
+=
+
+完整AI应用</code></pre>
+<p>这其实就是目前 Java AI 工程师岗位核心能力。</p>
+<hr/>
+<h1 id="下一步-day5">下一步 Day5</h1>
+<p>进入工程实现：</p>
+<h1 id="day5spring-boot-langchain4j-milvus-实现-rag-pipeline">Day5：Spring Boot + LangChain4j + Milvus 实现 RAG Pipeline</h1>
+<p>我们会实际写：</p>
+<pre><code>上传PDF
+
+↓
+
+解析
+
+↓
+
+Chunk
+
+↓
+
+Embedding
+
+↓
+
+Milvus
+
+↓
+
+Retriever
+
+↓
+
+Qwen LoRA
+
+↓
+
+回答</code></pre>
+<p>这会和你之前做的 <strong>Java AI Knowledge Assistant</strong> 完全融合。</p>
+</main>
+</body>
+</html>

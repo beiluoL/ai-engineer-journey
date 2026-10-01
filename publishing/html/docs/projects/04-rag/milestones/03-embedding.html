@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 04 — Chapter 03：Embedding【文本向量化】</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="project-04-chapter-03embedding文本向量化">Project 04 — Chapter 03：Embedding【文本向量化】</h1>
+<blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/embedding.py</code>（<code>BaseEmbeddingClient</code> + <code>SiliconFlowEmbeddingClient</code> + <code>FakeEmbeddingClient</code>）</p></blockquote>
+<hr/>
+<h2 id="1-本章要解决什么问题">1. 本章要解决什么问题</h2>
+<p>Chapter 02 结束时，我们手里是一堆干净的 <code>Chunk</code>。现在来了一个用户问题：&quot;RAG 为什么要 overlap？&quot;</p>
+<p>问题来了：<strong>计算机怎么判断&quot;这个问题&quot;和&quot;那个块&quot;是在说同一件事？</strong></p>
+<p>字符串匹配不行——问题里没有&quot;overlap&quot;这个词的块（比如某块写&quot;相邻块之间的重复区域是为了……&quot;）照样是正确答案。关键词匹配也不行——同义词、改写、中英混说，关键词永远追不上。</p>
+<p>答案是把文本变成<strong>向量</strong>，让&quot;意思接近&quot;变成&quot;距离接近&quot;，然后用数学比较：</p>
+<pre><code>你以为：  机器读懂了文本的含义
+实际上：  机器只是把文本压成一个高维坐标点，
+          训练让&quot;语义相近的文本&quot;落在相邻的位置——
+          &quot;读懂&quot;是幻觉，&quot;可计算的相近&quot;才是真的</code></pre>
+<p>本章目标：</p>
+<blockquote><p><strong>设计一个可替换的 embedding 客户端体系：真实 API + 离线 Fake，统一走批量异步接口。</strong></p></blockquote>
+<hr/>
+<h2 id="2-为什么需要这个知识">2. 为什么需要这个知识</h2>
+<h3 id="embedding-是什么">Embedding 是什么</h3>
+<p>Embedding【嵌入/向量化】把一段文本映射成一个<strong>定长向量</strong>（比如 1024 个浮点数），由一个预训练的嵌入模型完成。它的核心性质：</p>
+<blockquote><p><strong>哈希是&quot;精确相等&quot;的指纹，embedding 是&quot;语义相似&quot;的指纹。</strong></p></blockquote>
+<ul class="lvl"><li>SHA-256（Chapter 01 用过）：内容变一个比特，指纹完全不同——它能回答&quot;这两段文本一模一样吗&quot;。</li><li>Embedding：两段说得差不多的话，向量在空间里很接近——它能回答&quot;这两段文本意思接近吗&quot;。</li></ul>
+<p>这是本章必须建立的核心直觉：<strong>我们第一次拥有了&quot;语义&quot;的可运算表示。</strong></p>
+<h3 id="两个基本属性">两个基本属性</h3>
+<ul class="lvl"><li><strong>维度</strong>：不同模型的向量维度不同（bge-m3 是 1024，OpenAI text-embedding-3-small 是 1536）。维度本身没有优劣，但<strong>同一张向量表里必须全是同一个模型、同一个维度</strong>。</li><li><strong>归一化</strong>：多数嵌入模型输出已做 L2 归一化（模长为 1）。归一化之后，余弦相似度和欧氏距离可以互相换算，用哪个距离度量都等价。落地时可以用模长验证一下模型输出是否已归一化。</li></ul>
+<h3 id="查询与文档要同一种语言">查询与文档要&quot;同一种语言&quot;</h3>
+<p>用户 query 也要被 embed 成向量，再去和文档向量比距离。<strong>查询和文档必须用同一个嵌入模型</strong>——不同模型的向量空间互不相通（第 5 节详述）。</p>
+<hr/>
+<h2 id="3-核心概念">3. 核心概念</h2>
+<h3 id="31-嵌入模型选型">3.1 嵌入模型选型</h3>
+<table><thead><tr><th>模型</th><th>维度</th><th>说明</th></tr></thead><tbody><tr><td>BAAI/bge-m3</td><td>1024</td><td>中文最强开源系之一，多语言、支持长文本（8192 token），SiliconFlow 可直接调</td></tr><tr><td>BAAI/bge-large-zh-v1.5</td><td>1024</td><td>中文专用老将，轻量、稳定</td></tr><tr><td>OpenAI text-embedding-3-small</td><td>1536</td><td>效果好、贵一点；国内直连不稳</td></tr><tr><td>SiliconFlow API 托管的 bge 系列</td><td>1024</td><td>国内 API 访问稳定、价格低，<strong>本章首选</strong></td></tr></tbody></table>
+<p>一个必须点明的坑：<strong>DeepSeek 没有 embedding API。</strong> DeepSeek 只提供 chat 模型——很多人&quot;用 DeepSeek 做 RAG&quot;时想当然以为它家也有 embedding，没有。RAG 里 LLM 负责生成，embedding 是另一家的事（本项目：SiliconFlow 托管的 bge 系列做嵌入，LLM 另选）。</p>
+<h3 id="32-接口抽象延续-p02p03-的-fakeclient-模式">3.2 接口抽象：延续 P02/P03 的 FakeClient 模式</h3>
+<p>P02/P03 已经建立了&quot;接口 + 多实现&quot;的模式：<code>BaseLLMClient</code> 抽象，真实客户端和 <code>FakeLLMClient</code> 互换。embedding 沿用同一套思路：</p>
+<pre><code># src/rag/embedding.py
+from abc import ABC, abstractmethod
+
+class BaseEmbeddingClient(ABC):
+    &quot;&quot;&quot;嵌入客户端抽象。注意：接口是批量的。&quot;&quot;&quot;
+
+    model_name: str = &quot;&quot;
+    dim: int = 0
+
+    @abstractmethod
+    async def embed(self, texts: list[str]) -&gt; list[list[float]]:
+        &quot;&quot;&quot;一批文本 → 一批向量，顺序与输入一一对应。&quot;&quot;&quot;
+        ...
+
+    async def embed_one(self, text: str) -&gt; list[float]:
+        return (await self.embed([text]))[0]</code></pre>
+<p><strong>为什么接口是批量 <code>embed(texts: list[str])</code> 而不是单个 <code>embed_one(text: str)</code>？</strong> 一句话向量化一次 HTTP 往返，1000 个块就是 1000 次请求——限流、延迟全爆。批量接口一次往返处理几十上百条，这是 embedding 和 chat 最大的接口差异。<code>embed_one</code> 只是批量的单元素便捷方法。</p>
+<p><strong>Java 里这就是典型的&quot;接口 + 多实现 + 依赖注入&quot;</strong>：<code>EmbeddingClient</code> 接口，<code>@Profile(&quot;prod&quot;)</code> 的真实实现和 <code>@Profile(&quot;test&quot;)</code> 的 Fake 实现，上层 <code>VectorStore</code> 只依赖接口。Python 里没有容器帮你注入，但同样的模式靠&quot;构造函数传入实现&quot;手工达成——<strong>Java 里叫 DI，Python 里叫&quot;把依赖当参数传&quot;，是同一个设计</strong>。</p>
+<h3 id="33-真实实现siliconflow-httpx-异步">3.3 真实实现：SiliconFlow + httpx 异步</h3>
+<pre><code>import asyncio
+
+import httpx
+
+
+class SiliconFlowEmbeddingClient(BaseEmbeddingClient):
+    model_name = &quot;BAAI/bge-m3&quot;
+    dim = 1024
+
+    BASE_URL = &quot;https://api.siliconflow.cn/v1/embeddings&quot;
+    BATCH_SIZE = 32          # 单请求最多多少条文本
+    MAX_RETRIES = 3
+
+    def __init__(self, api_key: str, batch_size: int = 32):
+        self.api_key = api_key
+        self.batch_size = batch_size
+
+    async def embed(self, texts: list[str]) -&gt; list[list[float]]:
+        vectors: list[list[float]] | None = None
+        for i in range(0, len(texts), self.batch_size):
+            batch = [t[:8000] for t in texts[i:i + self.batch_size]]  # 超长截断，见 5.3
+            batch_vectors = await self._embed_batch_with_retry(batch)
+            vectors = batch_vectors if vectors is None else vectors + batch_vectors
+        assert vectors is not None
+        return vectors
+
+    async def _embed_batch_with_retry(self, batch: list[str]) -&gt; list[list[float]]:
+        delay = 1.0
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            try:
+                return await self._embed_batch(batch)
+            except RateLimitError:
+                if attempt == self.MAX_RETRIES:
+                    raise
+                await asyncio.sleep(delay)          # 指数退避：1s → 2s → 4s
+                delay *= 2
+
+    async def _embed_batch(self, batch: list[str]) -&gt; list[list[float]]:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                self.BASE_URL,
+                headers={&quot;Authorization&quot;: f&quot;Bearer {self.api_key}&quot;},
+                json={&quot;model&quot;: self.model_name, &quot;input&quot;: batch},
+            )
+        if resp.status_code == 429:
+            raise RateLimitError(&quot;embedding 触发限流&quot;)
+        resp.raise_for_status()
+        data = sorted(resp.json()[&quot;data&quot;], key=lambda d: d[&quot;index&quot;])  # 按 index 还原顺序！
+        return [item[&quot;embedding&quot;] for item in data]
+
+
+class RateLimitError(Exception):
+    pass</code></pre>
+<p>两个容易忽略的细节：<strong>响应里按 <code>index</code> 字段重新排序</strong>（有的服务不保证返回顺序与请求一致），以及<strong>限流用指数退避重试</strong>而不是立刻重试。</p>
+<h3 id="34-离线实现fakeembeddingclient">3.4 离线实现：FakeEmbeddingClient</h3>
+<pre><code>import hashlib
+import struct
+
+
+class FakeEmbeddingClient(BaseEmbeddingClient):
+    &quot;&quot;&quot;确定性哈希向量：同样的文本永远得到同样的向量，离线可跑、零成本。&quot;&quot;&quot;
+
+    model_name = &quot;fake-hash&quot;
+    dim = 64
+
+    def __init__(self, dim: int = 64):
+        self.dim = dim
+
+    async def embed(self, texts: list[str]) -&gt; list[list[float]]:
+        return [self._hash_vector(t) for t in texts]
+
+    def _hash_vector(self, text: str) -&gt; list[float]:
+        raw = hashlib.sha256(text.encode(&quot;utf-8&quot;)).digest()
+        # 扩展 digest 到 dim * 4 字节，解包成 float32
+        buf = (raw * ((self.dim * 4 // len(raw)) + 1))[: self.dim * 4]
+        floats = struct.unpack(f&quot;&lt;{self.dim}f&quot;, buf)
+        # 归一化到单位向量
+        norm = sum(f * f for f in floats) ** 0.5 or 1.0
+        return [f / norm for f in floats]</code></pre>
+<p><strong>为什么测试绝不能调真实 API？</strong> 三个理由，每个都足以单独成立：</p>
+<ul class="lvl"><li><strong>慢</strong>：单测要秒级跑完，真实 API 一次几百毫秒起步，批量更是几十秒——没人愿意跑一个 5 分钟的测试套件。</li><li><strong>花钱</strong>：每次 CI 都烧 API 费用，测试失败重跑更是双倍烧。</li><li><strong>不稳定</strong>：限流、网络抖动、模型静默升级，都会让&quot;昨天绿的测试今天红&quot;——测试的意义就是排除这些外部变量。</li></ul>
+<p>Fake 的&quot;语义&quot;当然为零（哈希向量与语义无关，相同文本相同向量、不同文本近似随机），但它能验证：<strong>接口契约（批量、顺序、维度）、向量库的存取与排序、RAG 流水线的串联</strong>。这些是测试目标，&quot;语义准不准&quot;是评测目标，不是单测目标。</p>
+<hr/>
+<figure class="figure"><img alt="真实运行：FakeEmbeddingClient 离线产出 64 维单位向量，字面越近余弦越大" src="../../../../../../projects/04-rag/assets/term-embed.png" loading="lazy"/><figcaption>真实运行：FakeEmbeddingClient 离线产出 64 维单位向量，字面越近余弦越大</figcaption></figure>
+<h2 id="4-动手实现设计稿">4. 动手实现（设计稿）</h2>
+<p>以下代码将在 <code>src/rag/embedding.py</code> 落地时实现。目标结构：</p>
+<pre><code>src/rag/
+├── embedding.py   # BaseEmbeddingClient / SiliconFlowEmbeddingClient / FakeEmbeddingClient
+└── ...</code></pre>
+<p>关键实现思路（在上面的骨架上补全）：</p>
+<ul class="lvl"><li><strong>客户端工厂</strong>，按配置选择实现——上层代码（第 04 章的入库流水线）只依赖 <code>BaseEmbeddingClient</code>：</li></ul>
+<pre><code>def create_embedding_client(config: dict) -&gt; BaseEmbeddingClient:
+    provider = config.get(&quot;provider&quot;, &quot;fake&quot;)
+    if provider == &quot;siliconflow&quot;:
+        return SiliconFlowEmbeddingClient(api_key=config[&quot;api_key&quot;])
+    if provider == &quot;fake&quot;:
+        return FakeEmbeddingClient()
+    raise ValueError(f&quot;未知 embedding provider: {provider!r}&quot;)</code></pre>
+<ul class="lvl"><li><strong>入库用批量、查询用单条</strong>：</li></ul>
+<pre><code># 入库：所有 chunk 一次性批量
+vectors = await client.embed([c.text for c in chunks])
+
+# 查询：单条
+query_vector = await client.embed_one(question)</code></pre>
+<ul class="lvl"><li><strong>入库时把模型名记进 metadata</strong>：<code>store.add(chunks, vectors, model=client.model_name)</code>，查询前校验&quot;当前查询模型 == 入库模型&quot;（第 5 节坑 1 的防线）。</li></ul>
+<ul class="lvl"><li><strong>浮点精度</strong>：向量在内存里是 Python float（float64），落库和传输统一转 float32——<code>struct.unpack</code> 的格式串、Chroma 的存储、NumPy 的 <code>dtype=np.float32</code>，全链路 float32，省一半空间且和 API 返回精度一致。</li></ul>
+<ul class="lvl"><li><strong>依赖</strong>：<code>pip install httpx</code>（P02/P03 已装）。</li></ul>
+<hr/>
+<h2 id="5-踩坑清单">5. 踩坑清单</h2>
+<h3 id="坑-1查询和文档用了不同的嵌入模型检索结果看似正常实则全错">坑 1：查询和文档用了不同的嵌入模型，检索结果看似正常实则全错</h3>
+<ul class="lvl"><li><strong>现象</strong>：入库用的是 bge-m3，后来换了 text-embedding-3 做 query（或者代码里两处硬编码了不同模型名），检索仍能返回结果，但相关性完全是噪声——top-1 和 top-5 没有区别。</li><li><strong>原因</strong>：不同模型把文本映射到<strong>不同的向量空间</strong>，1024 维的两套坐标之间没有任何对齐关系，跨模型算余弦相似度 = 拿北京的经纬度在上海找路。</li><li><strong>正确做法</strong>：模型名是向量库元数据的一部分，入库时记录、查询时校验，不一致直接抛异常拒绝服务，而不是默默返回错结果。</li></ul>
+<h3 id="坑-2批量太大触发-429重试又立刻打过去雪崩">坑 2：批量太大触发 429，重试又立刻打过去，雪崩</h3>
+<ul class="lvl"><li><strong>现象</strong>：批量入库时疯狂报 429 Too Many Requests，重试也全是 429，最后整个任务失败。</li><li><strong>原因</strong>：batch_size 或并发数超过服务商配额（SiliconFlow 对 bge 系列有 RPM/TPM 限制）；且失败后立刻重试，限流窗口还没过。</li><li><strong>正确做法</strong>：三件套——batch_size 调小（32 是安全起点）、失败后<strong>指数退避</strong>（1s→2s→4s）、大批量任务控制并发（顺序分批而不是 <code>asyncio.gather</code> 全量并发）。<strong>Java 里 Resilience4j 的 RateLimiter + Retry 干的就是这两件事，Python 里手写 <code>asyncio.sleep</code> 的退避循环。</strong></li></ul>
+<h3 id="坑-3文本超过模型最大输入8192-token请求直接-400">坑 3：文本超过模型最大输入（8192 token），请求直接 400</h3>
+<ul class="lvl"><li><strong>现象</strong>：某几条 chunk 特别长（Chapter 02 里&quot;段落极长退化&quot;漏网的），embedding 请求报 400，整批入库失败。</li><li><strong>原因</strong>：嵌入模型有最大输入长度（bge-m3 是 8192 token），超长文本服务端拒绝；一条坏文本毁掉整批请求。</li><li><strong>正确做法</strong>：客户端层统一截断（<code>t[:8000]</code> 字符级别粗截，留足安全余量）；更讲究的做法是 Chapter 02 的切分参数保证 chunk 不超限——但<strong>客户端的防御性截断仍然要有</strong>，不能信任上游。</li></ul>
+<h3 id="坑-4api-返回的向量顺序和输入不一致">坑 4：API 返回的向量顺序和输入不一致</h3>
+<ul class="lvl"><li><strong>现象</strong>：批量入库后，块和向量错位——检索命中的块和它的向量对不上号，症状是&quot;检索结果驴唇不对马嘴&quot;，且完全稳定复现不了是哪一步错的。</li><li><strong>原因</strong>：部分服务的响应数组不保证与请求顺序一致，靠 <code>data[].index</code> 字段标识原位置；不排序直接 zip 就会错位。</li><li><strong>正确做法</strong>：<code>sorted(data, key=lambda d: d[&quot;index&quot;])</code> 后再取 embedding（见 3.3 代码）。<strong>这和 Java 里 <code>parallelStream</code> 之后不保证顺序、要靠 <code>forEachOrdered</code> 是同一类教训：并行/批量操作的结果要显式对回顺序。</strong></li></ul>
+<hr/>
+<h2 id="6-自检清单">6. 自检清单</h2>
+<ul class="lvl"><li>[ ] 能用一句话说清哈希指纹与 embedding 指纹的区别（精确相等 vs 语义相似）</li><li>[ ] 能说出批量接口 <code>embed(texts)</code> 的设计理由，以及入库/查询各自的调用方式</li><li>[ ] 记住了 DeepSeek 没有 embedding API，嵌入和生成是两个供应商两件事</li><li>[ ] 能解释为什么单测必须用 Fake 而不是真实 API（慢/花钱/不稳定）</li><li>[ ] 知道 429 的三件套对策：调小批量、指数退避、控制并发</li><li>[ ] 知道入库要记录模型名、查询要校验模型一致性</li></ul>
+<hr/>
+<h2 id="7-真实运行截图第十一章补充">7. 真实运行截图（第十一章补充）</h2>
+<p>第十一章用百炼 <code>text-embedding-v3</code> 把本章的离线替身换成了真实服务，两个截图直接把「批量上限」与「真实链路」可视化：</p>
+<figure class="figure"><img alt="探测百炼单批上限" src="../../../../../../projects/04-rag/assets/real-batch-limit.png" loading="lazy"/><figcaption>探测百炼单批上限</figcaption></figure>
+<figure class="figure"><img alt="真实 embedding 与批量请求" src="../../../../../../projects/04-rag/assets/real-embed.png" loading="lazy"/><figcaption>真实 embedding 与批量请求</figcaption></figure>
+<blockquote><p>关键结论：<code>batch_size</code> 不是全局常数 —— 百炼的单批上限是 10，第 11 条会直接报 <code>400 batch size is invalid</code>；21 个 chunk 按 batch_size=10 只发 3 次 HTTP，真实返回 1024 维向量。</p></blockquote>
+<hr/>
+<p>上一章：<a href="02-chunking.html">02-chunking.md</a> —— 把文档切成大小合适、边界完整的块</p>
+<p>下一章：<a href="04-vector-database.html">04-vector-database.md</a> —— 几十万条向量，怎么在毫秒内找到最近的那些？</p>
+</main>
+</body>
+</html>

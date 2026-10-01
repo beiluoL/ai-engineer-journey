@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>01 · 语言模型基础：一个 token 的一生</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="01-语言模型基础一个-token-的一生">01 · 语言模型基础：一个 token 的一生</h1>
+<blockquote><p><strong>一句话结论</strong>：大语言模型（LLM）在训练时唯一做的事，就是<strong>给定前文，预测下一个 token 的概率分布</strong>。 所谓&quot;智能&quot;，是在把这个目标做到极致的过程中<strong>涌现</strong>出来的副产品。</p></blockquote>
+<p>本章把这条链路走完一遍：<code>文本 → token → 向量 → logits → 概率 → 损失</code>。这一步走通了，后面所有章节都只是在这条链路上加零件。</p>
+<hr/>
+<h2 id="11-从一句话开始语言模型到底在算什么">1.1 从一句话开始：语言模型到底在算什么</h2>
+<p>给模型半句话：</p>
+<pre><code>我 在 北京 吃 烤 ___</code></pre>
+<p>它输出的是一个<strong>概率分布</strong>，而不是一个词：</p>
+<table><thead><tr><th>候选</th><th>烤鸭</th><th>羊肉</th><th>火锅</th><th>香蕉</th></tr></thead><tbody><tr><td>概率</td><td>0.62</td><td>0.15</td><td>0.11</td><td>0.0003</td></tr></tbody></table>
+<p>用数学写出来，语言模型做的是把整个序列的联合概率<strong>分解成一串条件概率</strong>：</p>
+<p>$$ P(w_1, w_2, \dots, w_n) \;=\; \prod_{t=1}^{n} P\big(w_t \mid w_1, \dots, w_{t-1}\big) $$</p>
+<p>这个分解叫<strong>自回归（autoregressive）</strong>：每一步只看前面，不看后面。它带来两个直接后果：</p>
+<table><thead><tr><th>后果</th><th>说明</th></tr></thead><tbody><tr><td>训练可以高度并行</td><td>一句话里每个位置的目标都是&quot;下一个词&quot;，一次前向就能算出全部位置的损失（见 1.6）</td></tr><tr><td>生成必须串行</td><td>第 t 个 token 是第 t+1 个的输入，只能一个一个吐（见 <a href="07-decoding-and-inference.html">第 07 章</a>）</td></tr></tbody></table>
+<pre><code>输入:  我  在  北京  吃  烤
+目标:  在  北京  吃  烤  鸭        &lt;- 每个位置都预测&quot;它的下一个&quot;
+       ↑ 这就是&quot;下一 token 预测&quot;，一句话同时提供了 5 个训练样本</code></pre>
+<blockquote><p><strong>记住这一句</strong>：整个 LLM 产业（预训练 → 微调 → 对齐 → 推理优化）都是围绕&quot;下一 token 预测&quot;这一个目标展开的。</p></blockquote>
+<hr/>
+<h2 id="12-第一步文本-token分词-tokenization">1.2 第一步：文本 → token（分词 / Tokenization）</h2>
+<p>模型不认识字符，只认识整数。<strong>token 是模型处理文本的最小单位</strong>，介于&quot;字符&quot;和&quot;词&quot;之间。</p>
+<h3 id="121-为什么不用按字符或按词">1.2.1 为什么不用「按字符」或「按词」</h3>
+<table><thead><tr><th>粒度</th><th>词表大小</th><th>序列长度</th><th>问题</th></tr></thead><tbody><tr><td>按字符</td><td>极小（~10⁴）</td><td>太长</td><td>序列翻好几倍，注意力是 O(n²)，算不起；单字符信息量太低</td></tr><tr><td>按词</td><td>极大（10⁶⁺）</td><td>短</td><td>未登录词（OOV）无法处理；中文/德语的复合词爆炸；词表大 → embedding 矩阵和 softmax 都变贵</td></tr><tr><td><strong>BPE 子词</strong></td><td>中（3×10⁴ ~ 2×10⁵）</td><td>适中</td><td>✅ 常见词整块保留，生僻词拆成片段，兼顾长度与词表</td></tr></tbody></table>
+<h3 id="122-bpe字节对编码的算法思想">1.2.2 BPE：字节对编码的算法思想</h3>
+<p>BPE（Byte-Pair Encoding）的核心只有两步循环：<strong>统计最常相邻的符号对 → 合并它</strong>。</p>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>S</code> — 初始：拆到字符级 l o w e r &amp;lt;/w&amp;gt;</li><li><code>M</code> — 合并为一个新符号 w e → we</li><li><code>U</code> — 更新词表：加入新 token &#x27;we&#x27;</li><li><code>F</code> — 得到最终词表 + 合并规则表</li><li><code>T</code> — 对新文本：按合并规则 从字符贪心合并</li></ul></div>
+<p>下面是 <code>demos/01_bpe_tokenizer.py</code> 的<strong>真实运行结果</strong>（语料 8 个词，合并 12 次）——注意&quot;合并后 token 总数&quot;一路下降，说明常见片段被压成了整块：</p>
+<figure class="figure"><img alt="BPE 分词器真实运行输出" src="../../../../llm-fundamentals/assets/term-01_bpe_tokenizer.png" loading="lazy"/><figcaption>BPE 分词器真实运行输出</figcaption></figure>
+<p>合并过程中学到的高频组合，正好是英语里最常见的词素：<code>w+e</code> → <code>l+o</code> → <code>n+e</code> → <code>lo+we</code> → <code>w+&lt;/w&gt;</code> → <code>lowe+r</code> … 最后新词 <code>lowest</code> 被切成 <code>[&#x27;lowe&#x27;, &#x27;st&lt;/w&gt;&#x27;]</code> 而不是 6 个字符。<strong>这就是子词分词的价值：见过的部分复用，没见过的部分拆开。</strong></p>
+<h3 id="123-真实的分词器长什么样">1.2.3 真实的分词器长什么样</h3>
+<p>生产模型用的是<strong>字节级 BPE（BBPE）</strong>：先按 UTF-8 转成字节，再对字节做 BPE。好处是<strong>任何 Unicode 文本都不会 OOV</strong>，最坏情况退化为逐字节。</p>
+<table><thead><tr><th>模型</th><th>分词器</th><th>词表大小</th><th>特点</th></tr></thead><tbody><tr><td>GPT-2</td><td>BPE</td><td>50,257</td><td>最早的字节级 BPE</td></tr><tr><td>GPT-4 / o 系列</td><td>cl100k_base / o200k_base</td><td>10 万 / 20 万</td><td>合并了多空格、对代码友好</td></tr><tr><td>LLaMA 3</td><td>TikToken-based BPE</td><td>128,256</td><td>词表大 → 同样文本 token 更少，推理更快</td></tr><tr><td>Qwen / DeepSeek</td><td>BPE</td><td>15 万左右</td><td>中文压缩率高（1 汉字常为 1 token）</td></tr><tr><td>SentencePiece / Unigram</td><td>语言无关子词</td><td>32k 左右</td><td>不依赖空格，适合中日韩</td></tr></tbody></table>
+<h3 id="124-中文为什么更贵">1.2.4 中文为什么更&quot;贵&quot;</h3>
+<p>同样的意思，中文信息密度高、但<strong>每个汉字占的字节多</strong>（UTF-8 一个汉字 3 字节），早期面向英文训练的分词器会把一个汉字拆成 2–3 个 token：</p>
+<table><thead><tr><th>文本</th><th>字符数</th><th>大致 token 数</th><th>说明</th></tr></thead><tbody><tr><td><code>The quick brown fox jumps</code></td><td>25</td><td>~6</td><td>英文约 4 字符/token</td></tr><tr><td><code>那只敏捷的棕色狐狸跳了过去</code></td><td>13</td><td>~9（老分词器） / ~13（中文优化后 1 字 1 token）</td><td>中文早期常 1 字 ≈ 1.5 token</td></tr></tbody></table>
+<p><strong>这件事有真实的钱味</strong>：token 数直接决定 API 计费和上下文上限。所以国内模型都专门扩了中文词表。</p>
+<h3 id="125-别忽略特殊-token">1.2.5 别忽略特殊 token</h3>
+<table><thead><tr><th>token</th><th>作用</th><th>典型形式</th></tr></thead><tbody><tr><td>BOS / EOS</td><td>序列开始 / 结束</td><td><code>&lt;s&gt;</code>、<code>&lt;｜endoftext｜&gt;</code></td></tr><tr><td>PAD</td><td>批处理时补齐长度</td><td><code>&lt;pad&gt;</code>（注意 attention mask 要屏蔽掉，见 <a href="02-attention.html">第 02 章</a> 2.5）</td></tr><tr><td>角色标记</td><td>对话模板</td><td><code>&lt;｜im_start｜&gt;user</code> … <code>&lt;｜im_end｜&gt;</code></td></tr></tbody></table>
+<blockquote><p><strong>坑</strong>：同一个模型权重，用错 chat template（比如漏掉角色标记）会让效果断崖式下跌。这不是&quot;格式洁癖&quot;，因为模型就是在这些 token 的分布上训练出来的。</p></blockquote>
+<hr/>
+<h2 id="13-第二步token-向量embedding">1.3 第二步：token → 向量（Embedding）</h2>
+<p>token id 只是索引，没有语义。要参与矩阵运算，必须先变成向量。</p>
+<p>$$ \text{embedding 矩阵 } E \in \mathbb{R}^{V \times d_{model}},\qquad x_t = E[\,\text{id}_t\,] \in \mathbb{R}^{d_{model}} $$</p>
+<ul class="lvl"><li><code>V</code>：词表大小（例如 128,256）</li><li><code>d_model</code>：隐藏维度（例如 4096）</li><li>所谓&quot;查表&quot;，数学上等价于 <strong>one-hot 向量 × E</strong></li></ul>
+<pre><code>id = 321   -&gt;   one-hot(长度 V) = [0,0,...,1,...,0]
+                                       ↑ 第 321 位
+              ×  E (V × d_model)
+                    ↓
+              x = [0.12, -0.88, ..., 0.31]     长度 d_model</code></pre>
+<table><thead><tr><th>关键性质</th><th>含义</th></tr></thead><tbody><tr><td>参数量 = <code>V × d_model</code></td><td>LLaMA-7B：128k × 4096 ≈ <strong>5.2 亿</strong>参数，占总参数 7.5%，不小</td></tr><tr><td>语义相似 = 向量相近</td><td>&quot;猫&quot;和&quot;狗&quot;的 embedding 余弦相似度明显高于&quot;猫&quot;和&quot;利率&quot;</td></tr><tr><td>一个 token 一个向量？</td><td>不完全是。同一个词在不同上下文中，<strong>上下文相关表示</strong>在注意力层里被改写（见 <a href="02-attention.html">第 02 章</a>）</td></tr><tr><td>权重共享（weight tying）</td><td>输出投影 <code>d_model × V</code> 直接复用 <code>Eᵀ</code>，省下同样的 5 亿参数（GPT-2 / 多数小模型这么做）</td></tr></tbody></table>
+<blockquote><p>注意区分两个常被混为一谈的词： - <strong>Input embedding</strong>：token → 向量（本章） - <strong>Sentence embedding / text embedding</strong>：整句话 → 一个向量，用于检索。RAG 用的就是这种（由 encoder 或专门的双塔模型产出），跟语言模型内部的 embedding 不是一回事。</p></blockquote>
+<hr/>
+<h2 id="14-第三步向量-概率lm-head-softmax">1.4 第三步：向量 → 概率（LM Head + Softmax）</h2>
+<p>经过 N 层 Transformer（<a href="03-transformer.html">第 03 章</a>）后，最后一个位置的隐藏状态 <code>h ∈ R^{d_model}</code> 要变成&quot;下一个词的打分&quot;。</p>
+<p>$$ \text{logits} = h \, W_{lm},\quad W_{lm} \in \mathbb{R}^{d_{model} \times V} \qquad\Longrightarrow\qquad p = \operatorname{softmax}(\text{logits}) $$</p>
+<h3 id="141-logits-是什么">1.4.1 logits 是什么</h3>
+<p><strong>logits = 未归一化的打分</strong>，可以为负、可以很大，还不构成概率分布。只有过完 softmax 才是概率。</p>
+<p>$$ \operatorname{softmax}(z)_i = \frac{e^{z_i}}{\sum_{j=1}^{V} e^{z_j}} $$</p>
+<p>工程上必须<strong>先减去最大值</strong>再取指数——数学上等价，但能避免 <code>exp(1000)</code> 溢出：</p>
+<p>$$ \operatorname{softmax}(z)_i = \frac{e^{\,z_i - \max_j z_j}}{\sum_j e^{\,z_j - \max_j z_j}} $$</p>
+<p>下面是 <code>demos/03_softmax_crossentropy.py</code> 的真实输出，用 <code>logits = [1000, 1001, 999]</code> 做了对照实验：</p>
+<figure class="figure"><img alt="Softmax 与交叉熵真实运行输出" src="../../../../llm-fundamentals/assets/term-03_softmax_crossentropy.png" loading="lazy"/><figcaption>Softmax 与交叉熵真实运行输出</figcaption></figure>
+<p>看第 2 段：<strong>不减最大值时 <code>exp</code> 全部溢出成 <code>inf</code>，<code>inf/inf</code> 得到 <code>nan</code>，梯度直接炸掉</strong>；减掉最大值后得到正常的 <code>[0.2447, 0.6652, 0.0900]</code>。这就是为什么所有框架的 softmax 都是&quot;数值稳定&quot;版本。</p>
+<h3 id="142-温度-t采样时的随机性旋钮">1.4.2 温度 T：采样时的&quot;随机性旋钮&quot;</h3>
+<p>在 softmax 之前把 logits 除以 T：</p>
+<p>$$ p_i = \operatorname{softmax}\!\left(\frac{z_i}{T}\right) $$</p>
+<figure class="figure"><img alt="温度对分布的影响" src="../../../../llm-fundamentals/assets/softmax-temperature.png" loading="lazy"/><figcaption>温度对分布的影响</figcaption></figure>
+<table><thead><tr><th>T</th><th>效果</th><th>使用场景</th></tr></thead><tbody><tr><td>→ 0</td><td>退化为 argmax（永远取最高分）</td><td>数学解题、抽取结构化字段</td></tr><tr><td>0.2 – 0.7</td><td>分布更尖锐，稳定但略死板</td><td>代码、翻译、RAG 问答</td></tr><tr><td>1.0</td><td>使用模型原始分布</td><td>通用对话</td></tr><tr><td>&gt; 1.2</td><td>分布变平，长尾 token 有机会</td><td>创意写作、头脑风暴（<strong>幻觉风险同步上升</strong>）</td></tr></tbody></table>
+<blockquote><p>注意：温度<strong>不改变相对排序</strong>，只改变分布平坦程度。<code>argmax</code> 在任意 T 下都不变——所以&quot;调温度&quot;解决不了&quot;模型把答案排在了第二位&quot;这类问题。</p></blockquote>
+<h3 id="143-完整链路速查">1.4.3 完整链路速查</h3>
+<table><thead><tr><th>阶段</th><th>张量形状</th><th>含义</th><th>典型数值</th></tr></thead><tbody><tr><td>输入文本</td><td><code>(1,)</code> str</td><td><code>&quot;我在北京吃烤&quot;</code></td><td>—</td></tr><tr><td>token ids</td><td><code>(T,)</code> int</td><td><code>[7892, 221, 1900, ...]</code></td><td>词表内</td></tr><tr><td>embedding</td><td><code>(T, 4096)</code> float</td><td>逐 token 向量</td><td>~N(0, 1)</td></tr><tr><td>隐藏状态（末层）</td><td><code>(T, 4096)</code> float</td><td>上下文相关表示</td><td>—</td></tr><tr><td>logits</td><td><code>(T, V)</code> float</td><td>每个位置对全词表打分</td><td>−30 ~ +30</td></tr><tr><td>概率</td><td><code>(T, V)</code> float</td><td>每行和为 1</td><td>0 ~ 1</td></tr><tr><td>采样结果</td><td><code>(1,)</code> int</td><td>实际吐出的 token</td><td>词表内</td></tr></tbody></table>
+<hr/>
+<h2 id="15-训练目标交叉熵与困惑度">1.5 训练目标：交叉熵与困惑度</h2>
+<h3 id="151-交叉熵损失">1.5.1 交叉熵损失</h3>
+<p>$$ \mathcal{L} = -\frac{1}{T}\sum_{t=1}^{T} \log P\big(w_t \mid w_{&lt;t}\big) \;=\; -\frac{1}{T}\sum_{t=1}^{T} \log \operatorname{softmax}(z_t)\big[\,w_t\,\big] $$</p>
+<p>符号含义：</p>
+<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td>$T$</td><td>序列长度（实际是有效 token 数，PAD 不算）</td></tr><tr><td>$z_t$</td><td>第 t 个位置的 logits，维度 V</td></tr><tr><td>$z_t[w_t]$</td><td>正确 token 对应的那一个 logit</td></tr><tr><td>$\log$</td><td>自然对数</td></tr></tbody></table>
+<p><strong>直觉</strong>：只惩罚&quot;正确 token 的概率不够高&quot;。模型给出的正确概率是 0.9 → loss 0.105；只给 0.01 → loss 4.6。</p>
+<h3 id="152-shiftbyone目标怎么对齐">1.5.2 shift-by-one：目标怎么对齐</h3>
+<pre><code>tokens:   [BOS]  我   在   北京  吃   烤   鸭   [EOS]
+logits:    z0    z1   z2   z3   z4   z5   z6
+target:     我   在   北京  吃   烤   鸭   [EOS]   &lt;- 就是输入左移一位
+loss:     CE(z0, 我) + CE(z1, 在) + ... + CE(z6, EOS)</code></pre>
+<p><strong>一句话：输入和标签是同一串 token，只是错开一格。</strong> 这就是&quot;自监督&quot;——不需要任何人工标注。</p>
+<h3 id="153-困惑度perplexity">1.5.3 困惑度（Perplexity）</h3>
+<p>$$ \mathrm{PPL} = \exp(\mathcal{L}) = \exp\!\left(-\frac{1}{T}\sum_t \log p_t\right) $$</p>
+<table><thead><tr><th>交叉熵</th><th>困惑度</th><th>人话解释</th></tr></thead><tbody><tr><td>0.00</td><td>1.0</td><td>完全确定（不可能达到）</td></tr><tr><td>0.69</td><td>2.0</td><td>每次预测 ≈ 在 2 个候选里犹豫</td></tr><tr><td>2.30</td><td>10.0</td><td>每次都像在 10 个候选里挑</td></tr><tr><td>5.00</td><td>148</td><td>基本在瞎猜</td></tr></tbody></table>
+<p>真实参考（不同语料不可直接比）：</p>
+<table><thead><tr><th>模型 / 设置</th><th>交叉熵</th><th>困惑度</th></tr></thead><tbody><tr><td>随机猜（词表 5 万）</td><td>10.8</td><td>5 万</td></tr><tr><td>GPT-2 在通用英文</td><td>~3.0</td><td>~20</td></tr><tr><td>现代 7B 模型在英文维基</td><td>~2.2</td><td>~9</td></tr><tr><td>现代 70B+ 模型</td><td>&lt; 2.0</td><td>&lt; 8</td></tr></tbody></table>
+<p><strong>困惑度越低 ≠ 越有用</strong>。它衡量的是&quot;对语料的拟合&quot;，而用户关心的是&quot;任务做对没有&quot;。这两者常常一起上升，但对齐（<a href="08-alignment-rlhf.html">第 08 章</a>）后经常出现&quot;困惑度略升、人类评价更高&quot;的情况。</p>
+<h3 id="154-为什么用交叉熵不用准确率">1.5.4 为什么用交叉熵，不用准确率</h3>
+<table><thead><tr><th>指标</th><th>可导</th><th>梯度信息</th><th>结论</th></tr></thead><tbody><tr><td>准确率（是否 argmax 命中）</td><td>✗ 阶梯函数，几乎处处梯度为 0</td><td>无</td><td>无法训练</td></tr><tr><td>交叉熵</td><td>✓</td><td>连续反映&quot;差多远&quot;</td><td>✅ 训练目标</td></tr><tr><td>困惑度</td><td>✓（是 CE 的单调变换）</td><td>与 CE 等价</td><td>用来汇报</td></tr></tbody></table>
+<hr/>
+<h2 id="16-训练-vs-推理同一个模型的两种姿势">1.6 训练 vs 推理：同一个模型的两种姿势</h2>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>Train</code> — 训练（并行，一次看完整个序列）</li><li><code>T1</code> — 输入整句 [T 个 token]</li><li><code>T2</code> — 一次前向 → z1..zT</li><li><code>T3</code> — 对每个位置算 CE，求和取平均</li><li><code>T4</code> — 反向传播 → 更新全部参数</li><li><code>Infer</code> — 推理（串行，一次一个 token）</li><li><code>I1</code> — 输入 prompt</li><li><code>I2</code> — 前向 → 只要最后一个位置的概率</li><li><code>I3</code> — 采样得到新 token</li><li><code>I4</code> — 把新 token 拼回输入</li></ul></div>
+<table><thead><tr><th>维度</th><th>训练</th><th>推理（生成）</th></tr></thead><tbody><tr><td>并行度</td><td>全部位置并行</td><td>严格串行</td></tr><tr><td>输入</td><td>真实文本（teacher forcing）</td><td>模型自己刚生成的 token</td></tr><tr><td>计算特点</td><td>算力密集（矩阵乘满负荷）</td><td>显存带宽密集（每步只算一点）</td></tr><tr><td>关键优化</td><td>混合精度、并行策略、FlashAttention</td><td>KV Cache、连续批处理、量化（<a href="07-decoding-and-inference.html">第 07 章</a>）</td></tr><tr><td>副作用</td><td>—</td><td><strong>曝光偏差（exposure bias）</strong>：训练时只看过正确前缀，推理时错一步就可能越走越偏</td></tr></tbody></table>
+<blockquote><p><strong>曝光偏差</strong>是&quot;训练/推理不一致&quot;的经典后果。缓解手段（如 scheduled sampling）在 LLM 时代不主流，更常用的办法是：<strong>对齐阶段教它自我纠错</strong>（<a href="08-alignment-rlhf.html">第 08 章</a>），以及<strong>解码阶段加约束</strong>（<a href="07-decoding-and-inference.html">第 07 章</a>）。</p></blockquote>
+<hr/>
+<h2 id="17-完整地图三阶段分别改变了什么">1.7 完整地图：三阶段分别改变了什么</h2>
+<div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>R</code> — 原始互联网文本 （几 T ~ 几十 T token）</li><li><code>PT</code> — ① 预训练 下一 token 预测</li><li><code>BM</code> — Base Model 会续写，不会听话</li><li><code>SFT</code> — ② 指令微调 (SFT) 问答/对话数据</li><li><code>RM</code> — ③ 对齐 (RLHF/DPO) 人类偏好</li><li><code>Chat</code> — Chat Model 会听话，会拒绝</li></ul></div>
+<table><thead><tr><th>阶段</th><th>数据形态</th><th>改变了什么</th><th>详见</th></tr></thead><tbody><tr><td>预训练</td><td>海量无标注文本</td><td>学会语言与世界的统计规律</td><td><a href="04-pretraining.html">第 04 章</a></td></tr><tr><td>指令微调</td><td>指令-回答对（万~百万级）</td><td>学会&quot;按指令办事&quot;的形式</td><td><a href="05-finetuning.html">第 05 章</a></td></tr><tr><td>对齐</td><td>人类偏好对比数据</td><td>学会&quot;什么是好回答&quot;</td><td><a href="08-alignment-rlhf.html">第 08 章</a></td></tr></tbody></table>
+<hr/>
+<h2 id="18-常被误解的点">1.8 常被误解的点</h2>
+<table><thead><tr><th>误解</th><th>真相</th></tr></thead><tbody><tr><td>&quot;模型在数据库里检索答案&quot;</td><td>知识被<strong>压缩进参数</strong>（分布式存储）。所以会有&quot;记错&quot;和&quot;编造&quot;，这是压缩的固有代价，不是 bug</td></tr><tr><td>&quot;温度调低就不会胡说&quot;</td><td>低温度让输出更确定，但<strong>错误答案同样更确定</strong>。事实性要靠 RAG / 工具调用兜底</td></tr><tr><td>&quot;困惑度低就是好模型&quot;</td><td>困惑度只看语言拟合，不看指令遵循、事实性、安全性</td></tr><tr><td>&quot;token 就是词&quot;</td><td>一个词可能是多个 token，一个 token 也可能是半个词或一堆空格</td></tr><tr><td>&quot;logits 就是概率&quot;</td><td>logits 未归一化，可为负。softmax 之后才是概率</td></tr><tr><td>&quot;训练时模型看见答案才知道怎么答&quot;</td><td>训练时确实喂了真实文本（teacher forcing），但模型内部<strong>只能看到左侧位置</strong>——因果掩码保证了这一点（<a href="02-attention.html">第 02 章</a> 2.5）</td></tr></tbody></table>
+<hr/>
+<h2 id="19-动手">1.9 动手</h2>
+<pre><code>cd llm-fundamentals
+
+# 1) 亲手看 BPE 怎么合并：改 CORPUS 和 NUM_MERGES 再跑
+python3 demos/01_bpe_tokenizer.py
+
+# 2) 亲手看 logits → 概率 → loss：改 logits 数组再跑
+python3 demos/03_softmax_crossentropy.py
+
+# 3) 重画温度对比图
+python3 demos/make_figures.py</code></pre>
+<p><strong>建议动手改的三个数</strong>：</p>
+<ul class="lvl"><li><code>01_bpe_tokenizer.py</code> 里把语料换成中文（<code>[&quot;我们&quot;, &quot;你们&quot;, &quot;他们&quot;, &quot;我们&quot;]</code>），观察合并出的 token 是什么——你会发现中文按字节合并会产出奇怪但有效的片段。</li><li><code>03_softmax_crossentropy.py</code> 里把 <code>logits</code> 改成 <code>[0.1, 0.1, 0.1, 0.1]</code>，观察 loss 是否等于 <code>ln(4) = 1.386</code>（完全均匀分布时的交叉熵）。</li><li>把 <code>batch_probs</code> 改成 4 个 0.25，验证 PPL = 4。</li></ul>
+<hr/>
+<h2 id="110-自查问题">1.10 自查问题</h2>
+<ul class="lvl"><li>为什么语言模型的训练目标可以只用无标注文本？（答：标签是输入自身左移一位）</li><li><code>tokenizer</code> 词表从 5 万扩到 15 万，会带来哪三处变化？（答：embedding 参数量 ×3、每句 token 数下降、softmax 计算量变大）</li><li>为什么 softmax 要先减最大值？不减会怎样？</li><li>交叉熵 2.3 对应的困惑度是多少？意味着什么？</li><li>训练时是并行的，推理时为什么必须串行？这个差异导致哪种偏差？</li><li>温度调到 0.01，模型输出会不会更&quot;正确&quot;？</li></ul>
+<hr/>
+<p class="nav-footer"><a href="README.html">← 返回总览</a> · <a href="02-attention.html">下一章：注意力机制 →</a></p>
+</main>
+</body>
+</html>

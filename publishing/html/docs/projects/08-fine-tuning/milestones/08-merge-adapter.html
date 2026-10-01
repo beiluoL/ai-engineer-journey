@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 08 — Merge / Load Adapter：合并是免费的，但收益测不出来</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-08-merge-load-adapter合并是免费的但收益测不出来">Milestone 08 — Merge / Load Adapter：合并是免费的，但收益测不出来</h1>
+<p>M07 把 adapter 存成了一百多 KB 的文件。最后一个部署问题：<strong>上线时要不要把它&quot;融化&quot;回基座？</strong></p>
+<p>LoRA 有个常被忽略的好处 —— <strong>它是可以合并的</strong>。因为 LoRA 分支是线性层，前向只是&quot;两次矩阵乘&quot;，完全可以把它加回 <code>W</code>：</p>
+<pre><code>W&#x27; = W + (alpha/r) · A @ B</code></pre>
+<p>得到一个<strong>形状、结构、推理速度完全不变</strong>的普通模型。于是部署有两个选项：</p>
+<pre><code>┌─ 合并（merge）   推理零额外开销；但每个任务一份完整权重，切换任务要重新加载
+└─ 不合并（load）  一个基座常驻显存，切换任务只换几 MB 的 adapter；
+                   代价是每次前向多两次小矩阵乘（r 很小时约几个百分点）</code></pre>
+<p>本项目两种都实现，<strong>用数值证明它们等价</strong>，再用真实计时给出两者的推理耗时差 —— 然后诚实地告诉你：<strong>这个耗时差在这个规模下测不出来</strong>。</p>
+<hr/>
+<h2 id="1-why为什么合并必须被证明而不是被相信">1. Why：为什么&quot;合并&quot;必须被证明，而不是被相信</h2>
+<p><code>merge</code> 之所以能用，全靠那个等式成立。如果 <code>ΔW</code> 的合成方式（scaling、A/B 的乘法顺序、浮点累加顺序）有任何一处与训练时不一致，合并后的模型就会<strong>悄悄变差</strong> —— 而且不会报错，因为前向照样跑得通。</p>
+<p>所以本章第一节不是&quot;怎么合并&quot;，而是&quot;<strong>合并前后是否逐位相同</strong>&quot;。这和 M04 先证 B=0 等价性、再真训是同一套方法论。</p>
+<h2 id="2-design两个方向都要能走">2. Design：两个方向都要能走</h2>
+<ul class="lvl"><li><strong><code>merge_lora(model)</code></strong>：把 <code>W + ΔW</code> 写回成一个普通 <code>Parameter</code>，原地替换所有 LoRA 层，并返回一份<strong>备份</strong>（<code>W</code>/<code>A</code>/<code>B</code>/<code>r</code>/<code>alpha</code>/<code>block_size</code>/<code>double_quant</code>）—— 有了它才能还原。</li><li><strong><code>unmerge_lora(model, backup)</code></strong>：把合并后的权重还原成&quot;基座 + LoRA 分离&quot;结构（A/B 取备份值）。</li><li><strong><code>load_adapter(model, path)</code></strong>：不合并，只把 npz 里的 A/B 就地装回去（M07 已实现）。</li></ul>
+<p><strong>理论开销</strong>：<code>lora_overhead_report()</code> 按 MACs 算 —— 每层额外 <code>r×(in+out)</code>，相对于基座 <code>in×out</code>。</p>
+<figure class="figure"><img alt="M08 合并前后对比" src="../../../../../../projects/08-fine-tuning/assets/merge.svg" loading="lazy"/><figcaption>M08 合并前后对比</figcaption></figure>
+<h2 id="3-realrun-evidence来自-demosoutdemo08mergeterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_08_merge_terminal.txt</code>）</h2>
+<p>先训出一个 adapter（40 步，r=8）：loss <strong>8.2909 → 6.2130</strong>；注入后参数量 <code>230,656 + 27,136 = 257,792</code>；LoRA 层数 <strong>13</strong>。</p>
+<h3 id="31-数值证明合并后-分离状态实测逐位相同">3.1 数值证明：合并后 == 分离状态（实测逐位相同）</h3>
+<table><thead><tr><th>探针输入</th><th>输出元素数</th><th>合并前 vs 合并后 最大绝对误差</th></tr></thead><tbody><tr><td>shape (2, 32)</td><td>65,536</td><td><strong>0.000e+00</strong></td></tr><tr><td>shape (4, 64)</td><td>262,144</td><td><strong>0.000e+00</strong></td></tr><tr><td>shape (1, 128)</td><td>131,072</td><td><strong>0.000e+00</strong></td></tr></tbody></table>
+<p>三个探针的最大绝对误差 <strong>0.000e+00</strong>（float64 的 eps 是 2.2e-16）。合并后 <strong>LoRA 层数 0</strong>（已全部变成普通线性层），<strong>参数量回到 230,656</strong>（比分离状态少 27,136，A/B 消失）。</p>
+<p><code>ΔW 的平均幅度 / W 的平均幅度 = 31.55%</code> —— adapter 确实只改了基座的一部分。</p>
+<h3 id="32-推理耗时对比真实计时分离-合并交替各测-7-轮取中位数">3.2 推理耗时对比（真实计时：分离 / 合并<strong>交替</strong>各测 7 轮，取中位数）</h3>
+<pre><code>分离状态（基座 + LoRA 分支）  3.190 ms/次   7 轮: [2.62, 4.69, 3.01, 2.99, 3.27, 3.36, 3.19]
+合并后（单一 W&#x27;）            3.023 ms/次   7 轮: [2.57, 3.02, 3.09, 3.48, 2.93, 3.0, 3.05]
+合并节省的推理时间（中位数）   5.22%        绝对差 +0.166 ms/次
+同一状态的轮间波动（标准差）   18.4%        用来判断上面的差是不是真的
+LoRA 分支理论额外 MACs 占比  16.56%</code></pre>
+<p><strong>⚠ 实测差异（+5.22%）小于轮间噪声（±18.4%）—— 测不出来。</strong></p>
+<h3 id="33-另一种部署不合并只加载-adapter实测">3.3 另一种部署：不合并，只加载 adapter（实测）</h3>
+<pre><code>adapter 文件                 113.22 KB   只有 A / B
+加载前后输出是否变化          True       变了 = adapter 真的被装进去了
+加载后与「训练完的分离状态」是否一致   最大绝对误差 = 1.031e-07
+加载的层数                   13</code></pre>
+<p><code>1.031e-07</code> 是 fp32 落盘精度的量级（M07 实测 fp32 往返 7.449e-09，这里是 13 层累积后的结果），说明加载链路无损。</p>
+<h3 id="34-两种方式的取舍实测">3.4 两种方式的取舍（实测）</h3>
+<table><thead><tr><th></th><th>合并（merge）</th><th>只加载 adapter（load）</th></tr></thead><tbody><tr><td>推理速度</td><td>与基座完全相同</td><td>理论 +16.6% MACs（实测 +5.2%，见上）</td></tr><tr><td>磁盘 / 显存</td><td>每任务一份 901.00 KB</td><td>每任务 <strong>113.22 KB</strong></td></tr><tr><td>切任务</td><td>重新加载整个模型</td><td>换一个 adapter 文件（毫秒级）</td></tr><tr><td>多任务同时服务</td><td>每任务一份完整副本</td><td>一份基座 + N 个 adapter 共享</td></tr><tr><td>适合场景</td><td>单任务、极致延迟</td><td>多任务、频繁切换、显存紧张</td></tr></tbody></table>
+<figure class="figure"><img alt="M08 真实运行输出" src="../../../../../../projects/08-fine-tuning/assets/term-08-merge.png" loading="lazy"/><figcaption>M08 真实运行输出</figcaption></figure>
+<h2 id="4-踩坑-反直觉发现">4. 踩坑 / 反直觉发现</h2>
+<h3 id="41-合并的性能收益在这个规模测不出来实测-522-vs-184-噪声">4.1 合并的性能收益在这个规模测不出来（实测 +5.22% vs ±18.4% 噪声）</h3>
+<p>理论上 LoRA 分支带来 <strong>16.56%</strong> 的额外 MACs，合并应该省下这笔钱。实测只省了 <strong>5.22%</strong>，而同一状态的轮间波动标准差就有 <strong>18.4%</strong>。</p>
+<p><strong>这不是实验失败，是这个规模下的真实结论</strong>：<code>d_model=64、seq=64</code> 的前向耗时被 <strong>Python 层构建计算图的对象开销主导</strong>（每步几百个小 Tensor 分配），真正的矩阵乘占比很小，所以理论上的 16.6% 被淹没了。</p>
+<p>换到 7B 模型（<code>d_model=4096</code>，matmul 主导）才会在计时上看到这笔开销 —— <strong>注意：7B 这条是按结构推断，不是本机实测</strong>。</p>
+<blockquote><p>本 demo 的计时方法值得抄：<strong>分离 / 合并交替各测 7 轮</strong>（而不是先测 7 轮 A 再测 7 轮 B），这样机器负载的漂移不会系统性地偏向某一方；并<strong>同时报告轮间波动</strong>，让读者自己判断差值是否可信。</p></blockquote>
+<h3 id="42-合并后参数量变少不是省了显存实测-230656-vs-257792">4.2 &quot;合并后参数量变少&quot;不是省了显存（实测 230,656 vs 257,792）</h3>
+<p>合并后参数量从 257,792 回到 230,656，少掉的 27,136 是 A/B —— 看起来像&quot;省了 10% 显存&quot;。</p>
+<p>但要注意：<strong>adapter 那 27,136 个参数从来只占训练显存的很小一部分</strong>（M01 实测：训练显存里权重 1,007 KB，梯度 + Adam 只有 318 KB，而梯度/动量在推理时根本不存在）。所以合并省的是<strong>逐层多出来的那次小矩阵乘</strong>，不是参数。真正省存储的是&quot;不合并&quot;那条路（113.22 KB vs 901.00 KB）。</p>
+<h3 id="43-合并必须可逆转否则-debug-无从下手实现设计">4.3 合并必须可逆转，否则 debug 无从下手（实现设计）</h3>
+<p><code>merge_lora</code> 返回一份完整备份（<code>W</code>/<code>A</code>/<code>B</code>/<code>r</code>/<code>alpha</code>/<code>block_size</code>/<code>double_quant</code>），<code>unmerge_lora</code> 能原样还原。这不是过度设计：一旦合并后发现输出不对，你需要能回到&quot;分离状态&quot;去逐层对比 <code>ΔW</code> —— 本章的等价性证明本身就依赖这个能力（先算分离状态的输出，再合并，再算一次）。</p>
+<h3 id="44-等价性是-0000e00不是很小实测">4.4 等价性是 <code>0.000e+00</code>，不是&quot;很小&quot;（实测）</h3>
+<p>三个探针都是<strong>严格的零误差</strong>，不是 1e-15 量级。原因是合并走的正是 <code>.data</code> 里那条<strong>同一条</strong>合成路径（<code>layer.merged_weight()</code> 与前向的 <code>W.data + scaling·(A@B)</code> 是同一个表达式），浮点运算顺序完全一致。</p>
+<p>这反过来说明一件事：<strong>如果你在合并时&quot;优化&quot;了一下运算顺序（比如先算 <code>scaling·A</code> 再乘 <code>B</code>），误差就不再是 0 了</strong>。等价性是脆弱的，必须每次验证。</p>
+<h2 id="5-conclusion">5. Conclusion</h2>
+<ul class="lvl"><li><strong>合并前后最大绝对误差 <code>0.000e+00</code></strong>（三个探针，共 458,752 个输出元素）—— 数学上完全等价。</li><li>合并后 LoRA 层数 <strong>0</strong>、参数量回到 <strong>230,656</strong>；<code>ΔW/W = 31.55%</code>。</li><li>推理耗时 <strong>3.190 → 3.023 ms（+5.22%）</strong>，但轮间波动 <strong>±18.4%</strong> —— <strong>这个规模下测不出来</strong>；理论额外 MACs 是 <strong>16.56%</strong>。</li><li>只加载 adapter：文件 <strong>113.22 KB</strong>，与训练完的分离状态一致（<strong>1.031e-07</strong>，fp32 精度量级）。</li><li><strong>合并换推理速度，不合并换部署灵活性。</strong> 生产里常见做法：开发时不合并（方便换任务）+ 上线前合并（省延迟）。</li><li><code>merge</code> 能成立的前提，正是本章第一节证明的那个等式 —— 所以<strong>先证明，再上线</strong>。</li></ul>
+<h2 id="6-code-map">6. Code map</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/merge.py</code></td><td><code>merge_lora</code>（写回 <code>W+ΔW</code> 并返回备份）/ <code>unmerge_lora</code>（还原分离结构）/ <code>max_abs_diff</code>（等价性证明）/ <code>time_forward</code>（真实计时）/ <code>lora_overhead_report</code>（理论 MACs 开销）</td></tr><tr><td><code>src/ft/checkpoint.py</code></td><td><code>load_adapter</code>：不合并那条路的入口（就地写回 A/B）</td></tr><tr><td><code>src/ft/lora.py</code></td><td><code>delta_weight()</code> / <code>merged_weight()</code>：合并用的就是训练时那条合成路径（等价性为 0 的原因）</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>lora_layers()</code> / <code>set_param()</code>：按 path 定位并原地替换层</td></tr><tr><td><code>demos/demo_08_merge.py</code></td><td>6 节：训 adapter / 等价性证明 / 交替计时 / 只加载 adapter / 取舍表 / 关键数字</td></tr><tr><td><code>demos/out/demo_08_merge_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>models/adapters/demo08_adapter.npz</code></td><td>真实产物（113.22 KB）</td></tr><tr><td><code>assets/merge.svg</code></td><td>本章 merge 前后对比图</td></tr></tbody></table>
+<h2 id="7-version-line">7. Version line</h2>
+<p>v0.7 → <strong>v0.8</strong>，M08 merge / load adapter 落地。实测：合并前后最大绝对误差 <strong>0.000e+00</strong>（3 个探针共 458,752 个输出元素）；合并后 LoRA 层数 0、参数量回到 <strong>230,656</strong>；推理耗时 <strong>3.190 → 3.023 ms（+5.22%）</strong>，但轮间波动 <strong>±18.4%</strong> → 这个规模下<strong>测不出来</strong>；adapter 文件 <strong>113.22 KB</strong>。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</main>
+</body>
+</html>

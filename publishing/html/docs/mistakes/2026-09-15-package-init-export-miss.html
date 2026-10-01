@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>包 `__init__.py` 漏导出异常类：单测全绿，运行即炸</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="包-initpy-漏导出异常类单测全绿运行即炸">包 <code>__init__.py</code> 漏导出异常类：单测全绿，运行即炸</h1>
+<blockquote><p>状态：已复盘 · 关联：Project 01 <code>assistant</code> 包</p></blockquote>
+<h2 id="问题">问题</h2>
+<p>给 Project 01 写配置加载与异常体系后，运行 <code>python main.py &quot;测试&quot;</code> 验证无 Key 时的友好报错。</p>
+<h2 id="我的错误答案-做法与现象">我的错误答案 / 做法与现象</h2>
+<p>单元测试 6 个全部通过，但一运行 <code>main.py</code> 就抛：</p>
+<pre><code>ImportError: cannot import name &#x27;LLMConfigError&#x27; from &#x27;assistant.errors&#x27;</code></pre>
+<p>奇怪点：<code>tests/test_all.py</code> 明明测过配置加载路径，为什么测试是绿的？</p>
+<h2 id="为什么错">为什么错</h2>
+<p><code>assistant/__init__.py</code> 的 <code>__all__</code> 与 import 列表里<strong>漏了 <code>LLMConfigError</code></strong>（只导出了 <code>LLMAuthError</code> / <code>LLMRateLimitError</code> 等）。</p>
+<p>而单元测试全部从<strong>深层路径</strong>导入：</p>
+<pre><code>from assistant.errors import LLMConfigError   # 绕过了包的 __init__</code></pre>
+<p>这条导入路径不经过 <code>assistant/__init__.py</code> 的导出清单，所以漏导出对测试不可见； <code>main.py</code> 走的是使用路径 <code>from assistant import ...</code>，一跑就炸。</p>
+<h2 id="正确理解">正确理解</h2>
+<p><strong>测试通过 ≠ 没有 bug。测试的导入路径和使用者的导入路径可能不同。</strong> 包的 <code>__init__.py</code> 是一份「公共 API 承诺」，<code>__all__</code> 漏一项，承诺就缺一块—— 而测试如果绕过这份承诺，就等于没测它。</p>
+<h2 id="代码示例">代码示例</h2>
+<pre><code># 错：__all__ 缺 LLMConfigError
+__all__ = [&quot;Config&quot;, &quot;load_config&quot;, &quot;LLMClient&quot;, &quot;LLMError&quot;, &quot;LLMAuthError&quot;, &quot;LLMRateLimitError&quot;]
+
+# 对：与 errors.py 的定义清单一一对应
+__all__ = [&quot;Config&quot;, &quot;load_config&quot;, &quot;LLMClient&quot;, &quot;LLMError&quot;, &quot;LLMConfigError&quot;,
+           &quot;LLMAuthError&quot;, &quot;LLMRateLimitError&quot;, &quot;LLMResponseError&quot;]</code></pre>
+<p>修好后再跑测试无效——必须<strong>按使用路径冒烟</strong>：</p>
+<pre><code>python main.py &quot;测试&quot;   # 走 from assistant import ... 的真实路径</code></pre>
+<h2 id="如何避免">如何避免</h2>
+<ul class="lvl"><li>新增公共类/函数后，<code>__init__.py</code> 的 import + <code>__all__</code> 同步更新（当成一个原子动作）</li><li>单测之外永远保留一条「使用路径冒烟」：<code>python main.py</code> 实跑一次再提交</li><li>让 AI 审查代码时加一条固定检查项：<strong>测试路径与使用路径是否一致</strong></li></ul>
+<h2 id="复习时间">复习时间</h2>
+<ul class="lvl"><li>[ ] 3 天后（2026-09-18）</li><li>[ ] 2 周后（2026-09-29）</li><li>[ ] 2 个月后（2026-11-15）</li></ul>
+</main>
+</body>
+</html>

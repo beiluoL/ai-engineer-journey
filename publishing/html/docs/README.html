@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI Engineer Journey</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="ai-engineer-journey">AI Engineer Journey</h1>
+<blockquote><p><strong>Project First — 通过连续项目逐步构建 AI Engineer 能力</strong></p></blockquote>
+<h2 id="项目定位">项目定位</h2>
+<p>面向有 Java / 前端基础、但 Python 和 AI 基础薄弱的开发者， 通过 <strong>10 个连续项目</strong>，从 Python 基础一路学到 AI Application、RAG、Agent、 PyTorch、Transformer、微调、评估、量化、部署，并最终自己实现 Tiny LLM。</p>
+<p><strong>这不是课程，不是知识库，是一组持续演进、可以运行、可以展示、可以继续扩展的工程项目。</strong></p>
+<h2 id="project-first-原则">Project First 原则</h2>
+<pre><code>Project
+  &gt;
+Milestone
+  &gt;
+Knowledge
+  &gt;
+Code
+  &gt;
+Practice
+  &gt;
+Documentation</code></pre>
+<p><strong>项目遇到问题 → 学习知识 → 知识进入代码 → 运行验证 → 形成能力 → 进入下一个项目</strong></p>
+<h2 id="10-个项目路线">10 个项目路线</h2>
+<table><thead><tr><th>#</th><th>项目</th><th>核心能力</th><th>状态</th></tr></thead><tbody><tr><td>01</td><td><a href="../../../projects/01-python-ai-cli">Python AI CLI Assistant</a></td><td>Python 基础 + 真实 LLM API</td><td>🔄</td></tr><tr><td>02</td><td><a href="../../../projects/02-engineering-ai-assistant">Engineering AI Assistant</a></td><td>Python 工程化 + FastAPI</td><td>✅</td></tr><tr><td>03</td><td><a href="../../../projects/03-ai-application">AI Application</a></td><td>Prompt / Streaming / Function Calling</td><td>✅</td></tr><tr><td>04</td><td><a href="../../../projects/04-rag">AI Knowledge Base / RAG</a></td><td>Embedding / Chunk / Vector DB / RAG</td><td>✅</td></tr><tr><td>05</td><td><a href="../../../projects/05-agent-mcp">Research Agent / MCP</a></td><td>Agent / Tool / MCP Protocol</td><td>✅</td></tr><tr><td>06</td><td><a href="../../../projects/06-mini-transformer-llm">Mini Transformer / LLM</a></td><td>从零 autograd / Attention / Transformer</td><td>✅</td></tr><tr><td>07</td><td><a href="../../../projects/07-open-source-llm">Open Source LLM</a></td><td>Hugging Face / Tokenizer / 本地推理</td><td>🔄</td></tr><tr><td>08</td><td><a href="../../../projects/08-fine-tuning">LoRA / QLoRA Fine-Tuning</a></td><td>SFT / LoRA / QLoRA</td><td>✅</td></tr><tr><td>09</td><td><a href="../../../projects/09-evaluation-inference">LLM Evaluation / Inference</a></td><td>评估 / 量化 / 服务化</td><td>✅</td></tr><tr><td>10</td><td><a href="../../../projects/10-tiny-llm-capstone">Tiny LLM Capstone</a></td><td>从零实现小型 LLM（Tokenizer → Serving 全链路）</td><td>✅</td></tr></tbody></table>
+<blockquote><p>状态列指<strong>内容状态</strong>：✅ 已完成 / 🔄 进行中 / 📝 草稿 / ⬜ 未开始。 「我是否真的学会了」另记在 <a href="PROGRESS.html">PROGRESS.md</a> 的学习进度轨 —— 文档就绪 ≠ 已掌握。</p></blockquote>
+<h2 id="仓库结构">仓库结构</h2>
+<pre><code>ai-engineer-journey/
+│
+├── README.md              # 本文件
+├── ROADMAP.md             # 10 项目路线图
+├── PROGRESS.md            # 双轨进度（学习进度 / 内容生产）
+├── KNOWLEDGE-MAP.md       # 能力关系网（只展示关联，不复制正文）
+├── CONTRIBUTING.md        # 维护规范（单一事实源 / 命名 / 分级 / Git 约定）
+├── LICENSE
+├── .gitignore
+│
+├── mistakes/              # 错题本：真实踩过的坑（日期 + 原因 + 修复）
+│   └── README.md
+│
+├── llm-fundamentals/      # 基础理论层：大模型原理教材（12 章 + 可运行 demo + 真实配图）
+│                          #   定位见下方「基础知识层」一节；projects/ 仍是唯一事实源
+│
+├── python-practice/       # 练手层：6 个入门动手练习 + 07 延伸阅读（01–04 可跑，05/06 指路）
+│                          #   定位见下方「练手项目层」一节
+│
+├── audit/                 # 仓库体检档案：每期一次真实运行的全面体检 + 建议清单
+│
+├── projects/              # 核心内容（唯一事实源）
+│   ├── 01-python-ai-cli/
+│   │   ├── README.md          # 项目主页（必须对齐规范模板）
+│   │   ├── milestones/       # 学习里程碑（Project First 模板）
+│   │   │   ├── 01-variables.md
+│   │   │   ├── 02-list-dict-json.md
+│   │   │   └── ...（共 10 个）
+│   │   ├── exercises/        # 配套练习（01-basic 已有题，02/03/04 待播种）
+│   │   └── src/              # 项目代码
+│   ├── 02-engineering-ai-assistant/
+│   └── ...（共 10 个项目）
+│
+└── publishing/            # 对外发布内容（输出层，不是知识源）
+    ├── articles/          # 课程学习笔记型文章
+    ├── tutorials/         # 独立成篇的图文教程（md + html + assets/）
+    └── finetune-series/   # 微调系列草稿库（未校对，择优转正为 tutorials）</code></pre>
+<h3 id="维护工具scripts">维护工具（<code>scripts/</code>）</h3>
+<table><thead><tr><th>脚本</th><th>作用</th></tr></thead><tbody><tr><td><code>check_links.py --strict</code></td><td>死链 + 坏图体检（CI 也在跑）</td></tr><tr><td><code>audit.py</code></td><td>全仓库体检：骨架完整性 / 证据链 / 配图 / 文档漂移 / 密钥；<code>--tests</code> 可实跑全部测试</td></tr><tr><td><code>check_repos.py</code></td><td><strong>学习资源体检</strong>：把文档里推荐的 GitHub 仓库逐个探测（可访问 / 星标 / 是否归档 / 是否搬家 / 最近提交 / 是否维护模式）。不需要 API token</td></tr><tr><td><code>render_terminal.py</code></td><td>把真实 stdout 渲染成终端风格 PNG（截图有据可依）</td></tr><tr><td><code>md_to_tutorial_html.py</code></td><td>教程 Markdown → HTML 同款排版</td></tr><tr><td><code>build_docs_html.py</code></td><td><strong>批量渲染</strong>：把全部（或指定子集）Markdown 转成 <code>publishing/html/docs/</code> 下的 HTML 树，并自校验链接</td></tr><tr><td><code>gen_doc_index.py</code></td><td>扫描全部文档生成 <code>publishing/html/index.html</code> 索引，条目默认指向渲染页</td></tr><tr><td><code>md_to_book_html.py</code></td><td>单篇「自包含」HTML：图片 base64 内嵌，单文件拷走也能看（重点文档用）</td></tr></tbody></table>
+<p><strong>本地阅读</strong>：<code>publishing/html/index.html</code> 是入口，209 篇文档全部以渲染后的页面打开 （<code>publishing/html/docs/…</code>，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。 只想拷走单篇看重点文档的，用 <code>md_to_book_html.py</code> 生成 base64 内嵌的单文件版。</p>
+<h2 id="单一事实源">单一事实源</h2>
+<blockquote><p>所有知识只维护在 <code>projects/*/milestones/</code> 中。其他目录只做引用、关联或派生输出。</p></blockquote>
+<p>禁止出现平行知识体系：<code>curriculum/</code>、<code>labs/</code>、<code>knowledge/</code>、<code>assessments/</code>、<code>progress/</code>。</p>
+<h2 id="基础知识层">基础知识层</h2>
+<p><a href="llm-fundamentals/README.html"><code>llm-fundamentals/</code></a> 是<strong>基础理论层</strong>：把 Transformer、注意力、预训练/微调、涌现、推理优化、对齐等原理系统整理成 12 章笔记，每章配 Mermaid 图、公式推导、术语表与<strong>真实运行出来的配图</strong>（终端截图 + 公式计算绘图，均可复现）。</p>
+<ul class="lvl"><li>与实践层的关系：<code>llm-fundamentals/</code> 讲<strong>为什么这么设计</strong>，<code>projects/*/milestones/</code> 讲<strong>怎么跑起来</strong>。两者互相引用，不重复正文。</li><li>目录内自带 <code>demos/</code>（numpy 实现，无需 GPU）与 <code>demos/make_figures.py</code>（重建全部配图）。</li><li>第 11 章把 10 个开源项目对应到具体章节，并给出&quot;跑通的标志&quot;。</li><li>第 12 章按「学 / 调 / 造」三条线整理<strong>教程课程、微调框架、Agent 开发框架</strong>，星标与维护状态全部由 <code>scripts/check_repos.py</code> 当场核验（含 2026 年的生态洗牌与仓库迁移对照表）。</li></ul>
+<h2 id="练手项目层">练手项目层</h2>
+<p><a href="python-practice/README.html"><code>python-practice/</code></a> 是<strong>动手练手层</strong>：6 个按难度递进的小练习，目标是「一个周末能跑通一个」，用它们把 Python 本身的语法、文件、网络、Web 框架各走一遍。</p>
+<table><thead><tr><th>#</th><th>练习</th><th>难度</th><th>代码位置</th></tr></thead><tbody><tr><td>01</td><td>命令行待办清单</td><td>●○○ 入门</td><td>🏠 本目录可跑（纯标准库）</td></tr><tr><td>02</td><td>Excel 报表自动化</td><td>●●○ 进阶</td><td>🏠 本目录可跑（pandas）</td></tr><tr><td>03</td><td>网站内容爬虫</td><td>●●○ 进阶</td><td>🏠 本目录可跑（requests + bs4）</td></tr><tr><td>04</td><td>FastAPI 博客 API</td><td>●●○ 进阶</td><td>🏠 本目录可跑（FastAPI + pytest）</td></tr><tr><td>05</td><td>AI 命令助手</td><td>●●● 挑战</td><td>→ <a href="projects/01-python-ai-cli/README.html"><code>projects/01</code></a></td></tr><tr><td>06</td><td>RAG 知识库问答</td><td>●●● 挑战</td><td>→ <a href="projects/04-rag/README.html"><code>projects/04</code></a></td></tr><tr><td>07</td><td><a href="python-practice/07-延伸阅读.html">延伸阅读：书单与读法</a></td><td>读物</td><td>🏠 不占练习配额：Python 学习路线 + 读生产代码四阶梯 + Java 对照表</td></tr></tbody></table>
+<ul class="lvl"><li>与另外两层的关系：<code>python-practice/</code> 要的是<strong>会写</strong>，<code>projects/</code> 要的是<strong>做出来</strong>，<code>llm-fundamentals/</code> 要的是<strong>想明白</strong>。</li><li>05 / 06 的完整实现已由 <code>projects/01</code>、<code>projects/04</code> 承担，本层<strong>不重复实现</strong>，只给指路牌与冷启动路线。</li><li>07 不是练习，是「练完前四个之后读什么、怎么读」的书单与方法论；继续往大模型 / 微调 / Agent 方向走见 <a href="llm-fundamentals/12-tutorials-and-agent.html"><code>llm-fundamentals/12</code></a>。</li><li>01–04 每个都遵循同一套可复现约定：固定随机种子、<code>demo.sh</code> / <code>demo.py</code> 一键跑、原始 stdout 入库、截图由 <code>scripts/render_terminal.py</code> 从真实输出渲染（<strong>不是手截的</strong>）。</li><li>先读 <a href="python-practice/00-how-to-practice.html"><code>python-practice/00-how-to-practice.md</code></a>——讲「怎么练才不是抄代码」，比任何一个练习本身都重要。</li></ul>
+<h2 id="技术术语规范">技术术语规范</h2>
+<p>所有教学内容中的英文技术术语必须优先使用：<strong>英文名称【主流中文名称】</strong></p>
+<p>例如：Embedding【向量嵌入】、Token【词元】、Attention【注意力机制】、Fine-Tuning【微调】、Quantization【量化】</p>
+<h2 id="如何开始">如何开始</h2>
+<pre><code># 1. 读第一个项目主页
+open projects/01-python-ai-cli/README.md
+
+# 2. 跑项目
+cd projects/01-python-ai-cli/src
+cp .env.example .env   # 填入真实 API Key
+python3 main.py
+
+# 3. 学 Milestone
+open projects/01-python-ai-cli/milestones/01-variables.md</code></pre>
+<h2 id="安全约定">安全约定</h2>
+<ul class="lvl"><li>API Key 只通过环境变量 / <code>.env</code> 提供</li><li><code>.env</code> 永不入库，仓库只有 <code>.env.example</code></li></ul>
+<h2 id="双远程">双远程</h2>
+<p>GitHub（origin）+ Gitee（gitee），每次提交双推。</p>
+<h2 id="license">License</h2>
+<p><a href="../../../LICENSE">MIT</a></p>
+</main>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P07 Colab 使用说明（Open Source LLM）</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="p07-colab-使用说明open-source-llm">P07 Colab 使用说明（Open Source LLM）</h1>
+<p>本目录的 <code>p07_colab.ipynb</code> 是 Project 07 的全部 9 个 Milestone 的<strong>真实可跑</strong> notebook。 目标：在云端 GPU 上亲手加载 / 推理 / 量化 / 服务一个开源模型（Qwen2.5-0.5B-Instruct），本机零磁盘与内存占用。</p>
+<h2 id="一在-colab-打开并运行">一、在 Colab 打开并运行</h2>
+<ul class="lvl"><li>上传 <code>p07_colab.ipynb</code> 到 Google Colab（或点 <code>File → Open</code> 选本地文件）。</li><li>顶部菜单：<code>Runtime → Change runtime type → Hardware accelerator = GPU</code>（选 T4 免费即可）。</li><li><code>Runtime → Run all</code>（或逐节 <code>Shift+Enter</code>）。</li><li>全程会自动 <code>pip -U transformers bitsandbytes</code>（如需要）并从 Hugging Face 下载 Qwen2.5-0.5B（约 1GB，Colab 带宽很快）。</li></ul>
+<h2 id="二回收真实输出用于生成文档截图">二、回收真实输出（用于生成文档截图）</h2>
+<p>notebook 每节都会 <code>print</code> 真实数字（参数量、显存、延迟、生成文本等）。请把这些输出按 milestone 落到本仓库， 我再用 <code>scripts/render_terminal.py</code> 渲染成截图并撰写 <code>milestones/01-09</code>。</p>
+<p><strong>方式 A（推荐，最省力）</strong>：跑完后把每个 milestone 节（M01–M09）对应 cell 的输出文本， 分别存成文件：</p>
+<pre><code>projects/07-open-source-llm/demos/out/colab_M01.txt
+projects/07-open-source-llm/demos/out/colab_M02.txt
+...
+projects/07-open-source-llm/demos/out/colab_M09.txt</code></pre>
+<blockquote><p>每个文件只放该节代码的真实 stdout（从 <code>=== ... ===</code> 到该节结束），不要夹杂其他。</p></blockquote>
+<p><strong>方式 B（更省事）</strong>：直接把 Colab 全部输出（或截图）贴回对话，我负责拆分与渲染。</p>
+<h2 id="三m08-量化的两条路线说明">三、M08 量化的两条路线（说明）</h2>
+<ul class="lvl"><li><strong>Colab（CUDA T4）</strong>：notebook 里用 <code>load_in_4bit=True</code>（bitsandbytes）真跑，看 4-bit 权重大小与生成。</li><li><strong>Mac 本地（无 CUDA）</strong>：对应走 GGUF（q4_0 / q4_k_m）+ llama.cpp，不依赖 bitsandbytes。 Mac 本地若想实操，可后续单独补一个 <code>llama.cpp</code> 的 demo（不在本 notebook 内）。</li></ul>
+<h2 id="四faq">四、FAQ</h2>
+<ul class="lvl"><li><strong>Q：Colab 报 <code>bitsandbytes</code> 找不到？</strong> A：notebook 顶部已含 <code>!pip install -q -U bitsandbytes</code>；若仍失败，换 <code>Runtime → GPU</code> 重连一次。</li><li><strong>Q：模型下载慢/失败？</strong> A：Colab 直连 HF 通常很快；如遇限流，可重跑「M03 Model Loading」那节。</li><li><strong>Q：一定要 Colab 吗？</strong> A：不是。本机若愿意装 torch（M1 MPS 已验证可用），把 <code>device_map</code> 改为 <code>&quot;mps&quot;</code> 也能跑；但本项目当前阶段按「云端真跑」推进。</li></ul>
+</main>
+</body>
+</html>

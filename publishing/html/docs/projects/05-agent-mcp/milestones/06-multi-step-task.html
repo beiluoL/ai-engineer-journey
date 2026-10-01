@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</title>
+<style>:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
+  --table-alt:rgba(0,0,0,.025);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+    --table-alt:rgba(255,255,255,.03);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:900px; margin:0 auto; padding:36px 22px 90px;}
+h1,h2,h3,h4{line-height:1.3; margin-top:1.9em; scroll-margin-top:18px;}
+h1{font-size:1.9em; border-bottom:1px solid var(--border); padding-bottom:.35em;}
+h2{font-size:1.45em; border-bottom:1px solid var(--border); padding-bottom:.28em;}
+h3{font-size:1.18em;}
+h4{font-size:1.04em; color:var(--muted);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{background:var(--code-bg); padding:.15em .42em; border-radius:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.86em;}
+pre{background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto;}
+pre code{background:none; padding:0; font-size:.85em;}
+table{border-collapse:collapse; width:100%; margin:1.2em 0; font-size:.92em;}
+th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+th{background:var(--code-bg); font-weight:600;}
+tbody tr:nth-child(2n){background:var(--table-alt);}
+blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em;
+  color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
+blockquote p{margin:.4em 0;}
+.figure{margin:1.6em 0; text-align:center;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
+.mermaid-svg{margin:1.6em 0; text-align:center;}
+.mermaid-svg svg{max-width:100%; height:auto;}
+.mermaid-fallback{margin:1.2em 0; padding:.8em 1em; border:1px dashed var(--border); border-radius:8px;}
+hr{border:none; border-top:1px solid var(--border); margin:2.2em 0;}
+ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
+li{margin:.3em 0;}
+.nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
+  color:var(--muted); font-size:.92em;}
+.img-missing{color:#b35900; font-weight:600;}</style>
+</head>
+<body>
+<main class="container">
+<h1 id="milestone-06-multistep-task把计划从模型脑子里拿出来">Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</h1>
+<blockquote><p>上一章（Milestone 05）解决了「中间结论往哪放」——草稿纸。 但草稿纸记的是<strong>已经查到的东西</strong>，它回答不了一个更要紧的问题： <strong>还要做什么、先做哪个、哪些能同时做。</strong></p></blockquote>
+<h2 id="1-m05-留下的缺口">1. M05 留下的缺口</h2>
+<p>Milestone 05 的多步骤任务跑通了，但那份「计划」只存在于模型的 thought 里：</p>
+<pre><code>[1] thought：我先查 P01，再查 P04，最后对比。
+[2] 调用 rag_search(...)
+[3] thought：接下来查 P04。</code></pre>
+<p>短任务没问题。步骤一多，三件事就开始出错：</p>
+<ul class="lvl"><li><strong>忘记自己列过什么</strong> —— 第 5 步时已经不记得第 1 步说要做的第三件事。</li><li><strong>重复做已经做完的</strong> —— 历史被 token 预算裁掉后，它以为还没查过。</li><li><strong>依赖没满足就硬做</strong> —— 「汇总」需要两个查询结果，但它只查了一个就开始写结论。</li></ul>
+<p>前两个 Milestone 05 已经用草稿纸和裁剪缓解了。第三个是这一章要解决的： <strong>把计划变成显式的、可检查的数据结构</strong>。</p>
+<h2 id="2-plan-subtask">2. Plan / SubTask</h2>
+<pre><code>@dataclass
+class SubTask:
+    id: str
+    title: str
+    depends_on: tuple[str, ...] = ()   # 要等谁
+    status: str = PENDING              # pending/running/done/failed/skipped
+    result: str = &quot;&quot;</code></pre>
+<p>四个字段，缺一不可。<code>depends_on</code> 是<strong>唯一能算出并行度的信息</strong> —— 其余三个字段只是给模型看的。</p>
+<p>它和草稿纸的区别必须说清楚，两者很容易被合成一个：</p>
+<table><thead><tr><th></th><th>存什么</th><th>谁在读</th></tr></thead><tbody><tr><td><code>Scratchpad</code>（M05）</td><td><strong>结论</strong> ——「P01 用 JSON 落盘」</td><td>模型读回来用</td></tr><tr><td><code>Plan</code>（M06）</td><td><strong>待办</strong> ——「还要查 P04」</td><td>循环之外的代码用来推进</td></tr></tbody></table>
+<p><code>demos/out/demo_06_multi_step.txt</code> 第 1 节的真实输出：</p>
+<figure class="figure"><img alt="计划结构" src="../../../../../../projects/05-agent-mcp/assets/term-06-plan-topology.png" loading="lazy"/><figcaption>计划结构</figcaption></figure>
+<h2 id="3-依赖决定能并行多少">3. 依赖决定能并行多少</h2>
+<p>有了显式的依赖边，<code>Plan.batches()</code> 就能做 Kahn 分层 —— <strong>这是模型给不出来的信息</strong>。 它在 thought 里写下的计划只是一串文字，没有可计算的边。</p>
+<p>菱形依赖（t1 → (t2 ∥ t3) → t4）的真实分层结果：</p>
+<pre><code>第 0 批：[t1]  （单独一步）
+第 1 批：[t2、t3]  （可并行）
+第 2 批：[t4]  （单独一步）</code></pre>
+<p>串行做要 4 轮，按批做只要 3 轮。全串行的链则退化成 3 批 —— 一条依赖边都没有额外并行度。</p>
+<h2 id="4-成环会被拦下">4. 成环会被拦下</h2>
+<p>模型真会写出 A→B→A。人一眼看出不对，代码不查就会<strong>静静地卡住</strong>： 剩下的任务凑不出下一批，循环结束但任务没做完 —— 而且日志里看不出原因。</p>
+<pre><code>拦住了：依赖无法推进（成环或依赖未满足），卡住的：a, b</code></pre>
+<p>还有一类同源错误：<strong>依赖指向不存在的任务</strong>（<code>depends_on=[&quot;t9&quot;]</code> 而没有 t9）。 必须在<strong>派活之前</strong> <code>validate()</code>，否则错误信息会变成「卡住了」，根本没法排查。</p>
+<h2 id="5-上游失败会跳过下游传递闭包">5. 上游失败会跳过下游（传递闭包）</h2>
+<p>这是显式依赖换来的第二个好处：<strong>失败的影响范围可以精确计算</strong>。</p>
+<p>t2 失败时，<code>skip_downstream(&quot;t2&quot;)</code> 会沿依赖边一路传下去 —— 菱形里 t4 被跳过， <strong>但 t3 不受影响</strong>（它不依赖 t2）：</p>
+<pre><code>[x] t1  确定要对比哪两个项目  → 就比 P01 和 P04
+[!] t2  查 Project 01 怎么落盘  → 检索没有命中
+[ ] t3  查 Project 04 怎么落盘
+[-] t4  汇总两者的差异  → 上游 t2 未完成，跳过</code></pre>
+<p>不是「整个任务重来」，也不是「每步都重试一遍」—— 上游失败了，下游的输入根本不存在， 重试只会再失败一次。</p>
+<h2 id="6-三个计划工具">6. 三个计划工具</h2>
+<p>计划由<strong>模型自己维护</strong>，不是一个写死的流程：</p>
+<table><thead><tr><th>工具</th><th>作用</th></tr></thead><tbody><tr><td><code>plan_set</code></td><td>整份重设计划（tasks 是一段 JSON），返回分了几批</td></tr><tr><td><code>plan_update</code></td><td>推进某个子任务的状态；标 failed 会连带跳过下游</td></tr><tr><td><code>plan_view</code></td><td>查看当前计划与进度</td></tr></tbody></table>
+<p>两个设计选择值得记下来：</p>
+<p><strong>为什么是「整份重设」而不是「逐个 add」</strong>：增量操作一旦中间某步失败， 就留下半新半旧的计划。代价是模型写坏 JSON 时会把计划清空 —— 但重发一次就好。</p>
+<p><strong>工具层不抛异常</strong>：和本项目其它地方一致，错误变成模型看得见的文本，它才知道要改：</p>
+<pre><code>→ [计划建立失败] 计划不是合法 JSON（Expecting value: line 1 column 1 (char 0)）。
+   原文前 200 字：我觉得应该先查资料再汇总</code></pre>
+<p><code>parse_tasks()</code> 会宽容地提取 ```json 代码块里的 JSON —— 模型十次有八次会这么包。</p>
+<p>计划<strong>每一轮都会重新渲染进 system 提示</strong>（<code>_system_text()</code>），所以模型看到的永远是最新进度， 不会因为照着开局那份过时的计划而重复做事。</p>
+<figure class="figure"><img alt="计划工具与失败跳过" src="../../../../../../projects/05-agent-mcp/assets/term-06-plan-tools.png" loading="lazy"/><figcaption>计划工具与失败跳过</figcaption></figure>
+<h2 id="7-真实模型它自己决定拆几步">7. 真实模型：它自己决定拆几步</h2>
+<p>用 DeepSeek 跑「对比 P01 与 P04 的状态持久化」，提示词里只说「先用 plan_set 拆成子任务」， <strong>没告诉它拆几步、哪些能并行</strong>。</p>
+<p>它自己建了 3 个子任务，并且正确识别出前两个互不依赖：</p>
+<pre><code>[1] 调用 plan_set({...})
+    → 计划已建立，共 3 个子任务，分 2 批执行：[t1,t2]、[t3]。
+      同一批内的子任务互不依赖，可以并行做。
+[2] 调用 rag_search({&quot;query&quot;: &quot;Project 01 状态持久化方式&quot;})
+    调用 rag_search({&quot;query&quot;: &quot;Project 04 状态持久化方式&quot;})      ← 自己并行发了两个
+[5] 调用 write_note({&quot;key&quot;: &quot;p01_persistence&quot;, ...})
+    调用 write_note({&quot;key&quot;: &quot;p04_persistence&quot;, ...})
+[6] 调用 plan_update({&quot;id&quot;: &quot;t1&quot;, &quot;status&quot;: &quot;done&quot;, ...})</code></pre>
+<figure class="figure"><img alt="真实模型自己拆任务" src="../../../../../../projects/05-agent-mcp/assets/term-06-real-plan.png" loading="lazy"/><figcaption>真实模型自己拆任务</figcaption></figure>
+<p>最终 20 步、12 次工具调用，三个子任务全部 done：</p>
+<figure class="figure"><img alt="计划终态与结论" src="../../../../../../projects/05-agent-mcp/assets/term-06-real-plan-result.png" loading="lazy"/><figcaption>计划终态与结论</figcaption></figure>
+<p>结论本身也对：P01 是无状态（单轮 CLI，不落盘），P04 是有状态（会话 <code>mkstemp+fsync+os.replace</code> 原子写）。</p>
+<h2 id="8-踩到的坑">8. 踩到的坑</h2>
+<p><strong>坑 1：<code>PlanViewTool.schema()</code> 传了 <code>{}</code>。</strong> 没有参数的工具也要写完整的 object 壳：</p>
+<pre><code># 错：会被 M02 那条校验拦下（parameters.type 必须是 object）
+function_schema(self.name, self.description, {})
+# 对
+function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quot;, &quot;properties&quot;: {}, &quot;required&quot;: []})</code></pre>
+<p>这个错是在<strong>跑 demo 时</strong>才炸的，单测没覆盖到 —— 因为它只在「工具真的被注册进 registry」 这条路径上才会触发。教训：<strong>schema 校验要在构造时就做，而不是等发出去。</strong></p>
+<p><strong>坑 2：离线剧本里忘了更新 t1，计划终态出现 <code>[pending] t1</code>。</strong> 这不是 bug，是<strong>真实会发生的现象</strong>：模型也会漏更状态。 所以 <code>AgentResult.plan</code> 存的是<strong>快照</strong>，事后能看出「它说要做 4 件，实际只标了 3 件」。</p>
+<p><strong>坑 3：<code>skip_downstream</code> 一开始只跳一层。</strong> A 失败 → B 跳过 → 但 C（依赖 B）还在 pending。改成 while 循环的传递闭包后才对。</p>
+<h2 id="9-结论">9. 结论</h2>
+<ul class="lvl"><li><strong>计划是数据，不是想法。</strong> 只有变成数据，循环之外的代码才能算并行度、查环、做失败传播。</li><li><strong>依赖边是并行度的唯一来源。</strong> 模型写不出可计算的边，这就是显式 Plan 的价值。</li><li><strong>计划由模型维护，由代码保障。</strong> 它自己拆、自己推进；代码负责别让它写出成环的计划、 别让失败沿着依赖边污染下游。</li></ul>
+<h2 id="10-代码位置">10. 代码位置</h2>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/plan.py</code></td><td><code>Plan</code> / <code>SubTask</code> / <code>batches()</code> / <code>skip_downstream()</code> / 环检测</td></tr><tr><td><code>src/agent/tools.py</code></td><td><code>PlanSetTool</code> / <code>PlanUpdateTool</code> / <code>PlanViewTool</code> / <code>plan_tools()</code></td></tr><tr><td><code>src/agent/agent.py</code></td><td><code>ReActAgent.plan</code>；计划每轮渲染进 system；<code>AgentResult.plan</code> 快照</td></tr><tr><td><code>tests/test_plan.py</code></td><td>41 项：拓扑分层、环检测、传递闭包跳过、工具共享</td></tr><tr><td><code>demos/demo_06_multi_step.py</code></td><td>6 节离线演示 + <code>--real</code> 真实链路</td></tr></tbody></table>
+<h2 id="11-版本">11. 版本</h2>
+<p>v0.6 → <strong>v0.7</strong>，Multi-Step Task 落地：显式计划 + 依赖拓扑 + 计划工具， 离线真实双路跑通（真实 20 步 / 12 次工具调用 / 3 个子任务全 done）， 测试 146 → 187 passed，截图 15 → 19 张。</p>
+</main>
+</body>
+</html>
