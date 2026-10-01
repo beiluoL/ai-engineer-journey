@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -145,7 +177,7 @@ li{margin:.3em 0;}
 <p>它输出的是一个<strong>概率分布</strong>，而不是一个词：</p>
 <table><thead><tr><th>候选</th><th>烤鸭</th><th>羊肉</th><th>火锅</th><th>香蕉</th></tr></thead><tbody><tr><td>概率</td><td>0.62</td><td>0.15</td><td>0.11</td><td>0.0003</td></tr></tbody></table>
 <p>用数学写出来，语言模型做的是把整个序列的联合概率<strong>分解成一串条件概率</strong>：</p>
-<p>$$ P(w_1, w_2, \dots, w_n) \;=\; \prod_{t=1}^{n} P\big(w_t \mid w_1, \dots, w_{t-1}\big) $$</p>
+<div class="math-block"><math display="block"><mi>P</mi><mo stretchy="true">(</mo><msub><mi>w</mi><mn>1</mn></msub><mi>,</mi><msub><mi>w</mi><mn>2</mn></msub><mi>,</mi><mo>…</mo><mi>,</mi><msub><mi>w</mi><mi>n</mi></msub><mo stretchy="true">)</mo><mspace width="5pt"/><mo>=</mo><mspace width="5pt"/><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∏</mo><mi>t</mi><mo>=</mo><mn>1</mn></munder></mrow><mi>n</mi></mover></mrow><mi>P</mi><mo stretchy="true" maxsize="1.3em" minsize="1.3em">(</mo><msub><mi>w</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>w</mi><mn>1</mn></msub><mi>,</mi><mo>…</mo><mi>,</mi><msub><mi>w</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub><mo stretchy="true" maxsize="1.3em" minsize="1.3em">)</mo></math></div>
 <p>这个分解叫<strong>自回归（autoregressive）</strong>：每一步只看前面，不看后面。它带来两个直接后果：</p>
 <table><thead><tr><th>后果</th><th>说明</th></tr></thead><tbody><tr><td>训练可以高度并行</td><td>一句话里每个位置的目标都是&quot;下一个词&quot;，一次前向就能算出全部位置的损失（见 1.6）</td></tr><tr><td>生成必须串行</td><td>第 t 个 token 是第 t+1 个的输入，只能一个一个吐（见 <a href="07-decoding-and-inference.html">第 07 章</a>）</td></tr></tbody></table>
 <pre><code>输入:  我  在  北京  吃  烤
@@ -176,7 +208,7 @@ li{margin:.3em 0;}
 <hr/>
 <h2 id="13-第二步token-向量embedding">1.3 第二步：token → 向量（Embedding）</h2><nav class="sec-nav"><a class="sn prev" href="#12-第一步文本-token分词-tokenization"><span class="sn-label">← 上一节</span><span class="sn-name">1.2 第一步：文本 → token（分词 / Tokenization）</span></a><a class="sn next" href="#14-第三步向量-概率lm-head-softmax"><span class="sn-label">下一节 →</span><span class="sn-name">1.4 第三步：向量 → 概率（LM Head + Softmax）</span></a></nav>
 <p>token id 只是索引，没有语义。要参与矩阵运算，必须先变成向量。</p>
-<p>$$ \text{embedding 矩阵 } E \in \mathbb{R}^{V \times d_{model}},\qquad x_t = E[\,\text{id}_t\,] \in \mathbb{R}^{d_{model}} $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">embedding 矩阵</mtext><mi>E</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><mi>V</mi><mo>×</mo><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub></mrow></msup><mi>,</mi><mspace width="2em"/><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><mi>E</mi><mo stretchy="true">[</mo><mspace width="3pt"/><msub><mtext class="tx">id</mtext><mi>t</mi></msub><mspace width="3pt"/><mo stretchy="true">]</mo><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub></msup></math></div>
 <ul class="lvl"><li><code>V</code>：词表大小（例如 128,256）</li><li><code>d_model</code>：隐藏维度（例如 4096）</li><li>所谓&quot;查表&quot;，数学上等价于 <strong>one-hot 向量 × E</strong></li></ul>
 <pre><code>id = 321   -&gt;   one-hot(长度 V) = [0,0,...,1,...,0]
                                        ↑ 第 321 位
@@ -188,18 +220,18 @@ li{margin:.3em 0;}
 <hr/>
 <h2 id="14-第三步向量-概率lm-head-softmax">1.4 第三步：向量 → 概率（LM Head + Softmax）</h2><nav class="sec-nav"><a class="sn prev" href="#13-第二步token-向量embedding"><span class="sn-label">← 上一节</span><span class="sn-name">1.3 第二步：token → 向量（Embedding）</span></a><a class="sn next" href="#15-训练目标交叉熵与困惑度"><span class="sn-label">下一节 →</span><span class="sn-name">1.5 训练目标：交叉熵与困惑度</span></a></nav>
 <p>经过 N 层 Transformer（<a href="03-transformer.html">第 03 章</a>）后，最后一个位置的隐藏状态 <code>h ∈ R^{d_model}</code> 要变成&quot;下一个词的打分&quot;。</p>
-<p>$$ \text{logits} = h \, W_{lm},\quad W_{lm} \in \mathbb{R}^{d_{model} \times V} \qquad\Longrightarrow\qquad p = \operatorname{softmax}(\text{logits}) $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">logits</mtext><mo>=</mo><mi>h</mi><mspace width="3pt"/><msub><mi>W</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mi>,</mi><mspace width="1em"/><msub><mi>W</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub><mo>×</mo><mi>V</mi></mrow></msup><mspace width="2em"/><mo>⟹</mo><mspace width="2em"/><mi>p</mi><mo>=</mo><mtext>softmax</mtext><mo stretchy="true">(</mo><mtext class="tx">logits</mtext><mo stretchy="true">)</mo></math></div>
 <h3 id="141-logits-是什么">1.4.1 logits 是什么</h3>
 <p><strong>logits = 未归一化的打分</strong>，可以为负、可以很大，还不构成概率分布。只有过完 softmax 才是概率。</p>
-<p>$$ \operatorname{softmax}(z)_i = \frac{e^{z_i}}{\sum_{j=1}^{V} e^{z_j}} $$</p>
+<div class="math-block"><math display="block"><msub><mrow><mtext>softmax</mtext><mo stretchy="true">(</mo><mi>z</mi><mo stretchy="true">)</mo></mrow><mi>i</mi></msub><mo>=</mo><mrow><mfrac><msup><mi>e</mi><msub><mi>z</mi><mi>i</mi></msub></msup><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>j</mi><mo>=</mo><mn>1</mn></munder></mrow><mi>V</mi></mover></mrow><msup><mi>e</mi><msub><mi>z</mi><mi>j</mi></msub></msup></mfrac></mrow></math></div>
 <p>工程上必须<strong>先减去最大值</strong>再取指数——数学上等价，但能避免 <code>exp(1000)</code> 溢出：</p>
-<p>$$ \operatorname{softmax}(z)_i = \frac{e^{\,z_i - \max_j z_j}}{\sum_j e^{\,z_j - \max_j z_j}} $$</p>
+<div class="math-block"><math display="block"><msub><mrow><mtext>softmax</mtext><mo stretchy="true">(</mo><mi>z</mi><mo stretchy="true">)</mo></mrow><mi>i</mi></msub><mo>=</mo><mrow><mfrac><msup><mi>e</mi><mrow><mspace width="3pt"/><msub><mi>z</mi><mi>i</mi></msub><mo>-</mo><msub><mtext>max</mtext><mi>j</mi></msub><msub><mi>z</mi><mi>j</mi></msub></mrow></msup><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>j</mi></munder></mrow><msup><mi>e</mi><mrow><mspace width="3pt"/><msub><mi>z</mi><mi>j</mi></msub><mo>-</mo><msub><mtext>max</mtext><mi>j</mi></msub><msub><mi>z</mi><mi>j</mi></msub></mrow></msup></mfrac></mrow></math></div>
 <p>下面是 <code>demos/03_softmax_crossentropy.py</code> 的真实输出，用 <code>logits = [1000, 1001, 999]</code> 做了对照实验：</p>
 <figure class="figure"><img alt="Softmax 与交叉熵真实运行输出" src="../../../../llm-fundamentals/assets/term-03_softmax_crossentropy.png" loading="lazy"/><figcaption>Softmax 与交叉熵真实运行输出</figcaption></figure>
 <p>看第 2 段：<strong>不减最大值时 <code>exp</code> 全部溢出成 <code>inf</code>，<code>inf/inf</code> 得到 <code>nan</code>，梯度直接炸掉</strong>；减掉最大值后得到正常的 <code>[0.2447, 0.6652, 0.0900]</code>。这就是为什么所有框架的 softmax 都是&quot;数值稳定&quot;版本。</p>
 <h3 id="142-温度-t采样时的随机性旋钮">1.4.2 温度 T：采样时的&quot;随机性旋钮&quot;</h3>
 <p>在 softmax 之前把 logits 除以 T：</p>
-<p>$$ p_i = \operatorname{softmax}\!\left(\frac{z_i}{T}\right) $$</p>
+<div class="math-block"><math display="block"><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mtext>softmax</mtext><mspace width="-3pt"/><mo stretchy="true">(</mo><mrow><mfrac><msub><mi>z</mi><mi>i</mi></msub><mi>T</mi></mfrac></mrow><mo stretchy="true">)</mo></math></div>
 <figure class="figure"><img alt="温度对分布的影响" src="../../../../llm-fundamentals/assets/softmax-temperature.png" loading="lazy"/><figcaption>温度对分布的影响</figcaption></figure>
 <table><thead><tr><th>T</th><th>效果</th><th>使用场景</th></tr></thead><tbody><tr><td>→ 0</td><td>退化为 argmax（永远取最高分）</td><td>数学解题、抽取结构化字段</td></tr><tr><td>0.2 – 0.7</td><td>分布更尖锐，稳定但略死板</td><td>代码、翻译、RAG 问答</td></tr><tr><td>1.0</td><td>使用模型原始分布</td><td>通用对话</td></tr><tr><td>&gt; 1.2</td><td>分布变平，长尾 token 有机会</td><td>创意写作、头脑风暴（<strong>幻觉风险同步上升</strong>）</td></tr></tbody></table>
 <blockquote><p>注意：温度<strong>不改变相对排序</strong>，只改变分布平坦程度。<code>argmax</code> 在任意 T 下都不变——所以&quot;调温度&quot;解决不了&quot;模型把答案排在了第二位&quot;这类问题。</p></blockquote>
@@ -208,9 +240,9 @@ li{margin:.3em 0;}
 <hr/>
 <h2 id="15-训练目标交叉熵与困惑度">1.5 训练目标：交叉熵与困惑度</h2><nav class="sec-nav"><a class="sn prev" href="#14-第三步向量-概率lm-head-softmax"><span class="sn-label">← 上一节</span><span class="sn-name">1.4 第三步：向量 → 概率（LM Head + Softmax）</span></a><a class="sn next" href="#16-训练-vs-推理同一个模型的两种姿势"><span class="sn-label">下一节 →</span><span class="sn-name">1.6 训练 vs 推理：同一个模型的两种姿势</span></a></nav>
 <h3 id="151-交叉熵损失">1.5.1 交叉熵损失</h3>
-<p>$$ \mathcal{L} = -\frac{1}{T}\sum_{t=1}^{T} \log P\big(w_t \mid w_{&lt;t}\big) \;=\; -\frac{1}{T}\sum_{t=1}^{T} \log \operatorname{softmax}(z_t)\big[\,w_t\,\big] $$</p>
+<div class="math-block"><math display="block"><mi mathvariant="script">L</mi><mo>=</mo><mo>-</mo><mrow><mfrac><mn>1</mn><mi>T</mi></mfrac></mrow><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>t</mi><mo>=</mo><mn>1</mn></munder></mrow><mi>T</mi></mover></mrow><mtext>log</mtext><mi>P</mi><mo stretchy="true" maxsize="1.3em" minsize="1.3em">(</mo><msub><mi>w</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>w</mi><mrow><mo>&lt;</mo><mi>t</mi></mrow></msub><mo stretchy="true" maxsize="1.3em" minsize="1.3em">)</mo><mspace width="5pt"/><mo>=</mo><mspace width="5pt"/><mo>-</mo><mrow><mfrac><mn>1</mn><mi>T</mi></mfrac></mrow><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>t</mi><mo>=</mo><mn>1</mn></munder></mrow><mi>T</mi></mover></mrow><mtext>log</mtext><mtext>softmax</mtext><mo stretchy="true">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo stretchy="true">)</mo><mo stretchy="true" maxsize="1.3em" minsize="1.3em">[</mo><mspace width="3pt"/><msub><mi>w</mi><mi>t</mi></msub><mspace width="3pt"/><mo stretchy="true" maxsize="1.3em" minsize="1.3em">]</mo></math></div>
 <p>符号含义：</p>
-<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td>$T$</td><td>序列长度（实际是有效 token 数，PAD 不算）</td></tr><tr><td>$z_t$</td><td>第 t 个位置的 logits，维度 V</td></tr><tr><td>$z_t[w_t]$</td><td>正确 token 对应的那一个 logit</td></tr><tr><td>$\log$</td><td>自然对数</td></tr></tbody></table>
+<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td><math class="math-inline"><mi>T</mi></math></td><td>序列长度（实际是有效 token 数，PAD 不算）</td></tr><tr><td><math class="math-inline"><msub><mi>z</mi><mi>t</mi></msub></math></td><td>第 t 个位置的 logits，维度 V</td></tr><tr><td><math class="math-inline"><msub><mi>z</mi><mi>t</mi></msub><mo stretchy="true">[</mo><msub><mi>w</mi><mi>t</mi></msub><mo stretchy="true">]</mo></math></td><td>正确 token 对应的那一个 logit</td></tr><tr><td><math class="math-inline"><mtext>log</mtext></math></td><td>自然对数</td></tr></tbody></table>
 <p><strong>直觉</strong>：只惩罚&quot;正确 token 的概率不够高&quot;。模型给出的正确概率是 0.9 → loss 0.105；只给 0.01 → loss 4.6。</p>
 <h3 id="152-shiftbyone目标怎么对齐">1.5.2 shift-by-one：目标怎么对齐</h3>
 <pre><code>tokens:   [BOS]  我   在   北京  吃   烤   鸭   [EOS]
@@ -219,7 +251,7 @@ target:     我   在   北京  吃   烤   鸭   [EOS]   &lt;- 就是输入左�
 loss:     CE(z0, 我) + CE(z1, 在) + ... + CE(z6, EOS)</code></pre>
 <p><strong>一句话：输入和标签是同一串 token，只是错开一格。</strong> 这就是&quot;自监督&quot;——不需要任何人工标注。</p>
 <h3 id="153-困惑度perplexity">1.5.3 困惑度（Perplexity）</h3>
-<p>$$ \mathrm{PPL} = \exp(\mathcal{L}) = \exp\!\left(-\frac{1}{T}\sum_t \log p_t\right) $$</p>
+<div class="math-block"><math display="block"><mi mathvariant="normal">PPL</mi><mo>=</mo><mtext>exp</mtext><mo stretchy="true">(</mo><mi mathvariant="script">L</mi><mo stretchy="true">)</mo><mo>=</mo><mtext>exp</mtext><mspace width="-3pt"/><mo stretchy="true">(</mo><mo>-</mo><mrow><mfrac><mn>1</mn><mi>T</mi></mfrac></mrow><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>t</mi></munder></mrow><mtext>log</mtext><msub><mi>p</mi><mi>t</mi></msub><mo stretchy="true">)</mo></math></div>
 <table><thead><tr><th>交叉熵</th><th>困惑度</th><th>人话解释</th></tr></thead><tbody><tr><td>0.00</td><td>1.0</td><td>完全确定（不可能达到）</td></tr><tr><td>0.69</td><td>2.0</td><td>每次预测 ≈ 在 2 个候选里犹豫</td></tr><tr><td>2.30</td><td>10.0</td><td>每次都像在 10 个候选里挑</td></tr><tr><td>5.00</td><td>148</td><td>基本在瞎猜</td></tr></tbody></table>
 <p>真实参考（不同语料不可直接比）：</p>
 <table><thead><tr><th>模型 / 设置</th><th>交叉熵</th><th>困惑度</th></tr></thead><tbody><tr><td>随机猜（词表 5 万）</td><td>10.8</td><td>5 万</td></tr><tr><td>GPT-2 在通用英文</td><td>~3.0</td><td>~20</td></tr><tr><td>现代 7B 模型在英文维基</td><td>~2.2</td><td>~9</td></tr><tr><td>现代 70B+ 模型</td><td>&lt; 2.0</td><td>&lt; 8</td></tr></tbody></table>
@@ -289,6 +321,31 @@ python3 demos/make_figures.py</code></pre>
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

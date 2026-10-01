@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -141,17 +173,17 @@ li{margin:.3em 0;}
 <h2 id="61-缩放定律scaling-law可预测的那一半">6.1 缩放定律（Scaling Law）：可预测的那一半</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#62-涌现能力不可预测的那一半"><span class="sn-label">下一节 →</span><span class="sn-name">6.2 涌现能力：不可预测的那一半</span></a></nav>
 <h3 id="611-kaplan-定律2020">6.1.1 Kaplan 定律（2020）</h3>
 <p>OpenAI 发现：把模型变大、数据变多、算力变大，<strong>交叉熵损失呈幂律下降</strong>——在双对数坐标下近似是一条直线：</p>
-<p>$$ L(N) = \left(\frac{N_c}{N}\right)^{\alpha_N} \qquad\text{或更完整的形式}\qquad L(N, D) = \left(\frac{N_c}{N}\right)^{\alpha_N} + \left(\frac{D_c}{D}\right)^{\alpha_D} + L_\infty $$</p>
-<table><thead><tr><th>符号</th><th>含义</th><th>典型拟合值</th></tr></thead><tbody><tr><td>$N$</td><td>参数量（不含 embedding）</td><td>—</td></tr><tr><td>$D$</td><td>训练 token 数</td><td>—</td></tr><tr><td>$N_c, D_c$</td><td>拟合常数</td><td>量级 10¹³ / 10¹²</td></tr><tr><td>$\alpha_N, \alpha_D$</td><td>幂指数</td><td>约 0.076 / 0.095（都很小！）</td></tr><tr><td>$L_\infty$</td><td>不可约损失（语言的固有熵）</td><td>约 1.6 ~ 1.7</td></tr></tbody></table>
+<div class="math-block"><math display="block"><mi>L</mi><mo stretchy="true">(</mo><mi>N</mi><mo stretchy="true">)</mo><mo>=</mo><msup><mrow><mo stretchy="true">(</mo><mrow><mfrac><msub><mi>N</mi><mi>c</mi></msub><mi>N</mi></mfrac></mrow><mo stretchy="true">)</mo></mrow><msub><mi>α</mi><mi>N</mi></msub></msup><mspace width="2em"/><mtext class="tx">或更完整的形式</mtext><mspace width="2em"/><mi>L</mi><mo stretchy="true">(</mo><mi>N</mi><mi>,</mi><mi>D</mi><mo stretchy="true">)</mo><mo>=</mo><msup><mrow><mo stretchy="true">(</mo><mrow><mfrac><msub><mi>N</mi><mi>c</mi></msub><mi>N</mi></mfrac></mrow><mo stretchy="true">)</mo></mrow><msub><mi>α</mi><mi>N</mi></msub></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><mrow><mfrac><msub><mi>D</mi><mi>c</mi></msub><mi>D</mi></mfrac></mrow><mo stretchy="true">)</mo></mrow><msub><mi>α</mi><mi>D</mi></msub></msup><mo>+</mo><msub><mi>L</mi><mo>∞</mo></msub></math></div>
+<table><thead><tr><th>符号</th><th>含义</th><th>典型拟合值</th></tr></thead><tbody><tr><td><math class="math-inline"><mi>N</mi></math></td><td>参数量（不含 embedding）</td><td>—</td></tr><tr><td><math class="math-inline"><mi>D</mi></math></td><td>训练 token 数</td><td>—</td></tr><tr><td><math class="math-inline"><msub><mi>N</mi><mi>c</mi></msub><mi>,</mi><msub><mi>D</mi><mi>c</mi></msub></math></td><td>拟合常数</td><td>量级 10¹³ / 10¹²</td></tr><tr><td><math class="math-inline"><msub><mi>α</mi><mi>N</mi></msub><mi>,</mi><msub><mi>α</mi><mi>D</mi></msub></math></td><td>幂指数</td><td>约 0.076 / 0.095（都很小！）</td></tr><tr><td><math class="math-inline"><msub><mi>L</mi><mo>∞</mo></msub></math></td><td>不可约损失（语言的固有熵）</td><td>约 1.6 ~ 1.7</td></tr></tbody></table>
 <p><strong>指数只有 0.076 意味着什么</strong>：参数量翻 10 倍，损失只降约 <code>10^0.076 ≈ 1.19</code> 倍的幂——看起来很少，但因为损失是指数敏感的指标（PPL = e^L），实际能力提升非常显著。</p>
 <figure class="figure"><img alt="损失随参数量的幂律下降" src="../../../../llm-fundamentals/assets/scaling-law.png" loading="lazy"/><figcaption>损失随参数量的幂律下降</figcaption></figure>
 <p>真实运行数据（<code>demos/07_scaling_law.py</code>）：</p>
 <table><thead><tr><th>参数量</th><th>预测 loss</th><th>相对 0.1B 的下降</th></tr></thead><tbody><tr><td>0.1B</td><td>2.8300</td><td>—</td></tr><tr><td>1.0B</td><td>2.3756</td><td>−16.1%</td></tr><tr><td>10B</td><td>1.9943</td><td>−29.5%</td></tr><tr><td>100B</td><td>1.6741</td><td>−40.8%</td></tr><tr><td>1000B</td><td>1.4053</td><td>−50.3%</td></tr></tbody></table>
 <h3 id="612-chinchilla-定律2022算力怎么分最划算">6.1.2 Chinchilla 定律（2022）：算力怎么分最划算</h3>
 <p>DeepMind 的关键结论：<strong>给定算力预算，参数量和数据量应该等比增长</strong>。</p>
-<p>$$ N_{opt} \propto C^{0.5}, \qquad D_{opt} \propto C^{0.5} \qquad\Longrightarrow\qquad \boxed{D_{opt} \approx 20 \cdot N} $$</p>
+<div class="math-block"><math display="block"><msub><mi>N</mi><mrow><mi>o</mi><mi>p</mi><mi>t</mi></mrow></msub><mo>∝</mo><msup><mi>C</mi><mrow><mn>0</mn><mi>.</mi><mn>5</mn></mrow></msup><mi>,</mi><mspace width="2em"/><msub><mi>D</mi><mrow><mi>o</mi><mi>p</mi><mi>t</mi></mrow></msub><mo>∝</mo><msup><mi>C</mi><mrow><mn>0</mn><mi>.</mi><mn>5</mn></mrow></msup><mspace width="2em"/><mo>⟹</mo><mspace width="2em"/><mstyle class="math-boxed"><msub><mi>D</mi><mrow><mi>o</mi><mi>p</mi><mi>t</mi></mrow></msub><mo>≈</mo><mn>2</mn><mn>0</mn><mo>·</mo><mi>N</mi></mstyle></math></div>
 <p>即<strong>每 1 个参数配 20 个 token</strong>。训练算力估算：</p>
-<p>$$ C \approx 6ND \quad \Longrightarrow \quad N_{opt} \approx \sqrt{\frac{C}{120}} $$</p>
+<div class="math-block"><math display="block"><mi>C</mi><mo>≈</mo><mn>6</mn><mi>N</mi><mi>D</mi><mspace width="1em"/><mo>⟹</mo><mspace width="1em"/><msub><mi>N</mi><mrow><mi>o</mi><mi>p</mi><mi>t</mi></mrow></msub><mo>≈</mo><msqrt><mrow><mfrac><mi>C</mi><mn>1</mn><mn>2</mn><mn>0</mn></mfrac></mrow></msqrt></math></div>
 <figure class="figure"><img alt="缩放定律真实运行输出" src="../../../../llm-fundamentals/assets/term-07_scaling_law.png" loading="lazy"/><figcaption>缩放定律真实运行输出</figcaption></figure>
 <p>按这个公式，同样的算力预算怎么分配，有明确的答案：</p>
 <pre><code>C = 1e23 FLOPs 预算
@@ -160,7 +192,7 @@ li{margin:.3em 0;}
 <table><thead><tr><th>历史对照</th><th>参数量</th><th>实际训练 token</th><th>token/参数 比</th><th>评价</th></tr></thead><tbody><tr><td>GPT-3</td><td>175B</td><td>300B</td><td>1.7×</td><td>严重欠训练（参数过剩）</td></tr><tr><td>Chinchilla</td><td>70B</td><td>1.4T</td><td>20×</td><td>算力最优</td></tr><tr><td>LLaMA-1</td><td>7B–65B</td><td>1.0T–1.4T</td><td>140×–21×</td><td>已超出 Chinchilla</td></tr><tr><td>LLaMA-3</td><td>8B</td><td>15T</td><td><strong>1875×</strong></td><td>大幅 overtraining</td></tr></tbody></table>
 <h3 id="613-为什么现代模型都在过度训练">6.1.3 为什么现代模型都在&quot;过度训练&quot;</h3>
 <p>Chinchilla 优化的是<strong>训练效率</strong>（同样算力得到最低 loss）。但真实成本还要算<strong>推理</strong>：</p>
-<p>$$ \text{总成本} \;=\; \text{训练成本（一次性）} \;+\; \text{推理成本（每次调用都付）} $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">总成本</mtext><mspace width="5pt"/><mo>=</mo><mspace width="5pt"/><mtext class="tx">训练成本（一次性）</mtext><mspace width="5pt"/><mo>+</mo><mspace width="5pt"/><mtext class="tx">推理成本（每次调用都付）</mtext></math></div>
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>C</code> — 同样的总预算</li><li><code>A</code> — 方案 A：大模型 + 少数据 训练便宜、推理贵</li><li><code>B</code> — 方案 B：小模型 + 多数据 训练贵、推理便宜</li><li><code>R</code> — 若调用量巨大 方案 B 总成本更低</li></ul></div>
 <p><strong>结论</strong>：模型上线后要服务几亿次请求时，把 8B 模型从 Chinchilla 最优的 160B token 训到 15T token，虽然训练成本变高，但推理时用的小模型便宜得多——<strong>这才是 LLaMA-3 8B 训练 15T token 的经济学原因</strong>。</p>
 <blockquote><p>记忆要点：<strong>Chinchilla 是算力最优，不是总拥有成本最优（TCO 最优）。</strong></p></blockquote>
@@ -180,7 +212,7 @@ li{margin:.3em 0;}
 <h3 id="622-争议涌现是真相还是度量伪影">6.2.2 争议：涌现是真相还是度量伪影</h3>
 <p>2023 年 Schaeffer et al. 提出质疑：<strong>很多&quot;涌现&quot;是因为指标选得不对</strong>。</p>
 <table><thead><tr><th>视角</th><th>说法</th></tr></thead><tbody><tr><td>涌现是真的</td><td>能力出现伴随内部表征的质变（例如电路的形成）</td></tr><tr><td>是度量伪影</td><td>用&quot;完全答对才得分&quot;（exact match）这种<strong>非线性/不连续指标</strong>时，底层能力的连续提升会被显示成突变；换成 token 级准确率、编辑距离等<strong>连续指标</strong>，曲线立刻变平滑</td></tr></tbody></table>
-<p>$$ \text{底层能力} \xrightarrow{\text{连续提升}} \begin{cases} \text{用 exact match 度量} &amp; \to \text{看起来是阶跃（涌现）} \\ \text{用 token 准确率度量} &amp; \to \text{平滑上升} \end{cases} $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">底层能力</mtext><mrow><munder movablelimits="false"><mo>⟶</mo><mtext class="tx">连续提升</mtext></munder></mrow><mtable columnalign="left"><mtr><mtd><msup><mtext class="tx">用 exact match 度量</mtext><mi></mi></msup></mtd><mtd><mo>,</mo></mtd><mtd><mo>→</mo><msup><mtext class="tx">看起来是阶跃（涌现）</mtext><mi></mi></msup></mtd></mtr><mtr><mtd><msup><mtext class="tx">用 token 准确率度量</mtext><mi></mi></msup></mtd><mtd><mo>,</mo></mtd><mtd><mo>→</mo><msup><mtext class="tx">平滑上升</mtext><mi></mi></msup></mtd></mtr></mtable></math></div>
 <p><strong>工程结论</strong>：不要迷信&quot;某个规模以下一定不会&quot;。<strong>别用不连续指标判断&quot;能不能用&quot;</strong>，要用贴近业务的实际评估（部分正确是否有价值）。</p>
 <hr/>
 <h2 id="63-其他与规模相关的现象">6.3 其他与规模相关的现象</h2><nav class="sec-nav"><a class="sn prev" href="#62-涌现能力不可预测的那一半"><span class="sn-label">← 上一节</span><span class="sn-name">6.2 涌现能力：不可预测的那一半</span></a><a class="sn next" href="#64-对小团队和个人的实战启示"><span class="sn-label">下一节 →</span><span class="sn-name">6.4 对小团队和个人的实战启示</span></a></nav>
@@ -234,6 +266,31 @@ python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

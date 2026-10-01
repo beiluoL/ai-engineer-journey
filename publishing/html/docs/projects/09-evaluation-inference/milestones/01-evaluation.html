@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -155,7 +187,7 @@ li{margin:.3em 0;}
 }</code></pre>
 <p>三个数组都被 <code>mask</code> 筛过（<code>selected = mask.reshape(-1) &gt; 0.5</code>），所以它们长度一致、位置对齐 —— <strong>配对比较才成立</strong>。</p>
 <p>四个指标：</p>
-<table><thead><tr><th>指标</th><th>定义</th><th>回答什么</th></tr></thead><tbody><tr><td><code>perplexity</code></td><td><code>exp(mean(-log p_target))</code></td><td>分布拟合好不好</td></tr><tr><td><code>token_accuracy</code></td><td><code>mean(argmax == target)</code></td><td>贪心解码能不能命中</td></tr><tr><td><code>ece</code></td><td>`Σ (n_bin/n) · \</td><td>avg_conf − accuracy\</td><td>`（10 个等宽置信度箱）</td><td>概率值能不能当概率用</td></tr><tr><td><code>answer_coverage</code></td><td><code>Σ mask / Σ tokens</code></td><td>上面的 PPL 到底测的是哪一段</td></tr></tbody></table>
+<table><thead><tr><th>指标</th><th>定义</th><th>回答什么</th></tr></thead><tbody><tr><td><code>perplexity</code></td><td><code>exp(mean(-log p_target))</code></td><td>分布拟合好不好</td></tr><tr><td><code>token_accuracy</code></td><td><code>mean(argmax == target)</code></td><td>贪心解码能不能命中</td></tr><tr><td><code>ece</code></td><td><code>Σ (n_bin/n) · \|avg_conf − accuracy\|</code>（10 个等宽置信度箱）</td><td>概率值能不能当概率用</td></tr><tr><td><code>answer_coverage</code></td><td><code>Σ mask / Σ tokens</code></td><td>上面的 PPL 到底测的是哪一段</td></tr></tbody></table>
 <p><code>use_mask=False</code> 时 mask 全填 1，就退化成&quot;全序列困惑度&quot; —— 用同一个函数、同一批数据，只翻转一个开关，<strong>两者的差才可比</strong>。</p>
 <figure class="figure"><img alt="M01 评估指标体系：一次前向产出三个数组，支撑四个指标" src="../../../../../../projects/09-evaluation-inference/assets/evaluation.svg" loading="lazy"/><figcaption>M01 评估指标体系：一次前向产出三个数组，支撑四个指标</figcaption></figure>
 <h2 id="3-realrun-evidence来自-demosoutdemo01evaluationterminaltxt">3. Real-run evidence（来自 <code>demos/out/demo_01_evaluation_terminal.txt</code>）</h2><nav class="sec-nav"><a class="sn prev" href="#2-design一次前向四个指标"><span class="sn-label">← 上一节</span><span class="sn-name">2. Design：一次前向，四个指标</span></a><a class="sn next" href="#4-踩坑-反直觉发现"><span class="sn-label">下一节 →</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a></nav>
@@ -232,6 +264,31 @@ li{margin:.3em 0;}
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

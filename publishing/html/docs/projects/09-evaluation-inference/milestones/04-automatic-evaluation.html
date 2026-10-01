@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -203,7 +235,7 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
 <h2 id="5-conclusion">5. Conclusion</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑-反直觉发现"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑 / 反直觉发现</span></a><a class="sn next" href="#6-code-map"><span class="sn-label">下一节 →</span><span class="sn-name">6. Code map</span></a></nav>
 <ul class="lvl"><li>规则化评分 = <strong>五个纯函数加权</strong>：关键词 40% / 忠实度 20% / 格式 15% / 长度 15% / 去重复 10%。零 LLM、确定性、可解释。</li><li>实测排行：<strong>参考答案 94.09 &gt; 首句摘要 86.03 &gt; 重复回答 55.02 &gt; 空回答 0.00</strong>（5 题）。</li><li><strong>重复回答是本章的核心案例</strong>：长度 0.988（刷到了）、忠实度 0.921（也刷到了），但关键词 0.267、去重复 0.168 把它拉到 55.02 —— <strong>重复度 0.168 由 124 个 3-gram 里仅约 21 个不同得出</strong>。</li><li><strong>没有单项能防住刷分，防得住的是加权组合。</strong> 任何一维单独看都能被绕过（长度可被复读刷、忠实度可被复读刷、去重复对短文本白送 1.0）。</li><li><strong>忠实度只抓&quot;胡说&quot;</strong>，抓不住&quot;少说&quot;（M02：分母是答案自身）也抓不住&quot;复读&quot;（本章）。</li><li><code>repetition_score</code> 的实用上界约 <strong>0.95</strong>（参考答案实测 0.874），它是相对量不是绝对量。</li><li><strong>空回答严格 0.00</strong> —— 五个分项都有空输入短路，不是&quot;接近 0&quot;。</li><li>边界：词面重叠 ≠ 事实正确。这套评分器适合<strong>横向比较候选</strong>，不适合判定对错。</li><li>手写实现的意义：因为每个维度都是几行自己写的 Python，我能精确说出&quot;55.02 是怎么来的&quot;（逐项还原到 55.05）；用现成 judge 只能拿到一个分数和一个&quot;理由&quot;，而那个理由本身不可验证。</li></ul>
 <h2 id="6-code-map">6. Code map</h2><nav class="sec-nav"><a class="sn prev" href="#5-conclusion"><span class="sn-label">← 上一节</span><span class="sn-name">5. Conclusion</span></a><a class="sn next" href="#7-version-line"><span class="sn-label">下一节 →</span><span class="sn-name">7. Version line</span></a></nav>
-<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/autoeval.py</code></td><td><code>_terms</code>（ASCII 正则 + 中文 2-gram）/ <code>derive_keywords</code>（按标点切分，上限 8）/ <code>keyword_coverage</code> / <code>format_compliance</code>（加分制，0.35 起）/ <code>length_reasonableness</code>（相对 reference，过短 <code>ratio/0.6</code>）/ <code>faithfulness_proxy</code>（`\</td><td>A∩R\</td><td>/\</td><td>A\</td><td><code>）/ </code>repetition_score<code>（3-gram 唯一率，短文本返回 1.0）/ </code>evaluate_answer<code>（五维加权）/ </code>aggregate_scores<code> / </code>rank_answers`</td></tr><tr><td><code>src/ie/autoeval.py:83-84</code></td><td><code>if len(compact) &lt; ngram: return 1.0</code> —— 短文本白送满分，靠长度项兜底</td></tr><tr><td><code>src/ie/benchmark.py</code></td><td>复用 <code>evaluate_answer</code> + <code>aggregate_scores</code> 作为 M02 的打分与汇总口径</td></tr><tr><td><code>demos/demo_04_automatic_eval.py</code></td><td>3 节：候选构造 / 自动评分排行 / 最高最低分</td></tr><tr><td><code>demos/out/demo_04_automatic_eval_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/autoeval.svg</code></td><td>本章自动评分打分卡图</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/autoeval.py</code></td><td><code>_terms</code>（ASCII 正则 + 中文 2-gram）/ <code>derive_keywords</code>（按标点切分，上限 8）/ <code>keyword_coverage</code> / <code>format_compliance</code>（加分制，0.35 起）/ <code>length_reasonableness</code>（相对 reference，过短 <code>ratio/0.6</code>）/ <code>faithfulness_proxy</code>（<code>\|A∩R\|/\|A\|</code>）/ <code>repetition_score</code>（3-gram 唯一率，短文本返回 1.0）/ <code>evaluate_answer</code>（五维加权）/ <code>aggregate_scores</code> / <code>rank_answers</code></td></tr><tr><td><code>src/ie/autoeval.py:83-84</code></td><td><code>if len(compact) &lt; ngram: return 1.0</code> —— 短文本白送满分，靠长度项兜底</td></tr><tr><td><code>src/ie/benchmark.py</code></td><td>复用 <code>evaluate_answer</code> + <code>aggregate_scores</code> 作为 M02 的打分与汇总口径</td></tr><tr><td><code>demos/demo_04_automatic_eval.py</code></td><td>3 节：候选构造 / 自动评分排行 / 最高最低分</td></tr><tr><td><code>demos/out/demo_04_automatic_eval_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/autoeval.svg</code></td><td>本章自动评分打分卡图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，M04 零 LLM 规则化自动评分落地。实测（5 题）：<strong>参考答案 94.09 &gt; 首句摘要 86.03 &gt; 重复回答 55.02 &gt; 空回答 0.00</strong>；重复回答分项 关键词 0.267 / 格式 0.630 / 长度 0.988 / 忠实度 0.921 / <strong>去重复 0.168</strong>（124 个 3-gram 中约 21 个不同），逐项还原总分 55.05。并诚实记录「长度 0.988 与忠实度 0.921 均被复读刷到 → 无单项能防刷分，防得住的是加权组合」「<code>repetition_score</code> 对 &lt;3 字符文本返回 1.0」「忠实度抓不住少说与复读」「词面重叠 ≠ 事实正确」。纯 numpy + 标准库，无 LLM 调用。配图 1 张手写 SVG + 1 张真实终端截图。</p>
 </main>
@@ -238,6 +270,31 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

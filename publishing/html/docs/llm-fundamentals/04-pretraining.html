@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -139,8 +171,8 @@ li{margin:.3em 0;}
 <blockquote><p><strong>一句话结论</strong>：预训练就是<strong>用海量无标注文本，反复做&quot;下一 token 预测&quot;这个练习</strong>。 它不教模型任何具体任务，只是让模型把语言的统计规律压缩进参数——这个过程极其昂贵，且几乎不可逆。</p></blockquote>
 <hr/>
 <h2 id="41-预训练在做什么">4.1 预训练在做什么</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#42-数据预训练里最贵的一环"><span class="sn-label">下一节 →</span><span class="sn-name">4.2 数据：预训练里最贵的一环</span></a></nav>
-<p>$$ \max_{\theta}\; \mathbb{E}_{x \sim \mathcal{D}} \left[ -\sum_{t} \log P_{\theta}(x_t \mid x_{&lt;t}) \right] $$</p>
-<ul class="lvl"><li>$\mathcal{D}$：整个语料库（万亿 token）</li><li>$\theta$：全部参数（从随机初始化开始）</li><li>没有任何人工标签——<strong>标签就是数据自己左移一位</strong></li></ul>
+<div class="math-block"><math display="block"><msub><mtext>max</mtext><mi>θ</mi></msub><mspace width="5pt"/><msub><mi mathvariant="double-struck">E</mi><mrow><mi>x</mi><mo>∼</mo><mi mathvariant="script">D</mi></mrow></msub><mo stretchy="true">[</mo><mo>-</mo><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>t</mi></munder></mrow><mtext>log</mtext><msub><mi>P</mi><mi>θ</mi></msub><mo stretchy="true">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>x</mi><mrow><mo>&lt;</mo><mi>t</mi></mrow></msub><mo stretchy="true">)</mo><mo stretchy="true">]</mo></math></div>
+<ul class="lvl"><li><math class="math-inline"><mi mathvariant="script">D</mi></math>：整个语料库（万亿 token）</li><li><math class="math-inline"><mi>θ</mi></math>：全部参数（从随机初始化开始）</li><li>没有任何人工标签——<strong>标签就是数据自己左移一位</strong></li></ul>
 <table><thead><tr><th>对比项</th><th>预训练</th><th>微调（<a href="05-finetuning.html">第 05 章</a>）</th></tr></thead><tbody><tr><td>数据</td><td>几 T ~ 几十 T token，无需标注</td><td>几千 ~ 几百万条<strong>标注</strong>样本</td></tr><tr><td>目标</td><td>学习语言与世界知识</td><td>学习任务与格式</td></tr><tr><td>算力</td><td>全部成本的 99%</td><td>极小</td></tr><tr><td>谁能做</td><td>少数机构</td><td>个人即可</td></tr><tr><td>产物</td><td>Base model（会续写）</td><td>Chat / 领域模型（会办事）</td></tr></tbody></table>
 <p><strong>为什么说&quot;数据比算法更值钱&quot;</strong>：模型结构大体公开、算力可以买，但<strong>高质量去重语料是各家真正的护城河</strong>。</p>
 <hr/>
@@ -185,13 +217,13 @@ lr |      ___
 <table><thead><tr><th>省显存技巧</th><th>做法</th><th>代价</th></tr></thead><tbody><tr><td>梯度检查点</td><td>不保存中间激活，反向时重算</td><td>约 +30% 算力，省大量显存</td></tr><tr><td>ZeRO-3 / FSDP</td><td>参数也分片</td><td>通信量上升</td></tr><tr><td>CPU offload</td><td>优化器状态放内存/NVMe</td><td>慢</td></tr><tr><td>序列并行</td><td>长序列按 token 切分</td><td>通信上升</td></tr></tbody></table>
 <hr/>
 <h2 id="45-算力与成本算一遍就知道为什么只有大厂能训">4.5 算力与成本：算一遍就知道为什么只有大厂能训</h2><nav class="sec-nav"><a class="sn prev" href="#44-并行策略怎么把模型塞进几千张卡"><span class="sn-label">← 上一节</span><span class="sn-name">4.4 并行策略：怎么把模型塞进几千张卡</span></a><a class="sn next" href="#46-base-model-出来后为什么还不能直接给用户用"><span class="sn-label">下一节 →</span><span class="sn-name">4.6 Base Model 出来后，为什么还不能直接给用户用</span></a></nav>
-<p><strong>经验公式</strong>：训练总算力 ≈ $C \approx 6ND$（N = 参数，D = token 数；前向 2ND、反向 4ND）。</p>
-<p>按 Chinchilla 最优配比 $D = 20N$ 算一遍（<code>demos/07_scaling_law.py</code> 的真实输出）：</p>
+<p><strong>经验公式</strong>：训练总算力 ≈ <math class="math-inline"><mi>C</mi><mo>≈</mo><mn>6</mn><mi>N</mi><mi>D</mi></math>（N = 参数，D = token 数；前向 2ND、反向 4ND）。</p>
+<p>按 Chinchilla 最优配比 <math class="math-inline"><mi>D</mi><mo>=</mo><mn>2</mn><mn>0</mn><mi>N</mi></math> 算一遍（<code>demos/07_scaling_law.py</code> 的真实输出）：</p>
 <figure class="figure"><img alt="缩放定律真实运行输出" src="../../../../llm-fundamentals/assets/term-07_scaling_law.png" loading="lazy"/><figcaption>缩放定律真实运行输出</figcaption></figure>
 <figure class="figure"><img alt="损失随参数量的幂律下降" src="../../../../llm-fundamentals/assets/scaling-law.png" loading="lazy"/><figcaption>损失随参数量的幂律下降</figcaption></figure>
 <table><thead><tr><th>模型</th><th>参数量</th><th>Chinchilla 最优 token</th><th>训练算力</th></tr></thead><tbody><tr><td>GPT-2</td><td>2B</td><td>0.04T</td><td>2.70e20 FLOPs</td></tr><tr><td>LLaMA-7B</td><td>7B</td><td>0.14T</td><td>5.88e21 FLOPs</td></tr><tr><td>LLaMA-13B</td><td>13B</td><td>0.26T</td><td>2.03e22 FLOPs</td></tr><tr><td>LLaMA-70B</td><td>70B</td><td>1.4T</td><td>5.88e23 FLOPs</td></tr><tr><td>GPT-3-175B</td><td>175B</td><td>3.5T</td><td>3.67e24 FLOPs</td></tr></tbody></table>
 <p><strong>换算成钱</strong>：以 A100 约 300 TFLOPS（BF16 峰值，实际利用率 40% 左右）估算，5.88e23 FLOPs 需要约：</p>
-<p>$$ \frac{5.88\times 10^{23}}{300\times10^{12} \times 0.4 \times 3600} \approx 1.36\times10^{5}\ \text{GPU 小时} \;\approx\; 1360\ \text{张 A100 跑 100 小时} $$</p>
+<div class="math-block"><math display="block"><mrow><mfrac><mn>5</mn><mi>.</mi><mn>8</mn><mn>8</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mrow><mn>2</mn><mn>3</mn></mrow></msup><mn>3</mn><mn>0</mn><mn>0</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mrow><mn>1</mn><mn>2</mn></mrow></msup><mo>×</mo><mn>0</mn><mi>.</mi><mn>4</mn><mo>×</mo><mn>3</mn><mn>6</mn><mn>0</mn><mn>0</mn></mfrac></mrow><mo>≈</mo><mn>1</mn><mi>.</mi><mn>3</mn><mn>6</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>5</mn></msup><mo> </mo><mtext class="tx">GPU 小时</mtext><mspace width="5pt"/><mo>≈</mo><mspace width="5pt"/><mn>1</mn><mn>3</mn><mn>6</mn><mn>0</mn><mo> </mo><mtext class="tx">张 A100 跑 100 小时</mtext></math></div>
 <p>按每卡时 2 美元粗算，<strong>仅这一项就是 27 万美元量级</strong>——这还只是 70B 模型的一次训练，不含数据、调参、失败的尝试（通常要乘 2–3 倍）。</p>
 <blockquote><p>这也是为什么个人与小团队<strong>不会</strong>去预训练，而是站在（<a href="05-finetuning.html">第 05 章</a>）微调的肩上。参见现实对照：LLaMA-7B 实际训练了 1T tokens（远超 20×7B=140B），因为<strong>推理成本</strong>也要计入总账——小模型多训一点，长期推理更便宜。详见 <a href="06-scaling-and-emergence.html">第 06 章</a>。</p></blockquote>
 <hr/>
@@ -254,6 +286,31 @@ python3 demos/make_figures.py</code></pre>
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

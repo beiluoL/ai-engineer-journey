@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -147,13 +179,13 @@ li{margin:.3em 0;}
 <hr/>
 <h2 id="32-骨架残差-归一化">3.2 骨架：残差 + 归一化</h2><nav class="sec-nav"><a class="sn prev" href="#31-三种形态先认清你看的是哪一台机器"><span class="sn-label">← 上一节</span><span class="sn-name">3.1 三种形态：先认清你看的是哪一台机器</span></a><a class="sn next" href="#33-前馈网络ffn被低估的三分之二"><span class="sn-label">下一节 →</span><span class="sn-name">3.3 前馈网络（FFN）：被低估的三分之二</span></a></nav>
 <h3 id="321-为什么需要残差连接">3.2.1 为什么需要残差连接</h3>
-<p>$$ x&#x27; = x + \operatorname{Sublayer}(x) $$</p>
+<div class="math-block"><math display="block"><mi>x</mi><mi>'</mi><mo>=</mo><mi>x</mi><mo>+</mo><mtext>Sublayer</mtext><mo stretchy="true">(</mo><mi>x</mi><mo stretchy="true">)</mo></math></div>
 <table><thead><tr><th>作用</th><th>说明</th></tr></thead><tbody><tr><td>梯度高速公路</td><td>反向传播时 <code>∂x&#x27;/∂x = I + ∂Sublayer/∂x</code>，恒等项保证梯度至少能原样流回底层，缓解深层网络梯度消失</td></tr><tr><td>恒等初始化友好</td><td>子层初始输出很小，网络初始近似恒等映射，&quot;先能训得动，再慢慢学&quot;</td></tr><tr><td>不增加参数量</td><td>只做加法</td></tr></tbody></table>
 <h3 id="322-layernorm把数值拉回可控范围">3.2.2 LayerNorm：把数值拉回可控范围</h3>
-<p>$$ \operatorname{LN}(x) = \gamma \odot \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta $$</p>
+<div class="math-block"><math display="block"><mtext>LN</mtext><mo stretchy="true">(</mo><mi>x</mi><mo stretchy="true">)</mo><mo>=</mo><mi>γ</mi><mo>⊙</mo><mrow><mfrac><mi>x</mi><mo>-</mo><mi>μ</mi><msqrt><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mi>ε</mi></msqrt></mfrac></mrow><mo>+</mo><mi>β</mi></math></div>
 <ul class="lvl"><li>对<strong>每个 token 的特征维</strong>（最后一维）做归一化，与 batch 无关</li><li>这就是它比 BatchNorm 更适合变长文本的原因：<strong>不依赖 batch 统计</strong>，推理时行为一致</li></ul>
 <p>现代模型多数换成 <strong>RMSNorm</strong>（去掉均值中心化，只保留缩放）：</p>
-<p>$$ \operatorname{RMSNorm}(x) = \gamma \odot \frac{x}{\sqrt{\frac{1}{d}\sum_i x_i^2 + \epsilon}} $$</p>
+<div class="math-block"><math display="block"><mtext>RMSNorm</mtext><mo stretchy="true">(</mo><mi>x</mi><mo stretchy="true">)</mo><mo>=</mo><mi>γ</mi><mo>⊙</mo><mrow><mfrac><mi>x</mi><msqrt><mrow><mfrac><mn>1</mn><mi>d</mi></mfrac></mrow><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>i</mi></munder></mrow><msup><msub><mi>x</mi><mi>i</mi></msub><mn>2</mn></msup><mo>+</mo><mi>ε</mi></msqrt></mfrac></mrow></math></div>
 <p>省掉均值计算，约省 10% 的归一化开销，效果基本无差。LLaMA、Qwen、Gemma 都用它。</p>
 <h3 id="323-preln-vs-postln一个必须记住的工程结论">3.2.3 Pre-LN vs Post-LN：一个必须记住的工程结论</h3>
 <pre><code>Post-LN（原论文）:   x = LN(x + Sublayer(x))       归一化在残差之后
@@ -163,22 +195,22 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <hr/>
 <h2 id="33-前馈网络ffn被低估的三分之二">3.3 前馈网络（FFN）：被低估的三分之二</h2><nav class="sec-nav"><a class="sn prev" href="#32-骨架残差-归一化"><span class="sn-label">← 上一节</span><span class="sn-name">3.2 骨架：残差 + 归一化</span></a><a class="sn next" href="#34-位置编码把顺序写进向量"><span class="sn-label">下一节 →</span><span class="sn-name">3.4 位置编码：把顺序写进向量</span></a></nav>
 <p>注意力负责&quot;跨 token 通信&quot;，但<strong>每个 token 内部的信息加工</strong>由 FFN 完成。</p>
-<p>$$ \operatorname{FFN}(x) = W_2 \cdot \sigma(W_1 x + b_1) + b_2 $$</p>
+<div class="math-block"><math display="block"><mtext>FFN</mtext><mo stretchy="true">(</mo><mi>x</mi><mo stretchy="true">)</mo><mo>=</mo><msub><mi>W</mi><mn>2</mn></msub><mo>·</mo><mi>σ</mi><mo stretchy="true">(</mo><msub><mi>W</mi><mn>1</mn></msub><mi>x</mi><mo>+</mo><msub><mi>b</mi><mn>1</mn></msub><mo stretchy="true">)</mo><mo>+</mo><msub><mi>b</mi><mn>2</mn></msub></math></div>
 <p>标准配置把维度先放大 4 倍：</p>
-<table><thead><tr><th>项</th><th>形状（d=4096）</th><th>参数量</th></tr></thead><tbody><tr><td>$W_1$</td><td>4096 × 16384</td><td>67.1 M</td></tr><tr><td>$W_2$</td><td>16384 × 4096</td><td>67.1 M</td></tr><tr><td>合计</td><td>—</td><td><strong>134.2 M</strong></td></tr><tr><td>对比：一次注意力的 QKVO</td><td>4 × 4096 × 4096</td><td>67.1 M</td></tr></tbody></table>
+<table><thead><tr><th>项</th><th>形状（d=4096）</th><th>参数量</th></tr></thead><tbody><tr><td><math class="math-inline"><msub><mi>W</mi><mn>1</mn></msub></math></td><td>4096 × 16384</td><td>67.1 M</td></tr><tr><td><math class="math-inline"><msub><mi>W</mi><mn>2</mn></msub></math></td><td>16384 × 4096</td><td>67.1 M</td></tr><tr><td>合计</td><td>—</td><td><strong>134.2 M</strong></td></tr><tr><td>对比：一次注意力的 QKVO</td><td>4 × 4096 × 4096</td><td>67.1 M</td></tr></tbody></table>
 <p><strong>FFN 参数量是注意力部分的 2 倍</strong>。所以&quot;7B 参数&quot;里，大头其实是 FFN。</p>
-<table><thead><tr><th>变体</th><th>公式</th><th>特点</th></tr></thead><tbody><tr><td>标准 ReLU FFN</td><td>$\max(0, xW_1)W_2$</td><td>原版</td></tr><tr><td>GELU FFN</td><td>$\operatorname{GELU}(xW_1)W_2$</td><td>GPT-2/BERT</td></tr><tr><td><strong>SwiGLU</strong></td><td>$(\operatorname{Swish}(xW_g) \odot xW_1)W_2$</td><td>LLaMA 系主流；三个矩阵但把隐藏维降到 8/3 d，总参数持平，效果更好</td></tr></tbody></table>
+<table><thead><tr><th>变体</th><th>公式</th><th>特点</th></tr></thead><tbody><tr><td>标准 ReLU FFN</td><td><math class="math-inline"><mtext>max</mtext><mo stretchy="true">(</mo><mn>0</mn><mi>,</mi><mi>x</mi><msub><mi>W</mi><mn>1</mn></msub><mo stretchy="true">)</mo><msub><mi>W</mi><mn>2</mn></msub></math></td><td>原版</td></tr><tr><td>GELU FFN</td><td><math class="math-inline"><mtext>GELU</mtext><mo stretchy="true">(</mo><mi>x</mi><msub><mi>W</mi><mn>1</mn></msub><mo stretchy="true">)</mo><msub><mi>W</mi><mn>2</mn></msub></math></td><td>GPT-2/BERT</td></tr><tr><td><strong>SwiGLU</strong></td><td><math class="math-inline"><mo stretchy="true">(</mo><mtext>Swish</mtext><mo stretchy="true">(</mo><mi>x</mi><msub><mi>W</mi><mi>g</mi></msub><mo stretchy="true">)</mo><mo>⊙</mo><mi>x</mi><msub><mi>W</mi><mn>1</mn></msub><mo stretchy="true">)</mo><msub><mi>W</mi><mn>2</mn></msub></math></td><td>LLaMA 系主流；三个矩阵但把隐藏维降到 8/3 d，总参数持平，效果更好</td></tr></tbody></table>
 <blockquote><p><strong>&quot;FFN 是键值记忆&quot;</strong> 这个解释很流行（Geva et al. 2021）：把 W₁ 的每行看成&quot;模式检测器&quot;，W₂ 的列看成&quot;对应输出内容&quot;。这解释了为什么对 FFN 做知识编辑（ROME 一类方法）能改掉模型的具体事实记忆。</p></blockquote>
 <hr/>
 <h2 id="34-位置编码把顺序写进向量">3.4 位置编码：把顺序写进向量</h2><nav class="sec-nav"><a class="sn prev" href="#33-前馈网络ffn被低估的三分之二"><span class="sn-label">← 上一节</span><span class="sn-name">3.3 前馈网络（FFN）：被低估的三分之二</span></a><a class="sn next" href="#35-一个-decoder-block-的完整数据流"><span class="sn-label">下一节 →</span><span class="sn-name">3.5 一个 decoder block 的完整数据流</span></a></nav>
 <p><a href="02-attention.html">第 02 章</a>说过注意力是置换等变的——不注入位置信息，模型看&quot;我打你&quot;和&quot;你打我&quot;一样。位置编码就是补上这一课。</p>
 <h3 id="341-正弦位置编码原论文方案">3.4.1 正弦位置编码（原论文方案）</h3>
-<p>$$ \begin{aligned} PE_{(pos,\,2i)} &amp;= \sin\!\left(\frac{pos}{10000^{2i/d_{model}}}\right) \\[4pt] PE_{(pos,\,2i+1)} &amp;= \cos\!\left(\frac{pos}{10000^{2i/d_{model}}}\right) \end{aligned} $$</p>
-<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td>$pos$</td><td>位置索引（0, 1, 2, …）</td></tr><tr><td>$i$</td><td>维度对的索引（0 … d/2−1）</td></tr><tr><td>$10000^{2i/d}$</td><td>不同维度对应不同波长：低维波长短（高频），高维波长长（低频）</td></tr></tbody></table>
+<div class="math-block"><math display="block"><mtable columnalign="left"><mtr><mtd><mi>P</mi><msub><mi>E</mi><mrow><mo stretchy="true">(</mo><mi>p</mi><mi>o</mi><mi>s</mi><mi>,</mi><mspace width="3pt"/><mn>2</mn><mi>i</mi><mo stretchy="true">)</mo></mrow></msub><mi>&amp;</mi><mo>=</mo><mtext>sin</mtext><mspace width="-3pt"/><msup><mrow><mo stretchy="true">(</mo><mrow><mfrac><mi>p</mi><mi>o</mi><mi>s</mi><mn>1</mn><mn>0</mn><mn>0</mn><mn>0</mn><msup><mn>0</mn><mrow><mn>2</mn><mi>i</mi><mo>/</mo><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub></mrow></msup></mfrac></mrow><mo stretchy="true">)</mo></mrow><mi></mi></msup></mtd></mtr><mtr><mtd><mo stretchy="true">[</mo><mn>4</mn><mi>p</mi><mi>t</mi><mo stretchy="true">]</mo><mi>P</mi><msub><mi>E</mi><mrow><mo stretchy="true">(</mo><mi>p</mi><mi>o</mi><mi>s</mi><mi>,</mi><mspace width="3pt"/><mn>2</mn><mi>i</mi><mo>+</mo><mn>1</mn><mo stretchy="true">)</mo></mrow></msub><mi>&amp;</mi><mo>=</mo><mtext>cos</mtext><mspace width="-3pt"/><msup><mrow><mo stretchy="true">(</mo><mrow><mfrac><mi>p</mi><mi>o</mi><mi>s</mi><mn>1</mn><mn>0</mn><mn>0</mn><mn>0</mn><msup><mn>0</mn><mrow><mn>2</mn><mi>i</mi><mo>/</mo><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub></mrow></msup></mfrac></mrow><mo stretchy="true">)</mo></mrow><mi></mi></msup></mtd></mtr></mtable></math></div>
+<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td><math class="math-inline"><mi>p</mi><mi>o</mi><mi>s</mi></math></td><td>位置索引（0, 1, 2, …）</td></tr><tr><td><math class="math-inline"><mi>i</mi></math></td><td>维度对的索引（0 … d/2−1）</td></tr><tr><td><math class="math-inline"><mn>1</mn><mn>0</mn><mn>0</mn><mn>0</mn><msup><mn>0</mn><mrow><mn>2</mn><mi>i</mi><mo>/</mo><mi>d</mi></mrow></msup></math></td><td>不同维度对应不同波长：低维波长短（高频），高维波长长（低频）</td></tr></tbody></table>
 <p>这就是&quot;多把不同刻度的尺子同时量距离&quot;。<code>demos/04_positional_encoding.py</code> 的真实运行结果：</p>
 <figure class="figure"><img alt="位置编码真实运行输出" src="../../../../llm-fundamentals/assets/term-04_positional_encoding.png" loading="lazy"/><figcaption>位置编码真实运行输出</figcaption></figure>
 <p><strong>第 1 段</strong>验证了&quot;低维快速振荡、高维缓慢变化&quot;；<strong>第 2 段（性质 1）</strong>是这套编码最漂亮的地方——<strong>同一相对距离 k 下，不管 pos 是 0 还是 60，点积几乎完全一样</strong>（7.4852 / 7.4852 / 7.4852 / 7.4852）：</p>
-<p>$$ \langle PE_{pos},\, PE_{pos+k}\rangle \approx f(k) \quad \text{只依赖 } k $$</p>
+<div class="math-block"><math display="block"><mo>⟨</mo><mi>P</mi><msub><mi>E</mi><mrow><mi>p</mi><mi>o</mi><mi>s</mi></mrow></msub><mi>,</mi><mspace width="3pt"/><mi>P</mi><msub><mi>E</mi><mrow><mi>p</mi><mi>o</mi><mi>s</mi><mo>+</mo><mi>k</mi></mrow></msub><mo>⟩</mo><mo>≈</mo><mi>f</mi><mo stretchy="true">(</mo><mi>k</mi><mo stretchy="true">)</mo><mspace width="1em"/><mtext class="tx">只依赖</mtext><mi>k</mi></math></div>
 <p>这意味着模型能学到&quot;距离 5 个位置&quot;这种<strong>相对概念</strong>，而不是死记&quot;第 37 个位置&quot;——泛化到没见过的长度才成为可能。</p>
 <p>同一批数据画出来更直观：</p>
 <figure class="figure"><img alt="位置编码热力图与相似度衰减" src="../../../../llm-fundamentals/assets/positional-encoding.png" loading="lazy"/><figcaption>位置编码热力图与相似度衰减</figcaption></figure>
@@ -186,7 +218,7 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <h3 id="342-三种方案的对比与演进">3.4.2 三种方案的对比与演进</h3>
 <table><thead><tr><th>方案</th><th>是否可训练</th><th>外推能力</th><th>代表模型</th><th>说明</th></tr></thead><tbody><tr><td>Sinusoidal（正弦）</td><td>否</td><td>公式上任意长，但实际外推一般</td><td>原始 Transformer、早期 GPT</td><td>本章 demo 实现的就是它</td></tr><tr><td>Learned（可学习）</td><td>是</td><td><strong>差</strong>，超过训练长度失效</td><td>BERT、GPT-2</td><td>简单直接，但长度被写死在表里</td></tr><tr><td><strong>RoPE（旋转位置编码）</strong></td><td>否（有少量超参）</td><td>好，配合插值可扩展到 128k+</td><td>LLaMA、Qwen、Mistral、DeepSeek</td><td>当前绝对主流</td></tr><tr><td>ALiBi</td><td>否</td><td>好</td><td>BLOOM、部分长文模型</td><td>直接给注意力打分加距离偏置</td></tr></tbody></table>
 <p><strong>RoPE 的核心思想</strong>（推导见 <a href="09-math-foundations.html">第 09 章</a>）：不改 embedding，而是把 Q、K 向量按位置<strong>旋转</strong>一个角度：</p>
-<p>$$ q_m&#x27; = R_{\Theta, m}\, q_m,\qquad k_n&#x27; = R_{\Theta, n}\, k_n \qquad\Longrightarrow\qquad {q_m&#x27;}^{\top} k_n&#x27; = g(q_m, k_n,\; m-n) $$</p>
+<div class="math-block"><math display="block"><msub><mi>q</mi><mi>m</mi></msub><mi>'</mi><mo>=</mo><msub><mi>R</mi><mrow><mi>Θ</mi><mi>,</mi><mi>m</mi></mrow></msub><mspace width="3pt"/><msub><mi>q</mi><mi>m</mi></msub><mi>,</mi><mspace width="2em"/><msub><mi>k</mi><mi>n</mi></msub><mi>'</mi><mo>=</mo><msub><mi>R</mi><mrow><mi>Θ</mi><mi>,</mi><mi>n</mi></mrow></msub><mspace width="3pt"/><msub><mi>k</mi><mi>n</mi></msub><mspace width="2em"/><mo>⟹</mo><mspace width="2em"/><msup><msub><mi>q</mi><mi>m</mi></msub><mi>'</mi><mo>⊤</mo></msup><msub><mi>k</mi><mi>n</mi></msub><mi>'</mi><mo>=</mo><mi>g</mi><mo stretchy="true">(</mo><msub><mi>q</mi><mi>m</mi></msub><mi>,</mi><msub><mi>k</mi><mi>n</mi></msub><mi>,</mi><mspace width="5pt"/><mi>m</mi><mo>-</mo><mi>n</mi><mo stretchy="true">)</mo></math></div>
 <p>旋转后的内积<strong>天然只依赖相对位置 m−n</strong>，与绝对位置无关。相比正弦编码（加在输入上，之后还要经过多层投影会被&quot;稀释&quot;），RoPE 直接作用在注意力的打分里，而且不增加参数量——这是它成为主流的原因。</p>
 <table><thead><tr><th>长上下文扩展技巧</th><th>做法</th></tr></thead><tbody><tr><td>位置插值（PI）</td><td>把超长位置压缩回训练范围</td></tr><tr><td>NTK-aware / YaRN</td><td>改变旋转频率基底，按维度分频缩放</td></tr><tr><td>继续预训练</td><td>直接用长文本再训一段（最可靠，也最贵）</td></tr></tbody></table>
 <hr/>
@@ -201,9 +233,9 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <hr/>
 <h2 id="36-参数量估算自己算一遍">3.6 参数量估算：自己算一遍</h2><nav class="sec-nav"><a class="sn prev" href="#35-一个-decoder-block-的完整数据流"><span class="sn-label">← 上一节</span><span class="sn-name">3.5 一个 decoder block 的完整数据流</span></a><a class="sn next" href="#37-架构演化从-gpt1-到现代-llm"><span class="sn-label">下一节 →</span><span class="sn-name">3.7 架构演化：从 GPT-1 到现代 LLM</span></a></nav>
 <p>单层参数（忽略 bias）：</p>
-<p>$$ \underbrace{4 d^2}_{\text{注意力 QKVO}} + \underbrace{3 \cdot d \cdot d_{ff}}_{\text{SwiGLU 三个矩阵}} $$</p>
+<div class="math-block"><math display="block"><msub><mrow><munderover accent="true" accentunder="true"><mo stretchy="true">⏟</mo><mspace width="0pt"/><mn>4</mn><msup><mi>d</mi><mn>2</mn></msup></munderover></mrow><mtext class="tx">注意力 QKVO</mtext></msub><mo>+</mo><msub><mrow><munderover accent="true" accentunder="true"><mo stretchy="true">⏟</mo><mspace width="0pt"/><mn>3</mn><mo>·</mo><mi>d</mi><mo>·</mo><msub><mi>d</mi><mrow><mi>f</mi><mi>f</mi></mrow></msub></munderover></mrow><mtext class="tx">SwiGLU 三个矩阵</mtext></msub></math></div>
 <p>加上词表（含输出层共享时为一份）：</p>
-<p>$$ N \approx 12 \cdot L \cdot d^2 \; \left(\text{当 } d_{ff} = 4d \text{ 时}\right) $$</p>
+<div class="math-block"><math display="block"><mi>N</mi><mo>≈</mo><mn>1</mn><mn>2</mn><mo>·</mo><mi>L</mi><mo>·</mo><msup><mi>d</mi><mn>2</mn></msup><mspace width="5pt"/><mo stretchy="true">(</mo><mtext class="tx">当</mtext><msub><mi>d</mi><mrow><mi>f</mi><mi>f</mi></mrow></msub><mo>=</mo><mn>4</mn><mi>d</mi><mtext class="tx">时</mtext><mo stretchy="true">)</mo></math></div>
 <p>这个&quot;12·L·d²&quot;是面试常考的速算公式。验证一下：</p>
 <table><thead><tr><th>模型</th><th>L</th><th>d</th><th>12·L·d²</th><th>官方参数量</th><th>误差来源</th></tr></thead><tbody><tr><td>GPT-2 small</td><td>12</td><td>768</td><td>85 M</td><td>124 M（含 50k 词表 embedding 39 M）</td><td>词表未计入</td></tr><tr><td>GPT-3</td><td>96</td><td>12288</td><td>173 B</td><td>175 B</td><td>接近</td></tr><tr><td>LLaMA-7B</td><td>32</td><td>4096</td><td>6.4 B</td><td>6.7 B</td><td>SwiGLU 的 d_ff=11008 &lt; 4d</td></tr></tbody></table>
 <p><strong>结论</strong>：免词表时，参数量 ≈ <code>12 · L · d²</code>；实际再加 <code>V · d</code> 的 embedding（若共享则只算一次）。</p>
@@ -220,7 +252,7 @@ Pre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之�
 <pre><code>python3 demos/04_positional_encoding.py     # 位置编码的四个性质都是真实算出来的
 python3 demos/make_figures.py               # 重画 positional-encoding.png</code></pre>
 <p><strong>建议改的三处</strong>：</p>
-<ul class="lvl"><li>把 <code>D_MODEL</code> 从 64 改成 8，观察&quot;性质 1&quot;那张表是否还那么整齐（提示：维度太少，频率分辨率不够）。</li><li>把 <code>10000</code> 改成 <code>100</code>，观察热力图的频率分布如何变化。</li><li>自己加一段：实现 RoPE 的二维旋转矩阵，验证 $q_m&#x27;^\top k_n&#x27;$ 只依赖 m−n。</li></ul>
+<ul class="lvl"><li>把 <code>D_MODEL</code> 从 64 改成 8，观察&quot;性质 1&quot;那张表是否还那么整齐（提示：维度太少，频率分辨率不够）。</li><li>把 <code>10000</code> 改成 <code>100</code>，观察热力图的频率分布如何变化。</li><li>自己加一段：实现 RoPE 的二维旋转矩阵，验证 <math class="math-inline"><msub><mi>q</mi><mi>m</mi></msub><msup><mi>'</mi><mo>⊤</mo></msup><msub><mi>k</mi><mi>n</mi></msub><mi>'</mi></math> 只依赖 m−n。</li></ul>
 <hr/>
 <h2 id="310-自查问题">3.10 自查问题</h2><nav class="sec-nav"><a class="sn prev" href="#39-动手"><span class="sn-label">← 上一节</span><span class="sn-name">3.9 动手</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>一个 decoder block 里有哪些子层？各占多少参数？</li><li>残差连接为什么能缓解梯度消失？（写出 ∂x&#x27;/∂x）</li><li>Pre-LN 和 Post-LN 的公式分别是什么？为什么现代模型都用 Pre-LN？</li><li>位置编码为什么必需？RoPE 相比正弦编码好在哪两个点？</li><li>用 <code>12·L·d²</code> 估算一个 L=80、d=8192 的模型参数量，再想想词表占多少。</li><li>Encoder-only / Decoder-only / Encoder-Decoder 各自适合什么任务？为什么 LLM 是 Decoder-only？</li><li>MoE 的&quot;总参数&quot;和&quot;激活参数&quot;分别影响什么？</li></ul>
@@ -258,6 +290,31 @@ python3 demos/make_figures.py               # 重画 positional-encoding.png</co
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

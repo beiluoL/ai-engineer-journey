@@ -101,6 +101,18 @@ ai-engineer-journey/
 | `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航 |
 | `md_to_book_html.py` | 单篇渲染器：自动抽取 h2/h3 生成侧边目录大纲、顶部阅读进度条、每章末尾「上一节 / 下一节」链式导航、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
 | `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（675 个文件 / 12 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html` |
+| `latex_mathml.py` | **公式渲染**：构建期把 `$…$` / `$$…$$` 里的 LaTeX 转成浏览器原生 MathML（分数/根式/上下标/矩阵/`\text` 中文混排/`\operatorname`/`\mathbb`/间距与箭头），运行时零依赖 |
+| `verify_math_layout.js` | **公式版式实测**：用真实 Chromium 量「公式是否横排、是否溢出行容器、行内混排是否撑歪行高」，桌面 1280px + 移动 390/768px 三个视口 |
+| `shot_math.js` | 用真实 Chromium 截取公式渲染截图（`llm-fundamentals/assets/math-render-*.png` 的来源） |
+
+**公式渲染**：文档里的 `$…$`（行内）与 `$$…$$`（行间）在**构建期**就转成了浏览器原生的
+MathML，随页面一起落地——不引 CDN、不塞 KaTeX 字体，断网双击照样排版正确。
+行间公式居中且过长时在容器内横向滚动（窄屏先自动缩字号），行内公式与中文正文基线对齐。
+
+![行间公式：logits = h W_lm, W_lm ∈ R^(d_model × V) ⟹ p = softmax(logits)](llm-fundamentals/assets/math-render-block.png)
+![行内公式与中文混排](llm-fundamentals/assets/math-render-inline.png)
+![表格单元格里的公式（含 \| 平行符号）](llm-fundamentals/assets/math-render-table.png)
+![移动端 390px 视口下的行间公式](llm-fundamentals/assets/math-render-mobile.png)
 
 **代码浏览器**：`publishing/html/ide.html` 打开就是项目列表，点进某一项目后是
 IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）、右侧带语法高亮的代码区

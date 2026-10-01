@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -161,36 +193,36 @@ Key6:   &quot;鸭&quot;    相似度 0.11
         ↓ 加权求和
 输出 =  0.07·V(我) + 0.09·V(在) + ... + 0.11·V(鸭)</code></pre>
 <p>关键点：<strong>Q、K、V 全部来自同一个输入 X</strong>——所以叫 <strong>Self</strong>-Attention（自注意力）。三个不同的线性投影把同一个 X 映射成三种角色：</p>
-<p>$$ Q = XW_Q,\qquad K = XW_K,\qquad V = XW_V $$</p>
-<table><thead><tr><th>矩阵</th><th>形状</th><th>作用</th></tr></thead><tbody><tr><td>$X$</td><td>$(n, d_{model})$</td><td>n 个 token，每个 d_model 维</td></tr><tr><td>$W_Q, W_K, W_V$</td><td>$(d_{model}, d_k)$</td><td>学出来的三套投影</td></tr><tr><td>$Q, K, V$</td><td>$(n, d_k)$</td><td>同一批 token 的三种&quot;身份&quot;</td></tr></tbody></table>
-<blockquote><p><strong>面试常问</strong>：为什么 Q/K/V 要分开？如果 K 和 Q 用同一个投影，相似度矩阵就变成对称的（$XWW^TX^T$），&quot;我关注你&quot;和&quot;你关注我&quot;永远同强度，表达力被削掉一半。V 单独一套，则是因为&quot;相关性高&quot;和&quot;内容该抄多少&quot;是两件事。</p></blockquote>
+<div class="math-block"><math display="block"><mi>Q</mi><mo>=</mo><mi>X</mi><msub><mi>W</mi><mi>Q</mi></msub><mi>,</mi><mspace width="2em"/><mi>K</mi><mo>=</mo><mi>X</mi><msub><mi>W</mi><mi>K</mi></msub><mi>,</mi><mspace width="2em"/><mi>V</mi><mo>=</mo><mi>X</mi><msub><mi>W</mi><mi>V</mi></msub></math></div>
+<table><thead><tr><th>矩阵</th><th>形状</th><th>作用</th></tr></thead><tbody><tr><td><math class="math-inline"><mi>X</mi></math></td><td><math class="math-inline"><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub><mo stretchy="true">)</mo></math></td><td>n 个 token，每个 d_model 维</td></tr><tr><td><math class="math-inline"><msub><mi>W</mi><mi>Q</mi></msub><mi>,</mi><msub><mi>W</mi><mi>K</mi></msub><mi>,</mi><msub><mi>W</mi><mi>V</mi></msub></math></td><td><math class="math-inline"><mo stretchy="true">(</mo><msub><mi>d</mi><mrow><mi>m</mi><mi>o</mi><mi>d</mi><mi>e</mi><mi>l</mi></mrow></msub><mi>,</mi><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="true">)</mo></math></td><td>学出来的三套投影</td></tr><tr><td><math class="math-inline"><mi>Q</mi><mi>,</mi><mi>K</mi><mi>,</mi><mi>V</mi></math></td><td><math class="math-inline"><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="true">)</mo></math></td><td>同一批 token 的三种&quot;身份&quot;</td></tr></tbody></table>
+<blockquote><p><strong>面试常问</strong>：为什么 Q/K/V 要分开？如果 K 和 Q 用同一个投影，相似度矩阵就变成对称的（<math class="math-inline"><mi>X</mi><mi>W</mi><msup><msup><mi>W</mi><mi>TX</mi></msup><mi>T</mi></msup></math>），&quot;我关注你&quot;和&quot;你关注我&quot;永远同强度，表达力被削掉一半。V 单独一套，则是因为&quot;相关性高&quot;和&quot;内容该抄多少&quot;是两件事。</p></blockquote>
 <hr/>
 <h2 id="23-公式拆解与真实计算">2.3 公式拆解与真实计算</h2><nav class="sec-nav"><a class="sn prev" href="#22-直觉图书馆检索"><span class="sn-label">← 上一节</span><span class="sn-name">2.2 直觉：图书馆检索</span></a><a class="sn next" href="#24-为什么必须除以-dk"><span class="sn-label">下一节 →</span><span class="sn-name">2.4 为什么必须除以 √d_k</span></a></nav>
 <h3 id="231-完整公式">2.3.1 完整公式</h3>
-<p>$$ \operatorname{Attention}(Q,K,V) \;=\; \operatorname{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V $$</p>
+<div class="math-block"><math display="block"><mtext>Attention</mtext><mo stretchy="true">(</mo><mi>Q</mi><mi>,</mi><mi>K</mi><mi>,</mi><mi>V</mi><mo stretchy="true">)</mo><mspace width="5pt"/><mo>=</mo><mspace width="5pt"/><mtext>softmax</mtext><mspace width="-3pt"/><mo stretchy="true">(</mo><mrow><mfrac><mi>Q</mi><msup><mi>K</mi><mo>⊤</mo></msup><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></mfrac></mrow><mo stretchy="true">)</mo><mi>V</mi></math></div>
 <p>拆成四步看：</p>
-<table><thead><tr><th>步</th><th>运算</th><th>形状变化</th><th>含义</th></tr></thead><tbody><tr><td>①</td><td>$S = QK^{\top}$</td><td>$(n,d_k)\times(d_k,n) \to (n,n)$</td><td>两两相似度打分矩阵</td></tr><tr><td>②</td><td>$S / \sqrt{d_k}$</td><td>$(n,n)$</td><td>缩放，防止 softmax 过饱和（见 2.4）</td></tr><tr><td>③</td><td>$A = \operatorname{softmax}(S)$（按行）</td><td>$(n,n)$</td><td>每行是一个概率分布，和为 1</td></tr><tr><td>④</td><td>$O = AV$</td><td>$(n,n)\times(n,d_k) \to (n,d_k)$</td><td>按权重对 V 加权求和</td></tr></tbody></table>
+<table><thead><tr><th>步</th><th>运算</th><th>形状变化</th><th>含义</th></tr></thead><tbody><tr><td>①</td><td><math class="math-inline"><mi>S</mi><mo>=</mo><mi>Q</mi><msup><mi>K</mi><mo>⊤</mo></msup></math></td><td><math class="math-inline"><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="true">)</mo><mo>×</mo><mo stretchy="true">(</mo><msub><mi>d</mi><mi>k</mi></msub><mi>,</mi><mi>n</mi><mo stretchy="true">)</mo><mo>→</mo><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><mi>n</mi><mo stretchy="true">)</mo></math></td><td>两两相似度打分矩阵</td></tr><tr><td>②</td><td><math class="math-inline"><mi>S</mi><mo>/</mo><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></math></td><td><math class="math-inline"><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><mi>n</mi><mo stretchy="true">)</mo></math></td><td>缩放，防止 softmax 过饱和（见 2.4）</td></tr><tr><td>③</td><td><math class="math-inline"><mi>A</mi><mo>=</mo><mtext>softmax</mtext><mo stretchy="true">(</mo><mi>S</mi><mo stretchy="true">)</mo></math>（按行）</td><td><math class="math-inline"><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><mi>n</mi><mo stretchy="true">)</mo></math></td><td>每行是一个概率分布，和为 1</td></tr><tr><td>④</td><td><math class="math-inline"><mi>O</mi><mo>=</mo><mi>A</mi><mi>V</mi></math></td><td><math class="math-inline"><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><mi>n</mi><mo stretchy="true">)</mo><mo>×</mo><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="true">)</mo><mo>→</mo><mo stretchy="true">(</mo><mi>n</mi><mi>,</mi><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="true">)</mo></math></td><td>按权重对 V 加权求和</td></tr></tbody></table>
 <h3 id="232-跑一遍真的demos02selfattentionpy">2.3.2 跑一遍真的（demos/02_self_attention.py）</h3>
 <p>6 个 token、d_model=8、d_k=4 的真实运行结果：</p>
 <figure class="figure"><img alt="Self-Attention 真实运行输出" src="../../../../llm-fundamentals/assets/term-02_self_attention.png" loading="lazy"/><figcaption>Self-Attention 真实运行输出</figcaption></figure>
 <p>三个关键读数：</p>
-<ul class="lvl"><li><strong>第 3 段的权重矩阵每行和都是 1.000000</strong> —— softmax 是按行做的（对&quot;被关注者&quot;这一维归一化）。</li><li><strong>第 5 段最大误差 2.78e-17</strong> —— 输出确实等于 $\sum_j A_{0j} V_j$，误差只是浮点舍入。这验证了&quot;注意力 = 加权平均&quot;这个本质。</li><li><strong>第 6 段加因果掩码后，上三角全为 0</strong> —— 每行可见范围 <code>[0..i]</code>，且行和仍为 1。</li></ul>
+<ul class="lvl"><li><strong>第 3 段的权重矩阵每行和都是 1.000000</strong> —— softmax 是按行做的（对&quot;被关注者&quot;这一维归一化）。</li><li><strong>第 5 段最大误差 2.78e-17</strong> —— 输出确实等于 <math class="math-inline"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>j</mi></munder></mrow><msub><mi>A</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub><msub><mi>V</mi><mi>j</mi></msub></math>，误差只是浮点舍入。这验证了&quot;注意力 = 加权平均&quot;这个本质。</li><li><strong>第 6 段加因果掩码后，上三角全为 0</strong> —— 每行可见范围 <code>[0..i]</code>，且行和仍为 1。</li></ul>
 <p>同一批数据画成热力图，左右对照能看清掩码做了什么：</p>
 <figure class="figure"><img alt="注意力权重矩阵热力图" src="../../../../llm-fundamentals/assets/attention-heatmap.png" loading="lazy"/><figcaption>注意力权重矩阵热力图</figcaption></figure>
 <p>左图（双向）每个位置都能看全句；右图（因果）第 i 行只在 ≤ i 的格子有值——<strong>这就是 Encoder 和 Decoder 的唯一本质区别</strong>。</p>
 <h3 id="233-一个容易忽略的性质注意力是置换等变的">2.3.3 一个容易忽略的性质：注意力是&quot;置换等变&quot;的</h3>
 <p>把输入 token 的顺序打乱，输出会<strong>以同样方式打乱</strong>，但每个位置的数值不变：</p>
-<p>$$ \operatorname{Attn}(\pi(X)) = \pi(\operatorname{Attn}(X)) $$</p>
+<div class="math-block"><math display="block"><mtext>Attn</mtext><mo stretchy="true">(</mo><mi>π</mi><mo stretchy="true">(</mo><mi>X</mi><mo stretchy="true">)</mo><mo stretchy="true">)</mo><mo>=</mo><mi>π</mi><mo stretchy="true">(</mo><mtext>Attn</mtext><mo stretchy="true">(</mo><mi>X</mi><mo stretchy="true">)</mo><mo stretchy="true">)</mo></math></div>
 <p><strong>这意味着自注意力本身完全不知道顺序！</strong> &quot;我在北京吃烤鸭&quot;和&quot;鸭烤吃京北在我&quot;在这层看来是一样的。所以必须额外注入位置信息——这就是<a href="03-transformer.html#34-位置编码把顺序写进向量">位置编码</a>存在的原因。</p>
 <hr/>
 <h2 id="24-为什么必须除以-dk">2.4 为什么必须除以 √d_k</h2><nav class="sec-nav"><a class="sn prev" href="#23-公式拆解与真实计算"><span class="sn-label">← 上一节</span><span class="sn-name">2.3 公式拆解与真实计算</span></a><a class="sn next" href="#25-掩码mask两条不同的禁令"><span class="sn-label">下一节 →</span><span class="sn-name">2.5 掩码（Mask）：两条不同的&amp;quot;禁令&amp;quot;</span></a></nav>
 <p>这是面试里区分&quot;背过公式&quot;和&quot;懂了&quot;的经典问题。</p>
 <p><strong>推导思路</strong>（完整版见 <a href="09-math-foundations.html">第 09 章 · Self-Attention 的缩放</a>）：</p>
-<p>设 $q_i, k_j \in \mathbb{R}^{d_k}$ 的各分量独立、均值 0、方差 1，则点积的方差是：</p>
-<p>$$ \operatorname{Var}\!\left(\sum_{i=1}^{d_k} q_i k_i\right) = \sum_{i=1}^{d_k} \operatorname{Var}(q_i k_i) = d_k $$</p>
-<p>也就是<strong>点积的典型大小是 $\sqrt{d_k}$，随维度增长</strong>。而 softmax 的输入一旦数值过大，分布就会极端化：</p>
+<p>设 <math class="math-inline"><msub><mi>q</mi><mi>i</mi></msub><mi>,</mi><msub><mi>k</mi><mi>j</mi></msub><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><msub><mi>d</mi><mi>k</mi></msub></msup></math> 的各分量独立、均值 0、方差 1，则点积的方差是：</p>
+<div class="math-block"><math display="block"><mtext>Var</mtext><mspace width="-3pt"/><mo stretchy="true">(</mo><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>i</mi><mo>=</mo><mn>1</mn></munder></mrow><msub><mi>d</mi><mi>k</mi></msub></mover></mrow><msub><mi>q</mi><mi>i</mi></msub><msub><mi>k</mi><mi>i</mi></msub><mo stretchy="true">)</mo><mo>=</mo><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>i</mi><mo>=</mo><mn>1</mn></munder></mrow><msub><mi>d</mi><mi>k</mi></msub></mover></mrow><mtext>Var</mtext><mo stretchy="true">(</mo><msub><mi>q</mi><mi>i</mi></msub><msub><mi>k</mi><mi>i</mi></msub><mo stretchy="true">)</mo><mo>=</mo><msub><mi>d</mi><mi>k</mi></msub></math></div>
+<p>也就是<strong>点积的典型大小是 <math class="math-inline"><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></math>，随维度增长</strong>。而 softmax 的输入一旦数值过大，分布就会极端化：</p>
 <table><thead><tr><th>softmax 输入尺度</th><th>分布形态</th><th>梯度状况</th></tr></thead><tbody><tr><td>小（~1）</td><td>平滑，各位置都能分到权重</td><td>梯度良好</td></tr><tr><td>大（±20）</td><td>接近 one-hot</td><td>softmax 饱和区，<strong>梯度 ≈ 0，学不动</strong></td></tr></tbody></table>
-<p>除以 $\sqrt{d_k}$ 把点积的方差拉回 1，softmax 就工作在&quot;有梯度&quot;的区间。这不是经验技巧，而是<strong>必须做的归一化</strong>。</p>
+<p>除以 <math class="math-inline"><msqrt><msub><mi>d</mi><mi>k</mi></msub></msqrt></math> 把点积的方差拉回 1，softmax 就工作在&quot;有梯度&quot;的区间。这不是经验技巧，而是<strong>必须做的归一化</strong>。</p>
 <p>真实数据对照（<code>demos/02_self_attention.py</code> 的输出）：</p>
 <table><thead><tr><th>指标</th><th>未缩放</th><th>除以 √d_k = 2.0</th></tr></thead><tbody><tr><td>打分绝对值均值</td><td>1.457</td><td>0.729</td></tr></tbody></table>
 <blockquote><p><strong>补充</strong>：这也是为什么后来出现 QK-Norm、softmax 前加 tanh 等变体——一旦维度继续变大（如 128 以上、或训练不稳定时），缩放系数还需要继续调。</p></blockquote>
@@ -205,7 +237,7 @@ Key6:   &quot;鸭&quot;    相似度 0.11
 <pre><code>scores = scores.masked_fill(pad_mask, -1e9)   # pad_mask: (batch, 1, 1, T)</code></pre>
 <h3 id="252-causal-mask-别看未来">2.5.2 Causal Mask —— 别看未来</h3>
 <p>解码器生成时，第 i 个位置不能提前看到 i+1：</p>
-<p>$$ M_{ij} = \begin{cases} 0, &amp; j \le i \\ -\infty, &amp; j &gt; i \end{cases} $$</p>
+<div class="math-block"><math display="block"><msub><mi>M</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mtable columnalign="left"><mtr><mtd><mn>0</mn><msup><mi>,</mi><mi></mi></msup></mtd><mtd><mo>,</mo></mtd><mtd><mi>j</mi><mo>≤</mo><msup><mi>i</mi><mi></mi></msup></mtd></mtr><mtr><mtd><mo>-</mo><mo>∞</mo><msup><mi>,</mi><mi></mi></msup></mtd><mtd><mo>,</mo></mtd><mtd><mi>j</mi><mo>&gt;</mo><msup><mi>i</mi><mi></mi></msup></mtd></mtr></mtable></math></div>
 <pre><code>允许位置:               被屏蔽位置:
 1 . . . . .             。 X X X X X
 1 1 . . . .             。 。 X X X X
@@ -231,7 +263,7 @@ Key6:   &quot;鸭&quot;    相似度 0.11
 <hr/>
 <h2 id="27-复杂度注意力的代价">2.7 复杂度：注意力的代价</h2><nav class="sec-nav"><a class="sn prev" href="#26-多头注意力mha并行地看多种关系"><span class="sn-label">← 上一节</span><span class="sn-name">2.6 多头注意力（MHA）：并行地看多种关系</span></a><a class="sn next" href="#28-常被误解的点"><span class="sn-label">下一节 →</span><span class="sn-name">2.8 常被误解的点</span></a></nav>
 <p>单层的计算量与显存量（n = 序列长度，d = d_model）：</p>
-<table><thead><tr><th>项</th><th>复杂度</th><th>n=4k, d=4096 时的量级</th></tr></thead><tbody><tr><td>QKV 投影</td><td>$O(n \cdot d^2)$</td><td>3 × 4096² × 4096</td></tr><tr><td>注意力打分 QKᵀ</td><td>$O(n^2 \cdot d)$</td><td>4096² × 4096</td></tr><tr><td>加权求和 AV</td><td>$O(n^2 \cdot d)$</td><td>同上</td></tr><tr><td>注意力矩阵显存</td><td>$O(n^2)$ per head</td><td>4096² × 2 bytes × 32 头 ≈ 1 GB</td></tr></tbody></table>
+<table><thead><tr><th>项</th><th>复杂度</th><th>n=4k, d=4096 时的量级</th></tr></thead><tbody><tr><td>QKV 投影</td><td><math class="math-inline"><mi>O</mi><mo stretchy="true">(</mo><mi>n</mi><mo>·</mo><msup><mi>d</mi><mn>2</mn></msup><mo stretchy="true">)</mo></math></td><td>3 × 4096² × 4096</td></tr><tr><td>注意力打分 QKᵀ</td><td><math class="math-inline"><mi>O</mi><mo stretchy="true">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo>·</mo><mi>d</mi><mo stretchy="true">)</mo></math></td><td>4096² × 4096</td></tr><tr><td>加权求和 AV</td><td><math class="math-inline"><mi>O</mi><mo stretchy="true">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo>·</mo><mi>d</mi><mo stretchy="true">)</mo></math></td><td>同上</td></tr><tr><td>注意力矩阵显存</td><td><math class="math-inline"><mi>O</mi><mo stretchy="true">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo stretchy="true">)</mo></math> per head</td><td>4096² × 2 bytes × 32 头 ≈ 1 GB</td></tr></tbody></table>
 <p><strong>序列长度翻倍，注意力部分开销变 4 倍</strong> —— 这是长上下文（128k、1M）的根本障碍。</p>
 <p>主流应对手段：</p>
 <table><thead><tr><th>手段</th><th>思路</th><th>代表</th></tr></thead><tbody><tr><td>FlashAttention</td><td>不把 n×n 矩阵写回显存，分块在 SRAM 里算（<strong>精确</strong>等价，只是省 IO）</td><td>现在几乎所有训练框架默认</td></tr><tr><td>稀疏/滑窗注意力</td><td>只算局部窗口 + 少量全局 token</td><td>Longformer、Mistral 的 SWA</td></tr><tr><td>线性注意力 / SSM</td><td>换掉 softmax 结构，把复杂度降到 O(n)</td><td>Mamba、RWKV（但表达力有取舍）</td></tr><tr><td>KV Cache 压缩</td><td>GQA / MLA / 量化</td><td>LLaMA-3、DeepSeek-V2 的 MLA</td></tr></tbody></table>
@@ -282,6 +314,31 @@ python3 demos/make_figures.py            # 重画 attention-heatmap.png</code></
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

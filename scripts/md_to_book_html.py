@@ -35,11 +35,19 @@ import base64
 import html
 import os
 import re
+import sys
 from html.parser import HTMLParser
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from latex_mathml import render_math  # noqa: E402  构建期 LaTeX → MathML
 
 # 全局转换开关（--relative-images / --rewrite-md-links 时置位）
 RELATIVE_IMAGES = False
 REWRITE_MD_LINKS = False
+
+# 本次渲染遇到的、暂不认识的 LaTeX 命令（构建结束时会打印，绝不静默吞）
+MATH_UNKNOWN: set = set()
+MATH_COUNT = 0
 
 KNOWN_MD_TO_HTML = {
     "python-practice/07-延伸阅读.md": "07-延伸阅读.html",
@@ -102,6 +110,26 @@ def link_html(text: str, url: str) -> str:
     return f'<a href="{raw}"{target}>{text}</a>'
 
 
+def math_span(body: str, display: bool) -> str:
+    """包一层容器：行内跟着正文走，行间独立成块、过长可横滚。"""
+    global MATH_COUNT
+    MATH_COUNT += 1
+    if display:
+        return f'<div class="math-block"><math display="block">{body}</math></div>'
+    return f'<math class="math-inline">{body}</math>'
+
+
+def render_inline_math(latex: str) -> str:
+    body, unknown = render_math(latex, display=False)
+    MATH_UNKNOWN.update(unknown)
+    return math_span(body, display=False)
+
+
+# 行内公式 $...$：开号后不能是空白、闭号前不能是空白（避免把「价格 $5 和 $10」
+# 这类连用当公式），且不能与 $$ 抢。转义过的 \$ 不参与匹配。
+INLINE_MATH_RE = re.compile(r"(?<![\\$])\$(?![\s$])([^$\n]+?)(?<![\s\\])\$(?!\$)")
+
+
 def inline(text: str) -> str:
     # 1) 先抽取行内代码，避免内部被转义/加格式
     codes = []
@@ -111,6 +139,15 @@ def inline(text: str) -> str:
         return f"\x00{len(codes) - 1}\x00"
 
     text = re.sub(r"`([^`]+)`", coderepl, text)
+    # 1.5) 抽取行内公式。必须在转义之前：LaTeX 里的 \text \mathbb 等反斜杠
+    #      一旦先被 html.escape 处理就没了，再想还原得反解实体，极易出错。
+    maths = []
+
+    def mathrepl(m):
+        maths.append(render_inline_math(m.group(1)))
+        return f"\x01{len(maths) - 1}\x01"
+
+    text = INLINE_MATH_RE.sub(mathrepl, text)
     # 2) 转义剩余文本
     text = escape(text)
     # 3) 粗体 / 斜体 —— 必须**早于**链接渲染，否则这里的规则会去改写
@@ -131,12 +168,13 @@ def inline(text: str) -> str:
         lambda m: link_html(m.group(1), m.group(2)),
         text,
     )
-    # 5) 还原代码
+    # 5) 还原代码与公式（公式是已生成的 MathML，直接原样放回，不能再转义）
     def coderest(m):
         idx = int(m.group(1))
         return "<code>" + escape(codes[idx]) + "</code>"
 
     text = re.sub(r"\x00(\d+)\x00", coderest, text)
+    text = re.sub(r"\x01(\d+)\x01", lambda m: maths[int(m.group(1))], text)
     return text
 
 
@@ -319,6 +357,8 @@ def is_block_start(line: str) -> bool:
         return False
     if s.startswith("```"):
         return True
+    if s == "$$":                      # 行间公式，不能被段落吞掉
+        return True
     if re.match(r"^#{1,6}\s", line):
         return True
     if re.match(r"^---+\s*$", line):
@@ -331,12 +371,37 @@ def is_block_start(line: str) -> bool:
 
 
 def split_row(s: str):
+    """按 | 切单元格；转义的 \\| 与行内公式 $…$ 里的竖线不算分隔符。
+
+    踩过的坑（2026-10-01）：表格里写 $\\mathrm{KL}(p\\|q)$——`\\|` 是 LaTeX 的
+    「平行/整除」符号——朴素 split("|") 会把公式拦腰切成两个单元格，
+    页面直接露出半截裸 LaTeX（`$\\mathrm{KL}(p\\` + `q) \\neq …$`）。
+    """
     s = s.strip()
     if s.startswith("|"):
         s = s[1:]
-    if s.endswith("|"):
+    if s.endswith("|") and not s.endswith("\\|"):
         s = s[:-1]
-    return [c.strip() for c in s.split("|")]
+
+    cells, buf, in_math = [], [], False
+    i = 0
+    while i < len(s):
+        c = s[i]
+        if c == "\\" and i + 1 < len(s):
+            buf.append(s[i:i + 2])          # 连同被转义字符一起原样保留
+            i += 2
+            continue
+        if c == "$":
+            in_math = not in_math
+        elif c == "|" and not in_math:
+            cells.append("".join(buf))
+            buf = []
+            i += 1
+            continue
+        buf.append(c)
+        i += 1
+    cells.append("".join(buf))
+    return [c.strip() for c in cells]
 
 
 def parse_table(lines, i, n):
@@ -376,6 +441,20 @@ def md_to_html(md_text: str, base_dir: str) -> str:
                 out.append(mermaid_svg(code))
             else:
                 out.append(f"<pre><code>{escape(code)}</code></pre>")
+            continue
+
+        # 行间公式：本仓库统一写成「独占一行的 $$ 包裹」（140 个标记 = 70 组）
+        if line.strip() == "$$":
+            buf = []
+            i += 1
+            while i < n and lines[i].strip() != "$$":
+                buf.append(lines[i])
+                i += 1
+            i += 1  # 跳过结束 $$
+            latex = "\n".join(buf).strip()
+            body, unknown = render_math(latex, display=True)
+            MATH_UNKNOWN.update(unknown)
+            out.append(math_span(body, display=True))
             continue
 
         # 标题
@@ -596,6 +675,38 @@ EXTRA_CSS = """
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* \text{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 \text{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 """
 
 EXTRA_JS = """
@@ -628,6 +739,31 @@ EXTRA_JS = """
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
@@ -769,6 +905,10 @@ def main():
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(page)
     print(f"written: {args.output}  ({len(page)} bytes)")
+    print(f"  公式 {MATH_COUNT} 处（LaTeX → MathML，构建期完成、运行时零依赖）")
+    if MATH_UNKNOWN:
+        print("  ⚠ 未识别的 LaTeX 命令（已按字面输出）: "
+              + ", ".join(sorted(MATH_UNKNOWN)))
 
 
 if __name__ == "__main__":

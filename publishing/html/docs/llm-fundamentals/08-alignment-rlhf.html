@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -148,27 +180,25 @@ li{margin:.3em 0;}
 <table><thead><tr><th>阶段</th><th>数据</th><th>产物</th><th>训练信号</th></tr></thead><tbody><tr><td>① SFT</td><td>指令-回答对</td><td>会听指令的模型</td><td>监督（交叉熵）</td></tr><tr><td>② RM</td><td>同一 prompt 下的回答<strong>排序</strong>（A &gt; B）</td><td>打分器 r(x,y)</td><td>偏好对（分类/回归）</td></tr><tr><td>③ RL</td><td>无需新标注，模型自己采样</td><td>最终策略 π_θ</td><td>标量奖励（RM 打分）</td></tr></tbody></table>
 <h3 id="821-奖励模型把偏好变成标量">8.2.1 奖励模型：把偏好变成标量</h3>
 <p>用 <strong>Bradley-Terry 模型</strong>把&quot;人觉得 A 比 B 好&quot;转成可优化目标：</p>
-<p>$$ P(y_w \succ y_l \mid x) = \sigma\big(r_\phi(x, y_w) - r_\phi(x, y_l)\big) $$</p>
-<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td>$x$</td><td>问题（prompt）</td></tr><tr><td>$y_w$</td><td>被偏好的回答（winner）</td></tr><tr><td>$y_l$</td><td>被拒绝的回答（loser）</td></tr><tr><td>$r_\phi(x,y)$</td><td>奖励模型输出的标量分数（通常就是 LM 头部改成一个输出 1 维的线性层）</td></tr><tr><td>$\sigma$</td><td>sigmoid，把分数差映射成概率</td></tr></tbody></table>
+<div class="math-block"><math display="block"><mi>P</mi><mo stretchy="true">(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>≻</mo><msub><mi>y</mi><mi>l</mi></msub><mo>∣</mo><mi>x</mi><mo stretchy="true">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="true" maxsize="1.3em" minsize="1.3em">(</mo><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><msub><mi>y</mi><mi>w</mi></msub><mo stretchy="true">)</mo><mo>-</mo><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><msub><mi>y</mi><mi>l</mi></msub><mo stretchy="true">)</mo><mo stretchy="true" maxsize="1.3em" minsize="1.3em">)</mo></math></div>
+<table><thead><tr><th>符号</th><th>含义</th></tr></thead><tbody><tr><td><math class="math-inline"><mi>x</mi></math></td><td>问题（prompt）</td></tr><tr><td><math class="math-inline"><msub><mi>y</mi><mi>w</mi></msub></math></td><td>被偏好的回答（winner）</td></tr><tr><td><math class="math-inline"><msub><mi>y</mi><mi>l</mi></msub></math></td><td>被拒绝的回答（loser）</td></tr><tr><td><math class="math-inline"><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><mi>y</mi><mo stretchy="true">)</mo></math></td><td>奖励模型输出的标量分数（通常就是 LM 头部改成一个输出 1 维的线性层）</td></tr><tr><td><math class="math-inline"><mi>σ</mi></math></td><td>sigmoid，把分数差映射成概率</td></tr></tbody></table>
 <p>损失函数就是最大化&quot;偏好对排序正确&quot;的似然：</p>
-<p>$$ \mathcal{L}_{RM} = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \Big[\log \sigma\big(r_\phi(x,y_w) - r_\phi(x,y_l)\big)\Big] $$</p>
+<div class="math-block"><math display="block"><msub><mi mathvariant="script">L</mi><mrow><mi>R</mi><mi>M</mi></mrow></msub><mo>=</mo><mo>-</mo><msub><mi mathvariant="double-struck">E</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><msub><mi>y</mi><mi>w</mi></msub><mi>,</mi><msub><mi>y</mi><mi>l</mi></msub><mo stretchy="true">)</mo><mo>∼</mo><mi mathvariant="script">D</mi></mrow></msub><mo stretchy="true" maxsize="1.7em" minsize="1.7em">[</mo><mtext>log</mtext><mi>σ</mi><mo stretchy="true" maxsize="1.3em" minsize="1.3em">(</mo><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><msub><mi>y</mi><mi>w</mi></msub><mo stretchy="true">)</mo><mo>-</mo><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><msub><mi>y</mi><mi>l</mi></msub><mo stretchy="true">)</mo><mo stretchy="true" maxsize="1.3em" minsize="1.3em">)</mo><mo stretchy="true" maxsize="1.7em" minsize="1.7em">]</mo></math></div>
 <p><strong>直觉</strong>：不要求模型学出&quot;绝对分数&quot;，只要能正确排序——这就是为什么用两两比较而不是打分（人的绝对打分极不一致，但相对排序可靠）。</p>
 <h3 id="822-ppo-目标">8.2.2 PPO 目标</h3>
-<p>$$ \mathcal{J}(\theta) = \mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi_\theta(y|x)} \left[\; r_\phi(x, y) \;-\; \beta \, \mathrm{KL}\!\big(\pi_\theta(y|x) \,\|\, \pi_{ref}(y|x)\big) \right] $$</p>
-<table><thead><tr><th>项</th><th>作用</th><th>不要它会发生什么</th></tr></thead><tbody><tr><td>$r_\phi(x,y)$</td><td>奖励：RM 打了多少分</td><td>模型没有优化方向</td></tr><tr><td>$\beta \cdot \mathrm{KL}(\pi_\theta \</td><td>\pi_{ref})$</td><td><strong>惩罚&quot;偏离参考模型&quot;</strong></td><td>模型会找到 RM 的漏洞，输出人类看不懂但对 RM 分数极高的怪话（reward hacking）</td></tr><tr><td>$\pi_{ref}$</td><td>参考模型（通常就是 SFT 模型），<strong>冻结</strong></td><td>没有锚点，模型会漂移</td></tr></tbody></table>
+<div class="math-block"><math display="block"><mi mathvariant="script">J</mi><mo stretchy="true">(</mo><mi>θ</mi><mo stretchy="true">)</mo><mo>=</mo><msub><mi mathvariant="double-struck">E</mi><mrow><mi>x</mi><mo>∼</mo><mi mathvariant="script">D</mi><mi>,</mi><mspace width="3pt"/><mi>y</mi><mo>∼</mo><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="true">(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo></mrow></msub><mo stretchy="true">[</mo><mspace width="5pt"/><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><mi>y</mi><mo stretchy="true">)</mo><mspace width="5pt"/><mo>-</mo><mspace width="5pt"/><mi>β</mi><mspace width="3pt"/><mi mathvariant="normal">KL</mi><mspace width="-3pt"/><mo stretchy="true" maxsize="1.3em" minsize="1.3em">(</mo><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="true">(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo><mspace width="3pt"/><mo stretchy="true">‖</mo><mspace width="3pt"/><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub><mo stretchy="true">(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo><mo stretchy="true" maxsize="1.3em" minsize="1.3em">)</mo><mo stretchy="true">]</mo></math></div>
+<table><thead><tr><th>项</th><th>作用</th><th>不要它会发生什么</th></tr></thead><tbody><tr><td><math class="math-inline"><msub><mi>r</mi><mi>φ</mi></msub><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><mi>y</mi><mo stretchy="true">)</mo></math></td><td>奖励：RM 打了多少分</td><td>模型没有优化方向</td></tr><tr><td><math class="math-inline"><mi>β</mi><mo>·</mo><mi mathvariant="normal">KL</mi><mo stretchy="true">(</mo><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="true">‖</mo><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub><mo stretchy="true">)</mo></math></td><td><strong>惩罚&quot;偏离参考模型&quot;</strong></td><td>模型会找到 RM 的漏洞，输出人类看不懂但对 RM 分数极高的怪话（reward hacking）</td></tr><tr><td><math class="math-inline"><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub></math></td><td>参考模型（通常就是 SFT 模型），<strong>冻结</strong></td><td>没有锚点，模型会漂移</td></tr></tbody></table>
 <p>为什么 KL 惩罚必不可少：<strong>RM 只是人类偏好的一个近似</strong>。让模型无约束地去骗这个近似，等价于&quot;过度拟合奖励模型的偏好&quot;，会牺牲真实有用性。KL 项就是&quot;别忘了原本会说话&quot;。</p>
 <blockquote><p>PPO 本身是个复杂的 RL 算法（actor + critic + 优势估计 + 裁剪目标）。对齐场景里普遍用简化配置（去掉部分组件、用 GAE、共享 backbone），这也是它工程复杂、容易训崩的原因。</p></blockquote>
 <hr/>
 <h2 id="83-dpo把-rlhf-化简成一个监督损失">8.3 DPO：把 RLHF 化简成一个监督损失</h2><nav class="sec-nav"><a class="sn prev" href="#82-rlhf-三阶段"><span class="sn-label">← 上一节</span><span class="sn-name">8.2 RLHF 三阶段</span></a><a class="sn next" href="#84-后续演进更简单更省数据"><span class="sn-label">下一节 →</span><span class="sn-name">8.4 后续演进：更简单、更省数据</span></a></nav>
 <p><strong>核心洞察</strong>（Rafailov et al. 2023）：在 KL 约束下最大化奖励的那个最优策略，有解析解：</p>
-<p>$$ \pi^*(y \mid x) = \frac{1}{Z(x)} \, \pi_{ref}(y \mid x) \exp\!\left(\frac{1}{\beta} r(x,y)\right) $$</p>
+<div class="math-block"><math display="block"><msup><mi>π</mi><mo>*</mo></msup><mo stretchy="true">(</mo><mi>y</mi><mo>∣</mo><mi>x</mi><mo stretchy="true">)</mo><mo>=</mo><mrow><mfrac><mn>1</mn><mi>Z</mi><mo stretchy="true">(</mo><mi>x</mi><mo stretchy="true">)</mo></mfrac></mrow><mspace width="3pt"/><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub><mo stretchy="true">(</mo><mi>y</mi><mo>∣</mo><mi>x</mi><mo stretchy="true">)</mo><mtext>exp</mtext><mspace width="-3pt"/><mo stretchy="true">(</mo><mrow><mfrac><mn>1</mn><mi>β</mi></mfrac></mrow><mi>r</mi><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><mi>y</mi><mo stretchy="true">)</mo><mo stretchy="true">)</mo></math></div>
 <p>反过来就能把&quot;奖励&quot;用策略和参考模型的概率比表达出来：</p>
-<p>$$ r(x,y) = \beta \log \frac{\pi^*(y|x)}{\pi_{ref}(y|x)} + \beta \log Z(x) $$</p>
+<div class="math-block"><math display="block"><mi>r</mi><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><mi>y</mi><mo stretchy="true">)</mo><mo>=</mo><mi>β</mi><mtext>log</mtext><mrow><mfrac><msup><mi>π</mi><mo>*</mo></msup><mo stretchy="true">(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub><mo stretchy="true">(</mo><mi>y</mi><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo></mfrac></mrow><mo>+</mo><mi>β</mi><mtext>log</mtext><mi>Z</mi><mo stretchy="true">(</mo><mi>x</mi><mo stretchy="true">)</mo></math></div>
 <p>把它代回 Bradley-Terry 偏好模型，<strong>配分配对消掉</strong>，得到只含两个模型的直接优化目标：</p>
-<p>$$ \boxed{\; \mathcal{L}_{DPO}(\theta) = -\mathbb{E}_{(x, y_w, y_l)} \left[ \log \sigma\!\left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)}</p>
-<ul class="lvl"><li>\beta \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}</li></ul>
-<p>\right) \right] \;} $$</p>
-<p><strong>人话版</strong>：让模型<strong>相对于参考模型</strong>更倾向于回答 $y_w$、更不倾向于 $y_l$。<code>β</code> 控制偏离参考模型的强度（越大越保守）。</p>
+<div class="math-block"><math display="block"><mstyle class="math-boxed"><mspace width="5pt"/><msub><mi mathvariant="script">L</mi><mrow><mi>D</mi><mi>P</mi><mi>O</mi></mrow></msub><mo stretchy="true">(</mo><mi>θ</mi><mo stretchy="true">)</mo><mo>=</mo><mo>-</mo><msub><mi mathvariant="double-struck">E</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mi>,</mi><msub><mi>y</mi><mi>w</mi></msub><mi>,</mi><msub><mi>y</mi><mi>l</mi></msub><mo stretchy="true">)</mo></mrow></msub><mo stretchy="true">[</mo><mtext>log</mtext><mi>σ</mi><mspace width="-3pt"/><mo stretchy="true">(</mo><mi>β</mi><mtext>log</mtext><mrow><mfrac><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="true">(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub><mo stretchy="true">(</mo><msub><mi>y</mi><mi>w</mi></msub><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo></mfrac></mrow><mo>-</mo><mi>β</mi><mtext>log</mtext><mrow><mfrac><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="true">(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo><msub><mi>π</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub><mo stretchy="true">(</mo><msub><mi>y</mi><mi>l</mi></msub><mo>|</mo><mi>x</mi><mo stretchy="true">)</mo></mfrac></mrow><mo stretchy="true">)</mo><mo stretchy="true">]</mo><mspace width="5pt"/></mstyle></math></div>
+<p><strong>人话版</strong>：让模型<strong>相对于参考模型</strong>更倾向于回答 <math class="math-inline"><msub><mi>y</mi><mi>w</mi></msub></math>、更不倾向于 <math class="math-inline"><msub><mi>y</mi><mi>l</mi></msub></math>。<code>β</code> 控制偏离参考模型的强度（越大越保守）。</p>
 <pre><code>RLHF:  需要 4 个模型同时在线
        actor(π_θ) + critic + reward model + reference   →  显存大、流程复杂、易崩
 
@@ -232,6 +262,31 @@ DPO:   只需 2 个模型
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

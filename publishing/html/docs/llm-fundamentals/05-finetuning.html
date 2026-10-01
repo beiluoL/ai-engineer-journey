@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -167,7 +199,7 @@ loss:    0    0     0    ...     0        0        0    0  ...    0        0    
 <hr/>
 <h2 id="53-全量微调为什么个人做不了">5.3 全量微调：为什么个人做不了</h2><nav class="sec-nav"><a class="sn prev" href="#52-sft监督微调把续写变成听话"><span class="sn-label">← 上一节</span><span class="sn-name">5.2 SFT：监督微调（把&amp;quot;续写&amp;quot;变成&amp;quot;听话&amp;quot;）</span></a><a class="sn next" href="#54-lora低秩假设带来的免费午餐"><span class="sn-label">下一节 →</span><span class="sn-name">5.4 LoRA：低秩假设带来的&amp;quot;免费午餐&amp;quot;</span></a></nav>
 <p>全量微调要更新全部参数，显存账是这么算的（AdamW）：</p>
-<p>$$ \text{显存} \approx \underbrace{2N}_{\text{权重 fp16}} + \underbrace{2N}_{\text{梯度}} + \underbrace{8N}_{\text{Adam 一阶/二阶动量 fp32}} + \underbrace{\text{激活值}}_{\text{与 batch × seq 相关}} $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">显存</mtext><mo>≈</mo><msub><mrow><munderover accent="true" accentunder="true"><mo stretchy="true">⏟</mo><mspace width="0pt"/><mn>2</mn><mi>N</mi></munderover></mrow><mtext class="tx">权重 fp16</mtext></msub><mo>+</mo><msub><mrow><munderover accent="true" accentunder="true"><mo stretchy="true">⏟</mo><mspace width="0pt"/><mn>2</mn><mi>N</mi></munderover></mrow><mtext class="tx">梯度</mtext></msub><mo>+</mo><msub><mrow><munderover accent="true" accentunder="true"><mo stretchy="true">⏟</mo><mspace width="0pt"/><mn>8</mn><mi>N</mi></munderover></mrow><mtext class="tx">Adam 一阶/二阶动量 fp32</mtext></msub><mo>+</mo><msub><mrow><munderover accent="true" accentunder="true"><mo stretchy="true">⏟</mo><mspace width="0pt"/><mtext class="tx">激活值</mtext></munderover></mrow><mtext class="tx">与 batch × seq 相关</mtext></msub></math></div>
 <p>以 7B 模型为例（<code>demos/06_lora_params.py</code> 的真实计算）：</p>
 <figure class="figure"><img alt="LoRA 参数量与显存真实计算" src="../../../../llm-fundamentals/assets/term-06_lora_params.png" loading="lazy"/><figcaption>LoRA 参数量与显存真实计算</figcaption></figure>
 <table><thead><tr><th>项目</th><th>全量微调</th><th>LoRA(r=8)</th></tr></thead><tbody><tr><td>权重 fp16</td><td>13.0 GB</td><td>13.0 GB</td></tr><tr><td>梯度</td><td>13.0 GB</td><td>0.03 GB</td></tr><tr><td>优化器状态 fp32</td><td>52.2 GB</td><td>0.21 GB</td></tr><tr><td><strong>合计（不含激活）</strong></td><td><strong>78.2 GB</strong></td><td><strong>13.3 GB</strong></td></tr></tbody></table>
@@ -175,11 +207,11 @@ loss:    0    0     0    ...     0        0        0    0  ...    0        0    
 <hr/>
 <h2 id="54-lora低秩假设带来的免费午餐">5.4 LoRA：低秩假设带来的&quot;免费午餐&quot;</h2><nav class="sec-nav"><a class="sn prev" href="#53-全量微调为什么个人做不了"><span class="sn-label">← 上一节</span><span class="sn-name">5.3 全量微调：为什么个人做不了</span></a><a class="sn next" href="#55-qlora把门槛再降一个数量级"><span class="sn-label">下一节 →</span><span class="sn-name">5.5 QLoRA：把门槛再降一个数量级</span></a></nav>
 <h3 id="541-核心思想">5.4.1 核心思想</h3>
-<p>微调时权重的<strong>变化量</strong> $\Delta W$ 是低秩的——不需要动完整的 d×d 矩阵，用两个瘦矩阵近似就够：</p>
-<p>$$ W&#x27; = W + \Delta W = W + \frac{\alpha}{r} B A \qquad B \in \mathbb{R}^{d \times r},\; A \in \mathbb{R}^{r \times d},\; r \ll d $$</p>
-<table><thead><tr><th>符号</th><th>含义</th><th>典型值</th></tr></thead><tbody><tr><td>$W$</td><td>原始权重，<strong>冻结不更新</strong></td><td>d×d</td></tr><tr><td>$B, A$</td><td>两个可训练的小矩阵</td><td>r×d 与 d×r</td></tr><tr><td>$r$</td><td>秩（rank），控制容量</td><td>4 / 8 / 16 / 64</td></tr><tr><td>$\alpha$</td><td>缩放系数，实际学习率为 <code>lr × α/r</code></td><td>常取 <code>2r</code></td></tr></tbody></table>
+<p>微调时权重的<strong>变化量</strong> <math class="math-inline"><mi>Δ</mi><mi>W</mi></math> 是低秩的——不需要动完整的 d×d 矩阵，用两个瘦矩阵近似就够：</p>
+<div class="math-block"><math display="block"><mi>W</mi><mi>'</mi><mo>=</mo><mi>W</mi><mo>+</mo><mi>Δ</mi><mi>W</mi><mo>=</mo><mi>W</mi><mo>+</mo><mrow><mfrac><mi>α</mi><mi>r</mi></mfrac></mrow><mi>B</mi><mi>A</mi><mspace width="2em"/><mi>B</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><mi>d</mi><mo>×</mo><mi>r</mi></mrow></msup><mi>,</mi><mspace width="5pt"/><mi>A</mi><mo>∈</mo><msup><mi mathvariant="double-struck">R</mi><mrow><mi>r</mi><mo>×</mo><mi>d</mi></mrow></msup><mi>,</mi><mspace width="5pt"/><mi>r</mi><mo>≪</mo><mi>d</mi></math></div>
+<table><thead><tr><th>符号</th><th>含义</th><th>典型值</th></tr></thead><tbody><tr><td><math class="math-inline"><mi>W</mi></math></td><td>原始权重，<strong>冻结不更新</strong></td><td>d×d</td></tr><tr><td><math class="math-inline"><mi>B</mi><mi>,</mi><mi>A</mi></math></td><td>两个可训练的小矩阵</td><td>r×d 与 d×r</td></tr><tr><td><math class="math-inline"><mi>r</mi></math></td><td>秩（rank），控制容量</td><td>4 / 8 / 16 / 64</td></tr><tr><td><math class="math-inline"><mi>α</mi></math></td><td>缩放系数，实际学习率为 <code>lr × α/r</code></td><td>常取 <code>2r</code></td></tr></tbody></table>
 <p>训练时<strong>前向不变</strong>（初始 B=0 保证 ΔW=0）：</p>
-<p>$$ h = W&#x27;x = Wx + \frac{\alpha}{r}BAx $$</p>
+<div class="math-block"><math display="block"><mi>h</mi><mo>=</mo><mi>W</mi><mi>'</mi><mi>x</mi><mo>=</mo><mi>W</mi><mi>x</mi><mo>+</mo><mrow><mfrac><mi>α</mi><mi>r</mi></mfrac></mrow><mi>B</mi><mi>A</mi><mi>x</mi></math></div>
 <p>推理时可以<strong>合并回原权重</strong>（<code>W&#x27; = W + (α/r)BA</code>），<strong>零额外延迟</strong> —— 这是 LoRA 相比 Adapter 类方法的决定性优势。</p>
 <h3 id="542-为什么低秩假设成立">5.4.2 为什么&quot;低秩&quot;假设成立</h3>
 <table><thead><tr><th>证据/直觉</th><th>说明</th></tr></thead><tbody><tr><td>微调任务与预训练任务高度相关</td><td>只是&quot;重新加权&quot;已有能力，不需要新增自由度</td></tr><tr><td>实验观察</td><td>微调后 ΔW 的奇异值谱下降极快，前几个奇异值就占了大部分能量</td></tr><tr><td>实测</td><td>r=8 时效果已接近全量微调；r 再往上收益迅速递减</td></tr></tbody></table>
@@ -257,6 +289,31 @@ python3 demos/make_figures.py       # 重画 lora-params.png</code></pre>
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -257,7 +289,7 @@ client = DeepSeekClient(settings)       # 注入进去
 service = AssistantService(client)      # 再往上注入</code></pre>
 <hr/>
 <h2 id="5-java-python-对比">5. Java ↔ Python 对比</h2><nav class="sec-nav"><a class="sn prev" href="#4-项目代码"><span class="sn-label">← 上一节</span><span class="sn-name">4. 项目代码</span></a><a class="sn next" href="#6-常见坑"><span class="sn-label">下一节 →</span><span class="sn-name">6. 常见坑</span></a></nav>
-<table><thead><tr><th>Java / Spring</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>application.yml</code></td><td><code>.env</code> / <code>settings.py</code></td><td>Spring 的 yml 支持嵌套，<code>.env</code> 只有扁平 KV</td></tr><tr><td><code>@ConfigurationProperties</code></td><td><code>dataclass Settings</code></td><td>都是「把配置绑成对象」</td></tr><tr><td><code>@Value(&quot;${x}&quot;)</code></td><td><code>os.getenv(&quot;X&quot;)</code></td><td>同</td></tr><tr><td><code>System.getenv()</code></td><td><code>os.environ</code></td><td>同</td></tr><tr><td>Spring Profile</td><td>环境变量切换</td><td>Python 没有内置 profile 概念</td></tr><tr><td><code>final</code> 字段</td><td><code>@dataclass(frozen=True)</code></td><td>不可变</td></tr><tr><td><code>application-dev.yml</code></td><td><code>.env.local</code> 等约定</td><td>靠自己约定</td></tr></tbody></table>
+<table><thead><tr><th>Java / Spring</th><th>Python</th><th>说明</th></tr></thead><tbody><tr><td><code>application.yml</code></td><td><code>.env</code> / <code>settings.py</code></td><td>Spring 的 yml 支持嵌套，<code>.env</code> 只有扁平 KV</td></tr><tr><td><code>@ConfigurationProperties</code></td><td><code>dataclass Settings</code></td><td>都是「把配置绑成对象」</td></tr><tr><td><code>@Value(&quot;${x}&quot;)</code> | <code>os.getenv(&quot;X&quot;)</code> | 同</td></tr><tr><td><code>System.getenv()</code></td><td><code>os.environ</code></td><td>同</td></tr><tr><td>Spring Profile</td><td>环境变量切换</td><td>Python 没有内置 profile 概念</td></tr><tr><td><code>final</code> 字段</td><td><code>@dataclass(frozen=True)</code></td><td>不可变</td></tr><tr><td><code>application-dev.yml</code></td><td><code>.env.local</code> 等约定</td><td>靠自己约定</td></tr></tbody></table>
 <p>最大的思维差异：</p>
 <blockquote><p><strong>Spring 有 IoC 容器帮你注入，Python 没有 —— 你得自己把对象一层层传下去。</strong> 到 Chapter 09 讲 FastAPI 的 <code>Depends</code> 时，会看到 Python 版本的「轻量 IoC」。</p></blockquote>
 <hr/>
@@ -334,6 +366,31 @@ class Settings:
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;

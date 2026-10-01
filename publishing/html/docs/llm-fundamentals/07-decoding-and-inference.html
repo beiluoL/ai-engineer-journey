@@ -124,6 +124,38 @@ li{margin:.3em 0;}
   font-size:13px; cursor:pointer; box-shadow:0 4px 16px rgba(31,35,40,.14);
 }
 .book-top.show{display:block;}
+
+/* 数学公式（构建期已转成 MathML，运行时零依赖、无脚本）
+   字体按「本机真实存在」排序：macOS 自带 STIX Two Math，Windows 有 Cambria Math，
+   装了 TeX 的 Linux 有 Latin Modern Math。都缺时退回 serif，字形仍有兜底。 */
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",
+  "STIXGeneral","Times New Roman",serif; font-size:1.04em;}
+/* 千万别给 math 写 display:block / inline-block —— 那是踩过的坑：
+   单关键字 display 会把内层排版类型打回「普通块流」，MathML 的 math inner
+   display 丢失，于是整条公式被竖排成「一行一个符号」，而且元素尺寸非零、
+   结构良构，纯结构校验完全发现不了。display="block" 属性已由 UA 样式表
+   映射成 `block math`，保持默认即可。 */
+math.math-inline{margin:0 .1em;}
+/* 	ext{} 是「正文字类文字」：中文在数学字体里没有字形，必须换回正文栈，
+   否则 	ext{注意力} 会掉进衬线中文、与周围苹方/黑体对不上。 */
+math mtext.tx{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+    "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  font-style:normal;
+}
+/* 行间公式：外层负责居中与横向兜底，math 本体不碰 display（见上方注释） */
+.math-block{
+  display:block; margin:1.15em 0; padding:.15em .2em;
+  overflow-x:auto; overflow-y:hidden;
+  text-align:center; scrollbar-width:thin;
+}
+/* 移动端：公式不缩小到看不清，宁可横向滚动 */
+@media (max-width:640px){
+  .math-block{font-size:.94em; padding-bottom:.35em;}
+  math{font-size:1em;}
+}
+/* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
+td math, th math{font-size:1em;}
 </style>
 </head>
 <body>
@@ -142,7 +174,7 @@ li{margin:.3em 0;}
 <div class="mermaid-fallback"><p>流程图（简化）：</p><ul><li><code>P</code> — Prompt &#x27;介绍一下杭州&#x27;</li><li><code>PF</code> — ① Prefill n 个 token 一次并行前向 填满 KV Cache 算力密集</li><li><code>D1</code> — ② Decode 第 1 步 只算 1 个新 token 读取全部 KV</li><li><code>D2</code> — ② Decode 第 2 步</li><li><code>D3</code> — ... 直到 EOS 或上限</li><li><code>O</code> — 完整回答</li></ul></div>
 <table><thead><tr><th>阶段</th><th>输入</th><th>计算特征</th><th>瓶颈</th><th>首 token 延迟影响</th></tr></thead><tbody><tr><td>Prefill</td><td>整个 prompt（n 个 token）</td><td>大矩阵乘，并行度高</td><td><strong>算力（FLOPS）</strong></td><td>TTFT（Time To First Token）</td></tr><tr><td>Decode</td><td>上一个 token（1 个）</td><td>每步一个向量乘矩阵</td><td><strong>显存带宽（HBM 读写）</strong></td><td>TPOT / ITL（每 token 延迟）</td></tr></tbody></table>
 <p><strong>为什么 decode 是带宽瓶颈</strong>：生成 1 个 token，要把整个模型的权重从显存读一遍（7B fp16 = 14 GB），却只做了约 14 GFLOPs 的计算。算术强度极低，GPU 的算力单元大量空闲——所以<strong>批量处理（batching）几乎是唯一解</strong>：一次读权重，服务多个序列。</p>
-<p>$$ \text{每 token 理论延迟} \;\approx\; \frac{\text{模型大小} + \text{KV Cache 大小}}{\text{显存带宽}} $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">每 token 理论延迟</mtext><mspace width="5pt"/><mo>≈</mo><mspace width="5pt"/><mrow><mfrac><mtext class="tx">模型大小</mtext><mo>+</mo><mtext class="tx">KV Cache 大小</mtext><mtext class="tx">显存带宽</mtext></mfrac></mrow></math></div>
 <p>7B fp16 在 A100（2 TB/s）上的下界：14 GB / 2 TB/s ≈ <strong>7 ms/token</strong> → 理论上限约 140 token/s（单序列，实际更低）。</p>
 <hr/>
 <h2 id="72-解码策略从确定到随机">7.2 解码策略：从确定到随机</h2><nav class="sec-nav"><a class="sn prev" href="#71-两阶段prefill-与-decode"><span class="sn-label">← 上一节</span><span class="sn-name">7.1 两阶段：Prefill 与 Decode</span></a><a class="sn next" href="#73-kv-cache推理优化的头号功臣"><span class="sn-label">下一节 →</span><span class="sn-name">7.3 KV Cache：推理优化的头号功臣</span></a></nav>
@@ -157,17 +189,17 @@ li{margin:.3em 0;}
 <hr/>
 <h2 id="73-kv-cache推理优化的头号功臣">7.3 KV Cache：推理优化的头号功臣</h2><nav class="sec-nav"><a class="sn prev" href="#72-解码策略从确定到随机"><span class="sn-label">← 上一节</span><span class="sn-name">7.2 解码策略：从确定到随机</span></a><a class="sn next" href="#74-批处理吞吐量的关键"><span class="sn-label">下一节 →</span><span class="sn-name">7.4 批处理：吞吐量的关键</span></a></nav>
 <h3 id="731-问题每步都在重复计算">7.3.1 问题：每步都在重复计算</h3>
-<p>自回归第 t 步需要 $K_{1..t}, V_{1..t}$。如果不缓存，就要把整个前缀重新投影一遍。</p>
+<p>自回归第 t 步需要 <math class="math-inline"><msub><mi>K</mi><mrow><mn>1</mn><mi>.</mi><mi>.</mi><mi>t</mi></mrow></msub><mi>,</mi><msub><mi>V</mi><mrow><mn>1</mn><mi>.</mi><mi>.</mi><mi>t</mi></mrow></msub></math>。如果不缓存，就要把整个前缀重新投影一遍。</p>
 <pre><code>无 KV Cache（第 t 步）:  重新计算 K/V 共 t 个 token 的投影   -&gt; 总计 O(n²) 次投影
 有 KV Cache（第 t 步）:  只计算第 t 个 token 的 K/V，拼到缓存 -&gt; 总计 O(n) 次投影</code></pre>
 <p><code>demos/05_kv_cache.py</code> 的真实测量（seq_len=128, d_model=512, 12 层）：</p>
 <figure class="figure"><img alt="KV Cache 真实运行输出" src="../../../../llm-fundamentals/assets/term-05_kv_cache.png" loading="lazy"/><figcaption>KV Cache 真实运行输出</figcaption></figure>
 <table><thead><tr><th>策略</th><th>矩阵乘 FLOPs</th><th>相对</th></tr></thead><tbody><tr><td>无 KV Cache</td><td>13,709,803,520</td><td>1.0×</td></tr><tr><td>有 KV Cache</td><td>142,671,872</td><td><strong>节省 99.0%</strong></td></tr></tbody></table>
 <p>理论依据：</p>
-<p>$$ \text{无缓存} = \sum_{t=1}^{n} O(t \cdot d^2) = O(n^2 d^2) \qquad\qquad \text{有缓存} = O(n \cdot d^2) $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">无缓存</mtext><mo>=</mo><mrow><mover movablelimits="true"><mrow><munder movablelimits="true"><mo movablelimits="true">∑</mo><mi>t</mi><mo>=</mo><mn>1</mn></munder></mrow><mi>n</mi></mover></mrow><mi>O</mi><mo stretchy="true">(</mo><mi>t</mi><mo>·</mo><msup><mi>d</mi><mn>2</mn></msup><mo stretchy="true">)</mo><mo>=</mo><mi>O</mi><mo stretchy="true">(</mo><msup><mi>n</mi><mn>2</mn></msup><msup><mi>d</mi><mn>2</mn></msup><mo stretchy="true">)</mo><mspace width="2em"/><mspace width="2em"/><mtext class="tx">有缓存</mtext><mo>=</mo><mi>O</mi><mo stretchy="true">(</mo><mi>n</mi><mo>·</mo><msup><mi>d</mi><mn>2</mn></msup><mo stretchy="true">)</mo></math></div>
 <blockquote><p>注意脚本里同时打印了实测耗时（2.4× 加速）。耗时加速比远小于 FLOPs 节省比，是因为 Python 循环的固定开销摊薄了小矩阵乘——<strong>在 GPU 上访存才是瓶颈，收益会更接近 FLOPs 之比</strong>。这也是为什么&quot;FLOPs 账&quot;和&quot;实际延迟账&quot;经常对不上，做性能分析时不能只看 FLOPs。</p></blockquote>
 <h3 id="732-代价显存">7.3.2 代价：显存</h3>
-<p>$$ \text{KV Cache 字节数} = 2 \times L \times h_{kv} \times d_{head} \times n \times b \times \text{bytes} $$</p>
+<div class="math-block"><math display="block"><mtext class="tx">KV Cache 字节数</mtext><mo>=</mo><mn>2</mn><mo>×</mo><mi>L</mi><mo>×</mo><msub><mi>h</mi><mrow><mi>k</mi><mi>v</mi></mrow></msub><mo>×</mo><msub><mi>d</mi><mrow><mi>h</mi><mi>e</mi><mi>a</mi><mi>d</mi></mrow></msub><mo>×</mo><mi>n</mi><mo>×</mo><mi>b</mi><mo>×</mo><mtext class="tx">bytes</mtext></math></div>
 <p>（2 = K 和 V；L 层数；h_kv KV 头数；n 序列长；b 批大小；fp16 时 bytes=2）</p>
 <figure class="figure"><img alt="KV Cache 显存随序列长度增长" src="../../../../llm-fundamentals/assets/kv-cache-memory.png" loading="lazy"/><figcaption>KV Cache 显存随序列长度增长</figcaption></figure>
 <p>MHA 配置下每 token 约 <strong>512 KB</strong>（32 层 × 32 头 × 128 维 × 2 × 2 字节），于是：</p>
@@ -251,6 +283,31 @@ python3 demos/make_figures.py       # 重画 kv-cache-memory.png</code></pre>
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
   }
+  // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
+  // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
+  function fitMath(){
+    var MIN = 9;
+    [].slice.call(document.querySelectorAll('.math-block')).forEach(function(box){
+      var m = box.querySelector('math');
+      if(!m) return;
+      m.style.fontSize = '';
+      var guard = 0;
+      while(box.scrollWidth > box.clientWidth + 1 && guard < 30){
+        var cur = parseFloat(getComputedStyle(m).fontSize) || 16;
+        var next = cur - 0.4;
+        if(next < MIN) break;
+        m.style.fontSize = next + 'px';
+        guard++;
+      }
+    });
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitMath);
+  fitMath();
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt = setTimeout(fitMath, 150);
+  });
+
   window.addEventListener('scroll', function(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
