@@ -180,6 +180,9 @@ function check(name, cond, extra) {
     (await page.locator('#st-path').innerText()).includes('README.md'),
     await page.locator('#st-path').innerText());
 
+  // 深链直达的界面也留一张：证明 #/项目/文件 这种地址确实能直接落到某个文件
+  await page.screenshot({ path: path.join(SHOT, 'site-ide-deeplink.png') });
+
   await browser.close();
   console.log('\n控制台错误: ' + (errors.length ? JSON.stringify(errors.slice(0, 8), null, 1) : '无'));
   if (errors.length) fails.push('存在 JS 错误');
