@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI 工程师之旅 · 文档阅读器</title>
+<style>
+:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
+  --border:#d0d7de; --side:#f6f8fa; --active:#ddf4ff;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+    --border:#30363d; --side:#161b22; --active:#11304f;
+  }
+}
+*{box-sizing:border-box;}
+html,body{margin:0; height:100%;}
+body{
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--fg); background:var(--bg);
+}
+.layout{display:flex; min-height:100vh;}
+.side{
+  width:300px; flex:0 0 300px; background:var(--side);
+  border-right:1px solid var(--border); padding:24px 18px;
+  position:sticky; top:0; align-self:flex-start; height:100vh; overflow:auto;
+}
+.side h1{font-size:1.15em; margin:0 0 4px; line-height:1.4;}
+.side .sub{color:var(--muted); font-size:.82em; margin:0 0 22px;}
+.nav{list-style:none; margin:0; padding:0;}
+.nav li{margin:0 0 8px;}
+.nav button{
+  width:100%; text-align:left; cursor:pointer;
+  background:transparent; border:1px solid transparent; border-radius:8px;
+  padding:11px 13px; color:var(--fg); font:inherit; font-size:.94em;
+  transition:background .15s, border-color .15s;
+}
+.nav button:hover{border-color:var(--border);}
+.nav button.active{background:var(--active); border-color:var(--accent); font-weight:600;}
+.nav .meta{display:block; font-size:.78em; color:var(--muted); margin-top:3px; font-weight:400;}
+.side .foot{margin-top:26px; font-size:.78em; color:var(--muted); line-height:1.7;}
+.side .foot a{color:var(--accent);}
+.content{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;}
+.bar{
+  display:flex; align-items:center; gap:12px; padding:12px 18px;
+  border-bottom:1px solid var(--border); background:var(--bg);
+}
+.bar .title{font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bar a.open{font-size:.85em; color:var(--accent); text-decoration:none; border:1px solid var(--border); padding:5px 10px; border-radius:6px;}
+.bar a.open:hover{background:var(--side);}
+iframe{
+  flex:1 1 auto; width:100%; border:0; background:var(--bg);
+}
+.note{padding:40px; color:var(--muted); text-align:center;}
+@media (max-width:720px){
+  .layout{flex-direction:column;}
+  .side{width:auto; flex:none; height:auto; position:static; border-right:0; border-bottom:1px solid var(--border);}
+  iframe{min-height:70vh;}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <h1>AI 工程师之旅</h1>
+    <p class="sub">文档阅读器 · 双击本地 HTML 即可离线浏览</p>
+    <ul class="nav">
+      <li>
+        <button data-src="07-延伸阅读.html" data-title="07 · 延伸阅读：从「会写 Python」到「读得懂生产代码」" class="active">
+          07 · 延伸阅读：从「会写 Python」到「读得懂生产代码」
+          <span class="meta">Python 书单与读法 · 含脚本实测避坑清单</span>
+        </button>
+      </li>
+      <li>
+        <button data-src="12-tutorials-and-agent.html" data-title="12 · 教程、微调与 Agent 开发">
+          12 · 教程、微调与 Agent 开发
+          <span class="meta">学 / 调 / 造 三张地图 · 53 个仓库现场验证</span>
+        </button>
+      </li>
+    </ul>
+    <div class="foot">
+      所有页面均为<strong>单文件自包含</strong>：CSS 内联、图片以 base64 内嵌、Mermaid 图改画为内联 SVG，无任何外部依赖。<br/>
+      仓库：<a href="https://github.com/beiluoL/ai-engineer-journey" target="_blank" rel="noopener">ai-engineer-journey</a>
+    </div>
+  </aside>
+  <div class="content">
+    <div class="bar">
+      <span class="title" id="docTitle">07 · 延伸阅读</span>
+      <a class="open" id="openLink" href="07-延伸阅读.html" target="_blank" rel="noopener">在新标签打开 ↗</a>
+    </div>
+    <iframe id="viewer" src="07-延伸阅读.html" title="文档内容"></iframe>
+  </div>
+</div>
+<script>
+(function(){
+  var btns = document.querySelectorAll('.nav button');
+  var viewer = document.getElementById('viewer');
+  var titleEl = document.getElementById('docTitle');
+  var openLink = document.getElementById('openLink');
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var src = b.getAttribute('data-src');
+      btns.forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      viewer.src = src;
+      openLink.href = src;
+      titleEl.textContent = b.getAttribute('data-title') || src;
+    });
+  });
+})();
+</script>
+</body>
+</html>

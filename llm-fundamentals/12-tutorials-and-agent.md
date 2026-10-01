@@ -6,7 +6,8 @@
 > 两边只在微调部分有少量交接，都有明确指向，**不重复正文**。
 >
 > 文中的星标数与最近提交日期，全部由 [`scripts/check_repos.py`](../scripts/check_repos.py)
-> 在 **2026-09-30** 当天从 GitHub 现场抓取（见 [12.7](#127-这份清单怎么维护) 的真实运行截图）。
+> 现场抓取——**基础内容于 2026-09-30**，[12.4.5](#1245-评估可观测性与向量库) 增补于 **2026-10-01**
+> （见 [12.7](#127-这份清单怎么维护) 的真实运行截图）。
 > 快照会过期，所以更要紧的是 [12.7](#127-这份清单怎么维护) 那套**自己复跑**的方法。
 
 ---
@@ -134,6 +135,8 @@ flowchart LR
 | [`agno-agi/agno`](https://github.com/agno-agi/agno) | 42.4k | 2026-09-30 | 轻量多模态 Agent 框架 | 快速起步的另一个选择 |
 | [`pydantic/pydantic-ai`](https://github.com/pydantic/pydantic-ai) | 20.3k | 2026-09-30 | **类型安全**：产出直接是 Pydantic 模型 | 你在 [`python-practice/04`](../python-practice/04-fastapi-blog/README.md) 用过 pydantic，**这条对你迁移成本最低** |
 | [`microsoft/agent-framework`](https://github.com/microsoft/agent-framework) | 13.9k | 2026-09-30 | AutoGen + Semantic Kernel 的合并继任者 | 团队在 .NET / Azure 栈时 |
+| [`run-llama/llama_index`](https://github.com/run-llama/llama_index) | 52.4k | 2026-09-29 | **RAG 框架**：索引 / 检索 / 查询引擎，与 haystack 并列的另一条主流路线 | 你要做 [`projects/04`](../projects/04-rag/README.md) 那种 RAG 时，二选一对照学 |
+| [`microsoft/semantic-kernel`](https://github.com/microsoft/semantic-kernel) | 28.6k | 2026-09-30 | 轻量多语言 Agent SDK（C# / Python），AutoGen 的兄弟项目 | .NET / Azure 栈，或想看微软系 Agent 设计的另一种写法 |
 
 ### 12.4.3 平台：不写代码也能搭
 
@@ -154,7 +157,24 @@ flowchart LR
 | [`composiohq/composio`](https://github.com/composiohq/composio) | 30.4k | 2026-09-30 | 预置的工具集（GitHub / Slack / Gmail…），省掉手写工具定义 |
 | [`anthropics/claude-agent-sdk-python`](https://github.com/anthropics/claude-agent-sdk-python) | 8.2k | 2026-09-30 | Claude 官方 Agent SDK，安全敏感场景的第一方选择 |
 
-### 12.4.5 怎么选（我建议的顺序）
+### 12.4.5 评估、可观测性与向量库
+
+框架负责「怎么想」，[12.4.4](#1244-能力组件agent-的手脚) 负责「能干什么」，但**几乎所有教程都跳过一环：你做完之后怎么知道它好不好**。
+这一节补三样东西：评估、可观测性、向量库——它们不构成「又一个框架」，而是把 Agent 从 Demo 推向生产的地基。
+（本节于 **2026-10-01** 增补，同样经 [`scripts/check_repos.py`](../scripts/check_repos.py) 验证。）
+
+| 仓库 | 星标 | 最近提交 | 解决什么 |
+|---|---|---|---|
+| [`Comet-ml/opik`](https://github.com/Comet-ml/opik) | 22.3k | 2026-09-30 | **LLM 评估与追踪**：把每次调用的输入 / 输出 / 轨迹记录下来，做回归对比。比手写 print 强一百倍 |
+| [`Arize-ai/phoenix`](https://github.com/Arize-ai/phoenix) | 11.7k | 2026-10-01 | 可观测性与评测，**注意 2026-10 进入维护模式**——新项目优先用 opik，它更适合当「活例子」看设计 |
+| [`milvus-io/milvus`](https://github.com/milvus-io/milvus) | 46.3k | 2026-09-30 | **向量数据库**。你 [`projects/04`](../projects/04-rag/README.md) 已经在用，这里只确认它仍是头号开源选择 |
+| [`qdrant/qdrant`](https://github.com/qdrant/qdrant) | 34.9k | 2026-09-03 | 向量数据库，Rust 内核，单机到分布式都能跑 |
+| [`chroma-core/chroma`](https://github.com/chroma-core/chroma) | 29.4k | 2026-09-30 | 轻量嵌入式向量库，**原型最快**：`pip install chromadb` 就能用，不用起服务 |
+
+> **一个 verify 出来的坑**：Chroma 的 PyPI 包叫 `chromadb`，但 GitHub 仓库是 `chroma-core/chroma`——`chromadb/chromadb` 和 `chroma-core/chromadb` 都是 404。
+> 这正是 [12.6](#126-避坑清单脚本实测非转述) 想提醒你的事：**包名 ≠ 仓库地址**，引用前先让脚本验一下。
+
+### 12.4.6 怎么选（我建议的顺序）
 
 别按星标选，按你**现在缺什么**选：
 
@@ -201,6 +221,7 @@ flowchart TD
 | 让 Agent 调用我的工具 | `claude-cookbooks` | `modelcontextprotocol/python-sdk` | [`projects/05`](../projects/05-agent-mcp/README.md) |
 | 做一个 RAG 问答 | `llm-universe` · `llm-cookbook` | `haystack` / `Dify` | [`projects/04`](../projects/04-rag/README.md) · [`python-practice/06`](../python-practice/06-rag-qa.md) |
 | 不写代码先出个 Demo | `llm-course` | `Dify` | — |
+| 知道我的 RAG / Agent 到底准不准 | `llm-cookbook` 评估章节 | `Comet-ml/opik` | [`projects/04`](../projects/04-rag/README.md) |
 
 ---
 
@@ -210,6 +231,7 @@ flowchart TD
 |---|---|---|---|
 | **已归档** | [`karpathy/LLM101n`](https://github.com/karpathy/LLM101n) | 37.5k 星，**2024-08-01 已归档**，只读 | 内容有参考价值，但**不会有新内容**。学全流程改用 `nanochat` |
 | **维护模式** | [`microsoft/autogen`](https://github.com/microsoft/autogen) | 61.2k 星，最近提交 2026-04-06，首页带维护模式徽章 | 新项目改用 [`microsoft/agent-framework`](https://github.com/microsoft/agent-framework) |
+| **维护模式** | [`Arize-ai/phoenix`](https://github.com/Arize-ai/phoenix) | 11.7k 星，最近提交 2026-10-01，首页带维护模式徽章 | 评估 / 可观测性需求改用 [`Comet-ml/opik`](https://github.com/Comet-ml/opik) |
 | **已搬家** | `geekan/MetaGPT` · `All-Hands-AI/OpenHands` · `anthropics/anthropic-cookbook` · `volcengine/verl` · `hiyouga/LLaMA-Factory` · `microsoft/DeepSpeed` | 均 302 到新地址（见下表） | 引用与 clone 都用新地址 |
 | **长期未更新** | [`karpathy/nn-zero-to-hero`](https://github.com/karpathy/nn-zero-to-hero) | 24.6k 星，最近提交 2024-02-20（已 953 天） | **这不一定是缺点**：它是「讲清楚」型的完成品，不是「跟着版本走」的工具。按内容判断，别只看日期 |
 
@@ -251,15 +273,12 @@ python3 scripts/check_repos.py --delay 1.5           # 被限流时放慢（见�
 
 ![check_repos.py 真实运行输出](assets/term-check-repos.png)
 
-> 图中有两行日期显示为 `-`（`stanfordnlp/dspy` 与 `pydantic/pydantic-ai`）：
-> 那是抓 `commits.atom` 时正好撞上 GitHub 对当前出口 IP 的限流，重试 3 次仍未取到。
-> **脚本不会把这种情况悄悄留空当成功**——它会在「备注」列显式写出失败原因。
-> 这两条的日期另行单独复核过：`dspy` 为 **2026-09-27**、`pydantic-ai` 为 **2026-09-30**，
-> 与 [12.4.2](#1242-代码优先的框架) 表中一致。
+> 上一张截图里 `stanfordnlp/dspy` 与 `pydantic/pydantic-ai` 两行曾显示为 `-`：那是抓 `commits.atom` 时正好撞上 GitHub 对当前出口 IP 的限流，重试 3 次仍未取到。
+> **脚本不会把这种情况悄悄留空当成功**——它会在「备注」列显式写出失败原因（如 `NET`），而不是伪造一个日期。
+> 间隔足够时间、放慢节奏（`--delay 1.3`）重跑后，这两行已恢复正常（见上方截图：`dspy` 为 **2026-09-27**、`pydantic-ai` 为 **2026-09-30**，与 [12.4.2](#1242-代码优先的框架) 表中一致）。
 >
-> 另外提一句：连续扫两轮（近 100 次请求）之后，本机访问 `github.com` 曾出现**整站 502**
-> 而 `api.github.com` 仍正常——这是限流，不是仓库坏了，也不是脚本坏了。
-> 遇到它应放慢（`--delay`）并稍后再跑，**绝不能把那一轮结果当成死链写进文档**。
+> 教训：连续扫几十个仓库后，本机访问 `github.com` 会出现**整站 502** 而 `api.github.com` 仍正常——这是限流，不是仓库或脚本坏了。
+> 遇到应放慢（`--delay`）并稍后再跑，**绝不能把那一轮结果当成死链写进文档**。
 
 ---
 

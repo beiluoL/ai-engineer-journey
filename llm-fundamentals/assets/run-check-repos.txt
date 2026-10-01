@@ -1,57 +1,64 @@
-扫描 1 篇文档，抽到 46 个 GitHub 仓库
+扫描 1 篇文档，抽到 53 个 GitHub 仓库
 
 状态             星标  最近提交       仓库                                          备注
 ------------------------------------------------------------------------------------------------------------
-（首轮有 5 个仓库被拒连，正在二次补测…）
+（首轮有 4 个仓库被拒连，正在二次补测…）
 
 ARCHIVED   37,481  2024-08-01 karpathy/LLM101n                            
-MAINT      61,231  2026-04-06 microsoft/autogen                           README 声明维护模式
-STALE      24,600  2024-02-20 karpathy/nn-zero-to-hero                    已 953 天无提交
-MOVE       23,705  2026-09-30 volcengine/verl                             → verl-project/verl
-OK        157,554  2026-09-30 langgenius/dify                             
-OK        129,927  2026-09-30 ggml-org/llama.cpp                          
-OK        120,817  2026-09-18 microsoft/generative-ai-for-beginners       
-OK        116,770  2026-09-26 browser-use/browser-use                     
-OK         89,576  2026-09-30 OpenHands/OpenHands                         
-OK         83,242  2026-02-05 mlabonne/llm-course                         
-OK         77,061  2026-09-30 unslothai/unsloth                           
-OK         76,277  2026-09-29 openai/openai-cookbook                      
-OK         75,217  2026-09-28 hiyouga/LlamaFactory                        
-OK         70,698  2026-01-21 FoundationAgents/MetaGPT                    
-OK         69,281  2026-09-04 microsoft/AI-For-Beginners                  
-OK         59,900  2026-09-30 BerriAI/litellm                             
-OK         59,207  2026-09-29 crewAIInc/crewAI                            
-OK         58,343  2026-07-03 karpathy/nanochat                           
-OK         55,516  2025-10-10 Lordog/dive-into-llms                       
-OK         53,081  2026-09-28 anthropics/claude-cookbooks                 
-OK         43,167  2026-09-30 deepspeedai/DeepSpeed                       
-OK         42,497  2026-09-27 langchain-ai/langgraph                      
-OK         42,392  2026-09-30 agno-agi/agno                               
-OK         38,432  -          stanfordnlp/dspy                            
-OK         34,133  2026-08-08 datawhalechina/happy-llm                    
-OK         32,360  2026-09-12 datawhalechina/self-llm                     
-OK         30,368  2026-09-30 composiohq/composio                         
-OK         29,778  2026-09-30 openai/openai-agents-python                 
-OK         29,595  2026-09-30 huggingface/smolagents                      
-OK         26,632  2026-09-30 deepset-ai/haystack                         
-OK         25,123  2026-07-19 liguodongiot/llm-action                     
-OK         24,981  2026-09-10 letta-ai/letta                              
+MAINT      61,248  2026-04-06 microsoft/autogen                           README 声明维护模式
+MAINT      11,668  2026-10-01 Arize-ai/phoenix                            README 声明维护模式
+STALE      24,606  2024-02-20 karpathy/nn-zero-to-hero                    已 954 天无提交
+MOVE       23,714  2026-09-30 volcengine/verl                             → verl-project/verl
+OK        157,628  2026-10-01 langgenius/dify                             
+OK        130,010  2026-10-01 ggml-org/llama.cpp                          
+OK        120,869  2026-09-18 microsoft/generative-ai-for-beginners       
+OK        116,866  2026-09-26 browser-use/browser-use                     
+OK         89,669  2026-10-01 OpenHands/OpenHands                         
+OK         83,252  2026-02-05 mlabonne/llm-course                         
+OK         77,102  2026-10-01 unslothai/unsloth                           
+OK         76,289  2026-09-29 openai/openai-cookbook                      
+OK         75,238  2026-09-28 hiyouga/LlamaFactory                        
+OK         70,711  2026-01-21 FoundationAgents/MetaGPT                    
+OK         69,323  2026-09-04 microsoft/AI-For-Beginners                  
+OK         59,950  2026-10-01 BerriAI/litellm                             
+OK         59,245  2026-10-01 crewAIInc/crewAI                            
+OK         58,361  2026-07-03 karpathy/nanochat                           
+OK         55,539  2025-10-10 Lordog/dive-into-llms                       
+OK         53,106  2026-09-28 anthropics/claude-cookbooks                 
+OK         52,377  2026-09-29 run-llama/llama_index                       
+OK         46,293  2026-09-30 milvus-io/milvus                            
+OK         43,169  2026-09-30 deepspeedai/DeepSpeed                       
+OK         42,537  2026-09-30 langchain-ai/langgraph                      
+OK         42,431  2026-09-30 agno-agi/agno                               
+OK         38,444  2026-09-30 stanfordnlp/dspy                            
+OK         34,891  2026-09-03 qdrant/qdrant                               
+OK         34,139  2026-08-08 datawhalechina/happy-llm                    
+OK         32,368  2026-09-12 datawhalechina/self-llm                     
+OK         30,378  2026-09-30 composiohq/composio                         
+OK         29,792  2026-10-01 openai/openai-agents-python                 
+OK         29,614  2026-09-30 huggingface/smolagents                      
+OK         29,418  2026-09-30 chroma-core/chroma                          
+OK         28,618  2026-09-30 microsoft/semantic-kernel                   
+OK         26,634  2026-09-30 deepset-ai/haystack                         
+OK         25,126  2026-07-19 liguodongiot/llm-action                     
+OK         24,987  2026-09-10 letta-ai/letta                              
 OK         24,766  2025-06-12 datawhalechina/llm-cookbook                 
-OK         24,439  2026-09-29 modelcontextprotocol/python-sdk             
-OK         23,705  2026-09-30 verl-project/verl                           
-OK         21,741  2026-09-29 huggingface/peft                            
-OK         20,279  -          pydantic/pydantic-ai                        
-OK         19,421  2026-09-30 huggingface/trl                             
-OK         15,759  2026-09-28 modelscope/ms-swift                         
-OK         15,175  2026-06-14 wdndev/llm_interview_note                   
-OK         14,062  2026-08-27 datawhalechina/llm-universe                 
-OK         13,874  2026-09-30 microsoft/agent-framework                   
-OK         12,512  2026-09-30 axolotl-ai-cloud/axolotl                    
-OK          8,193  2026-09-30 anthropics/claude-agent-sdk-python          
+OK         24,444  2026-09-30 modelcontextprotocol/python-sdk             
+OK         23,714  2026-09-30 verl-project/verl                           
+OK         22,315  2026-09-30 Comet-ml/opik                               
+OK         21,742  2026-09-30 huggingface/peft                            
+OK         20,301  2026-10-01 pydantic/pydantic-ai                        
+OK         19,425  2026-09-30 huggingface/trl                             
+OK         15,763  2026-09-30 modelscope/ms-swift                         
+OK         15,178  2026-06-14 wdndev/llm_interview_note                   
+OK         14,066  2026-08-27 datawhalechina/llm-universe                 
+OK         13,888  2026-09-30 microsoft/agent-framework                   
+OK         12,512  2026-10-01 axolotl-ai-cloud/axolotl                    
+OK          8,197  2026-09-30 anthropics/claude-agent-sdk-python          
 OK          6,760  2026-09-17 huggingface/smol-course                     
 OK          3,062  2026-06-16 datawhalechina/hugging-llm                  
 ------------------------------------------------------------------------------------------------------------
-汇总：ARCHIVED 1  MAINT 1  STALE 1  MOVE 1  OK 42
+汇总：ARCHIVED 1  MAINT 2  STALE 1  MOVE 1  OK 48
 
 需要处理：
   [ARCHIVED] karpathy/LLM101n  ← llm-fundamentals/12-tutorials-and-agent.md  
