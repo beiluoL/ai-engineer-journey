@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-199" title="返回《文档总览》第 199 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#一先把结论说在前面" class="lvl2">一、先把结论说在前面</a><a href="#二怎么选三个问题就能定下来" class="lvl2">二、怎么选：三个问题就能定下来</a><a href="#三方案-ahttp推荐覆盖大多数场景" class="lvl2">三、方案 A：HTTP（推荐，覆盖大多数场景）</a><a href="#31-python-侧把函数变成服务" class="lvl3">3.1 Python 侧：把函数变成服务</a><a href="#32-先不用-spring验证一遍链路" class="lvl3">3.2 先不用 Spring，验证一遍链路</a><a href="#33-java-侧spring-boot-客户端restclient" class="lvl3">3.3 Java 侧：Spring Boot 客户端（RestClient）</a><a href="#34-下游挂了会怎样一次真实的故障演练" class="lvl3">3.4 下游挂了会怎样：一次真实的故障演练</a><a href="#35-生产化清单" class="lvl3">3.5 生产化清单</a><a href="#四方案-b子进程processbuilder" class="lvl2">四、方案 B：子进程（ProcessBuilder）</a><a href="#41-python-侧stdin-进stdout-出" class="lvl3">4.1 Python 侧：stdin 进，stdout 出</a><a href="#42-java-侧把管道管好" class="lvl3">4.2 Java 侧：把管道管好</a><a href="#43-什么时候该放弃子进程" class="lvl3">4.3 什么时候该放弃子进程</a><a href="#五方案-c-d消息队列与-grpc什么时候才轮到它们" class="lvl2">五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们</a><a href="#消息队列方案-c" class="lvl3">消息队列（方案 C）</a><a href="#grpc方案-d" class="lvl3">gRPC（方案 D）</a><a href="#六部署baseurl-在三套环境里怎么变" class="lvl2">六、部署：base-url 在三套环境里怎么变</a><a href="#七避坑清单按踩坑频率排序" class="lvl2">七、避坑清单（按踩坑频率排序）</a><a href="#八10-分钟自测" class="lvl2">八、10 分钟自测</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="spring-boot-怎么调-python五种方案两条真实跑通的链路一份避坑清单">Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单</h1>
 <blockquote><p>写给有 Java / Spring Boot 基础、想把 Python（AI 算法、模型推理、数据处理）接进 Java 系统的开发者。 你不需要先成为 Python 工程师，才能开始集成 —— 但你需要知道<strong>进程之间到底怎么传数据、出错时谁负责</strong>。 文中架构图与流程图为本教程自制示意框图；所有终端截图均来自本机真实运行，命令与输出可在仓库 <a href="../../../../tutorials/demos/08-springboot-python">demos/08-springboot-python/</a> 目录复现。</p></blockquote>
 <h2 id="一先把结论说在前面">一、先把结论说在前面</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#二怎么选三个问题就能定下来"><span class="sn-label">下一节 →</span><span class="sn-name">二、怎么选：三个问题就能定下来</span></a></nav>
@@ -455,8 +594,27 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
 │   ├── plain/ProcessCallDemo.java   # 纯 Java ProcessBuilder
 │   └── springboot-text-client/      # Spring Boot 3.3 完整工程（RestClient + 重试 + 503）
 └── out/                             # 文中终端截图的原始命令与输出</code></pre>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">publishing/tutorials/08-springboot-calls-python.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "publishing/tutorials/08-springboot-calls-python.md", "name": "08-springboot-calls-python.md", "text": "# Spring Boot 怎么调 Python：五种方案、两条真实跑通的链路、一份避坑清单\n\n> 写给有 Java / Spring Boot 基础、想把 Python（AI 算法、模型推理、数据处理）接进 Java 系统的开发者。\n> 你不需要先成为 Python 工程师，才能开始集成 —— 但你需要知道**进程之间到底怎么传数据、出错时谁负责**。\n> 文中架构图与流程图为本教程自制示意框图；所有终端截图均来自本机真实运行，命令与输出可在仓库 [demos/08-springboot-python/](demos/08-springboot-python/) 目录复现。\n\n## 一、先把结论说在前面\n\nJava 调 Python 的本质是**两个进程之间的通信问题**，不是语言问题。两个进程之间只有三种东西能传：字节流、消息、共享协议 —— 所谓跨语言调用，就是从中挑一种，并把它守好。\n\n![Java 调 Python 的五条路](assets/diagram8-options.png)\n\n| 方案 | Java 侧 | Python 侧 | 延迟 | 适用 |\n| --- | --- | --- | --- | --- |\n| ① HTTP / REST | RestClient / WebClient | FastAPI / Flask | 1–50 ms | 常驻服务、要复用、要独立扩容 |\n| ② 子进程 CLI | ProcessBuilder | 一次性脚本 | ＋100–800 ms 启动 | 离线批处理、定时任务 |\n| ③ 消息队列 | 生产者 + 回调 | 常驻 worker | 秒~分钟 | 分钟级长任务、削峰 |\n| ④ gRPC | 生成的 stub | grpc server | 亚毫秒 | 高频、低延迟、字段稳定 |\n| ⑤ 嵌入式解释器 | JVM 内调用 | 无独立进程 | 最低 | **别选**（见下） |\n\n三条结论，先记下来，全文都在论证它们：\n\n1. **默认选 HTTP**。它是唯一一条让 Java 和 Python 独立发版、独立扩容、独立排查的路，成本也最低。\n2. **只有「一个任务跑几分钟、结果不需要同步返回」才值得引入消息队列**；gRPC 是 HTTP 扛不住之后的性能优化，不是起点。\n3. **看到「用 Jython 在 JVM 里跑 Python」的旧文章直接跳过**：Jython 只支持 Python 2.7，numpy / torch 基本装不上，而且解释器崩溃会带走整个 JVM。\n\n> [!NOTE]\n> 本文所有代码都真实跑通过：Python 3.13 + FastAPI + uvicorn，Java 17 + Spring Boot 3.3.4（RestClient）。完整工程在本仓库 `publishing/tutorials/demos/08-springboot-python/`，你可以直接复现文中的每一段输出。\n\n## 二、怎么选：三个问题就能定下来\n\n选型不需要背对比表，问三个问题就够了：\n\n![选型决策树](assets/diagram8-decision.png)\n\n1. **一次性脚本还是在线服务？** 定时跑、一天几次的 → 子进程；用户等着结果的 → 继续往下。\n2. **这个任务要跑多久？** 秒级内同步返回 → HTTP；分钟级、允许异步 → 消息队列。\n3. **压测之后 HTTP 真的是瓶颈吗？** 大多数系统在这一步就结束了 —— 先加连接池、超时、重试、缓存，九成问题就解决了。真的测出协议开销才换 gRPC。\n\n顺序反了的代价很具体：先上了 gRPC，就多维护一份 `.proto`、一套代码生成流水线，而真正拖慢你的可能是 Python 侧那 3 秒的模型推理。\n\n## 三、方案 A：HTTP（推荐，覆盖大多数场景）\n\n### 3.1 Python 侧：把函数变成服务\n\n用 FastAPI 把 Python 能力暴露成 HTTP 接口。下面的 demo 刻意只用标准库做文本统计，不依赖任何模型 —— 目的是让「Java → HTTP → Python」这条链路本身可跑、可观测；真实场景里把 `analyze_text()` 换成你的 embedding / 推理 / 数据处理函数即可。\n\n```python\n# python/text_service.py\nimport re, time\nfrom collections import Counter\nfrom fastapi import FastAPI\nfrom pydantic import BaseModel, Field\n\napp = FastAPI(title=\"text-service\", version=\"1.0.0\")\nTOKEN_RE = re.compile(r\"[A-Za-z][A-Za-z0-9_]*\")\n\nclass AnalyzeRequest(BaseModel):\n    text: str = Field(min_length=1, max_length=100_000)\n    top_k: int = Field(default=5, ge=1, le=50)\n\n@app.get(\"/health\")\ndef health():\n    # Java 侧做健康检查 / 容器探针就用这个端点\n    return {\"status\": \"ok\", \"engine\": \"python-fastapi\", \"version\": \"1.0.0\"}\n\n@app.post(\"/v1/analyze\")\ndef analyze(req: AnalyzeRequest):\n    started = time.perf_counter()\n    words = TOKEN_RE.findall(req.text)\n    counter = Counter(w.lower() for w in words)\n    return {\n        \"chars\": len(req.text),\n        \"words\": len(words),\n        \"top_words\": [[w, c] for w, c in counter.most_common(req.top_k)],\n        \"elapsed_ms\": round((time.perf_counter() - started) * 1000, 3),\n        \"engine\": \"python-fastapi\",\n    }\n```\n\n启动与自测（注意：**用 venv 里的解释器**，依赖装在哪就用哪个）：\n\n![FastAPI 服务启动与 curl 自测](assets/term8-python-service.png)\n\n三个值得养成的习惯：\n\n- **pydantic 校验入参**。`text` 超长、`top_k` 传 0 都会在入口被拦下，返回 422，而不是让脏数据走进你的模型。\n- **提供 `/health`**。它同时服务两方：Java 的 `TextServiceClient` 启动检查，以及未来上容器时的 liveness probe。\n- **日志用 uvicorn 自带的**，别在业务代码里 `print` 到 stdout —— HTTP 方案里 stdout 是黑盒，但日志规范同样决定你排查问题的速度。\n\n### 3.2 先不用 Spring，验证一遍链路\n\n上框架之前，先用 Java 标准库把链路打穿。这能证明一件事：**跨语言调用的复杂度 100% 在网络与协议上，跟框架无关**。\n\n```java\n// java/plain/HttpCallDemo.java（Java 11+ 单文件源码模式，java HttpCallDemo.java 直接跑）\nHttpClient client = HttpClient.newBuilder()\n        .connectTimeout(Duration.ofSeconds(3))   // 连不上要快速失败\n        .build();\n\nHttpRequest request = HttpRequest.newBuilder(URI.create(\"http://127.0.0.1:8000/v1/analyze\"))\n        .header(\"Content-Type\", \"application/json\")\n        .timeout(Duration.ofSeconds(10))          // 整体超时，必须设\n        .POST(HttpRequest.BodyPublishers.ofString(body))\n        .build();\n\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());\n```\n\n![纯 Java HttpClient 调用 FastAPI](assets/term8-java-http.png)\n\n注意 `Cost 41ms` 而 Python 自报只花了 `0.042ms` —— 差额几乎全是 JVM 启动、建连和 HTTP 往返，不是 Python 慢。真实 Spring Boot 里连接是复用的，稳定态单次调用在 1–3ms。**性能问题要先归因，再动手。**\n\n### 3.3 Java 侧：Spring Boot 客户端（RestClient）\n\nSpring Boot 3.2+ 自带 `RestClient`，同步、流畅 API，比 `RestTemplate` 现代，比 `WebClient` 轻。工程结构：\n\n```text\njava/springboot-text-client/\n├── pom.xml                                  # 只依赖 spring-boot-starter-web\n└── src/main/java/com/example/pybridge/\n    ├── PyBridgeApplication.java\n    ├── client/\n    │   ├── TextServiceClient.java           # RestClient + 超时 + 重试 + 异常映射\n    │   └── PythonServiceException.java\n    └── web/\n        └── AnalyzeController.java           # /api/analyze、/api/python-health\n```\n\n配置先行 —— **地址、超时、重试次数全部外置**，本地、Docker、K8s 三套环境只改配置不改代码：\n\n```yaml\n# src/main/resources/application.yml\npython:\n  service:\n    base-url: http://127.0.0.1:8000   # Docker 里改成 http://text-service:8000\n    connect-timeout-ms: 1000\n    read-timeout-ms: 10000\n    max-retries: 2\n    backoff-ms: 200\n```\n\n客户端是整篇文章最重要的一段代码。四件事是必须的，缺一件生产就会出事：\n\n```java\n@Component\npublic class TextServiceClient {\n\n    private final RestClient restClient;\n    private final int maxRetries;\n    private final long backoffMs;\n\n    public TextServiceClient(RestClient.Builder builder,\n                             @Value(\"${python.service.base-url}\") String baseUrl,\n                             @Value(\"${python.service.connect-timeout-ms}\") int connectTimeoutMs,\n                             @Value(\"${python.service.read-timeout-ms}\") int readTimeoutMs,\n                             @Value(\"${python.service.max-retries}\") int maxRetries,\n                             @Value(\"${python.service.backoff-ms}\") long backoffMs) {\n\n        ClientHttpRequestFactorySettings settings = ClientHttpRequestFactorySettings.DEFAULTS\n                .withConnectTimeout(Duration.ofMillis(connectTimeoutMs))\n                .withReadTimeout(Duration.ofMillis(readTimeoutMs));\n\n        this.restClient = builder\n                .baseUrl(baseUrl)\n                .requestFactory(ClientHttpRequestFactories.get(settings))\n                .defaultStatusHandler(HttpStatusCode::isError, (request, response) -> {\n                    // 非 2xx 转成自己的异常，并把 Python 的报错 body 带走，\n                    // 否则默认异常里没有响应体，排查时抓瞎\n                    byte[] bytes = response.getBody().readAllBytes();\n                    String body = bytes.length > 0 ? new String(bytes, StandardCharsets.UTF_8) : \"<empty>\";\n                    throw new PythonServiceException(\n                            \"python service error: status=\" + response.getStatusCode() + \", body=\" + body,\n                            response.getStatusCode().value());\n                })\n                .build();\n        this.maxRetries = maxRetries;\n        this.backoffMs = backoffMs;\n    }\n\n    public AnalyzeResult analyze(String text, int topK) {\n        Map<String, Object> payload = Map.of(\"text\", text, \"top_k\", topK);\n        int attempt = 0;\n        while (true) {\n            attempt++;\n            long start = System.currentTimeMillis();\n            try {\n                AnalyzeResult result = restClient.post()\n                        .uri(\"/v1/analyze\")\n                        .contentType(MediaType.APPLICATION_JSON)\n                        .body(payload)\n                        .retrieve()\n                        .body(AnalyzeResult.class);\n                log.info(\"python /v1/analyze ok: cost={}ms, attempt={}\",\n                        System.currentTimeMillis() - start, attempt);\n                return result;\n            } catch (PythonServiceException e) {\n                // 4xx 是请求本身有问题，重试没意义，直接抛\n                if (e.getStatusCode() >= 400 && e.getStatusCode() < 500) throw e;\n                if (attempt > maxRetries) throw e;\n                sleepQuietly(backoffMs * attempt);      // 退避：200ms、400ms\n            } catch (Exception e) {\n                // 连接超时 / 读超时 / DNS 失败，都属于可重试\n                if (attempt > maxRetries) {\n                    throw new PythonServiceException(\"python service unreachable: \" + e.getMessage(), 503, e);\n                }\n                sleepQuietly(backoffMs * attempt);\n            }\n        }\n    }\n\n    @JsonIgnoreProperties(ignoreUnknown = true)\n    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)   // 关键注解，见下文\n    public record AnalyzeResult(int chars, int words, int sentences,\n                                List<List<Object>> topWords,\n                                double elapsedMs, String engine) {}\n}\n```\n\n四个要点，展开说：\n\n- **超时必须显式设置**。`RestClient` 默认不设读超时，Python 一旦卡住，Tomcat 工作线程会被慢慢吃光，整个 Java 服务假死 —— 这是集成 Python 后最常见的「雪崩起点」。\n- **非 2xx 转成自己的异常**。默认抛出的异常不带响应体；把 Python 的报错 body 记进日志，排查时才不至于两眼一抹黑。\n- **只重试 5xx 和超时**。4xx 说明请求本身错了，重试十次只会把错误放大十倍。\n- **重试上限后抛 503**，而不是让 Spring 兜底成 500。下游不可用和自己的 bug 是两类告警，混在一起监控就废了。\n\n还有一个小但致命的细节：Python 返回的是 `top_words` / `elapsed_ms`（snake_case），Java record 是 `topWords`（camelCase）。**不加 `@JsonNaming(SnakeCaseStrategy.class)`，这两个字段会静默反序列化成 null —— 不报错，只是值没了**，等你发现时它已经在线上跑了两周。\n\n完整工程跑起来：\n\n![Spring Boot 全链路真实运行](assets/term8-springboot-ok.png)\n\n![Java → HTTP → Python 完整链路与工程要点](assets/diagram8-http-flow.png)\n\n### 3.4 下游挂了会怎样：一次真实的故障演练\n\n集成质量不是看「正常时返回什么」，而是看「Python 挂掉时 Java 表现如何」。把 Python 服务 kill 掉再调 Java 接口：\n\n![Python 宕机后的重试与 503](assets/term8-springboot-fail.png)\n\n三个现象都符合预期：\n\n1. Java 侧重试了 2 次（共 3 次尝试，间隔 200ms → 400ms），日志里每一步都可见；\n2. 放弃后返回 **503 + `python_unavailable`**，而不是 500 —— 前端和监控可以正确分类；\n3. Python 服务重启后**立刻恢复，Java 不用重启**，因为连接是按请求建立的，没有缓存坏状态。\n\nController 里的异常映射只有几行，但它决定监控告警能不能正确分类：\n\n```java\n@ExceptionHandler(PythonServiceException.class)\npublic ResponseEntity<Map<String, Object>> onPythonError(PythonServiceException e) {\n    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)\n            .body(Map.of(\"error\", \"python_unavailable\", \"detail\", e.getMessage()));\n}\n```\n\n### 3.5 生产化清单\n\n跑通只是第一步，上生产前对照这份清单：\n\n| 项 | 做法 | 不做的后果 |\n| --- | --- | --- |\n| 超时 | connect 1s / read 按 P99×2 设置，全部配置化 | Python 卡住 → Tomcat 线程池耗尽 → 整个 Java 服务假死 |\n| 重试 | 只重试 5xx / 超时，2 次 + 退避 | 4xx 也重试会把错误放大十倍 |\n| 熔断 | Resilience4j：错误率超阈值直接快速失败 | Python 挂了，Java 还在傻等每次 10s 超时 |\n| 连接池 | `ClientHttpRequestFactory` 调大 `maxConnTotal` | 高并发下建连排队，表现为「莫名其妙变慢」 |\n| 健康检查 | Java 定期打 Python `/health`，失败告警 | 半小时前挂的 Python，半小时后才有人发现 |\n| traceId | Java 把 MDC 里的 traceId 塞进 `X-Trace-Id` 头 | 一次请求跨两个进程，日志对不上，排查靠猜 |\n| 模型冷启动 | 启动后预热一次请求；read-timeout 按首请求放宽 | 第一个用户请求必然超时，之后恢复正常 |\n| 监控 | 记录每次调用的耗时与结果分布，按 `engine`/端点打点 | 没有基线，性能退化无人知晓 |\n\n> [!WARN]\n> 最常被硬编码的是 `base-url`。本地写 `http://localhost:8000`，上容器环境Python 在另一个容器里，localhost 就永远指向 Java 自己 —— 你会花两小时找一个「本地明明能跑」的 bug。**从第一行代码起就把它放进配置文件。**\n\n## 四、方案 B：子进程（ProcessBuilder）\n\nPython 不是所有能力都值得做成常驻服务。定时任务、离线批处理、一天跑几次的脚本，用 `ProcessBuilder` 起子进程就够了：Java 写 stdin、读 stdout，用 JSON 交换数据。\n\n![ProcessBuilder 子进程链路](assets/diagram8-process.png)\n\n### 4.1 Python 侧：stdin 进，stdout 出\n\n```python\n# python/text_stats_cli.py\ndef main() -> int:\n    raw = sys.stdin.readline()\n    if not raw.strip():\n        print(\"empty stdin\", file=sys.stderr)\n        return 2                                  # 非 0 退出码 = 失败\n    try:\n        payload = json.loads(raw)\n    except json.JSONDecodeError as exc:\n        print(f\"bad request: {exc}\", file=sys.stderr)\n        return 2\n\n    print(\"start analyzing\", file=sys.stderr)     # 日志走 stderr，不污染 stdout\n    print(json.dumps(analyze(payload), ensure_ascii=False))   # 唯一一行业务输出\n    return 0\n```\n\n三条约定，缺一条线上必踩坑：\n\n1. **stdout 只允许有一行业务 JSON** —— `print()` 调试日志必须走 stderr；\n2. **任何异常都以非零退出码退出** —— Java 靠 `exitValue()` 判断成败；\n3. **用 `sys.stdin.readline()` 读**，不要 `input()`，避免交互提示阻塞。\n\n![Python CLI 脚本正常与异常输入](assets/term8-python-cli.png)\n\n### 4.2 Java 侧：把管道管好\n\n```java\n// java/plain/ProcessCallDemo.java（节选，完整版含注释）\nPath scriptPath = Path.of(script).toAbsolutePath().normalize();  // 相对路径陷阱，见下文\nProcessBuilder pb = new ProcessBuilder(pythonBin, scriptPath.toString());\npb.directory(scriptPath.getParent().toFile());\npb.redirectError(ProcessBuilder.Redirect.PIPE);\n\nProcess process = pb.start();\n\n// ① 异步 drain stderr，防止管道缓冲区打满导致子进程阻塞\nExecutorService drain = Executors.newSingleThreadExecutor();\ndrain.submit(() -> { /* 读 errorStream 并打日志 */ });\n\n// ② 写 stdin（一行 JSON），写完立刻关闭，否则 Python 的 readline() 会一直等\ntry (BufferedWriter writer = new BufferedWriter(\n        new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8))) {\n    writer.write(payload);\n    writer.newLine();\n}\n\n// ③ 读 stdout，④ 带超时等待，⑤ 超时就杀\nString stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);\nboolean finished = process.waitFor(20, TimeUnit.SECONDS);\nif (!finished) process.destroyForcibly();\n```\n\n![Java ProcessBuilder 调用真实输出](assets/term8-java-process.png)\n\n三个必须守住的规矩：\n\n- **必须 `waitFor(timeout)`** —— 否则 Python 死循环会把 Java 线程永久挂住；\n- **stderr 必须有人读** —— 管道缓冲区只有几十 KB，Python 写 stderr 阻塞，进程就假死了，而 Java 这边表现为「读不到结果」；\n- **用完 `destroyForcibly()`** —— 超时不杀进程，僵尸进程会慢慢耗尽机器资源。\n\n截图里还有一个真实踩坑：没转绝对路径时，`pb.directory()` 改变了相对路径的解析基准，Python 报 `can't open file`、退出码 2 —— 这就是「本地能跑、线上找不到脚本」的最常见原因。**一律先 `toAbsolutePath().normalize()`。**\n\n### 4.3 什么时候该放弃子进程\n\n✅ 适合：定时任务、离线批处理、一天几次的数据脚本、本机小工具 —— 频率低，起进程的开销（100–800ms，import torch 更慢）可以接受。\n\n❌ 不适合：在线请求链路。每秒起一次 Python 进程，光解释器启动就能把 QPS 打回个位数，CPU 和内存也会被反复 fork 吃满。\n\n判断标准很简单：**如果 QPS 上到个位数以上，或者单次调用要在 1 秒内返回，就把它改成常驻的 HTTP 服务。**\n\n## 五、方案 C / D：消息队列与 gRPC，什么时候才轮到它们\n\n### 消息队列（方案 C）\n\n当调用从「一问一答」变成「扔个任务就走」，HTTP 就不合适了：任务要跑几分钟，HTTP 连接撑不住，重试还可能造成重复执行。这时候引入 MQ（RabbitMQ / Kafka / Redis Stream 都行）：\n\n- Java 侧：`spring-boot-starter-amqp`，投递任务消息后立即返回任务 ID；\n- Python 侧：常驻 worker 消费队列，跑完把结果写回数据库或回调接口；\n- 前端拿任务 ID 轮询或走 WebSocket —— **「提交」和「取结果」是两个接口，不是一个请求**。\n\n它带来的新代价也要认：消息体成为新的契约（要有版本号）、消费要幂等（重试必然发生）、多了一个 MQ 组件要运维。**为分钟级任务付这些代价是值的，为 2 秒的任务是浪费。**\n\n### gRPC（方案 D）\n\nHTTP + JSON 的开销主要在两处：文本序列化和连接管理。当 Python 服务是**高频、低延迟、字段稳定**的内网调用（流式推理、特征服务），gRPC 的 protobuf + HTTP/2 多路复用能把单次调用压到亚毫秒：\n\n```protobuf\n// text.proto —— 契约先行，两边各自生成代码\nservice TextService {\n  rpc Analyze (AnalyzeRequest) returns (AnalyzeResponse);\n}\nmessage AnalyzeRequest { string text = 1; int32 top_k = 2; }\nmessage AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount top_words = 3; }\n```\n\n代价是每次改字段都要重新生成两侧代码、走一遍发版流程。**它是 HTTP 扛不住之后的优化，不是起点。**\n\n## 六、部署：base-url 在三套环境里怎么变\n\n| 环境 | Python 在哪 | Java 的 `base-url` | 注意 |\n| --- | --- | --- | --- |\n| 本地开发 | 本机 8000 端口 | `http://127.0.0.1:8000` | 两个终端分别起服务 |\n| Docker Compose | 同一网络里的 `text-service` 容器 | `http://text-service:8000` | 用服务名，不用 localhost |\n| K8s | 独立 Deployment + Service | `http://text-service.prod.svc:8000` | 配 liveness/readiness 探针指向 `/health` |\n\nDocker Compose 的最小形态：\n\n```yaml\nservices:\n  text-service:\n    image: text-service:1.0.0          # python:3.13-slim + pip install -r req.txt\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8000/health\"]\n      interval: 10s\n  java-app:\n    image: java-app:1.0.0\n    environment:\n      PYTHON_SERVICE_BASE_URL: http://text-service:8000\n    depends_on:\n      text-service:\n        condition: service_healthy\n```\n\nPython 的依赖必须锁定（`requirements.txt` 写死版本），Java 镜像里**不装 Python**——两个世界只在网络上握手，这是整个方案能长期维护的前提。\n\n## 七、避坑清单（按踩坑频率排序）\n\n1. **超时不设**：RestClient 默认无读超时，Python 一卡，Java 线程池被慢慢吃光。\n2. **`base-url` 硬编码**：换环境必炸，写进 `application.yml`。\n3. **snake_case 静默 null**：Python 返回 `top_words`，Java record 叫 `topWords`，不加 `@JsonNaming` 就是 null，不报错。\n4. **4xx 也重试**：请求本身错了，重试只会放大错误。\n5. **stdout 混入 `print`**：子进程方案里一句 debug 输出就能让 `json.loads` 在半夜炸掉，调试日志一律走 stderr。\n6. **stderr 无人读**：管道缓冲区几十 KB，写满即假死。\n7. **相对路径陷阱**：`pb.directory()` 会改变相对路径基准，脚本一律转绝对路径。\n8. **解释器路径写死**：开发机 `/usr/bin/python3`、服务器 venv、容器 `/opt/venv/bin/python` 各不相同，做成配置项。\n9. **依赖漂移**：Python 侧不锁版本，某天 `pip install` 拉到新版，行为悄悄变了。写死 `requirements.txt`。\n10. **模型冷启动**：加载模型的首个请求可能要几十秒，预热 + 单独放宽首请求超时，否则每天早上的第一个用户永远超时。\n\n## 八、10 分钟自测\n\n拿本文的 demo 自查，全部通过再谈生产：\n\n```text\n[ ] uvicorn 起服务，curl /health 返回 ok\n[ ] curl -X POST /v1/analyze，非法入参返回 422\n[ ] java HttpCallDemo.java 打印 200 和 JSON\n[ ] kill 掉 Python 后，Java 接口返回 503（不是 500），日志有重试记录\n[ ] 重启 Python，Java 不重启即恢复\n[ ] echo '{...}' | python text_stats_cli.py 输出一行 JSON，退出码 0\n[ ] echo 'not-json' | python text_stats_cli.py 退出码非 0，报错在 stderr\n[ ] java ProcessCallDemo.java 打印退出码 0 与 JSON\n```\n\n本文所有代码与运行输出在本仓库的位置：\n\n```text\npublishing/tutorials/demos/08-springboot-python/\n├── python/\n│   ├── text_service.py          # 方案 A：FastAPI 服务\n│   └── text_stats_cli.py        # 方案 B：stdin/stdout 脚本\n├── java/\n│   ├── plain/HttpCallDemo.java      # 纯 Java HttpClient（无框架）\n│   ├── plain/ProcessCallDemo.java   # 纯 Java ProcessBuilder\n│   └── springboot-text-client/      # Spring Boot 3.3 完整工程（RestClient + 重试 + 503）\n└── out/                             # 文中终端截图的原始命令与输出\n```\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -464,6 +622,8 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -473,6 +633,173 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -486,6 +813,17 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -512,15 +850,46 @@ message AnalyzeResponse { int32 chars = 1; int32 words = 2; repeated WordCount t
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-89" title="返回《文档总览》第 89 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">15 — Observability（可观测性）</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#0-这章解决什么问题" class="lvl2">0. 这章解决什么问题</a><a href="#1-设计一层薄的计数器不是监控系统" class="lvl2">1. 设计：一层薄的计数器，不是监控系统</a><a href="#2-埋点位置与口径" class="lvl2">2. 埋点位置与口径</a><a href="#3-真实运行123-秒问答告诉我们的三件事" class="lvl2">3. 真实运行：12.3 秒问答告诉我们的三件事</a><a href="#4-踩坑清单" class="lvl2">4. 踩坑清单</a><a href="#5-自检清单" class="lvl2">5. 自检清单</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="15-observability可观测性">15 — Observability（可观测性）</h1>
 <blockquote><p>14 章回答的是「答得准不准」，这一章回答另一组问题：<strong>慢在哪、召回有没有退化、钱花在哪</strong>。 这三个问题光看日志答不上来——日志是逐条的事件，而这三个是<strong>聚合的分布</strong>。</p></blockquote>
 <figure class="figure"><img alt="真实运行：6 次真实问答后的完整指标报告" src="../../../../../../projects/04-rag/assets/term-metrics-report.png" loading="lazy"/><figcaption>真实运行：6 次真实问答后的完整指标报告</figcaption></figure>
@@ -218,8 +357,27 @@ td math, th math{font-size:1em;}
 <ul class="lvl"><li><strong>离线模式下拒答测出 <code>llm.calls</code> 增量 1</strong>——<code>FakeEmbeddingClient</code> 是 char-ngram 哈希，什么查询都召回；<code>FakeLLMClient</code> 发现资料与问题重叠不足，返回拒答话术。拒答发生在 <strong>LLM 之后</strong>而不是闸门。所以 demo 第④节改成「拿分数说话」，两种模式各自给出诚实结论，而不是硬写「省下一次 LLM」。</li><li><strong>改 <code>settings.min_score</code> 不生效</strong>——<code>ContextAssembler(min_score=...)</code> 构造时固化。测试里换成重建 assembler 才造出「检索为空」。</li><li><strong>包装器让 <code>isinstance(service._llm, FakeLLMClient)</code> 失败</strong>——计量壳改变了静态类型。给两个包装器加 <code>inner</code> 属性，测试穿透一层断言，本意不变。</li><li><strong>pytest 函数名里写括号</strong>（<code>test_并发计数不丢(异步无关)</code>）会被当成参数化标记直接收集报错。中文测试名可以，括号不行。</li><li><strong>p99/p50 抖动判读需要足够样本</strong>——2 个样本时插值 p50≈1.05、p99≈1.98，比值不到 2，判读永远不触发。判读逻辑要有「样本够了才说话」的自觉，测试里用 9 快 1 慢的构造触发它。</li></ul>
 <h2 id="5-自检清单">5. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#4-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">4. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[x] 指标名集中在 <code>Names</code>，没有散落的裸字符串</li><li>[x] 计数、耗时、分数三类样本分开存；snapshot 一次拿全（避免「请求数」与「耗时数」来自不同时刻）</li><li>[x] 失败请求也进耗时分布；<code>llm.errors</code> / <code>embedding.errors</code> 单独计数</li><li>[x] <code>rag.generate.latency</code>（含重试）与 <code>llm.latency</code>（单次）口径分离并写进文档</li><li>[x] 分数采样在截断后、过滤前；分桶边界与 <code>min_score</code> 对齐</li><li>[x] <code>/stats</code> 直接返回 <code>metrics.snapshot()</code>，API 层零加工</li><li>[x] 17 项 metrics 单测：并发 20 线程 × 500 次 inc 不丢、异常也计时、分桶守恒</li><li>[x] 报告带自动判读（拒答率 &gt;50%、p99/p50 &gt;5 倍抖动、最低桶占比）</li></ul>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/15-observability.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/15-observability.md", "name": "15-observability.md", "text": "# 15 — Observability（可观测性）\n\n> 14 章回答的是「答得准不准」，这一章回答另一组问题：**慢在哪、召回有没有退化、钱花在哪**。\n> 这三个问题光看日志答不上来——日志是逐条的事件，而这三个是**聚合的分布**。\n\n![真实运行：6 次真实问答后的完整指标报告](../assets/term-metrics-report.png)\n\n## 0. 这章解决什么问题\n\nRAG 服务上线后最先被问到的三句话，没有一句是「功能对不对」：\n\n| 问题 | 需要的数据 | 对应指标 |\n| --- | --- | --- |\n| 「怎么这么慢？」 | 各阶段耗时分布 | `rag.request.latency` + 四段分段耗时 |\n| 「召回是不是退化了？」 | 相似度分数的分布 | `rag.retrieve.score` + 分桶 |\n| 「这个月 API 账单怎么算的？」 | 外部调用次数 | `embedding.calls/texts`、`llm.calls` |\n\n逐条日志给不出这三问的答案：日志适合排查**单次**故障，分布才适合回答**整体**健康度。\n\n## 1. 设计：一层薄的计数器，不是监控系统\n\n新增 `src/rag/metrics.py`，核心是 `MetricsRegistry`——进程内的 counter / timing / score 三种样本，加锁保证线程安全。\n\n三个关键决策：\n\n**① 内部一律存秒，出报告才转毫秒。** 早期版本直接存毫秒，结果一处取秒、一处取毫秒，p99 差了 1000 倍都没人发现。SI 基准单位只有一个，换算只发生在渲染层。\n\n**② 埋点用装饰器包装，不改 client 内部。** `MeteredEmbeddingClient` / `MeteredLLMClient` 包在真实客户端外面转发调用：\n\n```python\nclass MeteredLLMClient(BaseLLMClient):\n    def chat(self, messages: list[dict]) -> str:\n        self.registry.inc(Names.LLM_CALLS)\n        t0 = time.perf_counter()\n        try:\n            return self._inner.chat(messages)\n        except Exception:\n            self.registry.inc(Names.LLM_ERRORS)\n            raise\n        finally:\n            self.registry.observe(Names.LLM_LATENCY, time.perf_counter() - t0)\n```\n\n「计量」和「怎么调模型」是两个职责，写死进 `OpenAICompatibleLLMClient` 会让它同时承担协议适配和统计，测试时还得想办法关掉统计。包一层则完全不包就是原客户端。失败也要记耗时——**超时的那次往往是最慢的，只记成功会把 p99 洗得很好看**。\n\n**③ 分位数用线性插值，不用 nearest-rank。** 样本少（比如只有 3 次调用）时 nearest-rank 只会给出已有的某个值，p90 永远等于 max，看着像「每次都最慢」。插值在样本少时更诚实。\n\n## 2. 埋点位置与口径\n\n`RAGService` 增加可选 `metrics` 参数，总是持有一个 registry（没传就内部建），埋点代码不用判空，外部读指标取 `service.metrics`——**免去改 `build_components` 五元组返回签名**（那一改要动全部测试和 demo）。\n\n```\nask(query)\n ├─ rag.request.latency      端到端（try/finally，失败也记）\n ├─ rag.retrieve.latency     检索段\n ├─ rag.rerank.latency       精排段\n ├─ rag.assemble.latency     组装段\n ├─ rag.generate.latency     生成段（语义 3 重试两次就记两次）\n │    └─ llm.latency         单次 LLM 调用（MeteredLLMClient，不含重试）\n ├─ rag.retrieve.score       分数采样：截断之后、min_score 过滤之前\n └─ rag.requests / rag.refusals\n```\n\n两个口径故意分开：`rag.generate.latency`（这一趟生成总共多久，可能含重试）和 `llm.latency`（单次调用）。混成一个的话，「重试变多」和「单次变慢」就分不开了。\n\n**分数为什么在「截断之后、过滤之前」采样？** 这才是 top_k 真正拿到的那批质量。过滤后再采样，会把「召回全是噪声」洗成「分数不错」——被 min_score 拦掉的恰恰是最该看见的样本。\n\n另一个容易被忽略的事实：`min_score` 是在 `ContextAssembler` **构造时**定死的，不是每次 build 读 settings。改了 `settings.min_score` 却没重建 assembler，闸门其实没变——写测试造「检索为空」场景时踩到一次。\n\n## 3. 真实运行：12.3 秒问答告诉我们的三件事\n\n6 条库内问题 + 1 条库外问题，真实百炼 embedding + 真实 DeepSeek，总计 12.3s：\n\n**发现一：慢在生成，不在检索。** 端到端均值 2045.6ms，其中生成 1653.5ms（80.8%）、检索 391.8ms（19.2%）、精排 0.2ms、组装 0.05ms。优化优先级一目了然——换更快的模型 / 缩短输出，而不是优化向量检索。对比离线模式（Fake 全在内存里），检索反而占 74%：**占比结论只在真实链路上成立，离线数不能用来做性能判断**。\n\n![真实运行：四段耗时占比 + 拒答省钱实证](../assets/term-metrics-stage.png)\n\n**发现二：`min_score=0.2` 对百炼 embedding 形同虚设。** 30 个召回样本的分数最低 0.228、均值 0.506，**没有一个落进 <0.2 的桶**。余弦相似度的绝对量级在不同模型之间不可比：bge-m3 / 百炼对中文的分数普遍偏高，0.2 这种「通用阈值」在这里永远拦不住任何东西。阈值必须按实际分布校准（比如取 p10）。\n\n**发现三：拒答省钱的闸门其实在 rerank，不在 min_score。** 库外问题「2026 年世界杯冠军」的粗召回分数 0.327 / 0.295 / 0.311，全都高于 0.2，看起来该进 prompt；最终 `llm.calls` 增量却是 **0**——真正把它拦下来的是 FakeReranker 重打分之后的低分。这提醒我们：**链路上每一道闸门都要单独验证，不能只看粗召回分数**。\n\n**发现四：并发计数不丢。** 4 线程同时问，`rag.requests` 增量正好是 4。Web API 里 `/ask` 是 `asyncio.to_thread` 跑的，字典的 `+=` 不是原子操作，不加锁会在压测时丢计数——丢的偏偏是「调用次数」这种最不该丢的数（计费对账就靠它）。\n\n![真实运行：并发计数校验 + 口径纪律](../assets/term-metrics-concurrent.png)\n\n## 4. 踩坑清单\n\n1. **离线模式下拒答测出 `llm.calls` 增量 1**——`FakeEmbeddingClient` 是 char-ngram 哈希，什么查询都召回；`FakeLLMClient` 发现资料与问题重叠不足，返回拒答话术。拒答发生在 **LLM 之后**而不是闸门。所以 demo 第④节改成「拿分数说话」，两种模式各自给出诚实结论，而不是硬写「省下一次 LLM」。\n2. **改 `settings.min_score` 不生效**——`ContextAssembler(min_score=...)` 构造时固化。测试里换成重建 assembler 才造出「检索为空」。\n3. **包装器让 `isinstance(service._llm, FakeLLMClient)` 失败**——计量壳改变了静态类型。给两个包装器加 `inner` 属性，测试穿透一层断言，本意不变。\n4. **pytest 函数名里写括号**（`test_并发计数不丢(异步无关)`）会被当成参数化标记直接收集报错。中文测试名可以，括号不行。\n5. **p99/p50 抖动判读需要足够样本**——2 个样本时插值 p50≈1.05、p99≈1.98，比值不到 2，判读永远不触发。判读逻辑要有「样本够了才说话」的自觉，测试里用 9 快 1 慢的构造触发它。\n\n## 5. 自检清单\n\n- [x] 指标名集中在 `Names`，没有散落的裸字符串\n- [x] 计数、耗时、分数三类样本分开存；snapshot 一次拿全（避免「请求数」与「耗时数」来自不同时刻）\n- [x] 失败请求也进耗时分布；`llm.errors` / `embedding.errors` 单独计数\n- [x] `rag.generate.latency`（含重试）与 `llm.latency`（单次）口径分离并写进文档\n- [x] 分数采样在截断后、过滤前；分桶边界与 `min_score` 对齐\n- [x] `/stats` 直接返回 `metrics.snapshot()`，API 层零加工\n- [x] 17 项 metrics 单测：并发 20 线程 × 500 次 inc 不丢、异常也计时、分桶守恒\n- [x] 报告带自动判读（拒答率 >50%、p99/p50 >5 倍抖动、最低桶占比）\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -227,6 +385,8 @@ td math, th math{font-size:1em;}
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -236,6 +396,173 @@ td math, th math{font-size:1em;}
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -249,6 +576,17 @@ td math, th math{font-size:1em;}
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -275,15 +613,46 @@ td math, th math{font-size:1em;}
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

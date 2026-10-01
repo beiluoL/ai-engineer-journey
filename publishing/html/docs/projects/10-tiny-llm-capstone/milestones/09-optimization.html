@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-148" title="返回《文档总览》第 148 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 09 — Optimization：收益与代价必须一起量</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why优化有两个常见的半边账" class="lvl2">1. Why：优化有两个常见的&amp;quot;半边账&amp;quot;</a><a href="#2-design把两个账都算成公式" class="lvl2">2. Design：把两个账都算成公式</a><a href="#21-量化精度-粒度" class="lvl3">2.1 量化：精度 × 粒度</a><a href="#22-kv-cache-显存公式" class="lvl3">2.2 KV Cache 显存公式</a><a href="#3-realrun-evidence来自-demosoutdemo09optimizationterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_09_optimization_terminal.txt）</a><a href="#31-起点模型有多大" class="lvl3">3.1 起点：模型有多大</a><a href="#32-部署体积账同一份权重五档精度" class="lvl3">3.2 部署体积账：同一份权重，五档精度</a><a href="#33-kv-cache-账本每-token-多少字节" class="lvl3">3.3 KV Cache 账本：每 token 多少字节</a><a href="#34-量化压缩比-vs-精度代价" class="lvl3">3.4 量化：压缩比 vs 精度代价</a><a href="#35-粒度perchannel-是免费的精度" class="lvl3">3.5 粒度：per-channel 是&amp;quot;免费&amp;quot;的精度</a><a href="#36-另一半优化kv-cache-的速度收益" class="lvl3">3.6 另一半优化：KV Cache 的速度收益</a><a href="#37-一张表说清楚每种优化的收益与代价" class="lvl3">3.7 一张表说清楚：每种优化的收益与代价</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-09-optimization收益与代价必须一起量">Milestone 09 — Optimization：收益与代价必须一起量</h1>
 <p>M08 证明了&quot;能推理&quot;。但能跑不等于跑得起——这一章算两笔账：<strong>这份权重部署时要占多少空间（量化）</strong>，以及<strong>长上下文要额外花多少显存（KV Cache 账本）</strong>。</p>
 <p>本章的立场只有一句：<strong>只报压缩比的优化方案不可信。</strong> 压缩比只说明省了多少空间；<strong>ΔPPL 才说明你为此付出了多少代价</strong>。两者必须同时报出来，否则那不是优化方案，是宣传材料。</p>
@@ -274,8 +413,27 @@ KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/optimize.py</code></td><td><code>deployment_size_table</code>（五档体积）/ <code>kv_cache_report</code>（每 token 字节 + 追赶长度）/ <code>quantization_report</code>（真实验证集 ΔPPL）/ <code>granularity_report</code>（per-tensor vs per-channel MSE）/ <code>optimization_report</code>（收益代价总表）</td></tr><tr><td>P09 <code>src/ie/quantize.py</code></td><td>INT8 / INT4 / NF4 的量化与反量化实现、per-tensor / per-channel 分支</td></tr><tr><td>P09 <code>src/ie/kvbook.py</code></td><td>KV Cache 字节公式与账面</td></tr><tr><td><code>src/tiny/infer.py</code></td><td><code>cache_consistency_error</code> / <code>benchmark</code>（无损性验证）</td></tr><tr><td><code>demos/demo_09_optimization.py</code></td><td>7 节：起点体积 / 五档精度 / KV 账本 / 量化 ΔPPL / 粒度 / 速度 / 收益代价总表</td></tr><tr><td><code>demos/out/demo_09_optimization_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/optimization.svg</code></td><td>部署体积 + 量化代价 + 粒度 + KV 账本</td></tr><tr><td><code>assets/term-09-optimization.png</code></td><td>真实运行截图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.8 → <strong>v0.9</strong>，量化与 KV Cache 账本落地并被双向度量。实测：<strong>230,400 参数 / fp64 1.76 MiB</strong>，fp64→INT4 <strong>压缩 16×</strong>；KV 每 token fp32 <strong>1024 B</strong> / fp16 <strong>512 B</strong>，<strong>1801 token 的 KV = 整个模型</strong>；量化（真实验证集）<strong>INT8 3.85× / ΔPPL +0.08%</strong>、<strong>INT4 7.42× / +2.66%</strong>、<strong>NF4 7.75× / +4.01%</strong>；per-channel 让 INT8/INT4 的 MSE 降低 <strong>48.1% / 47.4%</strong>（NF4 为 0.0%）；KV Cache 加速 <strong>1.43×</strong>、误差 <strong>3.442e-15</strong>（严格无损）。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/10-tiny-llm-capstone/milestones/09-optimization.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/10-tiny-llm-capstone/milestones/09-optimization.md", "name": "09-optimization.md", "text": "# Milestone 09 — Optimization：收益与代价必须一起量\n\nM08 证明了\"能推理\"。但能跑不等于跑得起——这一章算两笔账：**这份权重部署时要占多少空间（量化）**，以及**长上下文要额外花多少显存（KV Cache 账本）**。\n\n本章的立场只有一句：**只报压缩比的优化方案不可信。** 压缩比只说明省了多少空间；**ΔPPL 才说明你为此付出了多少代价**。两者必须同时报出来，否则那不是优化方案，是宣传材料。\n\n---\n\n## 1. Why：优化有两个常见的\"半边账\"\n\n1. **只报压缩比，不报精度损失。** \"INT4 压缩 16 倍！\"——听起来很美。但如果它让 PPL 从 315.79 涨到 324.20（+2.66%），你就得分清：**这个代价在你的场景里值不值 8 倍空间**。\n2. **只报\"省了显存\"，不报\"每 token 到底花多少\"。** KV Cache 的显存占用不是常数，它随 `batch × seq_len` 线性增长。**必须把它算成一个公式**，才能回答\"多长的上下文会让 KV 超过模型本身\"。\n\n## 2. Design：把两个账都算成公式\n\n### 2.1 量化：精度 × 粒度\n\n```text\n量化：w → round((w - zero) / scale)，再反量化回浮点参与计算\n粒度：\n  per-tensor   整个张量共享一组 (scale, zero)     ← 存 1 组，但误差大\n  per-channel  每个输出通道一组 (scale, zero)     ← 多存 d_out 组，误差小\n  NF4 block=64 每 64 个权重一组 + 二次量化 scale  ← 误差居中，压缩比最高\n```\n\n**为什么 per-channel 能让误差明显下降**：神经网络的权重**各通道的尺度往往差很多**（`std/mean|w| = 0.872` 说明幅度很离散）。per-tensor 用一组 scale 覆盖所有通道，就必然在\"大通道\"上欠拟合、在\"小通道\"上过拟合。**per-channel 为每个通道单独定标，只多存一点 scale，误差就掉一半。这就是\"免费的精度\"。**\n\n**代价怎么量**：不看它自己的 MSE，而是在**真实验证集**上跑语言模型评估，记录 `ΔPPL = (量化后 PPL − 量化前 PPL) / 量化前 PPL`。MSE 只是\"权重像不像\"，ΔPPL 才是\"任务坏没坏\"。\n\n### 2.2 KV Cache 显存公式\n\n```text\nbytes_per_token = 2 × layers × kv_heads × head_dim × dtype_bytes\n                = 2 × 2 × 4 × 16 × dtype_bytes      （2 是因为 K 和 V）\n                = 256 × dtype_bytes\n```\n\n代入 `layers=2, kv_heads=4, head_dim=16`：fp32 = **1024 B/token**、fp16 = **512 B/token**。\n\n**这是一个纯解析公式，不依赖任何运行时**。它的价值在于：**在小模型上验证公式对不对，在大模型上用它做容量预判**。7B 模型的 `bytes_per_token` 会是这个值的几百倍——那时\"长上下文吃爆显存\"就是一个能提前算出来的数字，而不是上线后才知道的事故。\n\n![M09 Optimization：部署体积 + 量化代价 + KV Cache 账本](../assets/optimization.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_09_optimization_terminal.txt`）\n\n![M09 真实运行](../assets/term-09-optimization.png)\n\n### 3.1 起点：模型有多大\n\n```text\n参数量        230,400\n张量数        28\nfp64（训练时）  1.76 MiB\n  └ token_embedding    81,920  (35.6%)\n  └ output_projection  81,920  (35.6%)\n  └ transformer_blocks 66,432  (28.8%)\n  └ final_layernorm       128  (0.1%)\n```\n\n参数分布和 M04 一致：**词嵌入 + 输出投影合计 71.2%**，真正的 Transformer Block 只有 28.8%。这个分布预示了后面的一个反直觉结论：**量化误差主要由少数几块大权重决定。**\n\n### 3.2 部署体积账：同一份权重，五档精度\n\n```text\n精度           字节/参数  总字节        MiB\nfp64（训练时）        8  1,843,200  1.76\nfp32（常见推理）       4    921,600  0.88\nfp16 / bf16      2    460,800  0.44\nINT8             1    230,400  0.22\nINT4           0.5  115,200.0  0.11\nfp64 → INT4 的压缩比   16×\n```\n\n**从 fp64 到 INT4 是精确的 16 倍**（8 字节 → 0.5 字节）。但这里有个容易忽略的现实约束：**训练通常要 fp64/fp32（累加精度），推理只要 fp16，只有边缘部署才上 INT8/INT4**。所以\"压缩 16×\"是从**训练精度**起算的；如果基线是 fp32 推理，INT4 只省 8 倍。\n\n### 3.3 KV Cache 账本：每 token 多少字节\n\n```text\n架构                    layers=2  kv_heads=4  head_dim=16\n每 token（fp32 / fp16）    1024 B / 512 B\n公式                    2（K和V）× layers × kv_heads × head_dim × dtype_bytes\n模型权重（fp32）            921,600 B\n\nbatch  seq_len  KV 字节      KV GiB    占权重比\n    1       64     32,768  0.000031    3.5556%\n    1      256    131,072  0.000122   14.2222%\n    1     1024    524,288  0.000488   56.8889%\n    1     4096  2,097,152  0.001953  227.5556%\n    4       64    131,072  0.000122   14.2222%\n    4     1024  2,097,152  0.001953  227.5556%\nKV Cache 追上模型权重所需长度   1801   fp16、batch=1\n实测 max_len 下的 KV          65,536 B（64.00 KiB）\n```\n\n**这张表的意义是把\"显存焦虑\"变成一个可算的数字。**\n\n- `seq_len=64`（本项目 `max_len`）时，KV 只占权重的 **3.56%**——**这个模型小到 KV Cache 几乎不花钱**。\n- 但 **`seq_len=4096` 时占 227.6%**——KV 比整个模型还大。\n- **反解：1801 个 token 的 KV 就等于整个模型。**\n\n记住这个 **1801**。它不是这个项目的实际需求（本项目只用 64），而是**公式给出的一个可迁移的直觉**：当上下文长度增长时，\"KV 的开销\"会从\"可以忽略\"迅速变成\"比权重还大\"。**在 7B 模型上这个临界点会早得多，那才是\"长上下文吃爆显存\"的数学根源。**\n\n**为什么 batch 和 seq_len 一起乘**：KV 的形状是 `(batch, kv_heads, seq_len, head_dim)`，逐 token、逐样本都要存。所以 `batch=4, seq_len=1024` 和 `batch=1, seq_len=4096` 的 KV 字节数**完全一样**——都是 2,097,152 B。**这两个维度对称，是这张表里唯一需要\"看两眼才反应过来\"的地方。**\n\n### 3.4 量化：压缩比 vs 精度代价\n\n```text\n基线（未量化）   val_loss=5.7551  ppl=315.79  token_acc=0.1736\n\n精度    粒度            压缩比    MSE        量化前 PPL  量化后 PPL  ΔPPL    token_acc\nINT8  per_channel   3.85×  9.878e-07   315.79   316.06  +0.08%     0.1731\nINT4  per_channel   7.42×  3.175e-04   315.79   324.20  +2.66%     0.1706\nNF4   nf4_block_64  7.75×  2.867e-04   315.79   328.45  +4.01%     0.1736\n```\n\n**反直觉结论：INT4 的代价（+2.66%）远大于 INT8（+0.08%）——相差 33 倍，而压缩比只多了不到一倍（3.85× → 7.42×）。**\n\n为什么？**小模型每层权重少、冗余度低，4 bit 的粗粒度误差占比反而更高。** 这与\"7B 模型上 INT4 基本无损\"的常识**相反**——大模型有大量冗余可以吸收量化噪声，而 230K 参数的小模型几乎没有冗余。**所以\"INT4 无损\"不是一条普适规律，而是\"大模型特有\"的性质。**\n\n再看 NF4：压缩比最高（7.75×），但 ΔPPL **+4.01%** 反而比 INT4 更差。**\"更先进的算法\"（NF4 + 双重量化）在这么小的模型上并没有换回精度**——它省了 MSE（2.867e-4 vs INT4 的 3.175e-4），但任务指标更差。**这再次说明：MSE 小 ≠ 任务好。**\n\n### 3.5 粒度：per-channel 是\"免费\"的精度\n\n```text\n取样张量               token_emb.weight\n形状                   (1280, 64)\n权重幅度离散度 std/mean|w|   0.872\n\n精度    per-tensor MSE  per-channel MSE  MSE 降低  rL2(per-t)  rL2(per-c)\nINT8       1.277e-06        6.621e-07   48.1%      0.0160      0.0115\nINT4       4.065e-04        2.139e-04   47.4%      0.2859      0.2074\nNF4        4.132e-05        4.132e-05    0.0%      0.0911      0.0911\n```\n\n**per-channel 把 INT8 的 MSE 降了 48.1%、INT4 降了 47.4%——误差直接砍半，而代价只是多存几组 scale。**\n\n`std/mean|w| = 0.872` 解释了为什么有效：**权重幅度的离散度接近 0.87，说明各通道尺度差异很大**，per-tensor 用一把尺子量所有人必然吃亏。\n\n最后一行的 **NF4：per-tensor 和 per-channel 的 MSE 完全一样（4.132e-05），降低 0.0%**。原因很干净：**NF4 的码本本身就是分块的（block=64），块内已经自带了细粒度的尺度调整**，再叠加 per-channel 就是重复劳动，所以数值完全不变。**这一行不是\"NF4 没用\"，而是说明 per-channel 的价值只对\"全局统一量化的方案\"（INT8/INT4）成立。**\n\n### 3.6 另一半优化：KV Cache 的速度收益\n\n```text\n无缓存 / 有缓存 中位耗时   5.09 ms / 3.56 ms\n加速比              1.43×\n输出是否一致           True\nlogits 最大绝对误差    3.442e-15\n```\n\n和 M08 同一个结论（略有波动，1.43× vs 1.34×，因为运行环境噪声）：**KV Cache 是\"严格无损\"的优化——误差 3.442e-15（浮点舍入量级），输出完全一致。**\n\n**\"不等价的速度优化是 bug，不是优化\"** 这句话在这一章被重复验证，因为它是量化和 KV Cache 的**根本区别**：\n\n- 量化：**有损**，代价是 ΔPPL（换来体积和算力）；\n- KV Cache：**无损**，代价是显存（换来延迟）。\n\n**把这两种\"优化\"混在一起谈，是优化章节最常见的错误。**\n\n### 3.7 一张表说清楚：每种优化的收益与代价\n\n```text\n优化手段                收益        代价              适用判断\nINT8 per-channel       体积 ÷4      PPL +0.08%  小模型首选\nINT4 per-channel       体积 ÷8      PPL +2.66%  小模型上不划算\nNF4（block 64 双重量化）   体积 ÷7.8      PPL +4.01%  比 INT4 稳\nKV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损\n```\n\n这张表是本章的**交付物**：**任何一个优化决策，都必须能填进这四列**。填不满\"代价\"那一列的方案，不许上线。\n\n## 4. 踩坑与反直觉发现\n\n1. **\"INT4 基本无损\"是小模型上的假命题。** 本项目实测 INT4 **ΔPPL +2.66%**，是 INT8（+0.08%）的 33 倍。**大模型的冗余能吸收量化噪声，小模型不能。** 任何从大模型抄来的\"经验值\"，都要在小模型上重新量一遍。\n2. **MSE 小 ≠ 任务好。** NF4 的 MSE（2.867e-4）比 INT4（3.175e-4）还低，但 ΔPPL 反而更高（+4.01% vs +2.66%）。**量化方案必须用 ΔPPL 验收，不能只看权重重建误差。**\n3. **per-channel 是\"免费\"的精度。** INT8/INT4 的 MSE 都降了约 **48%**，代价只是多存一点 scale。成本几乎为零、收益接近一半，这种优化没有理由不做。\n4. **per-channel 对 NF4 完全无效（0.0%）。** 因为 NF4 的 block 量化**已经内置了细粒度尺度**，再叠 per-channel 是重复。**这说明\"加粒度\"不是越多越好，要看方案本身有没有已经在做这件事。**\n5. **KV Cache 的显存公式里 batch 和 seq_len 是乘起来的，彼此对称。** `batch=4, seq=1024` 与 `batch=1, seq=4096` 消耗**完全相同**（2,097,152 B）。这一点不看形状容易忽略。\n6. **1801 个 token 的 KV 就等于整个模型（fp16, batch=1）。** 这个数字在 7B 上会小得多。**\"长上下文吃爆显存\"不是玄学，是可反解的不等式。**\n7. **量化（有损）和 KV Cache（无损）是两类优化，别混。** 量化省空间、代价是精度；KV Cache 省延迟、代价是显存。**同一个\"优化\"标签下，权衡的维度完全不同。**\n\n## 5. Conclusion\n\n1. 模型 **230,400 参数 / 28 张量 / fp64 1.76 MiB**；词嵌入 + 输出投影占 **71.2%**。\n2. 部署体积：fp64 1.76 → fp32 0.88 → fp16 **0.44** → INT8 **0.22** → INT4 **0.11** MiB，**fp64→INT4 压缩 16×**。\n3. KV Cache 账本：**256 × dtype_bytes**，即 fp32 **1024 B/token**、fp16 **512 B/token**；`seq_len=64` 占权重 **3.56%**，`seq_len=4096` 占 **227.6%**；**1801 token 的 KV = 整个模型**。\n4. 量化代价（真实验证集）：**INT8 3.85× / ΔPPL +0.08%**、**INT4 7.42× / +2.66%**、**NF4 7.75× / +4.01%** ⇒ **INT4 的代价是 INT8 的 33 倍，只换来不到 2× 的压缩**。\n5. 粒度：per-channel 把 INT8/INT4 的 MSE 降 **48.1% / 47.4%**（近乎免费）；对 NF4 **0.0%**（block 量化已内置）。\n6. KV Cache 加速 **1.43×**（5.09 → 3.56 ms），**严格无损**（误差 3.442e-15）。\n7. 一句话结论：**优化必须同时报收益和代价；只报压缩比的方案不可信。**\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/tiny/optimize.py` | `deployment_size_table`（五档体积）/ `kv_cache_report`（每 token 字节 + 追赶长度）/ `quantization_report`（真实验证集 ΔPPL）/ `granularity_report`（per-tensor vs per-channel MSE）/ `optimization_report`（收益代价总表） |\n| P09 `src/ie/quantize.py` | INT8 / INT4 / NF4 的量化与反量化实现、per-tensor / per-channel 分支 |\n| P09 `src/ie/kvbook.py` | KV Cache 字节公式与账面 |\n| `src/tiny/infer.py` | `cache_consistency_error` / `benchmark`（无损性验证） |\n| `demos/demo_09_optimization.py` | 7 节：起点体积 / 五档精度 / KV 账本 / 量化 ΔPPL / 粒度 / 速度 / 收益代价总表 |\n| `demos/out/demo_09_optimization_terminal.txt` | 本章所有数字的来源 |\n| `assets/optimization.svg` | 部署体积 + 量化代价 + 粒度 + KV 账本 |\n| `assets/term-09-optimization.png` | 真实运行截图 |\n\n## 7. Version line\n\nv0.8 → **v0.9**，量化与 KV Cache 账本落地并被双向度量。实测：**230,400 参数 / fp64 1.76 MiB**，fp64→INT4 **压缩 16×**；KV 每 token fp32 **1024 B** / fp16 **512 B**，**1801 token 的 KV = 整个模型**；量化（真实验证集）**INT8 3.85× / ΔPPL +0.08%**、**INT4 7.42× / +2.66%**、**NF4 7.75× / +4.01%**；per-channel 让 INT8/INT4 的 MSE 降低 **48.1% / 47.4%**（NF4 为 0.0%）；KV Cache 加速 **1.43×**、误差 **3.442e-15**（严格无损）。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -283,6 +441,8 @@ KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -292,6 +452,173 @@ KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -305,6 +632,17 @@ KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -331,15 +669,46 @@ KV Cache            延迟 ÷1.43  显存 +每 token 字节  严格无损</code>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-105" title="返回《文档总览》第 105 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 02 — Tokenizer：文本变成 id 的那一步</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-三种切法词级-字符级-子词" class="lvl2">1. 三种切法：词级 / 字符级 / 子词</a><a href="#2-四个特殊-token-各自管什么" class="lvl2">2. 四个特殊 token 各自管什么</a><a href="#3-往返一致性为什么这条不能让步" class="lvl2">3. 往返一致性：为什么这条不能让步</a><a href="#4-bpe-训练循环" class="lvl2">4. BPE 训练循环</a><a href="#5-中英混排的真实-token-片段" class="lvl2">5. 中英混排的真实 token 片段</a><a href="#6-词表越大序列越短" class="lvl2">6. 词表越大，序列越短</a><a href="#7-词表外字符优雅停止落盘" class="lvl2">7. 词表外字符、优雅停止、落盘</a><a href="#8-这一章踩到的坑" class="lvl2">8. 这一章踩到的坑</a><a href="#9-结论" class="lvl2">9. 结论</a><a href="#10-代码位置" class="lvl2">10. 代码位置</a><a href="#11-真实运行截图" class="lvl2">11. 真实运行截图</a><a href="#12-下一步" class="lvl2">12. 下一步</a><a href="#13-版本" class="lvl2">13. 版本</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-02-tokenizer文本变成-id-的那一步">Milestone 02 — Tokenizer：文本变成 id 的那一步</h1>
 <p>Milestone 01 把五层契约钉完了，第一块砖就是 Tokenizer。</p>
 <p>在 Project 05 里，token 只是<strong>账单单位</strong> —— 我用 <code>estimate_messages_tokens</code> 估这一轮要花多少钱，历史超预算了就裁。那时候它是个外部概念，模型对我来说是黑盒，token 只是黑盒上的刻度。</p>
@@ -269,8 +408,27 @@ BPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 mer
 <p>Milestone 03 用这里的 id 序列去查 Embedding 矩阵：<code>(V, d_model)</code> 的一张表，加上让模型知道「第几个位置」的位置编码。Tokenizer 决定了 <code>V</code> 是 500，Embedding 那层就得老老实实建 500 行 —— 这就是 Milestone 01 说的「下游形状由上游决定」。</p>
 <h2 id="13-版本">13. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#12-下一步"><span class="sn-label">← 上一节</span><span class="sn-name">12. 下一步</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.0 → <strong>v0.1</strong>，<code>src/tokenizer/</code> 四个文件落地，字符级 + BPE 双实现测试 <strong>51 passed</strong>，demo 真实跑通并落盘，配图 5 张（3 张手写 SVG：架构图 / BPE 循环 / 词表增长曲线 + 2 张真实终端截图：pytest 全绿 / demo 输出）。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/06-mini-transformer-llm/milestones/02-tokenizer.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/06-mini-transformer-llm/milestones/02-tokenizer.md", "name": "02-tokenizer.md", "text": "# Milestone 02 — Tokenizer：文本变成 id 的那一步\n\nMilestone 01 把五层契约钉完了，第一块砖就是 Tokenizer。\n\n在 Project 05 里，token 只是**账单单位** —— 我用 `estimate_messages_tokens` 估这一轮要花多少钱，历史超预算了就裁。那时候它是个外部概念，模型对我来说是黑盒，token 只是黑盒上的刻度。\n\n现在不一样了：token 是**模型真正的输入**。Embedding 矩阵的第 `i` 行就是 id 为 `i` 的那个 token 的向量。词表错了，后面全部错位，而且这种错位**不会报错** —— loss 照样在降，模型照样在生成，只是生成的东西越来越没道理。\n\n这一章回答三个问题：字符级和 BPE 怎么取舍、四个特殊 token 各自管什么、以及为什么 `decode(encode(s)) == s` 是一条不能让步的硬指标。\n\n---\n\n## 1. 三种切法：词级 / 字符级 / 子词\n\n| 切法 | 词表 | 序列长度 | `<unk>` |\n|---|---|---|---|\n| 词级 | 几十万起，永远收不住 | 最短 | 满地都是（没见过的词全废） |\n| 字符级 | 很小（= 字符集） | **最长** | 几乎没有 |\n| 子词（BPE） | 可控（几万） | 中等 | 罕见字才出现 |\n\n选子词的理由只有一条，但足够硬：**Attention 是 O(n²)**。序列长度翻一倍，计算量翻四倍。字符级那点「词表小」的好处，在序列长度面前根本不够看。\n\n反过来说，字符级也不是没用 —— 它是**基线**。没有它，「BPE 压缩了 1.74 倍」这句话就没有参照物。所以两个都写了，用同一个 `Tokenizer` 抽象撑着。\n\n## 2. 四个特殊 token 各自管什么\n\n| token | id | 管什么 |\n|---|---|---|\n| `<pad>` | 0 | 把 batch 里的句子补齐到一样长，**它的位置不计入 loss** |\n| `<unk>` | 1 | 词表外的字符塌到这里 —— 出现一次就丢一次信息 |\n| `<bos>` | 2 | 句子开始。没有它，模型不知道「第一个 token 前面没有上下文」 |\n| `<eos>` | 3 | 句子结束。推理时见到它就停 —— 没有它，模型会一直生成下去 |\n\n顺序写死在 `base.py` 的 `SPECIAL_TOKENS` 里，子类不许改。理由很笨也很实在：id 是**跨模块共享的常量**，`<eos>` 在训练侧写进去、在推理侧读出来，两边只要有一边顺序不对，模型就永远学不会停。\n\n## 3. 往返一致性：为什么这条不能让步\n\n```python\nassert tok.decode(tok.encode(s)) == s      # 对词表内的输入必须成立\n```\n\n它不是「顺手加的断言」，它是**唯一能在离线阶段抓住分词器 bug 的指标**。\n\n理由是分词器的 bug 有一类特别恶心：**它不报错**。少切了一个字符、合并规则应用反了顺序、decode 时漏掉了空白 —— 这些都不会让程序崩，只会让训练数据静默地烂掉。等你在 loss 曲线上看见异常，已经跑了几万步，而且根本不知道该往回查哪一层。\n\n往返一致性把这件事提前到「写完立刻能验」：\n\n```\n往返一致性 decode(encode(s)) == s : True\n逐行往返一致性（25 行全部自检）：True\n```\n\n代价是设计上的两个约束，都写进实现了：\n\n- **预切分规则必须覆盖全部字符**。正则最后那个 `.` 是兜底，任何字符都不许被丢掉 —— 丢一个字符，解码就永远回不去。\n- **空白单独成 token，绝不参与合并**。所以 `merges` 里永远不会有含空格的 token，也就不存在「合并把两个词粘成一个」这种事故。\n\n## 4. BPE 训练循环\n\n真从零写的，核心就是一句话：**反复合并出现次数最多的那对相邻符号**。\n\n```python\nwhile len(vocab) < vocab_size:\n    pairs = cls._count_pairs(symbols)          # 统计相邻 pair 的加权频次\n    if not pairs:\n        break                                  # 没有可合并的了 —— 优雅停止\n    best = min(pairs.items(), key=lambda kv: (-kv[1], kv[0]))[0]\n    vocab[best[0] + best[1]] = len(vocab)      # 新 token 进词表\n    merges.append(best)                        # 顺序写进 merges\n    symbols = cls._merge_everywhere(symbols, best, best[0] + best[1])\n```\n\n![BPE 训练循环](../assets/bpe-merge-loop.svg)\n\n两个细节值得写下来：\n\n- **同频次时按字典序取小的那个**（`key=lambda kv: (-kv[1], kv[0])`）。不做这个，同一份语料训练两次可能给出两套词表，而「训练不可复现」在排查时是最难的一类问题 —— 因为它只在两次运行之间出现。\n- **`merges` 必须按学习顺序存**。encode 时是靠「优先级越高越先合并」把字符串拼回去的，顺序存错了，落盘的 JSON 读回来就是另一个分词器。\n\n真实跑出来的前 4 条合并：\n\n```\n#0  'e' + 'n'     → 'en'\n#1  'k' + 'en'    → 'ken'\n#2  'o' + 'ken'   → 'oken'\n#3  't' + 'oken'  → 'token'\n```\n\n注意 `token` 是**四次合并拼出来的**，不是一次到位的 —— 这就是 BPE 的贪心本质：它只看当前最高频的那一对，看不到「这四个字母合起来是个词」。\n\n## 5. 中英混排的真实 token 片段\n\n同一句样本，两种切法并排（`demos/out/demo_01_tokenizer.txt` 第 4 节）：\n\n```\n样本：Transformer 是一种神经网络架构，它在 2017 年被提出。\n\n[字符级] 共 35 个 token\n    T | r | a | n | s | f | o | r | m | e | r |\n    是 | 一 | 种 | 神 | 经 | 网 | 络 | 架 | 构 | ， | 它 | 在\n      | 2 | 0 | 1 | 7 |   | 年 | 被 | 提 | 出 | 。\n\n[BPE] 共 20 个 token\n    Transformer |   | 是 | 一种 | 神 | 经 | 网络 | 架 | 构 | ， | 它 | 在\n      | 2017 |   | 年 | 被 | 提 | 出 | 。\n```\n\n三个能看出来的东西：\n\n1. `Transformer` 和 `2017` 各自被并成了**一个** token —— 这是 BPE 最值钱的部分，一个 11 字符的词从 11 个位置压到 1 个。\n2. 中文这边 `一种`、`网络` 被并起来了，但 `神`、`经`、`架`、`构` 还是单字 —— 语料只有 1224 字符，出现次数不够，BPE 学不到那么多。**小语料上 BPE 对中文的收益明显不如英文**，这是真实的结论，不是实现没写好。\n3. 空格是独立 token，两个方案都一样 —— 它永远不会被并进别的 token。\n\n整份语料：**1224 token → 705 token，压缩率 1.74×**。\n\n## 6. 词表越大，序列越短\n\n这是 BPE 唯一的设计旋钮，所以把它量出来了：\n\n```\n  目标vocab   实际vocab   合并数   语料token   样本token   压缩率\n       299        299        0       1224         35   1.00x\n       350        350       51        917         25   1.33x\n       400        400      101        815         25   1.50x\n       450        450      151        755         21   1.62x\n       500        500      201        705         20   1.74x\n       600        600      301        605         15   2.02x\n```\n\n![词表增长与序列压缩曲线](../assets/tokenizer-vocab-growth.svg)\n\n曲线是**明显边际递减**的：前 51 次合并就把序列砍掉 25%，后面 100 次合并只再砍 15%。所以「词表越大越好」是错的 —— 词表每大一行，Embedding 就多 `d_model` 个参数，而且输出头的 softmax 也更贵。真实 LLM 选几万的词表，是在**序列长度 × 词表大小**之间取的一个平衡点，不是越大越好。\n\n## 7. 词表外字符、优雅停止、落盘\n\n**词表外字符只能塌成 `<unk>`**，信息在这里就丢了：\n\n```\n词表外的句子：GPT-4 在 2023 年发布，参数量约 1.8T，中文支持也不错。\nBPE 编码后 token 数：35，其中 <unk>(id=1) 出现 9 次\n```\n\n9 个 `<unk>` 就是 9 个「模型永远看不到的字」。这就是为什么**训练和推理必须用同一份词表** —— 换一份，输入就变成一堆 `<unk>`，模型还在认真算，算的是垃圾。\n\n**优雅停止**是刻意做成不报错的：\n\n```\n请求 vocab_size=5000，可合并的 pair 只够用 490 次\n实际 vocab_size=789（小于 5000，不抛异常，安静停下）\n反过来请求 10：直接报错 —— vocab_size=10 太小：光基础字符就有 299 个\n```\n\n方向不同处理不同：**上限超了就安静停**（小语料上是常态），**下限不够就报错**（说明调用方把参数传错了，静默通过只会让后面的维度对不上）。\n\n**落盘**存两套东西，缺一不可：\n\n```\n字符级词表 → demos/out/char_vocab.json（4648 字节）\nBPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 merges）\n读回后 vocab_size: 500（与原对象一致：True）\n读回后 merges 顺序一致: True\n读回后编码结果一致    : True\n```\n\n---\n\n## 8. 这一章踩到的坑\n\n| # | 坑 | 怎么发现的 | 修法 |\n|---|---|---|---|\n| 1 | 汉字逐字切分 → 中文合并 0 条 | demo 第 3 节打印「中文合并（共 0 条）」，而样本里明明有「模型」 | 预切分改成「连续汉字串整体当一个 word」（照 GPT-2 的做法），中文合并 48 条 |\n| 2 | `tmp_path` 在沙箱里 PermissionError | 一跑测试就崩，报 `/private/var/.../pytest-of-unknown` 不可写 | fixture 改用仓库内 `tests/.tmp/` + 自己 `rmtree` 清理（沿用 P05 的做法） |\n| 3 | `vocab_size` 在测试里写成常量 260 | 语料换成 1224 字符后，基础字符 299 个，`train(corpus, 260)` 直接 ValueError | 测试改成从 `CharTokenizer.build(corpus).vocab_size` 动态推导 |\n| 4 | 合并优先级的同频次分支不确定 | 两次 `train` 结果可能不一致，只在「跑两次」时才出现 | `min(key=(-频次, 字典序))`，同频取小的那个，钉进 `test_training_is_deterministic` |\n| 5 | 断言用了语料里没有的字 | `decode(encode(\"你好\"))` 返回 `<unk>好` —— 语料里压根没「你」 | 测试文本一律取自语料（或先 train 进去），不凭空写字 |\n\n坑 1 值得单独说一句：它不是调参问题，是**概念性错误**。我以为「切得越细越稳」，实际是把要学的东西切没了 —— 每个汉字独立成 word，word 内长度恒为 1，压根没有相邻 pair 可统计。这类错误只有**把中间结果打印出来**才会暴露，单测断言「vocab_size 对不对」是抓不到的。\n\n## 9. 结论\n\n1. LLM 用子词不是为了优雅，是因为 **Attention 是 O(n²)**，序列长度比词表大小贵得多。\n2. `decode(encode(s)) == s` 是唯一能在离线阶段抓住分词器 bug 的指标，必须钉成测试。\n3. 特殊 token 的 id 是**跨模块共享的常量**，顺序写死，两边不许各写一套。\n4. BPE 是**贪心的**：`token` 要 4 次合并才拼得出来，它看不到「这是个词」。\n5. 词表大小是**边际递减**的旋钮，不是越大越好。\n6. `<unk>` 出现的次数 = 丢掉的信息量。训练和推理必须用同一份词表。\n7. 参数约束要分方向：**上限超了安静停，下限不够就报错**。\n\n## 10. 代码位置\n\n| 文件 | 职责 |\n|---|---|\n| `src/tokenizer/base.py` | `Tokenizer` 抽象（vocab_size / encode / decode / save / load）+ `SPECIAL_TOKENS` + `pieces()` |\n| `src/tokenizer/char_tokenizer.py` | `CharTokenizer.build(corpus, min_freq=)`：字符级基线 |\n| `src/tokenizer/bpe.py` | `BPETokenizer.train(corpus, vocab_size)`：预切分 / pair 统计 / 合并循环 / 优雅停止 |\n| `src/tokenizer/sample_corpus.py` | 1224 字符的离线中英混排语料（不联网下载） |\n| `tests/conftest.py` | `workdir` fixture（仓库内临时目录）、共用语料与分词器 fixture |\n| `tests/test_char_tokenizer.py` | 24 项 |\n| `tests/test_bpe.py` | 27 项 |\n| `demos/demo_01_tokenizer.py` | 8 节演示，输出落 `demos/out/demo_01_tokenizer.txt` |\n| `assets/bpe-merge-loop.svg` | BPE 训练循环图 |\n| `assets/tokenizer-vocab-growth.svg` | 词表增长 / 序列压缩曲线（数据来自 demo 第 5 节） |\n\n```bash\ncd projects/06-mini-transformer-llm\n.venv/bin/python -m pytest -q                  # 51 passed\n.venv/bin/python demos/demo_01_tokenizer.py    # 输出落 demos/out/demo_01_tokenizer.txt\n```\n\n## 11. 真实运行截图\n\n截图来自**真实终端**（非伪造）：图 1 是 51 项 pytest 全绿，图 2 是 demo 真实跑通的输出（压缩率 1.74×、BPE 前 4 条合并、词表增长表都来自这里）。\n\n![Project 06 —— pytest 全绿（51 passed）](../assets/term-01-pytest.png)\n\n![Tokenizer demo 真实运行输出（来自 demos/out/demo_01_tokenizer.txt）](../assets/term-01-tokenizer.png)\n\n## 12. 下一步\n\nMilestone 03 用这里的 id 序列去查 Embedding 矩阵：`(V, d_model)` 的一张表，加上让模型知道「第几个位置」的位置编码。Tokenizer 决定了 `V` 是 500，Embedding 那层就得老老实实建 500 行 —— 这就是 Milestone 01 说的「下游形状由上游决定」。\n\n## 13. 版本\n\nv0.0 → **v0.1**，`src/tokenizer/` 四个文件落地，字符级 + BPE 双实现测试 **51 passed**，demo 真实跑通并落盘，配图 5 张（3 张手写 SVG：架构图 / BPE 循环 / 词表增长曲线 + 2 张真实终端截图：pytest 全绿 / demo 输出）。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -278,6 +436,8 @@ BPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 mer
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -287,6 +447,173 @@ BPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 mer
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -300,6 +627,17 @@ BPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 mer
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -326,15 +664,46 @@ BPE 词表   → demos/out/bpe_vocab.json（15689 字节，含 201 条有序 mer
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

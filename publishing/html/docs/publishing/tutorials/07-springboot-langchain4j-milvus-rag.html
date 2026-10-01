@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-198" title="返回《文档总览》第 198 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#一今天要做出什么" class="lvl2">一、今天要做出什么</a><a href="#二技术选型" class="lvl2">二、技术选型</a><a href="#三工程骨架与依赖" class="lvl2">三、工程骨架与依赖</a><a href="#四离线导入链从文件到-milvus" class="lvl2">四、离线导入链：从文件到 Milvus</a><a href="#41-配置两个模型" class="lvl3">4.1 配置两个模型</a><a href="#42-切片参数起点不是结论" class="lvl3">4.2 切片参数：起点，不是结论</a><a href="#43-导入服务" class="lvl3">4.3 导入服务</a><a href="#五在线问答链检索-组装-生成" class="lvl2">五、在线问答链：检索 + 组装 + 生成</a><a href="#51-milvus-向量库" class="lvl3">5.1 Milvus 向量库</a><a href="#52-问答服务" class="lvl3">5.2 问答服务</a><a href="#53-效果" class="lvl3">5.3 效果</a><a href="#六生产上要补的四件事今天不做但要知道" class="lvl2">六、生产上要补的四件事（今天不做，但要知道）</a><a href="#七完整调用链面试怎么讲" class="lvl2">七、完整调用链（面试怎么讲）</a><a href="#八今天完成标准" class="lvl2">八、今天完成标准</a><a href="#下一步-day6" class="lvl2">下一步 Day6</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="大模型微调实战-day5spring-boot-langchain4j-milvus-搭-rag-pipeline">大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline</h1>
 <blockquote><p>写给有 Java / Spring Boot 基础、已经把 LoRA 模型接进 Ollama 的开发者。 今天回到你最熟悉的领域，把前四天的成果装进一个真正的 Spring Boot 工程。 文中架构图与流程图为本教程自制示意框图；代码块为可执行片段，真实输出请在本地环境验证。</p></blockquote>
 <h2 id="一今天要做出什么">一、今天要做出什么</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#二技术选型"><span class="sn-label">下一节 →</span><span class="sn-name">二、技术选型</span></a></nav>
@@ -351,8 +490,27 @@ public class ChatController {
 <p>把「RAG 问答」升级成 <strong>Java AI Interview Agent</strong>：加入 Tools——查知识库、分析简历、自动出题、自动评分、保存错题。架构变成：</p>
 <pre><code>User → Agent → Decision → Tool Calling → RAG / LLM → Answer</code></pre>
 <p>这一步会把 Day4 的 Tool Calling + MCP + Agent 全部串起来，你的路线也接近一个完整 AI Engineer 项目闭环。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">publishing/tutorials/07-springboot-langchain4j-milvus-rag.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "publishing/tutorials/07-springboot-langchain4j-milvus-rag.md", "name": "07-springboot-langchain4j-milvus-rag.md", "text": "# 大模型微调实战 Day5：Spring Boot + LangChain4j + Milvus 搭 RAG Pipeline\n\n> 写给有 Java / Spring Boot 基础、已经把 LoRA 模型接进 Ollama 的开发者。\n> 今天回到你最熟悉的领域，把前四天的成果装进一个真正的 Spring Boot 工程。\n> 文中架构图与流程图为本教程自制示意框图；代码块为可执行片段，真实输出请在本地环境验证。\n\n## 一、今天要做出什么\n\nDay1～Day3 你有了微调好的 `Qwen + Java Interview LoRA`，Day4 理解了 RAG + LoRA 的分工。今天用 Spring Boot + LangChain4j + Milvus 把它们装进一个工程，做出 **Java AI Interview Agent V3**：用户上传 `Java面试笔记.md`、`项目文档.pdf`，然后直接用 Java 面试题提问，模型基于这些资料作答。\n\n![Day5 架构：两条链分开，向量库是唯一交汇点](assets/diagram7-arch.png)\n\n今天最重要的一个认知是：**这是两条链，不是一条**。\n\n| | 离线导入链 | 在线问答链 |\n| --- | --- | --- |\n| 触发时机 | 上传文档时，一次一条 | 用户提问，每次请求 |\n| 性能要求 | 可以慢、可以定时跑 | 每次都要快（秒级） |\n| 失败处理 | 记日志跳过，不影响服务 | 明确报错，绝不返回空答案 |\n| 汇合点 | **Milvus 向量库** | **Milvus 向量库** |\n\n把这两条链混在一个 Service 里写，是 RAG 工程最常见的腐烂起点——改切片参数会碰坏问答，压测问答会拖垮导入。\n\n![两条链路对照：每一步的产物与参数](assets/diagram7-pipeline.png)\n\n## 二、技术选型\n\n| 层 | 选型 | 说明 |\n| --- | --- | --- |\n| 后端 | Spring Boot 3 | 你的主场 |\n| AI 框架 | LangChain4j | Java 生态最成熟的 LLM 编排层 |\n| 向量数据库 | Milvus | 之前已装 `milvus-lite`，端口 19530 |\n| Embedding | `nomic-embed-text`（Ollama） | 768 维，本地跑不花钱 |\n| 大模型 | `java-interviewer`（Qwen + Java LoRA） | Day3 的产物，Ollama 暴露 |\n\n选型里最重要的一条纪律：**导入链和问答链必须用同一个 Embedding 模型**。两个不同的模型产出的向量不在同一个空间里，余弦相似度是随机数，检索结果全是噪声——而且这种错误不报异常，只会让答案慢慢变得「玄学」。\n\n## 三、工程骨架与依赖\n\n```text\njava-ai-interview-agent\n├── controller/   # ChatController、UploadController\n├── service/      # InterviewService（问答编排）\n├── rag/          # 导入链：ingest / split / embed / store\n├── embedding/    # EmbeddingModel 配置\n├── vector/       # Milvus EmbeddingStore 配置\n├── llm/          # ChatModel 配置\n└── config/       # Bean 装配\n```\n\nMaven 三个关键依赖：\n\n```xml\n<dependencies>\n    <dependency>\n        <groupId>org.springframework.boot<\/groupId>\n        <artifactId>spring-boot-starter-web<\/artifactId>\n    <\/dependency>\n    <dependency>\n        <groupId>dev.langchain4j<\/groupId>\n        <artifactId>langchain4j-spring-boot-starter<\/artifactId>\n    <\/dependency>\n    <dependency>\n        <groupId>dev.langchain4j<\/groupId>\n        <artifactId>langchain4j-ollama-spring-boot-starter<\/artifactId>\n    <\/dependency>\n<\/dependencies>\n```\n\n先确认本地模型就位：\n\n```bash\nollama list\n# java-interviewer    qwen3.5:9b 的 LoRA 版\n# nomic-embed-text    embedding 用\nollama serve          # 默认 http://localhost:11434\n```\n\n## 四、离线导入链：从文件到 Milvus\n\n### 4.1 配置两个模型\n\n`application.yml`：\n\n```yaml\nlangchain4j:\n  ollama:\n    chat-model:\n      base-url: http://localhost:11434\n      model-name: java-interviewer\n      temperature: 0.7\n    embedding-model:\n      base-url: http://localhost:11434\n      model-name: nomic-embed-text\n```\n\n### 4.2 切片参数：起点，不是结论\n\n```java\n// 500 token 一片，相邻片重叠 100 token\nDocumentSplitter splitter = DocumentSplitters.recursive(500, 100);\n```\n\n`recursive` 的含义和 Day4 讲的一致：优先在段落边界切，段落太长退到句子，句子太长才硬切——语义边界优先级从高到低降级。500/100 是常见起点，但**不是拍脑袋的结论**：切完要跑检索命中率验证，命中低就加大 overlap 或调小 size。\n\n### 4.3 导入服务\n\n```java\n@Service\npublic class RagIngestService {\n\n    private final EmbeddingModel embeddingModel;\n    private final EmbeddingStore<TextSegment> store;\n\n    public RagIngestService(EmbeddingModel embeddingModel,\n                            EmbeddingStore<TextSegment> store) {\n        this.embeddingModel = embeddingModel;\n        this.store = store;\n    }\n\n    public void ingest(MultipartFile file) throws IOException {\n        Document doc = Document.from(new String(file.getBytes(), StandardCharsets.UTF_8));\n        EmbeddingStoreIngestor.builder()\n                .documentSplitter(DocumentSplitters.recursive(500, 100))\n                .embeddingModel(embeddingModel)\n                .embeddingStore(store)\n                .build()\n                .ingest(doc);\n    }\n}\n```\n\n```java\n@RestController\npublic class UploadController {\n\n    private final RagIngestService ragService;\n\n    public UploadController(RagIngestService ragService) {\n        this.ragService = ragService;\n    }\n\n    @PostMapping(\"/upload\")\n    public String upload(@RequestParam MultipartFile file) throws IOException {\n        ragService.ingest(file);\n        return \"success\";\n    }\n}\n```\n\n这一步做完，`Java面试笔记.md` 就变成了 Milvus 里的一片向量：每个 chunk 一条记录，**向量 + 原文一起存**——检索时返回的是原文片段和出处，不是一串浮点数。\n\n## 五、在线问答链：检索 + 组装 + 生成\n\n### 5.1 Milvus 向量库\n\n```java\n@Bean\nEmbeddingStore<TextSegment> milvusStore() {\n    return MilvusEmbeddingStore.builder()\n            .host(\"localhost\")\n            .port(19530)\n            .collectionName(\"java_knowledge\")\n            .build();\n}\n```\n\n### 5.2 问答服务\n\n```java\n@Service\npublic class InterviewService {\n\n    private final ChatLanguageModel model;\n    private final EmbeddingStore<TextSegment> store;\n    private final EmbeddingModel embeddingModel;\n\n    public InterviewService(ChatLanguageModel model,\n                            EmbeddingStore<TextSegment> store,\n                            EmbeddingModel embeddingModel) {\n        this.model = model;\n        this.store = store;\n        this.embeddingModel = embeddingModel;\n    }\n\n    public String answer(String question) {\n        // ① 问题向量化 → ② Milvus 检索 Top-5\n        Embedding queryEmbedding = embeddingModel.embed(question).content();\n        List<EmbeddingMatch<TextSegment>> matches =\n                store.findRelevant(queryEmbedding, 5);\n\n        // ③ 组装 Prompt：System + 参考资料 + 问题\n        String context = matches.stream()\n                .map(m -> m.embedded().text())\n                .collect(Collectors.joining(\"\\n-----\\n\"));\n        String prompt = \"\"\"\n                你是严格依据参考资料作答的 Java 高级面试官。\n\n                【参考资料】\n                %s\n\n                【问题】\n                %s\n                \"\"\".formatted(context, question);\n\n        // ④ 交给 Qwen + Java LoRA 生成\n        return model.generate(prompt);\n    }\n}\n```\n\n```java\n@RestController\npublic class ChatController {\n\n    private final InterviewService service;\n\n    public ChatController(InterviewService service) {\n        this.service = service;\n    }\n\n    @GetMapping(\"/chat\")\n    public String chat(@RequestParam String question) {\n        return service.answer(question);\n    }\n}\n```\n\n### 5.3 效果\n\n```text\nGET /chat?question=ConcurrentHashMap如何扩容\n\n→ 检索命中：concurrenthashmap.md 第 30 段（扩容迁移机制）\n→ 输出：\n   面试回答：JDK8 的 ConcurrentHashMap 扩容支持多线程协助迁移：\n   第一，每个线程认领一段桶区间（transferIndex）……\n   第二，……\n   第三，……\n```\n\n注意答案里出现了**资料里才有的细节**（transferIndex 认领机制）——这就是 RAG 的价值：LoRA 给口吻和格式，资料给事实和细节。\n\n## 六、生产上要补的四件事（今天不做，但要知道）\n\n| 事项 | 为什么 | 今天先不做的原因 |\n| --- | --- | --- |\n| `min_score` 相似度阈值 | 检索不到相关资料时应直接拒答，而不是硬答 | 阈值要按真实 embedding 的分数分布校准，中文模型的余弦分数普遍偏高，0.2 这种通用值往往形同虚设 |\n| 引用溯源 | 每段答案标注出自哪个文件的哪个 chunk | LangChain4j 的 `EmbeddingMatch` 自带 score 与 metadata，加一层包装即可 |\n| 异步导入队列 | 大文件导入会阻塞 Tomcat 工作线程 | 演示阶段文档小，直接同步 |\n| 流式输出 | 逐 token 返回，体验差距巨大 | SSE 是 Day6 Agent 化的前置，到时候一起做 |\n\n## 七、完整调用链（面试怎么讲）\n\n面试官问「讲讲你们 RAG 的链路」时，可以这么答：\n\n> 用户提问后，Spring Boot 通过 LangChain4j 把问题向量化，到 Milvus 里检索 Top-K 相关片段；把检索结果和问题组装成带参考资料边界的 Prompt，发给经过 LoRA 微调的 Qwen 模型；模型结合自身能力和外部知识生成答案。文档导入是独立的离线链路：解析、切片（500/100）、向量化、入库，和问答链只共享 Milvus 这个交汇点。\n\n```text\nUser → Spring Boot → LangChain4j Retriever → Milvus\n     → Prompt Builder → Qwen + LoRA → Answer\n```\n\n追问「为什么不全微调进模型？」：微调改的是行为不是知识——知识会过期、更新要重训、还会伤害通用能力。RAG 让知识外置、随传随改，LoRA 只负责口吻和格式，两者各司其职（Day4 的核心结论，在这里落地）。\n\n## 八、今天完成标准\n\n- ✅ Spring Boot 3 工程跑起来，LangChain4j 接上 Ollama\n- ✅ `/upload` 能把 md/pdf 切片向量化写进 Milvus\n- ✅ `/chat` 能检索 Top-K 并组装参考资料回答\n- ✅ 说清两条链的边界与交汇点\n- ✅ 面试版调用链讲解过关\n\n## 下一步 Day6\n\n把「RAG 问答」升级成 **Java AI Interview Agent**：加入 Tools——查知识库、分析简历、自动出题、自动评分、保存错题。架构变成：\n\n```text\nUser → Agent → Decision → Tool Calling → RAG / LLM → Answer\n```\n\n这一步会把 Day4 的 Tool Calling + MCP + Agent 全部串起来，你的路线也接近一个完整 AI Engineer 项目闭环。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -360,6 +518,8 @@ public class ChatController {
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -369,6 +529,173 @@ public class ChatController {
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -382,6 +709,17 @@ public class ChatController {
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -408,15 +746,46 @@ public class ChatController {
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../index.html#ch-209" title="返回《文档总览》第 209 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">AI Engineer Journey — Roadmap</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#能力递进关系" class="lvl2">能力递进关系</a><a href="#project-01-python-ai-cli-assistant" class="lvl2">Project 01 — Python AI CLI Assistant</a><a href="#project-02-engineering-ai-assistant" class="lvl2">Project 02 — Engineering AI Assistant</a><a href="#project-03-ai-application" class="lvl2">Project 03 — AI Application</a><a href="#project-04-ai-knowledge-base-rag-assistant" class="lvl2">Project 04 — AI Knowledge Base / RAG Assistant</a><a href="#project-05-research-agent-mcp-assistant" class="lvl2">Project 05 — Research Agent / MCP Assistant</a><a href="#project-06-mini-transformer-llm" class="lvl2">Project 06 — Mini Transformer / LLM</a><a href="#project-07-open-source-llm" class="lvl2">Project 07 — Open Source LLM</a><a href="#project-08-lora-qlora-finetuning" class="lvl2">Project 08 — LoRA / QLoRA Fine-Tuning</a><a href="#project-09-llm-evaluation-inference-platform" class="lvl2">Project 09 — LLM Evaluation / Inference Platform</a><a href="#project-10-tiny-llm-ai-engineer-capstone" class="lvl2">Project 10 — Tiny LLM / AI Engineer Capstone</a><a href="#附-基础知识层llmfundamentals" class="lvl2">附 — 基础知识层：llm-fundamentals</a><a href="#附-练手层pythonpractice" class="lvl2">附 — 练手层：python-practice</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="ai-engineer-journey-roadmap">AI Engineer Journey — Roadmap</h1>
 <blockquote><p>10 个连续项目，逐步构建 AI Engineer 完整能力体系。</p></blockquote>
 <h2 id="能力递进关系">能力递进关系</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#project-01-python-ai-cli-assistant"><span class="sn-label">下一节 →</span><span class="sn-name">Project 01 — Python AI CLI Assistant</span></a></nav>
@@ -405,8 +544,27 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
 <p><strong>统一约定</strong>：固定随机种子、<code>demo.sh</code> / <code>demo.py</code> 一键复现、原始 stdout 入库、截图由 <code>scripts/render_terminal.py</code> 从真实输出渲染、03 用本地 <code>http.server</code> 造 fixture 站点（不打外网）。</p>
 <p><strong>延伸阅读（不占练习配额）</strong>：<a href="python-practice/07-延伸阅读.html"><code>07-延伸阅读.md</code></a> —— Python 学习书单与读法。上半是「补系统性」（10 个候选挑 1–2 个），下半是「读生产代码」四阶梯（<code>httpx</code> → <code>pydantic</code>/<code>kedro</code> → <code>flask</code>/<code>fastapi</code> → <code>superset</code>/<code>sentry</code>/<code>prefect</code>），含与 Java 经验的对照表和一份脚本实测的避坑清单（已归档 / 已停滞 / 已搬家）。</p>
 <p><strong>入口</strong>：<a href="python-practice/README.html"><code>python-practice/README.md</code></a> ｜ 先读 <a href="python-practice/00-how-to-practice.html"><code>00-how-to-practice.md</code></a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">ROADMAP.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "ROADMAP.md", "name": "ROADMAP.md", "text": "# AI Engineer Journey — Roadmap\n\n> 10 个连续项目，逐步构建 AI Engineer 完整能力体系。\n\n## 能力递进关系\n\n```text\nPython              ← Project 01-02（脚本 → 服务）\n  ↓\nLLM Application     ← Project 03（Prompt / Streaming / Tool Calling）\n  ↓\nRAG                 ← Project 04（Embedding / Vector DB / Retrieval）\n  ↓\nAgent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）\n  ↓\n模型原理            ← Project 06（PyTorch / Attention / Transformer）\n  ↓\n开源生态            ← Project 07（Hugging Face / 本地推理）\n  ↓\n微调                ← Project 08（SFT / LoRA / QLoRA）\n  ↓\n评估 + 服务化       ← Project 09（Benchmark / Quantization / vLLM）\n  ↓\n综合实现            ← Project 10（从零实现 Tiny LLM）\n```\n\n联系描述：\n\n前面的项目提供后续项目所需基础能力。Project 01 学会 Python、HTTP 和真实 LLM API；Project 02 将其工程化；Project 03 在此之上构建 AI Application；Project 04 为应用增加外部知识；Project 05 让模型拥有工具和执行能力；Project 06 开始进入模型内部；Project 07 使用真实开源模型；Project 08 修改模型能力；Project 09 解决生产级评估与推理；Project 10 将这些能力重新组合。\n\n---\n\n## Project 01 — Python AI CLI Assistant\n\n**目标**：通过持续升级一个 AI CLI Assistant，学习 Python 基础，并最终接入真实 LLM API。\n\n**核心技术**：Variables / List Dict JSON / Condition Loop / Function / Module Package / Exception / File JSON / venv pip / HTTP API / Real LLM\n\n**最终交付**：v1.0 的 CLI AI Assistant（能真实调用 LLM）\n\n**状态**：🔄 进行中\n\n**10 个 Milestone**：\n```\n01 — Variables\n02 — List / Dict / JSON\n03 — Condition / Loop\n04 — Function\n05 — Module / Package\n06 — Exception\n07 — File / JSON Persistence\n08 — venv / pip / Environment\n09 — HTTP / API\n10 — Real LLM API\n```\n\n---\n\n## Project 02 — Engineering AI Assistant\n\n**目标**：在 Project 01 基础上，把 CLI Assistant 从 Python Script 工程化为 Python Application。\n\n**核心技术**：Async / Type Hints / Dataclass / Config / Logging / Testing / FastAPI\n\n**最终交付**：HTTP 服务化的 AI Assistant Service\n\n**状态**：⬜ 未开始\n\n**10 个 Milestone**：\n```\n00 — Classes and OOP\n01 — Async / Await\n02 — Async HTTP Client\n03 — Type Hints\n04 — Dataclass\n05 — Config / Environment\n06 — Logging\n07 — Testing / Debugging\n08 — Packaging\n09 — FastAPI\n```\n\n---\n\n## Project 03 — AI Application\n\n**目标**：进入真正的 LLM Application【大模型应用】开发。\n\n**核心技术**：Prompt / Structured Output / Streaming / Function Calling / Conversation Memory\n\n**最终交付**：Web 端 AI Chat 应用\n\n**状态**：✅ 9/9 Milestone 成文 + `src/` 代码落地 + 61 项离线测试全绿\n\n**9 个 Milestone**：\n```\n01 — Prompt\n02 — System / User / Assistant Messages\n03 — Structured Output\n04 — Streaming\n05 — Conversation Memory\n06 — Model Parameters\n07 — Token / Context Window\n08 — Function Calling\n09 — AI Application Architecture\n```\n\n---\n\n## Project 04 — AI Knowledge Base / RAG Assistant\n\n**目标**：构建真正的 AI Knowledge Base【AI 知识库】与 RAG【检索增强生成】系统。\n\n**核心技术**：Document Ingestion / Chunking / Embedding / Vector Database / Retrieval / Rerank\n\n**最终交付**：接入个人知识库的 RAG Assistant\n\n**状态**：✅ 17/17 Milestone 成文 · ✅ src/rag/ + `web/` 落地（19 模块 + 零构建前端） · ✅ 197 项 pytest 离线全绿 · ✅ 44 张真实运行截图\n\n**17 个 Milestone**：\n```\n01 — Document Ingestion\n02 — Chunking\n03 — Embedding\n04 — Vector Database\n05 — Retrieval\n06 — Similarity Search\n07 — Rerank\n08 — Context Assembly\n09 — RAG Pipeline\n10 — RAG Evaluation\n11 — Real Service Integration\n12 — Real LLM Integration\n13 — FastAPI Web API\n14 — Real RAG Evaluation\n15 — Observability\n16 — Real Reranker & Calibration\n17 — Chat UI & Session History\n```\n\n---\n\n## Project 05 — Research Agent / MCP Assistant\n\n**目标**：让 AI 从\"回答问题\"变成能调用外部工具、执行多步骤任务的 Agent【智能体】。\n\n**核心技术**：Tool / Tool Schema / Function Calling / Agent Loop / MCP Protocol\n\n**最终交付**：能自主规划和调用工具的 Agent System\n\n**状态**：✅ 已完成（10/10 Milestone，v1.0 收官）\n\n**10 个 Milestone**：\n```\n01 — Tool                  ✅ 工具三件套 / ToolResult / 检索即工具 / ast 沙箱\n02 — Tool Schema          ✅ JSON Schema / 签名推导 / 参数纠偏\n03 — Function Calling     ✅ tool 消息三字段 / 协议顺序 / 真实链路三坑\n04 — Agent                ✅ ReAct 循环 / 三道闸门 / 轨迹落盘 / CLI 入口\n05 — Agent Loop           ✅ 工作记忆裁剪 / 草稿纸 / 第三道闸门 / 多步骤任务\n06 — Multi-Step Task      ✅ 显式 Plan / 依赖拓扑 / 失败传播 / 计划工具\n07 — MCP                  ✅ JSON-RPC 2.0 / 四种消息 / stdio 帧格式\n08 — MCP Server           ✅ 工具跨进程暴露 / 两类错误 / 错误码选择\n09 — MCP Client           ✅ 握手 / Schema 转换 / 桥接进 ToolRegistry\n10 — Agent Workflow       ✅ 多 Worker 编排 / 上下文隔离 / 规模扫描\n```\n\n---\n\n## Project 06 — Mini Transformer / LLM\n\n**目标**：从 AI 应用层进入模型内部，从零构建 Mini Transformer Decoder。\n\n**核心技术**：纯 numpy（刻意不引入 torch）/ 从零 Autograd / Self-Attention / Multi-Head Attention / Transformer Decoder\n\n**最终交付**：从零构建的 Mini Transformer Decoder\n\n**状态**：✅ 已完成（10/10 Milestone，v1.0 收官）\n\n> 备注：本项目刻意**不引入 PyTorch**（README 有说明），核心实现用纯 numpy 手写，包括从零的自动微分（autograd）。Milestone 实际执行顺序为「架构优先」：M01 架构 → M02 Tokenizer → M03-M10 模型全链路（Embedding / Attention / Multi-Head / Block / Decoder / DataLoader / Training / Inference）。\n\n**10 个 Milestone（实际落地）**：\n```\n01 — Project Architecture  ✅ 五层契约 / 目录约定 / 手写架构图\n02 — Tokenizer            ✅ 字符级 + BPE 双实现 / 往返一致性 / 词表增长曲线\n03 — Embedding            ✅ 查表 Embedding + 正弦位置编码 + combine\n04 — Attention            ✅ softmax(QKᵀ/√d)V 手写 + 因果掩码\n05 — Multi-Head Attention ✅ 分头 / 拼接 / 输出线性映射\n06 — Transformer Block    ✅ Pre-LN + 残差 + FFN\n07 — Decoder Stacking     ✅ 因果掩码 + N 层堆叠 + 输出投影\n08 — Dataset / DataLoader ✅ 滑窗采样 / batch / pad / mask\n09 — Training Loop        ✅ 从零 autograd 反传 + 交叉熵 + 优化器（loss 6.21→4.75）\n10 — Inference / Sampling ✅ greedy / temperature / top-k 生成\n```\n\n---\n\n## Project 07 — Open Source LLM\n\n**目标**：接触真实开源模型生态，在本地跑通 Hugging Face 模型。\n\n**核心技术**：Hugging Face / Tokenizer / Model Loading / Inference / Quantization\n\n**最终交付**：本地跑通的开源 LLM 应用\n\n**状态**：🔄 进行中（v0.1）\n\n> 本机 M1 磁盘仅剩 ~15GB，而 Qwen2.5-7B 的 bf16 权重就要 **14.18 GiB**，\n> 所以本项目拆成两条互不干扰的线：\n> - **`pipelines/`（已真实跑通）** —— 调用、生成参数、资源测算。\n>   不需要本地有卡，走 DeepSeek OpenAI 兼容接口由本机直连驱动，已产出 6 张真实终端截图。\n> - **`notebooks/`（待 Colab GPU）** —— 模型加载、量化这类必须摸到真实权重 / 需要 GPU 的部分。\n\n**9 个 Milestone**：\n```\n01 — Hugging Face              🔶 已用真实抓取的 HF config.json 做参数账本；Hub 生态部分待 Colab\n02 — Tokenizer                 🔶 已对照「本地估算 vs 服务端 usage」（40 vs 34）；BPE 细节待跑\n03 — Model Loading             ⬜ 需要 GPU/权重（Colab 路线）\n04 — Model Inference           ✅ 真实调用 + usage 守恒校验（pipelines M01）\n05 — Generation Parameters     ✅ temperature 0/0.7/1.5 四组对照实测（pipelines M03）\n06 — Local Model Serving       🔶 已实测 SSE 流式 / TTFT / 吞吐；真正起服务待 Colab\n07 — Model Memory / VRAM       ✅ 手算参数量对账 + 权重 & KV Cache 显存账本（pipelines M04、M05）\n08 — Quantization              ⬜ 需要权重（Colab=bitsandbytes 4bit / Mac=GGUF+llama.cpp）\n09 — Open Source LLM Application  ✅ Java 面试助手（检索 + 生成）端到端跑通（pipelines M06）\n```\n\n> ⚠️ 一个实测反例已记入 `pipelines/README.md`：temperature=0 连续两次调用**结果不一致**\n> （68 vs 72 tokens）——「贪婪解码 ⇒ 严格确定性」是近似成立而非保证。\n\n---\n\n## Project 08 — LoRA / QLoRA Fine-Tuning\n\n**目标**：进入模型微调，让通用模型变成领域模型。\n\n**核心技术**：SFT / PEFT / LoRA / QLoRA / Dataset Preparation / Training\n\n**最终交付**：自己微调的领域模型\n\n**状态**：✅ 已完成（v1.0，9/9 Milestone，189 项 pytest 全绿）\n\n**9 个 Milestone**：\n```\n01 — Fine-Tuning                  ✅ 全量 vs LoRA 开销对比（可训练 10.53% / 显存 36.76%）\n02 — Dataset Preparation          ✅ Alpaca 59 条 / 答案区占比 81.41% / 词表 1024\n03 — Instruction Tuning           ✅ 只在答案区算 loss，困惑度再降 6.64%\n04 — LoRA                         ✅ 手写 W+(α/r)·B·A；B=0 等价性误差 0.000e+00；grad_check 6.585e-05\n05 — QLoRA                        ✅ NF4 分位量化 + 双量化；压缩 7.75×，相对误差 0.0914\n06 — Training Configuration       ✅ rank / lr / alpha 真实扫描，最优 r=8 alpha=16 lr=0.01\n07 — Checkpoint                   ✅ adapter 115.76 KB vs 基座 901 KB（7.8×）；续训逐点差 1.290e-04\n08 — Merge / Load Adapter         ✅ 合并前后最大绝对误差 0.000e+00\n09 — Fine-Tuned Model Evaluation  ✅ 域内困惑度 3649.9 → 421.1（↓88.46%）+ 遗忘检查\n```\n\n> 实现说明：本机 M1 无 CUDA、磁盘余量紧张，故本项目走**纯 numpy 手写**路线——\n> 复用 Project 06 手写的 Transformer 与自动微分作为基座，在其上从零实现 LoRA / NF4 / QLoRA。\n> 好处是每一步都能用有限差分对拍验证、每个数字都是实测；代价是不接触 GPU 上的真实 7B 模型，\n> 涉及大规模的部分（如 7B 显存）在文档中明确标注为「按同一公式外推」，不伪装成实测。\n\n---\n\n## Project 09 — LLM Evaluation / Inference Platform\n\n**目标**：掌握模型评估、量化和高性能推理服务化。\n\n**核心技术**：Benchmark / 自动评估 / INT8 INT4 量化 / vLLM / Batching / PagedAttention\n\n**最终交付**：高性能推理服务平台\n\n**状态**：✅ 已完成（v1.0，11/11 Milestone，229 项 pytest 全绿）\n\n**11 个 Milestone**：\n```\n01 — Evaluation             ✅ 困惑度之外：Token Acc 6.05% / ECE 0.0927 / 覆盖率 99.31%\n02 — Benchmark              ✅ 任务集 + 排行（94.38 > 75.56 > 21.87）\n03 — Evaluation Dataset     ✅ held-out 12 条、与训练集 instruction 交集 0（防泄漏）\n04 — Automatic Evaluation   ✅ 零 LLM 规则评分（94.09 > 86.03 > 55.02 > 0.00）\n05 — Model Comparison       ✅ 多种子配对 bootstrap，相对基座 10/0/0 稳定\n06 — Quantization           ✅ INT8/INT4/NF4 三方；端到端 NF4 反而最优（−4.088%）\n07 — Inference Engine       ✅ 手写自回归引擎，KV Cache 6.155→2.794 ms（2.20×）\n08 — vLLM / PagedAttention  ✅ 分块 KV：浪费率 76.4%→16.0%，省 71.9%\n09 — Batching               ✅ Continuous vs Static：吞吐 1.52×、p95 −43.5%\n10 — KV Cache               ✅ 显存账本 57,344 B/token；batch16@32K 达权重 197.46%\n11 — Model Serving          ✅ 标准库 HTTP 服务 + SSE 流式 + 并发 4/4 + metrics\n```\n\n> 实现说明：与 Project 08 同源——本机 M1 无 CUDA、磁盘余量紧张，故走**纯 numpy + Python 标准库手写**\n> （HTTP 服务直接用 `http.server` + `urllib`，不引 fastapi/vllm 等第三方包）。\n> 基座与微调产物复用 P06（手写 Transformer + autograd）与 P08（LoRA / NF4 / 冻结基座），\n> 保证评估对象与 P08 微调出的模型是同一个，比较才有意义。\n> 边界已在文档中诚实标注：PagedAttention / Batching 为块级账本与离散事件仿真（非真实 GPU 分配）；\n> 7B 显存数字为按架构公式计算（与 P07 独立计算交叉验证），非本机实测。\n\n---\n\n## Project 10 — Tiny LLM / AI Engineer Capstone\n\n**目标**：把前面所有能力重新串起来，完成最终 AI Engineer Capstone【综合项目】。\n\n**核心技术**：Tokenizer → Embedding → Transformer → Training → Evaluation → Inference → Serving\n\n**最终交付**：从零实现的小型 LLM 完整工程\n\n**状态**：✅ 已完成（v1.0，11/11 Milestone，71 项 pytest 全绿）\n\n**11 个 Milestone**：\n```\n01 — Project Architecture  ✅ 唯一配置入口 TinyConfig + validate() / 八段流水线\n02 — Tokenizer            ✅ 手写 BPE vocab=1280；压缩 1.445 字/token；roundtrip 失败全归因 OOV\n03 — Dataset              ✅ 泄漏检查 overlap=0；滑动窗口打包 206 train / 37 val\n04 — Embedding            ✅ 查表=one-hot@W 误差 0.000e+00；正弦 PE 0 参数；词表占 35.6%\n05 — Transformer Block    ✅ 因果自检过去 0.000e+00 / 未来 1.191e+01；掩码反例 argmax 同为 676\n06 — Training             ✅ train 7.1547→3.6882 / val 5.7551（第 800 步）→5.8234；早停回滚\n07 — Evaluation           ✅ 三层评估；PPL 315.79 / ECE 0.0662 / 关键词覆盖 0.000；配对 37/0/0、24/13/0\n08 — Inference            ✅ 采样四旋钮；KV Cache 等价 3.442e-15；真流式 TTFT 0.20 ms / 总 4.73 ms\n09 — Optimization         ✅ INT8 3.85×/ΔPPL +0.08%、INT4 7.42×/+2.66%、NF4 7.75×/+4.01%；KV 512 B/token\n10 — Serving              ✅ OpenAI 兼容 + SSE；冒烟四项全过；并发 4 吞吐 130.60 req/s\n11 — Complete System      ✅ 八段一条命令跑完；可缓存 0.928 s / 可分段 / report.json 可机读\n```\n\n> 实现说明：与 P06/P08/P09 同源——**纯 numpy + Python 标准库手写**，不引入 torch / transformers / fastapi / vllm，\n> 通过 `src/tiny/paths.py` **三层复用**前面项目的已验真能力：P06（手写 Tensor/autograd + `TransformerLM` + BPE）\n> + P08（`enable_deterministic_autograd()` 确定性补丁）+ P09（评估指标 / 量化 / KV 账本 / HTTP 服务）。\n>\n> Capstone 的交付物不是模型，而是一条**可缓存、可分段重跑、报告可机读**的流水线。\n> 边界已诚实标注：这个 230K 参数 + 6,384 训练 token 的模型**会拼词、不会答题**（生成层关键词覆盖 0.000），\n> 这正是「三层评估」存在的理由——把真相量化出来，而不是让 loss 曲线替它遮羞。\n\n---\n\n## 附 — 基础知识层：llm-fundamentals\n\n**目标**：把大模型基础理论系统整理成一份由浅入深的学习笔记，讲清「**为什么这么设计**」。\n\n**与 10 个项目的关系**：不属于 Project 序号体系，是与之平行的**理论层**。\n`projects/*/milestones/` 回答「怎么跑起来」，`llm-fundamentals/` 回答「原理是什么、为什么」。两者互相引用，不重复正文。\n\n**状态**：✅ 已完成（12 章 + 8 个可运行 demo + 13 张可复现配图 + 1 张资源体检截图）\n\n**12 章**：\n```text\n01 — 语言模型基础      ✅ token → embedding → logits → 概率 → 交叉熵 / PPL 全链路\n02 — 注意力机制        ✅ QKV / √d_k 缩放推导 / 两类掩码 / 多头 / MHA-GQA-MQA\n03 — Transformer 架构  ✅ Pre-LN / RMSNorm / SwiGLU FFN / 位置编码 / 张量形状表\n04 — 预训练            ✅ 数据流水线 / CLM-MLM-FIM / 并行策略 / BF16 / 算力与成本账\n05 — 微调              ✅ SFT（loss mask / chat template 坑）/ LoRA / QLoRA / 灾难性遗忘\n06 — 涌现与缩放定律    ✅ Kaplan / Chinchilla / 涌现是否伪影 / 过度训练的经济学\n07 — 解码与推理        ✅ Prefill-Decode / 采样策略 / KV Cache / 量化 / 引擎选型\n08 — 对齐              ✅ RLHF 三阶段 / Bradley-Terry / PPO 目标 / DPO 推导 / reward hacking\n09 — 数学基础          ✅ 符号表 + 10 个关键推导（√d_k 方差、p−y 梯度、RoPE 正交性）\n10 — 术语表            ✅ 8 组 150+ 条中英对照，含「最容易混的六组」\n11 — 开源项目          ✅ 10 个项目对应到具体章节 + 跑通标志\n12 — 教程与 Agent      ✅ 教程/课程 + 微调选型 + Agent 框架（含 2026 洗牌实测与迁移表）\n```\n\n**入口**：[`llm-fundamentals/README.md`](llm-fundamentals/README.md)\n\n---\n\n## 附 — 练手层：python-practice\n\n**目标**：在正式项目之前先有一批**小而完整**的动手练习，把 Python 本身的语法、文件、网络、Web 框架各走一遍。标准是「一个周末能跑通一个」。\n\n**与 10 个项目的关系**：不属于 Project 序号体系，是**练手层**——`python-practice/` 要的是**会写**，`projects/` 要的是**做出来**，`llm-fundamentals/` 要的是**想明白**。05 / 06 两项的完整实现由 `projects/01`、`projects/04` 承担，本层只做指路，不重复实现。\n\n**状态**：✅ 01–04 代码可跑 + 真实截图；05 / 06 指路页成文；07 延伸阅读成文（含 `check_repos.py` 真实核验截图）\n\n**6 个练习**：\n```text\n01 — 命令行待办清单    ✅ ●○○ 入门  1 个周末  纯标准库：argparse / json / dataclass / 退出码\n02 — Excel 报表自动化  ✅ ●●○ 进阶  2–3 天    pandas 合并→清洗→聚合→透视→多 sheet→绘图\n03 — 网站内容爬虫      ✅ ●●○ 进阶  2–3 天    requests + BeautifulSoup + 重试/退避 + 白名单 + CSV\n04 — FastAPI 博客 API  ✅ ●●○ 进阶  1 周      路由 / pydantic 校验 / 状态码 / 依赖注入 / pytest\n05 — AI 命令助手       →  ●●● 挑战  1–2 周    见 projects/01（问答 → 多轮 → 流式）\n06 — RAG 知识库问答    →  ●●● 挑战  2–3 周    见 projects/04（切块 → 向量化 → 检索 → 生成 → 评测）\n```\n\n**统一约定**：固定随机种子、`demo.sh` / `demo.py` 一键复现、原始 stdout 入库、截图由 `scripts/render_terminal.py` 从真实输出渲染、03 用本地 `http.server` 造 fixture 站点（不打外网）。\n\n**延伸阅读（不占练习配额）**：[`07-延伸阅读.md`](python-practice/07-延伸阅读.md) —— Python 学习书单与读法。上半是「补系统性」（10 个候选挑 1–2 个），下半是「读生产代码」四阶梯（`httpx` → `pydantic`/`kedro` → `flask`/`fastapi` → `superset`/`sentry`/`prefect`），含与 Java 经验的对照表和一份脚本实测的避坑清单（已归档 / 已停滞 / 已搬家）。\n\n**入口**：[`python-practice/README.md`](python-practice/README.md) ｜ 先读 [`00-how-to-practice.md`](python-practice/00-how-to-practice.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -414,6 +572,8 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -423,6 +583,173 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -436,6 +763,17 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -462,15 +800,46 @@ Agent / MCP          ← Project 05（Tool / Agent Loop / MCP Protocol）
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

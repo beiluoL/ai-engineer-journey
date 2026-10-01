@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-98" title="返回《文档总览》第 98 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-m05-留下的缺口" class="lvl2">1. M05 留下的缺口</a><a href="#2-plan-subtask" class="lvl2">2. Plan / SubTask</a><a href="#3-依赖决定能并行多少" class="lvl2">3. 依赖决定能并行多少</a><a href="#4-成环会被拦下" class="lvl2">4. 成环会被拦下</a><a href="#5-上游失败会跳过下游传递闭包" class="lvl2">5. 上游失败会跳过下游（传递闭包）</a><a href="#6-三个计划工具" class="lvl2">6. 三个计划工具</a><a href="#7-真实模型它自己决定拆几步" class="lvl2">7. 真实模型：它自己决定拆几步</a><a href="#8-踩到的坑" class="lvl2">8. 踩到的坑</a><a href="#9-结论" class="lvl2">9. 结论</a><a href="#10-代码位置" class="lvl2">10. 代码位置</a><a href="#11-版本" class="lvl2">11. 版本</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-06-multistep-task把计划从模型脑子里拿出来">Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来</h1>
 <blockquote><p>上一章（Milestone 05）解决了「中间结论往哪放」——草稿纸。 但草稿纸记的是<strong>已经查到的东西</strong>，它回答不了一个更要紧的问题： <strong>还要做什么、先做哪个、哪些能同时做。</strong></p></blockquote>
 <h2 id="1-m05-留下的缺口">1. M05 留下的缺口</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#2-plan-subtask"><span class="sn-label">下一节 →</span><span class="sn-name">2. Plan / SubTask</span></a></nav>
@@ -250,8 +389,27 @@ function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quo
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/agent/plan.py</code></td><td><code>Plan</code> / <code>SubTask</code> / <code>batches()</code> / <code>skip_downstream()</code> / 环检测</td></tr><tr><td><code>src/agent/tools.py</code></td><td><code>PlanSetTool</code> / <code>PlanUpdateTool</code> / <code>PlanViewTool</code> / <code>plan_tools()</code></td></tr><tr><td><code>src/agent/agent.py</code></td><td><code>ReActAgent.plan</code>；计划每轮渲染进 system；<code>AgentResult.plan</code> 快照</td></tr><tr><td><code>tests/test_plan.py</code></td><td>41 项：拓扑分层、环检测、传递闭包跳过、工具共享</td></tr><tr><td><code>demos/demo_06_multi_step.py</code></td><td>6 节离线演示 + <code>--real</code> 真实链路</td></tr></tbody></table>
 <h2 id="11-版本">11. 版本</h2><nav class="sec-nav"><a class="sn prev" href="#10-代码位置"><span class="sn-label">← 上一节</span><span class="sn-name">10. 代码位置</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，Multi-Step Task 落地：显式计划 + 依赖拓扑 + 计划工具， 离线真实双路跑通（真实 20 步 / 12 次工具调用 / 3 个子任务全 done）， 测试 146 → 187 passed，截图 15 → 19 张。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/05-agent-mcp/milestones/06-multi-step-task.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/05-agent-mcp/milestones/06-multi-step-task.md", "name": "06-multi-step-task.md", "text": "# Milestone 06 — Multi-Step Task：把计划从模型脑子里拿出来\n\n> 上一章（Milestone 05）解决了「中间结论往哪放」——草稿纸。\n> 但草稿纸记的是**已经查到的东西**，它回答不了一个更要紧的问题：\n> **还要做什么、先做哪个、哪些能同时做。**\n\n## 1. M05 留下的缺口\n\nMilestone 05 的多步骤任务跑通了，但那份「计划」只存在于模型的 thought 里：\n\n```\n[1] thought：我先查 P01，再查 P04，最后对比。\n[2] 调用 rag_search(...)\n[3] thought：接下来查 P04。\n```\n\n短任务没问题。步骤一多，三件事就开始出错：\n\n1. **忘记自己列过什么** —— 第 5 步时已经不记得第 1 步说要做的第三件事。\n2. **重复做已经做完的** —— 历史被 token 预算裁掉后，它以为还没查过。\n3. **依赖没满足就硬做** —— 「汇总」需要两个查询结果，但它只查了一个就开始写结论。\n\n前两个 Milestone 05 已经用草稿纸和裁剪缓解了。第三个是这一章要解决的：\n**把计划变成显式的、可检查的数据结构**。\n\n## 2. Plan / SubTask\n\n```python\n@dataclass\nclass SubTask:\n    id: str\n    title: str\n    depends_on: tuple[str, ...] = ()   # 要等谁\n    status: str = PENDING              # pending/running/done/failed/skipped\n    result: str = \"\"\n```\n\n四个字段，缺一不可。`depends_on` 是**唯一能算出并行度的信息** —— 其余三个字段只是给模型看的。\n\n它和草稿纸的区别必须说清楚，两者很容易被合成一个：\n\n| | 存什么 | 谁在读 |\n|---|---|---|\n| `Scratchpad`（M05） | **结论** ——「P01 用 JSON 落盘」 | 模型读回来用 |\n| `Plan`（M06） | **待办** ——「还要查 P04」 | 循环之外的代码用来推进 |\n\n`demos/out/demo_06_multi_step.txt` 第 1 节的真实输出：\n\n![计划结构](../assets/term-06-plan-topology.png)\n\n## 3. 依赖决定能并行多少\n\n有了显式的依赖边，`Plan.batches()` 就能做 Kahn 分层 —— **这是模型给不出来的信息**。\n它在 thought 里写下的计划只是一串文字，没有可计算的边。\n\n菱形依赖（t1 → (t2 ∥ t3) → t4）的真实分层结果：\n\n```\n第 0 批：[t1]  （单独一步）\n第 1 批：[t2、t3]  （可并行）\n第 2 批：[t4]  （单独一步）\n```\n\n串行做要 4 轮，按批做只要 3 轮。全串行的链则退化成 3 批 —— 一条依赖边都没有额外并行度。\n\n## 4. 成环会被拦下\n\n模型真会写出 A→B→A。人一眼看出不对，代码不查就会**静静地卡住**：\n剩下的任务凑不出下一批，循环结束但任务没做完 —— 而且日志里看不出原因。\n\n```\n拦住了：依赖无法推进（成环或依赖未满足），卡住的：a, b\n```\n\n还有一类同源错误：**依赖指向不存在的任务**（`depends_on=[\"t9\"]` 而没有 t9）。\n必须在**派活之前** `validate()`，否则错误信息会变成「卡住了」，根本没法排查。\n\n## 5. 上游失败会跳过下游（传递闭包）\n\n这是显式依赖换来的第二个好处：**失败的影响范围可以精确计算**。\n\nt2 失败时，`skip_downstream(\"t2\")` 会沿依赖边一路传下去 —— 菱形里 t4 被跳过，\n**但 t3 不受影响**（它不依赖 t2）：\n\n```\n[x] t1  确定要对比哪两个项目  → 就比 P01 和 P04\n[!] t2  查 Project 01 怎么落盘  → 检索没有命中\n[ ] t3  查 Project 04 怎么落盘\n[-] t4  汇总两者的差异  → 上游 t2 未完成，跳过\n```\n\n不是「整个任务重来」，也不是「每步都重试一遍」—— 上游失败了，下游的输入根本不存在，\n重试只会再失败一次。\n\n## 6. 三个计划工具\n\n计划由**模型自己维护**，不是一个写死的流程：\n\n| 工具 | 作用 |\n|---|---|\n| `plan_set` | 整份重设计划（tasks 是一段 JSON），返回分了几批 |\n| `plan_update` | 推进某个子任务的状态；标 failed 会连带跳过下游 |\n| `plan_view` | 查看当前计划与进度 |\n\n两个设计选择值得记下来：\n\n**为什么是「整份重设」而不是「逐个 add」**：增量操作一旦中间某步失败，\n就留下半新半旧的计划。代价是模型写坏 JSON 时会把计划清空 —— 但重发一次就好。\n\n**工具层不抛异常**：和本项目其它地方一致，错误变成模型看得见的文本，它才知道要改：\n\n```\n→ [计划建立失败] 计划不是合法 JSON（Expecting value: line 1 column 1 (char 0)）。\n   原文前 200 字：我觉得应该先查资料再汇总\n```\n\n`parse_tasks()` 会宽容地提取 ```json 代码块里的 JSON —— 模型十次有八次会这么包。\n\n计划**每一轮都会重新渲染进 system 提示**（`_system_text()`），所以模型看到的永远是最新进度，\n不会因为照着开局那份过时的计划而重复做事。\n\n![计划工具与失败跳过](../assets/term-06-plan-tools.png)\n\n## 7. 真实模型：它自己决定拆几步\n\n用 DeepSeek 跑「对比 P01 与 P04 的状态持久化」，提示词里只说「先用 plan_set 拆成子任务」，\n**没告诉它拆几步、哪些能并行**。\n\n它自己建了 3 个子任务，并且正确识别出前两个互不依赖：\n\n```\n[1] 调用 plan_set({...})\n    → 计划已建立，共 3 个子任务，分 2 批执行：[t1,t2]、[t3]。\n      同一批内的子任务互不依赖，可以并行做。\n[2] 调用 rag_search({\"query\": \"Project 01 状态持久化方式\"})\n    调用 rag_search({\"query\": \"Project 04 状态持久化方式\"})      ← 自己并行发了两个\n[5] 调用 write_note({\"key\": \"p01_persistence\", ...})\n    调用 write_note({\"key\": \"p04_persistence\", ...})\n[6] 调用 plan_update({\"id\": \"t1\", \"status\": \"done\", ...})\n```\n\n![真实模型自己拆任务](../assets/term-06-real-plan.png)\n\n最终 20 步、12 次工具调用，三个子任务全部 done：\n\n![计划终态与结论](../assets/term-06-real-plan-result.png)\n\n结论本身也对：P01 是无状态（单轮 CLI，不落盘），P04 是有状态（会话 `mkstemp+fsync+os.replace` 原子写）。\n\n## 8. 踩到的坑\n\n**坑 1：`PlanViewTool.schema()` 传了 `{}`。**\n没有参数的工具也要写完整的 object 壳：\n\n```python\n# 错：会被 M02 那条校验拦下（parameters.type 必须是 object）\nfunction_schema(self.name, self.description, {})\n# 对\nfunction_schema(self.name, self.description, {\"type\": \"object\", \"properties\": {}, \"required\": []})\n```\n\n这个错是在**跑 demo 时**才炸的，单测没覆盖到 —— 因为它只在「工具真的被注册进 registry」\n这条路径上才会触发。教训：**schema 校验要在构造时就做，而不是等发出去。**\n\n**坑 2：离线剧本里忘了更新 t1，计划终态出现 `[pending] t1`。**\n这不是 bug，是**真实会发生的现象**：模型也会漏更状态。\n所以 `AgentResult.plan` 存的是**快照**，事后能看出「它说要做 4 件，实际只标了 3 件」。\n\n**坑 3：`skip_downstream` 一开始只跳一层。**\nA 失败 → B 跳过 → 但 C（依赖 B）还在 pending。改成 while 循环的传递闭包后才对。\n\n## 9. 结论\n\n1. **计划是数据，不是想法。** 只有变成数据，循环之外的代码才能算并行度、查环、做失败传播。\n2. **依赖边是并行度的唯一来源。** 模型写不出可计算的边，这就是显式 Plan 的价值。\n3. **计划由模型维护，由代码保障。** 它自己拆、自己推进；代码负责别让它写出成环的计划、\n   别让失败沿着依赖边污染下游。\n\n## 10. 代码位置\n\n| 文件 | 职责 |\n|---|---|\n| `src/agent/plan.py` | `Plan` / `SubTask` / `batches()` / `skip_downstream()` / 环检测 |\n| `src/agent/tools.py` | `PlanSetTool` / `PlanUpdateTool` / `PlanViewTool` / `plan_tools()` |\n| `src/agent/agent.py` | `ReActAgent.plan`；计划每轮渲染进 system；`AgentResult.plan` 快照 |\n| `tests/test_plan.py` | 41 项：拓扑分层、环检测、传递闭包跳过、工具共享 |\n| `demos/demo_06_multi_step.py` | 6 节离线演示 + `--real` 真实链路 |\n\n## 11. 版本\n\nv0.6 → **v0.7**，Multi-Step Task 落地：显式计划 + 依赖拓扑 + 计划工具，\n离线真实双路跑通（真实 20 步 / 12 次工具调用 / 3 个子任务全 done），\n测试 146 → 187 passed，截图 15 → 19 张。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -259,6 +417,8 @@ function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quo
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -268,6 +428,173 @@ function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quo
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -281,6 +608,17 @@ function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quo
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -307,15 +645,46 @@ function_schema(self.name, self.description, {&quot;type&quot;: &quot;object&quo
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

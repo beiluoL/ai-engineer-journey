@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-121" title="返回《文档总览》第 121 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 04 — LoRA：`W&#x27; = W + ΔW`，以及证明它真的没动基座</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么必须做等价性证明" class="lvl2">1. Why：为什么必须做&amp;quot;等价性证明&amp;quot;</a><a href="#2-design合成权重-拆梯度" class="lvl2">2. Design：合成权重 + 拆梯度</a><a href="#3-realrun-evidence来自-demosoutdemo04loraterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_04_lora_terminal.txt）</a><a href="#31-b0-等价性实测逐位相同" class="lvl3">3.1 B=0 等价性（实测：逐位相同）</a><a href="#32-alphar-缩放真的被乘进前向实测" class="lvl3">3.2 alpha/r 缩放真的被乘进前向（实测）</a><a href="#33-梯度对拍autograd-vs-中心差分实测" class="lvl3">3.3 梯度对拍：autograd vs 中心差分（实测）</a><a href="#34-参数账实测" class="lvl3">3.4 参数账（实测）</a><a href="#35-真训-120-步实测基座-0-个张量被动过" class="lvl3">3.5 真训 120 步（实测：基座 0 个张量被动过）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-tensorinit-把-backward-设成实例属性-静默失败实测踩过" class="lvl3">4.1 Tensor.__init__ 把 _backward 设成实例属性 → 静默失败（实测踩过）</a><a href="#42-冻结要能被证明不能只是不传参实测-028" class="lvl3">4.2 &amp;quot;冻结&amp;quot;要能被证明，不能只是不传参（实测 0/28）</a><a href="#43-alphar-和-lr-是乘性关系不是两个独立旋钮实测" class="lvl3">4.3 alpha/r 和 lr 是乘性关系，不是两个独立旋钮（实测）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-04-loraw-w-δw以及证明它真的没动基座">Milestone 04 — LoRA：<code>W&#x27; = W + ΔW</code>，以及证明它真的没动基座</h1>
 <p>M01 说&quot;LoRA 只动 1/8.5 的参数&quot;，但没证明它<strong>真的只动了那些参数</strong>。M03 定好了只在答案区算 loss。这一层把 LoRA 本身彻底解剖：结构、初始化、梯度、以及<strong>冻结是否真的生效</strong>。</p>
 <p>这一章的方法论是本项目后面所有章节的模板：<strong>先证明等价性，再证明梯度对，最后才真训</strong>。顺序不能反 —— 如果反向写错了，loss 照样会降，你根本看不出来。</p>
@@ -237,8 +376,27 @@ self._backward = self._lora_backward</code></pre>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/lora.py</code></td><td><code>LoRAConfig</code>（r/alpha/dropout/scaling）、<code>LoRALinear</code>（即时合成 <code>.data</code> + <code>_lora_backward</code> 拆梯度 + <code>delta_weight</code>/<code>merged_weight</code>）</td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>walk_parameters</code> / <code>inject_lora</code>（把 target 位置的 Parameter <strong>换成</strong> LoRALinear）/ <code>freeze_base</code> / <code>lora_layers</code> / <code>count_parameters</code></td></tr><tr><td><code>src/ft/trainer.py</code></td><td><code>LoRATrainer</code>：只把 A/B 交给 Adam，其余同普通训练循环</td></tr><tr><td><code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>：把 P06 的 <code>Tensor._prev</code> 从 set 换成有序 list（见 M07/M09 的可复现性）</td></tr><tr><td><code>demos/demo_04_lora.py</code></td><td>7 节：结构解剖 / B=0 等价性 / alpha 缩放 / 梯度对拍 / 参数账 / 真训 120 步 / 关键数字</td></tr><tr><td><code>demos/out/demo_04_lora_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/lora.svg</code></td><td>本章 LoRA 结构图（冻结基座 + 旁路）</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，M04 LoRA 落地并被证明。实测：B=0 等价性最大绝对误差 <code>0.000e+00</code>（整机 262,144 个输出逐位相同）；<code>grad_check</code> 最大相对误差 <code>6.585e-05</code>；120 步 loss <code>8.2909 → 6.1644</code>；基座被改动张量 <strong>0/28</strong>、adapter <strong>26/26</strong>。并定位 <code>Tensor.__init__</code> 实例属性遮蔽 <code>_backward</code> 导致的静默失败。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/08-fine-tuning/milestones/04-lora.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/08-fine-tuning/milestones/04-lora.md", "name": "04-lora.md", "text": "# Milestone 04 — LoRA：`W' = W + ΔW`，以及证明它真的没动基座\n\nM01 说\"LoRA 只动 1/8.5 的参数\"，但没证明它**真的只动了那些参数**。M03 定好了只在答案区算 loss。这一层把 LoRA 本身彻底解剖：结构、初始化、梯度、以及**冻结是否真的生效**。\n\n这一章的方法论是本项目后面所有章节的模板：**先证明等价性，再证明梯度对，最后才真训**。顺序不能反 —— 如果反向写错了，loss 照样会降，你根本看不出来。\n\n**纯 numpy 手写**：`LoRALinear` 同时继承 P06 的 `Tensor` 与 `Module`，`.data` 是一个**即时合成**的属性（`W.data + scaling·A@B`），反向靠覆写 `_backward` 把梯度拆回 A/B。这样 P06 一行都不用改。\n\n---\n\n## 1. Why：为什么必须做\"等价性证明\"\n\nLoRA 要成立，必须满足三件事，缺一件就是自欺欺人：\n\n1. **B=0 初始化 ⇒ 注入瞬间与基座完全等价。** 否则\"LoRA 是基座的增量\"这个前提就是假的，你没法把训练结果归因于 adapter。\n2. **反向必须真的流回 A/B。** 手写 autograd 最容易在这里静默失败：梯度不回流 → A/B 恒为初值 → loss 死活不降，**而且不报错**。\n3. **基座必须一动不动。** \"冻结\"在本项目里不是一句口号，是字节级比对（`0 / 28` 个张量变化）。\n\n## 2. Design：合成权重 + 拆梯度\n\n**前向（`src/ft/lora.py:150`）：**\n\n```python\n@property\ndef data(self):                      # 每次访问重新合成\n    return self.W.data + self.scaling * (self.A.data @ self.B.data)\n```\n\n因为 P06 的前向写死了 `linear(x, self.Wq)` 这种形态，而 `.data` 拿到的就是合并后的权重，**P06 一行都不用改，前向就自动带上了 LoRA 分支**。\n\n**反向（`:159`）：** 落在合并权重上的梯度 `G = ∂L/∂(W+ΔW)`，按链式法则拆回：\n\n```text\n∂L/∂A = (alpha/r) · G @ Bᵀ\n∂L/∂B = (alpha/r) · Aᵀ @ G\n```\n\n**初始化：** A 取 `U(-1/√in, 1/√in)` 小随机值，B **全零** —— 这保证第一步的 `ΔW ≡ 0`。\n\n![M04 LoRA 结构：冻结基座 + 旁路](../assets/lora.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_04_lora_terminal.txt`）\n\n真实环境：Python 3.13 | numpy 2.5，基座 230,656 参数，注入 13 个线性层。\n\n### 3.1 B=0 等价性（实测：逐位相同）\n\n```\ndelta_weight() 全零                      True   max|ΔW| = 0\n单层：LoRA 输出 vs 纯基座输出            最大绝对误差 = 0.000e+00\n整机：注入前 vs 注入后（同一输入）         最大绝对误差 = 0.000e+00   13 层全部注入，模型输出 262,144 个数全部相同\n```\n\n**262,144 个输出逐位相同**（4×64×1024）。这不是\"很接近\"，是**完全相同** —— B 全零使得 `ΔW` 严格为 0，浮点上没有任何舍入可谈。\n\n### 3.2 `alpha/r` 缩放真的被乘进前向（实测）\n\n```\nΔW vs (alpha/r)·A@B          最大绝对误差 = 0.000e+00\nalpha   scaling   ‖Δy‖/‖y‖\n    4       0.5   0.498830\n   16         2   1.995321\n   32         4   3.990642\n```\n\n偏移与 alpha **成正比**（0.5 → 0.4988，2 → 1.9953，4 → 3.9906），证明缩放不是摆设。这一点很重要：很多人把 alpha 当成\"另一个要调的旋钮\"，实际上它和 lr 是**乘性关系**（M06 会量化这个耦合）。\n\n### 3.3 梯度对拍：autograd vs 中心差分（实测）\n\n```\n独立 LoRALinear 的 grad_check         最大相对误差 = 1.213e-05   （< 1e-4 即通过）\n注入进 TransformerLM 后的 grad_check   最大相对误差 = 6.585e-05\n```\n\n第二行才是关键：它证明 **P06 的原前向里梯度确实流回了 A/B**（如果没流回，误差会是 100% 量级）。\n\n### 3.4 参数账（实测）\n\n| 项 | 数量 | 说明 |\n|---|---|---|\n| 基座（冻结） | 230,656 | 注入前后完全相同 |\n| adapter（r=8） | **27,136** | 13 个线性层 × r×(in+out) |\n| 合计 | 257,792 | 可训练占比 **10.53%** |\n| 进优化器的参数张量 | **26** | 13 层 × 2 |\n| 被冻结的参数张量 | **28** | |\n\n### 3.5 真训 120 步（实测：基座 0 个张量被动过）\n\n```\nstep 1   8.2909      step 41  6.1681\nstep 5   7.4485      step 61  6.0874\nstep 9   6.6515      step 81  6.1811\nstep 13  6.6012      step 101 6.1183\nstep 17  6.5853      step 120 6.1644\nstep 21  6.4202\n```\n\n- 首步 **8.2909** → 末步 **6.1644**；前 10 步均值 → 后 10 步均值 **7.3978 → 6.0596**（↓1.3383，18.1%）；耗时 6.96 s。\n- **训练后基座权重发生变化的张量：0 / 28**（字节级 `.tobytes()` 比对）—— 冻结生效。\n- **训练后 adapter 发生变化的张量：26 / 26** —— 全部是 `*.A` / `*.B`，说明真的在学。\n\n![M04 真实运行输出](../assets/term-04-lora.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 `Tensor.__init__` 把 `_backward` 设成实例属性 → 静默失败（实测踩过）\n\n这是本项目最危险的一个坑，写在 `src/ft/lora.py:140` 的注释里：\n\n```python\n# ⚠ Tensor.__init__ 会把 ``_backward`` 设成一个实例属性（noop lambda），\n#   它会**遮蔽**类里定义的方法。所以必须在这里显式挂回真正的反向实现。\nself._backward = self._lora_backward\n```\n\nP06 的 `Tensor.__init__` 里有 `self._backward = lambda: None`。Python 的查找顺序是**实例属性 > 类方法**，所以哪怕你在 `LoRALinear` 里定义了 `_lora_backward`，实例属性那个 noop 也会赢。\n\n**后果是静默的**：梯度不流回 A/B → A/B 恒为初值 → 而 B 初值是 0，所以 `ΔW` 恒为 0 → **loss 一步都不降，但没有任何报错**。`grad_check` 会全程返回接近 1.0 的相对误差，如果你不看这个数，就会以为\"模型在训，只是慢\"。\n\n> 可迁移的经验：**手写 autograd 时，任何\"没报错但结果不对\"的迹象都要先怀疑反向挂上了没有**。等价性证明（3.1）与梯度对拍（3.3）必须放在真训**之前**。\n\n### 4.2 \"冻结\"要能被证明，不能只是不传参（实测 0/28）\n\n`freeze_base()` 做两件事：把所有非 adapter 参数的 `requires_grad` 置 False（意图显式），以及**不把它们交给优化器**（真正的冻结）。但光这样还不够 —— 本章额外做了一次**字节级比对**（`.tobytes()`）：\n\n```\n训练后基座权重发生变化的张量     0 / 28\n训练后 adapter 发生变化的张量   26 / 26\n```\n\n这两行同时出现才有说服力：0/28 证明没被误改，26/26 证明 adapter 真的在学（如果两行都是 0，那说明压根没训起来）。\n\n### 4.3 `alpha/r` 和 lr 是乘性关系，不是两个独立旋钮（实测）\n\n从 3.2 的表看，`alpha` 越大偏移越大，几乎严格线性。这意味着调 `alpha` 和调 `lr` 在**第一步**是同一件事（都缩放步长）。M06 的扫描会证实：alpha 的最优值（16，即 `alpha/r = 2`）与 lr 高度耦合，两个一起调只会互相掩盖。\n\n## 5. Conclusion\n\n1. LoRA 一行公式：`W' = W + (alpha/r)·A@B`；**A 小随机、B 全零** ⇒ 注入瞬间 `ΔW ≡ 0`。\n2. **B=0 等价性实测 `0.000e+00`**：整机 13 层、262,144 个输出逐位相同。\n3. **梯度对拍 `6.585e-05`**（注入整机后），证明反向真的流回了 A/B；独立层是 `1.213e-05`。\n4. 可训练 **27,136 / 257,792 = 10.53%**；进优化器 26 个张量，冻结 28 个。\n5. 真训 120 步：loss **8.2909 → 6.1644**，**基座 0/28 个张量变化**、**adapter 26/26 变化** —— 冻结与学习同时被证明。\n6. **最危险的坑**：`Tensor.__init__` 的实例属性 `_backward` 会遮蔽子类方法，导致梯度不回流、loss 不降且不报错。\n7. 手写实现的意义：因为 `.data` 是自己合成的，P06 一行都不用改就拿到了完整 LoRA 前向 + 反向 —— 这是\"理解机制\"带来的自由度，框架用户拿不到。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ft/lora.py` | `LoRAConfig`（r/alpha/dropout/scaling）、`LoRALinear`（即时合成 `.data` + `_lora_backward` 拆梯度 + `delta_weight`/`merged_weight`） |\n| `src/ft/inject.py` | `walk_parameters` / `inject_lora`（把 target 位置的 Parameter **换成** LoRALinear）/ `freeze_base` / `lora_layers` / `count_parameters` |\n| `src/ft/trainer.py` | `LoRATrainer`：只把 A/B 交给 Adam，其余同普通训练循环 |\n| `src/ft/paths.py` | `enable_deterministic_autograd()`：把 P06 的 `Tensor._prev` 从 set 换成有序 list（见 M07/M09 的可复现性） |\n| `demos/demo_04_lora.py` | 7 节：结构解剖 / B=0 等价性 / alpha 缩放 / 梯度对拍 / 参数账 / 真训 120 步 / 关键数字 |\n| `demos/out/demo_04_lora_terminal.txt` | 本章所有数字的来源 |\n| `assets/lora.svg` | 本章 LoRA 结构图（冻结基座 + 旁路） |\n\n## 7. Version line\n\nv0.3 → **v0.4**，M04 LoRA 落地并被证明。实测：B=0 等价性最大绝对误差 `0.000e+00`（整机 262,144 个输出逐位相同）；`grad_check` 最大相对误差 `6.585e-05`；120 步 loss `8.2909 → 6.1644`；基座被改动张量 **0/28**、adapter **26/26**。并定位 `Tensor.__init__` 实例属性遮蔽 `_backward` 导致的静默失败。纯 numpy、无 torch/peft。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -246,6 +404,8 @@ self._backward = self._lora_backward</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -255,6 +415,173 @@ self._backward = self._lora_backward</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -268,6 +595,17 @@ self._backward = self._lora_backward</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -294,15 +632,46 @@ self._backward = self._lora_backward</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

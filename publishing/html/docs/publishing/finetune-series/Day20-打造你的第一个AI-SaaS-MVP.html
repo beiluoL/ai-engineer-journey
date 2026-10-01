@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-180" title="返回《文档总览》第 180 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Day20：打造你的第一个 AI SaaS MVP</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#ai-技术面试教练平台" class="lvl2">AI 技术面试教练平台</a><a href="#产品名称" class="lvl2">产品名称</a><a href="#用户1java开发者" class="lvl2">用户1：Java开发者</a><a href="#用户2ai转型开发者" class="lvl2">用户2：AI转型开发者</a><a href="#用户3培训机构" class="lvl2">用户3：培训机构</a><a href="#module-1用户系统" class="lvl2">Module 1：用户系统</a><a href="#module-2岗位画像" class="lvl2">Module 2：岗位画像</a><a href="#module-3ai模拟面试" class="lvl2">Module 3：AI模拟面试</a><a href="#module-4回答分析" class="lvl2">Module 4：回答分析</a><a href="#module-5学习计划" class="lvl2">Module 5：学习计划</a><a href="#前端" class="lvl2">前端</a><a href="#后端" class="lvl2">后端</a><a href="#ai层" class="lvl2">AI层</a><a href="#部署" class="lvl2">部署</a><a href="#agent能力" class="lvl2">Agent能力</a><a href="#tool1generatequestion" class="lvl3">Tool1：GenerateQuestion</a><a href="#tool2evaluateanswer" class="lvl3">Tool2：EvaluateAnswer</a><a href="#tool3searchknowledge" class="lvl3">Tool3：SearchKnowledge</a><a href="#tool4generateplan" class="lvl3">Tool4：GeneratePlan</a><a href="#用户" class="lvl2">用户</a><a href="#注册" class="lvl3">注册</a><a href="#登录" class="lvl3">登录</a><a href="#创建面试" class="lvl2">创建面试</a><a href="#获取问题" class="lvl2">获取问题</a><a href="#提交回答" class="lvl2">提交回答</a><a href="#week1基础系统" class="lvl2">Week1：基础系统</a><a href="#week2ai能力" class="lvl2">Week2：AI能力</a><a href="#week3rag" class="lvl2">Week3：RAG</a><a href="#week4产品化" class="lvl2">Week4：产品化</a><a href="#后端" class="lvl2">后端</a><a href="#前端" class="lvl2">前端</a><a href="#ai" class="lvl2">AI</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="day20打造你的第一个-ai-saas-mvp">Day20：打造你的第一个 AI SaaS MVP</h1>
 <h1 id="从-prd-架构-数据库-api-开发计划">从 PRD → 架构 → 数据库 → API → 开发计划</h1>
 <p>前面 Day1～Day19：</p>
@@ -815,8 +954,27 @@ JSON评分
 <blockquote><p>7天内跑起来一个真实 AI SaaS MVP。</p></blockquote>
 <p>下一节进入：</p>
 <h1 id="day21从0搭建-ai-saas-工程spring-boot-vue3-langchain4j-docker-项目初始化">Day21：《从0搭建 AI SaaS 工程：Spring Boot + Vue3 + LangChain4j + Docker 项目初始化》</h1>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">publishing/finetune-series/Day20-打造你的第一个AI-SaaS-MVP.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "publishing/finetune-series/Day20-打造你的第一个AI-SaaS-MVP.md", "name": "Day20-打造你的第一个AI-SaaS-MVP.md", "text": "# Day20：打造你的第一个 AI SaaS MVP\n\n# 从 PRD → 架构 → 数据库 → API → 开发计划\n\n前面 Day1～Day19：\n\n你已经完成：\n\n```text\nJava工程能力\n\n↓\n\nLLM基础\n\n↓\n\nRAG\n\n↓\n\nAgent\n\n↓\n\nTool Calling\n\n↓\n\n模型部署\n\n↓\n\nLoRA微调\n\n↓\n\nMLOps\n\n↓\n\nAI产品设计\n```\n\n今天开始进入真正 Builder 阶段：\n\n> **设计一个可以开发、上线、获得用户反馈的 AI SaaS 产品。**\n\n项目：\n\n# AI Interview Coach\n\n## AI 技术面试教练平台\n\n目标：\n\n30天完成 MVP。\n\n---\n\n# 一、产品定位（PRD第一部分）\n\n## 产品名称\n\n暂定：\n\n```\nInterviewAI\n```\n\n中文：\n\n```\nAI技术面试教练\n```\n\n---\n\n# 二、产品一句话介绍\n\n> 面向 Java / AI 工程师的智能面试训练平台，通过 AI Agent 模拟真实面试、分析回答质量、生成个性化学习计划。\n\n---\n\n# 三、目标用户\n\n## 用户1：Java开发者\n\n年龄：\n\n2～8年。\n\n痛点：\n\n- 不知道面试重点\n    \n- 技术会但是不会表达\n    \n- 缺少高级面试训练\n    \n\n---\n\n## 用户2：AI转型开发者\n\n痛点：\n\n- 不知道RAG/Agent怎么学\n    \n- 不知道企业面试要求\n    \n\n---\n\n## 用户3：培训机构\n\n需求：\n\n- 批量训练学生\n    \n- 自动评分\n    \n\n---\n\n# 四、MVP核心功能\n\n不要一开始做复杂。\n\n第一版只做：\n\n# 核心闭环\n\n```text\n注册\n\n↓\n\n选择目标岗位\n\n↓\n\nAI生成面试\n\n↓\n\n用户回答\n\n↓\n\nAI评分\n\n↓\n\n生成报告\n\n↓\n\n学习建议\n\n↓\n\n再次训练\n```\n\n---\n\n# 五、功能模块设计\n\n## Module 1：用户系统\n\n功能：\n\n- 注册\n    \n- 登录\n    \n- 用户资料\n    \n- 技术方向\n    \n\n保存：\n\n```text\nJava\nSpring\nAI\n```\n\n---\n\n## Module 2：岗位画像\n\n用户选择：\n\n例如：\n\n```\nJava高级工程师\n```\n\n系统生成：\n\n能力模型：\n\n```json\n{\n\"Java基础\":90,\n\n\"JVM\":80,\n\n\"Spring\":70,\n\n\"AI\":50\n}\n```\n\n---\n\n## Module 3：AI模拟面试\n\n流程：\n\n用户：\n\n点击：\n\n开始面试\n\nAI：\n\n```\n你好，现在开始Java高级工程师面试。\n\n问题1：\n\nConcurrentHashMap为什么线程安全？\n```\n\n---\n\n## Module 4：回答分析\n\n用户回答：\n\n文本/语音。\n\nAI输出：\n\n```json\n{\nscore:85,\n\ncorrect:true,\n\nweakness:[\n\"AQS源码不足\"\n],\n\nsuggestion:\n\"学习CLH队列\"\n}\n```\n\n---\n\n## Module 5：学习计划\n\n根据历史：\n\n生成：\n\n```text\nDay1:\n\n复习HashMap\n\n\nDay2:\n\n学习AQS\n\n\nDay3:\n\n练习RAG\n```\n\n---\n\n# 六、整体系统架构\n\nMVP架构：\n\n```text\n                         用户\n\n                          |\n\n                          ↓\n\n\n                       Vue3\n\n\n                          |\n\n                          ↓\n\n\n                  Spring Boot API\n\n\n                          |\n\n        +-----------------+----------------+\n\n        |                 |                |\n\n\n        ↓                 ↓                ↓\n\n\n Interview          User Service       Report\n\n\n Service\n\n\n        |\n\n        ↓\n\n\n LangChain4j Agent\n\n\n        |\n\n +------+------+\n\n\n |             |\n\n\nRAG          LLM\n\n\n |             |\n\n\nMilvus       Qwen\n\n```\n\n---\n\n# 七、技术选型\n\n## 前端\n\n选择：\n\n```\nVue3\n+\nTypeScript\n+\nElement Plus\n```\n\n原因：\n\n快速开发。\n\n---\n\n## 后端\n\n```\nSpring Boot 3\n\nJava 17+\n\nMySQL\n\nRedis\n```\n\n---\n\n## AI层\n\n```\nLangChain4j\n\nQwen\n\nvLLM\n\nMilvus\n```\n\n---\n\n## 部署\n\n开发：\n\nDocker Compose。\n\n生产：\n\nKubernetes。\n\n---\n\n# 八、数据库设计\n\n核心：\n\n6张表。\n\n---\n\n# 1. 用户表\n\nuser\n\n```sql\nCREATE TABLE user\n(\n id bigint,\n\n username varchar(50),\n\n password varchar(255),\n\n target_job varchar(100),\n\n created_time datetime\n);\n```\n\n---\n\n# 2. 面试记录表\n\ninterview_session\n\n```sql\nCREATE TABLE interview_session\n(\n id bigint,\n\n user_id bigint,\n\n job varchar(100),\n\n status varchar(20),\n\n score int,\n\n created_time datetime\n);\n```\n\n---\n\n# 3. 面试问题表\n\nquestion\n\n```sql\nCREATE TABLE question\n(\n id bigint,\n\n session_id bigint,\n\n content text,\n\n category varchar(50)\n);\n```\n\n---\n\n# 4. 用户回答表\n\nanswer\n\n```sql\nCREATE TABLE answer\n(\n id bigint,\n\n question_id bigint,\n\n content text,\n\n score int,\n\n feedback text\n);\n```\n\n---\n\n# 5. 知识薄弱点\n\nweak_point\n\n```sql\nCREATE TABLE weak_point\n(\n id bigint,\n\n user_id bigint,\n\n knowledge varchar(100),\n\n level int\n);\n```\n\n---\n\n# 6. 学习计划\n\nlearning_plan\n\n```sql\nCREATE TABLE learning_plan\n(\n id bigint,\n\n user_id bigint,\n\n content text,\n\n status varchar(20)\n);\n```\n\n---\n\n# 九、AI Agent设计\n\n核心：\n\nInterview Agent。\n\n---\n\n## Agent能力\n\nTools：\n\n---\n\n### Tool1：GenerateQuestion\n\n生成面试题。\n\n输入：\n\n```json\n{\njob:\"Java高级\"\n}\n```\n\n输出：\n\n问题。\n\n---\n\n### Tool2：EvaluateAnswer\n\n分析回答。\n\n输入：\n\n```json\n{\nquestion:\"\",\nanswer:\"\"\n}\n```\n\n输出：\n\n评分。\n\n---\n\n### Tool3：SearchKnowledge\n\nRAG。\n\n查询：\n\n- Java源码\n    \n- AI知识\n    \n\n---\n\n### Tool4：GeneratePlan\n\n生成学习计划。\n\n---\n\n完整流程：\n\n```text\n用户\n\n↓\n\nInterview Agent\n\n↓\n\n判断任务\n\n\n       |\n\n +-----+------+\n\n\n |            |\n\n\n生成问题     评分\n\n\n |            |\n\n\nQuestion    Evaluation\n\n```\n\n---\n\n# 十、API设计\n\n## 用户\n\n### 注册\n\n```\nPOST\n\n/api/user/register\n```\n\n---\n\n### 登录\n\n```\nPOST\n\n/api/user/login\n```\n\n---\n\n# 面试\n\n## 创建面试\n\n```\nPOST\n\n/api/interview/start\n```\n\n请求：\n\n```json\n{\n\"job\":\n\"Java高级工程师\"\n}\n```\n\n返回：\n\n```json\n{\nsessionId:10001\n}\n```\n\n---\n\n## 获取问题\n\n```\nGET\n\n/api/interview/{id}/question\n```\n\n---\n\n## 提交回答\n\n```\nPOST\n\n/api/interview/answer\n```\n\n请求：\n\n```json\n{\nquestionId:1,\n\nanswer:\n\"ConcurrentHashMap...\"\n}\n```\n\n---\n\n返回：\n\n```json\n{\nscore:85,\n\nfeedback:\n\"缺少扩容分析\"\n}\n```\n\n---\n\n# 十一、AI调用流程\n\n一次回答：\n\n```text\n用户提交答案\n\n↓\n\nSpring Boot\n\n↓\n\nInterview Service\n\n↓\n\nLangChain4j\n\n↓\n\nAgent判断\n\n\n↓\n\nEvaluate Tool\n\n\n↓\n\nRAG查询\n\n\n↓\n\nPrompt组装\n\n\n↓\n\nQwen\n\n\n↓\n\nJSON评分\n\n\n↓\n\n保存MySQL\n\n↓\n\n返回用户\n```\n\n---\n\n# 十二、项目目录设计\n\n后端：\n\n```\nai-interview-agent\n\n├── user\n\n├── interview\n\n├── agent\n\n├── rag\n\n├── model\n\n├── evaluation\n\n├── common\n\n└── infrastructure\n```\n\n---\n\nAI Prompt：\n\n```\nprompts/\n\n├── interviewer.txt\n\n├── evaluator.txt\n\n├── planner.txt\n```\n\n---\n\n# 十三、30天开发计划\n\n## Week1：基础系统\n\n完成：\n\n✅ 用户系统\n\n✅ 登录\n\n✅ 面试流程\n\n✅ 基础聊天\n\n---\n\n## Week2：AI能力\n\n完成：\n\n✅ LangChain4j\n\n✅ Agent\n\n✅ Tool Calling\n\n✅ Prompt\n\n---\n\n## Week3：RAG\n\n完成：\n\n✅ 文档上传\n\n✅ Chunk\n\n✅ Embedding\n\n✅ Milvus\n\n✅ 检索\n\n---\n\n## Week4：产品化\n\n完成：\n\n✅ 评分报告\n\n✅ 数据分析\n\n✅ Docker部署\n\n✅ 域名HTTPS\n\n---\n\n# 十四、MVP成本\n\n开发阶段：\n\n最低：\n\n```\n0～300元/月\n```\n\n方案：\n\n- 本地 Ollama\n    \n- 免费额度API\n    \n- 按小时GPU\n    \n\n---\n\n上线：\n\n小规模：\n\n```\n500～2000元/月\n```\n\n包括：\n\n- GPU\n    \n- 数据库\n    \n- 服务器\n    \n- 域名\n    \n\n---\n\n# 十五、面试项目包装\n\n简历：\n\n不要：\n\n❌\n\n> 做了一个AI聊天机器人\n\n改：\n\n✅\n\n> 设计并开发一套 AI 技术面试训练 SaaS 平台，通过 Agent 模拟真实面试流程，结合 RAG 私有知识库和大模型能力，实现自动出题、回答评估、能力画像和个性化学习路径推荐。\n\n---\n\n# 十六、下一阶段开发顺序\n\n接下来不要继续学概念。\n\n开始 Coding。\n\n推荐：\n\n# Day21：AI SaaS 项目初始化\n\n内容：\n\n## 后端\n\n- Spring Boot 3 项目创建\n    \n- Maven模块设计\n    \n- MySQL设计\n    \n- Redis配置\n    \n- LangChain4j接入\n    \n\n## 前端\n\n- Vue3初始化\n    \n- 登录页面\n    \n- 面试页面\n    \n\n## AI\n\n- 第一个 Agent\n    \n- 第一个 Tool\n    \n- 第一个 Prompt\n    \n\n目标：\n\n> 7天内跑起来一个真实 AI SaaS MVP。\n\n下一节进入：\n\n# Day21：《从0搭建 AI SaaS 工程：Spring Boot + Vue3 + LangChain4j + Docker 项目初始化》"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -824,6 +982,8 @@ JSON评分
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -833,6 +993,173 @@ JSON评分
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -846,6 +1173,17 @@ JSON评分
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -872,15 +1210,46 @@ JSON评分
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

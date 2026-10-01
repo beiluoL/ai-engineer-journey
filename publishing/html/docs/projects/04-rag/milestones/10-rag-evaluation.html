@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-84" title="返回《文档总览》第 84 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 10：RAG Evaluation【RAG 效果评估】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-指标总览每个指标测哪一段" class="lvl3">3.1 指标总览：每个指标测哪一段</a><a href="#32-hit-ratek-与-mrr手算一遍" class="lvl3">3.2 Hit Rate@k 与 MRR：手算一遍</a><a href="#33-评测集怎么建黄金标准来自文档本身" class="lvl3">3.3 评测集怎么建：黄金标准来自文档本身</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1评测问题混进了知识库语料" class="lvl3">坑 1：评测问题混进了知识库语料</a><a href="#坑-2expectedsource-写错案例永远-fail" class="lvl3">坑 2：expected_source 写错，案例永远 fail</a><a href="#坑-3只测-happy-path不测拒答" class="lvl3">坑 3：只测 happy path，不测拒答</a><a href="#坑-4指标口径不一致前后对比失真" class="lvl3">坑 4：指标口径不一致，前后对比失真</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-10rag-evaluationrag-效果评估">Project 04 — Chapter 10：RAG Evaluation【RAG 效果评估】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/evaluation.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
@@ -358,8 +497,27 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
 <h2 id="6-自检清单">6. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能说出三段式评估各段对应哪些指标，以及「检索差该改什么、生成差该改什么」</li><li>[ ] 给 4 个检索结果，能手算 Hit Rate@k 和 MRR</li><li>[ ] 评测集含 should_refuse 拒答案例，且拒答率被单独统计</li><li>[ ] expected_source 经过程序自检，且比对口径统一（文件名）</li><li>[ ] 调参前后能产出两份同口径的 EvalReport JSON 并对比</li><li>[ ] 知道 LLM Judge（忠实度）与 RAGAS / TruLens 的定位，且明白学习阶段先手写的价值</li></ul>
 <p>上一章：<a href="09-rag-pipeline.html">09-rag-pipeline.md</a> 回到项目主页：<a href="../README.html">../README.md</a> 下一步：Project 05 —— Research Agent / MCP。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/10-rag-evaluation.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/10-rag-evaluation.md", "name": "10-rag-evaluation.md", "text": "# Project 04 — Chapter 10：RAG Evaluation【RAG 效果评估】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/evaluation.py`（代码落地时实现）\n\n---\n\n## 1. 本章要解决什么问题\n\nChapter 09 把流水线跑通了。接下来你想优化：换一个 embedding 模型？把 chunk_size 从 500 调到 300？打开 hybrid 检索？\n\n每次改完，你问了三个问题，回答都变好了，于是得出结论：「效果提升了」。\n\n```text\n你以为：  我问了几个问题，回答变好了，说明改动有效\n实际上：  三个问题、凭印象判断——既没有覆盖面，也没有可复现的口径。\n          明天换个时间段再问一次，模型措辞变了，你的\"感觉\"也会变。\n          这不是评估，是抽签\n```\n\n真正的评估要回答的问题非常具体：\n\n```text\n改动前：Hit Rate@5 = 0.62，MRR = 0.48\n改动后：Hit Rate@5 = 0.78，MRR = 0.61\n```\n\n两个数字，一前一后，谁也不用争。\n\n本章目标：\n\n> **把 RAG 效果拆成三段分别量化，用一套固定评测集把「感觉变好」变成「指标变好」。**\n\n---\n\n## 2. 为什么需要这个知识\n\nRAG 链路是一条三段接力：检索 → 组装 → 生成。整体效果差时，「整体问一下好不好」无法定位问题出在哪一段。所以必须拆开测：\n\n```text\n第一段  检索质量：  能不能找对文档？      → Hit Rate@k / MRR\n第二段  上下文质量：找对的有没有装进 prompt？（预算截断有没有把答案截掉？）\n第三段  生成质量：  装进去了，答案对不对？有没有幻觉？引用对不对？\n                    → 忠实度 Faithfulness / 答案相关性\n```\n\n拆开测的直接好处是**调参有方向**：Hit Rate 低，说明问题在检索层（换 embedding 模型、调 chunk 策略），改 prompt 措辞毫无用处；Hit Rate 高但答案不对，说明资料找对了模型却在自由发挥，该改 system 规则或换模型。**不看分段指标就调参，等于蒙着眼睛拧螺丝。**\n\nJava 里这对应单元测试与集成测试的分层：DAO 层单测、Service 层集成测试，挂了先看哪一层红；Python 里就是检索层指标 + 端到端指标两级。也对应覆盖率报告的思路——覆盖率不会告诉你代码没 bug，但它会告诉你「哪些地方你根本没测到」。\n\n---\n\n## 3. 核心概念\n\n### 3.1 指标总览：每个指标测哪一段\n\n| 指标 | 测哪段 | 问题 | 计算成本 |\n|------|--------|------|---------|\n| Hit Rate@k | 检索 | top-k 里有没有出现正确文档 | 零成本，纯规则 |\n| MRR | 检索 | 正确文档排得靠不靠前 | 零成本，纯规则 |\n| 上下文命中率 | 组装 | 正确文档是否被装进最终 prompt | 零成本，纯规则 |\n| 忠实度 Faithfulness | 生成 | 答案的每句话是否被资料支持 | 需要裁判（LLM Judge） |\n| 答案相关性 | 生成 | 答案是否回应了用户的问题 | 需要裁判（LLM Judge） |\n\n前三个是**确定性指标**，代码就能算，学习阶段先把这三个做扎实。后两个需要 LLM 当裁判（本章只做采样观察，进阶可选）。\n\n### 3.2 Hit Rate@k 与 MRR：手算一遍\n\n假设知识库里有 5 篇文档，4 个评测问题，「正确文档」人工标注好了。检索器返回 top-3：\n\n```text\n问题 Q1  正确答案: doc_B    检索返回: [doc_A, doc_B, doc_C]  → 命中，排第 2\n问题 Q2  正确答案: doc_A    检索返回: [doc_A, doc_D, doc_E]  → 命中，排第 1\n问题 Q3  正确答案: doc_C    检索返回: [doc_E, doc_D, doc_B]  → 未命中\n问题 Q4  正确答案: doc_D    检索返回: [doc_C, doc_D, doc_A]  → 命中，排第 2\n```\n\n**Hit Rate@3** = 命中的问题数 / 总问题数 = 3 / 4 = **0.75**\n\n**MRR（Mean Reciprocal Rank，平均倒数排名）**——对每个命中问题取「排名的倒数」，再求平均：\n\n```text\nQ1: 排第 2 → 1/2\nQ2: 排第 1 → 1/1\nQ3: 未命中 → 0\nQ4: 排第 2 → 1/2\n\nMRR = (0.5 + 1.0 + 0 + 0.5) / 4 = 2.0 / 4 = 0.50\n```\n\n两个指标看的角度不同：Hit Rate 只问「有没有」，MRR 还问「靠不靠前」。上面这组数据 Hit Rate@5 可能是 1.0（都在 top5 里），但 MRR 只有 0.5——正确答案全排在第 2 名以后，用户要翻两屏才看到。**所以两个都要看。**\n\n### 3.3 评测集怎么建：黄金标准来自文档本身\n\n```python\n@dataclass(frozen=True)\nclass EvalCase:\n    question: str                              # 用户会问的问题\n    expected_source: str                       # 答案应该在的文档（黄金标准）\n    expected_keywords: tuple[str, ...] = ()    # 好答案应包含的关键词\n    should_refuse: bool = False                # True = 知识库里没有，应拒答\n```\n\n构建规则：\n\n```text\n1. 规模：手写 20~50 条，覆盖典型问题 + 边界问题\n2. 黄金标准不需要人工写答案——打开文档，把「这个问题的答案在哪篇文档」\n   记下来就是 expected_source，keywords 从原文里摘\n3. 必须包含 should_refuse=True 的案例：问知识库里完全没有的东西\n   （如「今天天气怎么样」），期望系统回答「知识库中没有相关资料」\n   ——这是 Chapter 09 定下的失败语义， refuse 路径也要被测\n4. 建议拒答案例占 20%~30%，和正常案例分开统计\n```\n\n黄金标准来自文档本身，意味着**建评测集的成本很低，但它是唯一能复现的基准**。没有它，每次调参你都在重新掷骰子。\n\n---\n\n![真实运行：7 条 EvalCase 的逐条明细与 hit_rate / MRR / 拒答指标汇总](../assets/term-eval.png)\n\n## 4. 动手实现（设计稿）\n\n以下代码将在 `src/rag/evaluation.py` 落地，这里先当设计稿读。评估只依赖 Chapter 09 `RAGService` 的公开接口（`ask()` 返回的 `RAGAnswer` 里有 `retrieved_sources` 和 `citations`），内部零件对评估代码是黑盒。\n\n```python\n\"\"\"RAG 三段式评估：检索 / 组装指标（确定性） + 生成质量（LLM Judge 进阶可选）。\"\"\"\n\nimport json\nimport logging\nfrom dataclasses import dataclass, field\nfrom pathlib import Path\n\nlogger = logging.getLogger(__name__)\n\n\n@dataclass(frozen=True)\nclass EvalCase:\n    question: str\n    expected_source: str\n    expected_keywords: tuple[str, ...] = ()\n    should_refuse: bool = False\n\n\n@dataclass\nclass EvalReport:\n    n_cases: int\n    hit_rate_at_3: float\n    hit_rate_at_5: float\n    mrr: float\n    context_hit_rate: float         # 正确文档装进最终 prompt 的比例\n    keyword_pass_rate: float        # 关键词出现在答案中的比例（非拒答案例）\n    refusal_pass_rate: float        # 该拒答的案例正确拒答的比例\n    failed_cases: list[str] = field(default_factory=list)\n\n    def dump(self, path: Path) -> None:\n        path.write_text(json.dumps(self.__dict__, ensure_ascii=False, indent=2))\n\n\ndef _source_name(source: str) -> str:\n    \"\"\"metadata 里的 source 是路径，统一取文件名比对，避免路径前缀口径问题。\"\"\"\n    return Path(source).name if source else \"\"\n\n\ndef evaluate(service, eval_cases: list[EvalCase], budget: int) -> EvalReport:\n    hits3 = hits5 = ctx_hits = kw_pass = ref_pass = 0\n    rr_sum = 0.0\n    failed: list[str] = []\n\n    for i, case in enumerate(eval_cases):\n        answer = service.ask(case.question, budget)\n        sources = [_source_name(s) for s in answer.retrieved_sources]\n\n        # —— 第一段：检索质量（不经过 LLM，纯规则指标）——\n        ranks = [j + 1 for j, s in enumerate(sources) if s == case.expected_source]\n        if ranks:\n            rr_sum += 1.0 / ranks[0]\n            hits5 += 1\n            if ranks[0] <= 3:\n                hits3 += 1\n        else:\n            failed.append(f\"#{i} 未命中 [{case.expected_source}]: {case.question}\")\n\n        # —— 第二段：上下文质量——正确文档有没有装进最终 prompt ——\n        cited = {_source_name(c.source) for c in answer.citations}\n        if case.expected_source in cited:\n            ctx_hits += 1\n\n        # —— 第三段：生成质量（确定性子集：拒答 + 关键词）——\n        if case.should_refuse:\n            if \"没有相关资料\" in answer.answer:\n                ref_pass += 1\n            else:\n                failed.append(f\"#{i} 应拒答却作答: {case.question}\")\n        else:\n            missing = [k for k in case.expected_keywords if k not in answer.answer]\n            if not missing:\n                kw_pass += 1\n            else:\n                failed.append(f\"#{i} 缺关键词 {missing}: {case.question}\")\n\n    n = len(eval_cases)\n    n_normal = sum(1 for c in eval_cases if not c.should_refuse)\n    n_refuse = n - n_normal\n    return EvalReport(\n        n_cases=n,\n        hit_rate_at_3=hits3 / n,\n        hit_rate_at_5=hits5 / n,\n        mrr=rr_sum / n,\n        context_hit_rate=ctx_hits / n,\n        keyword_pass_rate=kw_pass / max(n_normal, 1),\n        refusal_pass_rate=ref_pass / max(n_refuse, 1),\n        failed_cases=failed,\n    )\n```\n\n使用方式（改参数前后各跑一次，同口径对比）：\n\n```bash\npython -m rag.evaluation --profile dev --report reports/before.json\n# 修改 chunk_size / 换 embedding 模型 / 开关 hybrid\npython -m rag.evaluation --profile dev --report reports/after.json\n```\n\n两点定位说明：\n\n- **LLM Judge 是进阶可选**。上面只用了「关键词 + 拒答」这类确定性检查；忠实度（答案是否被资料支持）严格来说要靠 LLM 当裁判——把「参考资料 + 答案」发给裁判模型逐句判断。学习阶段可以做一个 `NoopLLMJudge` 占位接口（只记录样本、不判分），之后接入 DeepSeek 实现真实采样，不阻塞主线。\n- **RAGAS / TruLens 等框架是生产工具**。它们把指标、裁判、报告都封装好了，生产可直接用。但学习阶段建议先手写这 100 行——手写过 MRR 的分子分母，才真正理解指标口径；框架对你才是透明盒而不是魔法。\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：评测问题混进了知识库语料\n\n```text\n现象：  所有指标满分，Hit Rate@5 = 1.0、MRR = 1.0，完美得可疑\n原因：  建索引用了某批文档，建评测集时又\"顺手\"从同一批文档\n        摘了原句当 question——问题文本和语料几乎逐字相同，\n        检索器等于在做字符串匹配\n做法：  question 必须换一种问法（陈述句 → 疑问句、换同义词）；\n        更严格的做法是留出一部分文档只做评测、永不建索引\n```\n\n### 坑 2：expected_source 写错，案例永远 fail\n\n```text\n现象：  某几条案例无论怎么调参都是 0 分，failed_cases 里稳定出现同一批编号\n原因：  人工标注时文档名写错（大小写、路径前后缀不一致），\n        与 metadata 里的 source 永远匹配不上\n做法：  建评测集时用程序自检：每条 expected_source 必须真实\n        存在于索引中；比对时统一取文件名（见 _source_name），\n        不要拿完整路径裸比\n```\n\n### 坑 3：只测 happy path，不测拒答\n\n```text\n现象：  指标全绿，但用户问「股票明天涨吗」时系统煞有介事地编了一段分析\n原因：  评测集里没有 should_refuse=True 的案例，\n        \"知识库外的问题\"这条路径从未被测过\n做法：  评测集固定安排 20%~30% 的拒答案例，\n        并把 refusal_pass_rate 当作与 hit_rate 同级的指标来盯\n```\n\n### 坑 4：指标口径不一致，前后对比失真\n\n```text\n现象：  改动前报告写 Hit@3，改动后报告写 Hit@5，得出\"大幅提升\"的结论\n原因：  不同 k 值的指标本来就不可比，何况还可能换了评测集\n做法：  报告结构固化（EvalReport 字段即口径），评测集文件入库固定，\n        对比只允许同口径、同评测集前后对照\n```\n\n![真实运行：失败明细定位到「缺关键词」；报告 dump → load 往返一致，保证同口径对比](../assets/term-eval-report.png)\n\n---\n\n## 6. 自检清单\n\n- [ ] 能说出三段式评估各段对应哪些指标，以及「检索差该改什么、生成差该改什么」\n- [ ] 给 4 个检索结果，能手算 Hit Rate@k 和 MRR\n- [ ] 评测集含 should_refuse 拒答案例，且拒答率被单独统计\n- [ ] expected_source 经过程序自检，且比对口径统一（文件名）\n- [ ] 调参前后能产出两份同口径的 EvalReport JSON 并对比\n- [ ] 知道 LLM Judge（忠实度）与 RAGAS / TruLens 的定位，且明白学习阶段先手写的价值\n\n上一章：[09-rag-pipeline.md](09-rag-pipeline.md)\n回到项目主页：[../README.md](../README.md)\n下一步：Project 05 —— Research Agent / MCP。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -367,6 +525,8 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -376,6 +536,173 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -389,6 +716,17 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -415,15 +753,46 @@ python -m rag.evaluation --profile dev --report reports/after.json</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

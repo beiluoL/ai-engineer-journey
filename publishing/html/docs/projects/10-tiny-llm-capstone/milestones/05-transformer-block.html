@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-144" title="返回《文档总览》第 144 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why三个必须被证明的不变量" class="lvl2">1. Why：三个必须被证明的不变量</a><a href="#2-designpreln-的顺序是有代价的" class="lvl2">2. Design：Pre-LN 的顺序是有代价的</a><a href="#3-realrun-evidence来自-demosoutdemo05transformerblockterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_05_transformer_block_terminal.txt）</a><a href="#31-结构树" class="lvl3">3.1 结构树</a><a href="#32-单-block-的参数账注意力与-ffn-几乎平分" class="lvl3">3.2 单 Block 的参数账：注意力与 FFN 几乎平分</a><a href="#33-多头拆分拆了还能拼回去" class="lvl3">3.3 多头拆分：拆了还能拼回去</a><a href="#34-因果性自检改未来-过去必须逐位不变" class="lvl3">3.4 因果性自检：改未来 → 过去必须逐位不变</a><a href="#35-反例把掩码去掉会发生什么" class="lvl3">3.5 反例：把掩码去掉会发生什么</a><a href="#36-层数对照深度换来的参数与耗时" class="lvl3">3.6 层数对照：深度换来的参数与耗时</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-05-transformer-blockpreln-残差-ffn以及因果性必须被证明">Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明</h1>
 <p>M04 把 id 变成了 <code>(B, T, 64)</code> 的向量。这一章把这堆向量送进<strong>真正干活的那一层</strong>：<code>ln → 注意力 → 残差 → ln → FFN → 残差</code>。</p>
 <p>本章的核心不是&quot;把结构画出来&quot;，而是<strong>证明一个几乎无法用肉眼发现的错误不存在</strong>：因果掩码。它写错了，模型照样能训、loss 照样会降、验证集指标照样好看——只是它在偷偷看答案。所以这里把它做成一条硬性自检。</p>
@@ -247,8 +386,27 @@ layernorm     256   0.8%
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/model.py</code></td><td><code>forward_sanity</code>（三条不变量：形状 / 因果 / 确定）/ <code>build_model</code> / <code>walk_parameters</code> / <code>parameter_report</code></td></tr><tr><td>P06 <code>model/decoder.py</code></td><td><code>DecoderStack</code> / <code>Block</code>（Pre-LN + 残差）/ <code>ln_f</code></td></tr><tr><td>P06 <code>model/attention.py</code></td><td><code>MultiHeadAttention</code>（拆头 reshape + 因果掩码在此生效）</td></tr><tr><td>P08 <code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>（把 <code>_prev</code> 从 set 改成有序 list）</td></tr><tr><td><code>demos/demo_05_transformer_block.py</code></td><td>6 节：结构树 / 参数账 / 多头拆分 / 因果自检 / 掩码反例 / 层数对照</td></tr><tr><td><code>demos/out/demo_05_transformer_block_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/transformer-block.svg</code></td><td>Pre-LN 结构 + 参数账 + 因果自检 + 反例</td></tr><tr><td><code>assets/term-05-transformer-block.png</code></td><td>真实运行截图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.4 → <strong>v0.5</strong>，Transformer Block 结构落地并被逐项验真。实测：2 层 × 4 头 × d_model 64、d_ff=128；单 Block <strong>33,216</strong> 参数（attention 16,384 / FFN 16,576 / LN 256），<strong>注意力与 FFN 平手（49.3% vs 49.9%）</strong>，因为 <code>d_ff = 2·d_model</code>；多头拆分还原误差 <strong>0.000e+00</strong>；因果性过去位置 <strong>0.000e+00</strong> / 未来位置 <strong>1.191e+01</strong> / 确定性 <strong>0.000e+00</strong>，三项自检全过；掩码反例：最后一位 logits 最大差 <strong>0.6892</strong> 但 argmax 同为 <strong>676</strong>（⇒ 必须比数值）；深度 1/2/4 层 → 197,184 / 230,400 / 296,832 参数与 0.88 / 1.39 / 2.23 ms。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/10-tiny-llm-capstone/milestones/05-transformer-block.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/10-tiny-llm-capstone/milestones/05-transformer-block.md", "name": "05-transformer-block.md", "text": "# Milestone 05 — Transformer Block：Pre-LN + 残差 + FFN，以及因果性必须被证明\n\nM04 把 id 变成了 `(B, T, 64)` 的向量。这一章把这堆向量送进**真正干活的那一层**：`ln → 注意力 → 残差 → ln → FFN → 残差`。\n\n本章的核心不是\"把结构画出来\"，而是**证明一个几乎无法用肉眼发现的错误不存在**：因果掩码。它写错了，模型照样能训、loss 照样会降、验证集指标照样好看——只是它在偷偷看答案。所以这里把它做成一条硬性自检。\n\n---\n\n## 1. Why：三个必须被证明的不变量\n\n一个 Decoder Block 里有三处\"写错了也不会崩\"的地方：\n\n1. **因果性。** 位置 `t` 的输出只能依赖 `≤ t` 的输入。判据很干净：**把第 `t` 个位置之后的 token 全改掉，第 `t` 个及之前的 logits 必须逐位不变**。误差是精确的 0，不是\"很小\"。\n2. **确定性。** 同一输入跑两次必须逐位相同。这是 P08 那个确定性补丁生效的前提——`Tensor._prev` 如果是 `set`，反向传播的加法顺序随对象地址变，跨进程就不可复现。\n3. **多头拆分的可逆性。** 把 `d_model` 切成 `h` 份再拼回来，必须还原。这一步错了不会报错，只会让每个头学到\"残缺的、交错的信息\"。\n\n三条都不靠\"我读代码看对了\"，靠**对着数字验**。\n\n## 2. Design：Pre-LN 的顺序是有代价的\n\n```text\nx (B, T, d_model)\n  ├─ h = x\n  ├─ h = ln1(h)                    # LN 在子层**之前**\n  ├─ h = MultiHeadAttention(h)     # ← 因果掩码在这一层里加\n  ├─ x = x + h                     # 残差：直连通路，梯度不经过 LN\n  ├─ h = ln2(x)\n  ├─ h = FFN(h)                    # 64 → 128 → 64\n  └─ x = x + h                     # 残差 → 下一层\n```\n\n**为什么是 Pre-LN（LN 放子层前面）而不是 Post-LN**：Post-LN 里梯度要先穿过 LN 才回到残差，深模型上训练初期容易不稳；Pre-LN 让残差通路**完全不经过归一化**，梯度可以直连到最底层。代价是每层输出的量级会随深度累积，所以最后需要一个 `ln_f` 兜底——这就是输出投影前那个 LayerNorm 存在的理由。\n\n多头拆分的形状变换（`P06` 的 `MultiHeadAttention`）：\n\n```text\n(B, T, d_model)  →  reshape  →  (B, T, h, d/h)  →  transpose  →  (B, h, T, d/h)\n```\n\n`head_dim = d_model / n_heads = 64 / 4 = 16`。**拆的是\"通道维\"，不是\"批次维\"** —— 所以 reshape 之后必须 transpose，让 `h` 和 `T` 换个位置，之后才能对 `T` 做 softmax。\n\n![M05 Transformer Block：Pre-LN 结构 + 参数账 + 因果性自检](../assets/transformer-block.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_05_transformer_block_terminal.txt`）\n\n![M05 真实运行](../assets/term-05-transformer-block.png)\n\n### 3.1 结构树\n\n```text\nEmbedding + 位置编码    (1280, 64) + (64, 64)\nDecoderStack 层数       2\nBlock 组成              ln1 → MultiHeadAttention → 残差 → ln2 → FFN → 残差\n注意力头数 / head_dim    4 / 16\nFFN 升维               64 → 128 → 64\n输出投影                (64, 1280)\n最终 LayerNorm          decoder.ln_f\n```\n\n### 3.2 单 Block 的参数账：注意力与 FFN 几乎平分\n\n```text\n子层         参数量     占比\n---------  ------  -----\nffn        16,576  49.9%\nattention  16,384  49.3%\nlayernorm     256   0.8%\n单 Block 合计    33,216\n全部 Block 合计  66,432\n```\n\n这一条值得停一下：**在大模型上 FFN 通常占绝大多数参数（往往是注意力的 2 倍以上），但在这里两者几乎相等（49.9% vs 49.3%）。**\n\n原因是 FFN 的参数量按 `2 × d_model × d_ff` 算，注意力按 `4 × d_model²` 算。令两者相等，解出 `d_ff = 2 × d_model`。当前配置恰好是 `d_ff = 128 = 2 × 64` —— 所以它们必然平分。**大模型之所以 FFN 占大头，是因为它们的 `d_ff/d_model` 通常取 4**（GPT 系列），4 > 2，FFN 自然翻倍。\n\n也就是说，\"参数都在 FFN\"这个直觉**不是普遍规律，而是 `d_ff/d_model = 4` 这个具体选择的后果**。在 `d_ff = 2×d_model` 的配置下，两者就是平手。这也是本章唯一一处会改变你对\"模型长什么样\"的认知的地方。\n\n### 3.3 多头拆分：拆了还能拼回去\n\n```text\n输入形状        (2, 8, 64)     (B, T, d_model)\n分头后形状      (2, 4, 8, 16)  (B, h, T, d/h)\n拼回去是否还原   0.000e+00\n```\n\n还原误差是**精确的 0**。`transpose → reshape` 这一步看似只是搬数据，但顺序错了（比如漏了 transpose 就 reshape）就是另一套语义，而它不会报错。\n\n### 3.4 因果性自检：改未来 → 过去必须逐位不变\n\n```text\nlogits 形状                   (2, 16, 1280)\n形状正确 / 数值有限             True / True\n改未来后：过去位置最大绝对误差     0.000e+00   必须为 0\n改未来后：未来位置最大绝对误差     1.191e+01   必须 > 0\n同输入两次前向最大绝对误差        0.000e+00\n三项自检是否全部通过             True\n```\n\n自检的做法是：取一段 16 长度的输入，把**后 8 个位置**的 token 全部加 7 再取模（换成完全不同的词），然后比较前后两次前向：\n\n- **前 8 个位置的 logits 误差 0.000e+00** —— 改未来完全不影响过去。这是因果掩码正确的**判据**。\n- **后 8 个位置的 logits 误差 1.191e+01** —— 未来**必须**变。如果这里也是 0，说明注意力压根没起作用（比如权重全 0、或者残差把子层短路了），那是另一种坏掉。\n\n**两条都要满足，只看一条会漏。** 只验\"过去不变\"，一个把注意力输出全置 0 的实现也能通过。\n\n### 3.5 反例：把掩码去掉会发生什么\n\n只验上面两条还不够——万一掩码本来就\"全开\"，过去不变也可能碰巧成立（比如序列很短）。所以做一个反向实验：**用全 0 掩码**（谁都能看谁）跑同一批 id。\n\n```text\n带因果掩码 vs 不带掩码，最后一位 logits 最大差    0.6892\n带掩码 / 不带掩码 的 argmax                 676 / 676\n```\n\n**两个数字要连起来读**：logits 的数值差到了 0.6892（确实被作弊影响了），**但 argmax 是同一个 676**。\n\n这就是最阴的地方：**如果只检查\"预测出来的那个 token 对不对\"，这个错误会被完全漏掉。** 数值全错了，结论却没变。所以自检必须比 **logits 的数值**，不能比 argmax。掩码一旦失效，模型在训练时会持续看到\"答案\"，损失会降得更快、验证指标会虚高，而你在推理时用不到那些未来信息——**训练和推理之间就断了一根线**。\n\n### 3.6 层数对照：深度换来的参数与耗时\n\n```text\nn_layers  参数量      前向耗时 (4×32)\n--------  -------  -----------\n       1  197,184      0.88 ms\n       2  230,400      1.39 ms\n       4  296,832      2.23 ms\n当前配置    n_layers=2\n```\n\n每加一层恒增 **33,216** 参数（即单 Block 参数量），耗时增加约 0.5 ms。**参数是线性长的，耗时也是线性长的**——在纯 numpy 的 CPU 实现上，没有 GPU 那种\"深度几乎免费、宽度很贵\"的特性。这也是后面 M09 量化能拿到 3.85× 加速的原因：算力瓶颈就在这些矩阵乘上，而它们可以被压到低精度。\n\n## 4. 踩坑与反直觉发现\n\n1. **\"参数都在 FFN\"不是规律，是 `d_ff/d_model = 4` 的后果。** 令 `2·d·d_ff = 4·d²` 得 `d_ff = 2d`。当前 `d_ff = 2d`，所以 FFN 与注意力参数几乎相等（49.9% vs 49.3%）。换成 GPT 的 `d_ff = 4d`，FFN 立刻翻倍。**记住这个比例，比记住\"FFN 大\"有用。**\n2. **因果性自检必须双向验证。** 只验\"过去不变\"是不够的——一个注意力恒输出 0 的实现也能过。必须同时要求\"未来**必须变**\"（实测 1.191e+01），两条一起才锁死。\n3. **argmax 相等 ≠ 模型没被污染。** 去掉掩码后，最后一位 logits 最大差 0.6892，但 argmax 依然是 676。**这就是为什么自检要比数值。** 任何\"只看最终预测对不对\"的测试，在掩码这类结构错误面前都是盲的。\n4. **多头拆分错在 transpose 上，不会报错。** `(B,T,h,d/h)` 直接 reshape 回 `(B,T,d_model)` 在形状上完全合法，但语义已经变了（相当于把不同头的通道交错混在一起）。只有\"拆完再拼、误差是否为 0\"这一个检查能抓住它——这就是 3.3 那一行存在的意义。\n5. **Pre-LN 需要 `ln_f` 收尾，Post-LN 不需要。** 因为残差通路不经过 LN，输出量级会随层数累积。这不是\"多加一层更保险\"，是结构选择的必然配套。\n\n## 5. Conclusion\n\n1. 结构：**2 层 × (4 头 × d_model 64)，d_ff = 128**，单 Block **33,216** 参数（注意力 16,384 / FFN 16,576 / LN 256），全部 Block 合计 66,432。\n2. **注意力与 FFN 参数几乎相等（49.3% vs 49.9%）**，因为 `d_ff = 2 × d_model`。这是配置的后果，不是普遍规律。\n3. 多头拆分还原误差 **0.000e+00**；`head_dim = 16`。\n4. 因果性：**过去位置误差 0.000e+00（必须为 0），未来位置误差 1.191e+01（必须 > 0）**；同输入两次前向 **0.000e+00**；三项自检全部通过。\n5. 反例证明：去掉掩码后最后一位 logits 最大差 **0.6892**，但 argmax 仍为 **676** ⇒ **只比 argmax 会漏掉这类错误，必须比数值**。\n6. 层的代价是线性的：每层 +33,216 参数、+0.5 ms（4×32 前向）。当前 230,400 参数、1.39 ms。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/tiny/model.py` | `forward_sanity`（三条不变量：形状 / 因果 / 确定）/ `build_model` / `walk_parameters` / `parameter_report` |\n| P06 `model/decoder.py` | `DecoderStack` / `Block`（Pre-LN + 残差）/ `ln_f` |\n| P06 `model/attention.py` | `MultiHeadAttention`（拆头 reshape + 因果掩码在此生效） |\n| P08 `src/ft/paths.py` | `enable_deterministic_autograd()`（把 `_prev` 从 set 改成有序 list） |\n| `demos/demo_05_transformer_block.py` | 6 节：结构树 / 参数账 / 多头拆分 / 因果自检 / 掩码反例 / 层数对照 |\n| `demos/out/demo_05_transformer_block_terminal.txt` | 本章所有数字的来源 |\n| `assets/transformer-block.svg` | Pre-LN 结构 + 参数账 + 因果自检 + 反例 |\n| `assets/term-05-transformer-block.png` | 真实运行截图 |\n\n## 7. Version line\n\nv0.4 → **v0.5**，Transformer Block 结构落地并被逐项验真。实测：2 层 × 4 头 × d_model 64、d_ff=128；单 Block **33,216** 参数（attention 16,384 / FFN 16,576 / LN 256），**注意力与 FFN 平手（49.3% vs 49.9%）**，因为 `d_ff = 2·d_model`；多头拆分还原误差 **0.000e+00**；因果性过去位置 **0.000e+00** / 未来位置 **1.191e+01** / 确定性 **0.000e+00**，三项自检全过；掩码反例：最后一位 logits 最大差 **0.6892** 但 argmax 同为 **676**（⇒ 必须比数值）；深度 1/2/4 层 → 197,184 / 230,400 / 296,832 参数与 0.88 / 1.39 / 2.23 ms。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -256,6 +414,8 @@ layernorm     256   0.8%
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -265,6 +425,173 @@ layernorm     256   0.8%
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -278,6 +605,17 @@ layernorm     256   0.8%
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -304,15 +642,46 @@ layernorm     256   0.8%
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

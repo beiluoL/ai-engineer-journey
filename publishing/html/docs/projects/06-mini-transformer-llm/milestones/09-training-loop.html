@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-112" title="返回《文档总览》第 112 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 09 — Training Loop：从零 autograd 反传，loss 肉眼可见地下降</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-what-why为什么必须手写并校验-autograd" class="lvl2">1. What / Why：为什么必须手写并校验 autograd</a><a href="#2-designautograd-引擎-训练循环" class="lvl2">2. Design：autograd 引擎 + 训练循环</a><a href="#3-realrun-evidence来自-demosoutdemo09trainingtxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_09_training.txt）</a><a href="#4-bugs-lessons" class="lvl2">4. Bugs / lessons</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-09-training-loop从零-autograd-反传loss-肉眼可见地下降">Milestone 09 — Training Loop：从零 autograd 反传，loss 肉眼可见地下降</h1>
 <p>Milestone 07 的整机能从 id 吐 logits，Milestone 08 备好了 <code>(X, Y, mask)</code> 批次。这一层把二者连起来跑训练：<strong>前向 → 带 mask 的交叉熵 → 反向 → 优化器 step</strong>，把梯度一路回写进 Embedding 和 Block 的参数。这是 Milestone 01 点名的「整张图里唯一一条从后往前的箭头」。</p>
 <p>最关键的是：<strong>本项目自动微分完全是手写的</strong>（不用 PyTorch）。我必须自己证明 <code>loss.backward()</code> 求出的梯度和有限差分对得上 —— 否则前面所有层的反向都是错的，loss 下降也只是假象。</p>
@@ -220,8 +359,27 @@ loss 是否下降        : True
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/model/autograd.py</code></td><td><code>Tensor</code>（拓扑排序+链式求导）、<code>Parameter</code>、<code>Module</code>、<code>grad_check</code>（中心差分对拍）、所有带反向的算子</td></tr><tr><td><code>src/model/training.py</code></td><td><code>SGD</code> / <code>Adam</code>（带偏置修正）、<code>Trainer</code>（前向→交叉熵→反传→step，mask 排除 pad）</td></tr><tr><td><code>src/model/decoder.py</code></td><td>复用的 <code>TransformerLM</code>（被训练的主体）</td></tr><tr><td><code>demos/demo_09_training.py</code></td><td>5 节演示：数据 / 模型 / 150 步训练 / 曲线 / 梯度校验，输出落 <code>demos/out/demo_09_training.txt</code></td></tr><tr><td><code>assets/training.svg</code></td><td>本章训练 + 梯度校验图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.7 → <strong>v0.8</strong>，训练循环 + 从零 autograd 落地。玩具模型 150 步 loss <code>6.2100→4.7472</code>，梯度校验 <code>2.60e-05</code> 通过；纯 numpy、无 torch。演示真实跑通并核对 loss 与梯度校验，配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/06-mini-transformer-llm/milestones/09-training-loop.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/06-mini-transformer-llm/milestones/09-training-loop.md", "name": "09-training-loop.md", "text": "# Milestone 09 — Training Loop：从零 autograd 反传，loss 肉眼可见地下降\n\nMilestone 07 的整机能从 id 吐 logits，Milestone 08 备好了 `(X, Y, mask)` 批次。这一层把二者连起来跑训练：**前向 → 带 mask 的交叉熵 → 反向 → 优化器 step**，把梯度一路回写进 Embedding 和 Block 的参数。这是 Milestone 01 点名的「整张图里唯一一条从后往前的箭头」。\n\n最关键的是：**本项目自动微分完全是手写的**（不用 PyTorch）。我必须自己证明 `loss.backward()` 求出的梯度和有限差分对得上 —— 否则前面所有层的反向都是错的，loss 下降也只是假象。\n\n---\n\n## 1. What / Why：为什么必须手写并校验 autograd\n\nProject 05 里我只会 `optimizer.step()`；这里要真的懂训练，就得自己写反向传播。手写 `Tensor` 的风险是：**反向写错不会报错，loss 照样下降**（尤其是玩具规模），但学到的权重是错的。唯一能抓这类错误的，是**梯度校验（gradient check）**—— 用有限差分数值求导，和 autograd 的解析梯度比相对误差。\n\n## 2. Design：autograd 引擎 + 训练循环\n\n**`src/model/autograd.py`（从零自动微分）：**\n- `Tensor`：包一块 numpy 数组，记 `_prev`（父节点）和 `_backward`（反向闭包）。`backward()` 做**拓扑排序**，从标量损失出发逆序调用每个节点的 `_backward`，把梯度沿 `_set_grad` 累加 —— 这就是链式法则具象化。\n- `Parameter`：永远是叶子、`requires_grad=True`，优化器只更新它。\n- `Module`：`parameters()` 递归收集所有 Parameter，`zero_grad()` 清零。\n- 算子（`matmul/add/mul/softmax/layernorm/transpose/reshape/cross_entropy/...`）每个都「前向算 numpy + 闭包里写反向」。**广播梯度用 `_unbroadcast` 还原**（和对 PyTorch 行为一致）。\n- `grad_check(func, inputs, eps, tol)`：**中心差分**扰动每个参数元素，得数值梯度，和 `backward()` 的解析梯度比相对误差；对近零梯度改用绝对误差，避免浮点噪声假阳性。\n\n**`src/model/training.py`（训练循环）：**\n- `SGD`：`w -= lr * g`；`Adam`：带一/二阶动量 + 偏置修正。\n- `Trainer.train_step`：`logits = model(x)` → `loss = cross_entropy(logits, y, mask)` → `zero_grad` → `loss.backward()` → `optimizer.step()`。mask 让 pad 位权重为 0，不计入。\n- `Trainer.run`：跑 `n_steps` 步，记录 loss 曲线。\n\n![训练循环：前向 → 交叉熵 → 反向 → 优化器 step，并附梯度校验](../assets/training.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_09_training.txt`）\n\n真实环境：Python 3.13.12 | numpy 2.5.3。玩具模型：`d_model=24, n_heads=4, d_ff=64, n_layers=2`，**参数量 23,168（27 个 Parameter 张量）**，训练样本 280、约 18 个 batch。\n\n**loss 必须肉眼可见地下降 —— 实测做到了：**\n\n```\nstep   25/150  loss = 4.8810\nstep   50/150  loss = 4.7132\nstep   75/150  loss = 4.6541\nstep  100/150  loss = 4.9276\nstep  125/150  loss = 5.0557\nstep  150/150  loss = 4.7472\n```\n\n粗粒度曲线（每 15 步取一点）：\n\n```\n初始 loss (step 1)   : 6.2100  ≈ log(vocab)=6.2146\n最终 loss (step 150) : 4.7472\n下降幅度             : 1.4628\nloss 是否下降        : True\n\n  step   1  loss= 6.210  ########################################\n  step  16  loss= 4.890  ###############################\n  step  31  loss= 4.997  ################################\n  step  46  loss= 4.987  ################################\n  step  61  loss= 4.950  ###############################\n  step  76  loss= 4.806  ##############################\n  step  91  loss= 4.834  ###############################\n  step 106  loss= 4.748  ##############################\n  step 121  loss= 5.004  ################################\n  step 136  loss= 4.809  ##############################\n```\n\n两个关键读数：\n- **初始 loss `6.2100` ≈ `log(500)=6.2146`**：这正是一个随机初始化、对词表几乎均匀预测的模型该有的交叉熵，证明前向 + 损失公式正确（没算错、没饱和）。\n- **最终 `4.7472`**，**下降 1.4628**，且 `loss 是否下降 : True`。曲线有上下抖动（玩具规模、小数据、Adam 噪声），但整体下行 —— 这正是「模型在学」的信号。\n\n**梯度校验（autograd vs 有限差分）：**\n\n```\n梯度校验最大相对误差 : 2.60e-05  (< 1e-3 即正确)\n```\n\n`2.60e-05` 远小于阈值 `1e-3`，说明手写的 `matmul/softmax/layernorm/cross_entropy/reshape/transpose` 等全部反向正确 —— 前面 M03–M07 所有层的梯度都能可靠回传，loss 下降是**真**学会、不是假象。\n\n![Training demo 真实运行输出](../assets/term-09-training.png)\n\n## 4. Bugs / lessons\n\n本 milestone demo 没有暴露真实运行 bug。两条**从源码提炼的硬规则**值得记：\n\n1. **`backward()` 清零所有节点梯度**（`for v in topo: v.grad = zeros`），避免多次反向累加 —— 这是手写 autograd 最容易漏、漏了就训练崩的一点。\n2. **梯度校验对近零梯度改用绝对误差**（`denom < 1e-6` 时不除），否则深层网络里很多本就≈0 的梯度会被浮点噪声放大成假阳性。这条让 `grad_check` 在深网络上依然可靠（本例 2.60e-05 即通过）。\n\n另外：loss 曲线并非单调下降（step 100/125 有回弹），这正是**小玩具 + Adam 噪声**的真实表现，不是 bug。记录真实曲线比粉饰成直线更诚实。\n\n## 5. Conclusion\n\n1. 训练是整张图里**唯一一条反向箭头**：`loss.backward()` 把梯度写回 Embedding 和 Block 的所有 Parameter。\n2. **手写 autograd 必须过梯度校验**：中心差分 vs 解析梯度相对误差 `2.60e-05` ≪ `1e-3`，反向全对。\n3. 初始 loss `6.2100 ≈ log(500)=6.2146`，证明前向与交叉熵公式正确。\n4. 玩具规模下 loss **整体下行但非单调**（最终 `4.7472`，降 `1.4628`），抖动来自小数据 + Adam 噪声，非 bug。\n5. `mask` 让 pad 位不计入损失；`zero_grad` 是每个 step 必须的。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/model/autograd.py` | `Tensor`（拓扑排序+链式求导）、`Parameter`、`Module`、`grad_check`（中心差分对拍）、所有带反向的算子 |\n| `src/model/training.py` | `SGD` / `Adam`（带偏置修正）、`Trainer`（前向→交叉熵→反传→step，mask 排除 pad） |\n| `src/model/decoder.py` | 复用的 `TransformerLM`（被训练的主体） |\n| `demos/demo_09_training.py` | 5 节演示：数据 / 模型 / 150 步训练 / 曲线 / 梯度校验，输出落 `demos/out/demo_09_training.txt` |\n| `assets/training.svg` | 本章训练 + 梯度校验图 |\n\n## 7. Version line\n\nv0.7 → **v0.8**，训练循环 + 从零 autograd 落地。玩具模型 150 步 loss `6.2100→4.7472`，梯度校验 `2.60e-05` 通过；纯 numpy、无 torch。演示真实跑通并核对 loss 与梯度校验，配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -229,6 +387,8 @@ loss 是否下降        : True
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -238,6 +398,173 @@ loss 是否下降        : True
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -251,6 +578,17 @@ loss 是否下降        : True
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -277,15 +615,46 @@ loss 是否下降        : True
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

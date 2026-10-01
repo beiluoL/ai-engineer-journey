@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-131" title="返回《文档总览》第 131 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 04 — Automatic Evaluation：零 LLM 的规则化评分</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么是这五项权重为什么这么分" class="lvl2">1. Why：为什么是这五项，权重为什么这么分</a><a href="#2-design五个纯函数-一个加权" class="lvl2">2. Design：五个纯函数 + 一个加权</a><a href="#3-realrun-evidence来自-demosoutdemo04automaticevalterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_04_automatic_eval_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-没有单项能防住刷分-防得住的是加权组合" class="lvl3">4.1 没有单项能防住刷分 —— 防得住的是加权组合</a><a href="#42-短文本在去重复上天然满分源码级陷阱" class="lvl3">4.2 短文本在&amp;quot;去重复&amp;quot;上天然满分（源码级陷阱）</a><a href="#43-忠实度对复读完全失灵这是它的定义决定的" class="lvl3">4.3 忠实度对&amp;quot;复读&amp;quot;完全失灵，这是它的定义决定的</a><a href="#44-参考答案的去重复只有-0874-真实的中文文本本来就有重复" class="lvl3">4.4 参考答案的&amp;quot;去重复&amp;quot;只有 0.874 —— 真实的中文文本本来就有重复</a><a href="#45-边界这套规则测不了事实正确性" class="lvl3">4.5 边界：这套规则测不了&amp;quot;事实正确性&amp;quot;</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-04-automatic-evaluation零-llm-的规则化评分">Milestone 04 — Automatic Evaluation：零 LLM 的规则化评分</h1>
 <p>M02 搭好了 benchmark 的骨架（任务集 + 排行），但打分函数是借来的。这一层把它做实：<strong>一个完全离线、确定性、零 LLM 调用的自动评分器</strong>。</p>
 <p>用 LLM 当裁判（LLM-as-judge）是现在的主流做法，但它有三个硬伤：</p>
@@ -238,8 +377,27 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/autoeval.py</code></td><td><code>_terms</code>（ASCII 正则 + 中文 2-gram）/ <code>derive_keywords</code>（按标点切分，上限 8）/ <code>keyword_coverage</code> / <code>format_compliance</code>（加分制，0.35 起）/ <code>length_reasonableness</code>（相对 reference，过短 <code>ratio/0.6</code>）/ <code>faithfulness_proxy</code>（<code>\|A∩R\|/\|A\|</code>）/ <code>repetition_score</code>（3-gram 唯一率，短文本返回 1.0）/ <code>evaluate_answer</code>（五维加权）/ <code>aggregate_scores</code> / <code>rank_answers</code></td></tr><tr><td><code>src/ie/autoeval.py:83-84</code></td><td><code>if len(compact) &lt; ngram: return 1.0</code> —— 短文本白送满分，靠长度项兜底</td></tr><tr><td><code>src/ie/benchmark.py</code></td><td>复用 <code>evaluate_answer</code> + <code>aggregate_scores</code> 作为 M02 的打分与汇总口径</td></tr><tr><td><code>demos/demo_04_automatic_eval.py</code></td><td>3 节：候选构造 / 自动评分排行 / 最高最低分</td></tr><tr><td><code>demos/out/demo_04_automatic_eval_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/autoeval.svg</code></td><td>本章自动评分打分卡图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.3 → <strong>v0.4</strong>，M04 零 LLM 规则化自动评分落地。实测（5 题）：<strong>参考答案 94.09 &gt; 首句摘要 86.03 &gt; 重复回答 55.02 &gt; 空回答 0.00</strong>；重复回答分项 关键词 0.267 / 格式 0.630 / 长度 0.988 / 忠实度 0.921 / <strong>去重复 0.168</strong>（124 个 3-gram 中约 21 个不同），逐项还原总分 55.05。并诚实记录「长度 0.988 与忠实度 0.921 均被复读刷到 → 无单项能防刷分，防得住的是加权组合」「<code>repetition_score</code> 对 &lt;3 字符文本返回 1.0」「忠实度抓不住少说与复读」「词面重叠 ≠ 事实正确」。纯 numpy + 标准库，无 LLM 调用。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/09-evaluation-inference/milestones/04-automatic-evaluation.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/09-evaluation-inference/milestones/04-automatic-evaluation.md", "name": "04-automatic-evaluation.md", "text": "# Milestone 04 — Automatic Evaluation：零 LLM 的规则化评分\n\nM02 搭好了 benchmark 的骨架（任务集 + 排行），但打分函数是借来的。这一层把它做实：**一个完全离线、确定性、零 LLM 调用的自动评分器**。\n\n用 LLM 当裁判（LLM-as-judge）是现在的主流做法，但它有三个硬伤：\n\n1. **不确定** —— 同一个输入两次调用可能给不同分，排行榜不可复现；\n2. **贵且慢** —— 5 题 × 4 个候选 × 多次调用，成本和时间都不适合放在开发循环里；\n3. **不可解释** —— 拿到一个\"78 分\"，你不知道是哪一项丢的。\n\n本项目选另一条路：**规则化评分**。五个维度加权求和，每个维度都是一段几行的纯 Python。代价是它只能测\"表面质量\"，测不了事实正确性 —— 这条边界后面会明确写出来。\n\n---\n\n## 1. Why：为什么是这五项，权重为什么这么分\n\n```python\ntotal = 100 × (0.40·关键词 + 0.15·格式 + 0.15·长度 + 0.20·忠实度 + 0.10·去重复)\n```\n\n| 维度 | 权重 | 回答什么 | 为什么是这个权重 |\n|---|---|---|---|\n| **关键词覆盖** | 40% | 该说的点说到了吗 | 最高 —— 内容是第一位 |\n| **忠实度** | 20% | 说的东西有依据吗 | 次高 —— 惩罚\"胡说\" |\n| **格式** | 15% | 像个\"回答\"吗 | 弱约束，只做加分 |\n| **长度** | 15% | 说够了吗 / 啰嗦吗 | 双向惩罚过短和过长 |\n| **去重复** | 10% | 在复读吗 | 权重最小但**不可省**（见 4.1） |\n\n五项分三类：**内容**（关键词 + 忠实度，60%）、**形式**（格式 + 长度，30%）、**退化检测**（去重复，10%）。\n\n为什么\"去重复\"权重最小却不可省：它是一个**否决项**。前 60% 的内容分可以通过\"反复复读同一句话\"部分刷到（复读确实包含关键词、也确实忠实），只有去重复能识别出\"这个回答的信息量远小于它的字数\"。10% 的权重足以让\"复读型答案\"上不了榜，又不会过度惩罚正常的术语重复。\n\n## 2. Design：五个纯函数 + 一个加权\n\n```python\nkeyword_coverage(answer, keywords)   # keywords 里出现了几个（子串匹配）\nformat_compliance(answer)            # 0.35 起 + 有句号 +0.25 + 有列表/编号 +0.25 + 有冒号分号 +0.15\nlength_reasonableness(a, reference)  # ratio=n/ref；[0.6,1.6] 满分，过短 ratio/0.6，过长 1-(r-1.6)/2.4\nfaithfulness_proxy(a, reference)     # |terms(a) ∩ terms(ref)| / |terms(a)|\nrepetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数\n```\n\n三个实现细节值得单独说：\n\n- **`_terms` 的中英混排处理**（`src/ie/autoeval.py:24`）：ASCII 词用正则 `[a-z][a-z0-9_+.-]{1,}` 抽（至少 2 字符，避免把单个字母当词）；中文没有空格，用**滑动 2-gram**：`\"线程安全\"` → `{\"线程\",\"程安\",\"安全\"}`。**中文是 2-gram 而不是分词** —— 不引入 jieba，靠 2-gram 的重叠度做集合运算，对\"是否用了同样的术语\"足够用。\n- **`format_compliance` 是加分制不是扣分制**：空回答直接 0，非空起 0.35，然后逐项加分、上限 1.0。这样\"格式\"永远是个温和的加成，不会让一个内容正确的朴素段落被判死。\n- **`length_reasonableness` 以参考答案为标尺**（`src/ie/autoeval.py:67`）：`target = len(reference)`，`ratio = n / target`。**没有 reference 时退化到绝对字数区间 [20, 500]** —— 所有 demo 都传了 reference，走的是相对分支。\n\n![M04 自动评分打分卡：五维加权，空回答全线归零](../assets/autoeval.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_04_automatic_eval_terminal.txt`）\n\n5 道评估题（M03 的 held-out 前 5 条），四个候选答案：\n\n| 候选 | 构造方式 |\n|---|---|\n| 参考答案 | 原样返回 `record[\"output\"]` |\n| 首句摘要 | 参考答案的第一句 |\n| **重复回答** | `(reference[:20] + \"。\") × 6` —— 把参考答案前 20 字复读 6 遍 |\n| 空回答 | 空字符串 |\n\n```\n── 自动评分排行 ───────────────────────────────────────────────────\n  排名  候选    总分     关键词    格式     长度     忠实度    去重复\n  --  ----  -----  -----  -----  -----  -----  -----\n   1  参考答案  94.09  1.000  0.690  1.000  1.000  0.874\n   2  首句摘要  86.03  0.900  0.660  0.711  1.000  0.946\n   3  重复回答  55.02  0.267  0.630  0.988  0.921  0.168\n   4  空回答    0.00  0.000  0.000  0.000  0.000  0.000\n\n  最高分                                参考答案 94.09\n  最低分                                空回答 0.00\n```\n\n**把\"重复回答\"这一行拆开看（本章的核心）：**\n\n- **长度 0.988 —— 几乎满分。** 它把前 20 字复读 6 遍，总长约 126 字符，和参考答案长度几乎一致，**长度项被成功刷到了**。\n- **忠实度 0.921 —— 也很高。** 复读的词全部来自参考答案，`|A∩R|/|A|` 自然接近 1。**忠实度项对\"复读\"是瞎的。**\n- **去重复 0.168 —— 崩了。** 126 个字符产生 124 个 3-gram，其中不同的只有约 21 个（一个周期的量），`21/124 ≈ 0.169`。\n- **关键词 0.267 —— 也崩了。** 复读前 20 字只能覆盖 6 个关键词里的约 1.6 个。\n- **总分 55.02**。按权重还原：`0.40×0.267 + 0.15×0.630 + 0.15×0.988 + 0.20×0.921 + 0.10×0.168 = 55.05`（分项显示值四舍五入后的误差内）。\n\n**空回答 0.00**：五个分项**每一个**都有\"空输入直接返回 0\"的短路分支，所以总分严格为 0，不是\"某项接近 0\"。\n\n![M04 真实运行输出](../assets/term-04-automatic-eval.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 没有单项能防住刷分 —— 防得住的是加权组合\n\n这一条值得说三遍，因为它推翻了\"加个重复度检测就安全了\"的直觉：\n\n- **长度项确实被刷到了**（0.988）。如果只看长度，复读答案和参考答案没区别。\n- **忠实度项也确实被刷到了**（0.921）。复读出来的词当然全部\"忠实\"。\n- 真正拉住它的是**关键词**（0.267，权重最大 40%，一项就丢 29.3 分）和**去重复**（0.168，权重 10%，丢 8.3 分）。\n\n反过来说：**如果我为了\"防复读\"把去重复权重提到 40%，那正常回答里的术语复现（\"volatile 保证可见性……volatile 不保证原子性\"）就会被误杀。**\n\n> 可迁移的经验：**评估指标的设计目标是\"让每一种作弊方式都要同时过好几关\"，而不是\"找一个万能指标\"。** 五个维度里任何一个单独看都能被针对性绕过 —— 这正是要五维加权的原因。\n\n### 4.2 短文本在\"去重复\"上天然满分（源码级陷阱）\n\n```python\ndef repetition_score(answer, ngram=3):\n    compact = re.sub(r\"\\s+\", \"\", answer)\n    if not compact:\n        return 0.0\n    if len(compact) < ngram:      # <-- 少于 3 个字符，直接满分\n        return 1.0\n```\n\n一个 2 个字的回答（\"好的\"）会拿到 `repetition_score = 1.0`。这看起来是 bug，其实是**有意的**：3-gram 在长度不足时无定义，返回 1.0（\"没有可判定的重复\"）比返回 0.0（\"判定为重复\"）更保守。\n\n代价是：**极短回答在去重复项上白拿满分**。兜底靠 `length_reasonableness`（过短按 `ratio/0.6` 线性扣分）—— 这又回到 4.1 的结论：**任何一个单项的漏洞都要靠另一个单项补**。\n\n### 4.3 忠实度对\"复读\"完全失灵，这是它的定义决定的\n\nM02 已经指出忠实度的分母是答案自身（`|A∩R|/|A|`），所以\"少说\"不受惩罚。M04 补上了另一半：**\"复读\"也不受惩罚**，因为复读的词 100% 来自参考答案，分子分母相等。\n\n实测：重复回答忠实度 **0.921**，比首句摘要的 1.000 只低一点，远高于它应得的水平。\n\n**忠实度这个指标真正能抓的只有一类错误：说参考答案里没有的东西（幻觉）。** 它抓不住\"说太少\"（M02），也抓不住\"反复说\"（本章）。三条一起看才完整。\n\n### 4.4 参考答案的\"去重复\"只有 0.874 —— 真实的中文文本本来就有重复\n\n参考答案去重复 0.874、格式 0.690，两项加起来丢了约 11 分（94.09 而非 100）。\n\n原因很实在：**中文技术回答里\"的\"、\"是\"、\"一个\"这类 2-gram 和大量术语会自然复现**，3-gram 唯一率本来就不可能是 1。这意味着 `repetition_score` 的**实用上界大约在 0.95 左右**，不是 1.0。\n\n所以不要把这个分数当\"绝对质量\"读，它是**相对量**：0.168（复读） vs 0.874（正常文本）的差距才是信号，0.874 vs 0.946（首句摘要）的差距基本是噪声。\n\n### 4.5 边界：这套规则测不了\"事实正确性\"\n\n必须诚实写出来：`faithfulness_proxy` 是**词面重叠度**，不是事实核查。\n\n- 一个答案把\"volatile 保证原子性\"说成\"volatile 不保证原子性\"，词面重叠度几乎一样，**评分器给同样的分**；\n- 一个用词完全不同但完全正确的答案，会被判低分。\n\n所以这套评分器适用于：**同一批任务上、候选答案之间的横向比较**（M02 的排行、M05 的模型对比）。它不适用于判断\"这个答案对不对\"。\n\n真正要测事实正确性，得用 LLM-as-judge 或人工 —— 而那正是本章开头说的\"不确定、贵、不可解释\"的方案。**评估没有免费的午餐，只有明确取舍。**\n\n## 5. Conclusion\n\n1. 规则化评分 = **五个纯函数加权**：关键词 40% / 忠实度 20% / 格式 15% / 长度 15% / 去重复 10%。零 LLM、确定性、可解释。\n2. 实测排行：**参考答案 94.09 > 首句摘要 86.03 > 重复回答 55.02 > 空回答 0.00**（5 题）。\n3. **重复回答是本章的核心案例**：长度 0.988（刷到了）、忠实度 0.921（也刷到了），但关键词 0.267、去重复 0.168 把它拉到 55.02 —— **重复度 0.168 由 124 个 3-gram 里仅约 21 个不同得出**。\n4. **没有单项能防住刷分，防得住的是加权组合。** 任何一维单独看都能被绕过（长度可被复读刷、忠实度可被复读刷、去重复对短文本白送 1.0）。\n5. **忠实度只抓\"胡说\"**，抓不住\"少说\"（M02：分母是答案自身）也抓不住\"复读\"（本章）。\n6. `repetition_score` 的实用上界约 **0.95**（参考答案实测 0.874），它是相对量不是绝对量。\n7. **空回答严格 0.00** —— 五个分项都有空输入短路，不是\"接近 0\"。\n8. 边界：词面重叠 ≠ 事实正确。这套评分器适合**横向比较候选**，不适合判定对错。\n9. 手写实现的意义：因为每个维度都是几行自己写的 Python，我能精确说出\"55.02 是怎么来的\"（逐项还原到 55.05）；用现成 judge 只能拿到一个分数和一个\"理由\"，而那个理由本身不可验证。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ie/autoeval.py` | `_terms`（ASCII 正则 + 中文 2-gram）/ `derive_keywords`（按标点切分，上限 8）/ `keyword_coverage` / `format_compliance`（加分制，0.35 起）/ `length_reasonableness`（相对 reference，过短 `ratio/0.6`）/ `faithfulness_proxy`（`\\|A∩R\\|/\\|A\\|`）/ `repetition_score`（3-gram 唯一率，短文本返回 1.0）/ `evaluate_answer`（五维加权）/ `aggregate_scores` / `rank_answers` |\n| `src/ie/autoeval.py:83-84` | `if len(compact) < ngram: return 1.0` —— 短文本白送满分，靠长度项兜底 |\n| `src/ie/benchmark.py` | 复用 `evaluate_answer` + `aggregate_scores` 作为 M02 的打分与汇总口径 |\n| `demos/demo_04_automatic_eval.py` | 3 节：候选构造 / 自动评分排行 / 最高最低分 |\n| `demos/out/demo_04_automatic_eval_terminal.txt` | 本章所有数字的来源 |\n| `assets/autoeval.svg` | 本章自动评分打分卡图 |\n\n## 7. Version line\n\nv0.3 → **v0.4**，M04 零 LLM 规则化自动评分落地。实测（5 题）：**参考答案 94.09 > 首句摘要 86.03 > 重复回答 55.02 > 空回答 0.00**；重复回答分项 关键词 0.267 / 格式 0.630 / 长度 0.988 / 忠实度 0.921 / **去重复 0.168**（124 个 3-gram 中约 21 个不同），逐项还原总分 55.05。并诚实记录「长度 0.988 与忠实度 0.921 均被复读刷到 → 无单项能防刷分，防得住的是加权组合」「`repetition_score` 对 <3 字符文本返回 1.0」「忠实度抓不住少说与复读」「词面重叠 ≠ 事实正确」。纯 numpy + 标准库，无 LLM 调用。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -247,6 +405,8 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -256,6 +416,173 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -269,6 +596,17 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -295,15 +633,46 @@ repetition_score(answer, ngram=3)    # 去重后 3-gram 数 / 总 3-gram 数</co
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

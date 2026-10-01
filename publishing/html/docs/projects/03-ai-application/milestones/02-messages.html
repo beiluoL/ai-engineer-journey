@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-61" title="返回《文档总览》第 61 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-四种角色" class="lvl3">3.1 四种角色</a><a href="#32-一次多轮对话的真实报文" class="lvl3">3.2 一次多轮对话的真实报文</a><a href="#33-代码里怎么累积" class="lvl3">3.3 代码里怎么累积</a><a href="#34-一条消息该不该被信任" class="lvl3">3.4 一条消息该不该被信任</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1忘了回灌-assistant-消息" class="lvl3">坑 1：忘了回灌 assistant 消息</a><a href="#坑-2每一轮都重复插入-system" class="lvl3">坑 2：每一轮都重复插入 system</a><a href="#坑-3role-拼错" class="lvl3">坑 3：role 拼错</a><a href="#坑-4tool-消息的-toolcallid-对不上" class="lvl3">坑 4：tool 消息的 tool_call_id 对不上</a><a href="#坑-5裁剪历史时切在工具调用中间" class="lvl3">坑 5：裁剪历史时切在工具调用中间</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-03-chapter-02system-user-assistant-messages消息结构">Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>src/assistant/memory.py</code>（<code>Conversation</code>）</p></blockquote>
 <hr/>
@@ -297,8 +436,27 @@ conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧
 <h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 多轮对话能稳定记住上一轮的内容（有真实调用验证）</li><li>[ ] <code>to_messages()</code> 返回副本，外部修改不影响内部</li><li>[ ] 发送前有消息校验，非法 role 会直接报错</li><li>[ ] system 消息全会话只存在一份</li><li>[ ] 已支持 <code>tool</code> 角色与 <code>tool_call_id</code>（为 Chapter 08 做准备）</li></ul>
 <p>下一章：<a href="03-structured-output.html">03-structured-output.md</a> —— 让模型的输出能被程序直接消费。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/03-ai-application/milestones/02-messages.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/03-ai-application/milestones/02-messages.md", "name": "02-messages.md", "text": "# Project 03 — Chapter 02：System / User / Assistant Messages【消息结构】\n\n> 状态：✅ 已校对\n> 对应代码：`src/assistant/memory.py`（`Conversation`）\n\n---\n\n## 1. 项目要增加什么能力\n\nChapter 01 解决了「提示词怎么写」，这一章解决「提示词怎么送过去」。\n\nProject 02 里已经有消息结构了，但只用到两种角色：\n\n```python\n# P02 conversation.py\nself._messages: list[dict[str, str]] = []\nif system_prompt:\n    self._messages.append({\"role\": \"system\", \"content\": system_prompt})\n```\n\n现在要支持完整的四种角色，并回答一个关键问题：\n\n> **为什么必须把模型自己说过的话再发回去？**\n\n本章目标：\n\n> **正确地构造、累积、校验 messages，让多轮对话和工具调用都能正常工作。**\n\n---\n\n## 2. 为什么需要这个知识\n\n大模型 API 是**无状态**的。这一点怎么强调都不过分：\n\n```text\n你以为：  模型记得上一轮聊了什么\n实际上：  模型每次只看到你这次发过来的 messages 数组\n```\n\n所以「多轮对话」这件事，**本质上是客户端在伪造记忆**——每一轮把完整历史重新发一遍。\n\n这意味着 messages 数组就是 AI 应用最重要的一个数据结构：\n\n```text\nmessages 拼错了 → 模型表现诡异，而且很难定位\n                  （因为错误不在代码里，在数据里）\n```\n\n---\n\n## 3. 核心概念\n\n### 3.1 四种角色\n\n| role | 谁产生的 | 作用 |\n|------|---------|------|\n| `system` | 你 | 全局人设与规则，一般只在开头出现一次 |\n| `user` | 你（用户） | 这一轮的输入 |\n| `assistant` | 模型 | 模型上一轮的回答；**工具调用时承载 `tool_calls`** |\n| `tool` | 你（执行工具后） | 把工具执行结果回灌给模型，靠 `tool_call_id` 对应 |\n\n### 3.2 一次多轮对话的真实报文\n\n第 1 轮：\n\n```json\n[\n  {\"role\": \"system\", \"content\": \"你是一个简洁的中文助手。\"},\n  {\"role\": \"user\", \"content\": \"我叫小明\"}\n]\n```\n\n模型回：`{\"role\": \"assistant\", \"content\": \"你好小明，有什么可以帮你？\"}`\n\n第 2 轮（**注意：三条都要发**）：\n\n```json\n[\n  {\"role\": \"system\", \"content\": \"你是一个简洁的中文助手。\"},\n  {\"role\": \"user\", \"content\": \"我叫小明\"},\n  {\"role\": \"assistant\", \"content\": \"你好小明，有什么可以帮你？\"},\n  {\"role\": \"user\", \"content\": \"我叫什么名字？\"}\n]\n```\n\n**`assistant` 那条是自己上一轮的回复，必须回灌。** 少了它，模型就不知道自己说过什么，也不知道「小明」是谁说的。\n\n![真实运行：多轮 messages 的完整请求体、tool 往返与 token 估算](../assets/term-messages.png)\n\n![真实运行：请求体里除 messages 之外的字段（model / stream / temperature / top_p / max_tokens）、token 估算（1 字符 ≈ 1.30 token），以及把 role 写成 AI 时发送前校验报 ValueError](../assets/term-messages-payload.png)\n\n### 3.3 代码里怎么累积\n\n```python\n@dataclass\nclass Conversation:\n    _system: str = \"\"\n    _turns: list[dict[str, str]] = field(default_factory=list)\n\n    def add_user(self, content: str) -> None:\n        self._turns.append({\"role\": \"user\", \"content\": content})\n\n    def add_assistant(self, content: str) -> None:\n        self._turns.append({\"role\": \"assistant\", \"content\": content})\n\n    def add_tool(self, tool_call_id: str, content: str) -> None:\n        self._turns.append({\"role\": \"tool\", \"tool_call_id\": tool_call_id, \"content\": content})\n\n    def to_messages(self) -> list[dict[str, str]]:\n        head = [{\"role\": \"system\", \"content\": self._system}] if self._system else []\n        return head + list(self._turns)\n```\n\n关键设计：`to_messages()` 返回的是**副本**（`list(self._turns)`），外部拿去改也改不动内部状态。\n\n### 3.4 一条消息该不该被信任\n\nmessages 是会被多处修改的共享数据，写个校验器很划算：\n\n```python\ndef validate_messages(messages: list[dict]) -> None:\n    if not messages:\n        raise ValueError(\"messages 不能为空\")\n    for i, m in enumerate(messages):\n        role = m.get(\"role\")\n        if role not in {\"system\", \"user\", \"assistant\", \"tool\"}:\n            raise ValueError(f\"第 {i} 条消息 role 非法: {role!r}\")\n        if role == \"tool\" and \"tool_call_id\" not in m:\n            raise ValueError(f\"第 {i} 条 tool 消息缺少 tool_call_id\")\n        if \"content\" not in m and \"tool_calls\" not in m:\n            raise ValueError(f\"第 {i} 条消息既没有 content 也没有 tool_calls\")\n```\n\n在**发送请求前**调用它，能省掉大量「模型为什么答非所问」的排查时间。\n\n---\n\n## 4. 项目代码\n\n```text\nsrc/assistant/\n├── memory.py      # Conversation：add_user / add_assistant / add_tool / to_messages\n├── schema.py      # Message 类型别名（Chapter 03 用）\n└── client.py      # 发送前调用 validate_messages()\n```\n\n调用链：\n\n```text\n用户输入\n  ↓ Conversation.add_user()\nConversation.to_messages()\n  ↓ validate_messages()\nclient.chat(messages)            ← 模型\n  ↓ 拿到 assistant 消息\nConversation.add_assistant()     ← 回灌，下一轮才能带上\n```\n\n---\n\n## 5. Java ↔ Python 对比\n\n| Java | Python | 说明 |\n|------|--------|------|\n| `List<Map<String,String>>` | `list[dict[str, str]]` | 同（Python 更常用 TypedDict 约束） |\n| DTO / `record Message(String role, String content)` | `@dataclass` 或 `TypedDict` | Python 里 dict 更贴合 JSON 契约 |\n| HTTP 是无状态的（靠 Cookie/Session） | LLM API 无状态（靠 messages） | **完全同构** |\n| `Bean Validation @NotNull` | `validate_messages()` | 同样的前置校验思路 |\n| Jackson 序列化顺序 | `json.dumps(ensure_ascii=False)` | Python 默认转义中文，要关掉 |\n\n最贴切的类比：\n\n> **messages ≈ HTTP 请求体 + Session。** 模型没有服务端状态，每次请求必须自带全部上下文，就像 JWT 无状态鉴权每次都要带上完整的 token。\n\n---\n\n## 6. 常见坑\n\n### 坑 1：忘了回灌 assistant 消息\n\n```python\nconv.add_user(\"我叫小明\")\nreply = await client.chat(conv.to_messages())\nconv.add_user(\"我叫什么名字？\")        # ❌ 少了 add_assistant(reply)\nreply2 = await client.chat(conv.to_messages())   # 模型：我不知道你叫什么\n```\n\n**这是多轮对话最常见的 bug。** 表现是「模型记性好时好时坏」，其实是根本没把记忆发出去。\n\n### 坑 2：每一轮都重复插入 system\n\n```python\nconv.add_system(\"你是一个助手\")     # 每一轮都 append\nconv.add_system(\"你是一个助手\")\nconv.add_system(\"你是一个助手\")     # ❌ 三份 system，白烧 token\n```\n\nsystem 应该只存在一份，由 `to_messages()` 负责拼在开头。\n\n### 坑 3：role 拼错\n\n```python\n{\"role\": \"AI\", \"content\": \"...\"}       # ❌ API 直接 400\n{\"role\": \"human\", \"content\": \"...\"}    # ❌ 这是 LangChain 的写法，不是 OpenAI 契约\n```\n\n### 坑 4：tool 消息的 `tool_call_id` 对不上\n\n工具调用时，模型返回的 `tool_calls[].id` 必须在回灌时原样带回。对不上会直接报协议错误，且报错信息通常很不友好。\n\n### 坑 5：裁剪历史时切在工具调用中间\n\n当历史太长需要裁剪（Chapter 05）时，如果截掉了 `assistant(tool_calls)` 但留下了 `tool` 消息，协议就坏了。\n\n规则：\n\n> **裁剪以「一轮完整交互」为单位，不要以「单条消息」为单位。**\n\n---\n\n## 7. 实战挑战\n\n**挑战 1**：实现 `validate_messages()`，并在 `client.chat()` 里调用——让非法消息在发送前就失败。\n\n**挑战 2**：给 `Conversation` 加 `last_n_turns(n)`，只保留最近 n 轮（system 始终保留）。\n\n**挑战 3（进阶）**：支持 `tool_calls` 结构（Chapter 08 会用到），让 `add_assistant()` 既能存纯文本也能存工具调用。\n\n---\n\n## 8. 主动回忆\n\n1. 为什么多轮对话必须把 assistant 的历史回复再发一遍？\n2. 四种 role 分别由谁产生、作用是什么？\n3. `to_messages()` 为什么要返回副本？\n4. system 消息应该出现几次？放在数组的什么位置？\n5. tool 消息靠什么字段与工具调用对应？\n6. 裁剪历史时，为什么不能以单条消息为单位？\n\n---\n\n## 9. 本节完成标准\n\n- [ ] 多轮对话能稳定记住上一轮的内容（有真实调用验证）\n- [ ] `to_messages()` 返回副本，外部修改不影响内部\n- [ ] 发送前有消息校验，非法 role 会直接报错\n- [ ] system 消息全会话只存在一份\n- [ ] 已支持 `tool` 角色与 `tool_call_id`（为 Chapter 08 做准备）\n\n下一章：[03-structured-output.md](03-structured-output.md) —— 让模型的输出能被程序直接消费。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -306,6 +464,8 @@ conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -315,6 +475,173 @@ conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -328,6 +655,17 @@ conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -354,15 +692,46 @@ conv.add_system(&quot;你是一个助手&quot;)     # ❌ 三份 system，白烧
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

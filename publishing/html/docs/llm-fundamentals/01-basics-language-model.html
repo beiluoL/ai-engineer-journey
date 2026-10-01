@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-1" title="返回《文档总览》第 1 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">01 · 语言模型基础：一个 token 的一生</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#11-从一句话开始语言模型到底在算什么" class="lvl2">1.1 从一句话开始：语言模型到底在算什么</a><a href="#12-第一步文本-token分词-tokenization" class="lvl2">1.2 第一步：文本 → token（分词 / Tokenization）</a><a href="#121-为什么不用按字符或按词" class="lvl3">1.2.1 为什么不用「按字符」或「按词」</a><a href="#122-bpe字节对编码的算法思想" class="lvl3">1.2.2 BPE：字节对编码的算法思想</a><a href="#123-真实的分词器长什么样" class="lvl3">1.2.3 真实的分词器长什么样</a><a href="#124-中文为什么更贵" class="lvl3">1.2.4 中文为什么更&amp;quot;贵&amp;quot;</a><a href="#125-别忽略特殊-token" class="lvl3">1.2.5 别忽略特殊 token</a><a href="#13-第二步token-向量embedding" class="lvl2">1.3 第二步：token → 向量（Embedding）</a><a href="#14-第三步向量-概率lm-head-softmax" class="lvl2">1.4 第三步：向量 → 概率（LM Head + Softmax）</a><a href="#141-logits-是什么" class="lvl3">1.4.1 logits 是什么</a><a href="#142-温度-t采样时的随机性旋钮" class="lvl3">1.4.2 温度 T：采样时的&amp;quot;随机性旋钮&amp;quot;</a><a href="#143-完整链路速查" class="lvl3">1.4.3 完整链路速查</a><a href="#15-训练目标交叉熵与困惑度" class="lvl2">1.5 训练目标：交叉熵与困惑度</a><a href="#151-交叉熵损失" class="lvl3">1.5.1 交叉熵损失</a><a href="#152-shiftbyone目标怎么对齐" class="lvl3">1.5.2 shift-by-one：目标怎么对齐</a><a href="#153-困惑度perplexity" class="lvl3">1.5.3 困惑度（Perplexity）</a><a href="#154-为什么用交叉熵不用准确率" class="lvl3">1.5.4 为什么用交叉熵，不用准确率</a><a href="#16-训练-vs-推理同一个模型的两种姿势" class="lvl2">1.6 训练 vs 推理：同一个模型的两种姿势</a><a href="#17-完整地图三阶段分别改变了什么" class="lvl2">1.7 完整地图：三阶段分别改变了什么</a><a href="#18-常被误解的点" class="lvl2">1.8 常被误解的点</a><a href="#19-动手" class="lvl2">1.9 动手</a><a href="#110-自查问题" class="lvl2">1.10 自查问题</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="01-语言模型基础一个-token-的一生">01 · 语言模型基础：一个 token 的一生</h1>
 <blockquote><p><strong>一句话结论</strong>：大语言模型（LLM）在训练时唯一做的事，就是<strong>给定前文，预测下一个 token 的概率分布</strong>。 所谓&quot;智能&quot;，是在把这个目标做到极致的过程中<strong>涌现</strong>出来的副产品。</p></blockquote>
 <p>本章把这条链路走完一遍：<code>文本 → token → 向量 → logits → 概率 → 损失</code>。这一步走通了，后面所有章节都只是在这条链路上加零件。</p>
@@ -289,8 +428,27 @@ python3 demos/make_figures.py</code></pre>
 <ul class="lvl"><li>为什么语言模型的训练目标可以只用无标注文本？（答：标签是输入自身左移一位）</li><li><code>tokenizer</code> 词表从 5 万扩到 15 万，会带来哪三处变化？（答：embedding 参数量 ×3、每句 token 数下降、softmax 计算量变大）</li><li>为什么 softmax 要先减最大值？不减会怎样？</li><li>交叉熵 2.3 对应的困惑度是多少？意味着什么？</li><li>训练时是并行的，推理时为什么必须串行？这个差异导致哪种偏差？</li><li>温度调到 0.01，模型输出会不会更&quot;正确&quot;？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="README.html">← 返回总览</a> · <a href="02-attention.html">下一章：注意力机制 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/01-basics-language-model.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/01-basics-language-model.md", "name": "01-basics-language-model.md", "text": "# 01 · 语言模型基础：一个 token 的一生\n\n> **一句话结论**：大语言模型（LLM）在训练时唯一做的事，就是**给定前文，预测下一个 token 的概率分布**。\n> 所谓\"智能\"，是在把这个目标做到极致的过程中**涌现**出来的副产品。\n\n本章把这条链路走完一遍：`文本 → token → 向量 → logits → 概率 → 损失`。这一步走通了，后面所有章节都只是在这条链路上加零件。\n\n---\n\n## 1.1 从一句话开始：语言模型到底在算什么\n\n给模型半句话：\n\n```\n我 在 北京 吃 烤 ___\n```\n\n它输出的是一个**概率分布**，而不是一个词：\n\n| 候选 | 烤鸭 | 羊肉 | 火锅 | 香蕉 |\n|------|------|------|------|------|\n| 概率 | 0.62 | 0.15 | 0.11 | 0.0003 |\n\n用数学写出来，语言模型做的是把整个序列的联合概率**分解成一串条件概率**：\n\n$$\nP(w_1, w_2, \\dots, w_n) \\;=\\; \\prod_{t=1}^{n} P\\big(w_t \\mid w_1, \\dots, w_{t-1}\\big)\n$$\n\n这个分解叫**自回归（autoregressive）**：每一步只看前面，不看后面。它带来两个直接后果：\n\n| 后果 | 说明 |\n|------|------|\n| 训练可以高度并行 | 一句话里每个位置的目标都是\"下一个词\"，一次前向就能算出全部位置的损失（见 1.6） |\n| 生成必须串行 | 第 t 个 token 是第 t+1 个的输入，只能一个一个吐（见 [第 07 章](07-decoding-and-inference.md)） |\n\n```text\n输入:  我  在  北京  吃  烤\n目标:  在  北京  吃  烤  鸭        <- 每个位置都预测\"它的下一个\"\n       ↑ 这就是\"下一 token 预测\"，一句话同时提供了 5 个训练样本\n```\n\n> **记住这一句**：整个 LLM 产业（预训练 → 微调 → 对齐 → 推理优化）都是围绕\"下一 token 预测\"这一个目标展开的。\n\n---\n\n## 1.2 第一步：文本 → token（分词 / Tokenization）\n\n模型不认识字符，只认识整数。**token 是模型处理文本的最小单位**，介于\"字符\"和\"词\"之间。\n\n### 1.2.1 为什么不用「按字符」或「按词」\n\n| 粒度 | 词表大小 | 序列长度 | 问题 |\n|------|----------|----------|------|\n| 按字符 | 极小（~10⁴） | 太长 | 序列翻好几倍，注意力是 O(n²)，算不起；单字符信息量太低 |\n| 按词 | 极大（10⁶⁺） | 短 | 未登录词（OOV）无法处理；中文/德语的复合词爆炸；词表大 → embedding 矩阵和 softmax 都变贵 |\n| **BPE 子词** | 中（3×10⁴ ~ 2×10⁵） | 适中 | ✅ 常见词整块保留，生僻词拆成片段，兼顾长度与词表 |\n\n### 1.2.2 BPE：字节对编码的算法思想\n\nBPE（Byte-Pair Encoding）的核心只有两步循环：**统计最常相邻的符号对 → 合并它**。\n\n```mermaid\nflowchart LR\n    S[\"初始：拆到字符级<br/>l o w e r &lt;/w&gt;\"] --> C{\"统计所有相邻对<br/>谁的频次最高？\"}\n    C -->|\"w+e 出现 5 次\"| M[\"合并为一个新符号<br/>w e → we\"]\n    M --> U[\"更新词表：加入新 token 'we'\"]\n    U --> C\n    C -->|\"达到目标词表大小<br/>或不再有高频对\"| F[\"得到最终词表 + 合并规则表\"]\n    F --> T[\"对新文本：按合并规则<br/>从字符贪心合并\"]\n\n    style S fill:#e0f2fe,stroke:#0284c7\n    style M fill:#dbeafe,stroke:#2563eb\n    style F fill:#dcfce7,stroke:#16a34a\n    style T fill:#dcfce7,stroke:#16a34a\n```\n\n下面是 `demos/01_bpe_tokenizer.py` 的**真实运行结果**（语料 8 个词，合并 12 次）——注意\"合并后 token 总数\"一路下降，说明常见片段被压成了整块：\n\n![BPE 分词器真实运行输出](assets/term-01_bpe_tokenizer.png)\n\n合并过程中学到的高频组合，正好是英语里最常见的词素：`w+e` → `l+o` → `n+e` → `lo+we` → `w+<\/w>` → `lowe+r` … 最后新词 `lowest` 被切成 `['lowe', 'st<\/w>']` 而不是 6 个字符。**这就是子词分词的价值：见过的部分复用，没见过的部分拆开。**\n\n### 1.2.3 真实的分词器长什么样\n\n生产模型用的是**字节级 BPE（BBPE）**：先按 UTF-8 转成字节，再对字节做 BPE。好处是**任何 Unicode 文本都不会 OOV**，最坏情况退化为逐字节。\n\n| 模型 | 分词器 | 词表大小 | 特点 |\n|------|--------|----------|------|\n| GPT-2 | BPE | 50,257 | 最早的字节级 BPE |\n| GPT-4 / o 系列 | cl100k_base / o200k_base | 10 万 / 20 万 | 合并了多空格、对代码友好 |\n| LLaMA 3 | TikToken-based BPE | 128,256 | 词表大 → 同样文本 token 更少，推理更快 |\n| Qwen / DeepSeek | BPE | 15 万左右 | 中文压缩率高（1 汉字常为 1 token） |\n| SentencePiece / Unigram | 语言无关子词 | 32k 左右 | 不依赖空格，适合中日韩 |\n\n### 1.2.4 中文为什么更\"贵\"\n\n同样的意思，中文信息密度高、但**每个汉字占的字节多**（UTF-8 一个汉字 3 字节），早期面向英文训练的分词器会把一个汉字拆成 2–3 个 token：\n\n| 文本 | 字符数 | 大致 token 数 | 说明 |\n|------|--------|---------------|------|\n| `The quick brown fox jumps` | 25 | ~6 | 英文约 4 字符/token |\n| `那只敏捷的棕色狐狸跳了过去` | 13 | ~9（老分词器） / ~13（中文优化后 1 字 1 token） | 中文早期常 1 字 ≈ 1.5 token |\n\n**这件事有真实的钱味**：token 数直接决定 API 计费和上下文上限。所以国内模型都专门扩了中文词表。\n\n### 1.2.5 别忽略特殊 token\n\n| token | 作用 | 典型形式 |\n|-------|------|----------|\n| BOS / EOS | 序列开始 / 结束 | `<s>`、`<｜endoftext｜>` |\n| PAD | 批处理时补齐长度 | `<pad>`（注意 attention mask 要屏蔽掉，见 [第 02 章](02-attention.md) 2.5） |\n| 角色标记 | 对话模板 | `<｜im_start｜>user` … `<｜im_end｜>` |\n\n> **坑**：同一个模型权重，用错 chat template（比如漏掉角色标记）会让效果断崖式下跌。这不是\"格式洁癖\"，因为模型就是在这些 token 的分布上训练出来的。\n\n---\n\n## 1.3 第二步：token → 向量（Embedding）\n\ntoken id 只是索引，没有语义。要参与矩阵运算，必须先变成向量。\n\n$$\n\\text{embedding 矩阵 } E \\in \\mathbb{R}^{V \\times d_{model}},\\qquad\nx_t = E[\\,\\text{id}_t\\,] \\in \\mathbb{R}^{d_{model}}\n$$\n\n- `V`：词表大小（例如 128,256）\n- `d_model`：隐藏维度（例如 4096）\n- 所谓\"查表\"，数学上等价于 **one-hot 向量 × E**\n\n```text\nid = 321   ->   one-hot(长度 V) = [0,0,...,1,...,0]\n                                       ↑ 第 321 位\n              ×  E (V × d_model)\n                    ↓\n              x = [0.12, -0.88, ..., 0.31]     长度 d_model\n```\n\n| 关键性质 | 含义 |\n|----------|------|\n| 参数量 = `V × d_model` | LLaMA-7B：128k × 4096 ≈ **5.2 亿**参数，占总参数 7.5%，不小 |\n| 语义相似 = 向量相近 | \"猫\"和\"狗\"的 embedding 余弦相似度明显高于\"猫\"和\"利率\" |\n| 一个 token 一个向量？ | 不完全是。同一个词在不同上下文中，**上下文相关表示**在注意力层里被改写（见 [第 02 章](02-attention.md)） |\n| 权重共享（weight tying） | 输出投影 `d_model × V` 直接复用 `Eᵀ`，省下同样的 5 亿参数（GPT-2 / 多数小模型这么做） |\n\n> 注意区分两个常被混为一谈的词：\n> - **Input embedding**：token → 向量（本章）\n> - **Sentence embedding / text embedding**：整句话 → 一个向量，用于检索。RAG 用的就是这种（由 encoder 或专门的双塔模型产出），跟语言模型内部的 embedding 不是一回事。\n\n---\n\n## 1.4 第三步：向量 → 概率（LM Head + Softmax）\n\n经过 N 层 Transformer（[第 03 章](03-transformer.md)）后，最后一个位置的隐藏状态 `h ∈ R^{d_model}` 要变成\"下一个词的打分\"。\n\n$$\n\\text{logits} = h \\, W_{lm},\\quad W_{lm} \\in \\mathbb{R}^{d_{model} \\times V}\n\\qquad\\Longrightarrow\\qquad\np = \\operatorname{softmax}(\\text{logits})\n$$\n\n### 1.4.1 logits 是什么\n\n**logits = 未归一化的打分**，可以为负、可以很大，还不构成概率分布。只有过完 softmax 才是概率。\n\n$$\n\\operatorname{softmax}(z)_i = \\frac{e^{z_i}}{\\sum_{j=1}^{V} e^{z_j}}\n$$\n\n工程上必须**先减去最大值**再取指数——数学上等价，但能避免 `exp(1000)` 溢出：\n\n$$\n\\operatorname{softmax}(z)_i = \\frac{e^{\\,z_i - \\max_j z_j}}{\\sum_j e^{\\,z_j - \\max_j z_j}}\n$$\n\n下面是 `demos/03_softmax_crossentropy.py` 的真实输出，用 `logits = [1000, 1001, 999]` 做了对照实验：\n\n![Softmax 与交叉熵真实运行输出](assets/term-03_softmax_crossentropy.png)\n\n看第 2 段：**不减最大值时 `exp` 全部溢出成 `inf`，`inf/inf` 得到 `nan`，梯度直接炸掉**；减掉最大值后得到正常的 `[0.2447, 0.6652, 0.0900]`。这就是为什么所有框架的 softmax 都是\"数值稳定\"版本。\n\n### 1.4.2 温度 T：采样时的\"随机性旋钮\"\n\n在 softmax 之前把 logits 除以 T：\n\n$$\np_i = \\operatorname{softmax}\\!\\left(\\frac{z_i}{T}\\right)\n$$\n\n![温度对分布的影响](assets/softmax-temperature.png)\n\n| T | 效果 | 使用场景 |\n|---|------|----------|\n| → 0 | 退化为 argmax（永远取最高分） | 数学解题、抽取结构化字段 |\n| 0.2 – 0.7 | 分布更尖锐，稳定但略死板 | 代码、翻译、RAG 问答 |\n| 1.0 | 使用模型原始分布 | 通用对话 |\n| > 1.2 | 分布变平，长尾 token 有机会 | 创意写作、头脑风暴（**幻觉风险同步上升**） |\n\n> 注意：温度**不改变相对排序**，只改变分布平坦程度。`argmax` 在任意 T 下都不变——所以\"调温度\"解决不了\"模型把答案排在了第二位\"这类问题。\n\n### 1.4.3 完整链路速查\n\n| 阶段 | 张量形状 | 含义 | 典型数值 |\n|------|----------|------|----------|\n| 输入文本 | `(1,)` str | `\"我在北京吃烤\"` | — |\n| token ids | `(T,)` int | `[7892, 221, 1900, ...]` | 词表内 |\n| embedding | `(T, 4096)` float | 逐 token 向量 | ~N(0, 1) |\n| 隐藏状态（末层） | `(T, 4096)` float | 上下文相关表示 | — |\n| logits | `(T, V)` float | 每个位置对全词表打分 | −30 ~ +30 |\n| 概率 | `(T, V)` float | 每行和为 1 | 0 ~ 1 |\n| 采样结果 | `(1,)` int | 实际吐出的 token | 词表内 |\n\n---\n\n## 1.5 训练目标：交叉熵与困惑度\n\n### 1.5.1 交叉熵损失\n\n$$\n\\mathcal{L} = -\\frac{1}{T}\\sum_{t=1}^{T} \\log P\\big(w_t \\mid w_{<t}\\big)\n\\;=\\; -\\frac{1}{T}\\sum_{t=1}^{T} \\log \\operatorname{softmax}(z_t)\\big[\\,w_t\\,\\big]\n$$\n\n符号含义：\n\n| 符号 | 含义 |\n|------|------|\n| $T$ | 序列长度（实际是有效 token 数，PAD 不算） |\n| $z_t$ | 第 t 个位置的 logits，维度 V |\n| $z_t[w_t]$ | 正确 token 对应的那一个 logit |\n| $\\log$ | 自然对数 |\n\n**直觉**：只惩罚\"正确 token 的概率不够高\"。模型给出的正确概率是 0.9 → loss 0.105；只给 0.01 → loss 4.6。\n\n### 1.5.2 shift-by-one：目标怎么对齐\n\n```text\ntokens:   [BOS]  我   在   北京  吃   烤   鸭   [EOS]\nlogits:    z0    z1   z2   z3   z4   z5   z6\ntarget:     我   在   北京  吃   烤   鸭   [EOS]   <- 就是输入左移一位\nloss:     CE(z0, 我) + CE(z1, 在) + ... + CE(z6, EOS)\n```\n\n**一句话：输入和标签是同一串 token，只是错开一格。** 这就是\"自监督\"——不需要任何人工标注。\n\n### 1.5.3 困惑度（Perplexity）\n\n$$\n\\mathrm{PPL} = \\exp(\\mathcal{L}) = \\exp\\!\\left(-\\frac{1}{T}\\sum_t \\log p_t\\right)\n$$\n\n| 交叉熵 | 困惑度 | 人话解释 |\n|--------|--------|----------|\n| 0.00 | 1.0 | 完全确定（不可能达到） |\n| 0.69 | 2.0 | 每次预测 ≈ 在 2 个候选里犹豫 |\n| 2.30 | 10.0 | 每次都像在 10 个候选里挑 |\n| 5.00 | 148 | 基本在瞎猜 |\n\n真实参考（不同语料不可直接比）：\n\n| 模型 / 设置 | 交叉熵 | 困惑度 |\n|-------------|--------|--------|\n| 随机猜（词表 5 万） | 10.8 | 5 万 |\n| GPT-2 在通用英文 | ~3.0 | ~20 |\n| 现代 7B 模型在英文维基 | ~2.2 | ~9 |\n| 现代 70B+ 模型 | < 2.0 | < 8 |\n\n**困惑度越低 ≠ 越有用**。它衡量的是\"对语料的拟合\"，而用户关心的是\"任务做对没有\"。这两者常常一起上升，但对齐（[第 08 章](08-alignment-rlhf.md)）后经常出现\"困惑度略升、人类评价更高\"的情况。\n\n### 1.5.4 为什么用交叉熵，不用准确率\n\n| 指标 | 可导 | 梯度信息 | 结论 |\n|------|------|----------|------|\n| 准确率（是否 argmax 命中） | ✗ 阶梯函数，几乎处处梯度为 0 | 无 | 无法训练 |\n| 交叉熵 | ✓ | 连续反映\"差多远\" | ✅ 训练目标 |\n| 困惑度 | ✓（是 CE 的单调变换） | 与 CE 等价 | 用来汇报 |\n\n---\n\n## 1.6 训练 vs 推理：同一个模型的两种姿势\n\n```mermaid\nflowchart TB\n    subgraph Train[\"训练（并行，一次看完整个序列）\"]\n        T1[\"输入整句 [T 个 token]\"] --> T2[\"一次前向 → z1..zT\"]\n        T2 --> T3[\"对每个位置算 CE，求和取平均\"]\n        T3 --> T4[\"反向传播 → 更新全部参数\"]\n    end\n    subgraph Infer[\"推理（串行，一次一个 token）\"]\n        I1[\"输入 prompt\"] --> I2[\"前向 → 只要最后一个位置的概率\"]\n        I2 --> I3[\"采样得到新 token\"]\n        I3 --> I4[\"把新 token 拼回输入\"]\n        I4 --> I2\n    end\n\n    style Train fill:#e0f2fe,stroke:#0284c7\n    style Infer fill:#fef3c7,stroke:#d97706\n```\n\n| 维度 | 训练 | 推理（生成） |\n|------|------|--------------|\n| 并行度 | 全部位置并行 | 严格串行 |\n| 输入 | 真实文本（teacher forcing） | 模型自己刚生成的 token |\n| 计算特点 | 算力密集（矩阵乘满负荷） | 显存带宽密集（每步只算一点） |\n| 关键优化 | 混合精度、并行策略、FlashAttention | KV Cache、连续批处理、量化（[第 07 章](07-decoding-and-inference.md)） |\n| 副作用 | — | **曝光偏差（exposure bias）**：训练时只看过正确前缀，推理时错一步就可能越走越偏 |\n\n> **曝光偏差**是\"训练/推理不一致\"的经典后果。缓解手段（如 scheduled sampling）在 LLM 时代不主流，更常用的办法是：**对齐阶段教它自我纠错**（[第 08 章](08-alignment-rlhf.md)），以及**解码阶段加约束**（[第 07 章](07-decoding-and-inference.md)）。\n\n---\n\n## 1.7 完整地图：三阶段分别改变了什么\n\n```mermaid\nflowchart LR\n    R[\"原始互联网文本<br/>（几 T ~ 几十 T token）\"] --> PT[\"① 预训练<br/>下一 token 预测\"]\n    PT --> BM[\"Base Model<br/>会续写，不会听话\"]\n    BM --> SFT[\"② 指令微调 (SFT)<br/>问答/对话数据\"]\n    SFT --> RM[\"③ 对齐 (RLHF/DPO)<br/>人类偏好\"]\n    RM --> Chat[\"Chat Model<br/>会听话，会拒绝\"]\n\n    style BM fill:#e0f2fe,stroke:#0284c7\n    style Chat fill:#dcfce7,stroke:#16a34a\n```\n\n| 阶段 | 数据形态 | 改变了什么 | 详见 |\n|------|----------|------------|------|\n| 预训练 | 海量无标注文本 | 学会语言与世界的统计规律 | [第 04 章](04-pretraining.md) |\n| 指令微调 | 指令-回答对（万~百万级） | 学会\"按指令办事\"的形式 | [第 05 章](05-finetuning.md) |\n| 对齐 | 人类偏好对比数据 | 学会\"什么是好回答\" | [第 08 章](08-alignment-rlhf.md) |\n\n---\n\n## 1.8 常被误解的点\n\n| 误解 | 真相 |\n|------|------|\n| \"模型在数据库里检索答案\" | 知识被**压缩进参数**（分布式存储）。所以会有\"记错\"和\"编造\"，这是压缩的固有代价，不是 bug |\n| \"温度调低就不会胡说\" | 低温度让输出更确定，但**错误答案同样更确定**。事实性要靠 RAG / 工具调用兜底 |\n| \"困惑度低就是好模型\" | 困惑度只看语言拟合，不看指令遵循、事实性、安全性 |\n| \"token 就是词\" | 一个词可能是多个 token，一个 token 也可能是半个词或一堆空格 |\n| \"logits 就是概率\" | logits 未归一化，可为负。softmax 之后才是概率 |\n| \"训练时模型看见答案才知道怎么答\" | 训练时确实喂了真实文本（teacher forcing），但模型内部**只能看到左侧位置**——因果掩码保证了这一点（[第 02 章](02-attention.md) 2.5） |\n\n---\n\n## 1.9 动手\n\n```bash\ncd llm-fundamentals\n\n# 1) 亲手看 BPE 怎么合并：改 CORPUS 和 NUM_MERGES 再跑\npython3 demos/01_bpe_tokenizer.py\n\n# 2) 亲手看 logits → 概率 → loss：改 logits 数组再跑\npython3 demos/03_softmax_crossentropy.py\n\n# 3) 重画温度对比图\npython3 demos/make_figures.py\n```\n\n**建议动手改的三个数**：\n\n1. `01_bpe_tokenizer.py` 里把语料换成中文（`[\"我们\", \"你们\", \"他们\", \"我们\"]`），观察合并出的 token 是什么——你会发现中文按字节合并会产出奇怪但有效的片段。\n2. `03_softmax_crossentropy.py` 里把 `logits` 改成 `[0.1, 0.1, 0.1, 0.1]`，观察 loss 是否等于 `ln(4) = 1.386`（完全均匀分布时的交叉熵）。\n3. 把 `batch_probs` 改成 4 个 0.25，验证 PPL = 4。\n\n---\n\n## 1.10 自查问题\n\n1. 为什么语言模型的训练目标可以只用无标注文本？（答：标签是输入自身左移一位）\n2. `tokenizer` 词表从 5 万扩到 15 万，会带来哪三处变化？（答：embedding 参数量 ×3、每句 token 数下降、softmax 计算量变大）\n3. 为什么 softmax 要先减最大值？不减会怎样？\n4. 交叉熵 2.3 对应的困惑度是多少？意味着什么？\n5. 训练时是并行的，推理时为什么必须串行？这个差异导致哪种偏差？\n6. 温度调到 0.01，模型输出会不会更\"正确\"？\n\n---\n\n[← 返回总览](README.md) · [下一章：注意力机制 →](02-attention.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -298,6 +456,8 @@ python3 demos/make_figures.py</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -307,6 +467,173 @@ python3 demos/make_figures.py</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -320,6 +647,17 @@ python3 demos/make_figures.py</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -346,15 +684,46 @@ python3 demos/make_figures.py</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

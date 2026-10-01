@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-59" title="返回《文档总览》第 59 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">LEARNING — Project 03 AI Application</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#怎么用" class="lvl2">怎么用</a><a href="#总览表" class="lvl2">总览表</a><a href="#m01-prompt" class="lvl2">M01 Prompt</a><a href="#m02-messages" class="lvl2">M02 Messages</a><a href="#m03-结构化输出" class="lvl2">M03 结构化输出</a><a href="#m04-流式输出" class="lvl2">M04 流式输出</a><a href="#m05-会话记忆" class="lvl2">M05 会话记忆</a><a href="#m06-模型参数" class="lvl2">M06 模型参数</a><a href="#m07-token-上下文窗口" class="lvl2">M07 Token / 上下文窗口</a><a href="#m08-function-calling" class="lvl2">M08 Function Calling</a><a href="#m09-应用架构" class="lvl2">M09 应用架构</a><a href="#自测完成度自查" class="lvl2">自测完成度自查</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="learning-project-03-ai-application">LEARNING — Project 03 AI Application</h1>
 <blockquote><p>这份文件只记录<strong>「我是否真的掌握」</strong>，仓库里写了什么请去看 <code>README.md</code> / <code>PROGRESS.md</code>。</p><p>铁律：<strong>文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。</strong></p><p>生成这份清单的人（AI）<strong>不会替你打任何勾</strong>。下面每一个框起点都是 ⬜， 只有你本人做完题、能讲清楚「为什么」之后，<strong>由你</strong>把它填成 ✅。</p></blockquote>
 <h2 id="怎么用">怎么用</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#总览表"><span class="sn-label">下一节 →</span><span class="sn-name">总览表</span></a></nav>
@@ -260,8 +399,27 @@ td math, th math{font-size:1em;}
 <blockquote><p>全部 ⬜ 是起点。这里记录的是你自己的掌握证据，不是文档或参考答案的完成情况。</p></blockquote>
 <table><thead><tr><th>环节</th><th>状态</th></tr></thead><tbody><tr><td>9 章 milestone 都独立读过</td><td>⬜</td></tr><tr><td>32 道动手题未对照答案独立完成</td><td>⬜</td></tr><tr><td><code>exercises/grade.py</code> 跑过自己实现的版本</td><td>⬜</td></tr><tr><td>9 章自测题都能不看材料答出“为什么”</td><td>⬜</td></tr><tr><td>能用自己的例子讲清完整 AI 应用调用链与安全边界</td><td>⬜</td></tr></tbody></table>
 <p><strong>只有最后三项都能打 ✅ 时，这个 Project 才算「已学习」。</strong></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/03-ai-application/LEARNING.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/03-ai-application/LEARNING.md", "name": "LEARNING.md", "text": "# LEARNING — Project 03 AI Application\n\n> 这份文件只记录**「我是否真的掌握」**，仓库里写了什么请去看 `README.md` / `PROGRESS.md`。\n>\n> 铁律：**文档就绪 ≠ 已学习，参考答案跑通 ≠ 我会了。**\n>\n> 生成这份清单的人（AI）**不会替你打任何勾**。下面每一个框起点都是 ⬜，\n> 只有你本人做完题、能讲清楚「为什么」之后，**由你**把它填成 ✅。\n\n## 怎么用\n\n三条线同时过才算掌握一章：\n\n1. **自测题** —— 每章 4–5 道问答题，考的是「为什么」，不是「用没用过」。答完再展开 `<details>` 对照判分要点\n2. **动手验证** —— 去 `exercises/` 独立写代码，再跑 `exercises/grade.py`；卡住了只看 `answers.py` 中对应的一个函数\n3. **自评** —— 诚实判断自己处在哪一档，不能用参考答案的运行结果代替自己的掌握程度\n\n## 总览表\n\n| # | Milestone | 自测题 | 动手验证 | 我掌握了 |\n|---|---|---|---|---|\n| 01 | [Prompt](milestones/01-prompt.md) | ⬜ | ⬜ `01-prompt-and-messages` A1–A5 | ⬜ |\n| 02 | [Messages](milestones/02-messages.md) | ⬜ | ⬜ `01-prompt-and-messages` B1–B5 | ⬜ |\n| 03 | [结构化输出](milestones/03-structured-output.md) | ⬜ | ⬜ `02-structured-and-streaming` A1–A4 | ⬜ |\n| 04 | [流式输出](milestones/04-streaming.md) | ⬜ | ⬜ `02-structured-and-streaming` B1–B3 | ⬜ |\n| 05 | [会话记忆](milestones/05-conversation-memory.md) | ⬜ | ⬜ `03-memory-tokens-tools` A1–A3 | ⬜ |\n| 06 | [模型参数](milestones/06-model-parameters.md) | ⬜ | ⬜ `02-structured-and-streaming` C1–C3 | ⬜ |\n| 07 | [Token / 上下文窗口](milestones/07-token-context-window.md) | ⬜ | ⬜ `03-memory-tokens-tools` B1–B3 | ⬜ |\n| 08 | [Function Calling](milestones/08-function-calling.md) | ⬜ | ⬜ `03-memory-tokens-tools` C1–C4 | ⬜ |\n| 09 | [应用架构](milestones/09-application-architecture.md) | ⬜ | ⬜ `03-memory-tokens-tools` D1–D2 | ⬜ |\n\n---\n\n## M01 Prompt\n\n**动手验证**：`exercises/01-prompt-and-messages` A1–A5\n\n**自测题**\n\n- ⬜ Q1 为什么说 Prompt 是 AI 应用的业务逻辑，而不应该作为长字符串散落在 CLI、API 和 service 中？\n- ⬜ Q2 system 与 user 消息为什么要按「不变规则 / 本轮输入」拆分？把所有内容都塞进 user 会带来什么成本与维护问题？\n- ⬜ Q3 为什么 `PromptTemplate` 要在 `render()` 时替换变量，而不是用 f-string 在定义模板时求值？\n- ⬜ Q4 为什么缺少变量和传入未知变量都应立即报错？只检查缺变量会漏掉哪类真实故障？\n- ⬜ Q5 用标签包住用户输入为什么只能缓解 Prompt 注入，不能成为高风险操作的最终安全边界？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能说出 Prompt 可复用、可测试、可版本化、可 review，并举出复制漂移或回归不可追踪的后果；只说“方便管理”给半档。\n- Q2：满档能解释全局规则稳定、本轮数据变化，以及重复规则会增加每轮 token、导致不同入口行为不一致；只会背“不变进 system”给半档。\n- Q3：满档能说明 f-string 立即绑定当前值，失去可保存的占位模板、统一变量校验和后续版本管理；只说“两者语法不同”给半档。\n- Q4：满档能区分缺参导致无法渲染与未知参数常由拼写错误造成，二者都应 fail fast；只答出缺参检查给半档。\n- Q5：满档能说明标签只是给模型的语义提示，模型仍可能违背；权限、写操作确认与数据访问控制必须由传统代码执行。只说“标签更安全”给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M02 Messages\n\n**动手验证**：`exercises/01-prompt-and-messages` B1–B5\n\n**自测题**\n\n- ⬜ Q1 LLM API 为什么说是无状态的？多轮对话为什么必须把 user 与 assistant 的历史都重新发送？\n- ⬜ Q2 system、user、assistant、tool 四种角色各由谁产生？assistant 的 `tool_calls` 与 tool 的 `tool_call_id` 如何对应？\n- ⬜ Q3 `Conversation.to_messages()` 为什么要复制列表中的每个字典，而不只是复制最外层 list？\n- ⬜ Q4 为什么 `validate_messages()` 应在发送请求前运行？它至少应该拦住哪三类协议错误？\n- ⬜ Q5 裁剪历史为什么不能从任意一条消息切开，尤其不能留下孤立的 tool 消息？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能说明模型每次只看到当前 messages，请求之间没有服务端记忆；assistant 历史不回灌会丢掉模型已经说过的上下文。只说“为了记忆”给半档。\n- Q2：满档能准确说出四个产生方和用途，并指出 tool 消息必须原样携带对应调用的 id；漏掉 id 的协议作用给半档。\n- Q3：满档能举出“浅复制 list 后修改其中 dict 仍污染内部状态”的例子；只说“防止外部 append”给半档。\n- Q4：满档至少答出空列表、非法 role、tool 缺 `tool_call_id`、既无 content 也无 tool_calls 中三项，并说明前置失败比远端 400 更易定位；只列错误不给原因给半档。\n- Q5：满档能说明 assistant(tool_calls) 与随后 tool 结果构成协议原子单元，切断后上游无法匹配调用结果；只说“上下文不完整”给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M03 结构化输出\n\n**动手验证**：`exercises/02-structured-and-streaming` A1–A4\n\n**自测题**\n\n- ⬜ Q1 Prompt 约定、JSON Mode、工具/函数调用三种结构化手段分别保证什么，又分别不能保证什么？\n- ⬜ Q2 Pydantic 模型为什么同时服务于“给模型看的契约”和“程序运行时的边界校验”？\n- ⬜ Q3 为什么 `json.loads()` 成功仍不代表结果可安全进入业务逻辑？\n- ⬜ Q4 结构化校验失败后为什么要把精简后的具体错误回灌，并且必须限制重试次数？\n- ⬜ Q5 `max_tokens` 太小时为什么常被误判为模型不遵守 JSON 格式？应该观察哪个响应字段？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能按弱到强说明 Prompt 无硬保证、JSON Mode 只保语法、tool schema 能约束字段形状但仍需本地校验；把 JSON Mode 说成保证字段正确只给半档。\n- Q2：满档能提到 `model_json_schema()` 生成机器契约、`model_validate()` 构造强类型对象并检查范围/类型；只答“方便定义字段”给半档。\n- Q3：满档能举出合法 JSON 仍可能缺字段、类型错误、范围越界，如 `{\"error\":\"不知道\"}`；只说“还可能报错”给半档。\n- Q4：满档能说明明确错误帮助模型定点修正，有限重试控制延迟和费用、防止无限循环；只答“让它再试一次”给半档。\n- Q5：满档能解释输出在 JSON 中间被截断导致解析失败，并指出 `finish_reason == \"length\"`；只说“调大 max_tokens”给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M04 流式输出\n\n**动手验证**：`exercises/02-structured-and-streaming` B1–B3\n\n**自测题**\n\n- ⬜ Q1 为什么流式输出能显著改善感知性能，却不一定缩短模型完成整段回答的总耗时？\n- ⬜ Q2 SSE 的 `data:`、空行分隔与 `[DONE]` 各承担什么协议职责？为什么每个 data 事件仍要可独立解析？\n- ⬜ Q3 `ChatService.astream()` 为什么必须缓冲全部 delta，并在结束后回灌一条完整 assistant 消息？\n- ⬜ Q4 为什么流已经开始后不能再把 HTTP 状态改成 500？上游中途失败应该怎样表达？\n- ⬜ Q5 流式展示与结构化解析为什么天然冲突？两者并存时应该怎样分工？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能区分首字延迟 TTFB 与完成耗时，说明用户早看到反馈但生成工作量未减少；只说“一个字一个字更快”给半档。\n- Q2：满档能说明事件前缀、事件边界、结束信号，并指出客户端按事件消费 JSON；只背出格式不给职责给半档。\n- Q3：满档能说明下一轮必须看到模型完整回复，否则只有流式路径失忆；只说“保存历史”不给症状给半档。\n- Q4：满档能说明响应头/状态已经发送，只能在流中发送约定的 error 事件并正常终止；只说“捕获异常”给半档。\n- Q5：满档能解释半个 JSON 无法校验，界面逐块展示但程序后台缓冲，结束后一次性 parse；主张边流边 `json.loads` 给半档以下。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M05 会话记忆\n\n**动手验证**：`exercises/03-memory-tokens-tools` A1–A3\n\n**自测题**\n\n- ⬜ Q1 为什么全量携带历史时，第 n 轮的累计 token 成本接近 O(n²)，而不是 O(n)？\n- ⬜ Q2 按预算裁剪时为什么 system、当前用户输入和完整工具调用轮次需要特殊保护？\n- ⬜ Q3 裁剪与摘要各损失什么、消耗什么？什么内容适合摘要，什么内容更适合保留原文？\n- ⬜ Q4 多用户共享同一个 `Conversation` 为什么不是普通逻辑 bug，而是数据泄漏问题？\n- ⬜ Q5 开发环境用内存 `SessionStore` 足够时，生产环境为什么仍要把会话外部化？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能写出每轮携带长度约为 n，累计为 1+2+…+n；只说“历史越来越长所以更贵”给半档。\n- Q2：满档能分别说明 system 保存规则、当前输入是本次任务、tool_calls/tool 必须成组；只答“保留最近消息”给半档。\n- Q3：满档能说明裁剪免费但丢内容，摘要保留关键信息但额外调用且损失细节，并以用户偏好/代码原文举例；只会比较“长短”给半档。\n- Q4：满档能描述 A 的事实进入 B 的请求与回答，形成跨用户隐私泄漏；只说“会串话”给半档。\n- Q5：满档能提到进程重启丢失、多副本之间不共享、并发更新与过期管理，说明 Redis/数据库的价值；只说“内存不够”给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M06 模型参数\n\n**动手验证**：`exercises/02-structured-and-streaming` C1–C3\n\n**自测题**\n\n- ⬜ Q1 temperature 改变的是采样分布的什么性质？为什么提高 temperature 不等于让模型更聪明？\n- ⬜ Q2 为什么通常不建议同时大幅调整 temperature 与 top_p？\n- ⬜ Q3 结构化抽取与创意写作为什么需要不同 Profile？请分别解释稳定性与发散性的取舍。\n- ⬜ Q4 `max_tokens`、上下文窗口和 `finish_reason` 三者如何共同解释“合法 JSON 只返回了一半”？\n- ⬜ Q5 `Settings.for_profile()` 为什么返回新的 frozen 配置，而不是原地修改共享 Settings？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能说明温度拉平或尖锐下一 token 概率分布，只改变随机性/惊喜程度，不增加知识与推理能力；只说“越高越随机”给半档。\n- Q2：满档能说明两者都筛改候选概率，同时变动会互相干扰、难归因和复现；只说“官方不推荐”给半档。\n- Q3：满档能说明抽取需要低温减少字段漂移，创意场景允许高温扩展候选，并结合 max_tokens；只背参数值给半档。\n- Q4：满档能说明输出也占共享窗口，生成上限耗尽会截断，`finish_reason=\"length\"` 是诊断证据；只说“JSON 太长”给半档。\n- Q5：满档能说明不可变对象避免跨请求污染与并发竞态，Profile 是可追踪的新值；只说“frozen 不能改”给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M07 Token / 上下文窗口\n\n**动手验证**：`exercises/03-memory-tokens-tools` B1–B3\n\n**自测题**\n\n- ⬜ Q1 为什么字符数、UTF-8 字节数和 token 数不能互相替代？中文场景为什么更容易估错？\n- ⬜ Q2 `estimate_tokens()` 与响应 `usage` 应分别用于什么决策？为什么不能拿估算值做账单对账？\n- ⬜ Q3 上下文窗口为什么是输入与输出共享，而不是只限制历史消息？\n- ⬜ Q4 `Budget.history_budget` 为什么先减去 `reserved_output`，再乘历史比例？\n- ⬜ Q5 发送前发现 overflow 时，为什么正确流程是裁剪、复查、明确报错，而不是静默截断或无限重试？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能说明 tokenizer 按子词切分且模型各异，字符/字节只是编码单位，并指出中文 token/字符比与英文不同；只说“数字不一样”给半档。\n- Q2：满档能说估算用于发送前预算与裁剪，usage 是厂商实际计数用于日志、成本和对账；混用二者给半档。\n- Q3：满档能举出 64K 窗口中历史占 60K 只剩约 4K 输出空间；只说“都算 token”给半档。\n- Q4：满档能说明先为回答留硬空间，再限制历史只占可用部分，避免历史把输出预算挤没；只复述公式给半档。\n- Q5：满档能说明一次裁剪后重新估值，仍超则抛 `ContextWindowError` 并建议新会话；静默裁剪会造成无解释的遗忘，无限重试只会重复失败。答不全给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M08 Function Calling\n\n**动手验证**：`exercises/03-memory-tokens-tools` C1–C4\n\n**自测题**\n\n- ⬜ Q1 为什么说模型只“请求调用”工具而不执行函数？这条边界对权限设计意味着什么？\n- ⬜ Q2 工具 schema 中 name、description、parameters、required 为什么都影响调用可靠性？\n- ⬜ Q3 完整工具循环的六步是什么？为什么执行结果必须作为带 `tool_call_id` 的 tool 消息回灌后再请求模型？\n- ⬜ Q4 为什么未知工具、坏 JSON 和参数不匹配适合作为错误结果回灌，而工具循环本身仍必须有 `max_iterations`？\n- ⬜ Q5 哪些工具可以直接暴露，哪些必须二次确认，哪些不该暴露？为什么不能让模型自己决定权限？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能说明模型只生成结构化意图，程序拥有查找、校验、执行和拒绝权；只说“代码在本地跑”给半档。\n- Q2：满档能说明名称用于派发、description 用于模型选工具、parameters/required 约束参数形状；只答“这是 JSON Schema”给半档。\n- Q3：满档能完整讲出请求、tool_calls、执行、tool 回灌、再次请求、最终回答，并解释 id 关联调用与结果；漏掉回灌或第二次请求给半档。\n- Q4：满档能说明错误回灌让模型有机会纠正，同时上限防止反复调用造成无限延迟与费用；只答其中一半给半档。\n- Q5：满档能区分只读查询、需确认的写操作、shell/删除/任意文件等禁区，并指出 Prompt 注入可操纵模型，权限必须由代码校验。只列例子不给原因给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## M09 应用架构\n\n**动手验证**：`exercises/03-memory-tokens-tools` D1–D2\n\n**自测题**\n\n- ⬜ Q1 接入层、编排层、能力层、模型层、支撑层各负责什么？为什么只有模型层应该知道上游 API 的形状？\n- ⬜ Q2 如果 service 直接使用 httpx、拼 API URL，会怎样破坏替换模型与离线测试？\n- ⬜ Q3 “无状态服务 + 外部化会话”为什么有利于水平扩展？它又引入了哪些并发与生命周期问题？\n- ⬜ Q4 延迟、token/费用、分类失败率为什么是 AI 应用最低限度的三类可观测指标？\n- ⬜ Q5 为什么生成文本可以谨慎重试，而写数据库、下单、发邮件等工具调用不能照搬同一重试策略？\n\n<details><summary>判分要点<\/summary>\n\n- Q1：满档能准确说出五层职责，并说明 API 变化被 client/settings 隔离，上层只依赖稳定接口；只会背文件名给半档。\n- Q2：满档能说明厂商协议泄漏到编排层、FakeClient 无法替换、测试被迫联网或重度 patch；只说“耦合高”给半档。\n- Q3：满档能说明任意实例可处理请求、Redis/数据库跨副本共享，同时要解决并发写、会话过期和数据隔离；只说“方便扩容”给半档。\n- Q4：满档能分别用 TTFB/总延迟定位体验、usage/费用定位账单、按类型失败率定位限流/解析/工具问题；只列三个名词给半档。\n- Q5：满档能说明文本生成通常无外部副作用，而写操作重试可能重复扣款/重复记录，需要幂等键、确认与专门策略；只说“写操作危险”给半档。\n\n<\/details>\n\n**自评**：⬜ 还没看过 · ⬜ 看过但不会写代码 · ⬜ 会写代码但讲不清为什么 · ⬜ 能讲清并举例\n\n---\n\n## 自测完成度自查\n\n> 全部 ⬜ 是起点。这里记录的是你自己的掌握证据，不是文档或参考答案的完成情况。\n\n| 环节 | 状态 |\n|---|---|\n| 9 章 milestone 都独立读过 | ⬜ |\n| 32 道动手题未对照答案独立完成 | ⬜ |\n| `exercises/grade.py` 跑过自己实现的版本 | ⬜ |\n| 9 章自测题都能不看材料答出“为什么” | ⬜ |\n| 能用自己的例子讲清完整 AI 应用调用链与安全边界 | ⬜ |\n\n**只有最后三项都能打 ✅ 时，这个 Project 才算「已学习」。**\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -269,6 +427,8 @@ td math, th math{font-size:1em;}
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -278,6 +438,173 @@ td math, th math{font-size:1em;}
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -291,6 +618,17 @@ td math, th math{font-size:1em;}
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -317,15 +655,46 @@ td math, th math{font-size:1em;}
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

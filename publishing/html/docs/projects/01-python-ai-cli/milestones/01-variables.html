@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-27" title="返回《文档总览》第 27 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#str-string字符串" class="lvl2">str —— String【字符串】</a><a href="#int-integer整数" class="lvl2">int —— Integer【整数】</a><a href="#float-floating-point浮点数" class="lvl2">float —— Floating Point【浮点数】</a><a href="#bool-boolean布尔值" class="lvl2">bool —— Boolean【布尔值】</a><a href="#联系描述" class="lvl3">联系描述</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#level-1跟做" class="lvl2">Level 1：跟做</a><a href="#level-2修改" class="lvl2">Level 2：修改</a><a href="#level-3独立实现" class="lvl2">Level 3：独立实现</a><a href="#level-4需求变化" class="lvl2">Level 4：需求变化</a><a href="#level-5解释" class="lvl2">Level 5：解释</a><a href="#lessonmd" class="lvl3">lesson.md</a><a href="#demo" class="lvl3">demo/</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="lesson-01-用-python-做第一个小项目ai-engineer-学习档案生成器">Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器</h1>
 <blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   本章目标：<strong>不单独背 Python 语法，而是在完成一个真实小项目的过程中学会 Python 基础。</strong></p></blockquote>
 <hr/>
@@ -980,8 +1119,27 @@ system / user / assistant
  ↓
 第一次真正接触 LLM API 数据结构</code></pre>
 <p>这才是 Python 正式迈向 AI 开发的第一座桥。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/01-python-ai-cli/milestones/01-variables.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/01-python-ai-cli/milestones/01-variables.md", "name": "01-variables.md", "text": "# Lesson 01 — 用 Python 做第一个小项目：AI Engineer 学习档案生成器\n\n> AI Engineer Journey · Project 01 — Python AI CLI Assistant  \n> 学习方式：Project-Based Learning【项目驱动学习】  \n> 本章目标：**不单独背 Python 语法，而是在完成一个真实小项目的过程中学会 Python 基础。**\n\n---\n\n# 1. 这一章我们到底要做什么？\n\n我们先不学一堆 Python 语法。\n\n假设我们刚刚开始学习 AI，现在想做一个最简单的小工具：\n\n> **输入自己的学习信息，程序帮我们生成一份 AI Engineer 学习档案。**\n\n最终运行效果：\n\n```text\n$ python main.py\n\n========== AI Engineer 学习档案 ==========\n\n姓名：Beiluo\n当前职业：Java 开发工程师\n每天学习时间：3.5 小时\n当前方向：Python + AI + LLM\n\n目标：\n成为 AI Engineer\n\n===========================================\n```\n\n听起来很简单。\n\n但为了完成这个小项目，我们自然会遇到：\n\n```text\n怎么保存姓名？\n怎么保存年龄？\n怎么保存学习时间？\n怎么让用户输入？\n怎么输出？\n学习时间为什么是数字？\nPython 怎么知道变量是什么类型？\n怎么把变量放进一段文本？\n```\n\n于是我们开始学习：\n\n```text\n变量\n数据类型\ninput()\nprint()\ntype()\n类型转换\nf-string\n```\n\n这就是这一章的学习方式：\n\n> **先有项目问题，再学习解决问题所需要的 Python 知识。**\n\n---\n\n# 2. 项目地图\n\n我们的第一个项目非常小，但会逐步升级。\n\n```text\nProject 00\nAI Engineer 学习档案生成器\n\nv0.1\n写死数据\n ↓\nv0.2\n让用户输入\n ↓\nv0.3\n处理数字\n ↓\nv0.4\n格式化输出\n ↓\nv0.5\n检查数据类型\n ↓\nv1.0\n完成学习档案\n```\n\n这条路线很重要。\n\n以后真正开发 AI 应用也是一样：\n\n```text\n先有需求\n↓\n先做最小版本\n↓\n遇到问题\n↓\n补知识\n↓\n继续升级\n```\n\n---\n\n# 3. 项目 v0.1：先把结果做出来\n\n第一版我们甚至不学习 `input()`。\n\n先写一个最简单的程序：\n\n```python\nprint(\"========== AI Engineer 学习档案 ==========\")\nprint(\"姓名：Beiluo\")\nprint(\"当前职业：Java 开发工程师\")\nprint(\"每天学习时间：3.5 小时\")\nprint(\"当前方向：Python + AI + LLM\")\nprint(\"目标：成为 AI Engineer\")\nprint(\"===========================================\")\n```\n\n运行：\n\n```text\n========== AI Engineer 学习档案 ==========\n\n姓名：Beiluo\n当前职业：Java 开发工程师\n每天学习时间：3.5 小时\n当前方向：Python + AI + LLM\n目标：成为 AI Engineer\n\n===========================================\n```\n\n很好。\n\n我们的第一个版本已经能运行了。\n\n但是马上出现一个问题：\n\n> 如果换一个人使用怎么办？\n\n现在所有内容都是写死的。\n\n---\n\n# 4. 第一个问题：程序怎么保存数据？\n\n例如我们希望：\n\n```text\n姓名 → Beiluo\n职业 → Java 开发工程师\n学习时间 → 3.5\n方向 → Python + AI + LLM\n```\n\n我们需要给这些数据起名字。\n\n于是出现 Python 最基础的概念：\n\n# 变量 Variable【变量】\n\n把代码改成：\n\n```python\nname = \"Beiluo\"\nrole = \"Java 开发工程师\"\nstudy_hours = 3.5\ndirection = \"Python + AI + LLM\"\n\nprint(name)\nprint(role)\nprint(study_hours)\nprint(direction)\n```\n\n这里真正发生的事情是：\n\n```text\nname\n ↓\n\"Beiluo\"\n\nrole\n ↓\n\"Java 开发工程师\"\n\nstudy_hours\n ↓\n3.5\n\ndirection\n ↓\n\"Python + AI + LLM\"\n```\n\n变量的作用可以先简单理解为：\n\n> **给数据绑定一个名字，后面可以通过这个名字使用数据。**\n\n---\n\n# 5. Java 开发者怎么理解变量？\n\nJava：\n\n```java\nString name = \"Beiluo\";\ndouble studyHours = 3.5;\n```\n\nPython：\n\n```python\nname = \"Beiluo\"\nstudy_hours = 3.5\n```\n\n这里最大的区别之一：\n\nJava 通常显式写类型：\n\n```java\nString name\ndouble studyHours\n```\n\nPython 通常直接：\n\n```python\nname\nstudy_hours\n```\n\nPython 会根据右侧对象判断类型。\n\n所以：\n\n```python\nname = \"Beiluo\"\n```\n\nPython 知道这是字符串。\n\n```python\nstudy_hours = 3.5\n```\n\nPython 知道这是浮点数。\n\n---\n\n# 6. 第二个问题：Python 怎么知道数据是什么？\n\n现在项目有：\n\n```python\nname = \"Beiluo\"\nage = 29\nstudy_hours = 3.5\nlearning_ai = True\n```\n\n它们的数据明显不一样。\n\n所以我们需要知道：\n\n> **这些数据到底是什么类型？**\n\n使用：\n\n```python\ntype()\n```\n\n例如：\n\n```python\nprint(type(name))\nprint(type(age))\nprint(type(study_hours))\nprint(type(learning_ai))\n```\n\n输出类似：\n\n```text\n<class 'str'>\n<class 'int'>\n<class 'float'>\n<class 'bool'>\n```\n\n于是我们第一次遇到了 Python 的基本类型。\n\n---\n\n# 7. 项目中最常见的几种类型\n\n我们只学项目当前需要的。\n\n## `str` —— String【字符串】\n\n文本：\n\n```python\nname = \"Beiluo\"\nrole = \"Java 开发工程师\"\n```\n\n---\n\n## `int` —— Integer【整数】\n\n整数：\n\n```python\nage = 29\n```\n\n---\n\n## `float` —— Floating Point【浮点数】\n\n带小数：\n\n```python\nstudy_hours = 3.5\n```\n\n---\n\n## `bool` —— Boolean【布尔值】\n\n只有两个值：\n\n```python\nTrue\nFalse\n```\n\n例如：\n\n```python\nlearning_ai = True\nhas_finished_python = False\n```\n\n---\n\n# 8. 第三个问题：让程序真的能给别人用\n\n当前代码：\n\n```python\nname = \"Beiluo\"\nrole = \"Java 开发工程师\"\nstudy_hours = 3.5\n```\n\n还是写死。\n\n我们希望：\n\n```text\n请输入姓名：\n请输入职业：\n请输入每天学习时间：\n请输入学习方向：\n```\n\n这时候就需要：\n\n# `input()`\n\n例如：\n\n```python\nname = input(\"请输入你的姓名：\")\n```\n\n运行：\n\n```text\n请输入你的姓名：Beiluo\n```\n\n用户输入：\n\n```text\nBeiluo\n```\n\n那么：\n\n```python\nname\n```\n\n就保存了：\n\n```text\nBeiluo\n```\n\n---\n\n# 9. 第一个真正能交互的版本\n\n把项目升级：\n\n```python\nname = input(\"请输入你的姓名：\")\nrole = input(\"请输入你的职业：\")\nstudy_hours = input(\"请输入每天学习时间：\")\ndirection = input(\"请输入当前学习方向：\")\n\nprint(name)\nprint(role)\nprint(study_hours)\nprint(direction)\n```\n\n现在它已经不是一个静态脚本了。\n\n它变成：\n\n```text\n程序\n ↓\n等待用户输入\n ↓\n得到数据\n ↓\n保存数据\n ↓\n继续执行\n```\n\n这就是最基本的程序交互。\n\n---\n\n# 10. `input()` 的第一个坑\n\n现在做个实验：\n\n```python\nstudy_hours = input(\"每天学习几小时：\")\n\nprint(study_hours)\nprint(type(study_hours))\n```\n\n输入：\n\n```text\n3.5\n```\n\n你可能会以为：\n\n```text\nstudy_hours = 3.5\n```\n\n但实际上：\n\n```text\n<class 'str'>\n```\n\n为什么？\n\n因为：\n\n> **`input()` 默认返回字符串。**\n\n即使用户输入：\n\n```text\n29\n```\n\n程序默认得到的是：\n\n```text\n\"29\"\n```\n\n而不是：\n\n```text\n29\n```\n\n这两个东西不一样。\n\n---\n\n# 11. 项目开始真正遇到类型转换问题\n\n现在我们的需求是：\n\n> 每天学习时间以后可能需要做数学计算。\n\n比如：\n\n```text\n每天 3.5 小时\n一个星期大约学习多少小时？\n```\n\n如果：\n\n```python\nstudy_hours = \"3.5\"\n```\n\n它只是字符串。\n\n我们需要把它变成数字。\n\n使用：\n\n```python\nfloat()\n```\n\n于是：\n\n```python\nstudy_hours = float(\n    input(\"请输入每天学习时间：\")\n)\n```\n\n现在：\n\n```python\nprint(type(study_hours))\n```\n\n会得到：\n\n```text\n<class 'float'>\n```\n\n于是：\n\n```text\n用户输入\n ↓\n\"3.5\"\n ↓\nfloat()\n ↓\n3.5\n```\n\n---\n\n# 12. 如果是年龄呢？\n\n年龄是整数：\n\n```python\nage = int(input(\"请输入年龄：\"))\n```\n\n于是：\n\n```text\n用户输入：\n29\n\n得到：\n\n29\n```\n\n类型：\n\n```text\nint\n```\n\n---\n\n# 13. 类型转换\n\n项目里现在出现了几个常见函数：\n\n```python\nint()\nfloat()\nstr()\nbool()\n```\n\n例如：\n\n```python\nage = int(\"29\")\nstudy_hours = float(\"3.5\")\n```\n\n你可以暂时记成：\n\n```text\n字符串\n ↓\nint()\n ↓\n整数\n```\n\n或者：\n\n```text\n字符串\n ↓\nfloat()\n ↓\n浮点数\n```\n\n---\n\n# 14. 第四个问题：输出太难看了\n\n现在我们的程序可能写成：\n\n```python\nprint(name)\nprint(role)\nprint(study_hours)\nprint(direction)\n```\n\n运行：\n\n```text\nBeiluo\nJava 开发工程师\n3.5\nPython + AI + LLM\n```\n\n虽然有内容，但用户体验很差。\n\n我们需要把变量和文字组合起来。\n\n于是学习：\n\n# f-string【格式化字符串】\n\n写：\n\n```python\nprint(f\"姓名：{name}\")\nprint(f\"职业：{role}\")\nprint(f\"每天学习时间：{study_hours} 小时\")\nprint(f\"当前方向：{direction}\")\n```\n\n这里：\n\n```python\nf\"姓名：{name}\"\n```\n\n意思就是：\n\n> 在字符串中把 `name` 当前保存的值插入进去。\n\n![真实运行：变量、type()、input() 与 f-string 的完整输出](../assets/term-variables-types.png)\n\n![真实运行：第 4-7 节——重新赋值后 id() 变化、input() 永远返回字符串、f-string 与动态类型](../assets/term-variables-id.png)\n\n---\n\n# 15. 最终项目 v1.0\n\n现在，我们把刚刚遇到的所有问题组合起来：\n\n```python\nname = input(\"请输入你的姓名：\")\nage = int(input(\"请输入你的年龄：\"))\nrole = input(\"请输入你的职业：\")\nstudy_hours = float(input(\"请输入每天学习时间：\"))\ndirection = input(\"请输入当前学习方向：\")\n\nprint(\"\\n========== AI Engineer 学习档案 ==========\")\n\nprint(f\"姓名：{name}\")\nprint(f\"年龄：{age}\")\nprint(f\"职业：{role}\")\nprint(f\"每天学习时间：{study_hours} 小时\")\nprint(f\"当前学习方向：{direction}\")\n\nprint(\"\\n目标：成为 AI Engineer\")\n\nprint(\"===========================================\")\n```\n\n例如：\n\n```text\n请输入你的姓名：Beiluo\n请输入你的年龄：29\n请输入你的职业：Java 开发工程师\n请输入每天学习时间：3.5\n请输入当前学习方向：Python + AI + LLM\n\n========== AI Engineer 学习档案 ==========\n\n姓名：Beiluo\n年龄：29\n职业：Java 开发工程师\n每天学习时间：3.5 小时\n当前学习方向：Python + AI + LLM\n\n目标：成为 AI Engineer\n\n===========================================\n```\n\n现在我们已经完成第一个真正的 Python 小项目。\n\n---\n\n# 16. 回头看：我们到底学了什么？\n\n注意：\n\n我们不是先学：\n\n```text\n变量\n类型\ninput\nprint\nf-string\n```\n\n然后再做项目。\n\n而是：\n\n```text\n项目需求\n ↓\n我要保存数据\n ↓\n学习变量\n ↓\n我要知道数据是什么\n ↓\n学习类型\n ↓\n我要接收用户输入\n ↓\n学习 input()\n ↓\n我要进行数学计算\n ↓\n发现 input() 是字符串\n ↓\n学习 int() / float()\n ↓\n我要漂亮地输出\n ↓\n学习 f-string\n```\n\n这就是：\n\n# Project-Based Learning\n\n真正的项目驱动。\n\n---\n\n# 17. 本章知识地图\n\n现在把这几个知识点串起来：\n\n```text\n                   AI Engineer 学习档案\n                            │\n                            ↓\n                     用户输入数据\n                            │\n                            ↓\n                         input()\n                            │\n                            ↓\n                         变量\n                            │\n                            ↓\n                     数据类型判断\n                            │\n                  ┌─────────┼─────────┐\n                  ↓         ↓         ↓\n                 str       int      float\n                  │         │         │\n                  └─────────┼─────────┘\n                            ↓\n                       类型转换\n                            │\n                            ↓\n                        f-string\n                            │\n                            ↓\n                         print()\n                            │\n                            ↓\n                         最终输出\n```\n\n### 联系描述\n\n用户首先通过 `input()` 向程序提供数据，Python 把这些数据保存到变量中。由于不同输入具有不同的数据类型，我们需要理解 `str`、`int`、`float` 和 `bool`，并在需要进行数学运算时使用 `int()` 或 `float()` 完成类型转换。最后通过 f-string 把变量组合成用户能够理解的文本，并使用 `print()` 输出。整个过程形成了一个最基本的“输入 → 处理 → 输出”程序闭环。\n\n这也是后续 AI 应用的基本结构：\n\n```text\n用户\n ↓\n输入\n ↓\n程序处理\n ↓\nAI / API\n ↓\n输出\n```\n\n---\n\n# 18. Java → Python 的迁移\n\n现在不需要死记完整 Python 语法，只先建立这个映射。\n\n|项目需求|Java|Python|\n|---|---|---|\n|文本|`String`|`str`|\n|整数|`int`|`int`|\n|小数|`double`|`float`|\n|布尔值|`boolean`|`bool`|\n|获取输入|`Scanner`|`input()`|\n|输出|`System.out.println()`|`print()`|\n|字符串格式化|拼接 / Formatter|f-string|\n|字符串转整数|`Integer.parseInt()`|`int()`|\n|字符串转小数|`Double.parseDouble()`|`float()`|\n\n注意：\n\n> 这些只是帮助你迁移编程思维，不意味着 Java 和 Python 的底层机制完全一样。\n\n---\n\n# 19. 一个重要认识：动态类型\n\n看看：\n\n```python\nx = 10\nprint(type(x))\n\nx = \"hello\"\nprint(type(x))\n```\n\n第一次：\n\n```text\nint\n```\n\n第二次：\n\n```text\nstr\n```\n\n所以 Python 属于：\n\n> **动态类型语言（Dynamically Typed Language）**\n\n简单理解：\n\n> 变量在写代码的时候通常不用声明固定类型，运行时根据绑定的对象决定类型。\n\n但是：\n\n> **动态类型 ≠ 没有类型。**\n\n`10` 还是 `int`。\n\n`\"hello\"` 还是 `str`。\n\n---\n\n# 20. 本章第一个工程习惯\n\n以后不要一看到代码就背。\n\n先问：\n\n```text\n这个项目要解决什么问题？\n ↓\n需要保存什么数据？\n ↓\n这些数据是什么类型？\n ↓\n用户数据从哪里来？\n ↓\n数据需要怎么处理？\n ↓\n最后输出什么？\n```\n\n这就是工程思维的开始。\n\n---\n\n# 21. 小实验：自己修改需求\n\n现在项目已经可以用了。\n\n我们增加一个需求：\n\n> 根据每天学习时间，计算一周总学习时间。\n\n新增：\n\n```python\nweekly_hours = study_hours * 7\n```\n\n然后：\n\n```python\nprint(f\"预计每周学习时间：{weekly_hours} 小时\")\n```\n\n整个代码变成：\n\n```python\nname = input(\"请输入你的姓名：\")\nage = int(input(\"请输入你的年龄：\"))\nrole = input(\"请输入你的职业：\")\nstudy_hours = float(input(\"请输入每天学习时间：\"))\ndirection = input(\"请输入当前学习方向：\")\n\nweekly_hours = study_hours * 7\n\nprint(\"\\n========== AI Engineer 学习档案 ==========\")\n\nprint(f\"姓名：{name}\")\nprint(f\"年龄：{age}\")\nprint(f\"职业：{role}\")\nprint(f\"每天学习时间：{study_hours} 小时\")\nprint(f\"预计每周学习时间：{weekly_hours} 小时\")\nprint(f\"当前学习方向：{direction}\")\n\nprint(\"\\n目标：成为 AI Engineer\")\n\nprint(\"===========================================\")\n```\n\n注意：\n\n我们没有专门开一节讲“算术运算”。\n\n因为项目需求自然让你遇到了：\n\n```python\nstudy_hours * 7\n```\n\n后面真正需要更多运算的时候，再继续学。\n\n---\n\n# 22. 小挑战\n\n现在不要看上面的最终代码。\n\n自己重新写一个：\n\n# AI Engineer Profile v2\n\n要求用户输入：\n\n```text\n姓名\n当前职业\nJava 工作年限\n每天学习小时数\n当前学习方向\n```\n\n输出：\n\n```text\n========== AI Engineer Profile ==========\n\n姓名：\n职业：\nJava 工作年限：\n每天学习：\n每周预计学习：\n学习方向：\n\n最终目标：\nAI Engineer\n\n==========================================\n```\n\n要求：\n\n```text\nJava 工作年限 → int\n每天学习小时数 → float\n每周学习时间 = 每天学习时间 × 7\n使用 f-string\n不能把用户信息写死\n```\n\n---\n\n# 23. 主动回忆\n\n完成代码以后，不要马上看答案。\n\n回答：\n\n### Q1\n\n为什么：\n\n```python\nage = input(\"年龄：\")\n```\n\n得到的是 `str`？\n\n---\n\n### Q2\n\n为什么：\n\n```python\nage = int(input(\"年龄：\"))\n```\n\n就可以得到整数？\n\n---\n\n### Q3\n\n下面：\n\n```python\nstudy_hours = 3.5\n```\n\n为什么是 `float`？\n\n---\n\n### Q4\n\n为什么 Python 可以：\n\n```python\nx = 10\nx = \"hello\"\n```\n\n而 Java 的变量声明方式通常不同？\n\n---\n\n### Q5\n\n下面：\n\n```python\nprint(f\"姓名：{name}\")\n```\n\n为什么需要 `f`？\n\n---\n\n### Q6\n\n从项目角度解释：\n\n> **变量、类型、input、类型转换、f-string、print 之间是什么关系？**\n\n不要背定义，用“我们的学习档案项目”来解释。\n\n---\n\n# 24. 本章练习分级\n\n## Level 1：跟做\n\n把本章项目完整运行一次。\n\n---\n\n## Level 2：修改\n\n增加：\n\n```text\n当前年龄\n预计每周学习时间\n```\n\n---\n\n## Level 3：独立实现\n\n关闭课程代码后，自己重新实现：\n\n```text\nAI Engineer Profile\n```\n\n---\n\n## Level 4：需求变化\n\n新增：\n\n```text\n目标职位\n最想学习的技术\n```\n\n不用修改整体程序结构也能完成需求。\n\n---\n\n## Level 5：解释\n\n能够向一个完全不会 Python 的人解释：\n\n> 为什么 `input()` 得到的是字符串，而我们又要使用 `int()` 或 `float()`？\n\n如果能够用自己的语言解释清楚，这一章才算真正掌握。\n\n---\n\n# 25. 本章在 AI Engineer Journey 中的位置\n\n```text\nProject 01 — Python AI CLI Assistant\n\nLesson 01\n变量 / 类型 / 输入输出\n        ↓\nLesson 02\nList / Dict / JSON / AI Messages\n        ↓\nLesson 03\nCondition / Loop\n        ↓\nLesson 04\nFunction\n        ↓\n...\n        ↓\nPython AI CLI Assistant\n```\n\n当前：\n\n```text\nLesson 01\n✅ 完成\n\nLesson 02\n⬜ 下一章\n```\n\n---\n\n# 26. 与最终 AI 项目的连接\n\n现在的项目：\n\n```text\n用户\n ↓\ninput()\n ↓\nPython\n ↓\nprint()\n```\n\n很快会升级成：\n\n```text\n用户\n ↓\nPython\n ↓\nmessages\n ↓\nLLM API\n ↓\n大模型\n ↓\nResponse\n ↓\nPython\n ↓\n用户\n```\n\n再往后：\n\n```text\n用户\n ↓\nVue\n ↓\nFastAPI\n ↓\nLLM\n ↓\nRAG\n ↓\nAgent\n ↓\nTool\n ↓\nModel\n```\n\n所以这不是“学完以后没用的 Python 基础”。\n\n它是后面整个 AI 工程链的第一层。\n\n---\n\n# 27. 本章文件建议\n\n本章最终在 GitHub 中：\n\n```text\nprojects/\n└── 01-python-ai-cli/\n    └── 01-variables/\n        ├── README.md\n        ├── lesson.md\n        ├── demo/\n        │   ├── 01-basic-profile.py\n        │   ├── 02-input-profile.py\n        │   └── 03-learning-profile.py\n        └── exercises/\n            └── README.md\n```\n\n其中：\n\n### `lesson.md`\n\n就是本章正式课程。\n\n### `demo/`\n\n保存随着课程逐步演进的代码：\n\n```text\n01-basic-profile.py\n→ 写死版本\n\n02-input-profile.py\n→ 加入 input\n\n03-learning-profile.py\n→ 完整版本\n```\n\n这个设计非常重要。\n\n不要只保存最后答案。\n\n> **把项目从 v0.1 → v1.0 的演进过程保留下来。**\n\n这以后会成为你 GitHub 项目和自媒体内容非常有价值的一部分。\n\n---\n\n# 28. 本章总结\n\n这一章我们不是为了记住：\n\n```text\nstr\nint\nfloat\nbool\ninput\nprint\n```\n\n而是通过：\n\n> **AI Engineer 学习档案生成器**\n\n亲手经历了：\n\n```text\n项目需求\n ↓\n发现需要保存数据\n ↓\n变量\n ↓\n发现数据类型不同\n ↓\n类型\n ↓\n发现需要用户输入\n ↓\ninput()\n ↓\n发现输入默认是字符串\n ↓\nint() / float()\n ↓\n发现输出需要组合变量\n ↓\nf-string\n ↓\nprint()\n ↓\n完成项目\n```\n\n这就是我们整个 **AI Engineer Journey** 后续都要遵循的学习方式：\n\n> **不要为了学知识而学知识，而是先做项目；项目遇到问题，再学习解决问题所需要的知识。**\n\n下一章自然进入：\n\n# Lesson 02 — List / Dict → JSON → AI Messages\n\n我们会继续升级这个思路：\n\n> “学习档案里只有一个人的数据不够了，我需要保存很多数据、保存多条消息。”\n\n于是我们自然会遇到：\n\n```text\nList\n ↓\nDict\n ↓\nList + Dict\n ↓\nJSON\n ↓\nmessages\n ↓\nsystem / user / assistant\n ↓\n第一次真正接触 LLM API 数据结构\n```\n\n这才是 Python 正式迈向 AI 开发的第一座桥。"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -989,6 +1147,8 @@ system / user / assistant
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -998,6 +1158,173 @@ system / user / assistant
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -1011,6 +1338,17 @@ system / user / assistant
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -1037,15 +1375,46 @@ system / user / assistant
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

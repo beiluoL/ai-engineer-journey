@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-9" title="返回《文档总览》第 9 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">09 · 数学基础：关键公式与推导思路</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#91-符号约定先统一口径" class="lvl2">9.1 符号约定（先统一口径）</a><a href="#92-前置三个必须熟练的运算" class="lvl2">9.2 前置：三个必须熟练的运算</a><a href="#921-矩阵乘法与形状检查" class="lvl3">9.2.1 矩阵乘法与形状检查</a><a href="#922-点积与余弦相似度" class="lvl3">9.2.2 点积与余弦相似度</a><a href="#923-转置与广播" class="lvl3">9.2.3 转置与广播</a><a href="#93-selfattention-的缩放为什么是-dk" class="lvl2">9.3 Self-Attention 的缩放：为什么是 √d_k</a><a href="#推导思路" class="lvl3">推导思路</a><a href="#顺带softmax-的雅可比矩阵推导思路" class="lvl3">顺带：Softmax 的雅可比矩阵（推导思路）</a><a href="#94-softmax-与交叉熵梯度为什么这么漂亮" class="lvl2">9.4 Softmax 与交叉熵：梯度为什么这么漂亮</a><a href="#941-softmax-的数值稳定性" class="lvl3">9.4.1 Softmax 的数值稳定性</a><a href="#942-交叉熵" class="lvl3">9.4.2 交叉熵</a><a href="#943-梯度推导" class="lvl3">9.4.3 梯度推导</a><a href="#944-困惑度" class="lvl3">9.4.4 困惑度</a><a href="#95-位置编码与-rope" class="lvl2">9.5 位置编码与 RoPE</a><a href="#951-正弦位置编码" class="lvl3">9.5.1 正弦位置编码</a><a href="#952-rope把旋转搬到-qk-上" class="lvl3">9.5.2 RoPE：把旋转搬到 Q/K 上</a><a href="#96-反向传播与自动微分" class="lvl2">9.6 反向传播与自动微分</a><a href="#961-链式法则" class="lvl3">9.6.1 链式法则</a><a href="#962-计算图前向-反向" class="lvl3">9.6.2 计算图（前向 → 反向）</a><a href="#963-为什么必须用-autograd" class="lvl3">9.6.3 为什么必须用 autograd</a><a href="#964-梯度累积与裁剪" class="lvl3">9.6.4 梯度累积与裁剪</a><a href="#97-优化器从-sgd-到-adamw" class="lvl2">9.7 优化器：从 SGD 到 AdamW</a><a href="#98-概率与信息论速查" class="lvl2">9.8 概率与信息论速查</a><a href="#981-熵交叉熵kl-散度" class="lvl3">9.8.1 熵、交叉熵、KL 散度</a><a href="#982-采样温度与-topp-的数学" class="lvl3">9.8.2 采样：温度与 top-p 的数学</a><a href="#983-奖励模型里的-bradleyterry" class="lvl3">9.8.3 奖励模型里的 Bradley-Terry</a><a href="#99-手推清单面试前自查" class="lvl2">9.9 手推清单（面试前自查）</a><a href="#910-自查问题" class="lvl2">9.10 自查问题</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="09-数学基础关键公式与推导思路">09 · 数学基础：关键公式与推导思路</h1>
 <blockquote><p><strong>一句话结论</strong>：LLM 用到的数学其实不多——<strong>矩阵乘法、softmax、交叉熵、链式法则、几个优化器</strong>。 难的不是数学本身，而是把符号和工程实现对应起来。本章按&quot;符号 → 公式 → 推导思路 → 实现注意&quot;的顺序过一遍。</p></blockquote>
 <p><strong>怎么读这一章</strong>：第 02/03/07 章已经把结论用掉了。本章是&quot;回头补推导&quot;的地方，第一次读可以跳读，第二遍再细看。</p>
@@ -298,8 +437,27 @@ td math, th math{font-size:1em;}
 <ul class="lvl"><li>为什么注意力要除以 √d_k？请写出方差推导的两步。</li><li>交叉熵对 logits 的梯度是什么？为什么这个形式带来训练稳定性？</li><li>正弦位置编码为什么能表达相对位置？RoPE 的做法有什么不同？</li><li>反向传播为什么比数值求导快几个数量级？</li><li>AdamW 和 Adam 的区别是什么？为什么要做这个改动？</li><li>交叉熵、KL 散度、熵三者的关系式是什么？为什么最小化交叉熵是合理的？</li><li>温度 T→0 和 T→∞ 时，softmax 分别退化成什么？为什么？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="08-alignment-rlhf.html">← 上一章：对齐（RLHF 与 DPO）</a> · <a href="README.html">返回总览</a> · <a href="10-glossary.html">下一章：术语表 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/09-math-foundations.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/09-math-foundations.md", "name": "09-math-foundations.md", "text": "# 09 · 数学基础：关键公式与推导思路\n\n> **一句话结论**：LLM 用到的数学其实不多——**矩阵乘法、softmax、交叉熵、链式法则、几个优化器**。\n> 难的不是数学本身，而是把符号和工程实现对应起来。本章按\"符号 → 公式 → 推导思路 → 实现注意\"的顺序过一遍。\n\n**怎么读这一章**：第 02/03/07 章已经把结论用掉了。本章是\"回头补推导\"的地方，第一次读可以跳读，第二遍再细看。\n\n---\n\n## 9.1 符号约定（先统一口径）\n\n| 符号 | 含义 | 典型值 |\n|------|------|--------|\n| $n$ / $T$ | 序列长度（token 数） | 512 – 128k |\n| $d$ / $d_{model}$ | 隐藏维度 | 4096 |\n| $h$ | 注意力头数 | 32 |\n| $d_k = d/h$ | 每个头的维度 | 128 |\n| $V$ | 词表大小 | 32k – 200k |\n| $L$ | 层数 | 32 |\n| $B$ | 批大小（batch size） | 1 – 512 |\n| $X \\in \\mathbb{R}^{n \\times d}$ | 输入序列的表示矩阵 | — |\n| $x_t \\in \\mathbb{R}^{d}$ | 第 t 个 token 的向量（行向量约定） | — |\n| $W \\in \\mathbb{R}^{d \\times d'}$ | 权重矩阵 | — |\n| $z \\in \\mathbb{R}^{V}$ | logits（未归一化打分） | — |\n| $p$ | 概率分布，$\\sum_i p_i = 1$ | — |\n| $\\theta$ | 全部可训练参数 | 7e9 |\n| $\\eta$ | 学习率 | 1e-4 |\n| $\\sigma$ | sigmoid：$\\frac{1}{1+e^{-x}}$ | — |\n| $\\odot$ | 逐元素乘（Hadamard） | — |\n| $\\nabla_\\theta$ | 对参数的梯度 | — |\n\n> **约定说明**：本笔记与多数实现一致，**每个 token 是矩阵的一行**（$X \\in \\mathbb{R}^{n \\times d}$）。看到公式里的行/列要能自动换算——这是读论文时最常见的困惑来源。\n\n---\n\n## 9.2 前置：三个必须熟练的运算\n\n### 9.2.1 矩阵乘法与形状检查\n\n$$\n(A B)_{ij} = \\sum_{k} A_{ik} B_{kj},\n\\qquad\n\\underbrace{(m \\times k)}_{A} \\cdot \\underbrace{(k \\times p)}_{B} = \\underbrace{(m \\times p)}_{AB}\n$$\n\n**形状检查是调试的第一手段**：算不出来 90% 是形状不对（内维必须相等）。\n\n| 运算 | 形状 | 计算量 |\n|------|------|--------|\n| $XW$ | $(n,d)\\times(d,d') \\to (n,d')$ | $2ndd'$ FLOPs |\n| $AB^{\\top}$ | $(n,d)\\times(d,n) \\to (n,n)$ | $2n^2d$ |\n| 逐元素 | 形状必须相同 | $O(n)$ |\n\n### 9.2.2 点积与余弦相似度\n\n$$\na \\cdot b = \\sum_{i=1}^{d} a_i b_i = \\|a\\|\\,\\|b\\|\\cos\\theta\n$$\n\n注意力里 $q \\cdot k$ 就是用它衡量\"方向一致程度\"（含模长影响，所以缩放很关键，见 9.3）。\n\n### 9.2.3 转置与广播\n\n- $(AB)^{\\top} = B^{\\top}A^{\\top}$ —— 反向传播推导的基础\n- 广播（broadcast）：`(n,1)` 与 `(1,m)` 相加得到 `(n,m)`，掩码就是这么加的\n\n---\n\n## 9.3 Self-Attention 的缩放：为什么是 √d_k\n\n**结论**：为了让注意力打分矩阵在初始化时保持**单位方差**，softmax 不至于饱和。\n\n### 推导思路\n\n**前提假设**：$q$ 和 $k$ 的各分量独立同分布，均值 0、方差 1（这是合理的初始化假设——现代网络的激活尺度控制就是朝这个方向设计的）。\n\n**第一步**：计算单个乘积项的方差。\n\n$$\n\\operatorname{Var}(q_i k_i) = \\mathbb{E}[q_i^2 k_i^2] - \\big(\\mathbb{E}[q_i k_i]\\big)^2 = \\mathbb{E}[q_i^2]\\,\\mathbb{E}[k_i^2] - 0 = 1 \\cdot 1 = 1\n$$\n\n**第二步**：$d_k$ 个独立项求和，方差线性累加。\n\n$$\n\\operatorname{Var}\\!\\left(\\sum_{i=1}^{d_k} q_i k_i\\right) = \\sum_{i=1}^{d_k} \\operatorname{Var}(q_i k_i) = d_k\n\\qquad \\Longrightarrow \\qquad\n\\text{标准差} = \\sqrt{d_k}\n$$\n\n**第三步**：结论。点积的典型大小随 $\\sqrt{d_k}$ 增长。除以 $\\sqrt{d_k}$ 后方差回到 1：\n\n$$\n\\operatorname{Var}\\!\\left(\\frac{q \\cdot k}{\\sqrt{d_k}}\\right) = \\frac{d_k}{d_k} = 1\n$$\n\n**第四步**：为什么方差重要——看 softmax 的行为。\n\n$$\n\\operatorname{softmax}(z)_i = \\frac{e^{z_i}}{\\sum_j e^{z_j}}\n$$\n\n| 输入标准差 | softmax 输出 | 梯度 |\n|------------|--------------|------|\n| ≈ 1 | 平滑分布，各位置都有权重 | 健康 |\n| ≫ 1（如 10） | 接近 one-hot；最大项独占 | $\\partial p / \\partial z \\to 0$，**饱和，学不动** |\n\n**真实数据验证**（`demos/02_self_attention.py`）：未缩放时打分绝对值均值 1.457，除以 √d_k = 2.0 后降到 0.729——数值被\"压\"到合理区间。\n\n### 顺带：Softmax 的雅可比矩阵（推导思路）\n\n$$\n\\frac{\\partial p_i}{\\partial z_j} = p_i (\\delta_{ij} - p_j)\n\\qquad\\Longrightarrow\\qquad\n\\frac{\\partial \\mathcal{L}}{\\partial z} = p - y \\quad (\\text{与交叉熵复合后})\n$$\n\n这个\"$p - y$\"结果极其重要（见 9.4），也是为什么 softmax + 交叉熵的组合在框架里常常被合并成一个 op（`cross_entropy_with_logits`）—— 不只是为了数值稳定，也因为梯度形式特别简洁。\n\n---\n\n## 9.4 Softmax 与交叉熵：梯度为什么这么漂亮\n\n### 9.4.1 Softmax 的数值稳定性\n\n$$\n\\operatorname{softmax}(z)_i = \\frac{e^{z_i - c}}{\\sum_j e^{z_j - c}} \\quad \\text{对任意常数 } c \\text{ 成立}\n$$\n\n取 $c = \\max_j z_j$，指数项的取值范围被压到 $(-\\infty, 0]$，永不溢出。真实实验见 [第 01 章](01-basics-language-model.md)（`logits=[1000,1001,999]` 时 naive 版本得到 `nan`）。\n\n### 9.4.2 交叉熵\n\n单样本（正确类别为 $y$）：\n\n$$\n\\mathcal{L} = -\\log p_y = -\\log \\frac{e^{z_y}}{\\sum_j e^{z_j}} = -z_y + \\log \\sum_j e^{z_j}\n$$\n\n这个形式叫 **log-sum-exp**，也是数值稳定实现的标准写法。\n\n一个 batch：\n\n$$\n\\mathcal{L} = -\\frac{1}{N}\\sum_{i=1}^{N} \\log p_{i, y_i}\n$$\n\n### 9.4.3 梯度推导\n\n对 logits 求导：\n\n$$\n\\frac{\\partial \\mathcal{L}}{\\partial z_j} = -\\frac{\\partial z_y}{\\partial z_j} + \\frac{\\partial}{\\partial z_j}\\log\\sum_k e^{z_k}\n= -\\delta_{jy} + \\frac{e^{z_j}}{\\sum_k e^{z_k}}\n= p_j - \\delta_{jy}\n$$\n\n$$\n\\boxed{\\;\\frac{\\partial \\mathcal{L}}{\\partial z} = p - y\\;}\n$$\n\n**人话**：梯度就是\"预测分布 − 真实分布（one-hot）\"。预测得越准，梯度越小；错得越离谱，梯度越大（但配合 softmax 有上界，不会爆炸）。这个结果也解释了为什么 softmax + CE 的组合训练如此稳定。\n\n### 9.4.4 困惑度\n\n$$\n\\mathrm{PPL} = \\exp(\\mathcal{L})\n$$\n\n推导：对一个长度为 $T$ 的序列，其似然是 $\\prod_t p_t$，取负对数再取指数就是\"几何平均的倒数\"：\n\n$$\n\\mathrm{PPL} = \\left(\\prod_{t=1}^{T} \\frac{1}{p_t}\\right)^{1/T} = \\exp\\!\\left(-\\frac{1}{T}\\sum_t \\log p_t\\right) = e^{\\mathcal{L}}\n$$\n\n**直觉**：PPL 相当于\"模型每次预测时，等价于在 PPL 个候选里均匀犹豫\"。\n\n---\n\n## 9.5 位置编码与 RoPE\n\n### 9.5.1 正弦位置编码\n\n$$\nPE_{(pos,\\,2i)} = \\sin\\!\\left(\\frac{pos}{10000^{2i/d}}\\right),\n\\qquad\nPE_{(pos,\\,2i+1)} = \\cos\\!\\left(\\frac{pos}{10000^{2i/d}}\\right)\n$$\n\n定义角频率 $\\omega_i = 10000^{-2i/d}$，则 $\\operatorname{PE}(pos) = [\\sin(\\omega_0 pos), \\cos(\\omega_0 pos), \\sin(\\omega_1 pos), \\cos(\\omega_1 pos), \\dots]$\n\n**为什么能表达相对位置**（推导思路）：利用和角公式\n\n$$\n\\begin{aligned}\n\\sin(\\omega(pos+k)) &= \\sin(\\omega pos)\\cos(\\omega k) + \\cos(\\omega pos)\\sin(\\omega k) \\\\\n\\cos(\\omega(pos+k)) &= \\cos(\\omega pos)\\cos(\\omega k) - \\sin(\\omega pos)\\sin(\\omega k)\n\\end{aligned}\n$$\n\n写成矩阵形式：\n\n$$\n\\begin{bmatrix} \\sin(\\omega(pos+k)) \\\\ \\cos(\\omega(pos+k)) \\end{bmatrix}\n=\n\\underbrace{\\begin{bmatrix} \\cos(\\omega k) & \\sin(\\omega k) \\\\ -\\sin(\\omega k) & \\cos(\\omega k) \\end{bmatrix}}_{\\text{只与 } k \\text{ 有关的旋转矩阵}}\n\\begin{bmatrix} \\sin(\\omega pos) \\\\ \\cos(\\omega pos) \\end{bmatrix}\n$$\n\n**结论**：$PE(pos+k)$ 是 $PE(pos)$ 的一个**只依赖 k 的线性变换**。所以注意力里 $q^{\\top}k$ 能自然地表达相对距离——这就是 `demos/04_positional_encoding.py` 里\"同一 k 下不同 pos 点积完全相同\"（7.4852 × 4）的数学原因。\n\n### 9.5.2 RoPE：把旋转搬到 Q/K 上\n\nRoPE 直接对 Q、K 施加旋转（而非加在输入上）：\n\n$$\nq_m' = R_{\\Theta,m} q_m, \\qquad k_n' = R_{\\Theta,n} k_n\n$$\n\n对二维子空间 $(2i, 2i+1)$ 的旋转矩阵：\n\n$$\nR^{(i)}_{\\theta_i, m} =\n\\begin{bmatrix}\n\\cos(m\\theta_i) & -\\sin(m\\theta_i) \\\\\n\\sin(m\\theta_i) & \\cos(m\\theta_i)\n\\end{bmatrix},\n\\qquad \\theta_i = 10000^{-2i/d}\n$$\n\n**关键性质**（这是 RoPE 的全部价值）：\n\n$$\n{q_m'}^{\\top} k_n' = (R_m q_m)^{\\top}(R_n k_n) = q_m^{\\top} R_m^{\\top} R_n k_n = q_m^{\\top} R_{n-m} k_n\n$$\n\n因为 $R^{\\top}_m R_n = R_{n-m}$（旋转矩阵的正交性与可加性）。**内积只依赖 $n-m$，即相对位置。** 而且这个操作不增加任何参数，也不改变向量模长（正交变换）。\n\n| 实现细节 | 说明 |\n|----------|------|\n| 应用到哪些位置 | 只对 Q、K 旋转，**V 不动** |\n| 计算方式 | 用 `cos/sin` 预计算表，偶数维用 sin、奇数维用 cos 配对旋转 |\n| 长上下文扩展 | 位置插值 / 调整 $\\theta_i$ 基底（NTK-aware）/ YaRN |\n\n---\n\n## 9.6 反向传播与自动微分\n\n### 9.6.1 链式法则\n\n$$\n\\frac{\\partial \\mathcal{L}}{\\partial \\theta}\n= \\frac{\\partial \\mathcal{L}}{\\partial z} \\cdot \\frac{\\partial z}{\\partial h} \\cdot \\frac{\\partial h}{\\partial \\theta}\n$$\n\n**反向传播 = 按计算图的逆序，反复应用链式法则**，同时复用中间梯度（所以它比\"逐个参数数值求导\"快几个数量级）。\n\n### 9.6.2 计算图（前向 → 反向）\n\n```mermaid\nflowchart LR\n    X[\"X\"] --> W1[\"@ W1\"]\n    W1 --> H[\"h1\"]\n    H --> ACT[\"激活\"]\n    ACT --> W2[\"@ W2\"]\n    W2 --> Z[\"logits z\"]\n    Z --> CE[\"softmax + CE\"]\n    T[\"target y\"] --> CE\n    CE --> L[\"loss L\"]\n\n    L -.->|\"∂L/∂z = p - y\"| Z\n    Z -.->|\"∂L/∂W2 = hᵀ·(∂L/∂z)\"| W2\n    W2 -.->|\"∂L/∂h\"| ACT\n    ACT -.->|\"乘激活导数\"| H\n    H -.->|\"∂L/∂W1 = xᵀ·(∂L/∂h1)\"| W1\n\n    style L fill:#fee2e2,stroke:#dc2626\n    style X fill:#e0f2fe,stroke:#0284c7\n```\n\n虚线是反向传播方向。工程上一个必须记住的结论：\n\n> **每个算子的反向传播，本质上都是\"用上游梯度 × 本算子的局部雅可比\"，而矩阵乘的反向就是\"另一侧的转置\"**。\n> 例：$z = hW$ 时，$\\frac{\\partial \\mathcal{L}}{\\partial W} = h^{\\top}\\frac{\\partial \\mathcal{L}}{\\partial z}$，$\\frac{\\partial \\mathcal{L}}{\\partial h} = \\frac{\\partial \\mathcal{L}}{\\partial z}W^{\\top}$。\n\n### 9.6.3 为什么必须用 autograd\n\n以 7B 模型为例，参数量 7×10⁹：\n\n| 方式 | 代价 | 可行性 |\n|------|------|--------|\n| 数值求导（逐参数扰动） | 每个参数需要 2 次前向 → 1.4×10¹⁰ 次前向 | ❌ 完全不可行 |\n| 符号求导（推导闭式） | 表达式爆炸 | ❌ 不现实 |\n| **反向传播 + autograd** | 约 1 次前向的 2 倍计算量 | ✅ 唯一可行 |\n\n这也解释了 `C ≈ 6ND` 的由来：**前向 2ND + 反向 4ND = 6ND**。\n\n### 9.6.4 梯度累积与裁剪\n\nGPU 装不下大 batch 时：\n\n$$\ng_{\\text{effective}} = \\frac{1}{K}\\sum_{k=1}^{K} g_k \\quad \\text{（K 个 micro-batch 累积后再更新）}\n$$\n\n梯度裁剪（防爆炸）：\n\n$$\ng \\leftarrow g \\cdot \\min\\!\\left(1, \\frac{c}{\\|g\\|}\\right) \\qquad (c \\text{ 通常取 } 1.0)\n$$\n\n---\n\n## 9.7 优化器：从 SGD 到 AdamW\n\n| 优化器 | 更新公式 | 特点 |\n|--------|----------|------|\n| SGD | $\\theta \\leftarrow \\theta - \\eta g$ | 简单，收敛慢，对 LR 敏感 |\n| Momentum | $v \\leftarrow \\beta v + g;\\; \\theta \\leftarrow \\theta - \\eta v$ | 抑制震荡，加速方向一致性 |\n| RMSProp | $s \\leftarrow \\beta s + (1-\\beta)g^2;\\; \\theta \\leftarrow \\theta - \\eta \\frac{g}{\\sqrt{s}+\\epsilon}$ | 自适应学习率 |\n| **Adam** | $m \\leftarrow \\beta_1 m + (1-\\beta_1)g$<br/>$v \\leftarrow \\beta_2 v + (1-\\beta_2)g^2$<br/>$\\hat m = \\frac{m}{1-\\beta_1^t},\\; \\hat v = \\frac{v}{1-\\beta_2^t}$<br/>$\\theta \\leftarrow \\theta - \\eta\\frac{\\hat m}{\\sqrt{\\hat v}+\\epsilon}$ | 一阶+二阶动量，几乎所有 LLM 都用 |\n| **AdamW** | 同 Adam，但权重衰减**独立**于梯度：$\\theta \\leftarrow \\theta - \\eta(\\frac{\\hat m}{\\sqrt{\\hat v}+\\epsilon} + \\lambda\\theta)$ | 修正原版 Adam 中 L2 与自适应缩放耦合的问题 |\n\n**符号含义**：\n\n| 符号 | 含义 | 默认值 |\n|------|------|--------|\n| $\\beta_1$ | 一阶动量衰减 | 0.9 |\n| $\\beta_2$ | 二阶动量衰减 | 0.95（LLM 常用，而非 0.999） |\n| $\\epsilon$ | 数值稳定项 | 1e-8 |\n| $\\lambda$ | 权重衰减系数 | 0.1 |\n| $\\hat m, \\hat v$ | 偏差校正后的动量（因为初始为 0，前几步偏小） | — |\n\n**为什么 LLM 显存这么贵**：Adam 要为每个参数存一阶和二阶动量，各 4 字节 fp32：\n\n$$\n\\text{优化器状态} = 8N \\text{ bytes} = 8 \\times 7\\times10^9 \\approx 52\\ \\text{GB}\n$$\n\n（[第 05 章](05-finetuning.md)里的显存账就是这么来的。）\n\n---\n\n## 9.8 概率与信息论速查\n\n### 9.8.1 熵、交叉熵、KL 散度\n\n$$\nH(p) = -\\sum_i p_i \\log p_i\n\\qquad\nH(p,q) = -\\sum_i p_i \\log q_i\n\\qquad\n\\mathrm{KL}(p \\| q) = \\sum_i p_i \\log \\frac{p_i}{q_i}\n$$\n\n三者的关系（**这是理解\"为什么训练目标合理\"的关键**）：\n\n$$\nH(p, q) = H(p) + \\mathrm{KL}(p \\| q)\n$$\n\n- $H(p)$：真实分布的固有不确定性（不可约损失 $L_\\infty$）\n- $\\mathrm{KL}(p\\|q)$：模型分布与真实分布的差距（我们真正想最小化的东西）\n- 由于 $H(p)$ 与参数无关，**最小化交叉熵 ≡ 最小化 KL 散度**\n\n| 性质 | KL 散度 |\n|------|---------|\n| 非负性 | $\\mathrm{KL} \\ge 0$，当且仅当 $p=q$ 时为 0 |\n| 不对称 | $\\mathrm{KL}(p\\|q) \\neq \\mathrm{KL}(q\\|p)$ |\n| 前向 KL（$\\mathrm{KL}(p\\|q)$） | 惩罚\"$p>0$ 但 $q\\approx 0$\"→ 倾向覆盖所有模式（**mode-covering**） |\n| 反向 KL（$\\mathrm{KL}(q\\|p)$） | 惩罚\"$q>0$ 但 $p\\approx 0$\"→ 倾向只抓一个模式（**mode-seeking**） |\n\n> 对齐（[第 08 章](08-alignment-rlhf.md)）里用的 KL 惩罚是 $\\mathrm{KL}(\\pi_\\theta \\| \\pi_{ref})$——注意方向很重要，它约束的是\"新模型不要跑到参考模型概率极低的地方去\"。\n\n### 9.8.2 采样：温度与 top-p 的数学\n\n温度采样：\n\n$$\np_i = \\frac{\\exp(z_i / T)}{\\sum_j \\exp(z_j / T)}\n$$\n\n**T 的极限行为**（值得记）：\n\n| T | 极限 | 证明思路 |\n|---|------|----------|\n| $T \\to 0^+$ | $p \\to$ one-hot（argmax） | 最大项占指数主导 |\n| $T \\to \\infty$ | $p \\to$ 均匀分布 | $z_i/T \\to 0$，所有 $e^0 = 1$ |\n\nTop-p（核采样）：按概率降序排列，取最小集合 $S$ 满足\n\n$$\n\\sum_{i \\in S} p_i \\ge p\n$$\n\n然后把 $S$ 外概率置 0 并重新归一化。\n\n### 9.8.3 奖励模型里的 Bradley-Terry\n\n见 [第 08 章 8.2.1](08-alignment-rlhf.md)，本质是用 sigmoid 把\"分数差\"映射为偏好概率：\n\n$$\nP(y_w \\succ y_l) = \\sigma(r_w - r_l)\n$$\n\n---\n\n## 9.9 手推清单（面试前自查）\n\n能不看笔记推出下面这些，理论部分就过关了：\n\n| # | 推导 | 关键工具 |\n|---|------|----------|\n| 1 | 注意力公式中 √d_k 的来历 | 方差可加性 |\n| 2 | softmax 的雅可比 $p_i(\\delta_{ij}-p_j)$ | 商的求导 |\n| 3 | 交叉熵对 logits 的梯度 $p - y$ | 链式法则 + log-sum-exp |\n| 4 | PPL 与交叉熵的关系 | 几何平均 |\n| 5 | 正弦位置编码的\"相对位置线性变换\"性质 | 和角公式 |\n| 6 | RoPE 内积只依赖相对位置 | 旋转矩阵正交性 $R_m^{\\top}R_n = R_{n-m}$ |\n| 7 | 矩阵乘的反向传播 | $(AB)^{\\top}=B^{\\top}A^{\\top}$ |\n| 8 | Adam 的偏差校正为什么必要 | 初始动量全 0 |\n| 9 | $C \\approx 6ND$ 的由来 | 前向 2ND + 反向 4ND |\n| 10 | KL 惩罚如何抑制 reward hacking | 前向 KL 的 mode-covering 行为 |\n\n---\n\n## 9.10 自查问题\n\n1. 为什么注意力要除以 √d_k？请写出方差推导的两步。\n2. 交叉熵对 logits 的梯度是什么？为什么这个形式带来训练稳定性？\n3. 正弦位置编码为什么能表达相对位置？RoPE 的做法有什么不同？\n4. 反向传播为什么比数值求导快几个数量级？\n5. AdamW 和 Adam 的区别是什么？为什么要做这个改动？\n6. 交叉熵、KL 散度、熵三者的关系式是什么？为什么最小化交叉熵是合理的？\n7. 温度 T→0 和 T→∞ 时，softmax 分别退化成什么？为什么？\n\n---\n\n[← 上一章：对齐（RLHF 与 DPO）](08-alignment-rlhf.md) · [返回总览](README.md) · [下一章：术语表 →](10-glossary.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -307,6 +465,8 @@ td math, th math{font-size:1em;}
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -316,6 +476,173 @@ td math, th math{font-size:1em;}
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -329,6 +656,17 @@ td math, th math{font-size:1em;}
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -355,15 +693,46 @@ td math, th math{font-size:1em;}
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

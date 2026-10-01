@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-3" title="返回《文档总览》第 3 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">03 · Transformer 架构：一个 decoder block 里到底有什么</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#31-三种形态先认清你看的是哪一台机器" class="lvl2">3.1 三种形态：先认清你看的是哪一台机器</a><a href="#32-骨架残差-归一化" class="lvl2">3.2 骨架：残差 + 归一化</a><a href="#321-为什么需要残差连接" class="lvl3">3.2.1 为什么需要残差连接</a><a href="#322-layernorm把数值拉回可控范围" class="lvl3">3.2.2 LayerNorm：把数值拉回可控范围</a><a href="#323-preln-vs-postln一个必须记住的工程结论" class="lvl3">3.2.3 Pre-LN vs Post-LN：一个必须记住的工程结论</a><a href="#33-前馈网络ffn被低估的三分之二" class="lvl2">3.3 前馈网络（FFN）：被低估的三分之二</a><a href="#34-位置编码把顺序写进向量" class="lvl2">3.4 位置编码：把顺序写进向量</a><a href="#341-正弦位置编码原论文方案" class="lvl3">3.4.1 正弦位置编码（原论文方案）</a><a href="#342-三种方案的对比与演进" class="lvl3">3.4.2 三种方案的对比与演进</a><a href="#35-一个-decoder-block-的完整数据流" class="lvl2">3.5 一个 decoder block 的完整数据流</a><a href="#端到端的张量形状batch1序列长-t" class="lvl3">端到端的张量形状（batch=1，序列长 T）</a><a href="#36-参数量估算自己算一遍" class="lvl2">3.6 参数量估算：自己算一遍</a><a href="#37-架构演化从-gpt1-到现代-llm" class="lvl2">3.7 架构演化：从 GPT-1 到现代 LLM</a><a href="#38-常被误解的点" class="lvl2">3.8 常被误解的点</a><a href="#39-动手" class="lvl2">3.9 动手</a><a href="#310-自查问题" class="lvl2">3.10 自查问题</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="03-transformer-架构一个-decoder-block-里到底有什么">03 · Transformer 架构：一个 decoder block 里到底有什么</h1>
 <blockquote><p><strong>一句话结论</strong>：现代 LLM = <strong>N 个结构完全相同的 decoder block 堆叠</strong>。 每个 block 只有两个子层——注意力（负责&quot;从上下文取信息&quot;）和前馈网络（负责&quot;加工信息&quot;）——外面包上残差和归一化，让几十上百层能稳定地叠起来。</p></blockquote>
 <p><a href="02-attention.html">第 02 章</a>讲了注意力这一个零件，本章把它组装成机器。</p>
@@ -258,8 +397,27 @@ python3 demos/make_figures.py               # 重画 positional-encoding.png</co
 <ul class="lvl"><li>一个 decoder block 里有哪些子层？各占多少参数？</li><li>残差连接为什么能缓解梯度消失？（写出 ∂x&#x27;/∂x）</li><li>Pre-LN 和 Post-LN 的公式分别是什么？为什么现代模型都用 Pre-LN？</li><li>位置编码为什么必需？RoPE 相比正弦编码好在哪两个点？</li><li>用 <code>12·L·d²</code> 估算一个 L=80、d=8192 的模型参数量，再想想词表占多少。</li><li>Encoder-only / Decoder-only / Encoder-Decoder 各自适合什么任务？为什么 LLM 是 Decoder-only？</li><li>MoE 的&quot;总参数&quot;和&quot;激活参数&quot;分别影响什么？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="02-attention.html">← 上一章：注意力机制</a> · <a href="README.html">返回总览</a> · <a href="04-pretraining.html">下一章：预训练 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/03-transformer.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/03-transformer.md", "name": "03-transformer.md", "text": "# 03 · Transformer 架构：一个 decoder block 里到底有什么\n\n> **一句话结论**：现代 LLM = **N 个结构完全相同的 decoder block 堆叠**。\n> 每个 block 只有两个子层——注意力（负责\"从上下文取信息\"）和前馈网络（负责\"加工信息\"）——外面包上残差和归一化，让几十上百层能稳定地叠起来。\n\n[第 02 章](02-attention.md)讲了注意力这一个零件，本章把它组装成机器。\n\n---\n\n## 3.1 三种形态：先认清你看的是哪一台机器\n\n```mermaid\nflowchart LR\n    subgraph EO[\"Encoder-only（BERT 系）\"]\n        E1[\"双向注意力<br/>看全句\"] --> E2[\"每个位置一个向量<br/>适合理解类任务\"]\n    end\n    subgraph DO[\"Decoder-only（GPT / LLaMA / Qwen 系）\"]\n        D1[\"因果注意力<br/>只看左边\"] --> D2[\"下一 token 预测<br/>适合生成\"]\n    end\n    subgraph ED[\"Encoder-Decoder（T5 / 翻译系）\"]\n        F1[\"编码器双向读源文\"] --> F2[\"解码器因果生成目标文\"]\n    end\n\n    style EO fill:#e0f2fe,stroke:#0284c7\n    style DO fill:#dbeafe,stroke:#2563eb\n    style ED fill:#f3e8ff,stroke:#9333ea\n```\n\n| 形态 | 代表 | 注意力 | 预训练目标 | 现状 |\n|------|------|--------|------------|------|\n| Encoder-only | BERT、RoBERTa、BGE | 双向 | 掩码语言建模（MLM） | 作为**文本嵌入模型**仍是主力（RAG 检索就用它） |\n| Decoder-only | GPT 全系、LLaMA、Qwen、DeepSeek | 因果 | 下一 token 预测（CLM） | **当前 LLM 唯一主流** |\n| Encoder-Decoder | T5、BART、原始 Transformer | 编码器双向 + 解码器因果 | Span corruption 等 | 翻译/摘要仍有市场，通用 LLM 已让位 |\n\n**为什么 Decoder-only 赢了**：一个目标（预测下一个 token）+ 一套结构，就能同时表达理解与生成；训练信号最密集（每个位置都是监督）；且天然支持 in-context learning 与任意长度的续写。\n\n本章接下来讲的都是 **decoder block**。\n\n---\n\n## 3.2 骨架：残差 + 归一化\n\n### 3.2.1 为什么需要残差连接\n\n$$\nx' = x + \\operatorname{Sublayer}(x)\n$$\n\n| 作用 | 说明 |\n|------|------|\n| 梯度高速公路 | 反向传播时 `∂x'/∂x = I + ∂Sublayer/∂x`，恒等项保证梯度至少能原样流回底层，缓解深层网络梯度消失 |\n| 恒等初始化友好 | 子层初始输出很小，网络初始近似恒等映射，\"先能训得动，再慢慢学\" |\n| 不增加参数量 | 只做加法 |\n\n### 3.2.2 LayerNorm：把数值拉回可控范围\n\n$$\n\\operatorname{LN}(x) = \\gamma \\odot \\frac{x - \\mu}{\\sqrt{\\sigma^2 + \\epsilon}} + \\beta\n$$\n\n- 对**每个 token 的特征维**（最后一维）做归一化，与 batch 无关\n- 这就是它比 BatchNorm 更适合变长文本的原因：**不依赖 batch 统计**，推理时行为一致\n\n现代模型多数换成 **RMSNorm**（去掉均值中心化，只保留缩放）：\n\n$$\n\\operatorname{RMSNorm}(x) = \\gamma \\odot \\frac{x}{\\sqrt{\\frac{1}{d}\\sum_i x_i^2 + \\epsilon}}\n$$\n\n省掉均值计算，约省 10% 的归一化开销，效果基本无差。LLaMA、Qwen、Gemma 都用它。\n\n### 3.2.3 Pre-LN vs Post-LN：一个必须记住的工程结论\n\n```text\nPost-LN（原论文）:   x = LN(x + Sublayer(x))       归一化在残差之后\nPre-LN（现代主流）:  x = x + Sublayer(LN(x))       归一化在子层之前\n```\n\n| 方案 | 深层训练稳定性 | 是否要 warmup | 代表 |\n|------|----------------|---------------|------|\n| Post-LN | 差，需要精心调 warmup，层数一多就发散 | 必须 | 原始 Transformer |\n| **Pre-LN** | 好，能直接堆几百层 | 宽松得多 | GPT-2 之后几乎所有 LLM |\n\n**记忆点**：看到\"模型层数上不去 / 训练初期 loss 爆炸\"，第一反应就是检查用的哪种 LN 布局。\n\n---\n\n## 3.3 前馈网络（FFN）：被低估的三分之二\n\n注意力负责\"跨 token 通信\"，但**每个 token 内部的信息加工**由 FFN 完成。\n\n$$\n\\operatorname{FFN}(x) = W_2 \\cdot \\sigma(W_1 x + b_1) + b_2\n$$\n\n标准配置把维度先放大 4 倍：\n\n| 项 | 形状（d=4096） | 参数量 |\n|----|----------------|--------|\n| $W_1$ | 4096 × 16384 | 67.1 M |\n| $W_2$ | 16384 × 4096 | 67.1 M |\n| 合计 | — | **134.2 M** |\n| 对比：一次注意力的 QKVO | 4 × 4096 × 4096 | 67.1 M |\n\n**FFN 参数量是注意力部分的 2 倍**。所以\"7B 参数\"里，大头其实是 FFN。\n\n| 变体 | 公式 | 特点 |\n|------|------|------|\n| 标准 ReLU FFN | $\\max(0, xW_1)W_2$ | 原版 |\n| GELU FFN | $\\operatorname{GELU}(xW_1)W_2$ | GPT-2/BERT |\n| **SwiGLU** | $(\\operatorname{Swish}(xW_g) \\odot xW_1)W_2$ | LLaMA 系主流；三个矩阵但把隐藏维降到 8/3 d，总参数持平，效果更好 |\n\n> **\"FFN 是键值记忆\"** 这个解释很流行（Geva et al. 2021）：把 W₁ 的每行看成\"模式检测器\"，W₂ 的列看成\"对应输出内容\"。这解释了为什么对 FFN 做知识编辑（ROME 一类方法）能改掉模型的具体事实记忆。\n\n---\n\n## 3.4 位置编码：把顺序写进向量\n\n[第 02 章](02-attention.md)说过注意力是置换等变的——不注入位置信息，模型看\"我打你\"和\"你打我\"一样。位置编码就是补上这一课。\n\n### 3.4.1 正弦位置编码（原论文方案）\n\n$$\n\\begin{aligned}\nPE_{(pos,\\,2i)} &= \\sin\\!\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right) \\\\[4pt]\nPE_{(pos,\\,2i+1)} &= \\cos\\!\\left(\\frac{pos}{10000^{2i/d_{model}}}\\right)\n\\end{aligned}\n$$\n\n| 符号 | 含义 |\n|------|------|\n| $pos$ | 位置索引（0, 1, 2, …） |\n| $i$ | 维度对的索引（0 … d/2−1） |\n| $10000^{2i/d}$ | 不同维度对应不同波长：低维波长短（高频），高维波长长（低频） |\n\n这就是\"多把不同刻度的尺子同时量距离\"。`demos/04_positional_encoding.py` 的真实运行结果：\n\n![位置编码真实运行输出](assets/term-04_positional_encoding.png)\n\n**第 1 段**验证了\"低维快速振荡、高维缓慢变化\"；**第 2 段（性质 1）**是这套编码最漂亮的地方——**同一相对距离 k 下，不管 pos 是 0 还是 60，点积几乎完全一样**（7.4852 / 7.4852 / 7.4852 / 7.4852）：\n\n$$\n\\langle PE_{pos},\\, PE_{pos+k}\\rangle \\approx f(k) \\quad \\text{只依赖 } k\n$$\n\n这意味着模型能学到\"距离 5 个位置\"这种**相对概念**，而不是死记\"第 37 个位置\"——泛化到没见过的长度才成为可能。\n\n同一批数据画出来更直观：\n\n![位置编码热力图与相似度衰减](assets/positional-encoding.png)\n\n左图是 PE 矩阵（横轴位置、纵轴维度）：低维是密集的横纹（高频），高维是平缓的色块（低频）。右图是相似度随距离的衰减：**单点有起伏（多频率叠加的必然结果），滑动平均后单调下降**——这就是\"局部性先验\"的来源：近处 token 天然更容易互相注意。\n\n### 3.4.2 三种方案的对比与演进\n\n| 方案 | 是否可训练 | 外推能力 | 代表模型 | 说明 |\n|------|------------|----------|----------|------|\n| Sinusoidal（正弦） | 否 | 公式上任意长，但实际外推一般 | 原始 Transformer、早期 GPT | 本章 demo 实现的就是它 |\n| Learned（可学习） | 是 | **差**，超过训练长度失效 | BERT、GPT-2 | 简单直接，但长度被写死在表里 |\n| **RoPE（旋转位置编码）** | 否（有少量超参） | 好，配合插值可扩展到 128k+ | LLaMA、Qwen、Mistral、DeepSeek | 当前绝对主流 |\n| ALiBi | 否 | 好 | BLOOM、部分长文模型 | 直接给注意力打分加距离偏置 |\n\n**RoPE 的核心思想**（推导见 [第 09 章](09-math-foundations.md)）：不改 embedding，而是把 Q、K 向量按位置**旋转**一个角度：\n\n$$\nq_m' = R_{\\Theta, m}\\, q_m,\\qquad k_n' = R_{\\Theta, n}\\, k_n\n\\qquad\\Longrightarrow\\qquad\n{q_m'}^{\\top} k_n' = g(q_m, k_n,\\; m-n)\n$$\n\n旋转后的内积**天然只依赖相对位置 m−n**，与绝对位置无关。相比正弦编码（加在输入上，之后还要经过多层投影会被\"稀释\"），RoPE 直接作用在注意力的打分里，而且不增加参数量——这是它成为主流的原因。\n\n| 长上下文扩展技巧 | 做法 |\n|------------------|------|\n| 位置插值（PI） | 把超长位置压缩回训练范围 |\n| NTK-aware / YaRN | 改变旋转频率基底，按维度分频缩放 |\n| 继续预训练 | 直接用长文本再训一段（最可靠，也最贵） |\n\n---\n\n## 3.5 一个 decoder block 的完整数据流\n\n把上面的零件拼起来，一层 decoder（Pre-LN 布局）：\n\n```mermaid\nflowchart TB\n    IN[\"输入 x<br/>(n × d)\"] --> N1[\"RMSNorm\"]\n    N1 --> ATT[\"多头因果自注意力<br/>Q/K/V + RoPE + causal mask\"]\n    ATT --> ADD1[\"+ 残差\"]\n    IN --> ADD1\n    ADD1 --> N2[\"RMSNorm\"]\n    N2 --> FFN[\"FFN / SwiGLU<br/>d → 8/3·d → d\"]\n    FFN --> ADD2[\"+ 残差\"]\n    ADD1 --> ADD2\n    ADD2 --> OUT[\"输出 x<br/>(n × d)<br/>→ 交给下一层\"]\n\n    style IN fill:#e0f2fe,stroke:#0284c7\n    style ATT fill:#dbeafe,stroke:#2563eb\n    style FFN fill:#f3e8ff,stroke:#9333ea\n    style OUT fill:#dcfce7,stroke:#16a34a\n```\n\n一个 7B 级模型的超参（LLaMA-7B 量级）：\n\n| 超参 | 取值 | 备注 |\n|------|------|------|\n| d_model | 4096 | 隐藏维度 |\n| n_layers | 32 | 层数 |\n| n_heads | 32 | 头数 |\n| d_head | 128 | 4096 / 32 |\n| d_ff | 11008 | SwiGLU 的中间维度（≈ 8/3 × 4096 取整到 256 的倍数，为硬件友好） |\n| vocab_size | 32,000（LLaMA-1）/ 128,256（LLaMA-3） | 词表 |\n| context_len | 2048 → 4096 → 128k | 逐代变长 |\n| norm | RMSNorm + Pre-LN | — |\n| 位置编码 | RoPE | — |\n| 激活 | SwiGLU | — |\n\n### 端到端的张量形状（batch=1，序列长 T）\n\n| 阶段 | 形状 | 说明 |\n|------|------|------|\n| token ids | `(1, T)` | — |\n| embedding | `(1, T, 4096)` | 查表 |\n| × 32 层 | `(1, T, 4096)` | 形状全程不变（这是残差能用的前提） |\n| final norm | `(1, T, 4096)` | — |\n| lm_head | `(1, T, V)` | V = 词表大小，**这一层 logits 是显存杀手**（T=2048、V=128k 时约 500 MB/序列，fp16） |\n| softmax + 采样 | `(1,)` | 只取最后一个位置 |\n\n> **工程提示**：推理时一般只需要最后一个位置的 logits，但很多实现会把整个 `(T, V)` 算出来，白白浪费算力与显存——这也是为什么\"只取最后位置\"是一种常见的推理优化。\n\n---\n\n## 3.6 参数量估算：自己算一遍\n\n单层参数（忽略 bias）：\n\n$$\n\\underbrace{4 d^2}_{\\text{注意力 QKVO}} + \\underbrace{3 \\cdot d \\cdot d_{ff}}_{\\text{SwiGLU 三个矩阵}}\n$$\n\n加上词表（含输出层共享时为一份）：\n\n$$\nN \\approx 12 \\cdot L \\cdot d^2 \\; \\left(\\text{当 } d_{ff} = 4d \\text{ 时}\\right)\n$$\n\n这个\"12·L·d²\"是面试常考的速算公式。验证一下：\n\n| 模型 | L | d | 12·L·d² | 官方参数量 | 误差来源 |\n|------|---|---|---------|------------|----------|\n| GPT-2 small | 12 | 768 | 85 M | 124 M（含 50k 词表 embedding 39 M） | 词表未计入 |\n| GPT-3 | 96 | 12288 | 173 B | 175 B | 接近 |\n| LLaMA-7B | 32 | 4096 | 6.4 B | 6.7 B | SwiGLU 的 d_ff=11008 < 4d |\n\n**结论**：免词表时，参数量 ≈ `12 · L · d²`；实际再加 `V · d` 的 embedding（若共享则只算一次）。\n\n---\n\n## 3.7 架构演化：从 GPT-1 到现代 LLM\n\n| 代际 | 代表 | 关键变化 | 解决的问题 |\n|------|------|----------|------------|\n| 原始（2017） | Transformer | 提出注意力、位置编码、Post-LN | 取代 RNN |\n| 规模化（2018-2020） | GPT-2 / GPT-3 | Pre-LN、更大词表、层数堆深 | 训练稳定性、规模扩展 |\n| 开源对齐（2023） | LLaMA-1 | RMSNorm + SwiGLU + RoPE | 同规模下更强、更省显存 |\n| 推理友好（2023-2024） | LLaMA-2/3、Qwen | GQA、更长上下文、更大词表 | 推理成本、长文能力 |\n| 效率结构（2024-） | Mixtral、DeepSeek-V2/V3 | MoE（稀疏专家）、MLA、FP8、MTP | 用更少的激活参数换更大容量 |\n\n**MoE 一句话**：把 FFN 换成 N 个\"专家\"，每个 token 只激活其中 1–2 个。总参数很大（容量大），但每次前向只算一小部分（推理便宜）。Mixtral 8×7B 总参数 46.7B，激活只有 12.9B。\n\n| 概念 | 含义 | 注意 |\n|------|------|------|\n| 总参数（total） | 模型文件大小、显存占用 | 决定\"装得下吗\" |\n| 激活参数（active） | 每个 token 实际参与计算的参数 | 决定\"跑得快吗\" |\n\n---\n\n## 3.8 常被误解的点\n\n| 误解 | 真相 |\n|------|------|\n| \"Transformer 就是注意力\" | 注意力只占参数 1/3；FFN 占 2/3，且是知识与事实的主要存储地 |\n| \"位置编码只是个细节\" | 没有它模型完全无法理解语序；方案选择直接决定外推能力上限 |\n| \"层数越多越强\" | 在同等参数预算下，宽/深存在最优比；堆深主要考验训练稳定性（Pre-LN 才敢堆） |\n| \"Pre-LN 和 Post-LN 差不多\" | 差很多，Post-LN 在深层必须靠 warmup 救，Pre-LN 是能堆 100+ 层的前提 |\n| \"d_ff 一定是 4d\" | LLaMA 用 SwiGLU 时取 8/3·d，为的是保持总参数不变 |\n| \"MoE 一定更省钱\" | 只在**推理**上省算力；显存要装下全部专家，训练也更复杂 |\n\n---\n\n## 3.9 动手\n\n```bash\npython3 demos/04_positional_encoding.py     # 位置编码的四个性质都是真实算出来的\npython3 demos/make_figures.py               # 重画 positional-encoding.png\n```\n\n**建议改的三处**：\n\n1. 把 `D_MODEL` 从 64 改成 8，观察\"性质 1\"那张表是否还那么整齐（提示：维度太少，频率分辨率不够）。\n2. 把 `10000` 改成 `100`，观察热力图的频率分布如何变化。\n3. 自己加一段：实现 RoPE 的二维旋转矩阵，验证 $q_m'^\\top k_n'$ 只依赖 m−n。\n\n---\n\n## 3.10 自查问题\n\n1. 一个 decoder block 里有哪些子层？各占多少参数？\n2. 残差连接为什么能缓解梯度消失？（写出 ∂x'/∂x）\n3. Pre-LN 和 Post-LN 的公式分别是什么？为什么现代模型都用 Pre-LN？\n4. 位置编码为什么必需？RoPE 相比正弦编码好在哪两个点？\n5. 用 `12·L·d²` 估算一个 L=80、d=8192 的模型参数量，再想想词表占多少。\n6. Encoder-only / Decoder-only / Encoder-Decoder 各自适合什么任务？为什么 LLM 是 Decoder-only？\n7. MoE 的\"总参数\"和\"激活参数\"分别影响什么？\n\n---\n\n[← 上一章：注意力机制](02-attention.md) · [返回总览](README.md) · [下一章：预训练 →](04-pretraining.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -267,6 +425,8 @@ python3 demos/make_figures.py               # 重画 positional-encoding.png</co
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -276,6 +436,173 @@ python3 demos/make_figures.py               # 重画 positional-encoding.png</co
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -289,6 +616,17 @@ python3 demos/make_figures.py               # 重画 positional-encoding.png</co
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -315,15 +653,46 @@ python3 demos/make_figures.py               # 重画 positional-encoding.png</co
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

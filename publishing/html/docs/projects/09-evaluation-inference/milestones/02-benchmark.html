@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-129" title="返回《文档总览》第 129 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 02 — Benchmark：任务定义、统一打分与排行</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么排行榜必须有三个同一" class="lvl2">1. Why：为什么&amp;quot;排行榜&amp;quot;必须有三个&amp;quot;同一&amp;quot;</a><a href="#2-design三个对象" class="lvl2">2. Design：三个对象</a><a href="#3-realrun-evidence来自-demosoutdemo02benchmarkterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_02_benchmark_terminal.txt）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-忠实度是查准率不是查全率-越短越容易满分" class="lvl3">4.1 忠实度是&amp;quot;查准率&amp;quot;，不是&amp;quot;查全率&amp;quot;—— 越短越容易满分</a><a href="#42-参考答案自己拿不到-100-分-这是特性不是-bug" class="lvl3">4.2 参考答案自己拿不到 100 分 —— 这是特性不是 bug</a><a href="#43-三个模型都是规则函数-这不是偷懒" class="lvl3">4.3 三个&amp;quot;模型&amp;quot;都是规则函数 —— 这不是偷懒</a><a href="#44-排序键必须全序否则排行榜不可复现" class="lvl3">4.4 排序键必须全序，否则排行榜不可复现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-02-benchmark任务定义统一打分与排行">Milestone 02 — Benchmark：任务定义、统一打分与排行</h1>
 <p>M01 建立了<strong>指标</strong>：PPL、Token Acc、ECE。但指标只描述&quot;模型在某个数据集上的表现&quot;，还没回答&quot;我要拿它干什么&quot;。</p>
 <p>这一层把评估升级成 <strong>Benchmark</strong>：一组<strong>任务</strong>（task），每个任务有 prompt、参考答案、关键词、主题；一个统一的<strong>打分函数</strong>；一张<strong>可排序的排行榜</strong>。</p>
@@ -227,8 +366,27 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/benchmark.py</code></td><td><code>BenchmarkTask</code>（task_id/prompt/reference/keywords/topic）/ <code>Benchmark.evaluate</code>（单模型跑全任务）/ <code>Benchmark.compare</code>（多模型排行，<code>(-total, model)</code> 全序排序）/ <code>tasks_from_records</code>（把 held-out 记录转成任务）</td></tr><tr><td><code>src/ie/autoeval.py</code></td><td>提供 <code>evaluate_answer</code> 与 <code>aggregate_scores</code>（本章的打分与汇总口径来源，详见 M04）</td></tr><tr><td><code>src/ie/evalset.py</code></td><td><code>infer_topic</code>：给任务打主题标签，供&quot;主题数&quot;统计</td></tr><tr><td><code>demos/demo_02_benchmark.py</code></td><td>3 节：任务集构造 / 三个 predictor / 总分排行</td></tr><tr><td><code>demos/out/demo_02_benchmark_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/benchmark.svg</code></td><td>本章 benchmark 流水线图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.1 → <strong>v0.2</strong>，M02 Benchmark 落地。实测（Java held-out v1，6 任务 / 4 主题）：排行 <strong>参考答案 94.38 &gt; 首句摘要 75.56 &gt; 弱基线 21.87</strong>；分项显示参考答案格式 0.700 / 去重复 0.888（拿不到满分），首句摘要忠实度 1.000 但长度仅 0.639，弱基线去重复 1.000 而忠实度仅 0.015。并诚实记录「忠实度分母是答案自身 → 惩罚胡说不惩罚少说」「三个&quot;模型&quot;均为规则函数，用于标定评分器动态范围」。纯 numpy、无评测框架。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/09-evaluation-inference/milestones/02-benchmark.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/09-evaluation-inference/milestones/02-benchmark.md", "name": "02-benchmark.md", "text": "# Milestone 02 — Benchmark：任务定义、统一打分与排行\n\nM01 建立了**指标**：PPL、Token Acc、ECE。但指标只描述\"模型在某个数据集上的表现\"，还没回答\"我要拿它干什么\"。\n\n这一层把评估升级成 **Benchmark**：一组**任务**（task），每个任务有 prompt、参考答案、关键词、主题；一个统一的**打分函数**；一张**可排序的排行榜**。\n\nM01 的指标和 M02 的 benchmark 是两件事：\n\n| | M01 Evaluation | M02 Benchmark |\n|---|---|---|\n| 单位 | token | 任务（task） |\n| 打分 | 概率分布层面的统计量 | 可读答案的多维规则评分 |\n| 可比性 | 同一分词器、同一数据 | 同一任务集 + 同一评分函数 + 同一汇总口径 |\n\n**纯 numpy 手写**：任务集、评分器、汇总、排行全部自己实现（`src/ie/benchmark.py`、`src/ie/autoeval.py`），不引入任何评测框架。\n\n---\n\n## 1. Why：为什么\"排行榜\"必须有三个\"同一\"\n\n一个 benchmark 分数只有在**三个东西都固定**的时候才可比较：\n\n1. **同一任务** —— prompt 必须一字不差（否则测的是 prompt 工程，不是模型）。\n2. **同一评分函数** —— 参数、权重、阈值都不能变。\n3. **同一汇总口径** —— 每题打分后怎么平均（本项目用简单算术平均，`aggregate_scores`）。\n\n违反任何一条，排行榜就是噪音。现实中大量\"某某模型超越 GPT-4\"的结论，问题都出在第三条 —— 换个汇总方式（macro vs micro、去极值与否）结论就翻。\n\n本项目刻意**不碰** MMLU / HumanEval 这类真实榜单：它们需要真实大模型才能跑出有意义的结果。这里的价值是**把排行榜的骨架做对** —— 任务集抽象、评分器接口、可复现的排行，这些换到任何榜单上都一样。\n\n## 2. Design：三个对象\n\n```python\nBenchmarkTask(task_id, prompt, reference, keywords, topic)   # 一个任务\nBenchmark(name, tasks).evaluate(model_name, predictor)        # 一个模型跑完所有任务\nBenchmark.compare({name: predictor})                          # 多个模型 → 排行榜\n```\n\n- `predictor: Callable[[str], str]` —— **模型被抽象成一个函数**。这是整个设计的核心：不管背后是 7B 还是规则拼字符串，只要 `prompt → answer`，就能进排行榜。本项目三个\"模型\"里有两个就是规则函数。\n- `tasks_from_records(records)` —— 直接把 M03 的 held-out 记录转成任务（`instruction → prompt`，`output → reference`，`topic` 由 `infer_topic` 推断）。**评估集和 benchmark 用同一批数据**，避免\"两套数据各说各话\"。\n- `Benchmark.compare` 按 `(-total, model)` 排序 —— **分数相同时按名字排序**，保证排行榜在不同机器上完全一样（可复现性细节，但很重要）。\n\n打分函数来自 M04 的 `evaluate_answer`（关键词 40% + 格式 15% + 长度 15% + 忠实度 20% + 去重复 10%），这里只做**汇总与排行**。\n\n![M02 Benchmark 流水线：任务集 → 多个 predictor → 统一评分 → 汇总排行](../assets/benchmark.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_02_benchmark_terminal.txt`）\n\n任务集 **Java held-out v1**，6 个任务 / 4 个主题（从 M03 的 held-out 前 6 条构造）。三个\"模型\"全是规则函数：\n\n| 模型 | 做法 |\n|---|---|\n| 参考答案 | 直接返回 `record[\"output\"]`（理论上界） |\n| 首句摘要 | 只返回参考答案的第一句 |\n| 弱基线 | 无论问什么都回答「Java 中需要根据具体情况分析。」 |\n\n```\n── 总分排行（全部由规则评分真实计算） ─────────────────────────────\n  排名  模型    总分     关键词    格式     长度     忠实度    去重复\n  --  ----  -----  -----  -----  -----  -----  -----\n   1  参考答案  94.38  1.000  0.700  1.000  1.000  0.888\n   2  首句摘要  75.56  0.667  0.650  0.639  1.000  0.955\n   3  弱基线   21.87  0.000  0.600  0.171  0.015  1.000\n\n  第一名                                参考答案（94.38）\n```\n\n四个读数：\n\n- **参考答案 94.38，不是 100**。这是最有信息量的一行：连\"把参考答案原样交上去\"都拿不到满分，说明评分函数**不是\"跟参考答案比对\"**，而是在独立地衡量答案质量。`0.700`（格式）和 `0.888`（去重复）是参考答案自己丢的分 —— 参考答案里有重复的 3-gram，格式也不完全符合\"有列表/有冒号\"的加分项。\n- **首句摘要 75.56，忠实度却是满分 1.000**。因为忠实度的定义是 `|answer_terms ∩ reference_terms| / |answer_terms|` —— **分母是答案自己的词**，所以\"少说\"完全不被惩罚，只惩罚\"多说\"。这是本评分器的已知偏向，见 4.1。\n- **弱基线 21.87，其中去重复 1.000（满分）**。一个 13 个字的车轱辘话，在\"去重复\"这一项上拿了满分 —— 因为它根本没重复。**单一维度完全不能判优劣**，必须看加权总分和各分项。\n- **弱基线忠实度 0.015**，几乎为 0。它说的「Java」「根据」「具体」「情况」「分析」几乎都不是参考答案里的词。**这一项才是真正把废话答案区分出来的东西**（权重 20%，仅次于关键词）。\n\n![M02 真实运行输出](../assets/term-02-benchmark.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 忠实度是\"查准率\"，不是\"查全率\"—— 越短越容易满分\n\n```python\nfaithfulness = |answer_terms ∩ reference_terms| / |answer_terms|     # src/ie/autoeval.py:97\n```\n\n分母是**答案自己的词数**。后果：\n\n- 只回答一个词且这个词在参考答案里 → 忠实度 **1.000**（首句摘要实测 1.000）。\n- 回答很长但大部分不在参考答案里 → 忠实度很低（弱基线 0.015）。\n\n所以忠实度单项**惩罚\"胡说\"，不惩罚\"不说\"**。必须和 `length_reasonableness`（权重 15%）配对使用 —— 后者在 `ratio < 0.6` 时按 `ratio / 0.6` 线性扣分，专门治\"少说\"。\n\n实测印证：首句摘要长度项 0.639（被扣了），忠实度 1.000（被奖励了），两项合起来才给出合理的 75.56。\n\n> 可迁移的经验：**任何一个\"比值型\"指标，先问分母是什么**。分母是自己 → 越短越占便宜；分母是参考答案 → 越长越占便宜。两种都不是质量度量，必须配对。\n\n### 4.2 参考答案自己拿不到 100 分 —— 这是特性不是 bug\n\n参考答案 94.38 分，丢了 5.62 分（格式 0.700、去重复 0.888）。\n\n这不是评分器写错了。**\"参考答案\"只是一个参考，不是唯一正确答案**。评分函数衡量的是\"这个答案像不像一个好的回答\"（有关键词、有格式、长度合适、不复读），参考答案在这些维度上本来就不一定完美。\n\n真正要警惕的是反过来：如果某个评分器给参考答案 100 分，**那它一定在跟答案做字符串比对**，也就失去了评估\"没见过的好答案\"的能力。\n\n### 4.3 三个\"模型\"都是规则函数 —— 这不是偷懒\n\n排行榜上的三项全是不调模型的规则函数。这看起来像\"没测模型\"，但实际上是最有价值的一类对照实验：\n\n- **参考答案 = 上界**（94.38）\n- **首句摘要 = 信息量的消融**（砍掉 2/3 内容，掉 18.82 分）\n- **弱基线 = 下界**（21.87）\n\n**先把评分器的动态范围标定出来，再往里放真模型。** 如果你不知道\"废话\"该得多少分、\"完美\"该得多少分，真模型拿到的 60 分你也不知道该高兴还是该难过。\n\n本项目后续各章（M05 的 adapter / INT8 比较）走的都是这条路线：**先有可解释的对照组，再放真模型**。\n\n### 4.4 排序键必须全序，否则排行榜不可复现\n\n```python\nrows.sort(key=lambda row: (-row[\"total\"], row[\"model\"]))    # src/ie/benchmark.py:54\n```\n\n只按 `-total` 排序时，Python 的 `sort` 是稳定的 —— 相同分数会保持**输入字典的顺序**，而 dict 顺序依赖于插入顺序。加上 `model` 作为第二键，排序变成**全序**，任何机器上跑出同一张表。\n\n这类\"可复现性细节\"在 P08 已经踩过一次（`Tensor._prev` 是 set 导致跨进程不可复现）。本项目在排序、抽样（M03 的 seed）、指标汇总处都做了同样的处理。\n\n## 5. Conclusion\n\n1. Benchmark = **任务集 + 评分函数 + 汇总口径**；三者任一变化，分数就不可比。\n2. `predictor: str → str` 是核心抽象：**模型只是一个函数**，规则函数也能进排行榜当对照组。\n3. 实测排行：**参考答案 94.38 > 首句摘要 75.56 > 弱基线 21.87**（6 任务 / 4 主题，全部由规则评分真实计算）。\n4. **参考答案只拿 94.38**（格式 0.700、去重复 0.888）—— 评分器衡量的是\"像不像好答案\"，不是\"像不像参考答案\"。\n5. **忠实度是查准率不是查全率**：首句摘要忠实度 1.000 却只拿 75.56，靠长度项 0.639 兜底。比值型指标必须先问分母是什么。\n6. **弱基线去重复满分 1.000 却总分 21.87** —— 单一维度不能判优劣，必须看加权总分 + 分项表。\n7. 手写实现的意义：因为评分器是自己写的，我才知道\"参考答案为什么不是 100 分\"；用 `lm-eval-harness` 这类框架只能拿到一个分数，解释不了它。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ie/benchmark.py` | `BenchmarkTask`（task_id/prompt/reference/keywords/topic）/ `Benchmark.evaluate`（单模型跑全任务）/ `Benchmark.compare`（多模型排行，`(-total, model)` 全序排序）/ `tasks_from_records`（把 held-out 记录转成任务） |\n| `src/ie/autoeval.py` | 提供 `evaluate_answer` 与 `aggregate_scores`（本章的打分与汇总口径来源，详见 M04） |\n| `src/ie/evalset.py` | `infer_topic`：给任务打主题标签，供\"主题数\"统计 |\n| `demos/demo_02_benchmark.py` | 3 节：任务集构造 / 三个 predictor / 总分排行 |\n| `demos/out/demo_02_benchmark_terminal.txt` | 本章所有数字的来源 |\n| `assets/benchmark.svg` | 本章 benchmark 流水线图 |\n\n## 7. Version line\n\nv0.1 → **v0.2**，M02 Benchmark 落地。实测（Java held-out v1，6 任务 / 4 主题）：排行 **参考答案 94.38 > 首句摘要 75.56 > 弱基线 21.87**；分项显示参考答案格式 0.700 / 去重复 0.888（拿不到满分），首句摘要忠实度 1.000 但长度仅 0.639，弱基线去重复 1.000 而忠实度仅 0.015。并诚实记录「忠实度分母是答案自身 → 惩罚胡说不惩罚少说」「三个\"模型\"均为规则函数，用于标定评分器动态范围」。纯 numpy、无评测框架。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -236,6 +394,8 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -245,6 +405,173 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -258,6 +585,17 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -284,15 +622,46 @@ Benchmark.compare({name: predictor})                          # 多个模型 →
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

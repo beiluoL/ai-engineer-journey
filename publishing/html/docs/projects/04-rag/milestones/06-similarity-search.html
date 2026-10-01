@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-80" title="返回《文档总览》第 80 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 06：Similarity Search【相似度度量】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-三种度量方式" class="lvl3">3.1 三种度量方式</a><a href="#32-为什么行业默认余弦以及那个必会的等价式" class="lvl3">3.2 为什么行业默认余弦，以及那个必会的等价式</a><a href="#33-手写实现纯-python-版与-numpy-批量版" class="lvl3">3.3 手写实现：纯 Python 版与 NumPy 批量版</a><a href="#34-相似度-相关性" class="lvl3">3.4 相似度 ≠ 相关性</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1零向量除零" class="lvl3">坑 1：零向量除零</a><a href="#坑-2float32-精度累积误差" class="lvl3">坑 2：float32 精度累积误差</a><a href="#坑-3归一化忘掉一半点积结果飘" class="lvl3">坑 3：归一化忘掉一半，点积结果飘</a><a href="#坑-4topk-排序方向搞反" class="lvl3">坑 4：Top-K 排序方向搞反</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-06similarity-search相似度度量">Project 04 — Chapter 06：Similarity Search【相似度度量】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/similarity.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
@@ -317,8 +456,27 @@ def cosine_top_k(
 <hr/>
 <p>上一章：<a href="05-retrieval.html">05-retrieval.md</a> —— 检索流水线的骨架已经搭好，本章填上了最核心的度量件。</p>
 <p>下一章：<a href="07-rerank.html">07-rerank.md</a> —— 相似度判断不了「能不能回答」，那就让 query 和文档真正见一面。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/06-similarity-search.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/06-similarity-search.md", "name": "06-similarity-search.md", "text": "# Project 04 — Chapter 06：Similarity Search【相似度度量】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/similarity.py`（代码落地时实现）\n\n---\n\n## 1. 本章要解决什么问题\n\nChapter 05 的 `Retriever` 每一步都在调用同一个黑盒：「这两个向量有多相似」。向量库排序靠它、MMR 打分靠它、判断召回质量也靠它。但「相似」到底是什么？为什么两个 768 维的浮点数列表一相乘，就能表示「两段话语义接近」？\n\n不搞清楚这个黑盒，后面全是玄学调参：分数 0.82 算高吗？换个模型分数变成 0.35，是变差了吗？为什么同样两段文本，用点积和用余弦得到的排名不一样？\n\n先破除一个误解：\n\n```text\n你以为：  embedding 是把文本压缩成\"内容摘要\"，相似度就是比摘要\n实际上：  embedding 是把文本映射成高维空间中的一个\"方向\"，\n          相似度 = 比较方向（和长度无关，见 3.2）\n```\n\n本章目标：\n\n> **把「相似度」从直觉变成可手算、可手写的数学：三种度量、它们的适用场景，以及为什么全行业默认余弦相似度。**\n\n---\n\n## 2. 为什么需要这个知识\n\n一句话：**向量库的 top-k 排序，从头到尾只由相似度公式决定**。你选哪个公式，直接决定哪些段落被召回。\n\n- 召回错了段落，生成模型再强也救不回来（检索质量 = RAG 上限，Chapter 05 讲过）；\n- 相似度公式错了，后面 rerank（Chapter 07）精排的也是一堆错料。\n\n而且这个知识点是纯数学，不依赖任何框架、任何 API——学一次，换什么向量库、什么 embedding 模型都通用。Java 开发者都有线代基础（哪怕已经还给老师了），本章只需要用到「向量、点积、夹角」三个概念，不超过大学第一节课。\n\n---\n\n## 3. 核心概念\n\n### 3.1 三种度量方式\n\n设两个向量 a = (a₁, a₂, …, aₙ)，b = (b₁, b₂, …, bₙ)：\n\n| 度量 | 公式 | 取值范围 | 受向量模长影响？ | 适用场景 |\n|------|------|---------|----------------|---------|\n| 点积 Dot Product | a·b = Σ aᵢbᵢ | (−∞, +∞) | **受**（模长越大值越大） | 向量已归一化；推荐系统（有时要利用「热门度=模长大」） |\n| 余弦 Cosine | a·b / (\\|a\\|·\\|b\\|) | [−1, 1] | **不受**（只看夹角） | **文本语义检索（行业默认）** |\n| 欧氏距离 L2 | √Σ(aᵢ−bᵢ)² | [0, +∞) | 受（值越小越相似，注意方向相反） | 图像特征、聚类；低维向量 |\n\n三者的关系（了解即可，不必推导）：**当所有向量都归一化（模长=1）后，点积 = 余弦 = (1 − 欧氏距离²/2)**，三种排序结果完全一致。这就是为什么很多向量库（如 FAISS 的内积索引）干脆只实现点积——把归一化的责任推给上层。\n\n### 3.2 为什么行业默认余弦，以及那个必会的等价式\n\n文本 embedding 的模长没有语义含义——它主要被**文本长短、词频高低**牵着走。一篇 2000 字的文档和一句 20 字的提问，很可能说的是同一件事（方向相同），但模长差出好几倍。如果用点积，长文档仅凭模长就赢了；余弦把模长除掉，只比方向：\n\n```text\n点积：    a·b = |a| |b| cosθ     ← 模长和夹角都影响结果\n余弦：    cosθ = a·b / (|a||b|)  ← 只留下夹角（语义）\n```\n\n由此得出本章最重要的工程结论。**把两个向量都归一化**（各自除以自己的模长），得到单位向量 â 和 b̂，此时：\n\n```text\nâ·b̂ = |â| |b̂| cosθ = 1 × 1 × cosθ = cosθ\n```\n\n**归一化之后，点积就是余弦**。用几行 NumPy 验证：\n\n```python\nimport numpy as np\n\nrng = np.random.default_rng(42)\na, b = rng.normal(size=8), rng.normal(size=8)\n\na_unit = a / np.linalg.norm(a)      # 归一化：除以模长\nb_unit = b / np.linalg.norm(b)\n\ndot     = float(np.dot(a_unit, b_unit))\ncosine  = float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))\nprint(dot)      # 0.2437...\nprint(cosine)   # 0.2437...  ← 完全相等\n```\n\n这个等价式是向量库高性能的基石：库内部只需要最快的点积运算（矩阵乘法，CPU/GPU 都有极致优化），归一化在入库时做一次、查询时做一次就完事。**Java 类比**：就像把昂贵的格式化预处理放到写入时做一次（写时转换），而不是每次查询都重复转换——本质是预计算换查询性能。\n\n![真实运行：归一化后 dot(na, nb) 与 cosine(a, b) 在小数点后 12 位完全一致](../assets/term-similarity.png)\n\n![真实运行：a 与 7a 的余弦仍为 1（与模长无关）；零向量直接抛错，绝不返回 nan](../assets/term-similarity-scale.png)\n\n### 3.3 手写实现：纯 Python 版与 NumPy 批量版\n\n先写纯 Python 版，逼自己直面每个循环（面试也常考）：\n\n```python\nimport math\n\ndef cosine_similarity(a: list[float], b: list[float]) -> float:\n    \"\"\"余弦相似度，纯 Python 版。两个向量必须等长。\"\"\"\n    if len(a) != len(b):\n        raise ValueError(f\"维度不一致: {len(a)} vs {len(b)}\")\n    dot = sum(x * y for x, y in zip(a, b))\n    norm_a = math.sqrt(sum(x * x for x in a))\n    norm_b = math.sqrt(sum(y * y for y in b))\n    if norm_a == 0.0 or norm_b == 0.0:\n        raise ValueError(\"零向量没有方向，余弦相似度无定义\")\n    return dot / (norm_a * norm_b)\n```\n\n但检索场景从来不是比两个向量，而是**一个 query 向量 vs 库里几万个向量**。用 Python 双层循环遍历几万条，每条还要除模长——慢到不可用。NumPy 的向量化写法把整个问题变成一次矩阵乘法：\n\n```python\nimport numpy as np\n\ndef top_k_by_cosine(query: np.ndarray, matrix: np.ndarray, k: int = 5) -> tuple[np.ndarray, np.ndarray]:\n    \"\"\"query: (d,)  matrix: (n, d)——每行是一个已归一化的文档向量。\n    返回相似度最高的 k 条的下标和分数。\"\"\"\n    # 关键一行：一次算出 query 与全部 n 个文档的点积（余弦）\n    sims = matrix @ query                     # (n,) —— 等价于 n 次点积\n    k = min(k, len(sims))\n    idx = np.argsort(-sims)[:k]               # 分数降序，取前 k\n    return idx, sims[idx]\n```\n\n为什么 `matrix @ query` 一行能顶替双重循环？因为 NumPy 调用的是 BLAS（底层线性代数库）的矩阵-向量乘法——C/Fortran 写的、SIMD 指令级并行、CPU 缓存友好的内存访问顺序。**Java 类比**：就像 `parallelStream()` 对比手写 for 循环，但 NumPy 的并行发生在原生代码层，快得多。n=10000、d=768 时，这行耗时是毫秒级；纯 Python 双循环是秒级。\n\nJava 里用 `Comparator` + `Collections.sort` 对整个列表排序再取前 k（O(n log n)）；上面的 `argsort(-sims)[:k]` 是同一件事的 NumPy 版——注意取的是**头部**（因为取了负号变成降序），细节见踩坑 4。\n\n### 3.4 相似度 ≠ 相关性\n\n最后校准一个致命误区，它直接引出下一章：\n\n```python\nq1 = embed(\"Java 里怎么定义数组？\")\nq2 = embed(\"Python 中 list 的用法\")\nprint(cosine_similarity(q1, q2))   # 0.68 —— 挺高！\n```\n\n两段话都是「编程语言 + 容器 + 入门问题」，语义相近所以相似度高。但如果你在问 Java 数组，一段 Python list 的文档**不是答案**，它只能帮模型答得更歪。\n\n```text\n你以为：  相似度高的 chunk 就能回答问题\n实际上：  相似度衡量的是\"语义像不像\"，\n          不是\"能不能回答\"——后者需要 query 和 doc 放在一起联合判断\n```\n\n向量检索的 bi-encoder（双塔结构）天生只能算前者：query 和 doc 各自独立编码，互相看不见。要判断「这段文档对**这个问题**有没有用」，必须让两者碰面——这就是 Chapter 07 cross-encoder 和 rerank 存在的理由。\n\n---\n\n## 4. 动手实现（设计稿）\n\n> 以下代码将在 `src/rag/similarity.py` 落地时实现，这里先当设计稿读。要点：归一化负责到底 + 排序方向不出错。\n\n```python\n\"\"\"src/rag/similarity.py — 相似度计算工具：归一化 + 批量 top-k\"\"\"\nfrom __future__ import annotations\n\nimport numpy as np\n\n\ndef normalize(matrix: np.ndarray) -> np.ndarray:\n    \"\"\"按行归一化，零向量直接报错而不是返回全 0（除零防护）。\n\n    matrix: (n, d)，也兼容一维向量 (d,)\n    \"\"\"\n    if matrix.ndim == 1:\n        matrix = matrix.reshape(1, -1)\n    norms = np.linalg.norm(matrix, axis=1, keepdims=True)   # (n, 1)\n    if np.any(norms == 0.0):\n        raise ValueError(\"输入中包含零向量，无法归一化\")\n    return matrix / norms\n\n\ndef cosine_top_k(\n    query: np.ndarray,\n    doc_matrix: np.ndarray,\n    k: int = 5,\n    assume_normalized: bool = True,\n) -> tuple[np.ndarray, np.ndarray]:\n    \"\"\"返回相似度降序的前 k 条 (下标, 分数)。\n\n    assume_normalized=True 时跳过归一化（向量库入库时已归一化的场景），\n    否则内部先归一化再算——等价式见 3.2。\n    \"\"\"\n    q = query.reshape(1, -1).astype(np.float32)\n    docs = doc_matrix.astype(np.float32)\n    if not assume_normalized:\n        q, docs = normalize(q), normalize(docs)\n    sims = (docs @ q.T).ravel()              # (n,)\n    k = min(k, sims.shape[0])\n    # -sims 升序 == sims 降序；取头部即 top-k（argsort 默认升序，方向别搞反）\n    idx = np.argsort(-sims)[:k]\n    return idx, sims[idx]\n```\n\n落地时的两个纪律：\n\n1. **归一化的责任要明确归属**：本项目约定「入库前统一归一化」（在 Chapter 04 的 `VectorStore.upsert` 里做），检索侧默认信任 `assume_normalized=True`；一旦信任，就绝不混入未归一化的向量。\n2. **分数只用于排序，不用于解读**：余弦分数 0.7 和 0.8 之间的差距没有绝对含义，别写 `if score > 0.75: trust it` 这种魔法阈值（要阈值也应该基于自己的数据集实测校准）。\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：零向量除零\n\n**现象**：某条数据是空文本（chunk 切出来一段空白），embedding 返回全 0 向量，余弦计算抛 `ZeroDivisionError`，或 NumPy 静默给出 `nan`，后续排序全部乱套。\n\n**原因**：余弦公式分母含模长，零向量模长为 0；且 NumPy 的 `0/0` 只给 warning 不抛异常，`nan` 会一路污染 `argsort` 的结果。\n\n**正确做法**：入口处显式校验（见 `normalize()` 里的 `norms == 0.0` 检查），直接抛 `ValueError`。同时在上游（chunking 阶段）就过滤空 chunk，别让垃圾数据流到这里。\n\n### 坑 2：float32 精度累积误差\n\n**现象**：768 维向量的点积，纯 Python `sum()` 和 NumPy 算出来的结果在小数点后 5~6 位开始不一致；判断「两个分数是否相等」的测试时好时坏。\n\n**原因**：float32 只有约 7 位有效数字，几万次加法的舍入误差会累积；纯 Python 的 `float` 是 float64，两者精度本来就不同。\n\n**正确做法**：比较分数用容差（`abs(a - b) < 1e-6`）而不是 `==`——**Java 里用 `BigDecimal` 或 `Math.abs(a-b) < eps` 对比浮点数，Python 里是同一纪律**；全链路统一用 float32（embedding 模型输出就是 float32，再转 float64 只是浪费内存），误差源就只剩一处。\n\n### 坑 3：归一化忘掉一半，点积结果飘\n\n**现象**：明明该用余弦，却直接用点积排序；或者入库时归一化了、查询向量忘了归一化。表现为排名「看起来大致对，但某些长文档总是排前面」，且分数不稳定。\n\n**原因**：点积 = 模长 × 模长 × cosθ，模长（≈文本长度）在偷偷加分；只归一化一边等价于没归一化干净。\n\n**正确做法**：归一化策略写成不变量——在 `upsert` 和 `search` 的交界处统一做并加断言（`assert max(abs(norms - 1)) < 1e-5`），让「忘归一化」在开发期就炸，而不是在线上悄悄影响排序。\n\n### 坑 4：Top-K 排序方向搞反\n\n**现象**：用 `np.argsort(sims)[:k]` 取回的居然是**最不相似**的 k 条；或者把欧氏距离当相似度用 `argsort(-dists)` 排序，取回的是**最远**的。\n\n**原因**：`argsort` 默认**升序**。对相似度（越大越好）要取尾部或取负号取头部；对距离（越小越好）直接取头部。两者方向相反，混用必翻车。\n\n**正确做法**：给函数命名和参数带上方向语义（本项目统一用相似度：`cosine_top_k` 内部固定 `argsort(-sims)`），距离只在调用向量库 API 时出现（有些库返回 distance，注意它的注释是「越小越好」）。\n\n---\n\n## 6. 自检清单\n\n- [ ] 能默写三种度量的公式，并说出各自取值范围和模长敏感性\n- [ ] 能推导「归一化后点积 == 余弦」这 3 步等价式\n- [ ] 手写 `cosine_similarity()` 能一次写对（含零向量防护）\n- [ ] 能解释 `matrix @ query` 一行代码替代双重循环的性能来源\n- [ ] 能举出「相似度高但不是答案」的例子，并说清 bi-encoder 为什么判断不了「能否回答」\n- [ ] 知道相似度和距离的排序方向相反，不写混\n\n---\n\n上一章：[05-retrieval.md](05-retrieval.md) —— 检索流水线的骨架已经搭好，本章填上了最核心的度量件。\n\n下一章：[07-rerank.md](07-rerank.md) —— 相似度判断不了「能不能回答」，那就让 query 和文档真正见一面。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -326,6 +484,8 @@ def cosine_top_k(
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -335,6 +495,173 @@ def cosine_top_k(
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -348,6 +675,17 @@ def cosine_top_k(
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -374,15 +712,46 @@ def cosine_top_k(
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

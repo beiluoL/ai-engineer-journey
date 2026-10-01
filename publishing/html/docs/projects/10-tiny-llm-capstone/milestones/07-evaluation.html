@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-146" title="返回《文档总览》第 146 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 07 — Evaluation：把「训完了」和「训好了」分开</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why困惑度只说明确定不说明对" class="lvl2">1. Why：困惑度只说明&amp;quot;确定&amp;quot;，不说明&amp;quot;对&amp;quot;</a><a href="#2-design三层各自回答一个问题" class="lvl2">2. Design：三层各自回答一个问题</a><a href="#3-realrun-evidence来自-demosoutdemo07evaluationterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_07_evaluation_terminal.txt）</a><a href="#31-语言层平均之下藏着方差" class="lvl3">3.1 语言层：平均之下藏着方差</a><a href="#32-校准层模型比它自己以为的更容易错" class="lvl3">3.2 校准层：模型比它自己以为的更容易错</a><a href="#33-生成层这是最诚实的一节" class="lvl3">3.3 生成层：这是最诚实的一节</a><a href="#34-多样性人眼看不出复读数字看得见" class="lvl3">3.4 多样性：人眼看不出复读，数字看得见</a><a href="#35-配对实验-a未训练-vs-已训练" class="lvl3">3.5 配对实验 A：未训练 vs 已训练</a><a href="#36-配对实验-b早停回滚到底值多少分本章最硬的一组数字" class="lvl3">3.6 配对实验 B：早停回滚到底值多少分（本章最硬的一组数字）</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-07-evaluation把训完了和训好了分开">Milestone 07 — Evaluation：把「训完了」和「训好了」分开</h1>
 <p>M06 交出了一份权重，并且证明了它是&quot;验证最优&quot;的那一份。但<strong>&quot;比随机初始化好&quot;和&quot;能用&quot;之间隔着一条鸿沟</strong>。这一章就是去量那条鸿沟有多宽。</p>
 <p>要做到这一点，需要<strong>三层评估</strong>（缺一层结论就不成立）+ <strong>两组配对实验</strong>（因为平均值上的提升，可能只是被个别样本带偏的假象）。本章的结论是诚实的：困惑度 PPL 315.79 看着还行，但关键词覆盖率是 <strong>0.000</strong>。</p>
@@ -282,8 +421,27 @@ T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/evaluate.py</code></td><td><code>evaluate_model</code>（三层入口）/ <code>per_example_losses</code> / <code>compare_models</code>（走 P09 配对）/ <code>qa_pairs_from_lines</code> / <code>diversity_report</code> / <code>generation_report</code></td></tr><tr><td><code>src/tiny/train.py</code></td><td><code>evaluate_loss</code>（CE / PPL / token_accuracy）</td></tr><tr><td>P09 <code>src/ie/metrics.py</code></td><td><code>calibration</code>（ECE + 可靠性分箱，<code>gap</code> 为绝对值）</td></tr><tr><td>P09 <code>src/ie/compare.py</code></td><td><code>paired_compare</code>（逐条对拍：胜/负/平 + 符号一致性）</td></tr><tr><td>P08 <code>src/ft/autoeval.py</code></td><td><code>generation_report</code> 的评分口径（关键词覆盖 40% / 格式 15% / 长度 15% / 忠实 20% / 不重复 10%）</td></tr><tr><td><code>demos/demo_07_evaluation.py</code></td><td>7 节：三层总览 / 语言 / 校准 / 生成 / 多样性 / 配对 A / 配对 B</td></tr><tr><td><code>demos/out/demo_07_evaluation_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/evaluation.svg</code></td><td>三层评估 + 多样性 + 两组配对对照</td></tr><tr><td><code>assets/term-07-evaluation.png</code></td><td>真实运行截图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.6 → <strong>v0.7</strong>，三层评估 + 配对显著性落地。实测：语言层 PPL <strong>315.79</strong> / token 准确率 <strong>0.1736</strong>（相对随机 1280 下降 75.3%），逐样本 PPL 129.95 ~ 848.80；校准层 ECE <strong>0.0662</strong>，<strong>4/5 箱过度自信</strong>（<code>[0.8,1.0)</code> 说 0.945 只有 0.781 对，72.8% token 落在低置信箱）；生成层贪心 <strong>16.84</strong>（重复率 0.934）/ 采样 <strong>31.81</strong>（<strong>关键词覆盖 0.000</strong>）；配对 A <strong>37 胜 0 负 0 平</strong>、一致性 <strong>1.000</strong>（改善 +1.3972）；配对 B PPL <strong>低 6.61%</strong>、<strong>24 胜 13 负 0 平</strong>。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/10-tiny-llm-capstone/milestones/07-evaluation.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/10-tiny-llm-capstone/milestones/07-evaluation.md", "name": "07-evaluation.md", "text": "# Milestone 07 — Evaluation：把「训完了」和「训好了」分开\n\nM06 交出了一份权重，并且证明了它是\"验证最优\"的那一份。但**\"比随机初始化好\"和\"能用\"之间隔着一条鸿沟**。这一章就是去量那条鸿沟有多宽。\n\n要做到这一点，需要**三层评估**（缺一层结论就不成立）+ **两组配对实验**（因为平均值上的提升，可能只是被个别样本带偏的假象）。本章的结论是诚实的：困惑度 PPL 315.79 看着还行，但关键词覆盖率是 **0.000**。\n\n---\n\n## 1. Why：困惑度只说明\"确定\"，不说明\"对\"\n\n一个 1280 词表上的均匀分布，PPL 就是 1280。我们的模型 PPL 是 315.79，相对下降 75.3%——**这确实说明它学到了东西**。但困惑度有一个致命性质：\n\n> **它只衡量模型给正确答案分配了多少概率，不衡量那个概率对不对得上\"语义正确\"。**\n\n模型可以给\"token token token\"这种无意义序列很高的概率，只要语料里这种模式出现过。所以单看 PPL 甚至能骗过你自己：\n\n- **PPL 降了** ⇒ 模型更\"确定\"了（分布更尖锐）\n- **PPL 降了 ≠ 模型更\"对\"了**\n\n要补上另外两个维度：\n\n1. **校准层（ECE）**：模型说\"我有 94% 把握\"的时候，实际有多少次是对的？——**\"很自信地说错话\"比\"不知道\"更危险**，因为用户会相信那个数字。\n2. **生成层**：拿验证集里的\"问\"去问它（答案它训练时没见过），看它答得怎样。这是**唯一贴近真实使用场景**的一层。\n\n再加**配对实验**，因为两个模型的平均分差 1.4 分，也可能是\"37 个样本里 3 个大胜 + 34 个小负\"——平均值掩盖了方向。\n\n## 2. Design：三层各自回答一个问题\n\n```text\n① 语言层  evaluate_loss()      → CE / PPL / token_accuracy   「能不能预测」\n② 校准层  ie.metrics.calibration() → ECE + 5 个可靠性分箱     「确定得有没有道理」\n③ 生成层  generation_report()  → 关键词覆盖 / 忠实 / 不重复    「说出来能不能用」\n```\n\n配对实验用的是 P09 的 `ie.compare.paired_compare`，它不是比两个平均数，而是**逐条样本对拍**，然后数 `胜 / 负 / 平` 和**符号一致性**（有多少比例样本方向一致）。\n\n**为什么必须逐条对拍**：假设模型 A 平均 CE 比 B 低 0.1，但这个优势全来自一条特别长的样本，其余 36 条 B 都略好——那\"平均改善\"就是个假象。`symbol consistency = 1.000` 才是\"每条都一样好\"的证据。\n\n![M07 Evaluation：三层评估 + 两组配对对照](../assets/evaluation.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_07_evaluation_terminal.txt`）\n\n![M07 真实运行](../assets/term-07-evaluation.png)\n\n### 3.1 语言层：平均之下藏着方差\n\n```text\n验证集平均交叉熵        5.7551\n验证困惑度 PPL        315.79\n下一个 token 准确率      0.1736\n随机猜测的困惑度         1280\n相对随机的下降          75.3%\n\n样本#  有效 token  cross_entropy  ppl\n  0        64         6.1708  478.56\n  1        64         6.7438  848.80\n  2        64         5.7601  317.38\n  3        64         4.8671  129.95\n  4        64         5.2832  196.99\n  5        64         5.4194  225.73\n```\n\n**平均 5.7551，逐样本从 4.8671 到 6.7438（PPL 129.95 到 848.80）——最差样本的困惑度是最优样本的 6.5 倍。**\n\n这一行表格的价值在于：**它证明\"平均 PPL\"是一个会骗人的指标**。如果只看 315.79，你会以为模型\"均匀地弱\"；实际上它在某些样本上是\"可用\"（PPL 130），在另一些样本上完全\"懵了\"（PPL 849）。只报平均值，等于把这些差异全抹平了。\n\n不过话说回来，**75.3% 的相对下降是真实的**——这不是玄学，是量出来的。它说明模型确实学到了东西（哪怕只是字词分布），也说明这套结构是work的。\n\n### 3.2 校准层：模型比它自己以为的更容易错\n\n```text\nECE（期望校准误差）        0.0662\n参评 token 数           2368\n置信度区间       token 数  平均置信度  实际准确率  置信度−准确率\n[0.0, 0.2)     1724  0.060  0.084   -0.024\n[0.2, 0.4)      258  0.289  0.151   +0.137\n[0.4, 0.6)       98  0.492  0.316   +0.175\n[0.6, 0.8)       60  0.711  0.300   +0.411\n[0.8, 1.0)      228  0.945  0.781   +0.164\n过度自信的箱子数  4 / 5\n```\n\n读这张表有个反直觉的点：**72.8%（1724/2368）的 token 都落在最低的置信度箱 [0.0, 0.2) 里**，而且这个箱子是**略微偏保守**的（-0.024，说 6% 把握、实际对了 8.4%）。\n\n真正的问题出在**中高置信度段**：\n\n- **[0.6, 0.8) 箱：模型说\"71% 把握\"，实际只有 30% 对——高估了 41 个百分点。** 这是全表最严重的一格。\n- **[0.8, 1.0) 箱：说\"94.5% 把握\"，实际 78.1% 对。**\n\n**这就是\"上线即灾难\"的具体形态**：用户在界面上看到\"置信度 0.94\"，会当成\"基本不会错\"；实际 5 次里有 1 次是错的。而 72.8% 的 token 落在\"低置信\"区，则说明**模型在大部分位置其实是\"知道自己不确定\"的**——它只在少数位置过度自信，但这些位置恰恰容易被用户当真。\n\nECE **0.0662**（越接近 0 越好）是这 5 个箱子的**加权平均**（按 token 数）。因为大头（1724 个）的偏差很小，所以整体 ECE 看着还不错；但**分布是不均匀的**——这正是\"要看分箱、不能只看 ECE\"的原因。\n\n### 3.3 生成层：这是最诚实的一节\n\n```text\nheld-out 问答对（来自验证集）   7\n评分口径   keyword_coverage 40% / 格式 15% / 长度 15% / 忠实 20% / 不重复 10%\n\n解码策略 A（贪心）           总分 16.84\n[A1] 问：什么是梯度裁剪？\n     生成：什么是 token token token token token token token token token token token\n[A2] 问：什么是 QLoRA？\n     生成：什么是 token token token token token token token token token token token\n\n解码策略 B（采样 T=0.8/top_p 0.9/rep 1.15）  总分 31.81\n[B1] 问：什么是梯度裁剪？\n     参考：梯度裁剪按全局范数缩放梯度，避免异常大的梯度把训练带崩。\n     生成：什么是 I 上下文链路算问题正故障的 输出m检索于然瓶态然Oje通\n     得分：30.2（覆盖 0.00 忠实 0.00 不重复 1.00）\n[B2] 问：什么是 QLoRA？\n     参考：QLoRA 把基座量化到 4 比特，再在量化权重之上训练 LoRA 适配器。\n     生成：什么是 GA确否则模型给步检索的 Agent token Agent 和eO(请。\n     得分：33.1（覆盖 0.00 忠实 0.00 不重复 0.91）\n\n关键词覆盖 / 忠实度        0.000 / 0.018\n不重复分 / 长度合理性        0.945 / 0.967\n```\n\n**这一节必须原样保留，不能美化。** 两个策略各自的失败模式都很典型：\n\n- **贪心（T=0）：复读。** 它直接输出\"token token token...\"——因为\"token\"是语料里的高频词，贪心每一步都选概率最大的，就会卡死在一个循环里。形式上它\"生成\"了 16.84 分（主要靠不重复分之外的项），但语义上什么都没说。\n- **采样（T=0.8 + top_p + 惩罚）：看着像中文，实则是词块拼贴。** \"什么是 I 上下文链路算问题正故障的 输出m检索于然瓶态然Oje通\"——每个片段都是语料里出现过的领域词（\"上下文\"\"链路\"\"检索\"\"瓶态\"），但拼在一起**不构成任何意思**。关键词覆盖 **0.000**：连\"梯度裁剪\"这几个字都没答出来。\n\n**⚠ 诚实的结论**（原样引用自运行输出）：\n\n> 230,400 参数 + 6,384 个训练 token 学不会语义。模型只学到了「字词形态 + 领域词表」：采样后看着像中文，但答不了题。这一层的作用恰恰是**把这个真相量化出来**，而不是让 loss 曲线替它遮羞。\n\n**为什么这一节是本项目最有价值的一节**：如果只看 §3.1 的 PPL（相对随机下降 75.3%），你完全可以写一篇\"训练成功\"的报告。是生成层把这份报告的**真实成色**暴露了出来：**这个模型会拼词、不会答题。**\n\n### 3.4 多样性：人眼看不出复读，数字看得见\n\n```text\n采样策略                         distinct-1  distinct-2  3-gram 重复率\n贪心 T=0                            0.049       0.057       0.934\nT=0.8                               0.741       0.917       0.048\nT=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048\n```\n\n**distinct-1 从 0.795 断崖式跌到 0.049**——贪心模式下只有 4.9% 的 token 是不同的，93.4% 的 3-gram 是重复的。**这个数字就是 §3.3 里那串\"token token token\"的另一种表述。**\n\n判据：**distinct-1 断崖式下跌 = 模型开始复读。人眼扫一眼输出可能以为\"它就是啰嗦\"，但数字能精确定位到\"它在循环\"。**\n\n采样把 distinct-1 从 0.049 拉回 0.795（16 倍），代价是抛掉了确定性（每次输出不同）。这是一个**必付的取舍**：要么连贯地复读，要么发散地乱说。对 230K 参数的小模型来说，第三个选项（连贯且正确）不存在。\n\n### 3.5 配对实验 A：未训练 vs 已训练\n\n```text\n样本数（逐条配对）        37\n未训练 / 已训练 平均交叉熵   7.1523 / 5.7551\n平均改善              +1.3972\n胜 / 负 / 平          37 / 0 / 0\n符号一致性             1.000\n是否出现方向翻转          False\n```\n\n**37 胜 0 负 0 平，符号一致性 1.000。** 这是配对实验的理想结果：不是\"平均上更好\"，而是**每一条样本单独看都更好**。\n\n对比一下 §3.1 的逐样本方差（4.87 ~ 6.74）就看得出配对的必要性：**平均改善 +1.3972 是个宏观数字，但只有\"37/0/0 + 一致性 1.000\"才能排除\"改善是噪声\"的可能。** 如果 50.5% 的样本变好、49.5% 变差，平均可能照样是 +1.4——那这个改善就完全不可信。\n\n### 3.6 配对实验 B：早停回滚到底值多少分（本章最硬的一组数字）\n\n```text\n回滚模型停在          第 800 步（验证最优）\n不回滚模型停在         第 1200 步（训练终点）\n不回滚模型 PPL        338.13\n回滚模型 PPL         315.79   低 6.61%\n逐条对拍 平均改善        +0.0684\n胜 / 负 / 平          24 / 13 / 0\n```\n\n这一节把 M06 里\"早停\"这个做法，从\"**看起来有道理**\"变成了\"**有数字支撑的决策**\"：\n\n- PPL 315.79 vs 338.13，**低 6.61%**；\n- **但更有说服力的是 24 胜 13 负 0 平**——它不是被一两个超长样本带出来的。37 个样本里 24 个变好、13 个变差、**没有一个打平**。\n\n注意 13 负这一列：**回滚不是\"全面碾压\"**。有 13 条样本上，多训 400 步的模型反而更准。但因为赢的更多（24 > 13），整体是正的，且平均改善 +0.0684。**这就是\"逐条对拍\"能给出的、平均值给不出的信息**：我们知道回滚是\"多数情况更好\"，而不是\"所有情况都更好\"——后者才是需要警惕的（常常意味着样本太少）。\n\n## 4. 踩坑与反直觉发现\n\n1. **PPL 和\"能答题\"之间没有必然联系。** 相对随机下降 75.3%（看着很成功）与关键词覆盖 0.000（完全答不了题）**同时成立**。任何\"只看 loss 曲线\"的评估，都会得出错误结论。\n2. **平均 PPL 会掩盖逐样本的方差。** 6 条样本的 PPL 从 129.95 到 848.80，相差 6.5 倍。**报平均值时必须同时报分布**，否则\"315.79\"这个数字会误导读者以为模型是\"均匀地弱\"。\n3. **\"置信度 0.94\"实际只有 78% 正确。** 校准层抓的是这类问题：`[0.8,1.0)` 箱里平均置信度 0.945、实际准确率 0.781。**过度自信的 UI 比\"低置信度\"更危险**，因为用户会信那个数字。\n4. **大部分 token 其实落在\"低置信\"箱（72.8%）。** 所以整体 ECE（0.0662）看着还行，但**分箱后才看得出问题集中在 `[0.6,0.8)`（高估 41 个百分点）**。只看一个 ECE 数字是盲的。\n5. **贪心\"复读\"和采样\"乱说\"是两个不同的失败，别混为一谈。** 贪心：distinct-1 = 0.049、重复率 0.934（**循环**）；采样：distinct-1 = 0.795、重复率 0.048（**发散**）。**两种都错，但错法不同**，需要用两个指标分开看。\n6. **配对实验要报告\"负\"的那一列。** 回滚 vs 不回滚是 24 胜 **13 负**，不是 37 胜。只报胜场、不报负场的配对实验，是在隐藏信息。**13 负正好说明这个实验样本量够、结论真实**——如果 37 胜 0 负反而要怀疑是不是设置有问题（比如两个模型差别被放大了）。\n7. **`gap` 是绝对值，看不出偏的方向。** P09 的 `calibration` 返回的 `gap` 是 `|avg_confidence - accuracy|`，永远 ≥ 0。要判断\"过度自信还是过度保守\"，必须自己算**有符号差** `avg_confidence - accuracy`。demo 里就是这么做的——否则你会漏掉\"低置信箱其实偏保守（-0.024）\"这个细节。\n\n## 5. Conclusion\n\n1. **语言层**：验证 CE **5.7551**、PPL **315.79**、token 准确率 **0.1736**，相对随机（1280）下降 **75.3%**。逐样本 CE 从 4.8671 到 6.7438（PPL 129.95 ~ 848.80）。\n2. **校准层**：ECE **0.0662**，**5 个箱中 4 个过度自信**；最严重的是 `[0.8,1.0)` 箱——平均置信度 **0.945** 对应实际准确率 **0.781**；同时 **72.8% 的 token 落在低置信箱**。\n3. **生成层**：贪心总分 **16.84**（distinct-1 0.049 / 重复率 0.934，复读）、采样总分 **31.81**（**关键词覆盖 0.000** / 忠实 0.018 / 不重复 0.945）。**模型会拼词、不会答题。**\n4. **配对 A**（未训练 vs 已训练）：平均 CE 7.1523 → 5.7551，改善 **+1.3972**，**37 胜 0 负 0 平**，符号一致性 **1.000**，无方向翻转。\n5. **配对 B**（早停回滚 vs 不回滚）：PPL 338.13 → **315.79（低 6.61%）**，逐条对拍平均改善 **+0.0684**，**24 胜 13 负 0 平** ⇒ 回滚是**稳定的**改善，不是个别样本的假象。\n6. 一句话结论：**PPL 只是入场券；校准度、生成质量、配对显著性才是判决书。**\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/tiny/evaluate.py` | `evaluate_model`（三层入口）/ `per_example_losses` / `compare_models`（走 P09 配对）/ `qa_pairs_from_lines` / `diversity_report` / `generation_report` |\n| `src/tiny/train.py` | `evaluate_loss`（CE / PPL / token_accuracy） |\n| P09 `src/ie/metrics.py` | `calibration`（ECE + 可靠性分箱，`gap` 为绝对值） |\n| P09 `src/ie/compare.py` | `paired_compare`（逐条对拍：胜/负/平 + 符号一致性） |\n| P08 `src/ft/autoeval.py` | `generation_report` 的评分口径（关键词覆盖 40% / 格式 15% / 长度 15% / 忠实 20% / 不重复 10%） |\n| `demos/demo_07_evaluation.py` | 7 节：三层总览 / 语言 / 校准 / 生成 / 多样性 / 配对 A / 配对 B |\n| `demos/out/demo_07_evaluation_terminal.txt` | 本章所有数字的来源 |\n| `assets/evaluation.svg` | 三层评估 + 多样性 + 两组配对对照 |\n| `assets/term-07-evaluation.png` | 真实运行截图 |\n\n## 7. Version line\n\nv0.6 → **v0.7**，三层评估 + 配对显著性落地。实测：语言层 PPL **315.79** / token 准确率 **0.1736**（相对随机 1280 下降 75.3%），逐样本 PPL 129.95 ~ 848.80；校准层 ECE **0.0662**，**4/5 箱过度自信**（`[0.8,1.0)` 说 0.945 只有 0.781 对，72.8% token 落在低置信箱）；生成层贪心 **16.84**（重复率 0.934）/ 采样 **31.81**（**关键词覆盖 0.000**）；配对 A **37 胜 0 负 0 平**、一致性 **1.000**（改善 +1.3972）；配对 B PPL **低 6.61%**、**24 胜 13 负 0 平**。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -291,6 +449,8 @@ T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -300,6 +460,173 @@ T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -313,6 +640,17 @@ T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -339,15 +677,46 @@ T=0.8 + top_p 0.9 + rep 1.15        0.795       0.930       0.048</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

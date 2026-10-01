@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-6" title="返回《文档总览》第 6 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">06 · 涌现能力与缩放定律：规模到底买到了什么</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#61-缩放定律scaling-law可预测的那一半" class="lvl2">6.1 缩放定律（Scaling Law）：可预测的那一半</a><a href="#611-kaplan-定律2020" class="lvl3">6.1.1 Kaplan 定律（2020）</a><a href="#612-chinchilla-定律2022算力怎么分最划算" class="lvl3">6.1.2 Chinchilla 定律（2022）：算力怎么分最划算</a><a href="#613-为什么现代模型都在过度训练" class="lvl3">6.1.3 为什么现代模型都在&amp;quot;过度训练&amp;quot;</a><a href="#62-涌现能力不可预测的那一半" class="lvl2">6.2 涌现能力：不可预测的那一半</a><a href="#621-现象" class="lvl3">6.2.1 现象</a><a href="#622-争议涌现是真相还是度量伪影" class="lvl3">6.2.2 争议：涌现是真相还是度量伪影</a><a href="#63-其他与规模相关的现象" class="lvl2">6.3 其他与规模相关的现象</a><a href="#64-对小团队和个人的实战启示" class="lvl2">6.4 对小团队和个人的实战启示</a><a href="#65-常被误解的点" class="lvl2">6.5 常被误解的点</a><a href="#66-动手" class="lvl2">6.6 动手</a><a href="#67-自查问题" class="lvl2">6.7 自查问题</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="06-涌现能力与缩放定律规模到底买到了什么">06 · 涌现能力与缩放定律：规模到底买到了什么</h1>
 <blockquote><p><strong>一句话结论</strong>：损失随规模<strong>平滑</strong>下降（幂律，可预测），但<strong>具体任务的表现</strong>往往在某个规模点突然变好——这就是&quot;涌现&quot;。 对工程的意义：小模型&quot;差一点&quot;往往不是差一点，而是<strong>差一个台阶</strong>；选型时卡在临界点下方比预算不足更亏。</p></blockquote>
 <hr/>
@@ -234,8 +373,27 @@ python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
 <ul class="lvl"><li>写出缩放定律的幂律形式，并说明幂指数&quot;只有 0.076&quot;意味着什么。</li><li>Chinchilla 的核心结论是什么？为什么 GPT-3 被称为&quot;欠训练&quot;？</li><li>为什么 LLaMA-3 8B 要训 15T token？请从总拥有成本角度解释。</li><li>&quot;涌现能力&quot;的争议双方各持什么论据？工程上应该怎么应对？</li><li>In-Context Learning 为什么&quot;不用改权重&quot;？它对提示工程意味着什么？</li><li>举一个 inverse scaling 的例子，并说明为什么对齐阶段要处理它。</li></ul>
 <hr/>
 <p class="nav-footer"><a href="05-finetuning.html">← 上一章：微调</a> · <a href="README.html">返回总览</a> · <a href="07-decoding-and-inference.html">下一章：解码与推理 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/06-scaling-and-emergence.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/06-scaling-and-emergence.md", "name": "06-scaling-and-emergence.md", "text": "# 06 · 涌现能力与缩放定律：规模到底买到了什么\n\n> **一句话结论**：损失随规模**平滑**下降（幂律，可预测），但**具体任务的表现**往往在某个规模点突然变好——这就是\"涌现\"。\n> 对工程的意义：小模型\"差一点\"往往不是差一点，而是**差一个台阶**；选型时卡在临界点下方比预算不足更亏。\n\n---\n\n## 6.1 缩放定律（Scaling Law）：可预测的那一半\n\n### 6.1.1 Kaplan 定律（2020）\n\nOpenAI 发现：把模型变大、数据变多、算力变大，**交叉熵损失呈幂律下降**——在双对数坐标下近似是一条直线：\n\n$$\nL(N) = \\left(\\frac{N_c}{N}\\right)^{\\alpha_N}\n\\qquad\\text{或更完整的形式}\\qquad\nL(N, D) = \\left(\\frac{N_c}{N}\\right)^{\\alpha_N} + \\left(\\frac{D_c}{D}\\right)^{\\alpha_D} + L_\\infty\n$$\n\n| 符号 | 含义 | 典型拟合值 |\n|------|------|------------|\n| $N$ | 参数量（不含 embedding） | — |\n| $D$ | 训练 token 数 | — |\n| $N_c, D_c$ | 拟合常数 | 量级 10¹³ / 10¹² |\n| $\\alpha_N, \\alpha_D$ | 幂指数 | 约 0.076 / 0.095（都很小！） |\n| $L_\\infty$ | 不可约损失（语言的固有熵） | 约 1.6 ~ 1.7 |\n\n**指数只有 0.076 意味着什么**：参数量翻 10 倍，损失只降约 `10^0.076 ≈ 1.19` 倍的幂——看起来很少，但因为损失是指数敏感的指标（PPL = e^L），实际能力提升非常显著。\n\n![损失随参数量的幂律下降](assets/scaling-law.png)\n\n真实运行数据（`demos/07_scaling_law.py`）：\n\n| 参数量 | 预测 loss | 相对 0.1B 的下降 |\n|--------|-----------|------------------|\n| 0.1B | 2.8300 | — |\n| 1.0B | 2.3756 | −16.1% |\n| 10B | 1.9943 | −29.5% |\n| 100B | 1.6741 | −40.8% |\n| 1000B | 1.4053 | −50.3% |\n\n### 6.1.2 Chinchilla 定律（2022）：算力怎么分最划算\n\nDeepMind 的关键结论：**给定算力预算，参数量和数据量应该等比增长**。\n\n$$\nN_{opt} \\propto C^{0.5}, \\qquad D_{opt} \\propto C^{0.5}\n\\qquad\\Longrightarrow\\qquad\n\\boxed{D_{opt} \\approx 20 \\cdot N}\n$$\n\n即**每 1 个参数配 20 个 token**。训练算力估算：\n\n$$\nC \\approx 6ND \\quad \\Longrightarrow \\quad N_{opt} \\approx \\sqrt{\\frac{C}{120}}\n$$\n\n![缩放定律真实运行输出](assets/term-07_scaling_law.png)\n\n按这个公式，同样的算力预算怎么分配，有明确的答案：\n\n```text\nC = 1e23 FLOPs 预算\n  -> 最优参数量 N ≈ 28.9B，最优数据量 D ≈ 0.58T tokens\n  若把参数堆到 2x（57.7B）却只喂同样数据 -> 参数过剩，loss 更差\n```\n\n| 历史对照 | 参数量 | 实际训练 token | token/参数 比 | 评价 |\n|----------|--------|----------------|---------------|------|\n| GPT-3 | 175B | 300B | 1.7× | 严重欠训练（参数过剩） |\n| Chinchilla | 70B | 1.4T | 20× | 算力最优 |\n| LLaMA-1 | 7B–65B | 1.0T–1.4T | 140×–21× | 已超出 Chinchilla |\n| LLaMA-3 | 8B | 15T | **1875×** | 大幅 overtraining |\n\n### 6.1.3 为什么现代模型都在\"过度训练\"\n\nChinchilla 优化的是**训练效率**（同样算力得到最低 loss）。但真实成本还要算**推理**：\n\n$$\n\\text{总成本} \\;=\\; \\text{训练成本（一次性）} \\;+\\; \\text{推理成本（每次调用都付）}\n$$\n\n```mermaid\nflowchart LR\n    C[\"同样的总预算\"] --> A[\"方案 A：大模型 + 少数据<br/>训练便宜、推理贵\"]\n    C --> B[\"方案 B：小模型 + 多数据<br/>训练贵、推理便宜\"]\n    A --> R[\"若调用量巨大<br/>方案 B 总成本更低\"]\n    B --> R\n\n    style A fill:#fee2e2,stroke:#dc2626\n    style B fill:#dcfce7,stroke:#16a34a\n    style R fill:#dbeafe,stroke:#2563eb\n```\n\n**结论**：模型上线后要服务几亿次请求时，把 8B 模型从 Chinchilla 最优的 160B token 训到 15T token，虽然训练成本变高，但推理时用的小模型便宜得多——**这才是 LLaMA-3 8B 训练 15T token 的经济学原因**。\n\n> 记忆要点：**Chinchilla 是算力最优，不是总拥有成本最优（TCO 最优）。**\n\n---\n\n## 6.2 涌现能力：不可预测的那一半\n\n### 6.2.1 现象\n\n在损失平滑下降的同时，某些**具体能力**呈现\"阶梯式\"出现：小模型几乎完全不会，模型大到某个规模后突然会了。\n\n```text\n准确率\n 100% |                                    ___________  多步推理 /\n      |                                   /             CoT\n  50% |            ______    ____________/\n      |           /                        ____  指令遵循\n   0% |___________/          _____________/\n      +----------------------------------------------------→ 规模（log）\n              ↑某个临界点前几乎为 0\n```\n\n| 涌现能力 | 典型出现规模（数量级） | 表现 |\n|----------|------------------------|------|\n| In-Context Learning（少样本示例学习） | ~10B | 给几个例子就能学会新任务，**无需改权重** |\n| 思维链推理（CoT） | ~100B（GSM8K 上更晚） | 让它\"一步步想\"才有效，小模型反而更差 |\n| 指令遵循 | ~10B–100B | 能听懂\"总结成三句话\"这类指令 |\n| 多步算术 / 逻辑 | ~100B | 3 位数乘法开始可用 |\n| 代码能力 | ~10B（专训后） | HumanEval 突然过得去 |\n\n### 6.2.2 争议：涌现是真相还是度量伪影\n\n2023 年 Schaeffer et al. 提出质疑：**很多\"涌现\"是因为指标选得不对**。\n\n| 视角 | 说法 |\n|------|------|\n| 涌现是真的 | 能力出现伴随内部表征的质变（例如电路的形成） |\n| 是度量伪影 | 用\"完全答对才得分\"（exact match）这种**非线性/不连续指标**时，底层能力的连续提升会被显示成突变；换成 token 级准确率、编辑距离等**连续指标**，曲线立刻变平滑 |\n\n$$\n\\text{底层能力} \\xrightarrow{\\text{连续提升}} \\begin{cases}\n\\text{用 exact match 度量} & \\to \\text{看起来是阶跃（涌现）} \\\\\n\\text{用 token 准确率度量} & \\to \\text{平滑上升}\n\\end{cases}\n$$\n\n**工程结论**：不要迷信\"某个规模以下一定不会\"。**别用不连续指标判断\"能不能用\"**，要用贴近业务的实际评估（部分正确是否有价值）。\n\n---\n\n## 6.3 其他与规模相关的现象\n\n| 现象 | 定义 | 工程含义 |\n|------|------|----------|\n| **In-Context Learning** | 不更新权重，仅靠提示里的示例学习 | 这是\"提示工程有效\"的根本原因 |\n| **思维链 CoT** | 生成中间推理步骤再给答案 | 只在足够大的模型上有效；小模型加 CoT 可能更差 |\n| **Grokking** | 在小数据集上训练很久后，测试准确率突然从记忆跳到泛化 | 说明\"训练够久\"有时能跨过质变点 |\n| **U 形缩放 / Inverse Scaling** | 某些任务上模型越大反而越差（如模仿偏见、重复无理输入） | 规模不是万能的，对齐阶段必须处理 |\n| **双重下降** | 测试误差随规模先降后升再降 | 提醒不要用单一小规模实验下结论 |\n| **数据质量 > 数量** | 同样算力下，精选数据可抵数倍原始数据（phi 系列的核心主张） | 小团队的机会窗口 |\n\n---\n\n## 6.4 对小团队和个人的实战启示\n\n| 场景 | 建议 |\n|------|------|\n| 想省钱 | 选\"刚好跨过临界点\"的规模，而不是最大或最小。7B–14B 是当前性价比区 |\n| 想提升效果 | 先做数据（清洗 + 精选 + 领域数据），再做规模 |\n| 推理成本敏感 | 选已 well-trained 的小模型（如 8B 训 15T token 类），而非 Chinchilla 最优的小模型 |\n| 能力不达标 | 先确认\"是知识缺失（用 RAG）还是能力不足（换更大基座）\"，不要硬靠微调补 |\n| 做长上下文 | 位置编码与数据配比都要专门处理，不是把 context_len 改大就行 |\n\n---\n\n## 6.5 常被误解的点\n\n| 误解 | 真相 |\n|------|------|\n| \"规模大了自然什么都会\" | 部分能力反而随规模倒退（inverse scaling）；且能力要靠提示/训练目标激活 |\n| \"涌现是玄学\" | 底层能力提升是连续的，只是**度量方式**造成了阶跃外观 |\n| \"Chinchilla 最优 = 实践最优\" | 它只优化训练效率；考虑推理成本后，**过度训练**常更划算 |\n| \"参数量翻倍损失减半\" | 幂指数约 0.076，收益远小于此；是**指数放大**后才显得明显 |\n| \"小模型加 CoT 也能变强\" | 反例常见：小模型加\"一步步思考\"可能比直接回答更差 |\n| \"把 context 设长就能长文推理\" | 长上下文是**能力**，需要数据（长文档）与位置编码共同支持 |\n\n---\n\n## 6.6 动手\n\n```bash\npython3 demos/07_scaling_law.py      # 表格与结论全部现场算出\npython3 demos/make_figures.py        # 重画 scaling-law.png\n```\n\n**建议改的三处**：\n\n1. 把 `flops_str(budget)` 里的 `1e23` 改成 `1e21`、`1e25`，观察\"最优参数量\"如何随算力平方根增长。\n2. 把 `alpha` 从 0.076 改成 0.05 / 0.15，看曲线斜率如何变化 → 直观理解幂指数的作用。\n3. 用 `C = 6ND` 手算：训练一个 7B 模型 15T token 需要多少 FLOPs？再对比 Chinchilla 最优的 140B token。\n\n---\n\n## 6.7 自查问题\n\n1. 写出缩放定律的幂律形式，并说明幂指数\"只有 0.076\"意味着什么。\n2. Chinchilla 的核心结论是什么？为什么 GPT-3 被称为\"欠训练\"？\n3. 为什么 LLaMA-3 8B 要训 15T token？请从总拥有成本角度解释。\n4. \"涌现能力\"的争议双方各持什么论据？工程上应该怎么应对？\n5. In-Context Learning 为什么\"不用改权重\"？它对提示工程意味着什么？\n6. 举一个 inverse scaling 的例子，并说明为什么对齐阶段要处理它。\n\n---\n\n[← 上一章：微调](05-finetuning.md) · [返回总览](README.md) · [下一章：解码与推理 →](07-decoding-and-inference.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -243,6 +401,8 @@ python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -252,6 +412,173 @@ python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -265,6 +592,17 @@ python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -291,15 +629,46 @@ python3 demos/make_figures.py        # 重画 scaling-law.png</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

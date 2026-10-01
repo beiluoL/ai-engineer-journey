@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-83" title="返回《文档总览》第 83 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 09：RAG Pipeline【完整流水线】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-分层架构rag-只是多了索引链路的-chat-应用" class="lvl3">3.1 分层架构：RAG 只是「多了索引链路的 chat 应用」</a><a href="#32-配置整合frozen-settings-forprofile" class="lvl3">3.2 配置整合：frozen Settings + for_profile</a><a href="#33-失败语义三种失败三种处理" class="lvl3">3.3 失败语义：三种失败三种处理</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1索引与查询用了不同的-embedding-模型" class="lvl3">坑 1：索引与查询用了不同的 embedding 模型</a><a href="#坑-2增量索引重复入库" class="lvl3">坑 2：增量索引重复入库</a><a href="#坑-3流式输出时-citations-发早了" class="lvl3">坑 3：流式输出时 citations 发早了</a><a href="#坑-4测试连着真实-api-跑全链路" class="lvl3">坑 4：测试连着真实 API 跑全链路</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-09rag-pipeline完整流水线">Project 04 — Chapter 09：RAG Pipeline【完整流水线】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/pipeline.py</code> + <code>src/rag/service.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
@@ -399,8 +538,27 @@ class RAGService:
 <h2 id="6-自检清单">6. 自检清单</h2><nav class="sec-nav"><a class="sn prev" href="#5-踩坑清单"><span class="sn-label">← 上一节</span><span class="sn-name">5. 踩坑清单</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 能画出五层架构图，并说清「RAG = 多了索引链路的 chat 应用」</li><li>[ ] 能不看书写出两条链路的入口：<code>IngestionPipeline.ingest(paths)</code> 与 <code>RAGService.ask(query)</code></li><li>[ ] <code>RAGSettings.for_profile(&quot;test&quot;)</code> 下的全链路测试完全不碰外部 API</li><li>[ ] 检索为空时直接拒答，不调 LLM</li><li>[ ] 单文件解析失败不阻塞整批索引；重复 ingest 不会重复入库</li><li>[ ] 知道 embedding 模型变更必须重建索引，且 store 里记录了模型名</li></ul>
 <p>上一章：<a href="08-context-assembly.html">08-context-assembly.md</a> 下一章：<a href="10-rag-evaluation.html">10-rag-evaluation.md</a> —— 流水线跑通了，但「感觉变好了」不算数，这一章教你用数字说话。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/09-rag-pipeline.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/09-rag-pipeline.md", "name": "09-rag-pipeline.md", "text": "# Project 04 — Chapter 09：RAG Pipeline【完整流水线】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/pipeline.py` + `src/rag/service.py`（代码落地时实现）\n\n---\n\n## 1. 本章要解决什么问题\n\nChapter 01-08 已经把所有零件造好了：`BaseParser` 解析文档、`chunk_document` 切分、`BaseEmbeddingClient` 向量化、`BaseVectorStore` 存储、`Retriever` 检索（支持 hybrid / MMR）、`BaseReranker` 重排、`ContextAssembler` 组装。\n\n但零件散落在各自的章节里，互相怎么调用还没有定论：\n\n```text\n你以为：  RAG = 这些函数按顺序调用一遍，写个 main 就完事了\n实际上：  这条链路天然分成两条完全不同的链——\n          一条是离线批处理（建索引），一条是在线服务（问答），\n          它们的触发时机、失败语义、性能要求全都不一样\n```\n\n这两条链是：\n\n```text\n离线索引链路（可以慢，可以定时跑）：\n  ingest(paths) → parse → chunk_document → embed → store\n\n在线问答链路（每次请求都要快）：\n  ask(query) → retrieve → rerank → assemble → llm → answer + citations\n```\n\n本章目标：\n\n> **把 01-08 的零件串成两条完整链路，并定下配置、分层、失败语义——这就是 Personal RAG v1.0。**\n\n---\n\n## 2. 为什么需要这个知识\n\n数仓领域有一句老话：**批处理（batch）与在线服务（serving）必须分离**。Java 里 Spring Batch 跑夜间报表、Tomcat 提供在线 API，从来不会混在一个事务里；Python 里 RAG 的索引和问答也是同构关系。\n\n分离的直接收益是**失败语义可以分开定义**：\n\n```text\n索引失败：  不阻塞问答。用户照常用旧索引提问，后台记 WARNING，下次重跑\n检索为空：  不进入 LLM。直接返回「知识库中没有相关资料」，不花一分钱 token\nLLM 失败：  重试一次，仍失败则明确告知，不返回空字符串\n```\n\n如果没有明确定义，实际写出来的代码往往是「任何一步挂了整个请求 500」，或者更糟——静默返回一个看起来正常、实则瞎编的答案。\n\n另一个原因：把零件的调用顺序固化在两个入口类（`IngestionPipeline` / `RAGService`）里，Chapter 10 的评估就能**只依赖 `RAGService` 的公开方法**测整条链路，而不需要知道内部有几个零件。Java 里这就是「面向接口编程」：评估代码拿到的是一个黑盒，Python 里同样是这一个对象。\n\n---\n\n## 3. 核心概念\n\n### 3.1 分层架构：RAG 只是「多了索引链路的 chat 应用」\n\n呼应 P03 Chapter 09 的五层结构，P04 的分层是这样的：\n\n```text\n┌──────────────────────────────────────────────────┐\n│ 接入层    cli.py / api.py                         │ 复用 P03 的 FastAPI + SSE 模式\n├──────────────────────────────────────────────────┤\n│ 编排层    IngestionPipeline / RAGService          │ 本章主角：串起两条链路\n├──────────────────────────────────────────────────┤\n│ 能力层    Retriever / BaseReranker / Assembler    │ Ch05-08 的零件\n├──────────────────────────────────────────────────┤\n│ 模型层    BaseEmbeddingClient / DeepSeek /        │ Ch03-04 的零件\n│           BaseVectorStore                        │\n├──────────────────────────────────────────────────┤\n│ 数据层    BaseParser / chunk_document / Chunk     │ Ch01-02 的零件\n└──────────────────────────────────────────────────┘\n```\n\n关键的心智模型：**在线问答链路和 P03 的 chat 应用几乎一模一样**（system + user → LLM → 回答），RAG 只多了两件事——前置的检索阶段（能力层）和一条离线索引链路。所以 P03 的 FastAPI + SSE、token 预算、结构化输出经验全部直接复用，不需要重新发明。\n\n### 3.2 配置整合：frozen Settings + for_profile\n\n沿用 P02/P03 定下的模式：配置不可变、按 profile 生成。RAG 比 chat 多了一组索引参数：\n\n| 配置项 | 默认值 | 说明 |\n|--------|--------|------|\n| `chunk_size` / `chunk_overlap` | 500 / 80 | Chapter 02 定下的切分参数 |\n| `top_k` | 5 | 检索召回条数（rerank 后交给组装） |\n| `enable_hybrid` | True | 是否启用混合检索 |\n| `enable_rerank` | True | 是否启用重排（离线测试时可关） |\n| `min_score` | 0.2 | 组装时的分数阈值 |\n| `context_window` / `reserved_output` | 64000 / 2048 | 预算计算（P03 Budget 思路） |\n| `embedding_model` | BAAI/bge-m3 | SiliconFlow 向量模型 |\n\n```python\n@dataclass(frozen=True)\nclass RAGSettings:\n    chunk_size: int = 500\n    chunk_overlap: int = 80\n    top_k: int = 5\n    enable_hybrid: bool = True\n    enable_rerank: bool = True\n    context_window: int = 64_000\n    reserved_output: int = 2_048\n\n    @classmethod\n    def for_profile(cls, profile: str) -> \"RAGSettings\":\n        if profile == \"test\":\n            # 离线测试：关 rerank（不调外部 API），窗口收小逼出裁剪逻辑\n            return cls(enable_rerank=False, context_window=2_000, reserved_output=512)\n        return cls()\n```\n\nfrozen 的意义和 Java 里的不可变对象（`record` / builder 产出的 immutable config）一样：**配置对象在多处传递时，不会中途被谁悄悄改掉**。\n\n### 3.3 失败语义：三种失败三种处理\n\n```text\n1. 索引失败（某个文件解析报错 / embedding API 超时）\n   → 捕获、记日志、跳过该文件继续处理其余文件；\n     整体失败时问答服务不受影响，旧索引照常可用\n\n2. 检索为空（score 全部低于 min_score）\n   → 不调 LLM，直接返回固定话术「知识库中没有相关资料」。\n     这既是省钱，更是防幻觉：模型手里没资料还硬答，必然瞎编\n\n3. LLM 调用失败\n   → 重试一次；仍失败则向用户报明确错误，绝不返回空字符串\n```\n\n第 2 条值得单独强调：**「不知道」是一个合法且必须优先输出的答案**。判断「知识库里没有相关资料」不需要 LLM，用分数阈值就够了——这是在检索层就能做的决定，比让模型自己承认不知道可靠得多。\n\n---\n\n![真实运行：RAGService.ask() 离线端到端问答，检索为空时拒答且一次 LLM 都不调](../assets/term-pipeline.png)\n\n## 4. 动手实现（设计稿）\n\n以下代码将在 `src/rag/pipeline.py` 和 `src/rag/service.py` 落地，这里先当设计稿读。\n\n```python\n\"\"\"离线索引链路：ingest(paths) → parse → chunk_document → embed → store\"\"\"\n\nimport logging\nfrom dataclasses import dataclass\nfrom pathlib import Path\n\nfrom rag.chunker import chunk_document\nfrom rag.embedding_client import BaseEmbeddingClient\nfrom rag.ingestion import BaseParser\nfrom rag.vector_store import BaseVectorStore\n\nlogger = logging.getLogger(__name__)\n\n\n@dataclass(frozen=True)\nclass IngestReport:\n    files_total: int\n    files_ok: int\n    files_failed: list[str]\n    chunks_stored: int\n\n\nclass IngestionPipeline:\n    def __init__(\n        self,\n        parsers: list[BaseParser],\n        embedding_client: BaseEmbeddingClient,\n        vector_store: BaseVectorStore,\n    ) -> None:\n        self._parsers = parsers\n        self._embedding = embedding_client\n        self._store = vector_store\n\n    def ingest(self, paths: list[Path], size: int = 500, overlap: int = 80) -> IngestReport:\n        failed: list[str] = []\n        all_chunks = []\n        for path in paths:\n            parser = self._find_parser(path)\n            if parser is None:\n                failed.append(f\"{path}: 无可用 parser\")\n                continue\n            try:\n                doc = parser.parse(path)\n                all_chunks.extend(chunk_document(doc, size=size, overlap=overlap))\n            except Exception:\n                # 单文件失败不拖垮整批：记日志、跳过、继续\n                logger.warning(\"解析失败，跳过文件: %s\", path, exc_info=True)\n                failed.append(str(path))\n\n        vectors = self._embedding.embed([c.text for c in all_chunks])\n        for chunk, vec in zip(all_chunks, vectors):\n            # 主键 = chunk_id（内容哈希前缀，Ch01/Ch02 定的）→ 重复 ingest 幂等\n            self._store.upsert(\n                id=chunk.chunk_id,\n                vector=vec,\n                text=chunk.text,\n                metadata=chunk.metadata,\n            )\n        return IngestReport(\n            files_total=len(paths),\n            files_ok=len(paths) - len(failed),\n            files_failed=failed,\n            chunks_stored=len(all_chunks),\n        )\n\n    def _find_parser(self, path: Path) -> BaseParser | None:\n        return next((p for p in self._parsers if p.supports(path)), None)\n```\n\n```python\n\"\"\"在线问答链路：ask(query) → retrieve → rerank → assemble → llm → answer\"\"\"\n\nimport logging\nfrom dataclasses import dataclass\n\nfrom rag.assembly import AssembledContext, ContextAssembler, RAG_SYSTEM_RULES\n\nlogger = logging.getLogger(__name__)\n\nNO_RESULT_ANSWER = \"知识库中没有相关资料，无法回答这个问题。\"\n\n\n@dataclass(frozen=True)\nclass RAGAnswer:\n    answer: str\n    citations: list                  # AssembledContext.citations\n    context_tokens: int\n    retrieved_sources: list[str]     # rerank 后的来源序列（评估用，Ch10 依赖）\n\n\nclass RAGService:\n    def __init__(self, retriever, reranker, assembler: ContextAssembler, llm) -> None:\n        self._retriever = retriever\n        self._reranker = reranker\n        self._assembler = assembler\n        self._llm = llm\n\n    def ask(self, query: str, budget: int) -> RAGAnswer:\n        scored = self._retriever.retrieve(query, top_k=10, mode=\"hybrid\", mmr=True)\n        if self._reranker is not None:\n            scored = self._reranker.rerank(query, scored)[:5]   # 精排出 top5\n\n        ctx: AssembledContext = self._assembler.build(query, scored, budget)\n        if not ctx.used_chunks:                                 # 失败语义 2\n            return RAGAnswer(NO_RESULT_ANSWER, [], ctx.context_tokens, [])\n\n        messages = [\n            {\"role\": \"system\", \"content\": RAG_SYSTEM_RULES + \"【参考资料】\\n\" + ctx.context_text},\n            {\"role\": \"user\", \"content\": query},\n        ]\n        answer = self._llm.chat(messages)\n        return RAGAnswer(\n            answer=answer,\n            citations=ctx.citations,\n            context_tokens=ctx.context_tokens,\n            retrieved_sources=[sc.chunk.metadata.get(\"source\", \"\") for sc in ctx.used_chunks],\n        )\n```\n\n接入层的组装只发生在启动时一次（`cli.py` / `api.py`）：按 profile 读 `RAGSettings`，`enable_rerank` 为 True 时注入 `SiliconFlowReranker`、否则注入 `NoopReranker`，LLM 用 DeepSeek 的 `deepseek-chat`（用户自备 API Key）。之后每个请求只调 `service.ask(query, budget)`。\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：索引与查询用了不同的 embedding 模型\n\n```text\n现象：  换了一版 embedding 模型后（只改了代码没重建索引），\n        检索结果完全不对，top1 的相似度也低得离谱\n原因：  两个模型把文本映射到不同的向量空间，跨空间算余弦相似度没有意义\n做法：  Chapter 03 的防线在这里兑现——collection metadata 里记录\n        embedding 模型名，查询前校验一致；不一致就全量重建索引\n        （全库作废，没有增量方案）\n```\n\n### 坑 2：增量索引重复入库\n\n```text\n现象：  同一批文档跑了两次 ingest，向量库条目翻倍，\n        检索结果里同一段话出现两遍，浪费 Context 预算（呼应 Ch08 坑 1）\n原因：  用时间戳或自增 id 当主键，同一内容每次入库都是「新条目」\n做法：  主键用 chunk_id（内容哈希前缀 + 块序号，Ch01/Ch02 已定），\n        配合 store 的 upsert 天然幂等——这和 Java 里\n        「业务键 + UPSERT 替代裸 INSERT」是同一个思路\n```\n\n### 坑 3：流式输出时 citations 发早了\n\n```text\n现象：  SSE 场景下，前端在正文开始前就收到了 citations，\n        点引用发现内容对不上；或者正文完了 citations 永远不来\n原因：  citations 由 AssembledContext 产生，在 LLM 开始生成之前就有了，\n        但「本次回答实际引用了哪些编号」要等模型输出完才知道\n做法：  流式协议里 citations 作为最后一个事件、在 done 事件前补发；\n        若要精确到「实际被引用的编号」，需在流结束后对全文\n        提取 [n] 再过滤 citations\n```\n\n### 坑 4：测试连着真实 API 跑全链路\n\n```text\n现象：  想验证 pipeline 逻辑，却每次测试都真实调 SiliconFlow + DeepSeek，\n        慢、花钱、断网就红\n原因：  没有用离线替身\n做法：  test profile 下固定使用 FakeEmbeddingClient（确定性向量）\n        + InMemoryVectorStore + NoopReranker，\n        全链路（索引 → 检索 → 组装 → 拒答）不碰任何外部 API；\n        LLM 层用录制回放或假实现。这正是 Ch03/Ch07 预留 Fake 类的原因\n```\n\n---\n\n![真实运行：离线测试套件 113 passed，不联网、不写系统临时目录](../assets/term-pytest.png)\n\n## 6. 自检清单\n\n- [ ] 能画出五层架构图，并说清「RAG = 多了索引链路的 chat 应用」\n- [ ] 能不看书写出两条链路的入口：`IngestionPipeline.ingest(paths)` 与 `RAGService.ask(query)`\n- [ ] `RAGSettings.for_profile(\"test\")` 下的全链路测试完全不碰外部 API\n- [ ] 检索为空时直接拒答，不调 LLM\n- [ ] 单文件解析失败不阻塞整批索引；重复 ingest 不会重复入库\n- [ ] 知道 embedding 模型变更必须重建索引，且 store 里记录了模型名\n\n上一章：[08-context-assembly.md](08-context-assembly.md)\n下一章：[10-rag-evaluation.md](10-rag-evaluation.md) —— 流水线跑通了，但「感觉变好了」不算数，这一章教你用数字说话。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -408,6 +566,8 @@ class RAGService:
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -417,6 +577,173 @@ class RAGService:
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -430,6 +757,17 @@ class RAGService:
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -456,15 +794,46 @@ class RAGService:
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

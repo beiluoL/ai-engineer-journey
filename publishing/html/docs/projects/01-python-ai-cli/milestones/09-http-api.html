@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-35" title="返回《文档总览》第 35 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Lesson 09 — HTTP / API：让 Python AI CLI Assistant 第一次连接外部世界</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#get" class="lvl3">GET</a><a href="#post" class="lvl3">POST</a><a href="#put" class="lvl3">PUT</a><a href="#delete" class="lvl3">DELETE</a><a href="#401" class="lvl3">401</a><a href="#403" class="lvl3">403</a><a href="#路线描述" class="lvl3">路线描述</a><a href="#lesson-01" class="lvl2">Lesson 01</a><a href="#lesson-02" class="lvl2">Lesson 02</a><a href="#lesson-03" class="lvl2">Lesson 03</a><a href="#lesson-04" class="lvl2">Lesson 04</a><a href="#lesson-05" class="lvl2">Lesson 05</a><a href="#lesson-06" class="lvl2">Lesson 06</a><a href="#lesson-07" class="lvl2">Lesson 07</a><a href="#lesson-08" class="lvl2">Lesson 08</a><a href="#lesson-09" class="lvl2">Lesson 09</a><a href="#标准话术" class="lvl3">标准话术</a><a href="#标准话术" class="lvl3">标准话术</a><a href="#标准话术" class="lvl3">标准话术</a><a href="#标准话术" class="lvl3">标准话术</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#q8" class="lvl3">Q8</a><a href="#q9" class="lvl3">Q9</a><a href="#q10" class="lvl3">Q10</a><a href="#q11" class="lvl3">Q11</a><a href="#q12" class="lvl3">Q12</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="lesson-09-http-api让-python-ai-cli-assistant-第一次连接外部世界">Lesson 09 — HTTP / API：让 Python AI CLI Assistant 第一次连接外部世界</h1>
 <blockquote><p>项目：Python AI CLI Assistant   版本：v0.9   核心主题：HTTP【超文本传输协议】、API【应用程序编程接口】、Request【请求】、Response【响应】、JSON、Status Code【状态码】、Headers【请求头】、POST、Timeout【超时】</p></blockquote>
 <hr/>
@@ -1287,8 +1426,27 @@ Max Tokens</code></pre>
 <p>这里会第一次真正出现：</p>
 <blockquote><p><strong>“我的 Python 程序到底是怎么调用大模型的？”</strong></p></blockquote>
 <p>但仍然会坚持项目驱动：不是先背一堆 LLM 概念，而是先让程序成功完成一次真实对话，再从代码反推这些概念。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/01-python-ai-cli/milestones/09-http-api.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/01-python-ai-cli/milestones/09-http-api.md", "name": "09-http-api.md", "text": "# Lesson 09 — HTTP / API：让 Python AI CLI Assistant 第一次连接外部世界\n\n> 项目：Python AI CLI Assistant  \n> 版本：v0.9  \n> 核心主题：HTTP【超文本传输协议】、API【应用程序编程接口】、Request【请求】、Response【响应】、JSON、Status Code【状态码】、Headers【请求头】、POST、Timeout【超时】\n\n---\n\n# 一、这一章的项目需求\n\n前面的 AI CLI Assistant 是这样的：\n\n```text\n用户\n ↓\nPython\n ↓\nMock Response【模拟响应】\n ↓\nAI CLI Assistant\n```\n\n例如：\n\n```text\n你：你好\n\nAI：我收到你的问题了：你好\n```\n\n这个“AI”其实并没有真正调用任何外部 AI 服务。\n\n它只是：\n\n```python\ndef generate_mock_response(user_input):\n    return f\"我收到你的问题了：{user_input}\"\n```\n\n所以 v0.9 我们提出一个新的项目需求：\n\n> **让 Python 程序第一次真正访问一个外部 HTTP API。**\n\n先不接 LLM。\n\n我们先让程序学会：\n\n```text\n发送请求\n ↓\n等待服务器\n ↓\n接收响应\n ↓\n解析 JSON\n ↓\n处理错误\n```\n\n掌握这条链路之后，下一章再把服务器换成大模型 API。\n\n---\n\n# 二、为什么 AI 工程师必须懂 HTTP？\n\n因为以后你会不断遇到：\n\n```text\nLLM API\nEmbedding API\nRerank API\nVector Database\nMCP Server\nAgent Tool\nFastAPI\nOpenAI-compatible API\n```\n\n这些系统虽然业务不同，但底层经常都绕不开：\n\n```text\nClient【客户端】\n        ↓\nHTTP Request【HTTP 请求】\n        ↓\nServer【服务器】\n        ↓\nHTTP Response【HTTP 响应】\n        ↓\nClient\n```\n\n所以：\n\n> HTTP 是 AI 应用开发连接外部系统的一条基础公路。\n\n---\n\n# 三、先建立最重要的认知：API 到底是什么？\n\nAPI：\n\n# API = Application Programming Interface【应用程序编程接口】\n\n不要把 API 简单理解成：\n\n> “一个网址。”\n\nAPI 更准确的理解是：\n\n> **一个软件向另一个软件提供能力的约定。**\n\n例如：\n\n```text\n天气系统\n   ↓\n提供：\n查询天气\n\n支付系统\n   ↓\n提供：\n创建支付\n查询支付\n退款\n\nLLM 服务\n   ↓\n提供：\n文本生成\nEmbedding【嵌入】\nRerank【重排序】\n```\n\n所以：\n\n```text\nAPI\n=\n能力\n+\n调用规则\n+\n数据格式\n```\n\n---\n\n# 四、API 和 HTTP 是什么关系？\n\n这是面试非常容易问的地方。\n\n不要混淆：\n\n```text\nAPI ≠ HTTP\n```\n\nAPI 是：\n\n> 软件之间约定如何调用能力。\n\nHTTP 是：\n\n> 网络通信协议。\n\n例如：\n\n```text\n你的 Python 程序\n        ↓\n调用 LLM API\n        ↓\n通过 HTTP\n        ↓\nLLM Server\n```\n\n所以可以理解成：\n\n```text\nAPI\n  ↓\n规定“我要调用什么、怎么传参数、返回什么”\n\nHTTP\n  ↓\n负责“这些数据怎么在网络上传输”\n```\n\n---\n\n# 五、谁是 Client，谁是 Server？\n\n在我们的项目里：\n\n```text\nPython AI CLI Assistant\n        ↓\nClient【客户端】\n```\n\n远程服务：\n\n```text\nAPI Server\n        ↓\nServer【服务器】\n```\n\n完整关系：\n\n```text\n┌────────────────────┐\n│ Python AI CLI      │\n│ Client【客户端】   │\n└─────────┬──────────┘\n          │\n          │ HTTP Request【请求】\n          ↓\n┌────────────────────┐\n│ API Server         │\n│ Server【服务器】   │\n└─────────┬──────────┘\n          │\n          │ HTTP Response【响应】\n          ↓\n┌────────────────────┐\n│ Python AI CLI      │\n└────────────────────┘\n```\n\n---\n\n# 六、Request【请求】到底是什么？\n\n当客户端访问服务器时，会发送一个：\n\n# Request【请求】\n\n例如：\n\n```text\nPOST /chat\n```\n\n它可以包含：\n\n```text\nMethod【请求方法】\nURL【地址】\nHeaders【请求头】\nBody【请求体】\n```\n\n可以先形成这个结构：\n\n```text\nHTTP Request\n│\n├── Method\n├── URL\n├── Headers\n└── Body\n```\n\n---\n\n# 七、Method【请求方法】\n\n最常见：\n\n```text\nGET\nPOST\nPUT\nDELETE\n```\n\n初学阶段先重点理解：\n\n### GET\n\n通常用于：\n\n> 获取资源。\n\n例如：\n\n```text\nGET /users/100\n```\n\n意思类似：\n\n> 查询 ID=100 的用户。\n\n---\n\n### POST\n\n通常用于：\n\n> 向服务器提交数据，创建资源或执行某个操作。\n\n例如：\n\n```text\nPOST /chat\n```\n\n并携带：\n\n```json\n{\n  \"message\": \"你好\"\n}\n```\n\n意思就是：\n\n> 把这条消息交给服务器处理。\n\n---\n\n### PUT\n\n通常用于：\n\n> 更新资源。\n\n---\n\n### DELETE\n\n通常用于：\n\n> 删除资源。\n\n---\n\n# 八、AI API 为什么经常使用 POST？\n\n因为调用大模型时通常需要传递比较复杂的请求数据。\n\n例如：\n\n```json\n{\n  \"model\": \"some-model\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"什么是 Java？\"\n    }\n  ]\n}\n```\n\n这种数据一般放到：\n\n```text\nRequest Body【请求体】\n```\n\n中。\n\n所以经常使用：\n\n```text\nPOST\n```\n\n---\n\n# 九、URL / Endpoint 是什么？\n\n例如：\n\n```text\nhttps://api.example.com/v1/chat\n```\n\n这里可以先把它理解为：\n\n# Endpoint【接口端点】\n\n就是：\n\n> **服务器提供某项 API 能力的访问入口。**\n\n例如：\n\n```text\nhttps://api.example.com\n```\n\n是服务器。\n\n而：\n\n```text\n/v1/chat\n```\n\n可能代表：\n\n> Chat API【聊天接口】\n\n所以：\n\n```text\n完整 URL\n=\n服务器地址\n+\n接口路径\n```\n\n---\n\n# 十、Headers【请求头】是什么？\n\nHTTP 请求除了 URL 和 Body，还可以携带：\n\n# Headers【请求头】\n\n例如：\n\n```text\nContent-Type: application/json\n```\n\n意思：\n\n> 我发送的数据格式是 JSON。\n\n还有：\n\n```text\nAuthorization: Bearer xxx\n```\n\n意思通常是：\n\n> 我正在提供身份认证信息。\n\n所以可以理解：\n\n```text\nHeaders\n=\n请求的附加元信息\n```\n\n---\n\n# 十一、Body【请求体】是什么？\n\nBody 就是：\n\n> **真正提交给服务器的数据内容。**\n\n例如：\n\n```json\n{\n  \"message\": \"你好\"\n}\n```\n\n它可以表示：\n\n> 我想让服务器处理“你好”。\n\n对于 LLM API，Body 往往更复杂：\n\n```json\n{\n  \"model\": \"model-name\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"你好\"\n    }\n  ]\n}\n```\n\n---\n\n# 十二、Response【响应】\n\n服务器处理请求之后，会返回：\n\n# Response【响应】\n\n一个 HTTP Response 通常包含：\n\n```text\nResponse\n│\n├── Status Code【状态码】\n├── Headers【响应头】\n└── Body【响应体】\n```\n\n例如：\n\n```text\n200 OK\n```\n\nBody：\n\n```json\n{\n  \"message\": \"你好，很高兴认识你\"\n}\n```\n\n---\n\n# 十三、Status Code【状态码】\n\n状态码是 HTTP 中非常重要的一部分。\n\n先记住几个高频的：\n\n|状态码|含义|\n|---|---|\n|200|请求成功|\n|201|创建成功|\n|400|请求参数有问题|\n|401|未认证 / 身份认证失败|\n|403|没有权限|\n|404|资源不存在|\n|429|请求过于频繁|\n|500|服务器内部错误|\n|502|网关错误|\n|503|服务暂时不可用|\n\n不要死背所有状态码。\n\n先建立：\n\n```text\n2xx\n→ 成功\n\n4xx\n→ 客户端请求有问题\n\n5xx\n→ 服务端处理有问题\n```\n\n看一个真实例子 —— 用标准库 `urllib` 发一个 GET 请求，拿到 200：\n\n![urllib GET 请求实测：状态码 200](../assets/term-http-urllib.png)\n\n![真实运行：本机起 HTTP 服务，GET 200 / 404、POST 发 JSON、坏 JSON 400、端口没监听 Connection refused](../assets/term-http-local.png)\n\n---\n\n# 十四、一个非常重要的面试点：401 vs 403\n\n### 401\n\n通常表示：\n\n> 身份认证没有通过。\n\n例如：\n\n```text\nAPI Key 错误\nToken 无效\n```\n\n### 403\n\n通常表示：\n\n> 服务器知道你是谁，但你没有权限执行这个操作。\n\n简单记：\n\n```text\n401\n→ 你是谁？\n\n403\n→ 你没有权限做这个事情。\n```\n\n---\n\n# 十五、我们开始真正写 HTTP Client\n\nPython 标准库本身可以做 HTTP。\n\n但是现代 Python 项目里，经常会使用第三方 HTTP Client【HTTP 客户端】库。\n\n这一章我们使用：\n\n```text\nhttpx\n```\n\n它是 Python 中常见的 HTTP Client。\n\n进入：\n\n```bash\nsource .venv/bin/activate\n```\n\n安装：\n\n```bash\npython -m pip install httpx\n```\n\n然后更新：\n\n```bash\npython -m pip freeze > requirements.txt\n```\n\n现在：\n\n```text\nrequirements.txt\n```\n\n中应该同时包含：\n\n```text\npython-dotenv\nhttpx\n```\n\n---\n\n# 十六、第一个 HTTP Demo\n\n创建：\n\n```text\nprojects/01-python-ai-cli/exercises/09-http-api/demo/01-get.py\n```\n\n代码：\n\n```python\nimport httpx\n\nresponse = httpx.get(\n    \"https://httpbin.org/get\",\n    timeout=10,\n)\n\nprint(\"状态码：\", response.status_code)\nprint(\"响应内容：\", response.text)\n```\n\n运行：\n\n```bash\npython 01-get.py\n```\n\n你第一次真正完成：\n\n```text\nPython\n ↓\nHTTP GET\n ↓\nInternet\n ↓\nHTTP Server\n ↓\nHTTP Response\n ↓\nPython\n```\n\n---\n\n# 十七、这里到底发生了什么？\n\n这一行：\n\n```python\nresponse = httpx.get(...)\n```\n\n背后发生的是：\n\n```text\nhttpx\n ↓\n创建 HTTP Request\n ↓\n发送到服务器\n ↓\n服务器处理\n ↓\n服务器返回 Response\n ↓\nhttpx 接收\n ↓\nresponse 对象\n```\n\n所以：\n\n```python\nresponse\n```\n\n不是字符串。\n\n它是一个：\n\n# Response Object【响应对象】\n\n里面包含：\n\n```python\nresponse.status_code\nresponse.headers\nresponse.text\n```\n\n以及后面会经常使用的：\n\n```python\nresponse.json()\n```\n\n---\n\n# 十八、为什么有 `.text` 和 `.json()`？\n\n服务器返回的数据可能是：\n\n```text\n纯文本\n```\n\n也可能是：\n\n```json\n{\n  \"name\": \"AI\"\n}\n```\n\n如果服务器返回 JSON：\n\n```python\nresponse.json()\n```\n\n就可以把 JSON 响应转换成 Python 对象。\n\n例如：\n\n```python\ndata = response.json()\n\nprint(data)\n```\n\n得到的可能是：\n\n```python\n{\n    \"args\": {},\n    \"headers\": {...},\n    \"origin\": \"...\",\n    \"url\": \"...\"\n}\n```\n\n这里再次连接到 Lesson 02：\n\n```text\nJSON\n ↓\nPython Dict / List\n```\n\n所以前面学习 JSON 并不是孤立的。\n\n---\n\n# 十九、完整数据链路开始连接起来了\n\n还记得 Lesson 02 吗？\n\n我们学习：\n\n```text\nPython Dict\n ↓\nJSON\n```\n\n现在：\n\n```text\nPython Dict\n ↓\nJSON Request Body\n ↓\nHTTP\n ↓\nServer\n ↓\nJSON Response\n ↓\nPython Dict\n```\n\n这就是：\n\n> **为什么我们之前一定要先学习 Dict 和 JSON。**\n\n---\n\n# 二十、POST 请求\n\n创建：\n\n```text\n02-post.py\n```\n\n代码：\n\n```python\nimport httpx\n\npayload = {\n    \"message\": \"你好，我正在学习 Python HTTP。\",\n    \"source\": \"ai-engineer-journey\",\n}\n\nresponse = httpx.post(\n    \"https://httpbin.org/post\",\n    json=payload,\n    timeout=10,\n)\n\nprint(\"状态码：\", response.status_code)\n\ndata = response.json()\n\nprint(\"服务器收到的数据：\")\nprint(data[\"json\"])\n```\n\n这里非常重要：\n\n```python\njson=payload\n```\n\n表示：\n\n> 把 Python 对象作为 JSON 请求体发送。\n\n---\n\n# 二十一、`json=payload` 背后做了什么？\n\n可以理解成：\n\n```text\nPython Dict\n    ↓\nJSON Serialization【JSON 序列化】\n    ↓\nHTTP Request Body\n    ↓\n服务器\n```\n\n然后服务器返回：\n\n```text\nHTTP Response\n    ↓\nJSON\n    ↓\nresponse.json()\n    ↓\nPython Dict\n```\n\n所以整个过程是：\n\n```text\nPython\n ↓\nDict\n ↓\nJSON\n ↓\nHTTP\n ↓\nServer\n ↓\nHTTP\n ↓\nJSON\n ↓\nDict\n ↓\nPython\n```\n\n这条链以后会反复出现。\n\n---\n\n# 二十二、Headers 怎么传？\n\n例如：\n\n```python\nheaders = {\n    \"Content-Type\": \"application/json\",\n}\n```\n\n然后：\n\n```python\nresponse = httpx.post(\n    url,\n    headers=headers,\n    json=payload,\n    timeout=10,\n)\n```\n\n完整结构：\n\n```python\nresponse = httpx.post(\n    url,\n    headers=headers,\n    json=payload,\n    timeout=10,\n)\n```\n\n这里：\n\n```text\nurl\n→ 请求发送到哪里\n\nheaders\n→ 请求附加信息\n\njson\n→ 请求数据\n\ntimeout\n→ 最多等待多久\n```\n\n---\n\n# 二十三、Timeout【超时】为什么非常重要？\n\n想象：\n\n```text\nPython\n ↓\n发送请求\n ↓\n服务器一直不响应\n ↓\nPython 一直等\n ↓\n程序卡住\n```\n\n这是非常糟糕的。\n\n所以：\n\n```python\ntimeout=10\n```\n\n可以理解成：\n\n> 如果等待时间超过设定值，就不要无限等下去。\n\nAI API 中尤其重要。\n\n因为：\n\n```text\nLLM\n ↓\n模型推理\n ↓\n可能需要较长时间\n```\n\n但这并不意味着客户端应该：\n\n> 无限等待。\n\n---\n\n# 二十四、HTTP 异常\n\n网络请求不是一定成功。\n\n例如：\n\n```text\n网络断开\nDNS 失败\n服务器超时\n连接失败\nHTTP 错误\n```\n\n所以不能：\n\n```python\nresponse = httpx.get(url)\nprint(response.json())\n```\n\n然后假设世界永远正常。\n\n应该开始建立：\n\n```text\ntry\n ↓\nHTTP Request\n ↓\n成功？\n ├── 是 → 处理 Response\n └── 否 → Exception【异常】\n```\n\n---\n\n# 二十五、一个基础 HTTP 异常处理\n\n```python\nimport httpx\n\ntry:\n    response = httpx.get(\n        \"https://httpbin.org/get\",\n        timeout=10,\n    )\n\n    response.raise_for_status()\n\n    data = response.json()\n\n    print(data)\n\nexcept httpx.HTTPStatusError as error:\n    print(f\"HTTP 请求失败：{error}\")\n\nexcept httpx.RequestError as error:\n    print(f\"网络请求失败：{error}\")\n```\n\n这里出现一个很重要的方法：\n\n```python\nresponse.raise_for_status()\n```\n\n---\n\n# 二十六、`raise_for_status()` 是什么？\n\n如果：\n\n```text\n200\n```\n\n一般不会抛出 HTTP 状态异常。\n\n但是：\n\n```text\n400\n401\n403\n404\n500\n```\n\n等错误状态，就可能抛出：\n\n```text\nHTTPStatusError\n```\n\n于是代码可以：\n\n```text\nRequest\n ↓\nResponse\n ↓\nraise_for_status()\n ↓\n判断 HTTP 是否成功\n```\n\n---\n\n# 二十七、为什么不能只判断 `status_code == 200`？\n\n当然可以：\n\n```python\nif response.status_code == 200:\n    ...\n```\n\n但真实项目里状态码可能有很多成功情况：\n\n```text\n200\n201\n202\n204\n```\n\n而且不同接口的成功状态可能不同。\n\n所以：\n\n```python\nresponse.raise_for_status()\n```\n\n通常更适合处理：\n\n> “如果 HTTP 层失败，就进入异常流程。”\n\n---\n\n# 二十八、现在升级我们的 AI CLI Assistant\n\n到目前为止：\n\n```text\nassistant.py\n```\n\n里面还是：\n\n```python\ndef generate_mock_response(user_input):\n    return f\"我收到你的问题了：{user_input}\"\n```\n\n现在暂时不要直接接真实 LLM。\n\n先把结构升级成：\n\n```text\nassistant.py\n       │\n       ↓\nHTTP Client\n       │\n       ↓\nExternal API\n       │\n       ↓\nResponse\n```\n\n我们可以先使用一个测试 API 模拟远程服务。\n\n---\n\n# 二十九、增加 api_client.py\n\n项目结构：\n\n```text\nsrc/ai_cli/\n├── __init__.py\n├── main.py\n├── config.py\n├── conversation.py\n├── assistant.py\n├── formatter.py\n├── storage.py\n└── api_client.py\n```\n\n为什么单独增加：\n\n```text\napi_client.py\n```\n\n？\n\n因为：\n\n```text\nassistant.py\n```\n\n应该负责：\n\n> Assistant 的业务逻辑。\n\n而：\n\n```text\napi_client.py\n```\n\n负责：\n\n> HTTP 通信。\n\n这就是：\n\n# Separation of Concerns【关注点分离】\n\n---\n\n# 三十、api_client.py\n\n```python\nimport httpx\n\n\ndef get_demo_response(message):\n    payload = {\n        \"message\": message,\n    }\n\n    try:\n        response = httpx.post(\n            \"https://httpbin.org/post\",\n            json=payload,\n            timeout=10,\n        )\n\n        response.raise_for_status()\n\n        return response.json()\n\n    except httpx.HTTPStatusError as error:\n        raise RuntimeError(\n            f\"远程服务返回 HTTP 错误：{error}\"\n        ) from error\n\n    except httpx.RequestError as error:\n        raise RuntimeError(\n            f\"网络请求失败：{error}\"\n        ) from error\n```\n\n---\n\n# 三十一、assistant.py 开始调用 API Client\n\n```python\nfrom .api_client import get_demo_response\n\n\ndef generate_response(user_input):\n    result = get_demo_response(user_input)\n\n    return f\"服务器收到：{result['json']['message']}\"\n```\n\n现在：\n\n```text\nassistant.py\n```\n\n已经不需要知道：\n\n```text\nHTTP\nheaders\ntimeout\nhttpx\n异常\n```\n\n这些细节。\n\n它只知道：\n\n```text\n我要获得一个远程响应。\n```\n\n---\n\n# 三十二、这就是分层的价值\n\n以前：\n\n```text\nmain.py\n ↓\nassistant.py\n ↓\n所有代码混在一起\n```\n\n现在：\n\n```text\nmain.py\n   ↓\nassistant.py\n   ↓\napi_client.py\n   ↓\nHTTP\n   ↓\nExternal API\n```\n\n每层负责自己的事情。\n\n---\n\n# 三十三、联系描述：完整请求链路\n\n这是这一章最重要的链路。\n\n```text\n用户输入\n   ↓\nmain.py\n   ↓\nassistant.py\n   ↓\napi_client.py\n   ↓\n构造 Request\n   │\n   ├── Method = POST\n   ├── URL\n   ├── Headers\n   └── JSON Body\n   ↓\nHTTP\n   ↓\nAPI Server\n   ↓\n处理请求\n   ↓\nHTTP Response\n   │\n   ├── Status Code\n   ├── Headers\n   └── JSON Body\n   ↓\napi_client.py\n   ↓\n解析 JSON\n   ↓\nassistant.py\n   ↓\n生成 Assistant Response\n   ↓\nmain.py\n   ↓\n展示给用户\n```\n\n### 路线描述\n\n用户首先输入问题，`main.py` 负责控制整个程序流程。它把用户问题交给 `assistant.py`，因为 Assistant 层负责决定“如何产生回答”。\n\n`assistant.py` 又把真正的远程通信交给 `api_client.py`，这样业务逻辑和网络通信不会混在一起。\n\n`api_client.py` 根据接口要求构造 HTTP Request，包括请求方法、接口地址、请求头和 JSON 请求体，然后通过 HTTP 发送给服务器。\n\n服务器处理请求后返回 HTTP Response。Response 中包含状态码、响应头和响应体。`api_client.py` 首先处理 HTTP 层错误，然后把 JSON 响应解析成 Python 对象，再交给 `assistant.py`。\n\n最后 `assistant.py` 把远程服务返回的数据转换成 Assistant 的业务结果，`main.py` 再负责展示。\n\n所以整个项目真正形成了：\n\n> **用户输入 → 业务层 → HTTP 客户端 → API → HTTP 响应 → 业务层 → 用户输出。**\n\n---\n\n# 三十四、为什么下一章就可以接 LLM？\n\n因为真实 LLM API 本质上也是：\n\n```text\nHTTP Request\n ↓\nLLM Server\n ↓\nHTTP Response\n```\n\n区别主要在于：\n\n```text\nRequest Body\n```\n\n会从：\n\n```json\n{\n  \"message\": \"你好\"\n}\n```\n\n变成类似：\n\n```json\n{\n  \"model\": \"某个模型\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"你好\"\n    }\n  ]\n}\n```\n\n然后服务器返回：\n\n```json\n{\n  \"choices\": [\n    {\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"你好！\"\n      }\n    }\n  ]\n}\n```\n\n所以：\n\n> **你前面学习的 List、Dict、JSON、Function、Exception、Environment，现在全部开始汇合。**\n\n---\n\n# 三十五、前面学的东西为什么没有白学？\n\n现在回头看：\n\n## Lesson 01\n\n变量：\n\n```python\nmessage = \"你好\"\n```\n\n---\n\n## Lesson 02\n\nDict：\n\n```python\n{\n    \"role\": \"user\",\n    \"content\": message,\n}\n```\n\nList：\n\n```python\n[\n    {\n        \"role\": \"user\",\n        \"content\": message,\n    }\n]\n```\n\nJSON：\n\n```text\nPython Object\n ↓\nJSON\n```\n\n---\n\n## Lesson 03\n\n循环处理：\n\n```python\nfor message in messages:\n    ...\n```\n\n---\n\n## Lesson 04\n\n函数：\n\n```python\ngenerate_response(...)\n```\n\n---\n\n## Lesson 05\n\n模块：\n\n```python\nfrom .api_client import ...\n```\n\n---\n\n## Lesson 06\n\n异常：\n\n```python\ntry:\n    ...\nexcept:\n    ...\n```\n\n---\n\n## Lesson 07\n\n持久化：\n\n```text\nmessages\n ↓\nJSON\n ↓\nmessages.json\n```\n\n---\n\n## Lesson 08\n\n环境：\n\n```text\n.venv\nrequirements.txt\n.env\n```\n\n---\n\n## Lesson 09\n\n终于把它们连接：\n\n```text\nPython\n ↓\nDict\n ↓\nJSON\n ↓\nHTTP\n ↓\nAPI\n ↓\nJSON\n ↓\nDict\n ↓\nPython\n```\n\n这才是项目驱动学习真正的价值。\n\n---\n\n# 三十六、Java 开发者视角\n\n你有 Java 后端经验，这部分可以快速建立映射。\n\nPython：\n\n```python\nresponse = httpx.post(\n    url,\n    json=payload,\n    timeout=10,\n)\n```\n\n可以类比 Java 后端里的：\n\n```text\nHTTP Client\n ↓\n发送 HTTP Request\n ↓\n接收 Response\n```\n\n例如 Java 生态中的：\n\n```text\nRestTemplate\nWebClient\nHttpClient\nOkHttp\n```\n\n它们解决的问题本质相似：\n\n> **让程序作为 HTTP Client 与其他服务通信。**\n\n---\n\n# 三十七、一个高频面试题：HTTP 请求包含什么？\n\n### 标准话术\n\n> 一个 HTTP 请求通常包含请求方法、URL、请求头和请求体。请求方法用于表示希望执行的操作，例如 GET、POST；URL 用于确定请求目标；Headers 用于传递元信息，例如 Content-Type 和 Authorization；Body 用于传输具体业务数据，POST 请求中经常使用 JSON 作为请求体。\n\n---\n\n# 三十八、一个高频面试题：HTTP Response 包含什么？\n\n### 标准话术\n\n> HTTP 响应通常包含状态码、响应头和响应体。状态码用于表示请求处理结果，例如 2xx 表示成功、4xx 通常表示客户端请求问题、5xx 通常表示服务端问题。响应体则用于返回具体业务数据，例如 JSON 数据。\n\n---\n\n# 三十九、一个高频面试题：401 和 403 有什么区别？\n\n### 标准话术\n\n> 401 通常表示身份认证没有通过，例如 Token 或 API Key 无效；403 通常表示服务器已经识别了请求方，但当前请求没有执行对应操作的权限。\n\n---\n\n# 四十、一个高频面试题：为什么 HTTP Client 要设置 Timeout？\n\n### 标准话术\n\n> 因为网络请求可能出现服务器无响应、网络异常或者服务处理时间过长。如果不设置超时，客户端可能长时间阻塞。设置 Timeout【超时】可以限制等待时间，在超过阈值后主动失败并进入异常处理流程，提高系统的稳定性。\n\n---\n\n# 四十一、主动回忆训练\n\n先不要看答案。\n\n### Q1\n\nAPI 和 HTTP 是一回事吗？\n\n---\n\n### Q2\n\nClient 和 Server 分别是什么？\n\n---\n\n### Q3\n\nHTTP Request 包含哪些核心部分？\n\n---\n\n### Q4\n\nGET 和 POST 最核心的区别是什么？\n\n---\n\n### Q5\n\nHeaders 是干什么的？\n\n---\n\n### Q6\n\nBody 是干什么的？\n\n---\n\n### Q7\n\nResponse 包含哪些核心部分？\n\n---\n\n### Q8\n\n200、400、401、403、404、429、500 分别代表什么？\n\n---\n\n### Q9\n\n为什么：\n\n```python\nresponse.json()\n```\n\n和：\n\n```python\nresponse.text\n```\n\n不是一回事？\n\n---\n\n### Q10\n\n为什么：\n\n```python\njson=payload\n```\n\n可以把 Python Dict 作为 JSON 请求体发送？\n\n---\n\n### Q11\n\n为什么 HTTP Client 需要 Timeout？\n\n---\n\n### Q12\n\n为什么我们新增：\n\n```text\napi_client.py\n```\n\n而不是把 HTTP 请求直接写进：\n\n```text\nmain.py\n```\n\n？\n\n---\n\n# 四十二、最终挑战\n\n现在不要复制前面的代码。\n\n自己设计一个：\n\n```text\nGET /health\n```\n\n调用模块。\n\n要求：\n\n```text\nhealth_client.py\n```\n\n提供：\n\n```python\ncheck_health()\n```\n\n最终：\n\n```text\nmain.py\n ↓\ncheck_health()\n ↓\nHTTP GET\n ↓\nServer\n ↓\nResponse\n ↓\n判断状态码\n ↓\n输出服务是否正常\n```\n\n要求：\n\n1. 使用 `httpx`\n    \n2. 设置 Timeout\n    \n3. 处理网络异常\n    \n4. 处理 HTTP 错误\n    \n5. 返回 Python 数据\n    \n6. `main.py` 不直接操作 `httpx`\n    \n\n---\n\n# 四十三、v0.9 完成标准\n\n不要以“我看完了”作为完成标准。\n\n达到下面状态才算：\n\n```text\n□ 我知道 API 和 HTTP 的区别\n□ 我知道 Client / Server\n□ 我知道 Request 的组成\n□ 我知道 Response 的组成\n□ 我知道 GET / POST\n□ 我知道 Headers\n□ 我知道 Body\n□ 我知道 Status Code\n□ 我知道 401 / 403\n□ 我知道 response.json()\n□ 我知道 Timeout\n□ 我会用 httpx 发 GET\n□ 我会用 httpx 发 POST\n□ 我会处理 HTTP 异常\n□ 我理解 api_client.py 为什么独立\n□ 我能自己画出完整请求链路\n```\n\n---\n\n# 四十四、当前项目路线\n\n```text\nv0.1 ✅ Input / Output\nv0.2 ✅ List / Dict / JSON / Messages\nv0.3 ✅ Condition / Loop\nv0.4 ✅ Function\nv0.5 ✅ Module / Package\nv0.6 ✅ Exception / Validation\nv0.7 ✅ File / JSON Persistence\nv0.8 ✅ venv / pip / Environment\nv0.9 ✅ HTTP / API\nv1.0 ⏭ Real LLM CLI Assistant\n```\n\n---\n\n# 四十五、下一章：真正接入大模型\n\n下一章不再使用：\n\n```text\nMock Response\n```\n\n也不再使用：\n\n```text\nhttpbin\n```\n\n而是正式进入：\n\n# Lesson 10 — Real LLM API：让 Python AI CLI Assistant 真正成为 AI Assistant\n\n届时会把前面所有知识串起来：\n\n```text\n用户输入\n   ↓\nmessages List\n   ↓\nDict\n   ↓\nJSON\n   ↓\nHTTP POST\n   ↓\nLLM API\n   ↓\nModel【模型】\n   ↓\nResponse\n   ↓\nassistant message\n   ↓\nmessages\n   ↓\nmessages.json\n```\n\n并开始理解：\n\n```text\nAPI Key\nModel\nMessages\nSystem\nUser\nAssistant\nToken\nContext\nTemperature\nMax Tokens\n```\n\n这里会第一次真正出现：\n\n> **“我的 Python 程序到底是怎么调用大模型的？”**\n\n但仍然会坚持项目驱动：不是先背一堆 LLM 概念，而是先让程序成功完成一次真实对话，再从代码反推这些概念。"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -1296,6 +1454,8 @@ Max Tokens</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -1305,6 +1465,173 @@ Max Tokens</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -1318,6 +1645,17 @@ Max Tokens</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -1344,15 +1682,46 @@ Max Tokens</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

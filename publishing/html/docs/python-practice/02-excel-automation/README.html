@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-16" title="返回《文档总览》第 16 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">02 Excel 报表自动化</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#你要做的东西" class="lvl2">你要做的东西</a><a href="#先看结果" class="lvl2">先看结果</a><a href="#你要学到的-python-pandas" class="lvl2">你要学到的 Python / pandas</a><a href="#怎么跑起来" class="lvl2">怎么跑起来</a><a href="#代码结构" class="lvl2">代码结构</a><a href="#关键代码拆解" class="lvl2">关键代码拆解</a><a href="#常见坑" class="lvl2">常见坑</a><a href="#验收标准做完自检" class="lvl2">验收标准（做完自检）</a><a href="#进阶挑战" class="lvl2">进阶挑战</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="02-excel-报表自动化">02 Excel 报表自动化</h1>
 <blockquote><p><strong>难度</strong> ●●○ 进阶 ｜ <strong>预计</strong> 2–3 天 ｜ <strong>依赖</strong> pandas、openpyxl、matplotlib 上级目录：<a href="../README.html">练手项目总览</a></p></blockquote>
 <h2 id="你要做的东西">你要做的东西</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#先看结果"><span class="sn-label">下一节 →</span><span class="sn-name">先看结果</span></a></nav>
@@ -249,8 +388,27 @@ wb.save(XLSX)</code></pre>
 <ul class="lvl"><li>[ ] <code>report.py</code> 打印的「丢弃 重复行 / 数量为空」与 <code>make_sample_data.py</code> 报告的注入数量对得上</li><li>[ ] <code>assets/sales-report.xlsx</code> 有 6 个 sheet，每个 sheet 首行冻结、表头是深蓝底白字</li><li>[ ] 三个门店的销售额相加（<code>114960 + 111703 + 91118 = 317781</code>）= 透视表里 <code>All</code> 行的总计</li><li>[ ] 两张图里的中文正常显示，没有方块</li><li>[ ] 删掉 <code>data/</code> 目录重跑 <code>demo.sh</code>，输出与截图完全一致（可复现性）</li></ul>
 <h2 id="进阶挑战">进阶挑战</h2><nav class="sec-nav"><a class="sn prev" href="#验收标准做完自检"><span class="sn-label">← 上一节</span><span class="sn-name">验收标准（做完自检）</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li><strong>加一列「环比」</strong> —— 每个门店当月销售额相对上月的增长百分比，正增长标红、负增长标绿（中国习惯）。</li><li><strong>换成从 Excel 读</strong> —— 把输入从 CSV 换成 <code>.xlsx</code>（<code>pd.read_excel</code>），并处理「一份文件里多个 sheet」的情况。</li><li><strong>加自动邮件</strong> —— 报表生成后用 <code>smtplib</code> 发出去（练习异常处理与超时重试）。<strong>注意</strong>：不要把邮箱密码写进代码，用环境变量。</li><li><strong>性能对比</strong> —— 把样本量放大到 100 万行，对比 <code>iterrows()</code> 逐行处理与向量化操作的耗时差（提示：会差几个数量级）。</li><li><strong>写测试</strong> —— 给 <code>load_and_clean()</code> 写 <code>pytest</code>：构造一小段已知数据，断言清洗后的行数与销售额。这也是 <code>04-fastapi-blog</code> 里要用的技能。</li></ul>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">python-practice/02-excel-automation/README.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "python-practice/02-excel-automation/README.md", "name": "README.md", "text": "# 02 Excel 报表自动化\n\n> **难度** ●●○ 进阶 ｜ **预计** 2–3 天 ｜ **依赖** pandas、openpyxl、matplotlib\n> 上级目录：[练手项目总览](../README.md)\n\n## 你要做的东西\n\n三家门店各自导出一份 CSV，你要把它们变成**一份可以直接发出去的多 sheet 报表**：\n\n```\ndata/sales-beijing.csv  ┐\ndata/sales-shanghai.csv ├─→ 合并 → 清洗 → 统计 → assets/sales-report.xlsx（6 个 sheet）\ndata/sales-shenzhen.csv ┘                              └→ 两张图（折线 + 条形）\n```\n\n这就是「每周一手工复制粘贴两小时」这件事的标准解法。它的价值不在技术难度，而在于**从此以后这个活不需要人**——这才是自动化。\n\n## 先看结果\n\n**第一步：造数据**（顺手埋了三处真实的脏数据，见下）\n\n![生成样本数据](assets/term-02-data.png)\n\n**第二步：报表流水线**（合并 → 清洗 → 统计 → 写 Excel → 画图）\n\n![报表流水线真实运行](assets/term-02-report.png)\n\n注意图里这几行，它们是这个项目真正教你的东西：\n\n- `合并后 1715 行` → `丢弃 重复行 8 / 日期非法 0 / 数量为空 8` → `清洗后 1699 行（保留率 99.1%）`\n  **每一步丢了多少行都必须打印出来。** 报表自动化最致命的 bug 不是报错，而是「悄悄少了几百行」而没人发现。\n- `日期非法 0` —— 源数据里 430 行用的是 `2026/01/26` 这种斜杠格式，靠 `pd.to_datetime(..., format=\"mixed\")` 全部救回来了。\n- `月份 × 品类` 透视表最后一行/列是 `All`，这是 `pivot_table(margins=True)` 自动加的小计。\n\n报表本身长这样（`assets/sales-report.xlsx`，6 个 sheet）：\n\n| sheet | 内容 | 行 × 列 |\n|---|---|---|\n| `清洗后明细` | 全部可用交易，销售额列带红绿色阶 | 1700 × 7 |\n| `门店汇总` | 订单数 / 销售额 / 销量 / 客单价，按销售额降序 | 4 × 5 |\n| `品类汇总` | 销售额 / 销量 / 占比 | 4 × 4 |\n| `月份×品类` | 透视表（带 All 小计） | 8 × 5 |\n| `SKU 排行` | 全部 9 个 SKU 的销售额排名 | 10 × 4 |\n| `月份×门店` | 画折线图用的数据源 | 7 × 4 |\n\n两张图（也都是脚本现场画出来的，不是手绘）：\n\n![各门店月度销售额](assets/chart-monthly-revenue.png)\n\n![品类销售额占比](assets/chart-category-share.png)\n\n## 你要学到的 Python / pandas\n\n| 知识点 | 在本项目里落在哪 |\n|---|---|\n| `pd.read_csv` | 读三个 CSV，注意 `encoding=\"utf-8-sig\"`（带 BOM） |\n| `pd.concat` | 把三张结构相同的表纵向拼成一张 |\n| `pd.to_datetime(..., format=\"mixed\")` | 处理混排日期格式（真实数据的头号坑） |\n| `drop_duplicates` / `dropna` / `to_numeric(errors=\"coerce\")` | 清洗三件套 |\n| 派生列 | `df[\"revenue\"] = df[\"qty\"] * df[\"unit_price\"]`、`dt.to_period(\"M\")` |\n| `groupby().agg(命名聚合)` | 一次算出订单数/销售额/销量/客单价 |\n| `pivot_table(margins=True)` | 二维透视 + 自动小计 |\n| `ExcelWriter` 多 sheet | 一个文件写 6 个表 |\n| openpyxl 二次加工 | 冻结首行、表头配色、列宽自适应、数字格式、色阶 |\n| matplotlib 中文字体 | 不设字体就全是「豆腐块」方框 |\n| 固定随机种子 | `random.Random(42)` 让数据可复现 |\n\n## 怎么跑起来\n\n```bash\ncd python-practice/02-excel-automation\n\n# 装依赖（第一次）\npython3 -m venv .venv && source .venv/bin/activate\npip install -r ../requirements.txt\n\npython3 make_sample_data.py    # 生成 data/*.csv\npython3 report.py              # 生成 assets/sales-report.xlsx 与两张图\n\nbash demo.sh                   # 或者一次跑完上面两步，输出就是截图里的内容\n```\n\n## 代码结构\n\n```\n02-excel-automation/\n├── make_sample_data.py   # 造数据（固定 seed=42，可复现）+ 注入三类脏数据\n├── report.py             # 主流程：合并→清洗→统计→写 Excel→画图\n├── demo.sh               # 可复现演示脚本\n├── data/                 # 三份样本 CSV（入库，作为证据）\n├── assets/               # 报表 xlsx、两张图、终端截图、原始运行输出 run.txt\n└── README.md\n```\n\n## 关键代码拆解\n\n**① 为什么脏数据要「故意埋」**\n\n真实项目里，`df.drop_duplicates()` 这行代码你写完不知道对不对——因为真实数据可能本来就没重复。所以这里**主动注入**了 5 行完全重复、8 行数量为空、430 行斜杠日期：\n\n```python\nfor r in rng.sample(rows, 8):\n    r[\"qty\"] = \"\"           # 数量为空\nfor r in rng.sample(rows, 5):\n    rows.append(dict(r))    # 完全重复\n```\n\n跑完你能对着 `丢弃 重复行 8 / 数量为空 8` 验证你的清洗逻辑真的生效了。**能验证，才叫会了。**\n\n**② 清洗顺序有讲究**\n\n```python\ndf[\"date\"] = pd.to_datetime(df[\"date\"], format=\"mixed\", errors=\"coerce\")  # 先转类型\ndf = df.dropna(subset=[\"date\"])                                          # 再丢坏的\ndf = df.drop_duplicates()                                                # 后去重\ndf[\"qty\"] = pd.to_numeric(df[\"qty\"], errors=\"coerce\")                    # 空值变 NaN\ndf = df.dropna(subset=[\"qty\"])\n```\n\n先转类型再去重，是因为 `\"6\"` 和 `6` 在 pandas 眼里不是同一个值——如果先去重，类型不一致的「重复行」会漏网。这类顺序问题只有真跑过才记得住。\n\n**③ 中文字体：不做这一步，图全是方块**\n\n```python\ninstalled = {f.name for f in font_manager.fontManager.ttflist}\nfor name in (\"PingFang SC\", \"Hiragino Sans GB\", \"Heiti SC\", \"Arial Unicode MS\"):\n    if name in installed:\n        plt.rcParams[\"font.sans-serif\"] = [name]\n        plt.rcParams[\"axes.unicode_minus\"] = False   # 负号别变方块\n        break\n```\n\n`axes.unicode_minus = False` 这一行最容易被忽略：字体设对了中文能显示，但坐标轴上的负号仍然会是方块——因为它用的是另一套数学符号字形。\n\n**④ 列宽要用「显示宽度」而不是「字符数」**\n\n```python\ndef disp_width(text: str) -> int:\n    return sum(2 if unicodedata.east_asian_width(ch) in \"WF\" else 1 for ch in text)\n```\n\n`len(\"门店\")` 是 2，但在 Excel 里它占 **4 格宽**。直接用 `len()` 算列宽，中英混排的表就会挤成一团。\n\n**⑤ pandas 管数据，openpyxl 管颜面**\n\npandas 的 `to_excel` 只能写内容，写不了颜色/列宽/冻结窗格。所以流程是「pandas 写完 → openpyxl 打开再加工」：\n\n```python\nwith pd.ExcelWriter(XLSX, engine=\"openpyxl\") as writer:\n    ...\nwb = load_workbook(XLSX)     # 重新打开\nws.freeze_panes = \"A2\"       # 冻结首行\n...\nwb.save(XLSX)\n```\n\n## 常见坑\n\n| 坑 | 现象 | 怎么破 |\n|---|---|---|\n| 读带 BOM 的 CSV 没指定编码 | 第一列列名变成 `\\ufeffdate`，`df[\"date\"]` 报 KeyError | `encoding=\"utf-8-sig\"` |\n| 日期格式混排 | `to_datetime` 抛 `ValueError` 或整列变 NaT | `format=\"mixed\"` 或先 `str.replace(\"/\", \"-\")` |\n| `dropna` 把整个数据集清空 | 有一列全空，`dropna()` 不传 subset 会删掉所有行 | 永远写 `dropna(subset=[...])` |\n| 在循环里 `df.append(row)` | pandas 3.x 已删除该方法，直接 AttributeError | 先收集到 list，最后 `pd.concat` 一次 |\n| `pivot_table` 默认 `aggfunc=\"mean\"` | 销售额算成了平均值（少了一个数量级） | 显式写 `aggfunc=\"sum\"` |\n| matplotlib 中文乱码 | 标题全是 □□□ | 设置 `font.sans-serif` |\n| 图表纵轴刻度写成 `.0f` | 1.5 万显示成「2万」，刻度全一样 | 保留一位小数 |\n\n## 验收标准（做完自检）\n\n- [ ] `report.py` 打印的「丢弃 重复行 / 数量为空」与 `make_sample_data.py` 报告的注入数量对得上\n- [ ] `assets/sales-report.xlsx` 有 6 个 sheet，每个 sheet 首行冻结、表头是深蓝底白字\n- [ ] 三个门店的销售额相加（`114960 + 111703 + 91118 = 317781`）= 透视表里 `All` 行的总计\n- [ ] 两张图里的中文正常显示，没有方块\n- [ ] 删掉 `data/` 目录重跑 `demo.sh`，输出与截图完全一致（可复现性）\n\n## 进阶挑战\n\n1. **加一列「环比」** —— 每个门店当月销售额相对上月的增长百分比，正增长标红、负增长标绿（中国习惯）。\n2. **换成从 Excel 读** —— 把输入从 CSV 换成 `.xlsx`（`pd.read_excel`），并处理「一份文件里多个 sheet」的情况。\n3. **加自动邮件** —— 报表生成后用 `smtplib` 发出去（练习异常处理与超时重试）。**注意**：不要把邮箱密码写进代码，用环境变量。\n4. **性能对比** —— 把样本量放大到 100 万行，对比 `iterrows()` 逐行处理与向量化操作的耗时差（提示：会差几个数量级）。\n5. **写测试** —— 给 `load_and_clean()` 写 `pytest`：构造一小段已知数据，断言清洗后的行数与销售额。这也是 `04-fastapi-blog` 里要用的技能。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -258,6 +416,8 @@ wb.save(XLSX)</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -267,6 +427,173 @@ wb.save(XLSX)</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -280,6 +607,17 @@ wb.save(XLSX)</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -306,15 +644,46 @@ wb.save(XLSX)</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-181" title="返回《文档总览》第 181 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Day21：企业 AI 平台落地实战</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#公司规模" class="lvl2">公司规模</a><a href="#内部" class="lvl3">内部：</a><a href="#外部" class="lvl3">外部：</a><a href="#ai负载类型" class="lvl2">AI负载类型。</a><a href="#gpu节点" class="lvl2">GPU节点</a><a href="#小型ai平台" class="lvl2">小型AI平台</a><a href="#3050万元" class="lvl2">30～50万元</a><a href="#中型企业" class="lvl2">中型企业</a><a href="#200500万元" class="lvl2">200～500万元</a><a href="#大型企业" class="lvl2">大型企业</a><a href="#网络结构" class="lvl2">网络结构</a><a href="#前端网络" class="lvl2">前端网络</a><a href="#ai计算网络" class="lvl2">AI计算网络</a><a href="#存储网络" class="lvl2">存储网络</a><a href="#master节点" class="lvl2">Master节点</a><a href="#worker节点" class="lvl2">Worker节点</a><a href="#gpu-worker" class="lvl2">GPU Worker</a><a href="#文档存储" class="lvl2">文档存储</a><a href="#向量数据库" class="lvl2">向量数据库</a><a href="#搜索" class="lvl2">搜索</a><a href="#模型路由" class="lvl2">模型路由</a><a href="#限流" class="lvl2">限流</a><a href="#成本统计" class="lvl2">成本统计</a><a href="#系统监控" class="lvl2">系统监控</a><a href="#ai监控" class="lvl2">AI监控</a><a href="#日志" class="lvl2">日志</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="day21企业-ai-平台落地实战">Day21：企业 AI 平台落地实战</h1>
 <h1 id="从-0-设计一个企业私有-ai-平台硬件采购-网络规划-kubernetes-gpu集群-rag-agent-运维">从 0 设计一个企业私有 AI 平台：硬件采购 → 网络规划 → Kubernetes → GPU集群 → RAG → Agent → 运维</h1>
 <p>前面 Day1～Day20：</p>
@@ -1010,8 +1149,27 @@ AI Solution Architect</code></pre>
 <ul class="lvl"><li>企业自动化工作流</li></ul>
 <p>这会直接对应：</p>
 <p><strong>2026 AI Agent 工程师岗位核心能力。</strong></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">publishing/finetune-series/Day21-企业AI平台落地实战.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "publishing/finetune-series/Day21-企业AI平台落地实战.md", "name": "Day21-企业AI平台落地实战.md", "text": "# Day21：企业 AI 平台落地实战\n\n# 从 0 设计一个企业私有 AI 平台：硬件采购 → 网络规划 → Kubernetes → GPU集群 → RAG → Agent → 运维\n\n前面 Day1～Day20：\n\n你已经从：\n\n```text\nJava开发者\n\n↓\n\n调用大模型API\n\n↓\n\nRAG开发\n\n↓\n\nAgent开发\n\n↓\n\n模型部署\n\n↓\n\nLoRA微调\n\n↓\n\nMLOps\n\n↓\n\nAI产品设计\n```\n\n现在进入：\n\n> **企业 AI 平台架构设计能力**\n\n目标：\n\n假设你是企业 AI 平台负责人，需要建设一个：\n\n# Enterprise Private AI Platform【企业私有 AI 平台】\n\n支持：\n\n- 企业知识库\n    \n- AI客服\n    \n- 自动化Agent\n    \n- 图片生成\n    \n- 视频生成\n    \n- 私有模型部署\n    \n\n---\n\n# 一、先定义企业场景\n\n假设企业：\n\n## 公司规模\n\n5000员工。\n\nAI使用：\n\n1000人。\n\n业务：\n\n### 内部：\n\n- 技术知识助手\n    \n- HR助手\n    \n- 财务助手\n    \n- 数据分析助手\n    \n\n### 外部：\n\n- 智能客服\n    \n- 营销内容生成\n    \n- 图片视频生成\n    \n\n---\n\n# 二、整体平台架构\n\n企业最终形态：\n\n```text\n                           用户\n\n                            |\n\n                            ↓\n\n\n                    Web / App / API\n\n\n                            |\n\n                            ↓\n\n\n                    API Gateway\n\n\n                            |\n\n                            ↓\n\n\n                  AI Application Layer\n\n\n        +-------------------+-------------------+\n\n        |                   |                   |\n\n\n        ↓                   ↓                   ↓\n\n\n       RAG              Agent Platform       AI Content\n\n\n        |                   |                   |\n\n\n        ↓                   ↓                   ↓\n\n\n    Knowledge          Tool System        Image/Video\n\n\n    Platform           Workflow             Models\n\n\n        |\n\n        ↓\n\n\n              LLM Gateway\n\n\n        |\n\n+-----------+------------+-------------+\n\n|           |            |             |\n\n\nQwen       DeepSeek     GPT        Image Model\n\n\nvLLM        API        API        Stable Diffusion\n\n\n        |\n\n        ↓\n\n\n             GPU Compute Cluster\n\n\n        |\n\n        ↓\n\n\n        Kubernetes\n\n```\n\n---\n\n# 三、第一步：硬件采购规划\n\n企业不要先买GPU。\n\n先分析：\n\n## AI负载类型。\n\n---\n\n# 1. LLM推理负载\n\n用途：\n\n聊天、RAG、Agent。\n\n特点：\n\n大量小请求。\n\n需要：\n\n显存。\n\n---\n\n推荐：\n\n## GPU节点\n\n配置：\n\n```text\nGPU:\n\nNVIDIA L40S 48GB ×4\n\n\nCPU:\n\nAMD EPYC\n\n\n内存:\n\n512GB\n\n\nSSD:\n\n8TB\n\n\n网络:\n\n25GbE\n```\n\n数量：\n\n2台。\n\n---\n\n作用：\n\n运行：\n\n- Qwen\n    \n- DeepSeek\n    \n- Llama\n    \n\n---\n\n# 2. Embedding服务\n\nRAG：\n\n不需要大GPU。\n\n配置：\n\n```text\nCPU:\n\n32核\n\n\nRAM:\n\n128GB\n\n\nSSD:\n\n4TB\n```\n\n运行：\n\n- BGE Embedding\n    \n- Jina Embedding\n    \n\n---\n\n# 3. 图片生成节点\n\n例如：\n\nFlux / Stable Diffusion。\n\n配置：\n\n```text\nGPU:\n\nRTX4090 ×4\n```\n\n---\n\n# 4. 视频生成节点\n\n视频：\n\n非常吃GPU。\n\n例如：\n\n```text\nL40S ×8\n\n或者\n\nA100\n```\n\n---\n\n# 四、企业预算模型\n\n## 小型AI平台\n\n目标：\n\n500人。\n\n配置：\n\n```text\nGPU:\n\n4090 ×4\n\n\n服务器:\n\n2台\n\n\n存储:\n\n50TB\n\n\n网络:\n\n10GbE\n```\n\n预算：\n\n约：\n\n## 30～50万元\n\n---\n\n## 中型企业\n\n5000用户。\n\n配置：\n\n```text\nL40S服务器\n\n×\n\n4~8节点\n\n\n存储:\n\n200TB\n\n\n网络:\n\n25GbE\n```\n\n预算：\n\n## 200～500万元\n\n---\n\n## 大型企业\n\n金融/互联网。\n\n配置：\n\n```text\nA100/H100集群\n\n+\n\n高速网络\n\n+\n\nAI数据中心\n```\n\n预算：\n\n千万级。\n\n---\n\n# 五、第二步：网络规划\n\nAI平台：\n\n网络非常重要。\n\n因为：\n\n模型几十GB。\n\n数据：\n\nTB级。\n\n---\n\n## 网络结构\n\n```text\n             Internet\n\n\n                 |\n\n                 ↓\n\n\n             防火墙\n\n\n                 |\n\n                 ↓\n\n\n             LoadBalancer\n\n\n                 |\n\n        +--------+---------+\n\n        |                  |\n\n\n   Kubernetes          Storage\n\n\n        |\n\n\n        |\n\n     GPU Nodes\n\n```\n\n---\n\n# 六、网络设备\n\n## 前端网络\n\n用户访问：\n\n10Gb。\n\n---\n\n## AI计算网络\n\n推荐：\n\n25Gb/100Gb。\n\n原因：\n\n模型通信。\n\n---\n\n## 存储网络\n\n推荐：\n\n25Gb。\n\n---\n\n# 七、第三步：服务器系统\n\n企业：\n\n统一：\n\nUbuntu Server。\n\n推荐：\n\nUbuntu 22.04 LTS。\n\n---\n\n安装：\n\n基础：\n\n```bash\nDocker\n\nNVIDIA Driver\n\nCUDA\n\nContainer Toolkit\n```\n\n---\n\n# 八、第四步：Kubernetes集群\n\n为什么需要K8s？\n\n因为：\n\nAI服务很多。\n\n例如：\n\n```text\nSpring Boot\n\nvLLM\n\nMilvus\n\nRedis\n\nPrometheus\n\nGrafana\n```\n\n不用K8s：\n\n管理困难。\n\n---\n\n架构：\n\n```text\nKubernetes Cluster\n\n\n        |\n\n+-------+--------+\n\n|                |\n\n\nMaster Node     Worker Node\n\n\n                  |\n\n          +-------+-------+\n\n          |               |\n\n\n       GPU Node       GPU Node\n\n```\n\n---\n\n# 九、Kubernetes节点规划\n\n## Master节点\n\n负责：\n\n控制。\n\n配置：\n\n```text\nCPU:\n\n8核\n\n\nRAM:\n\n32GB\n```\n\n---\n\n## Worker节点\n\n运行业务。\n\n---\n\n## GPU Worker\n\n运行：\n\nvLLM。\n\n配置：\n\nGPU。\n\n---\n\n# 十、第五步：GPU集群管理\n\n安装：\n\nNVIDIA GPU Operator。\n\n作用：\n\n自动管理：\n\n- GPU驱动\n    \n- CUDA\n    \n- GPU资源\n    \n\n---\n\nK8s看到：\n\n```yaml\nresources:\n\n limits:\n\n   nvidia.com/gpu: 1\n```\n\n即可申请GPU。\n\n---\n\n# 十一、模型服务层\n\n核心：\n\nvLLM。\n\n部署：\n\n例如：\n\nQwen。\n\nKubernetes：\n\n```yaml\napiVersion: apps/v1\n\nkind: Deployment\n\n\nspec:\n\n replicas:3\n\n\n template:\n\n  spec:\n\n   containers:\n\n   - name:vllm\n\n     image:vllm/vllm-openai\n\n\n     resources:\n\n       limits:\n\n        nvidia.com/gpu:1\n```\n\n---\n\n现在：\n\n三个模型实例。\n\n```text\n       Gateway\n\n\n          |\n\n +--------+--------+\n\n |        |        |\n\nvLLM1  vLLM2  vLLM3\n\n\nGPU    GPU    GPU\n```\n\n---\n\n# 十二、第六步：RAG平台设计\n\n企业知识：\n\n来源：\n\n```text\nPDF\n\nWord\n\nWiki\n\nGit\n\n数据库\n\n业务系统\n```\n\n---\n\n处理：\n\n```text\nDocument Loader\n\n\n↓\n\nParser\n\n\n↓\n\nChunk\n\n\n↓\n\nEmbedding\n\n\n↓\n\nVector Database\n\n\n↓\n\nRetriever\n\n\n↓\n\nRerank\n\n\n↓\n\nLLM\n```\n\n---\n\n组件：\n\n## 文档存储\n\nMinIO。\n\n---\n\n## 向量数据库\n\nMilvus。\n\n---\n\n## 搜索\n\nElasticsearch。\n\n---\n\n# 十三、第七步：Agent平台\n\n企业：\n\n不能每个部门自己开发Agent。\n\n需要：\n\nAgent Platform。\n\n---\n\n架构：\n\n```text\n用户\n\n↓\n\nAgent Manager\n\n\n↓\n\nPlanner\n\n\n↓\n\nTool Router\n\n\n↓\n\nTools\n\n```\n\n---\n\n工具：\n\n例如：\n\nHR：\n\n```text\n查询员工信息\n\n请假审批\n```\n\n财务：\n\n```text\n查询报销\n\n生成报表\n```\n\nIT：\n\n```text\n创建工单\n\n查询日志\n```\n\n---\n\n# 十四、Agent安全设计\n\n重点：\n\n不能让LLM直接操作系统。\n\n必须：\n\n```text\nLLM\n\n↓\n\nTool Schema\n\n↓\n\nPermission\n\n↓\n\nBusiness Service\n\n↓\n\nDatabase\n```\n\n---\n\n# 十五、第八步：AI Gateway\n\n企业统一入口。\n\n功能：\n\n## 模型路由\n\n例如：\n\n简单：\n\nQwen7B。\n\n复杂：\n\nDeepSeek。\n\n---\n\n## 限流\n\n例如：\n\n用户：\n\n1000 token/min。\n\n---\n\n## 成本统计\n\n记录：\n\n```json\n{\nuser:\"001\",\n\nmodel:\"qwen\",\n\ntokens:2000,\n\ncost:0.02\n}\n```\n\n---\n\n# 十六、第九步：监控运维\n\n企业必须有：\n\nObservability【可观测性】。\n\n---\n\n## 系统监控\n\nPrometheus。\n\n监控：\n\n- CPU\n    \n- 内存\n    \n- GPU\n    \n\n---\n\n## AI监控\n\n记录：\n\n- Token\n    \n- 延迟\n    \n- 模型版本\n    \n- 用户反馈\n    \n\n---\n\n## 日志\n\nELK：\n\n```text\nElasticSearch\n\nLogstash\n\nKibana\n```\n\n---\n\n# 十七、第十步：CI/CD\n\n代码：\n\n```text\nGit\n\n↓\n\nCI\n\n↓\n\nDocker Image\n\n↓\n\nKubernetes Deploy\n```\n\n---\n\n模型：\n\n```text\nDataset\n\n↓\n\nTraining\n\n↓\n\nEvaluation\n\n↓\n\nModel Registry\n\n↓\n\nDeploy\n```\n\n---\n\n# 十八、企业完整 AI 平台流程\n\n最终：\n\n```text\n                    用户\n\n\n                      |\n\n                      ↓\n\n\n                API Gateway\n\n\n                      |\n\n                      ↓\n\n\n              AI Platform\n\n\n                      |\n\n     +----------------+----------------+\n\n     |                |                |\n\n\n     RAG            Agent          Content AI\n\n\n     |                |                |\n\n\n Milvus          Tools          Image/Video\n\n\n     |\n\n     ↓\n\n\n             LLM Gateway\n\n\n                      |\n\n        +-------------+-------------+\n\n        |             |             |\n\n\n      Qwen        DeepSeek       GPT\n\n\n                      |\n\n                      ↓\n\n\n              Kubernetes\n\n\n                      |\n\n                      ↓\n\n\n                GPU Cluster\n\n```\n\n---\n\n# 十九、作为 AI 架构师面试回答\n\n问题：\n\n> 如果让你建设企业私有大模型平台，你怎么设计？\n\n回答：\n\n> 我会采用分层架构设计，底层通过 Kubernetes 管理 GPU 集群，上层通过 vLLM 提供模型推理服务，通过 LLM Gateway 实现模型统一管理、路由和成本控制。应用层基于 Spring Boot 和 LangChain4j 构建 RAG、Agent 和业务应用。知识库采用文档解析、Embedding、Milvus向量检索和Rerank提升效果，同时通过权限系统、日志审计和MLOps流程保证企业安全和持续迭代。\n\n---\n\n# 二十、你的能力已经进入什么阶段？\n\n现在：\n\n不是：\n\n> Java开发学AI。\n\n而是：\n\n```text\nJava Backend Engineer\n\n        +\n\nAI Application Engineer\n\n        +\n\nLLM Platform Engineer\n\n        +\n\nMLOps Engineer\n\n        +\n\nAI Solution Architect\n```\n\n---\n\n# 下一节 Day22\n\n建议进入：\n\n# 《Day22：打造企业级 AI Agent 平台：Multi-Agent、多智能体协作、Workflow、MCP》\n\n因为下一阶段是目前企业最热门方向：\n\n> 从单 Agent → 多 Agent 系统。\n\n内容：\n\n- Planner Agent\n    \n- Executor Agent\n    \n- Reviewer Agent\n    \n- Memory Agent\n    \n- MCP Server\n    \n- 企业自动化工作流\n    \n\n这会直接对应：\n\n**2026 AI Agent 工程师岗位核心能力。**"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -1019,6 +1177,8 @@ AI Solution Architect</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -1028,6 +1188,173 @@ AI Solution Architect</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -1041,6 +1368,17 @@ AI Solution Architect</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -1067,15 +1405,46 @@ AI Solution Architect</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

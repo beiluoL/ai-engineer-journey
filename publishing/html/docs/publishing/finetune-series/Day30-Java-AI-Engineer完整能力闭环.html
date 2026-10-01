@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-189" title="返回《文档总览》第 189 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Day30：Java AI Engineer 完整能力闭环</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#目标" class="lvl2">目标</a><a href="#llm" class="lvl2">LLM</a><a href="#模型参数" class="lvl2">模型参数</a><a href="#模型选择" class="lvl2">模型选择</a><a href="#hugging-face" class="lvl2">Hugging Face</a><a href="#safetensors" class="lvl2">Safetensors</a><a href="#gguf" class="lvl2">GGUF</a><a href="#ollama" class="lvl2">Ollama</a><a href="#vllm" class="lvl2">vLLM</a><a href="#技术栈" class="lvl2">技术栈</a><a href="#1-prompt-engineering" class="lvl3">1. Prompt Engineering</a><a href="#2-structured-output" class="lvl3">2. Structured Output</a><a href="#3-streaming" class="lvl3">3. Streaming</a><a href="#文档解析" class="lvl2">文档解析</a><a href="#chunk" class="lvl2">Chunk</a><a href="#embedding" class="lvl2">Embedding</a><a href="#vector-database" class="lvl2">Vector Database</a><a href="#rerank" class="lvl2">Rerank</a><a href="#tool-calling" class="lvl2">Tool Calling</a><a href="#memory" class="lvl2">Memory</a><a href="#planning" class="lvl2">Planning</a><a href="#reflection" class="lvl2">Reflection</a><a href="#mcp" class="lvl2">MCP</a><a href="#sft" class="lvl2">SFT</a><a href="#lora" class="lvl2">LoRA</a><a href="#qlora" class="lvl2">QLoRA</a><a href="#gpu" class="lvl2">GPU</a><a href="#显存" class="lvl2">显存</a><a href="#cuda" class="lvl2">CUDA</a><a href="#docker" class="lvl2">Docker</a><a href="#kubernetes" class="lvl2">Kubernetes</a><a href="#vllm" class="lvl2">vLLM</a><a href="#evaluation" class="lvl2">Evaluation</a><a href="#golden-dataset" class="lvl2">Golden Dataset</a><a href="#model-registry" class="lvl2">Model Registry</a><a href="#灰度发布" class="lvl2">灰度发布</a><a href="#项目1" class="lvl2">项目1：</a><a href="#项目2" class="lvl2">项目2：</a><a href="#项目3" class="lvl2">项目3：</a><a href="#ai知识库助手" class="lvl2">AI知识库助手</a><a href="#ai-interview-agent" class="lvl2">AI Interview Agent</a><a href="#企业ai平台" class="lvl2">企业AI平台</a><a href="#java部分" class="lvl2">Java部分</a><a href="#ai部分" class="lvl2">AI部分</a><a href="#工程部分" class="lvl2">工程部分</a><a href="#第1个月" class="lvl2">第1个月</a><a href="#第2个月" class="lvl2">第2个月</a><a href="#第3个月" class="lvl2">第3个月</a><a href="#第46个月" class="lvl2">第4～6个月</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="day30java-ai-engineer-完整能力闭环">Day30：Java AI Engineer 完整能力闭环</h1>
 <h1 id="从模型-应用-平台-企业架构">从模型 → 应用 → 平台 → 企业架构</h1>
 <p>经过 Day1～Day29：</p>
@@ -950,8 +1089,27 @@ Day30
 <ul class="lvl"><li>空窗期</li></ul>
 <p>开始把学习成果转换成：</p>
 <p><strong>可投递、可面试、可拿Offer的能力。</strong></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">publishing/finetune-series/Day30-Java-AI-Engineer完整能力闭环.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "publishing/finetune-series/Day30-Java-AI-Engineer完整能力闭环.md", "name": "Day30-Java-AI-Engineer完整能力闭环.md", "text": "# Day30：Java AI Engineer 完整能力闭环\n\n# 从模型 → 应用 → 平台 → 企业架构\n\n经过 Day1～Day29：\n\n你已经完成了一套比较完整的：\n\n# Java → AI Engineer 转型路线\n\n但是今天不是简单总结。\n\n真正目标：\n\n> 把零散知识连接成一张“AI工程师能力地图”。\n\n企业招聘 Java AI 工程师，本质不是要求你成为算法科学家，而是：\n\n> 能把大模型能力稳定地集成到业务系统，并完成上线运营。\n\n---\n\n# 一、Java AI Engineer 到底是什么？\n\n先纠正一个认知。\n\n很多人认为：\n\nAI工程师 = 训练大模型。\n\n实际上企业岗位大部分：\n\n不是训练模型。\n\n更接近：\n\n# LLM Application Engineer\n\n# 大模型应用工程师\n\n核心：\n\n```text\n业务问题\n\n↓\n\nAI能力设计\n\n↓\n\n模型选择\n\n↓\n\nRAG/Agent开发\n\n↓\n\n系统集成\n\n↓\n\n部署上线\n\n↓\n\n持续优化\n```\n\n---\n\n# 二、完整能力闭环\n\n你的能力应该形成：\n\n```text\n                    用户需求\n\n\n                       ↓\n\n\n                AI产品设计\n\n\n                       ↓\n\n\n                 应用开发层\n\n\n                       ↓\n\n\n        +--------------+--------------+\n\n        |                             |\n\n\n       RAG                         Agent\n\n\n        |                             |\n\n\n        ↓                             ↓\n\n\n    知识增强                    自动执行\n\n\n        |                             |\n\n\n        +--------------+--------------+\n\n                       ↓\n\n\n                 LLM模型层\n\n\n                       ↓\n\n\n              部署与工程化\n\n\n                       ↓\n\n\n                 企业平台\n\n```\n\n---\n\n# 三、第一层：模型认知能力\n\n## 目标\n\n不是训练GPT。\n\n而是：\n\n知道怎么选择模型。\n\n---\n\n你需要理解：\n\n## LLM\n\nLarge Language Model\n\n大语言模型。\n\n例如：\n\n- GPT\n    \n- Claude\n    \n- Qwen\n    \n- DeepSeek\n    \n\n---\n\n## 模型参数\n\n例如：\n\nQwen2.5-7B\n\n含义：\n\n```\nQwen\n\n↓\n\n2.5版本\n\n↓\n\n70亿参数\n```\n\n---\n\n## 模型选择\n\n场景：\n\n|需求|选择|\n|---|---|\n|简单问答|小模型|\n|复杂推理|大模型|\n|代码|Code模型|\n|企业私有|开源模型|\n\n---\n\n# 四、第二层：模型运行能力\n\n你必须知道：\n\n一个模型如何运行。\n\n完整链路：\n\n```text\n模型文件\n\n↓\n\n加载框架\n\n↓\n\nGPU计算\n\n↓\n\n推理服务\n\n↓\n\nAPI\n\n↓\n\n业务调用\n```\n\n---\n\n掌握：\n\n## Hugging Face\n\n模型仓库。\n\n---\n\n## Safetensors\n\n模型权重格式。\n\n---\n\n## GGUF\n\n本地模型格式。\n\n---\n\n## Ollama\n\n个人运行。\n\n---\n\n## vLLM\n\n企业部署。\n\n---\n\n# 五、第三层：大模型应用开发\n\n这是你的核心。\n\n## 技术栈\n\n你的目标：\n\n```text\nSpring Boot\n\n+\n\nLangChain4j\n\n+\n\nQwen/DeepSeek\n\n+\n\nMilvus\n\n+\n\nRedis\n\n+\n\nMySQL\n```\n\n---\n\n能力：\n\n### 1. Prompt Engineering\n\n提示词工程。\n\n设计：\n\n- System Prompt\n    \n- Few-shot\n    \n- 输出格式\n    \n\n---\n\n### 2. Structured Output\n\n结构化输出。\n\n例如：\n\n要求模型：\n\n返回JSON。\n\n---\n\n### 3. Streaming\n\n流式输出。\n\n例如：\n\nChatGPT：\n\n文字一点点出现。\n\n---\n\n# 六、第四层：RAG能力\n\nRAG：\n\nRetrieval-Augmented Generation\n\n检索增强生成。\n\n---\n\n企业最常见。\n\n完整链路：\n\n```text\n企业文档\n\n↓\n\n解析\n\n↓\n\nChunk\n\n↓\n\nEmbedding\n\n↓\n\nVector Database\n\n↓\n\nRetriever\n\n↓\n\nRerank\n\n↓\n\nLLM\n\n↓\n\n回答\n```\n\n---\n\n你需要掌握：\n\n## 文档解析\n\nPDF\n\nWord\n\nMarkdown\n\n---\n\n## Chunk\n\n文本切片。\n\n---\n\n## Embedding\n\n文本向量化。\n\n---\n\n## Vector Database\n\n向量数据库。\n\n例如：\n\nMilvus。\n\n---\n\n## Rerank\n\n重新排序。\n\n提升召回质量。\n\n---\n\n# 七、第五层：Agent能力\n\nAgent：\n\n不是聊天。\n\n是：\n\n> AI自主完成任务。\n\n---\n\n核心：\n\n```text\n目标\n\n↓\n\n规划\n\n↓\n\n调用工具\n\n↓\n\n执行\n\n↓\n\n反馈\n\n↓\n\n完成任务\n```\n\n---\n\n你掌握：\n\n## Tool Calling\n\n模型调用外部能力。\n\n例如：\n\n查询订单。\n\n---\n\n## Memory\n\n记忆。\n\n包括：\n\n- 短期记忆\n    \n- 长期记忆\n    \n\n---\n\n## Planning\n\n规划。\n\n---\n\n## Reflection\n\n反思。\n\n---\n\n## MCP\n\nModel Context Protocol。\n\n模型连接工具标准。\n\n---\n\n# 八、第六层：模型微调能力\n\n你已经学习：\n\n```text\nTransformer\n\n↓\n\nPre-training\n\n↓\n\nSFT\n\n↓\n\nLoRA\n\n↓\n\nQLoRA\n```\n\n---\n\n重点：\n\n企业主要：\n\n不是重新训练。\n\n而是：\n\n## SFT\n\n监督微调。\n\n让模型学习：\n\n特定任务。\n\n---\n\n## LoRA\n\n低秩适配。\n\n降低训练成本。\n\n---\n\n## QLoRA\n\n量化+LoRA。\n\n个人GPU也可以训练。\n\n---\n\n# 九、第七层：模型部署能力\n\n企业工程师必须懂。\n\n---\n\n## GPU\n\n负责AI计算。\n\n---\n\n## 显存\n\n决定模型大小。\n\n---\n\n## CUDA\n\nGPU计算平台。\n\n---\n\n## Docker\n\n环境封装。\n\n---\n\n## Kubernetes\n\n服务管理。\n\n---\n\n## vLLM\n\n模型推理服务。\n\n---\n\n完整：\n\n```text\nGPU服务器\n\n↓\n\nCUDA\n\n↓\n\nDocker\n\n↓\n\nvLLM\n\n↓\n\n模型\n\n↓\n\nAPI\n```\n\n---\n\n# 十、第八层：MLOps能力\n\n模型不是部署完结束。\n\n需要：\n\n生命周期。\n\n---\n\n流程：\n\n```text\n数据\n\n↓\n\n训练\n\n↓\n\n评测\n\n↓\n\n版本管理\n\n↓\n\n部署\n\n↓\n\n监控\n\n↓\n\n优化\n```\n\n---\n\n掌握：\n\n## Evaluation\n\n模型评测。\n\n---\n\n## Golden Dataset\n\n黄金测试集。\n\n---\n\n## Model Registry\n\n模型版本管理。\n\n---\n\n## 灰度发布\n\n小流量验证。\n\n---\n\n# 十一、第九层：企业AI架构能力\n\n高级岗位需要。\n\n---\n\n企业AI平台：\n\n```text\n                 用户\n\n\n                  ↓\n\n\n             API Gateway\n\n\n                  ↓\n\n\n             AI Gateway\n\n\n                  ↓\n\n\n       +----------+----------+\n\n       |                     |\n\n\n      RAG                  Agent\n\n\n       |                     |\n\n\n       ↓                     ↓\n\n\n Knowledge              Tools\n\n\n       |\n\n       ↓\n\n\n       LLM\n\n\n       |\n\n       ↓\n\n\n    GPU Cluster\n```\n\n---\n\n# 十二、你的项目体系\n\n根据你的背景：\n\n6年Java。\n\n不要做简单Demo。\n\n应该打造：\n\n## 项目1：\n\n# AI知识库助手\n\n技术：\n\n```\nSpring Boot\n\nLangChain4j\n\nMilvus\n\nQwen\n\nRAG\n\nSSE\n```\n\n能力：\n\n企业知识问答。\n\n---\n\n## 项目2：\n\n# AI Interview Agent\n\n技术：\n\n```\nAgent\n\nMemory\n\nTool Calling\n\nRAG\n\nLoRA\n```\n\n能力：\n\n模拟面试。\n\n---\n\n## 项目3：\n\n# BlogAgent\n\n你的优势项目。\n\n升级：\n\nAI内容数字员工。\n\n能力：\n\n```\n浏览器\n\n↓\n\n截图\n\n↓\n\n理解页面\n\n↓\n\n生成教程\n\n↓\n\n生成图片\n\n↓\n\n审核\n\n↓\n\n发布\n```\n\n---\n\n# 十三、简历应该怎么包装？\n\n不要写：\n\n❌\n\n> 调用了ChatGPT API。\n\n太普通。\n\n---\n\n写：\n\n✅\n\n## AI知识库助手\n\n> 基于Spring Boot、LangChain4j和Milvus构建企业级RAG知识库系统，实现文档解析、智能切片、Embedding向量检索、Rerank优化和大模型生成回答。\n\n---\n\n## AI Interview Agent\n\n> 设计并开发基于Multi-Agent架构的智能面试系统，通过Agent规划、Tool Calling、Memory和RAG技术实现自动出题、回答评估和个性化学习规划。\n\n---\n\n## 企业AI平台\n\n> 构建私有大模型应用平台，通过vLLM部署Qwen模型，结合LLM Gateway实现模型路由、成本控制和服务监控。\n\n---\n\n# 十四、面试能力地图\n\n面试官可能问：\n\n---\n\n## Java部分\n\n必须保持：\n\n⭐⭐⭐⭐⭐\n\n- HashMap\n    \n- ConcurrentHashMap\n    \n- JVM\n    \n- Spring\n    \n- MySQL\n    \n- Redis\n    \n- MQ\n    \n\n---\n\n## AI部分\n\n重点：\n\n⭐⭐⭐⭐⭐\n\n- LLM\n    \n- Token\n    \n- Embedding\n    \n- RAG\n    \n- Chunk\n    \n- Vector DB\n    \n- Tool Calling\n    \n- Agent\n    \n- MCP\n    \n\n---\n\n## 工程部分\n\n高级：\n\n⭐⭐⭐⭐\n\n- Docker\n    \n- Kubernetes\n    \n- vLLM\n    \n- CUDA\n    \n- LoRA\n    \n- MLOps\n    \n\n---\n\n# 十五、未来6个月成长路线\n\n## 第1个月\n\n目标：\n\nJava AI工程师入门。\n\n完成：\n\n- RAG项目\n    \n- LangChain4j\n    \n- Agent\n    \n\n---\n\n## 第2个月\n\n模型能力：\n\n- Ollama\n    \n- vLLM\n    \n- QLoRA\n    \n\n---\n\n## 第3个月\n\n企业能力：\n\n- Kubernetes\n    \n- MLOps\n    \n- Monitoring\n    \n\n---\n\n## 第4～6个月\n\n打造：\n\nAI产品。\n\n方向：\n\n- AI SaaS\n    \n- Agent工具\n    \n- 自动化平台\n    \n\n---\n\n# 十六、最终能力模型\n\n你的目标：\n\n不是：\n\n普通Java。\n\n而是：\n\n# Java AI Engineer\n\n能力结构：\n\n```text\n                 Java AI Engineer\n\n\n                        |\n\n        +---------------+---------------+\n\n        |                               |\n\n\n  Software Engineering          AI Engineering\n\n\n        |                               |\n\n\nSpring Boot                  LLM\n\nDistributed System           RAG\n\nDatabase                     Agent\n\nMicroservice                 Fine-tuning\n\n                              Deployment\n\n\n                        |\n\n                        ↓\n\n\n                 AI Product Capability\n```\n\n---\n\n# 十七、30天学习路线最终闭环\n\n```text\nDay1-5\n\nJava基础恢复\n\n\n↓\n\nDay6-10\n\nLLM/RAG/Agent基础\n\n\n↓\n\nDay11-18\n\n模型部署 + 企业架构\n\n\n↓\n\nDay19-23\n\nAI产品 + 数字员工\n\n\n↓\n\nDay24-27\n\n高级Agent + 微调\n\n\n↓\n\nDay28-29\n\n训练 + MLOps\n\n\n↓\n\nDay30\n\n完整AI工程体系\n```\n\n---\n\n# 十八、最后一个重要认知\n\n你现在最大的变化不是：\n\n“会几个AI框架”。\n\n而是：\n\n从：\n\n> Java程序员调用AI接口\n\n变成：\n\n> 能设计、开发、部署、优化企业AI系统的工程师。\n\n---\n\n下一阶段建议：\n\n# Day31：进入真实求职阶段\n\n主题：\n\n# 《Java AI Engineer 求职冲刺：岗位要求 → 简历重构 → 项目包装 → 100问面试》\n\n结合你的实际情况：\n\n- 6年Java\n    \n- 深圳求职\n    \n- 非全日制本科\n    \n- AI转型\n    \n- 空窗期\n    \n\n开始把学习成果转换成：\n\n**可投递、可面试、可拿Offer的能力。**"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -959,6 +1117,8 @@ Day30
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -968,6 +1128,173 @@ Day30
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -981,6 +1308,17 @@ Day30
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -1007,15 +1345,46 @@ Day30
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

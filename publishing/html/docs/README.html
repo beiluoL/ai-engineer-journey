@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../index.html#ch-208" title="返回《文档总览》第 208 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">AI Engineer Journey</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#项目定位" class="lvl2">项目定位</a><a href="#project-first-原则" class="lvl2">Project First 原则</a><a href="#10-个项目路线" class="lvl2">10 个项目路线</a><a href="#仓库结构" class="lvl2">仓库结构</a><a href="#维护工具scripts" class="lvl3">维护工具（scripts/）</a><a href="#单一事实源" class="lvl2">单一事实源</a><a href="#基础知识层" class="lvl2">基础知识层</a><a href="#练手项目层" class="lvl2">练手项目层</a><a href="#技术术语规范" class="lvl2">技术术语规范</a><a href="#如何开始" class="lvl2">如何开始</a><a href="#安全约定" class="lvl2">安全约定</a><a href="#双远程" class="lvl2">双远程</a><a href="#license" class="lvl2">License</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="ai-engineer-journey">AI Engineer Journey</h1>
 <blockquote><p><strong>Project First — 通过连续项目逐步构建 AI Engineer 能力</strong></p></blockquote>
 <h2 id="项目定位">项目定位</h2><nav class="sec-nav"><span class="sn empty"><span class="sn-label">← 上一节</span><span class="sn-name">文档开头</span></span><a class="sn next" href="#project-first-原则"><span class="sn-label">下一节 →</span><span class="sn-name">Project First 原则</span></a></nav>
@@ -227,9 +366,21 @@ Documentation</code></pre>
     ├── tutorials/         # 独立成篇的图文教程（md + html + assets/）
     └── finetune-series/   # 微调系列草稿库（未校对，择优转正为 tutorials）</code></pre>
 <h3 id="维护工具scripts">维护工具（<code>scripts/</code>）</h3>
-<table><thead><tr><th>脚本</th><th>作用</th></tr></thead><tbody><tr><td><code>check_links.py --strict</code></td><td>死链 + 坏图体检（CI 也在跑）</td></tr><tr><td><code>audit.py</code></td><td>全仓库体检：骨架完整性 / 证据链 / 配图 / 文档漂移 / 密钥；<code>--tests</code> 可实跑全部测试</td></tr><tr><td><code>check_repos.py</code></td><td><strong>学习资源体检</strong>：把文档里推荐的 GitHub 仓库逐个探测（可访问 / 星标 / 是否归档 / 是否搬家 / 最近提交 / 是否维护模式）。不需要 API token</td></tr><tr><td><code>render_terminal.py</code></td><td>把真实 stdout 渲染成终端风格 PNG（截图有据可依）</td></tr><tr><td><code>md_to_tutorial_html.py</code></td><td>教程 Markdown → HTML 同款排版</td></tr><tr><td><code>build_docs_html.py</code></td><td><strong>批量渲染</strong>：把全部（或指定子集）Markdown 转成 <code>publishing/html/docs/</code> 下的 HTML 树，并自校验链接</td></tr><tr><td><code>gen_doc_index.py</code></td><td>把全部文档重排成「第 1 章…第 N 章」的文档式总览页 <code>publishing/html/index.html</code>：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航</td></tr><tr><td><code>md_to_book_html.py</code></td><td>单篇渲染器：自动抽取 h2/h3 生成侧边目录大纲、顶部阅读进度条、每章末尾「上一节 / 下一节」链式导航、移动端目录抽屉；<code>--relative-images</code> 走 base64 内嵌的自包含单文件版</td></tr><tr><td><code>gen_ide_browser.py</code></td><td><strong>代码浏览器</strong>：把 10 个项目 + 4 个练手项目 + <code>scripts/</code> 的真实源码（675 个文件 / 12 万行）全部内嵌，产出一个自包含单文件 IDE 界面 <code>publishing/html/ide.html</code></td></tr></tbody></table>
-<p><strong>代码浏览器</strong>：<code>publishing/html/ide.html</code> 打开就是项目列表，点进某一项目后是 IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）、右侧带语法高亮的代码区 （标签页、行号、面包屑、底部状态栏），深色主题、响应式，同样零依赖、双击即开。 数据源是构建时从仓库真实采集的（不含 <code>.venv</code> / <code>node_modules</code> / 二进制 / 权重）， 改完代码重跑 <code>python3 scripts/gen_ide_browser.py</code> 即可刷新。</p>
-<p><strong>本地阅读</strong>：<code>publishing/html/index.html</code> 是入口，209 篇文档全部以渲染后的页面打开 （<code>publishing/html/docs/…</code>，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。 索引里带紫色 &lt;code&gt;便携版&lt;/code&gt; 标签的两篇（<code>python-practice/07-延伸阅读</code>、 <code>llm-fundamentals/12-tutorials-and-agent</code>）是 base64 内嵌的自包含单文件， 存在镜像树的同名 <code>*.portable.html</code> 里——图片全在文件内，拷到别处、发给别人、断网都能双击打开， 是这两篇的便携阅读副本；其余文档想拷走单篇，用 <code>md_to_book_html.py</code> 现生成。</p>
+<table><thead><tr><th>脚本</th><th>作用</th></tr></thead><tbody><tr><td><code>check_links.py --strict</code></td><td>死链 + 坏图体检（CI 也在跑）</td></tr><tr><td><code>audit.py</code></td><td>全仓库体检：骨架完整性 / 证据链 / 配图 / 文档漂移 / 密钥；<code>--tests</code> 可实跑全部测试</td></tr><tr><td><code>check_repos.py</code></td><td><strong>学习资源体检</strong>：把文档里推荐的 GitHub 仓库逐个探测（可访问 / 星标 / 是否归档 / 是否搬家 / 最近提交 / 是否维护模式）。不需要 API token</td></tr><tr><td><code>render_terminal.py</code></td><td>把真实 stdout 渲染成终端风格 PNG（截图有据可依）</td></tr><tr><td><code>md_to_tutorial_html.py</code></td><td>教程 Markdown → HTML 同款排版</td></tr><tr><td><code>build_docs_html.py</code></td><td><strong>批量渲染</strong>：把全部（或指定子集）Markdown 转成 <code>publishing/html/docs/</code> 下的 HTML 树，并自校验链接</td></tr><tr><td><code>gen_doc_index.py</code></td><td>把全部文档重排成「第 1 章…第 N 章」的文档式总览页 <code>publishing/html/index.html</code>：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航、一键复制文档路径</td></tr><tr><td><code>md_to_book_html.py</code></td><td>单篇渲染器：顶栏（返回总览 / 阅读·源码切换 / 复制 / 下载）、自动抽取 h2/h3 生成侧边目录大纲、阅读进度条与百分比、每章末尾「上一节 / 下一节」链式导航、代码块一键复制、图片灯箱、宽表横滚、移动端目录抽屉；<code>--relative-images</code> 走 base64 内嵌的自包含单文件版</td></tr><tr><td><code>gen_ide_browser.py</code></td><td><strong>代码浏览器</strong>：把 10 个项目 + 4 个练手项目 + <code>scripts/</code> 的真实源码（678 个文件 / 12.26 万行）全部内嵌，产出一个自包含单文件 IDE 界面 <code>publishing/html/ide.html</code></td></tr><tr><td><code>verify_pages.js</code></td><td><strong>站点交互实测</strong>：用真实 Chromium 走一遍三张页面的交互（返回总览、阅读↔源码切换、灯箱、复制反馈、hash 路由与浏览器前进后退、深链直达），并顺带产出 <code>publishing/site-assets/</code> 里的截图</td></tr><tr><td><code>latex_mathml.py</code></td><td><strong>公式渲染</strong>：构建期把 <code>$…$</code> / <code>$$…$$</code> 里的 LaTeX 转成浏览器原生 MathML（分数/根式/上下标/矩阵/<code>\text</code> 中文混排/<code>\operatorname</code>/<code>\mathbb</code>/间距与箭头），运行时零依赖</td></tr><tr><td><code>verify_math_layout.js</code></td><td><strong>公式版式实测</strong>：用真实 Chromium 量「公式是否横排、是否溢出行容器、行内混排是否撑歪行高」，桌面 1280px + 移动 390/768px 三个视口</td></tr><tr><td><code>shot_math.js</code></td><td>用真实 Chromium 截取公式渲染截图（<code>llm-fundamentals/assets/math-render-*.png</code> 的来源）</td></tr></tbody></table>
+<p><strong>公式渲染</strong>：文档里的 <code>$…$</code>（行内）与 <code>$$…$$</code>（行间）在<strong>构建期</strong>就转成了浏览器原生的 MathML，随页面一起落地——不引 CDN、不塞 KaTeX 字体，断网双击照样排版正确。 行间公式居中且过长时在容器内横向滚动（窄屏先自动缩字号），行内公式与中文正文基线对齐。</p>
+<figure class="figure"><img alt="行间公式：logits = h W_lm, W_lm ∈ R^(d_model × V) ⟹ p = softmax(logits)" src="../../../llm-fundamentals/assets/math-render-block.png" loading="lazy"/><figcaption>行间公式：logits = h W_lm, W_lm ∈ R^(d_model × V) ⟹ p = softmax(logits)</figcaption></figure>
+<figure class="figure"><img alt="行内公式与中文混排" src="../../../llm-fundamentals/assets/math-render-inline.png" loading="lazy"/><figcaption>行内公式与中文混排</figcaption></figure>
+<figure class="figure"><img alt="表格单元格里的公式（含 \| 平行符号）" src="../../../llm-fundamentals/assets/math-render-table.png" loading="lazy"/><figcaption>表格单元格里的公式（含 \| 平行符号）</figcaption></figure>
+<figure class="figure"><img alt="移动端 390px 视口下的行间公式" src="../../../llm-fundamentals/assets/math-render-mobile.png" loading="lazy"/><figcaption>移动端 390px 视口下的行间公式</figcaption></figure>
+<p><strong>代码浏览器</strong>：<code>publishing/html/ide.html</code> 打开就是项目列表，点进某一项目后是 IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）、右侧带语法高亮的代码区 （标签页、行号、面包屑、底部状态栏），深色主题、响应式，同样零依赖、双击即开。 顶栏有「⧉ 复制文件」一键复制当前文件的完整内容（<code>file://</code> 下 Clipboard API 被拒时 自动退回 <code>execCommand</code>，不会变成一个按不动的假按钮），状态栏可复制文件路径。 地址栏就是状态：<code>ide.html#/01-python-ai-cli/README.md</code> 可以直达某个文件， 浏览器前进 / 后退也真的能用来在「项目列表 ↔ 项目 ↔ 文件」之间来回走。 数据源是构建时从仓库真实采集的（不含 <code>.venv</code> / <code>node_modules</code> / 二进制 / 权重）， 改完代码重跑 <code>python3 scripts/gen_ide_browser.py</code> 即可刷新。</p>
+<figure class="figure"><img alt="代码浏览器：项目列表，右上角是返回文档总览的入口" src="../../site-assets/site-ide-home.png" loading="lazy"/><figcaption>代码浏览器：项目列表，右上角是返回文档总览的入口</figcaption></figure>
+<figure class="figure"><img alt="复制当前文件：底部提示已复制 README.md（152 行 · 5.0 KB）" src="../../site-assets/site-ide-copy.png" loading="lazy"/><figcaption>复制当前文件：底部提示已复制 README.md（152 行 · 5.0 KB）</figcaption></figure>
+<p><strong>本地阅读</strong>：<code>publishing/html/index.html</code> 是入口，209 篇文档全部以渲染后的页面打开 （<code>publishing/html/docs/…</code>，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。 每个章节页的顶栏都有「← 文档总览」，并且<strong>带着该章的锚点回去</strong>（<code>index.html#ch-47</code>）， 落回总览里的第 47 章而不是被扔回页面顶部。</p>
+<figure class="figure"><img alt="文档总览：209 章、可过滤、每章三个入口（渲染页 / 原始 Markdown / 路径）" src="../../site-assets/site-index.png" loading="lazy"/><figcaption>文档总览：209 章、可过滤、每章三个入口（渲染页 / 原始 Markdown / 路径）</figcaption></figure>
+<figure class="figure"><img alt="章节页顶栏：返回文档总览 + 阅读/源码切换 + 复制/下载" src="../../site-assets/site-chapter-topbar.png" loading="lazy"/><figcaption>章节页顶栏：返回文档总览 + 阅读/源码切换 + 复制/下载</figcaption></figure>
+<figure class="figure"><img alt="章节页的源码视图：带行号的原始 Markdown，可复制、可下载" src="../../site-assets/site-chapter-source.png" loading="lazy"/><figcaption>章节页的源码视图：带行号的原始 Markdown，可复制、可下载</figcaption></figure>
+<p>索引里带紫色 &lt;code&gt;便携版&lt;/code&gt; 标签的两篇（<code>python-practice/07-延伸阅读</code>、 <code>llm-fundamentals/12-tutorials-and-agent</code>）是 base64 内嵌的自包含单文件， 存在镜像树的同名 <code>*.portable.html</code> 里——图片全在文件内，拷到别处、发给别人、断网都能双击打开， 是这两篇的便携阅读副本；其余文档想拷走单篇，用 <code>md_to_book_html.py</code> 现生成。</p>
+<p><strong>关于「原始 Markdown」</strong>：浏览器不认识 <code>.md</code>，双击只会把源码当纯文本摊开， 而索引里原先那条「原始 .md」链接连文件都找不到（路径按仓库根算，却从 <code>publishing/html/</code> 解析，209 条全是 404）。现在改成打开该文档在渲染页里的<strong>源码视图</strong>：带行号、 有 Markdown 高亮、可一键复制、可下载成 <code>.md</code>，与阅读视图用顶栏的「阅读 / 源码」随时互切 （快捷键 <code>S</code>）。同一页两副面孔，就不用再维护第二棵文件树。</p>
 <h2 id="单一事实源">单一事实源</h2><nav class="sec-nav"><a class="sn prev" href="#仓库结构"><span class="sn-label">← 上一节</span><span class="sn-name">仓库结构</span></a><a class="sn next" href="#基础知识层"><span class="sn-label">下一节 →</span><span class="sn-name">基础知识层</span></a></nav>
 <blockquote><p>所有知识只维护在 <code>projects/*/milestones/</code> 中。其他目录只做引用、关联或派生输出。</p></blockquote>
 <p>禁止出现平行知识体系：<code>curriculum/</code>、<code>labs/</code>、<code>knowledge/</code>、<code>assessments/</code>、<code>progress/</code>。</p>
@@ -260,8 +411,27 @@ open projects/01-python-ai-cli/milestones/01-variables.md</code></pre>
 <p>GitHub（origin）+ Gitee（gitee），每次提交双推。</p>
 <h2 id="license">License</h2><nav class="sec-nav"><a class="sn prev" href="#双远程"><span class="sn-label">← 上一节</span><span class="sn-name">双远程</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p><a href="../../../LICENSE">MIT</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">README.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "README.md", "name": "README.md", "text": "# AI Engineer Journey\n\n> **Project First — 通过连续项目逐步构建 AI Engineer 能力**\n\n## 项目定位\n\n面向有 Java / 前端基础、但 Python 和 AI 基础薄弱的开发者，\n通过 **10 个连续项目**，从 Python 基础一路学到 AI Application、RAG、Agent、\nPyTorch、Transformer、微调、评估、量化、部署，并最终自己实现 Tiny LLM。\n\n**这不是课程，不是知识库，是一组持续演进、可以运行、可以展示、可以继续扩展的工程项目。**\n\n## Project First 原则\n\n```text\nProject\n  >\nMilestone\n  >\nKnowledge\n  >\nCode\n  >\nPractice\n  >\nDocumentation\n```\n\n**项目遇到问题 → 学习知识 → 知识进入代码 → 运行验证 → 形成能力 → 进入下一个项目**\n\n## 10 个项目路线\n\n| # | 项目 | 核心能力 | 状态 |\n|---|------|----------|------|\n| 01 | [Python AI CLI Assistant](projects/01-python-ai-cli/) | Python 基础 + 真实 LLM API | 🔄 |\n| 02 | [Engineering AI Assistant](projects/02-engineering-ai-assistant/) | Python 工程化 + FastAPI | ✅ |\n| 03 | [AI Application](projects/03-ai-application/) | Prompt / Streaming / Function Calling | ✅ |\n| 04 | [AI Knowledge Base / RAG](projects/04-rag/) | Embedding / Chunk / Vector DB / RAG | ✅ |\n| 05 | [Research Agent / MCP](projects/05-agent-mcp/) | Agent / Tool / MCP Protocol | ✅ |\n| 06 | [Mini Transformer / LLM](projects/06-mini-transformer-llm/) | 从零 autograd / Attention / Transformer | ✅ |\n| 07 | [Open Source LLM](projects/07-open-source-llm/) | Hugging Face / Tokenizer / 本地推理 | 🔄 |\n| 08 | [LoRA / QLoRA Fine-Tuning](projects/08-fine-tuning/) | SFT / LoRA / QLoRA | ✅ |\n| 09 | [LLM Evaluation / Inference](projects/09-evaluation-inference/) | 评估 / 量化 / 服务化 | ✅ |\n| 10 | [Tiny LLM Capstone](projects/10-tiny-llm-capstone/) | 从零实现小型 LLM（Tokenizer → Serving 全链路） | ✅ |\n\n> 状态列指**内容状态**：✅ 已完成 / 🔄 进行中 / 📝 草稿 / ⬜ 未开始。\n> 「我是否真的学会了」另记在 [PROGRESS.md](PROGRESS.md) 的学习进度轨 —— 文档就绪 ≠ 已掌握。\n\n## 仓库结构\n\n```text\nai-engineer-journey/\n│\n├── README.md              # 本文件\n├── ROADMAP.md             # 10 项目路线图\n├── PROGRESS.md            # 双轨进度（学习进度 / 内容生产）\n├── KNOWLEDGE-MAP.md       # 能力关系网（只展示关联，不复制正文）\n├── CONTRIBUTING.md        # 维护规范（单一事实源 / 命名 / 分级 / Git 约定）\n├── LICENSE\n├── .gitignore\n│\n├── mistakes/              # 错题本：真实踩过的坑（日期 + 原因 + 修复）\n│   └── README.md\n│\n├── llm-fundamentals/      # 基础理论层：大模型原理教材（12 章 + 可运行 demo + 真实配图）\n│                          #   定位见下方「基础知识层」一节；projects/ 仍是唯一事实源\n│\n├── python-practice/       # 练手层：6 个入门动手练习 + 07 延伸阅读（01–04 可跑，05/06 指路）\n│                          #   定位见下方「练手项目层」一节\n│\n├── audit/                 # 仓库体检档案：每期一次真实运行的全面体检 + 建议清单\n│\n├── projects/              # 核心内容（唯一事实源）\n│   ├── 01-python-ai-cli/\n│   │   ├── README.md          # 项目主页（必须对齐规范模板）\n│   │   ├── milestones/       # 学习里程碑（Project First 模板）\n│   │   │   ├── 01-variables.md\n│   │   │   ├── 02-list-dict-json.md\n│   │   │   └── ...（共 10 个）\n│   │   ├── exercises/        # 配套练习（01-basic 已有题，02/03/04 待播种）\n│   │   └── src/              # 项目代码\n│   ├── 02-engineering-ai-assistant/\n│   └── ...（共 10 个项目）\n│\n└── publishing/            # 对外发布内容（输出层，不是知识源）\n    ├── articles/          # 课程学习笔记型文章\n    ├── tutorials/         # 独立成篇的图文教程（md + html + assets/）\n    └── finetune-series/   # 微调系列草稿库（未校对，择优转正为 tutorials）\n```\n\n### 维护工具（`scripts/`）\n\n| 脚本 | 作用 |\n|------|------|\n| `check_links.py --strict` | 死链 + 坏图体检（CI 也在跑） |\n| `audit.py` | 全仓库体检：骨架完整性 / 证据链 / 配图 / 文档漂移 / 密钥；`--tests` 可实跑全部测试 |\n| `check_repos.py` | **学习资源体检**：把文档里推荐的 GitHub 仓库逐个探测（可访问 / 星标 / 是否归档 / 是否搬家 / 最近提交 / 是否维护模式）。不需要 API token |\n| `render_terminal.py` | 把真实 stdout 渲染成终端风格 PNG（截图有据可依） |\n| `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版 |\n| `build_docs_html.py` | **批量渲染**：把全部（或指定子集）Markdown 转成 `publishing/html/docs/` 下的 HTML 树，并自校验链接 |\n| `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航、一键复制文档路径 |\n| `md_to_book_html.py` | 单篇渲染器：顶栏（返回总览 / 阅读·源码切换 / 复制 / 下载）、自动抽取 h2/h3 生成侧边目录大纲、阅读进度条与百分比、每章末尾「上一节 / 下一节」链式导航、代码块一键复制、图片灯箱、宽表横滚、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |\n| `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（678 个文件 / 12.26 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html` |\n| `verify_pages.js` | **站点交互实测**：用真实 Chromium 走一遍三张页面的交互（返回总览、阅读↔源码切换、灯箱、复制反馈、hash 路由与浏览器前进后退、深链直达），并顺带产出 `publishing/site-assets/` 里的截图 |\n| `latex_mathml.py` | **公式渲染**：构建期把 `$…$` / `$$…$$` 里的 LaTeX 转成浏览器原生 MathML（分数/根式/上下标/矩阵/`\\text` 中文混排/`\\operatorname`/`\\mathbb`/间距与箭头），运行时零依赖 |\n| `verify_math_layout.js` | **公式版式实测**：用真实 Chromium 量「公式是否横排、是否溢出行容器、行内混排是否撑歪行高」，桌面 1280px + 移动 390/768px 三个视口 |\n| `shot_math.js` | 用真实 Chromium 截取公式渲染截图（`llm-fundamentals/assets/math-render-*.png` 的来源） |\n\n**公式渲染**：文档里的 `$…$`（行内）与 `$$…$$`（行间）在**构建期**就转成了浏览器原生的\nMathML，随页面一起落地——不引 CDN、不塞 KaTeX 字体，断网双击照样排版正确。\n行间公式居中且过长时在容器内横向滚动（窄屏先自动缩字号），行内公式与中文正文基线对齐。\n\n![行间公式：logits = h W_lm, W_lm ∈ R^(d_model × V) ⟹ p = softmax(logits)](llm-fundamentals/assets/math-render-block.png)\n![行内公式与中文混排](llm-fundamentals/assets/math-render-inline.png)\n![表格单元格里的公式（含 \\| 平行符号）](llm-fundamentals/assets/math-render-table.png)\n![移动端 390px 视口下的行间公式](llm-fundamentals/assets/math-render-mobile.png)\n\n**代码浏览器**：`publishing/html/ide.html` 打开就是项目列表，点进某一项目后是\nIDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）、右侧带语法高亮的代码区\n（标签页、行号、面包屑、底部状态栏），深色主题、响应式，同样零依赖、双击即开。\n顶栏有「⧉ 复制文件」一键复制当前文件的完整内容（`file://` 下 Clipboard API 被拒时\n自动退回 `execCommand`，不会变成一个按不动的假按钮），状态栏可复制文件路径。\n地址栏就是状态：`ide.html#/01-python-ai-cli/README.md` 可以直达某个文件，\n浏览器前进 / 后退也真的能用来在「项目列表 ↔ 项目 ↔ 文件」之间来回走。\n数据源是构建时从仓库真实采集的（不含 `.venv` / `node_modules` / 二进制 / 权重），\n改完代码重跑 `python3 scripts/gen_ide_browser.py` 即可刷新。\n\n![代码浏览器：项目列表，右上角是返回文档总览的入口](publishing/site-assets/site-ide-home.png)\n![复制当前文件：底部提示已复制 README.md（152 行 · 5.0 KB）](publishing/site-assets/site-ide-copy.png)\n\n**本地阅读**：`publishing/html/index.html` 是入口，209 篇文档全部以渲染后的页面打开\n（`publishing/html/docs/…`，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。\n每个章节页的顶栏都有「← 文档总览」，并且**带着该章的锚点回去**（`index.html#ch-47`），\n落回总览里的第 47 章而不是被扔回页面顶部。\n\n![文档总览：209 章、可过滤、每章三个入口（渲染页 / 原始 Markdown / 路径）](publishing/site-assets/site-index.png)\n![章节页顶栏：返回文档总览 + 阅读/源码切换 + 复制/下载](publishing/site-assets/site-chapter-topbar.png)\n![章节页的源码视图：带行号的原始 Markdown，可复制、可下载](publishing/site-assets/site-chapter-source.png)\n\n索引里带紫色 <code>便携版<\/code> 标签的两篇（`python-practice/07-延伸阅读`、\n`llm-fundamentals/12-tutorials-and-agent`）是 base64 内嵌的自包含单文件，\n存在镜像树的同名 `*.portable.html` 里——图片全在文件内，拷到别处、发给别人、断网都能双击打开，\n是这两篇的便携阅读副本；其余文档想拷走单篇，用 `md_to_book_html.py` 现生成。\n\n**关于「原始 Markdown」**：浏览器不认识 `.md`，双击只会把源码当纯文本摊开，\n而索引里原先那条「原始 .md」链接连文件都找不到（路径按仓库根算，却从 `publishing/html/`\n解析，209 条全是 404）。现在改成打开该文档在渲染页里的**源码视图**：带行号、\n有 Markdown 高亮、可一键复制、可下载成 `.md`，与阅读视图用顶栏的「阅读 / 源码」随时互切\n（快捷键 `S`）。同一页两副面孔，就不用再维护第二棵文件树。\n\n## 单一事实源\n\n> 所有知识只维护在 `projects/*/milestones/` 中。其他目录只做引用、关联或派生输出。\n\n禁止出现平行知识体系：`curriculum/`、`labs/`、`knowledge/`、`assessments/`、`progress/`。\n\n## 基础知识层\n\n[`llm-fundamentals/`](llm-fundamentals/README.md) 是**基础理论层**：把 Transformer、注意力、预训练/微调、涌现、推理优化、对齐等原理系统整理成 12 章笔记，每章配 Mermaid 图、公式推导、术语表与**真实运行出来的配图**（终端截图 + 公式计算绘图，均可复现）。\n\n- 与实践层的关系：`llm-fundamentals/` 讲**为什么这么设计**，`projects/*/milestones/` 讲**怎么跑起来**。两者互相引用，不重复正文。\n- 目录内自带 `demos/`（numpy 实现，无需 GPU）与 `demos/make_figures.py`（重建全部配图）。\n- 第 11 章把 10 个开源项目对应到具体章节，并给出\"跑通的标志\"。\n- 第 12 章按「学 / 调 / 造」三条线整理**教程课程、微调框架、Agent 开发框架**，星标与维护状态全部由 `scripts/check_repos.py` 当场核验（含 2026 年的生态洗牌与仓库迁移对照表）。\n\n## 练手项目层\n\n[`python-practice/`](python-practice/README.md) 是**动手练手层**：6 个按难度递进的小练习，目标是「一个周末能跑通一个」，用它们把 Python 本身的语法、文件、网络、Web 框架各走一遍。\n\n| # | 练习 | 难度 | 代码位置 |\n|---|------|------|----------|\n| 01 | 命令行待办清单 | ●○○ 入门 | 🏠 本目录可跑（纯标准库） |\n| 02 | Excel 报表自动化 | ●●○ 进阶 | 🏠 本目录可跑（pandas） |\n| 03 | 网站内容爬虫 | ●●○ 进阶 | 🏠 本目录可跑（requests + bs4） |\n| 04 | FastAPI 博客 API | ●●○ 进阶 | 🏠 本目录可跑（FastAPI + pytest） |\n| 05 | AI 命令助手 | ●●● 挑战 | → [`projects/01`](projects/01-python-ai-cli/README.md) |\n| 06 | RAG 知识库问答 | ●●● 挑战 | → [`projects/04`](projects/04-rag/README.md) |\n| 07 | [延伸阅读：书单与读法](python-practice/07-延伸阅读.md) | 读物 | 🏠 不占练习配额：Python 学习路线 + 读生产代码四阶梯 + Java 对照表 |\n\n- 与另外两层的关系：`python-practice/` 要的是**会写**，`projects/` 要的是**做出来**，`llm-fundamentals/` 要的是**想明白**。\n- 05 / 06 的完整实现已由 `projects/01`、`projects/04` 承担，本层**不重复实现**，只给指路牌与冷启动路线。\n- 07 不是练习，是「练完前四个之后读什么、怎么读」的书单与方法论；继续往大模型 / 微调 / Agent 方向走见 [`llm-fundamentals/12`](llm-fundamentals/12-tutorials-and-agent.md)。\n- 01–04 每个都遵循同一套可复现约定：固定随机种子、`demo.sh` / `demo.py` 一键跑、原始 stdout 入库、截图由 `scripts/render_terminal.py` 从真实输出渲染（**不是手截的**）。\n- 先读 [`python-practice/00-how-to-practice.md`](python-practice/00-how-to-practice.md)——讲「怎么练才不是抄代码」，比任何一个练习本身都重要。\n\n## 技术术语规范\n\n所有教学内容中的英文技术术语必须优先使用：**英文名称【主流中文名称】**\n\n例如：Embedding【向量嵌入】、Token【词元】、Attention【注意力机制】、Fine-Tuning【微调】、Quantization【量化】\n\n## 如何开始\n\n```bash\n# 1. 读第一个项目主页\nopen projects/01-python-ai-cli/README.md\n\n# 2. 跑项目\ncd projects/01-python-ai-cli/src\ncp .env.example .env   # 填入真实 API Key\npython3 main.py\n\n# 3. 学 Milestone\nopen projects/01-python-ai-cli/milestones/01-variables.md\n```\n\n## 安全约定\n\n- API Key 只通过环境变量 / `.env` 提供\n- `.env` 永不入库，仓库只有 `.env.example`\n\n## 双远程\n\nGitHub（origin）+ Gitee（gitee），每次提交双推。\n\n## License\n\n[MIT](LICENSE)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -269,6 +439,8 @@ open projects/01-python-ai-cli/milestones/01-variables.md</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -278,6 +450,173 @@ open projects/01-python-ai-cli/milestones/01-variables.md</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -291,6 +630,17 @@ open projects/01-python-ai-cli/milestones/01-variables.md</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -317,15 +667,46 @@ open projects/01-python-ai-cli/milestones/01-variables.md</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

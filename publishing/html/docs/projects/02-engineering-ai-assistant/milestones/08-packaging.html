@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-51" title="返回《文档总览》第 51 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 02 — Chapter 08：Packaging【打包与发布】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-项目要增加什么能力" class="lvl2">1. 项目要增加什么能力</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-pyprojecttoml-是什么" class="lvl3">3.1 pyproject.toml 是什么</a><a href="#32-src-layout源码布局" class="lvl3">3.2 src layout【源码布局】</a><a href="#33-最小可用的-pyprojecttoml" class="lvl3">3.3 最小可用的 pyproject.toml</a><a href="#34-projectscripts-的魔法" class="lvl3">3.4 [project.scripts] 的魔法</a><a href="#35-editable-install可编辑安装" class="lvl3">3.5 editable install【可编辑安装】</a><a href="#36-依赖版本怎么写" class="lvl3">3.6 依赖版本怎么写</a><a href="#4-项目代码" class="lvl2">4. 项目代码</a><a href="#5-java-python-对比" class="lvl2">5. Java ↔ Python 对比</a><a href="#6-常见坑" class="lvl2">6. 常见坑</a><a href="#坑-1忘了-toolsetuptoolspackagesfind-where-src" class="lvl3">坑 1：忘了 [tool.setuptools.packages.find] where = [&amp;quot;src&amp;quot;]</a><a href="#坑-2每个目录都要-initpy" class="lvl3">坑 2：每个目录都要 __init__.py</a><a href="#坑-3忘了装-e改代码不生效" class="lvl3">坑 3：忘了装 -e，改代码不生效</a><a href="#坑-4命令找不到aiassistant-command-not-found" class="lvl3">坑 4：命令找不到（ai-assistant: command not found）</a><a href="#坑-5把-tests-也打包进去" class="lvl3">坑 5：把 tests/ 也打包进去</a><a href="#坑-6env-被打进包" class="lvl3">坑 6：.env 被打进包</a><a href="#7-实战挑战" class="lvl2">7. 实战挑战</a><a href="#8-主动回忆" class="lvl2">8. 主动回忆</a><a href="#9-本节完成标准" class="lvl2">9. 本节完成标准</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-02-chapter-08packaging打包与发布">Project 02 — Chapter 08：Packaging【打包与发布】</h1>
 <blockquote><p>状态：✅ 已校对 对应代码：<code>pyproject.toml</code></p></blockquote>
 <hr/>
@@ -333,8 +472,27 @@ where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不
 <h2 id="9-本节完成标准">9. 本节完成标准</h2><nav class="sec-nav"><a class="sn prev" href="#8-主动回忆"><span class="sn-label">← 上一节</span><span class="sn-name">8. 主动回忆</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <ul class="lvl"><li>[ ] 有 <code>pyproject.toml</code>，<code>pip install -e &quot;.[dev,api]&quot;</code> 成功</li><li>[ ] 装完后在任意目录可执行 <code>ai-assistant</code></li><li>[ ] 用 src layout，且 <code>[tool.setuptools.packages.find] where = [&quot;src&quot;]</code> 已配</li><li>[ ] 依赖分组：核心 / dev / api 三档</li><li>[ ] <code>.gitignore</code> 含 <code>.venv/</code>、<code>dist/</code>、<code>*.egg-info/</code></li></ul>
 <p>下一章：<a href="09-fastapi.html">09-fastapi.md</a> —— 把 CLI 变成 HTTP 服务。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/02-engineering-ai-assistant/milestones/08-packaging.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/02-engineering-ai-assistant/milestones/08-packaging.md", "name": "08-packaging.md", "text": "# Project 02 — Chapter 08：Packaging【打包与发布】\n\n> 状态：✅ 已校对\n> 对应代码：`pyproject.toml`\n\n---\n\n## 1. 项目要增加什么能力\n\n到目前为止，运行项目的方式是：\n\n```bash\ncd projects/02-engineering-ai-assistant/src\npython3 main.py \"问题\"\n```\n\n这有三个问题：\n\n```text\n问题 1：必须在 src/ 目录下才能跑（否则 import assistant 失败）\n问题 2：别人 clone 下来，不知道要先装什么\n问题 3：想复用这个包到别的项目，只能复制粘贴\n```\n\n本章目标：\n\n> **用 `pyproject.toml` 把项目变成「可安装的包」，装完后在任意目录都能用 `ai-assistant` 命令。**\n\n---\n\n## 2. 为什么需要这个知识\n\n打包解决的是**交付**问题：\n\n```text\n给自己     —— 装一次，之后在任何目录都能用，不用 cd\n给同事     —— pip install -e . 之后依赖自动装齐\n给用户     —— pip install ai-assistant 一条命令\n给生产     —— Docker 镜像里 pip install . 是标准动作\n```\n\n而且从这一章开始，你的项目才真正符合「Python 工程」的定义：\n\n> **能被安装、能被依赖、有明确的入口点、依赖被显式声明。**\n\n---\n\n## 3. 核心概念\n\n### 3.1 `pyproject.toml` 是什么\n\n它是 Python 官方（PEP 621）指定的**项目元数据文件**，取代了老的 `setup.py`。\n\n类比：\n\n| Java | Python |\n|------|--------|\n| `pom.xml` | `pyproject.toml` |\n| `<groupId>:<artifactId>:<version>` | `name` + `version` |\n| `<dependencies>` | `dependencies = [...]` |\n| `<build><plugins>` | `[build-system]` |\n| `mvn package` → jar | `pip wheel .` → whl |\n| `mvn install` | `pip install -e .` |\n\n### 3.2 src layout【源码布局】\n\n推荐的目录结构（本项目采用）：\n\n```text\nprojects/02-engineering-ai-assistant/\n├── pyproject.toml\n├── src/\n│   └── assistant/          # 真正的包在这里\n│       ├── __init__.py\n│       ├── client.py\n│       └── ...\n└── tests/\n```\n\n为什么多一层 `src/`？\n\n```text\n不用 src/ 时：在项目根目录下 import assistant 会拿到「本地目录」而不是「安装的包」\n              测试通过但线上失败 —— 因为本地目录里可能混进了没提交的文件\n用了 src/  ：必须先安装才能 import，测试环境 = 生产环境\n```\n\n这个坑很隐蔽，业界共识是用 `src/` layout 规避。\n\n### 3.3 最小可用的 pyproject.toml\n\n```toml\n[build-system]\nrequires = [\"setuptools>=68\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"engineering-ai-assistant\"\nversion = \"0.1.0\"\ndescription = \"一个工程化的 Python AI 助手：异步、类型安全、可测试、带 Web API\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\ndependencies = [\n    \"httpx>=0.27\",\n    \"python-dotenv>=1.0\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"pytest>=8.0\",\n    \"pytest-asyncio>=0.23\",\n    \"pytest-cov>=5.0\",\n]\napi = [\n    \"fastapi>=0.115\",\n    \"uvicorn>=0.30\",\n]\n\n[project.scripts]\nai-assistant = \"assistant.cli:main\"\n\n[tool.setuptools.packages.find]\nwhere = [\"src\"]\n```\n\n关键点逐个解释：\n\n| 字段 | 作用 |\n|------|------|\n| `requires-python` | 声明最低版本，别人装的时候 pip 会检查 |\n| `dependencies` | 运行时依赖（不写死版本，用 `>=`） |\n| `optional-dependencies` | 分组可选依赖：`pip install -e \".[dev,api]\"` |\n| `[project.scripts]` | **生成命令行命令**：装完后直接敲 `ai-assistant` |\n| `packages.find where` | 配合 src layout 告诉 setuptools 去哪找包 |\n\n### 3.4 `[project.scripts]` 的魔法\n\n```toml\n[project.scripts]\nai-assistant = \"assistant.cli:main\"\n```\n\n意思是：装完后生成一个 `ai-assistant` 可执行文件，运行它 = 执行 `assistant.cli` 模块里的 `main()` 函数。\n\n前提是你的 CLI 入口有 `main` 函数：\n\n```python\n# src/assistant/cli.py\ndef main() -> None:\n    ...\n\nif __name__ == \"__main__\":\n    main()\n```\n\n对应 Java 的：`java -jar app.jar` 里的 `Main-Class`，或者 Maven 生成的启动脚本。\n\n### 3.5 editable install【可编辑安装】\n\n```bash\npip install -e \".[dev,api]\"\n```\n\n`-e`（editable）的效果：\n\n```text\n不是把代码复制进 site-packages\n而是在 site-packages 里放一个「指向你源码目录」的链接\n所以你改代码立刻生效，不用重装\n```\n\n**开发期间必须用 `-e`**，否则你改一行代码就要重装一次。\n\n### 3.6 依赖版本怎么写\n\n```text\nhttpx>=0.27          ✅ 下限即可，允许升级\nhttpx==0.27.0        ⚠️  锁死：应用项目可以，库项目不该\nhttpx~=0.27          ✅ 兼容 0.27.x，不含 0.28\nhttpx                ❌ 完全不约束，某天上游 breaking change 你就崩了\n```\n\n规则：\n\n> **给的约束能有多松就多松，但不能没有。**\n\n---\n\n## 4. 项目代码\n\n完整安装与使用流程：\n\n```bash\ncd projects/02-engineering-ai-assistant\npython3 -m venv .venv\nsource .venv/bin/activate\npip install -e \".[dev,api]\"\ncp .env.example .env      # 填入 DEEPSEEK_API_KEY\n\nai-assistant \"用一句话解释 GIL\"        # 命令行入口\nai-assistant --interactive             # 多轮对话\npytest -v                              # 测试\n```\n\n依赖分组的意义：\n\n```text\n只跑 CLI  → pip install -e .              （只装 httpx + dotenv）\n要开发    → pip install -e \".[dev]\"       （+ pytest）\n要起服务  → pip install -e \".[api]\"       （+ fastapi + uvicorn）\n```\n\n为什么 FastAPI 放进可选依赖？因为**只用 CLI 的人不该被迫装 Web 框架**。\n\n---\n\n![真实运行：解析 pyproject.toml 的每个字段、用 importlib.metadata 读回元数据与控制台入口点、真的打出一个 wheel，并验证 python -m assistant.cli 可用](../assets/term-packaging.png)\n\n![真实运行：真的打出一个 wheel（18.7 KB）并列出里面的文件，以及 [project.scripts] 生成的 ai-assistant 控制台入口点](../assets/term-packaging-wheel.png)\n\n## 5. Java ↔ Python 对比\n\n| 概念 | Java / Maven | Python |\n|------|-------------|--------|\n| 项目描述文件 | `pom.xml` | `pyproject.toml` |\n| 坐标 | `groupId:artifactId:version` | `name` + `version`（无 group，全局唯一） |\n| 依赖声明 | `<dependency>` | `dependencies = [...]` |\n| 依赖作用域 | `<scope>test<\/scope>` | `optional-dependencies.dev` |\n| 构建 | `mvn package` | `python -m build` |\n| 产物 | `.jar` | `.whl` / `.tar.gz` |\n| 安装到仓库 | `mvn install` | `pip install .` |\n| 本地开发模式 | IDE 自动 | `pip install -e .` |\n| 可执行入口 | `Main-Class` | `[project.scripts]` |\n| 版本锁定 | `pom` 里写死 | `requirements.txt` / `uv.lock` / `poetry.lock` |\n\n最大的文化差异：\n\n> **Java 的依赖版本默认是锁死的，Python 默认给下限。**\n> 所以 Python 项目要发布上线时，通常会额外用 `pip freeze > requirements.txt` 或 `uv` 生成锁文件。\n\n---\n\n## 6. 常见坑\n\n### 坑 1：忘了 `[tool.setuptools.packages.find] where = [\"src\"]`\n\n用 src layout 却没配这一句，结果是**装上一个空包**，`import assistant` 报 `ModuleNotFoundError`，但 `pip install` 显示成功。\n\n排查：`pip show -f engineering-ai-assistant` 看装进去的文件列表。\n\n### 坑 2：每个目录都要 `__init__.py`\n\n```text\nsrc/assistant/\n├── __init__.py      ← 必须有（除非用 namespace packages）\n├── client.py\n└── service.py\n```\n\n少了它，setuptools 可能找不到包，或者 import 行为诡异。\n\n### 坑 3：忘了装 `-e`，改代码不生效\n\n```bash\npip install .        # ❌ 复制了一份，改源码没用\npip install -e .     # ✅ 链接到源码\n```\n\n症状：「我明明改了，怎么运行结果还是老的」——99% 是这个。\n\n### 坑 4：命令找不到（`ai-assistant: command not found`）\n\n原因：没激活虚拟环境，或者装到了别的 Python 里。\n\n排查：\n\n```bash\nwhich ai-assistant        # 应该在 .venv/bin/ 下\nwhich python3             # 确认当前用的是哪个\npip show engineering-ai-assistant\n```\n\n### 坑 5：把 `tests/` 也打包进去\n\n```toml\n[tool.setuptools.packages.find]\nwhere = [\"src\"]      # 只找 src 下的，tests 在根目录所以不会被打包 ✅\n```\n\n如果 tests 也在 src 下，要显式 `exclude = [\"tests*\"]`。\n\n### 坑 6：`.env` 被打进包\n\n`.env` 不在 `packages.find` 的范围内，不会被打包。但**如果你用了 `MANIFEST.in` 手动包含文件**，务必排除 `.env`。\n\n---\n\n## 7. 实战挑战\n\n**挑战 1**：给项目加 `pyproject.toml`，用 `pip install -e \".[dev,api]\"` 安装，验证在**任意目录**敲 `ai-assistant --help` 都能用。\n\n**挑战 2**：加一个 `--version` 参数，从 `importlib.metadata.version(\"engineering-ai-assistant\")` 读取版本号输出。\n\n**挑战 3（进阶）**：用 `python -m build` 打出 wheel，然后在一个全新的 venv 里 `pip install dist/*.whl` 验证干净安装可用。\n\n---\n\n## 8. 主动回忆\n\n1. `pyproject.toml` 取代了什么老文件？\n2. 为什么要 src layout？不用会有什么隐蔽的坑？\n3. `[project.scripts]` 做了什么？\n4. `pip install -e .` 和 `pip install .` 的区别？\n5. 依赖版本为什么「能松就松，但不能没有」？\n6. 为什么把 FastAPI 放进可选依赖？\n\n---\n\n## 9. 本节完成标准\n\n- [ ] 有 `pyproject.toml`，`pip install -e \".[dev,api]\"` 成功\n- [ ] 装完后在任意目录可执行 `ai-assistant`\n- [ ] 用 src layout，且 `[tool.setuptools.packages.find] where = [\"src\"]` 已配\n- [ ] 依赖分组：核心 / dev / api 三档\n- [ ] `.gitignore` 含 `.venv/`、`dist/`、`*.egg-info/`\n\n下一章：[09-fastapi.md](09-fastapi.md) —— 把 CLI 变成 HTTP 服务。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -342,6 +500,8 @@ where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -351,6 +511,173 @@ where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -364,6 +691,17 @@ where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -390,15 +728,46 @@ where = [&quot;src&quot;]      # 只找 src 下的，tests 在根目录所以不
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

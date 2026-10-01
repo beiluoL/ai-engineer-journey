@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-32" title="返回《文档总览》第 32 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#第一类技术层错误" class="lvl3">第一类：技术层错误</a><a href="#第二类业务层错误" class="lvl3">第二类：业务层错误</a><a href="#方式-a" class="lvl3">方式 A</a><a href="#方式-b" class="lvl3">方式 B</a><a href="#try" class="lvl2">try</a><a href="#except" class="lvl2">except</a><a href="#else" class="lvl2">else</a><a href="#finally" class="lvl2">finally</a><a href="#raise" class="lvl2">raise</a><a href="#q1" class="lvl3">Q1</a><a href="#q2" class="lvl3">Q2</a><a href="#q3" class="lvl3">Q3</a><a href="#q4" class="lvl3">Q4</a><a href="#q5" class="lvl3">Q5</a><a href="#q6" class="lvl3">Q6</a><a href="#q7" class="lvl3">Q7</a><a href="#challenge-1安全整数输入" class="lvl2">Challenge 1：安全整数输入</a><a href="#challenge-2消息不能为空" class="lvl2">Challenge 2：消息不能为空</a><a href="#challenge-3模拟-llm-故障" class="lvl2">Challenge 3：模拟 LLM 故障</a><a href="#level-1" class="lvl3">Level 1</a><a href="#level-2" class="lvl3">Level 2</a><a href="#level-3" class="lvl3">Level 3</a><a href="#level-4" class="lvl3">Level 4</a><a href="#level-5" class="lvl3">Level 5</a><a href="#level-6" class="lvl3">Level 6</a><a href="#level-7" class="lvl3">Level 7</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="lesson-06-exception让-ai-cli-assistant-学会处理错误">Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误</h1>
 <blockquote><p>AI Engineer Journey · Project 01 — Python AI CLI Assistant   学习方式：Project-Based Learning【项目驱动学习】   主线项目：Python AI CLI Assistant   本章目标：通过给已有项目制造真实错误，学习 Exception【异常】、try / except、else、finally、raise，并建立 AI 工程中的错误处理思维。</p></blockquote>
 <hr/>
@@ -1337,8 +1476,27 @@ JSON
 <hr/>
 <h1 id="49-本章一句话总结">49. 本章一句话总结</h1>
 <blockquote><p><strong>Exception Handling【异常处理】不是为了让程序“看起来不报错”，而是让程序能够识别异常、区分异常、在合适的位置处理异常，并在发生问题后以可控的方式继续运行。对于 AI CLI Assistant 来说，这一步是从“能运行的脚本”走向“可靠应用”的重要一步。</strong></p></blockquote>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/01-python-ai-cli/milestones/06-exception.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/01-python-ai-cli/milestones/06-exception.md", "name": "06-exception.md", "text": "# Lesson 06 — Exception：让 AI CLI Assistant 学会处理错误\n\n> AI Engineer Journey · Project 01 — Python AI CLI Assistant  \n> 学习方式：Project-Based Learning【项目驱动学习】  \n> 主线项目：Python AI CLI Assistant  \n> 本章目标：通过给已有项目制造真实错误，学习 Exception【异常】、try / except、else、finally、raise，并建立 AI 工程中的错误处理思维。\n\n---\n\n# 1. 这一章为什么存在？\n\n我们的 AI CLI Assistant 到目前为止已经可以：\n\n```text\n/hhelp\n/history\n/clear\n/size\n/last\n/exit\n```\n\n并且代码已经从：\n\n```text\n一个 main.py\n```\n\n逐步演进成：\n\n```text\nai_cli/\n├── main.py\n├── conversation.py\n├── assistant.py\n├── config.py\n└── formatter.py\n```\n\n看起来已经像一个 Python 项目了。\n\n但是：\n\n> **只要用户做一个意料之外的事情，程序可能直接崩溃。**\n\n例如：\n\n```text\n请输入年龄：abc\n```\n\n如果程序：\n\n```python\nage = int(input(\"请输入年龄：\"))\n```\n\n就可能直接报错。\n\n真正的问题不是：\n\n> “Python 报错了。”\n\n而是：\n\n> **一个真实程序必须知道哪些错误可以处理，哪些错误不能让整个程序直接崩掉。**\n\n这就是：\n\n# Exception Handling【异常处理】\n\n---\n\n# 2. 先制造一个真实错误\n\n先运行：\n\n```python\nage = int(input(\"请输入年龄：\"))\n\nprint(f\"你的年龄是：{age}\")\n```\n\n正常：\n\n```text\n请输入年龄：29\n你的年龄是：29\n```\n\n但是输入：\n\n```text\n请输入年龄：abc\n```\n\n程序可能出现：\n\n```text\nValueError\n```\n\n这说明：\n\n> `\"abc\"` 不能被转换成整数。\n\n---\n\n# 3. 这就是 Exception\n\nException【异常】可以先理解成：\n\n> **程序运行过程中出现了一个非正常情况，导致当前操作无法正常完成。**\n\n例如：\n\n```text\n用户输入错误\n文件不存在\n网络请求失败\nAPI 返回异常\n数据格式错误\n```\n\n这些在 AI 项目中非常常见。\n\n---\n\n# 4. 不处理异常有什么问题？\n\n假设你的 CLI Assistant：\n\n```text\n启动\n ↓\n等待用户输入\n ↓\n用户输入错误\n ↓\n程序崩溃\n```\n\n那么用户只能：\n\n```text\n重新启动程序\n```\n\n这明显不是一个好的体验。\n\n我们希望：\n\n```text\n用户输入错误\n ↓\n提示错误原因\n ↓\n重新输入\n ↓\n程序继续运行\n```\n\n---\n\n# 5. 第一个工具：try\n\nPython 使用：\n\n```python\ntry:\n    ...\n```\n\n表示：\n\n> **尝试执行这段可能出错的代码。**\n\n例如：\n\n```python\ntry:\n    age = int(input(\"请输入年龄：\"))\n```\n\n但是：\n\n> 仅仅 `try` 还不够。\n\n因为发生错误以后，我们还需要知道：\n\n> “出现异常之后怎么办？”\n\n于是需要：\n\n# except\n\n---\n\n# 6. try + except\n\n```python\ntry:\n    age = int(input(\"请输入年龄：\"))\nexcept:\n    print(\"输入错误，请输入数字。\")\n```\n\n现在：\n\n正常：\n\n```text\n请输入年龄：29\n```\n\n程序继续。\n\n错误：\n\n```text\n请输入年龄：abc\n输入错误，请输入数字。\n```\n\n程序不会直接崩掉。\n\n![真实运行：未捕获异常的 Traceback 与 try/except/else/finally/raise](../assets/term-exception.png)\n\n![真实运行：第 5-6 节——else/finally 在正常与出错两条路径下的执行顺序，finally 先于 return 执行](../assets/term-exception-finally.png)\n\n---\n\n# 7. 这到底发生了什么？\n\n程序：\n\n```text\ntry\n ↓\n执行 int(input())\n ↓\n成功？\n ├── 是 → 继续\n │\n └── 否 → Exception\n            ↓\n          except\n            ↓\n        执行错误处理\n```\n\n所以：\n\n```text\ntry\n ↓\n尝试执行\n\nexcept\n ↓\n发生异常时如何处理\n```\n\n这是本章最核心的关系。\n\n---\n\n# 8. 项目第一次改造\n\n上一阶段我们的 AI CLI Assistant 里面可能有：\n\n```python\nuser_input = input(\"You: \")\n```\n\n现在我们加入一个命令：\n\n```text\n/profile\n```\n\n用户输入一些信息。\n\n例如年龄：\n\n```python\ndef read_age():\n    age = int(input(\"请输入年龄：\"))\n    return age\n```\n\n正常：\n\n```text\n请输入年龄：29\n```\n\n错误：\n\n```text\n请输入年龄：abc\n```\n\n如果不处理：\n\n> 程序崩溃。\n\n所以改成：\n\n```python\ndef read_age():\n    try:\n        age = int(input(\"请输入年龄：\"))\n        return age\n    except:\n        print(\"AI: 年龄必须是整数。\")\n        return None\n```\n\n现在：\n\n```text\nYou: /profile\n请输入年龄：abc\n\nAI: 年龄必须是整数。\n```\n\n程序还能继续运行。\n\n---\n\n# 9. 为什么不建议直接裸 `except`\n\n刚才我们写：\n\n```python\nexcept:\n```\n\n它虽然简单，但工程代码中通常不推荐这样做。\n\n因为：\n\n> 它可能把很多完全不同的问题全部吃掉。\n\n例如：\n\n```python\ntry:\n    ...\nexcept:\n    print(\"出错了\")\n```\n\n你根本不知道：\n\n> 到底出了什么错。\n\n所以应该尽量捕获：\n\n# Specific Exception【特定异常】\n\n---\n\n# 10. `ValueError`\n\n刚才：\n\n```python\nint(\"abc\")\n```\n\n对应的典型异常就是：\n\n```text\nValueError\n```\n\n可以写：\n\n```python\ntry:\n    age = int(input(\"请输入年龄：\"))\nexcept ValueError:\n    print(\"请输入一个有效的整数。\")\n```\n\n现在逻辑更明确：\n\n```text\nint 转换失败\n ↓\nValueError\n ↓\n给用户友好提示\n```\n\n---\n\n# 11. 为什么叫 ValueError？\n\n可以先拆开：\n\n```text\nValue\n+\nError\n```\n\n意思就是：\n\n> 提供的值不符合当前操作要求。\n\n例如：\n\n```python\nint(\"abc\")\n```\n\n`\"abc\"` 是一个值，但它不能转换成整数。\n\n所以：\n\n```text\nValueError\n```\n\n---\n\n# 12. AI CLI Assistant 的真实场景\n\n我们现在可以设计：\n\n```text\n/profile\n```\n\n让用户输入：\n\n```text\n姓名\n年龄\n每日学习时间\n当前学习方向\n```\n\n例如：\n\n```text\nYou: /profile\n\n姓名：Beiluo\n年龄：abc\n```\n\n程序不应该崩。\n\n而应该：\n\n```text\nAI: 年龄格式错误，请输入数字。\n```\n\n然后回到 CLI。\n\n---\n\n# 13. 把错误处理封装成函数\n\n在：\n\n```text\nconversation.py\n```\n\n或者更合适的：\n\n```text\nprofile.py\n```\n\n中，我们可以写：\n\n```python\ndef read_integer(prompt):\n    try:\n        return int(input(prompt))\n    except ValueError:\n        print(\"输入错误，请输入整数。\")\n        return None\n```\n\n然后：\n\n```python\nage = read_integer(\"请输入年龄：\")\n```\n\n这样调用方不需要知道：\n\n```text\ntry\nexcept\nValueError\n```\n\n具体怎么写。\n\n这又回到了上一章：\n\n# Abstraction【抽象】\n\n---\n\n# 14. 现在出现一个很重要的工程思想\n\n我们已经见过：\n\n```text\n函数\n模块\n异常\n```\n\n它们正在开始组合。\n\n例如：\n\n```text\nmain.py\n    ↓\nread_integer()\n    ↓\ntry\n    ↓\nint()\n    ↓\nValueError\n```\n\n也就是说：\n\n> **异常处理应该尽量靠近“最了解这个错误”的代码。**\n\n比如：\n\n```python\ndef read_integer(prompt):\n    try:\n        return int(input(prompt))\n    except ValueError:\n        print(\"请输入整数。\")\n        return None\n```\n\n这个函数最清楚：\n\n> 什么输入才算合法。\n\n---\n\n# 15. `except` 后面可以拿到异常对象\n\n例如：\n\n```python\ntry:\n    age = int(\"abc\")\nexcept ValueError as error:\n    print(error)\n```\n\n可能看到类似：\n\n```text\ninvalid literal for int() with base 10\n```\n\n这里：\n\n```python\nerror\n```\n\n就是：\n\n> 当前发生的异常对象。\n\n可以：\n\n```python\nprint(type(error))\n```\n\n---\n\n# 16. 为什么这个能力对 AI 很重要？\n\n以后真正连接 LLM API 后：\n\n```text\nPython\n ↓\nHTTP\n ↓\nLLM API\n```\n\n可能出现：\n\n```text\n网络失败\n认证失败\n限流\n超时\n服务异常\n模型不存在\n返回数据格式错误\n```\n\n如果全部不处理：\n\n```text\n用户\n ↓\n请求 AI\n ↓\n程序崩溃\n```\n\n所以 AI 应用必须大量使用异常处理。\n\n---\n\n# 17. 模拟一个 LLM 调用异常\n\n我们现在先不连接真实 API。\n\n写一个模拟函数：\n\n```python\ndef generate_mock_response(user_input):\n    if user_input == \"error\":\n        raise RuntimeError(\"模拟 LLM 服务异常\")\n\n    return f\"我收到你的问题了：{user_input}\"\n```\n\n这里第一次遇到：\n\n# raise\n\n---\n\n# 18. `raise` 是什么？\n\n`raise`：\n\n> **主动抛出一个 Exception【异常】。**\n\n例如：\n\n```python\nraise RuntimeError(\"模拟错误\")\n```\n\n意思：\n\n> **我明确告诉 Python：这里发生了一个异常。**\n\n程序会中断当前正常流程，寻找能够处理它的 `except`。\n\n---\n\n# 19. 为什么我们需要主动 raise？\n\n因为某些错误：\n\n> Python 不一定天然知道这是“业务错误”。\n\n例如：\n\n```text\n用户年龄不能小于 0\n```\n\nPython 不会自动认为：\n\n```python\nage = -10\n```\n\n是程序异常。\n\n但业务上我们认为：\n\n> 年龄不能小于 0。\n\n于是可以：\n\n```python\nif age < 0:\n    raise ValueError(\"年龄不能小于 0\")\n```\n\n这就是：\n\n# Business Validation【业务校验】\n\n---\n\n# 20. 项目加入业务校验\n\n例如：\n\n```python\ndef validate_age(age):\n    if age < 0:\n        raise ValueError(\"年龄不能小于 0\")\n\n    return age\n```\n\n调用：\n\n```python\ntry:\n    age = int(input(\"年龄：\"))\n    validate_age(age)\nexcept ValueError as error:\n    print(f\"AI: 输入错误：{error}\")\n```\n\n现在：\n\n```text\n年龄：abc\n```\n\n得到：\n\n```text\nAI: 输入错误：请输入整数\n```\n\n而：\n\n```text\n年龄：-5\n```\n\n得到：\n\n```text\nAI: 输入错误：年龄不能小于 0\n```\n\n这里已经有两个不同层次：\n\n```text\n输入格式错误\n+\n业务规则错误\n```\n\n---\n\n# 21. 这两类错误要分开理解\n\n### 第一类：技术层错误\n\n例如：\n\n```python\nint(\"abc\")\n```\n\nPython 本身就无法完成。\n\n---\n\n### 第二类：业务层错误\n\n例如：\n\n```python\nage = -5\n```\n\n语法没有问题。\n\n但是：\n\n> 不符合我们的业务规则。\n\n于是我们自己：\n\n```python\nraise ValueError(...)\n```\n\n---\n\n# 22. `else`：没有异常时执行\n\nPython 的异常结构还可以写：\n\n```python\ntry:\n    age = int(input(\"请输入年龄：\"))\nexcept ValueError:\n    print(\"年龄输入错误\")\nelse:\n    print(f\"年龄是：{age}\")\n```\n\n逻辑：\n\n```text\ntry\n ↓\n成功？\n ├── 否 → except\n │\n └── 是 → else\n```\n\n---\n\n# 23. 为什么需要 else？\n\n例如：\n\n```python\ntry:\n    age = int(input(\"年龄：\"))\nexcept ValueError:\n    print(\"输入错误\")\nelse:\n    save_profile(age)\n```\n\n这里语义非常清楚：\n\n> 只有转换成功以后，才保存 Profile【档案】。\n\n相比把所有代码都塞进：\n\n```python\ntry:\n    ...\n```\n\n更容易控制异常范围。\n\n---\n\n# 24. `finally`\n\n还有一种情况：\n\n> 不管有没有异常，我都要执行某些代码。\n\n例如：\n\n```python\ntry:\n    print(\"执行操作\")\nexcept ValueError:\n    print(\"出现错误\")\nfinally:\n    print(\"本次操作结束\")\n```\n\n输出可能是：\n\n```text\n执行操作\n本次操作结束\n```\n\n或者异常时：\n\n```text\n出现错误\n本次操作结束\n```\n\n`finally`：\n\n> **无论是否出现异常，都执行。**\n\n---\n\n# 25. AI 项目中的 finally\n\n以后可能出现：\n\n```text\n打开文件\n ↓\n请求模型\n ↓\n记录日志\n ↓\n关闭资源\n```\n\n或者：\n\n```text\n开始一次请求\n ↓\n记录开始时间\n ↓\n调用模型\n ↓\n成功 / 失败\n ↓\n记录结束时间\n```\n\n这些场景都可能用到：\n\n```python\nfinally\n```\n\n当前先掌握概念即可。\n\n---\n\n# 26. 一个重要问题：try 不要包太大\n\n不推荐：\n\n```python\ntry:\n    整个程序几十行代码\nexcept:\n    print(\"出错了\")\n```\n\n因为这样你不知道：\n\n> 到底哪一步出错。\n\n更好的方式：\n\n```python\ntry:\n    age = int(input(\"年龄：\"))\nexcept ValueError:\n    print(\"年龄格式错误\")\n```\n\n只保护真正可能抛出该异常的代码。\n\n这叫：\n\n# Narrow Exception Boundary【窄异常边界】\n\n简单理解：\n\n> `try` 尽量只包住真正需要捕获的那一小段代码。\n\n---\n\n# 27. 现在给 CLI Assistant 加真实的错误处理\n\n我们的：\n\n```text\nassistant.py\n```\n\n目前：\n\n```python\ndef generate_mock_response(user_input):\n    return f\"我收到你的问题了：{user_input}\"\n```\n\n升级：\n\n```python\ndef generate_mock_response(user_input):\n    if user_input == \"error\":\n        raise RuntimeError(\"模拟 Assistant 服务异常\")\n\n    return f\"我收到你的问题了：{user_input}\"\n```\n\n---\n\n# 28. main.py 捕获异常\n\n主循环：\n\n```python\ntry:\n    answer = generate_mock_response(user_input)\nexcept RuntimeError as error:\n    print(f\"AI: Assistant 执行失败：{error}\")\n    continue\n```\n\n现在：\n\n```text\nYou: 你好\nAI: 我收到你的问题了：你好\n```\n\n但是：\n\n```text\nYou: error\nAI: Assistant 执行失败：模拟 Assistant 服务异常\n```\n\n程序没有崩。\n\n然后：\n\n```text\nYou: 继续\n```\n\n程序还能正常运行。\n\n---\n\n# 29. 这就是一个真正的 AI 应用体验\n\n错误处理前：\n\n```text\n用户\n ↓\nAI\n ↓\n异常\n ↓\n程序崩溃\n```\n\n错误处理后：\n\n```text\n用户\n ↓\nAI\n ↓\n异常\n ↓\n捕获\n ↓\n友好提示\n ↓\n继续运行\n```\n\n这看起来只是 Python 基础。\n\n实际上已经进入：\n\n# AI Application Engineering【AI 应用工程】\n\n---\n\n# 30. 错误应该保存进 messages 吗？\n\n这时候会出现一个很有意思的工程问题。\n\n例如：\n\n```text\nYou: 你好\nAI: 正常回答\n```\n\n保存：\n\n```text\nuser\nassistant\n```\n\n但如果：\n\n```text\nYou: error\nAI: 服务调用失败\n```\n\n需不需要把错误也记录进去？\n\n可以设计：\n\n```python\n{\n    \"role\": \"system\",\n    \"content\": \"Assistant error: ...\"\n}\n```\n\n或者：\n\n```python\n{\n    \"role\": \"error\",\n    \"content\": \"...\"\n}\n```\n\n但注意：\n\n> 真正的 LLM API messages 规范并不意味着你可以随意增加任意 `role`。\n\n所以我们的内部程序数据结构可以记录错误，但发送给真实模型时需要遵守具体 API 的消息格式。\n\n这个区别以后会非常重要。\n\n---\n\n# 31. 现在增加一个内部错误记录\n\n更推荐在当前阶段简单处理：\n\n```python\nerror_message = {\n    \"role\": \"assistant\",\n    \"content\": f\"抱歉，处理失败：{error}\"\n}\n```\n\n然后：\n\n```python\nmessages.append(error_message)\n```\n\n但是：\n\n> 这是我们自己的 CLI 历史设计，不等于所有 LLM API 都支持这样的历史消息。\n\n暂时不要把这个设计绝对化。\n\n---\n\n# 32. `Exception` 和 `return None`\n\n之前我们有：\n\n```python\ndef read_age():\n    try:\n        return int(input(\"年龄：\"))\n    except ValueError:\n        return None\n```\n\n另一种设计：\n\n```python\ndef read_age():\n    age = int(input(\"年龄：\"))\n    return age\n```\n\n然后调用处：\n\n```python\ntry:\n    age = read_age()\nexcept ValueError:\n    ...\n```\n\n两种方式都可以。\n\n区别是：\n\n### 方式 A\n\n函数自己处理错误：\n\n```text\n函数\n ↓\ntry / except\n ↓\n返回 None\n```\n\n### 方式 B\n\n函数把异常交给调用方：\n\n```text\n函数\n ↓\n发生异常\n ↓\n调用方处理\n```\n\n---\n\n# 33. 哪种更好？\n\n没有绝对答案。\n\n但工程上一个重要思维是：\n\n> **谁最知道这个错误该怎么处理，就尽量由谁决定。**\n\n比如：\n\n```text\nint(\"abc\")\n```\n\n这个函数知道：\n\n> 转换失败。\n\n但 CLI 知道：\n\n> 应该如何告诉用户。\n\n所以有时候：\n\n```text\n低层\n ↓\n抛出异常\n\n高层\n ↓\n决定如何展示\n```\n\n会更合理。\n\n这会是以后：\n\n```text\nHTTP Client\n ↓\nService\n ↓\nAPI\n```\n\n异常设计的重要基础。\n\n---\n\n# 34. 自定义异常\n\n现在假设：\n\n> AI CLI Assistant 有一个业务规则：消息不能为空。\n\n我们可以：\n\n```python\ndef add_message(messages, role, content):\n    if not content.strip():\n        raise ValueError(\"消息不能为空\")\n\n    messages.append(\n        {\n            \"role\": role,\n            \"content\": content\n        }\n    )\n```\n\n这里：\n\n```python\ncontent.strip()\n```\n\n暂时先理解成：\n\n> 去除文本首尾空白。\n\n如果用户输入：\n\n```text\n\"   \"\n```\n\n那么：\n\n```python\ncontent.strip()\n```\n\n得到：\n\n```text\n\"\"\n```\n\n于是：\n\n```python\nif not content.strip():\n```\n\n成立。\n\n然后：\n\n```python\nraise ValueError(\"消息不能为空\")\n```\n\n---\n\n# 35. 这就是输入校验\n\n现在数据流：\n\n```text\n用户输入\n ↓\nadd_message()\n ↓\n校验\n ↓\n是否合法？\n ├── 是 → 保存\n └── 否 → raise\n```\n\n这就是：\n\n# Validation【校验】\n\n这是所有 Web API、AI API 都非常重要的能力。\n\n---\n\n# 36. 完整的消息添加函数\n\n```python\ndef add_message(messages, role, content):\n    if not content.strip():\n        raise ValueError(\"消息不能为空\")\n\n    message = {\n        \"role\": role,\n        \"content\": content\n    }\n\n    messages.append(message)\n```\n\n主程序：\n\n```python\ntry:\n    add_message(\n        messages,\n        \"user\",\n        user_input\n    )\nexcept ValueError as error:\n    print(f\"AI: 输入错误：{error}\")\n    continue\n```\n\n现在：\n\n```text\nYou:\n```\n\n如果只输入空格：\n\n```text\nAI: 输入错误：消息不能为空\n```\n\n程序继续。\n\n---\n\n# 37. 这一次我们把异常处理放到了正确位置\n\n现在架构：\n\n```text\nmain.py\n  │\n  │ 调用\n  ↓\nconversation.py\n  │\n  │ 数据校验失败\n  ↓\nraise ValueError\n  │\n  │ 返回\n  ↓\nmain.py\n  │\n  ↓\n友好提示\n```\n\n联系描述：\n\n> `conversation.py` 负责判断消息是否满足自己的数据规则，因此它在发现空消息时抛出 `ValueError`；`main.py` 作为用户交互层，捕获这个异常并把技术错误转换成用户能够理解的提示。这样底层负责发现问题，上层负责决定如何向用户呈现问题。\n\n这就是比较基础但非常重要的分层思想。\n\n---\n\n# 38. 最终 Project 01 v0.6\n\n我们的项目现在变成：\n\n```text\n01-python-ai-cli/\n│\n├── README.md\n│\n└── src/\n    └── ai_cli/\n        ├── __init__.py\n        ├── main.py\n        ├── config.py\n        ├── conversation.py\n        ├── assistant.py\n        └── formatter.py\n```\n\n能力：\n\n```text\nv0.1\n输入输出\n\nv0.2\nList / Dict / JSON / Messages\n\nv0.3\nCondition / Loop\n\nv0.4\nFunction\n\nv0.5\nModule / Package\n\nv0.6\nException / Validation\n```\n\n---\n\n# 39. 一个简化版完整示例\n\n`conversation.py`：\n\n```python\ndef add_message(messages, role, content):\n    if not content.strip():\n        raise ValueError(\"消息不能为空\")\n\n    messages.append(\n        {\n            \"role\": role,\n            \"content\": content\n        }\n    )\n\n\ndef clear_history(messages):\n    messages.clear()\n\n\ndef get_message_count(messages):\n    return len(messages)\n\n\ndef show_history(messages):\n    print(\"\\n========== Conversation ==========\")\n\n    if not messages:\n        print(\"暂无消息。\")\n    else:\n        for message in messages:\n            print(\n                f\"{message['role']}: \"\n                f\"{message['content']}\"\n            )\n\n    print(\"===================================\")\n```\n\n`assistant.py`：\n\n```python\ndef generate_mock_response(user_input):\n    if user_input == \"error\":\n        raise RuntimeError(\"模拟 Assistant 服务异常\")\n\n    return f\"我收到你的问题了：{user_input}\"\n```\n\n`main.py`：\n\n```python\nfrom assistant import generate_mock_response\nfrom conversation import (\n    add_message,\n    clear_history,\n    get_message_count,\n    show_history,\n)\n\n\ndef main():\n    messages = []\n\n    print(\"AI Engineer CLI Assistant\")\n\n    while True:\n        user_input = input(\"\\nYou: \")\n\n        if user_input == \"/exit\":\n            print(\"AI: 再见！\")\n            break\n\n        if user_input == \"/history\":\n            show_history(messages)\n            continue\n\n        if user_input == \"/clear\":\n            clear_history(messages)\n            print(\"AI: 聊天记录已清空。\")\n            continue\n\n        if user_input == \"/size\":\n            print(\n                f\"AI: 当前共有 \"\n                f\"{get_message_count(messages)} 条消息。\"\n            )\n            continue\n\n        try:\n            add_message(\n                messages,\n                \"user\",\n                user_input\n            )\n\n            answer = generate_mock_response(\n                user_input\n            )\n\n            add_message(\n                messages,\n                \"assistant\",\n                answer\n            )\n\n            print(f\"AI: {answer}\")\n\n        except ValueError as error:\n            print(f\"AI: 输入错误：{error}\")\n\n        except RuntimeError as error:\n            print(f\"AI: Assistant 执行失败：{error}\")\n\n\nif __name__ == \"__main__\":\n    main()\n```\n\n注意：\n\n> 这里故意没有把所有 Exception 都 `except Exception`，因为现在我们希望你理解**不同异常对应不同处理逻辑**。\n\n---\n\n# 40. 为什么 AI 工程特别重视异常？\n\n以后真正调用模型：\n\n```text\nPython\n ↓\nHTTP Client\n ↓\nLLM API\n```\n\n可能遇到：\n\n```text\n认证失败\n ↓\nAuthentication Error\n\n请求超时\n ↓\nTimeout\n\n服务限流\n ↓\nRate Limit\n\n服务器异常\n ↓\nServer Error\n\nJSON 解析失败\n ↓\nJSON Error\n\n模型不存在\n ↓\nModel Error\n```\n\n所以未来会出现：\n\n```text\nRetry【重试】\nTimeout【超时】\nFallback【降级 / 备用】\nCircuit Breaker【熔断】\nLogging【日志】\nMonitoring【监控】\n```\n\n但这些还不是今天的内容。\n\n今天只需要掌握：\n\n> **错误不能假装不存在。程序必须设计错误路径。**\n\n---\n\n# 41. 本章知识地图\n\n```text\n                    AI CLI Assistant\n                           │\n                           ↓\n                        用户输入\n                           │\n                           ↓\n                       Validation\n                           │\n                 ┌─────────┴─────────┐\n                 ↓                   ↓\n                成功                 失败\n                 │                   │\n                 ↓                   ↓\n             正常处理             raise Exception\n                 │                   │\n                 ↓                   ↓\n             返回结果             except 捕获\n                                     │\n                                     ↓\n                                 用户提示\n                                     │\n                                     ↓\n                                  继续运行\n```\n\n另外：\n\n```text\ntry\n ↓\n尝试执行\n\nexcept\n ↓\n错误处理\n\nelse\n ↓\n没有异常时执行\n\nfinally\n ↓\n无论如何执行\n\nraise\n ↓\n主动抛出异常\n```\n\n---\n\n# 42. 本章最重要的区别\n\n## `try`\n\n> 我准备执行一段可能出错的代码。\n\n## `except`\n\n> 如果发生指定异常，我知道怎么处理。\n\n## `else`\n\n> 如果没有发生异常，执行这里。\n\n## `finally`\n\n> 无论结果如何，执行这里。\n\n## `raise`\n\n> 我认为这里发生了一个异常，主动告诉 Python。\n\n---\n\n# 43. 主动回忆\n\n不要看正文回答。\n\n### Q1\n\n为什么：\n\n```python\nint(\"abc\")\n```\n\n会触发 `ValueError`？\n\n---\n\n### Q2\n\n为什么不建议在真实项目里大量使用：\n\n```python\nexcept:\n```\n\n---\n\n### Q3\n\n解释：\n\n```python\ntry:\n    ...\nexcept ValueError:\n    ...\n```\n\n的执行流程。\n\n---\n\n### Q4\n\n什么时候应该使用 `raise`？\n\n结合我们的：\n\n```text\n消息不能为空\n```\n\n这个例子解释。\n\n---\n\n### Q5\n\n为什么：\n\n```python\ntry:\n    age = int(input(\"年龄：\"))\nexcept ValueError:\n    ...\n```\n\n比：\n\n```python\ntry:\n    整个 main.py 几十行代码\nexcept:\n    ...\n```\n\n更合理？\n\n---\n\n### Q6\n\n我们的 `conversation.py` 为什么可以 `raise ValueError`，而 `main.py` 负责把它转换成用户提示？\n\n请结合模块职责回答。\n\n---\n\n### Q7\n\n如果：\n\n```python\ndef generate_mock_response(user_input):\n    raise RuntimeError(\"模型服务异常\")\n```\n\n那么：\n\n```python\ntry:\n    answer = generate_mock_response(user_input)\nexcept RuntimeError:\n    ...\n```\n\n为什么程序不会直接崩溃？\n\n---\n\n# 44. 实战挑战\n\n这次不要直接复制最终代码。\n\n## Challenge 1：安全整数输入\n\n写：\n\n```python\ndef read_integer(prompt):\n    ...\n```\n\n要求：\n\n```text\n用户输入 29\n→ 返回 29\n\n用户输入 abc\n→ 提示错误\n→ 不让程序崩溃\n```\n\n---\n\n## Challenge 2：消息不能为空\n\n修改：\n\n```text\nadd_message()\n```\n\n要求：\n\n```text\n输入：\n\"\"\n\n或者：\n\n\"   \"\n```\n\n都抛出：\n\n```text\nValueError\n```\n\n提示：\n\n```text\n消息不能为空\n```\n\n---\n\n## Challenge 3：模拟 LLM 故障\n\n修改：\n\n```python\ngenerate_mock_response()\n```\n\n让：\n\n```text\n输入：\nerror\n```\n\n主动：\n\n```python\nraise RuntimeError(...)\n```\n\n然后在 `main.py` 中捕获。\n\n---\n\n# 45. Challenge 4：同时处理两种错误\n\n要求：\n\n```text\n用户输入空消息\n→ ValueError\n\nAssistant 模拟故障\n→ RuntimeError\n```\n\n分别输出：\n\n```text\n输入错误：\nAssistant 执行失败：\n```\n\n而不是全部显示：\n\n```text\n发生错误\n```\n\n---\n\n# 46. 本章完成标准\n\n### Level 1\n\n知道 Exception 是什么。\n\n### Level 2\n\n会使用：\n\n```text\ntry\nexcept\n```\n\n### Level 3\n\n知道：\n\n```text\nValueError\nRuntimeError\n```\n\n分别可以代表什么问题。\n\n### Level 4\n\n会使用：\n\n```python\nraise\n```\n\n主动表达业务错误。\n\n### Level 5\n\n能让 AI CLI Assistant：\n\n> 出现输入错误后继续运行，而不是直接崩溃。\n\n### Level 6\n\n能够把：\n\n```text\n底层异常\n```\n\n转换成：\n\n```text\n用户可理解的错误信息\n```\n\n### Level 7\n\n理解：\n\n> **异常处理不是“把错误藏起来”，而是让程序明确知道错误发生在哪里、应该由谁处理、处理之后程序应该怎么继续。**\n\n---\n\n# 47. Project 01 最新进度\n\n```text\nProject 01 — Python AI CLI Assistant\n\nv0.1  输入 / 输出                  ✅\nv0.2  List / Dict / JSON           ✅\nv0.3  Condition / Loop             ✅\nv0.4  Function                     ✅\nv0.5  Module / Package             ✅\nv0.6  Exception / Validation       🔄\nv0.7  File / JSON Persistence      ⬜\nv0.8  venv / pip / Environment     ⬜\nv0.9  HTTP / API                   ⬜\nv1.0  Real LLM CLI Assistant       ⬜\n```\n\n---\n\n# 48. 下一章为什么学习 File / JSON？\n\n现在我们已经可以：\n\n```text\n保存消息到内存\n```\n\n但程序关闭：\n\n```text\nmessages\n ↓\n消失\n```\n\n这显然不行。\n\n于是下一章需求自然出现：\n\n> **我要让 AI CLI Assistant 重启以后还能找回历史聊天。**\n\n于是进入：\n\n# Lesson 07 — File / JSON：让 AI CLI Assistant 记住历史\n\n我们会继续这个项目：\n\n```text\nmessages\n ↓\njson.dump()\n ↓\nmessages.json\n ↓\n程序关闭\n\n再次启动\n ↓\nmessages.json\n ↓\njson.load()\n ↓\n恢复历史\n```\n\n然后你会第一次真正理解：\n\n```text\nMemory【内存中的数据】\nVS\nPersistence【持久化】\n```\n\n并且继续把：\n\n```text\n文件\nJSON\n异常处理\n函数\n模块\n```\n\n组合在一起。\n\n---\n\n# 49. 本章一句话总结\n\n> **Exception Handling【异常处理】不是为了让程序“看起来不报错”，而是让程序能够识别异常、区分异常、在合适的位置处理异常，并在发生问题后以可控的方式继续运行。对于 AI CLI Assistant 来说，这一步是从“能运行的脚本”走向“可靠应用”的重要一步。**"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -1346,6 +1504,8 @@ JSON
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -1355,6 +1515,173 @@ JSON
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -1368,6 +1695,17 @@ JSON
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -1394,15 +1732,46 @@ JSON
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-81" title="返回《文档总览》第 81 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 07：Rerank【重排序】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-rerank-模型与两种接入方式" class="lvl3">3.1 Rerank 模型与两种接入方式</a><a href="#32-reranker-的接口契约" class="lvl3">3.2 Reranker 的接口契约</a><a href="#33-什么时候值得上-rerank" class="lvl3">3.3 什么时候值得上 rerank</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1rerank-分数与相似度分数混用排序" class="lvl3">坑 1：rerank 分数与相似度分数混用排序</a><a href="#坑-2rerank-之后忘了截断-topn" class="lvl3">坑 2：rerank 之后忘了截断 top_n</a><a href="#坑-3长-chunk-超出-crossencoder-输入上限被静默截断" class="lvl3">坑 3：长 chunk 超出 cross-encoder 输入上限被静默截断</a><a href="#坑-4把-rerank-用在召回之前顺序反了" class="lvl3">坑 4：把 rerank 用在召回之前，顺序反了</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-07rerank重排序">Project 04 — Chapter 07：Rerank【重排序】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/reranker.py</code>（代码落地时实现）</p></blockquote>
 <hr/>
@@ -352,8 +491,27 @@ final = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context</cod
 <hr/>
 <p>上一章：<a href="06-similarity-search.html">06-similarity-search.md</a> —— 相似度判断不了「能不能回答」，本章用 cross-encoder 让 query 和文档真正见了一面。</p>
 <p>下一章：<a href="08-context-assembly.html">08-context-assembly.md</a> —— 精排出的 5 条好材料，怎么拼成一段模型爱读的上下文。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/07-rerank.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/07-rerank.md", "name": "07-rerank.md", "text": "# Project 04 — Chapter 07：Rerank【重排序】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/reranker.py`（代码落地时实现）\n\n---\n\n## 1. 本章要解决什么问题\n\nChapter 06 的结尾留了一个尖锐的问题：向量检索的相似度只衡量「语义像不像」，判断不了「能不能回答」。导致的结果是——top-k 里**真正的答案经常排在第 3、第 5 名**，而第 1、2 名是「语义很像但答非所问」的段落。生成模型读 context 是有位置偏好的（开头和结尾的内容更被重视，中间容易被忽略），答案排在第 5 名，效果就打折。\n\n有没有办法把那 k 条候选**重新排一次序**，让真正的答案浮到最上面？有，这就是 rerank（重排序）。它不是靠调相似度公式，而是换一个**更强但更慢的模型**，只对少量候选做精细判断。\n\n先破除一个流程误解：\n\n```text\n你以为：  rerank 是在检索之前给所有文档\"打更准的分\"\n实际上：  rerank 永远在召回之后——先粗筛出 20 条，\n          再对这 20 条精排。顺序反了性能直接爆炸（见踩坑 4）\n```\n\n本章目标：\n\n> **理解两阶段检索架构（bi-encoder 粗召回 + cross-encoder 精排），并实现可插拔的 Reranker 抽象。**\n\n---\n\n## 2. 为什么需要这个知识\n\n核心是理解两种架构的根本差异，以及由此换来的「快」与「准」：\n\n**bi-encoder（双塔，Chapter 03 的 embedding 模型就是它）**：query 和 doc 各自独立过一遍编码器，得到两个向量，再算余弦。两座「塔」互不通信。好处是 doc 向量可以**离线批量算好存进向量库**，在线查询只编码一次 query——这就是向量库毫秒级响应的原因。\n\n**cross-encoder（交叉编码）**：把 query 和 doc **拼成一段文本** `[CLS] query [SEP] doc [SEP]` 一起送进模型。每个 query 的 token 都能对每个 doc 的 token 做 attention（注意力交互），模型能判断出「这一段确实在回答这个问题」这种双塔永远看不到的细粒度对应关系。代价是：每对 (query, doc) 都要跑一次完整的前向推理，**无法预计算**——1000 个候选就是 1000 次推理。\n\n```text\n你以为：  既然 cross-encoder 更准，干脆用它检索全部文档\n实际上：  它每对 (query, doc) 都要一次前向推理，没法预计算。\n          10 万文档 × 每秒几十对 = 用户等几分钟\n          所以只能用它精排少量候选\n```\n\n于是有了两阶段架构——**Java 里这就是「先 `LIMIT 20` 粗筛再精确 join」的查询优化**，或「一级缓存批量粗筛 + 二级缓存逐条精确查」的组合：\n\n```text\n用户 query\n  ↓ bi-encoder 粗召回：快（毫秒级），从全库捞 20 条（宁多勿漏）\n  ↓ cross-encoder 精排：慢（几百毫秒），只对这 20 条逐对打分\n  ↓ 取 top_n（如 5）交给 Chapter 08 拼 context\n```\n\n一句话：**召回阶段用快模型保证不漏，精排阶段用准模型保证排序对**。两阶段的预算分配（20 → 5）见 3.3。\n\n---\n\n## 3. 核心概念\n\n### 3.1 Rerank 模型与两种接入方式\n\n常用的 rerank 模型是 `bge-reranker-v2-m3`（BAAI 出品，多语言、轻量，和 Chapter 03 用过的 bge 系列 embedding 是一家）。接入方式两种：\n\n| | API 方式（SiliconFlow / Jina / Cohere rerank 接口） | 本地方式（sentence-transformers `CrossEncoder`） |\n|---|---|---|\n| 部署成本 | 零（HTTP 调用） | 需下载模型 + 本机推理资源 |\n| 延迟 | 网络往返 + 服务端推理 | 无网络开销，但受本机算力限制 |\n| 费用 | 按 token / 按次计费 | 免费 |\n| 教学价值 | 学真实生产接口契约 | 能看到 cross-encoder 的实际输出形态 |\n| 依赖 | `httpx` | `sentence-transformers` + torch |\n\n本项目两种都实现，用抽象基类统一契约；本地方式作为可选依赖（机器跑不动 torch 时能整体跳过）。\n\n### 3.2 Reranker 的接口契约\n\n延续 Chapter 03/04 的 ABC（抽象基类）+ Fake 模式：\n\n```python\nclass BaseReranker(ABC):\n    @abstractmethod\n    def rerank(self, query: str, chunks: list[ScoredChunk], top_n: int = 5) -> list[ScoredChunk]:\n        \"\"\"按 query 相关性重新排序，返回前 top_n 条（rerank_score 覆写 chunk.score）\"\"\"\n```\n\n三个实现：\n\n```python\n@dataclass\nclass SiliconFlowReranker(BaseReranker):\n    \"\"\"HTTP API 精排。bge-reranker-v2-m3 走 SiliconFlow rerank 接口\"\"\"\n    api_key: str\n    model: str = \"BAAI/bge-reranker-v2-m3\"\n    base_url: str = \"https://api.siliconflow.cn/v1/rerank\"\n\n    def rerank(self, query, chunks, top_n=5) -> list[ScoredChunk]:\n        if not chunks:\n            return []\n        resp = httpx.post(\n            self.base_url,\n            headers={\"Authorization\": f\"Bearer {self.api_key}\"},\n            json={\n                \"model\": self.model,\n                \"query\": query,\n                \"documents\": [c.text for c in chunks],   # 只送文本，长度上限见踩坑 3\n                \"top_n\": top_n,\n            },\n            timeout=30,\n        )\n        resp.raise_for_status()\n        results = resp.json()[\"results\"]          # [{\"index\": 3, \"relevance_score\": 0.91}, ...]\n        out = []\n        for r in results:                          # API 已按分数降序返回\n            chunk = chunks[r[\"index\"]]\n            chunk.score = float(r[\"relevance_score\"])\n            out.append(chunk)\n        return out\n\n\n@dataclass\nclass NoopReranker(BaseReranker):\n    \"\"\"直通实现：原样返回前 top_n 条。测试 / 无 rerank 资源时使用。\n\n    Java 类比：NoOp 实现模式——接口不变，行为为空，保证调用方代码统一。\n    \"\"\"\n    def rerank(self, query, chunks, top_n=5) -> list[ScoredChunk]:\n        return chunks[:top_n]\n```\n\n`NoopReranker` 的意义和 Chapter 03 的 `FakeClient` 一致：**让 pipeline 代码不感知 rerank 有没有真的发生**，单测里塞一个 Noop 就能把检索逻辑测完整，不需要网络和模型。本地 `CrossEncoder` 版本落地时按同样契约实现（`CrossEncoder(model_name).score([(query, c.text) for c in chunks])` 得到分数列表，再排序截断），此处不展开。\n\n### 3.3 什么时候值得上 rerank\n\nrerank 是拿**延迟**换**质量**，值不值看场景：\n\n| 方案 | 召回 | 精排 | 典型端到端延迟（粗估） | 适用 |\n|------|------|------|----------------------|------|\n| 纯向量 top-5 | 全库 → 5 | 无 | 几十~几百 ms | 文档量小、对质量要求一般 |\n| 两阶段（召回 20 → 精排 5） | 全库 → 20 | 20 次推理 | +数百 ms（API）/ 更久（CPU 本地） | **文档量千级以上、答案质量优先** |\n| 精排全部文档 | — | 上万次推理 | 分钟级 ❌ | 永远不要 |\n\n经验法则：\n\n- 文档量 < 几百条：embedding 质量好时，rerank 提升有限，先别加；\n- 文档量千级~万级：**性价比最高区间**，召回 20 条几乎不漏答案，精排只需 20 次推理；\n- 在线客服等延迟敏感场景：精排候选降到 10、或换更小的 rerank 模型，做延迟预算的取舍。\n\n延迟的账要这么算：向量库搜索是「一次向量比较 × 全库」（有索引加速），rerank 是「一次完整 Transformer 前向 × 候选数」——后者单次成本高两个数量级，所以候选数必须严格控制，这就是「先粗召回 k=20 再精排」的由来（Chapter 05 的 `fetch_k` 参数在这里兑现价值）。\n\n---\n\n![真实运行：向量粗召回 top-5，精排重打分取 top-2，粗排第 3 名被提到第 2](../assets/term-rerank.png)\n\n![真实运行：精排前后名次对照（粗排第 3 名→第 2 名）；NoopReranker 只截断不改分](../assets/term-rerank-compare.png)\n\n## 4. 动手实现（设计稿）\n\n> 以下代码将在 `src/rag/reranker.py` 落地时实现，这里先当设计稿读。目标：pipeline 侧一行切换「有/无 rerank」。\n\n```python\n\"\"\"src/rag/reranker.py — 重排序抽象：BaseReranker + API 实现 + Noop 直通\"\"\"\nfrom __future__ import annotations\n\nfrom abc import ABC, abstractmethod\nfrom dataclasses import dataclass\n\nimport httpx\n\nfrom rag.vector_store import ScoredChunk\n\n\nclass BaseReranker(ABC):\n    \"\"\"rerank 契约：输入 query + 候选 chunks，输出按相关性降序的前 top_n 条。\n\n    实现纪律：① 必须截断到 top_n；② 分数覆写进 chunk.score；\n    ③ 不修改传入列表的顺序（返回新列表）。\n    \"\"\"\n\n    @abstractmethod\n    def rerank(\n        self, query: str, chunks: list[ScoredChunk], top_n: int = 5\n    ) -> list[ScoredChunk]: ...\n\n\n@dataclass\nclass SiliconFlowReranker(BaseReranker):\n    api_key: str\n    model: str = \"BAAI/bge-reranker-v2-m3\"\n    base_url: str = \"https://api.siliconflow.cn/v1/rerank\"\n    max_doc_chars: int = 4000   # 超过 cross-encoder 输入上限会被服务端截断，先主动控住\n\n    def rerank(self, query, chunks, top_n=5) -> list[ScoredChunk]:\n        if not chunks:\n            return []\n        top_n = min(top_n, len(chunks))\n        resp = httpx.post(\n            self.base_url,\n            headers={\"Authorization\": f\"Bearer {self.api_key}\"},\n            json={\n                \"model\": self.model,\n                \"query\": query,\n                \"documents\": [c.text[: self.max_doc_chars] for c in chunks],\n                \"top_n\": top_n,\n            },\n            timeout=30,\n        )\n        resp.raise_for_status()\n        out: list[ScoredChunk] = []\n        for r in resp.json()[\"results\"]:\n            chunk = chunks[r[\"index\"]]\n            chunk.score = float(r[\"relevance_score\"])   # rerank 分数语义见踩坑 1\n            out.append(chunk)\n        return out[:top_n]      # 双保险：即使 API 忽略 top_n 也截断\n\n\n@dataclass\nclass NoopReranker(BaseReranker):\n    \"\"\"测试与降级用：跳过精排，保持 chunk 原有顺序取前 top_n\"\"\"\n\n    def rerank(self, query, chunks, top_n=5) -> list[ScoredChunk]:\n        return chunks[:top_n]\n```\n\npipeline 侧的接入方式（Chapter 09 完整实现）：\n\n```python\nreranker: BaseReranker = (\n    SiliconFlowReranker(api_key=settings.api_key)\n    if settings.enable_rerank\n    else NoopReranker()\n)\nhits = retriever.retrieve(query, top_k=20)   # 粗召回，故意取大 k\nfinal = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context\n```\n\n有 rerank 和没 rerank，pipeline 代码**一个字都不用改**——只是 `BaseReranker` 换了个实现。这就是依赖倒置：pipeline 依赖抽象，不依赖具体精排服务。\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：rerank 分数与相似度分数混用排序\n\n**现象**：把向量检索的余弦分数（0~1）和 rerank 的 relevance_score 放进同一个列表排序，或者用「rerank 分数 > 0.5 就保留」这种照搬相似度的阈值，结果完全不可预期。\n\n**原因**：两种分数语义不同。余弦是「语义夹角」，rerank 分数是「该模型对 query-doc 配对的相关性判断」，两者分布完全不一样（bge-reranker 的输出甚至可能是 logit 形态，不一定压在 0~1）。混用等于把摄氏度和华氏度排在一起。\n\n**正确做法**：rerank 之后**以 rerank 分数为准全盘重排**，向量分数仅保留用于日志/调试。阶段之间只传递排名和最终选中的 chunk，不跨阶段比较分数。\n\n### 坑 2：rerank 之后忘了截断 top_n\n\n**现象**：pipeline 直接把 `rerank()` 的返回全部塞进 prompt，chunk 越攒越多，token 消耗翻倍，还把答案稀释在噪音里。\n\n**原因**：部分 rerank 实现的 `top_n` 参数是可选的，不传或 API 忽略时会返回全部候选；调用方想当然以为「rerank 就是帮我选好了」。\n\n**正确做法**：实现侧双保险（`SiliconFlowReranker` 里先 `min(top_n, len(chunks))`、返回前再 `[:top_n]`），调用侧相信契约但契约本身必须兜底。**截断是 rerank 的职责，不是 pipeline 的善后工作。**\n\n### 坑 3：长 chunk 超出 cross-encoder 输入上限被静默截断\n\n**现象**：某些 chunk 长达 8000 字符，rerank 结果里它们无一例外排最后——看起来像「模型判定它们不相关」，实际是输入被截断只送进了前半段，答案在截掉的后半段里。\n\n**原因**：cross-encoder 的输入上限（如 512 或 8192 token）远小于很多 embedding 模型；超长文本被服务端或库静默剪掉，剪掉的恰好可能是答案。\n\n**正确做法**：① 发送前主动截断到安全长度（`max_doc_chars`，且截断前确认 chunking 阶段的块大小与此匹配）；② chunk 里如果带标题/来源等结构性前缀，保证前缀不被截掉；③ 观察「某类长文档永远排不进 top_n」这一异常信号时，先怀疑截断而不是模型能力。\n\n### 坑 4：把 rerank 用在召回之前，顺序反了\n\n**现象**：对全库几万条文档先跑 rerank 再排序，接口从 200ms 劣化到几十秒甚至超时。\n\n**原因**：cross-encoder 无法预计算（每次 query 都要和每条 doc 配对推理），候选数不控制就没有意义。rerank 的定位是「精排少量候选」，不是「更强的检索引擎」。\n\n**正确做法**：固定两阶段顺序——**bi-encoder 粗召回（fetch_k=20）→ cross-encoder 精排（top_n=5）**。rerank 永远只见到几十条候选，见不到全库。\n\n---\n\n## 6. 自检清单\n\n- [ ] 能画出两阶段架构图，并解释 bi-encoder 为什么快、cross-encoder 为什么准\n- [ ] 能说出「无法预计算」这一条如何直接推导出 rerank 必须在召回之后\n- [ ] `BaseReranker` / `SiliconFlowReranker` / `NoopReranker` 三者的职责划分能对上号\n- [ ] 能算一笔延迟账：为什么粗召回 k=20 而不是 k=200\n- [ ] 能说出至少两种「rerank 分数不能与相似度分数混用」的理由\n- [ ] 知道自己项目里 rerank 的开关在哪个配置项、降级路径是什么（NoopReranker）\n\n---\n\n上一章：[06-similarity-search.md](06-similarity-search.md) —— 相似度判断不了「能不能回答」，本章用 cross-encoder 让 query 和文档真正见了一面。\n\n下一章：[08-context-assembly.md](08-context-assembly.md) —— 精排出的 5 条好材料，怎么拼成一段模型爱读的上下文。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -361,6 +519,8 @@ final = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context</cod
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -370,6 +530,173 @@ final = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context</cod
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -383,6 +710,17 @@ final = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context</cod
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -409,15 +747,46 @@ final = reranker.rerank(query, hits, top_n=5)  # 精排留 5 条给 context</cod
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

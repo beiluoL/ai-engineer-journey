@@ -211,13 +211,14 @@ PAGE = """<!DOCTYPE html>
       先从「项目总览」看清全局，再逐章进入理论基础、练手练习、实战项目与发布产物。
       左侧目录可折叠跳转到任意一章，每章底部自动给出上一章 / 下一章。</p>
       <div class="hero-toolbar">
-        <input id="q" type="search" placeholder="过滤章节（可按标题、路径或正文关键词）…"/>
+        <input id="q" type="search" placeholder="过滤章节（可按标题、路径或正文关键词，快捷键 /）…"/>
         <span class="meta" id="counter">共 __TOTAL__ 章</span>
       </div>
       <div class="hero-stats">
         <span><b>__TOTAL__</b> 章</span>
         <span><b>__RENDERED__</b> 篇已渲染</span>
         <span><b>__PORTABLE__</b> 篇带自包含便携版</span>
+        <span>每章可切「阅读 / 源码」，源码可复制、可下载</span>
       </div>
     </section>
 
@@ -225,8 +226,9 @@ PAGE = """<!DOCTYPE html>
 
     <footer class="site-foot">
       <p>ai-engineer-journey · 文档总览由 <code>scripts/gen_doc_index.py</code> 生成，
-      链接指向 <code>publishing/html/docs/</code> 下的渲染页。带<span class="chip-demo">便携版</span>
-      标签的单文件图片已 base64 内嵌，断网也能双击打开。</p>
+      链接指向 <code>publishing/html/docs/</code> 下的渲染页；点「原始 Markdown」
+      会打开该页的源码视图（带行号、可复制、可下载 .md）。
+      带<span class="chip-demo">便携版</span>标签的单文件图片已 base64 内嵌，断网也能双击打开。</p>
       <button class="top-btn" id="topBtn">↑ 回到顶部</button>
     </footer>
   </main>
@@ -359,7 +361,20 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
 .btn.primary:hover{background:#0757b5; color:#fff;}
 .btn.portable{color:#7c3aed; border-color:#e9d5ff; background:#faf5ff;}
 .btn.portable:hover{background:#f3e8ff; color:#6d28d9; border-color:#7c3aed;}
+.btn.copy{font:inherit; font-size:13px; cursor:pointer;}
 .chip-demo{background:#faf5ff; color:#7c3aed; border:1px solid #e9d5ff; border-radius:999px; padding:0 6px;}
+
+/* 轻量提示条（复制反馈） */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:120;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:80vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(27,31,36,.3);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+kbd{background:var(--chip); border:1px solid var(--line); border-bottom-width:2px;
+  border-radius:4px; padding:0 5px; font-size:11.5px; font-family:inherit;}
 
 /* 章节链式导航 */
 .chapter-nav{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; margin-left:58px;}
@@ -422,10 +437,12 @@ JS = """
   var sidebar = document.getElementById('sidebar');
   var current = -1;
 
-  function go(el){
+  function go(el, instant){
     if(!el) return;
     var y = el.getBoundingClientRect().top + window.pageYOffset - 72;
-    window.scrollTo({top: y, behavior:'smooth'});
+    // 深链（从章节页点「返回文档总览」回来）用瞬移：隔着上百张卡做平滑滚动，
+    // 用户要盯着屏幕滑好几秒，体验比直接落位差得多。
+    window.scrollTo({top: y, behavior: instant ? 'instant' : 'smooth'});
     if(sidebar.classList.contains('open')) closeDrawer();
   }
   links.forEach(function(a){
@@ -528,57 +545,125 @@ JS = """
     });
   }
 
-  // 首屏定位：带 #ch-xx 直接滚到该章
+  /* ---------- 复制路径 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.btn.copy'), function(b){
+    b.addEventListener('click', function(){
+      copyText(b.getAttribute('data-path') || '', '已复制路径：' + b.getAttribute('data-path'));
+    });
+  });
+
+  /* ---------- 快捷键：/ 聚焦搜索，Esc 清空 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    if(e.key === '/' && q && document.activeElement !== q){
+      e.preventDefault(); q.focus(); q.select();
+    } else if(e.key === 'Escape' && q && document.activeElement === q){
+      q.value = '';
+      q.dispatchEvent(new Event('input'));
+      q.blur();
+    }
+  });
+
+  // 首屏定位：带 #ch-xx 直接落到该章
   var hash = window.location.hash;
   if(hash.indexOf('#ch-') === 0){
     var el = document.getElementById(hash.slice(1));
-    if(el) setTimeout(function(){ go(el); }, 60);
+    if(el) setTimeout(function(){ go(el, true); }, 60);
   }
+  // 同一页面内改 hash（浏览器前进/后退、或再次点「返回文档总览」）也要落位，
+  // 否则只有首次加载生效，回来的人会停在原地。
+  window.addEventListener('hashchange', function(){
+    var h = window.location.hash;
+    if(h.indexOf('#ch-') !== 0) return;
+    var el = document.getElementById(h.slice(1));
+    if(el) go(el, true);
+  });
 })();
 """
 
 
-def build_html(data):
-    total = total_rendered = total_portable = 0
-    chapters = []      # [(idx, theme, sub_name, rel, title, href, href_md, href_portable)]
-    groups_toc = []    # [(theme, name, [(idx, title)])]
-    seen_theme = None
+def ordered_docs(data=None):
+    """全仓库文档的**唯一**排序口径：主题 → 子分组 → 文件名，编号第 1…N 章。
 
+    索引页、渲染页的「返回总览」回链、自校验都从这里取编号。以前这段排序逻辑
+    只长在 build_html 里，渲染页想拿章节号就得再抄一份——抄一份就会漂移一份。
+    """
+    data = collect() if data is None else data
+    out = []
     theme_order = [t for t, _, _ in THEMES] + (["__other__"] if "__other__" in data else [])
-    theme_meta = {t: (name, desc) for t, name, desc in THEMES}
-    theme_meta.setdefault("__other__", ("其他", "未分类文档"))
-
     for theme in theme_order:
         groups = data.get(theme) or {}
-        theme_items = []
         for sk in sorted(groups.keys(), key=natural_key):
             for _, fn, rel, title, sub_name in sorted(groups[sk], key=lambda x: x[0]):
-                total += 1
                 rel_fwd = rel.replace(os.sep, "/")
-                rendered = rendered_html_path(rel_fwd)
-                port = PORTABLE.get(rel_fwd)
-                if rendered:
-                    total_rendered += 1
-                if port:
-                    total_portable += 1
-                chapters.append({
-                    "idx": total, "theme": theme, "sub": sub_name, "rel": rel_fwd,
-                    "title": title, "rendered": rendered, "portable": port,
+                out.append({
+                    "theme": theme, "sub": sub_name, "rel": rel_fwd, "title": title,
+                    "rendered": rendered_html_path(rel_fwd),
+                    "portable": PORTABLE.get(rel_fwd),
                 })
-                theme_items.append((total, title))
-        if theme_items:
-            groups_toc.append((theme, theme_meta[theme][0], theme_items))
+    for i, c in enumerate(out, 1):
+        c["idx"] = i
+    return out
 
-    # ---- 左侧目录大纲 ----
+
+def chapter_map():
+    """rel（正斜杠，含 .md 后缀）→ 章节号。供渲染页回链 index.html#ch-N。"""
+    return {c["rel"]: c["idx"] for c in ordered_docs()}
+
+
+def build_html(data):
+    chapters = ordered_docs(data)
+    total = len(chapters)
+    total_rendered = sum(1 for c in chapters if c["rendered"])
+    total_portable = sum(1 for c in chapters if c["portable"])
+
+    # ---- 左侧目录大纲：按主题分组，分组顺序 = 章节流里主题首次出现的顺序 ----
+    theme_name = {t: n for t, n, _ in THEMES}
+    theme_name.setdefault("__other__", "其他")
+    groups_toc, group_idx = [], {}
+    for c in chapters:
+        g = group_idx.get(c["theme"])
+        if g is None:
+            g = {"name": theme_name.get(c["theme"], c["theme"]), "items": []}
+            group_idx[c["theme"]] = g
+            groups_toc.append(g)
+        g["items"].append((c["idx"], c["title"]))
+
     toc_html = []
-    for theme, name, items in groups_toc:
+    for g in groups_toc:
         lis = "\n".join(
             f'        <li><a class="toc-link" href="#ch-{i}">'
             f'<span class="tn">{i:02d}</span>{html.escape(t)}</a></li>'
-            for i, t in items)
+            for i, t in g["items"])
         toc_html.append(
             f'    <details class="toc-group" open>\n'
-            f'      <summary>{html.escape(name)} <span class="cnt">{len(items)} 章</span></summary>\n'
+            f'      <summary>{html.escape(g["name"])} '
+            f'<span class="cnt">{len(g["items"])} 章</span></summary>\n'
             f'      <ul class="toc-list">\n{lis}\n      </ul>\n'
             f'    </details>')
     toc = "\n".join(toc_html)
@@ -596,23 +681,32 @@ def build_html(data):
         if c["rendered"]:
             href = os.path.relpath(c["rendered"], OUT_DIR).replace(os.sep, "/")
         else:
-            href = rel
+            href = os.path.join("..", "..", rel).replace(os.sep, "/")
         href = urllib.parse.quote(href, safe="/")
-        href_md = urllib.parse.quote(rel, safe="/")
+        # 「原始 Markdown」不再是死链：指向渲染页的源码视图（同一页面里的阅读/源码切换）。
+        # 以前这里给的是 `rel`——那是相对仓库根的路径，从 publishing/html/ 打开必然 404。
+        href_src = href + "#src" if c["rendered"] else None
         href_portable = None
         if c["portable"]:
             href_portable = urllib.parse.quote(
                 os.path.relpath(os.path.join(DOCS_DIR, c["portable"]), OUT_DIR).replace(os.sep, "/"),
                 safe="/")
 
-        theme_name = dict((t, n) for t, n, _ in THEMES).get(c["theme"], c["theme"])
+        theme_disp = theme_name.get(c["theme"], c["theme"])
         ex = excerpt(os.path.join(ROOT, rel))
-        actions = [f'<a class="btn primary" href="{href}" target="_blank" rel="noopener">打开渲染页</a>',
-                   f'<a class="btn" href="{href_md}" target="_blank" rel="noopener">原始 .md</a>']
+        actions = [f'<a class="btn primary" href="{href}" target="_blank" rel="noopener">打开渲染页</a>']
+        if href_src:
+            actions.append(
+                f'<a class="btn" href="{href_src}" target="_blank" rel="noopener" '
+                f'title="在页面内查看这篇文档的原始 Markdown 源码（带行号、可复制、可下载）">'
+                f'原始 Markdown</a>')
         if href_portable:
             actions.append(
                 f'<a class="btn portable" href="{href_portable}" target="_blank" rel="noopener">'
                 f'便携版（自包含）</a>')
+        actions.append(
+            f'<button class="btn copy" type="button" data-path="{html.escape(rel)}" '
+            f'title="复制该文档在仓库里的相对路径">⧉ 路径</button>')
         if not c["rendered"]:
             actions.insert(0, '<span class="btn" style="color:#656d76;cursor:default">尚未渲染</span>')
 
@@ -644,7 +738,7 @@ def build_html(data):
             f'        <div class="ch-hd">\n'
             f'          <h2><a href="{href}" target="_blank" rel="noopener">{html.escape(c["title"])}</a></h2>\n'
             f'          <p class="ch-meta"><span class="path">{html.escape(rel)}</span>'
-            f'<span>{html.escape(theme_name)} · {html.escape(c["sub"])}</span></p>\n'
+            f'<span>{html.escape(theme_disp)} · {html.escape(c["sub"])}</span></p>\n'
             f'        </div>\n'
             f'      </div>\n'
             + (f'      <p class="ch-excerpt">{ex}</p>\n' if ex else "")
@@ -665,14 +759,22 @@ def build_html(data):
 
 
 def verify_index():
-    """索引自校验：每条文档链接与便携版链接指向的文件必须真实存在。"""
+    """索引自校验：每条文档链接、源码视图链接、便携版链接都必须真实存在。
+
+    漏掉「原始 .md」这一类链接的教训（2026-10-01）：之前只校验了「打开渲染页」和
+    「便携版」两个 class 的 href，于是 209 条原始 md 链接全部 404 却一路绿灯——
+    校验覆盖不到的地方，就等于没有校验。
+    """
     bad, total = [], 0
     with open(OUT_FILE, encoding="utf-8") as f:
         text = f.read()
-    for tag in ('class="btn primary" href="', 'class="btn portable" href="'):
-        for u in re.findall(re.escape(tag) + r'([^"]+)"', text):
+    pats = [r'class="btn primary" href="([^"]+)"',
+            r'class="btn portable" href="([^"]+)"',
+            r'class="btn" href="([^"]+)" target="_blank" rel="noopener" title="在页面内查看']
+    for pat in pats:
+        for u in re.findall(pat, text):
             total += 1
-            local = urllib.parse.unquote(u).replace("/", os.sep)
+            local = urllib.parse.unquote(u.split("#")[0]).replace("/", os.sep)
             if not os.path.exists(os.path.join(OUT_DIR, local)):
                 bad.append(u)
     return total, bad

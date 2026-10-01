@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-145" title="返回《文档总览》第 145 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 06 — Training：过拟合是被量出来的，不是猜的</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why训练里三个看着对其实错的地方" class="lvl2">1. Why：训练里三个&amp;quot;看着对、其实错&amp;quot;的地方</a><a href="#2-design一条完整的训练闭环" class="lvl2">2. Design：一条完整的训练闭环</a><a href="#3-realrun-evidence来自-demosoutdemo06trainingterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_06_training_terminal.txt）</a><a href="#31-训练配置" class="lvl3">3.1 训练配置</a><a href="#32-train-与-val-的分道扬镳" class="lvl3">3.2 train 与 val 的分道扬镳</a><a href="#33-早停与回滚" class="lvl3">3.3 早停与回滚</a><a href="#34-学习率调度与梯度裁剪" class="lvl3">3.4 学习率调度与梯度裁剪</a><a href="#35-检查点存盘-改坏-读回" class="lvl3">3.5 检查点：存盘 → 改坏 → 读回</a><a href="#36-跨进程可复现-断点续训" class="lvl3">3.6 跨进程可复现 + 断点续训</a><a href="#4-踩坑与反直觉发现" class="lvl2">4. 踩坑与反直觉发现</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-06-training过拟合是被量出来的不是猜的">Milestone 06 — Training：过拟合是被量出来的，不是猜的</h1>
 <p>M05 证明了这个结构是<strong>可用的</strong>（因果正确、确定性成立）。这一章让它<strong>真的学起来</strong>，并且回答一个训练里最容易自欺的问题：<strong>你交出去的那份权重，是不是&quot;最好&quot;的那份？</strong></p>
 <p>本章的结论有点扎心：train loss 从 7.1547 一路降到 3.6882，看着是个成功故事；但 <strong>val loss 在第 800 步触底后开始回升</strong>。如果不监控验证集，你交付的会是&quot;第 1200 步&quot;而不是&quot;第 800 步&quot;——前者更差。</p>
@@ -266,8 +405,27 @@ loss 是否出现过 nan        False</code></pre>
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/tiny/train.py</code></td><td><code>LMTrainer</code>（<code>train_step</code> / <code>evaluate</code> / <code>lr_at</code> / <code>_snapshot_best</code> / <code>_restore_best</code>）/ <code>evaluate_loss</code> / <code>Checkpoint</code> / <code>save_checkpoint</code> / <code>load_checkpoint</code></td></tr><tr><td><code>src/tiny/model.py</code></td><td><code>build_optimizer</code> / <code>set_seed</code></td></tr><tr><td><code>src/tiny/data.py</code></td><td><code>batch_iter</code>（滑动窗口打包的批次供应）/ <code>pad_batch</code></td></tr><tr><td>P08 <code>src/ft/paths.py</code></td><td><code>enable_deterministic_autograd()</code>（<code>_prev</code> set → 有序 list，跨进程可复现的前提）</td></tr><tr><td><code>demos/demo_06_training.py</code></td><td>7 节：配置 / 真训 / 曲线 / 调度与裁剪 / 检查点 / 跨进程 / 断点续训</td></tr><tr><td><code>demos/out/demo_06_training_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/training.svg</code></td><td>train/val 曲线 + 过拟合机制 + 调度/裁剪/检查点三卡</td></tr><tr><td><code>assets/term-06-training.png</code></td><td>真实运行截图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.5 → <strong>v0.6</strong>，训练闭环落地并被逐项验真。实测：train loss <strong>7.1547 → 3.6882</strong>、val <strong>6.2283 → 5.7551（最优，第 800 步）→ 5.8234</strong>；1200 步 ≈ <strong>46.2 遍</strong>（206 训练样本）⇒ 早停触发（patience=4）<strong>回滚到第 800 步</strong>，最优验证困惑度 <strong>315.79</strong>（若取最后一步则为 338.13）；调度 20 步预热到 1e-3、1199 步回到 5e-5；梯度全局范数均值 <strong>2.5506</strong>、<strong>1050/1200 步被裁剪</strong>、全程无 NaN；检查点 28/28 张量读回误差 <strong>0.000e+00</strong>、跨进程重训 <strong>0.000e+00</strong>、断点续训 30 步 <strong>0.000e+00</strong>、落盘前还原最优步 <strong>0.000e+00</strong>；训练速度 46.5 step/s。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/10-tiny-llm-capstone/milestones/06-training.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/10-tiny-llm-capstone/milestones/06-training.md", "name": "06-training.md", "text": "# Milestone 06 — Training：过拟合是被量出来的，不是猜的\n\nM05 证明了这个结构是**可用的**（因果正确、确定性成立）。这一章让它**真的学起来**，并且回答一个训练里最容易自欺的问题：**你交出去的那份权重，是不是\"最好\"的那份？**\n\n本章的结论有点扎心：train loss 从 7.1547 一路降到 3.6882，看着是个成功故事；但 **val loss 在第 800 步触底后开始回升**。如果不监控验证集，你交付的会是\"第 1200 步\"而不是\"第 800 步\"——前者更差。\n\n---\n\n## 1. Why：训练里三个\"看着对、其实错\"的地方\n\n1. **train loss 单调下降 = 过拟合正在发生。** 它不是好消息，是一个警报。唯一能发现它的手段是**每次评估都在验证集上量一遍**——也就是必须有一套独立、未参与训练的数据。\n2. **检查点只存权重是不够的。** Adam 有动量（一阶、二阶），它们携带\"过去梯度方向\"的信息。只恢复权重、把动量清零，等价于让优化器\"失忆\"——续训的前几十步会明显偏离不中断训练。\n3. **\"可复现\"必须跨进程验证。** 同一进程里重跑一遍，往往因为内存地址复用而\"看起来\"一致。真正的判据是**两个独立进程**跑出逐位相同的权重——这正是 P08 那个补丁的来源。\n\n## 2. Design：一条完整的训练闭环\n\n```text\nfor step in range(n_steps):\n    lr = cosine_with_warmup(step)        # 预热 20 步 → 升到 1e-3 → 余弦衰减到 5e-5\n    batch = next(batch_iter(...))        # 滑动窗口打包过的 (x, y, mask)\n    loss = forward + backward(batch)\n    clip_global_norm(grad, max_norm=1.0) # 全局范数超阈就整体缩放\n    optimizer.step()\n    if step % eval_every == 0:\n        val_loss = evaluate(val_examples)\n        if val_loss < best:  snapshot()  # 记住\"最好那一刻\"的权重\n        elif patience_exceeded: break    # 连续 4 次无改善 → 早停\nrestore_best()                           # 关键：回滚到最优步，而不是停在最后一步\n```\n\n三个组件各自解决一个问题：\n\n- **预热 + 余弦调度**：开局梯度大，直接上 `1e-3` 容易震荡，所以先线性升；后期余弦平滑降，避免在最优附近来回跳。\n- **全局范数裁剪**：把所有参数的梯度拼成一个向量，算它的 L2 范数，超阈就整体按比例缩。**\"全局\"是关键**——按单个张量裁会破坏各层之间的相对尺度。\n- **早停 + 回滚**：早停不是\"停下就算完\"，而是**回滚到最优检查点**。停在哪一步和交付哪一份权重，是两件事。\n\n`batch_iter` 用的是 M03 的滑动窗口打包：`y = x` 右移一位、样本间插 `<eos>`、padding 位 `mask=0`。所以每次 `train_step` 拿到的都是 `(B, T)` 的 id 和对应 mask。\n\n![M06 Training：过拟合曲线 + 调度/裁剪/检查点](../assets/training.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_06_training_terminal.txt`）\n\n![M06 真实运行](../assets/term-06-training.png)\n\n### 3.1 训练配置\n\n```text\nbatch_size    8\nn_steps       1200\neval_every    100\npatience      4\noptimizer     adam lr=0.001\nwarmup / min_lr  20 步 / lr×0.05\ngrad_clip     1.0\nseed          0\n```\n\n### 3.2 train 与 val 的分道扬镳\n\n```text\nstep  train_loss  val_loss  val_ppl\n----  ----------  --------  -------\n 100      6.0185    6.2283   506.87\n 200      5.6096    6.0365   418.44\n 300      5.3811    5.9389   379.53\n 400      4.9767    5.9923   400.32\n 500      5.1438    5.8172   336.04\n 600      4.4712    5.8596   350.58\n 700      4.5881    5.7790   323.44\n 800      4.0234    5.7551   315.79   ← 验证最优\n 900      3.9646    5.7610   317.67\n1000      3.8552    5.8022   331.03\n1100      3.6491    5.8138   334.88\n1200      3.6882    5.8234   338.13\ntrain loss 首 → 末    7.1547 → 3.6882\n前 10% 均值 → 后 10% 均值  6.4260 → 3.6980\n验证最优出现在第几步      800\n验证最优 / 最后一步       5.7551 / 5.8234\n```\n\n**两个数字差得越大，过拟合越严重。** train 降了 7.1547 → 3.6882（降幅 3.47），val 只从 6.2283 降到 5.7551（降幅 0.47），然后回升到 5.8234。**第 800 步到第 1200 步这 400 步，train 还在降（4.0234 → 3.6882），但 val 反而涨了（5.7551 → 5.8234）——这段时间模型不是在学语言，是在背语料。**\n\n换句话说：**如果只看 train loss 选检查点，你会交出去一份 PPL 338.13 的模型，而不是 PPL 315.79 的那一份。** 差 7% 的困惑度，纯粹因为\"选错了交付时机\"。\n\n为什么会过拟合得这么快？语料只有 **206 个训练样本**，训 **1200 步 × batch 8 = 9600 次采样**，等于**把同一份数据看了约 46.2 遍**（9600 / 206）。在这个数据量下，230K 参数的模型几遍就能背下来。\n\n### 3.3 早停与回滚\n\n```text\n是否触发早停       True   patience=4\n回滚到最优步       800\n最优验证困惑度      315.79\n训练耗时 / 速度     25.8 s / 46.5 step/s\n```\n\n`patience=4` 意味着\"连续 4 次评估（即 400 步）没有刷新最优就停\"。第 800 步之后，900/1000/1100/1200 四次评估都没能低于 5.7551，早停在第 1200 步触发，然后**回滚到第 800 步**。\n\n**\"早停\"这个词容易误导**：它真正干的事不是\"提前结束训练\"，而是\"**结束训练并把权重退回到最好那一刻**\"。这两件事的差别就是 §3.2 里那 7% 的困惑度。\n\n### 3.4 学习率调度与梯度裁剪\n\n```text\nstep  lr\n----  --------\n   0  0.000050\n   1  0.000100\n  20  0.001000      ← 预热结束，到达峰值\n 600  0.000538      ← 余弦衰减到约一半\n1199  0.000050      ← 回到 min_lr_ratio 下限\n梯度全局范数 均值 / 中位 / 最大   2.5506 / 2.6670 / 6.2911\n被裁剪的步数（> clip）        1050\n裁剪阈值                  1.0\nloss 是否出现过 nan        False\n```\n\n两处值得看：\n\n- **调度确实按预想在跑**：0 → 5e-5、20 步升到 1e-3 峰值、600 步衰减到 5.38e-4（约一半）、1199 步回到 5e-5。**预热是一条 20 步的直线，不是\"第 20 步突然跳上去\"** —— step 0 是 5e-5 而不是 0，因为分母里加了 1 防止除零。\n- **87.5%（1050/1200）的步都被裁剪了。** 全局范数中位数 2.6670，是阈值 1.0 的 2.67 倍。这说明 **clip=1.0 对这个模型偏紧**。但它是\"无害的紧\"——loss 全程无 nan、最终收敛正常。这是个真实的工程取舍：宁可裁得狠一点保稳定，也不为了\"让裁剪率好看\"把阈值调大而冒发散风险。**记录这个数字的意义在于：以后换模型/换优化器时，能一眼看出\"裁剪是不是在过度干预\"。**\n\n### 3.5 检查点：存盘 → 改坏 → 读回\n\n```text\n恢复的张量数          28 / 28\n读回后最大绝对误差       0.000e+00\n检查点体积           5421.6 KB   demo06_probe.npz\n元数据里记录的步数        1200\n是否含优化器状态         True   Adam 的动量也是训练进度的一部分\n```\n\n这个实验的做法是故意破坏性的：**先把 28 个张量全部置 0**，再从检查点读回，看能不能逐位还原。\n\n误差 **0.000e+00**（28/28 全恢复），说明检查点是完整的。**但更关键的是最后一行**：检查点里含优化器状态。§3.6 会证明为什么这行不是可有可无。\n\n体积 5.4 MB——对一个 230,400 参数的模型（约 0.88 MB fp64 权重）来说明显偏大，因为**优化器存了两份同尺寸的动量**（m 和 v），加起来就是三份权重。\n\n### 3.6 跨进程可复现 + 断点续训\n\n```text\n两次独立进程训练的权重最大绝对误差    0.000e+00\n续训 30 步后最大绝对误差          0.000e+00\n落盘前已还原到最优步（逐位误差）      0.000e+00\n```\n\n三条 0.000e+00 各自对应一件事：\n\n1. **跨进程 0**：`Tensor._prev` 如果是 `set`，反向传播里\"先加谁的梯度\"取决于对象地址，两个进程就不一致。P08 把它换成**有序 list** 之后，两个独立进程跑出逐位相同的权重。\n2. **续训 0**：从检查点恢复（权重 + 动量 + 步数）后接着训 30 步，与\"不中断直接训 30 步\"完全一致。**前提是三样一起恢复，并且 batch 顺序也要对齐**（demo 里显式保存/恢复了 `rng.getstate()`）。少恢复动量、或 batch 顺序变了，这个数字就不会是 0。\n3. **落盘前还原 0**：这是本章最容易被忽略的一处工程细节。为了做对照实验，分支 A 在真实模型上**原地**多训了 30 步，模型已经不在第 800 步了。但 `tiny_lm_best.npz` 是给**后续所有章节**复用的——如果带着\"800+30 步\"的权重落盘，M07 的 PPL、M11 的评估就全对不上了。所以落盘前先 `load_checkpoint` 把权重+动量+步数还原到起点，**并且验证还原后逐位相同**（0.000e+00），再写盘。\n\n## 4. 踩坑与反直觉发现\n\n1. **train loss 降得越顺，越该警惕。** 7.1547 → 3.6882 是一条漂亮曲线，但它和\"模型变强\"没有必然关系。**判据只有 val**：同期的 val 只降了 0.47 就开始回升。\n2. **\"早停\"= 停下 + **回滚**。** 只停不回滚，交出去的就是\"最后一步\"（PPL 338.13）而不是\"最好一步\"（PPL 315.79）。**两个动作少一个都是错的。**\n3. **检查点必须含优化器状态，否则续训会有肉眼可见的偏移。** 这不是\"多存了点东西\"，是命门。demo 里 5.4 MB 里有约 3/4 是动量。\n4. **跨进程复现是检验确定性补丁的唯一方法。** 同进程内重跑\"看起来\"一致可能只是地址复用。**必须开两个进程**，这才是 P08 补丁真正的验收方式。\n5. **87.5% 的步被裁剪，模型照样收敛。** \"裁剪率高\"不等于\"配置错了\"——它可能只是阈值保守。**要看的是 loss 有没有发散/NaN**（本次全程 False），而不是裁剪率本身。\n6. **落盘前\"多余的\"那一次还原，是跨章节一致性的保险。** 对照实验污染了内存里的模型，如果直接落盘，后面 5 个章节的数字会集体偏掉。这个坑在写完 demo 后才发现并补上——**凡是 demo 之间共享产物，就必须在写盘前确认内存状态是\"该被共享的那个\"**。\n\n## 5. Conclusion\n\n1. train loss **7.1547 → 3.6882**（前 10% 均值 6.4260 → 后 10% 均值 3.6980）；val **6.2283 → 5.7551（最优，第 800 步）→ 5.8234（回升）**。\n2. **过拟合被量出来了**：语料 206 样本训 1200 步 ≈ **46.2 遍**；第 800→1200 步 train 继续降（4.0234 → 3.6882）而 val 反向上升（5.7551 → 5.8234）。\n3. 早停触发（patience=4），**回滚到第 800 步**，最优验证困惑度 **315.79**。不监控 val 会把 PPL 338.13 当作交付物。\n4. 调度按预期：预热 20 步到峰值 1e-3，600 步衰减到 5.38e-4，1199 步回落到 5e-5。梯度全局范数均值 **2.5506**、**1050/1200 步被裁剪**、全程无 NaN。\n5. 检查点 28/28 张量读回误差 **0.000e+00**，含优化器状态；**跨进程重训误差 0.000e+00**、**断点续训 30 步误差 0.000e+00**、**落盘前还原到最优步误差 0.000e+00**。\n6. 训练速度 46.5 step/s，1200 步耗时 25.8 s。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/tiny/train.py` | `LMTrainer`（`train_step` / `evaluate` / `lr_at` / `_snapshot_best` / `_restore_best`）/ `evaluate_loss` / `Checkpoint` / `save_checkpoint` / `load_checkpoint` |\n| `src/tiny/model.py` | `build_optimizer` / `set_seed` |\n| `src/tiny/data.py` | `batch_iter`（滑动窗口打包的批次供应）/ `pad_batch` |\n| P08 `src/ft/paths.py` | `enable_deterministic_autograd()`（`_prev` set → 有序 list，跨进程可复现的前提） |\n| `demos/demo_06_training.py` | 7 节：配置 / 真训 / 曲线 / 调度与裁剪 / 检查点 / 跨进程 / 断点续训 |\n| `demos/out/demo_06_training_terminal.txt` | 本章所有数字的来源 |\n| `assets/training.svg` | train/val 曲线 + 过拟合机制 + 调度/裁剪/检查点三卡 |\n| `assets/term-06-training.png` | 真实运行截图 |\n\n## 7. Version line\n\nv0.5 → **v0.6**，训练闭环落地并被逐项验真。实测：train loss **7.1547 → 3.6882**、val **6.2283 → 5.7551（最优，第 800 步）→ 5.8234**；1200 步 ≈ **46.2 遍**（206 训练样本）⇒ 早停触发（patience=4）**回滚到第 800 步**，最优验证困惑度 **315.79**（若取最后一步则为 338.13）；调度 20 步预热到 1e-3、1199 步回到 5e-5；梯度全局范数均值 **2.5506**、**1050/1200 步被裁剪**、全程无 NaN；检查点 28/28 张量读回误差 **0.000e+00**、跨进程重训 **0.000e+00**、断点续训 30 步 **0.000e+00**、落盘前还原最优步 **0.000e+00**；训练速度 46.5 step/s。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -275,6 +433,8 @@ loss 是否出现过 nan        False</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -284,6 +444,173 @@ loss 是否出现过 nan        False</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -297,6 +624,17 @@ loss 是否出现过 nan        False</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -323,15 +661,46 @@ loss 是否出现过 nan        False</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

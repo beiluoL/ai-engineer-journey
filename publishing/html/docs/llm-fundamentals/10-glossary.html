@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-10" title="返回《文档总览》第 10 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">10 · 术语表：中英文对照与简明定义</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#a-数据表示与分词" class="lvl2">A · 数据表示与分词</a><a href="#b-模型结构" class="lvl2">B · 模型结构</a><a href="#c-训练与预训练" class="lvl2">C · 训练与预训练</a><a href="#d-微调与参数高效方法" class="lvl2">D · 微调与参数高效方法</a><a href="#e-对齐与安全" class="lvl2">E · 对齐与安全</a><a href="#f-推理与部署" class="lvl2">F · 推理与部署</a><a href="#g-评测与指标" class="lvl2">G · 评测与指标</a><a href="#h-生态与工具" class="lvl2">H · 生态与工具</a><a href="#快速区分最容易混的六组" class="lvl2">快速区分：最容易混的六组</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="10-术语表中英文对照与简明定义">10 · 术语表：中英文对照与简明定义</h1>
 <blockquote><p>按主题分 8 组，每条给出<strong>中文名 · 英文名 · 一句话定义 · 详见章节</strong>。 遇到不认识的词，先在这里定位，再回对应章节看原理。</p></blockquote>
 <hr/>
@@ -198,8 +337,27 @@ td math, th math{font-size:1em;}
 <table><thead><tr><th>一组词</th><th>区别一句话</th></tr></thead><tbody><tr><td>预训练 vs 微调</td><td>预训练学语言（几 T～几十 T token，无标注）；微调学任务（几千～百万条，有标注）</td></tr><tr><td>embedding vs logits</td><td>embedding 在<strong>输入侧</strong>（token→向量）；logits 在<strong>输出侧</strong>（向量→打分）</td></tr><tr><td>LayerNorm vs BatchNorm</td><td>LN 对<strong>每个 token 的特征维</strong>归一化（与 batch 无关）；BN 依赖 batch 统计</td></tr><tr><td>MHA vs GQA vs MQA</td><td>差别只在 <strong>K/V 头数</strong>：各自独立 / 分组共享 / 全部共享</td></tr><tr><td>RLHF vs DPO</td><td>RLHF 要 4 个模型 + 在线 RL；DPO 只要 2 个模型 + 离线偏好对</td></tr><tr><td>量化 vs 蒸馏 vs 剪枝</td><td>降低精度 / 大教小重新训 / 删结构。只有量化不改结构</td></tr></tbody></table>
 <hr/>
 <p class="nav-footer"><a href="09-math-foundations.html">← 上一章：数学基础</a> · <a href="README.html">返回总览</a> · <a href="11-open-source-projects.html">下一章：开源项目推荐 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/10-glossary.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/10-glossary.md", "name": "10-glossary.md", "text": "# 10 · 术语表：中英文对照与简明定义\n\n> 按主题分 8 组，每条给出**中文名 · 英文名 · 一句话定义 · 详见章节**。\n> 遇到不认识的词，先在这里定位，再回对应章节看原理。\n\n---\n\n## A · 数据表示与分词\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 词元 / 标记 | **token** | 模型处理文本的最小单位，介于字符与词之间；可能是一个词、半个词或几个字符 | [01](01-basics-language-model.md) |\n| 分词 / 切词 | **tokenization** | 把文本切分成 token 序列的过程 | [01](01-basics-language-model.md) |\n| 分词器 | **tokenizer** | 执行分词的程序，含词表与合并规则 | [01](01-basics-language-model.md) |\n| 词表 | **vocabulary / vocab** | 所有 token 的集合，大小决定 embedding 与输出层参数量 | [01](01-basics-language-model.md) |\n| 字节对编码 | **BPE**（Byte-Pair Encoding） | 通过反复合并最高频相邻符号对来构建子词词表 | [01](01-basics-language-model.md) |\n| 子词 | **subword** | 比词小、比字符大的单位，BPE 的产物 | [01](01-basics-language-model.md) |\n| 词元嵌入 | **token embedding** | token id 查表得到的向量表示 | [01](01-basics-language-model.md) |\n| 嵌入 / 向量表示 | **embedding** | 把离散对象映射为连续向量的表示（广义）；也指整段文本的向量（RAG 用） | [01](01-basics-language-model.md) |\n| 位置编码 | **positional encoding / PE** | 把位置信息注入模型的手段 | [03](03-transformer.md) |\n| 旋转位置编码 | **RoPE**（Rotary Position Embedding） | 通过旋转 Q/K 使内积只依赖相对位置 | [09](09-math-foundations.md) |\n| 特殊标记 | **special token** | BOS / EOS / PAD / 角色标记等控制用 token | [01](01-basics-language-model.md) |\n| 对话模板 | **chat template** | 把系统提示、用户、助手消息拼成模型训练时见过的格式 | [01](01-basics-language-model.md) |\n| 序列长度 | **sequence length / context length** | 一次处理的 token 数上限 | [07](07-decoding-and-inference.md) |\n| 上下文窗口 | **context window** | 模型能\"看到\"的最大 token 数 | [07](07-decoding-and-inference.md) |\n| 字节级 BPE | **BBPE**（Byte-level BPE） | 在字节上做 BPE，保证任何 Unicode 文本都不 OOV | [01](01-basics-language-model.md) |\n\n---\n\n## B · 模型结构\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 变换器 | **Transformer** | 基于自注意力构建的序列建模架构 | [03](03-transformer.md) |\n| 自注意力 | **self-attention** | 同一序列内部各位置相互加权的机制 | [02](02-attention.md) |\n| 查询 / 键 / 值 | **Query / Key / Value (QKV)** | 注意力的三种角色：发起检索、被检索、被加权取值 | [02](02-attention.md) |\n| 多头注意力 | **MHA**（Multi-Head Attention） | 把 d_model 切分给多个头并行做注意力 | [02](02-attention.md) |\n| 多查询注意力 | **MQA**（Multi-Query Attention） | 所有头共享一份 K/V，大幅省 KV Cache | [02](02-attention.md) |\n| 分组查询注意力 | **GQA**（Grouped-Query Attention） | 头分组共享 K/V，MHA 与 MQA 的折中（当前主流） | [02](02-attention.md) |\n| 前馈网络 | **FFN / MLP** | 每个 token 独立经过的两层（或三层）网络，占约 2/3 参数 | [03](03-transformer.md) |\n| 激活函数 | **activation**（ReLU / GELU / SwiGLU） | 引入非线性的函数；SwiGLU 是当前主流 | [03](03-transformer.md) |\n| 残差连接 | **residual connection** | `x + f(x)`，保证梯度能跨层回传 | [03](03-transformer.md) |\n| 层归一化 | **LayerNorm / RMSNorm** | 对特征维做归一化；RMSNorm 省去均值计算 | [03](03-transformer.md) |\n| 前置/后置归一化 | **Pre-LN / Post-LN** | 归一化放子层前还是后；Pre-LN 是深层训练稳定的关键 | [03](03-transformer.md) |\n| 自回归 | **autoregressive** | 逐 token 生成，每步以已生成内容为条件 | [01](01-basics-language-model.md) |\n| 因果掩码 | **causal mask** | 屏蔽未来位置，保证生成时不\"偷看\"答案 | [02](02-attention.md) |\n| 编码器 / 解码器 | **encoder / decoder** | 双向理解模块 / 因果生成模块 | [03](03-transformer.md) |\n| 仅解码器 | **decoder-only** | 只有解码器堆叠的架构，当前 LLM 主流 | [03](03-transformer.md) |\n| 隐藏维度 | **d_model / hidden size** | 每层表示的向量维度 | [03](03-transformer.md) |\n| 头维度 | **d_head** | d_model / n_heads | [02](02-attention.md) |\n| 混合专家 | **MoE**（Mixture of Experts） | 用多个 FFN 专家 + 路由，每 token 只激活少数 | [03](03-transformer.md) |\n| 总参数 / 激活参数 | **total / active parameters** | 模型全部参数 / 每个 token 实际参与计算的参数 | [03](03-transformer.md) |\n\n---\n\n## C · 训练与预训练\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 预训练 | **pretraining** | 在海量无标注文本上做下一 token 预测 | [04](04-pretraining.md) |\n| 基础模型 | **base model / foundation model** | 预训练完、尚未指令微调的模型 | [04](04-pretraining.md) |\n| 因果语言建模 | **CLM**（Causal LM） | 目标为预测下一个 token | [04](04-pretraining.md) |\n| 掩码语言建模 | **MLM**（Masked LM） | 挖掉部分 token 让模型填空（BERT 式） | [04](04-pretraining.md) |\n| 中间填充 | **FIM**（Fill-in-the-Middle） | 用前缀+后缀预测中间内容，代码补全必备 | [04](04-pretraining.md) |\n| 对数几率 / 未归一化打分 | **logits** | 过 softmax 之前的原始输出分数 | [01](01-basics-language-model.md) |\n| 归一化指数函数 | **softmax** | 把任意实数向量变成概率分布 | [01](01-basics-language-model.md) |\n| 交叉熵损失 | **cross-entropy loss** | `-log p(正确token)`，语言模型的标准目标 | [01](01-basics-language-model.md) |\n| 困惑度 | **perplexity (PPL)** | 交叉熵的指数，等价于\"在几个候选里犹豫\" | [01](01-basics-language-model.md) |\n| 教师强制 | **teacher forcing** | 训练时用真实前缀而非模型自己生成的 token | [01](01-basics-language-model.md) |\n| 曝光偏差 | **exposure bias** | 训练见真实前缀、推理见自己输出造成的不一致 | [01](01-basics-language-model.md) |\n| 缩放定律 | **scaling law** | 损失随参数量/数据量呈幂律下降的规律 | [06](06-scaling-and-emergence.md) |\n| 计算最优 | **compute-optimal** | 给定算力下参数与数据的最优配比（Chinchilla: D≈20N） | [06](06-scaling-and-emergence.md) |\n| 过度训练 | **overtraining** | 为降低推理成本而刻意多训 token | [06](06-scaling-and-emergence.md) |\n| 涌现能力 | **emergent ability** | 规模跨过阈值后才出现的能力 | [06](06-scaling-and-emergence.md) |\n| 上下文学习 | **ICL**（In-Context Learning） | 不改权重，靠提示里的示例学会任务 | [06](06-scaling-and-emergence.md) |\n| 思维链 | **CoT**（Chain-of-Thought） | 先输出推理步骤再给结论 | [06](06-scaling-and-emergence.md) |\n| 数据并行 | **DP / DDP** | 每卡完整模型、各喂不同数据 | [04](04-pretraining.md) |\n| 张量并行 | **TP** | 把层内矩阵切开分到多卡 | [04](04-pretraining.md) |\n| 流水线并行 | **PP** | 不同层放不同卡，micro-batch 流水 | [04](04-pretraining.md) |\n| 专家并行 | **EP** | MoE 专家分散到不同卡 | [04](04-pretraining.md) |\n| 零冗余优化 / 全分片数据并行 | **ZeRO / FSDP** | 把优化器状态、梯度、参数分片存放 | [04](04-pretraining.md) |\n| 梯度检查点 | **gradient checkpointing** | 不存中间激活，反向时重算以省显存 | [04](04-pretraining.md) |\n| 梯度裁剪 | **gradient clipping** | 限制梯度范数，防止训练爆炸 | [09](09-math-foundations.md) |\n| 混合精度 | **mixed precision**（FP16 / BF16 / FP8） | 用低位宽加速计算；BF16 因范围大而更适合训练 | [04](04-pretraining.md) |\n| 学习率预热 | **warmup** | 训练初期逐步升高学习率 | [04](04-pretraining.md) |\n| 损失尖峰 | **loss spike** | 训练中损失突然飙升，通常需回滚或裁剪 | [04](04-pretraining.md) |\n| 优化器 | **AdamW** | LLM 训练的标准优化器（解耦权重衰减） | [09](09-math-foundations.md) |\n| 批量大小 | **batch size** | 一次更新使用的样本/token 数 | [04](04-pretraining.md) |\n\n---\n\n## D · 微调与参数高效方法\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 微调 | **fine-tuning (FT)** | 在预训练模型上继续训练以适配任务 | [05](05-finetuning.md) |\n| 全量微调 | **full fine-tuning** | 更新全部参数，显存开销最大 | [05](05-finetuning.md) |\n| 监督微调 / 指令微调 | **SFT**（Supervised Fine-Tuning） | 用指令-回答对做监督训练 | [05](05-finetuning.md) |\n| 参数高效微调 | **PEFT** | 只训练极少量新增/选定参数的微调方法总称 | [05](05-finetuning.md) |\n| 低秩适配 | **LoRA**（Low-Rank Adaptation） | 冻结原权重，只学低秩增量 ΔW = BA | [05](05-finetuning.md) |\n| 量化 LoRA | **QLoRA** | 4bit 量化基座 + LoRA，单卡可微调大模型 | [05](05-finetuning.md) |\n| 秩 | **rank (r)** | LoRA 中低秩矩阵的中间维度，控制容量 | [05](05-finetuning.md) |\n| 缩放系数 | **lora_alpha** | 控制 LoRA 增量的缩放，影响有效学习率 | [05](05-finetuning.md) |\n| 冻结 | **freeze** | 不更新某部分参数 | [05](05-finetuning.md) |\n| 适配器 | **adapter** | 层间插入的小型可训练模块（已边缘化） | [05](05-finetuning.md) |\n| 前缀微调 / 提示微调 | **prefix / prompt tuning** | 只训练序列前的虚拟 token | [05](05-finetuning.md) |\n| 灾难性遗忘 | **catastrophic forgetting** | 微调窄任务后通用能力退化 | [05](05-finetuning.md) |\n| 过拟合 | **overfitting** | 在训练集上表现好、泛化差 | [05](05-finetuning.md) |\n| 损失掩码 | **loss mask** | 只对回答部分计算损失 | [05](05-finetuning.md) |\n| 检索增强生成 | **RAG**（Retrieval-Augmented Generation） | 先检索外部知识再生成，用于注入事实 | [05](05-finetuning.md) |\n| 蒸馏 | **distillation** | 用大模型（教师）训练小模型（学生） | [07](07-decoding-and-inference.md) |\n\n---\n\n## E · 对齐与安全\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 对齐 | **alignment** | 让模型行为符合人类意图与价值 | [08](08-alignment-rlhf.md) |\n| 基于人类反馈的强化学习 | **RLHF** | SFT → 奖励模型 → RL 三阶段的对齐方法 | [08](08-alignment-rlhf.md) |\n| 奖励模型 | **reward model (RM)** | 学会给人偏好排序打分的模型 | [08](08-alignment-rlhf.md) |\n| 奖励劫持 | **reward hacking** | 模型学会骗奖励分数而非真正变好 | [08](08-alignment-rlhf.md) |\n| 近端策略优化 | **PPO** | RLHF 中使用的强化学习算法 | [08](08-alignment-rlhf.md) |\n| 直接偏好优化 | **DPO**（Direct Preference Optimization） | 无需奖励模型的偏好优化，损失形似监督学习 | [08](08-alignment-rlhf.md) |\n| 组相对策略优化 | **GRPO** | 去掉 critic，用组内相对比较估优势 | [08](08-alignment-rlhf.md) |\n| AI 反馈强化学习 | **RLAIF** | 用 AI 而非人类生成偏好标注 | [08](08-alignment-rlhf.md) |\n| 宪法式 AI | **Constitutional AI** | 让模型按一套原则自我批判与修正 | [08](08-alignment-rlhf.md) |\n| 参考模型 | **reference model** | 对齐时冻结的原模型，用于 KL 约束 | [08](08-alignment-rlhf.md) |\n| KL 惩罚 | **KL penalty** | 限制新模型偏离参考模型的强度 | [08](08-alignment-rlhf.md) |\n| 谄媚 | **sycophancy** | 迎合用户错误观点的行为倾向 | [08](08-alignment-rlhf.md) |\n| 幻觉 | **hallucination** | 生成看似合理但事实错误的内容 | [01](01-basics-language-model.md) |\n| 红队测试 | **red teaming** | 主动寻找模型漏洞与有害输出 | [08](08-alignment-rlhf.md) |\n\n---\n\n## F · 推理与部署\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 推理 | **inference** | 用训练好的模型做前向计算 | [07](07-decoding-and-inference.md) |\n| 预填充 | **prefill** | 并行处理整个 prompt、填充 KV Cache 的阶段 | [07](07-decoding-and-inference.md) |\n| 解码阶段 | **decode** | 逐 token 生成的阶段，受显存带宽限制 | [07](07-decoding-and-inference.md) |\n| KV 缓存 | **KV Cache** | 缓存历史 token 的 K/V，避免每步重算 | [07](07-decoding-and-inference.md) |\n| 分页注意力 | **PagedAttention** | 像操作系统分页一样管理 KV，消除碎片（vLLM） | [07](07-decoding-and-inference.md) |\n| 前缀缓存 | **prefix cache** | 复用相同系统提示的 KV | [07](07-decoding-and-inference.md) |\n| 连续批处理 | **continuous batching** | 每步迭代重新组批，完成的请求立刻换新请求 | [07](07-decoding-and-inference.md) |\n| 解码策略 | **decoding strategy** | greedy / beam / top-k / top-p 等采样方式 | [07](07-decoding-and-inference.md) |\n| 温度 | **temperature** | 缩放 logits 控制分布平坦度 | [01](01-basics-language-model.md) |\n| 核采样 | **top-p / nucleus sampling** | 在累计概率达 p 的最小集合内采样 | [07](07-decoding-and-inference.md) |\n| 重复惩罚 | **repetition penalty** | 降低已出现 token 的概率，抑制复读 | [07](07-decoding-and-inference.md) |\n| 投机解码 | **speculative decoding** | 用小模型草拟、大模型验证，加速生成 | [07](07-decoding-and-inference.md) |\n| 量化 | **quantization** | 用低位宽表示权重/激活以省显存 | [07](07-decoding-and-inference.md) |\n| 训练后量化 | **PTQ** | 训练完成后量化，需校准数据（GPTQ/AWQ） | [07](07-decoding-and-inference.md) |\n| 首 token 延迟 | **TTFT**（Time To First Token） | 从请求到第一个 token 的时间 | [07](07-decoding-and-inference.md) |\n| 每 token 延迟 | **TPOT / ITL** | 相邻输出 token 之间的时间间隔 | [07](07-decoding-and-inference.md) |\n| 吞吐量 | **throughput** | 单位时间产出的 token 数 | [07](07-decoding-and-inference.md) |\n| 流式输出 | **streaming** | 边生成边返回，改善体感延迟 | [07](07-decoding-and-inference.md) |\n| 预填充-解码分离 | **PD disaggregation** | prefill 与 decode 部署在不同实例 | [07](07-decoding-and-inference.md) |\n\n---\n\n## G · 评测与指标\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 基准测试 | **benchmark** | 标准化评测集，如 MMLU、GSM8K、HumanEval | [06](06-scaling-and-emergence.md) |\n| 数据污染 | **data contamination** | 评测集内容混入训练数据导致分数虚高 | [04](04-pretraining.md) |\n| 精确匹配 | **exact match (EM)** | 答案完全一致才算对（不连续指标） | [06](06-scaling-and-emergence.md) |\n| 困惑度 | **perplexity** | 语言拟合程度指标 | [01](01-basics-language-model.md) |\n| 胜率 | **win rate** | 与基线两两比较的胜出比例 | [08](08-alignment-rlhf.md) |\n| 人工评估 | **human evaluation** | 人类对输出质量的判断，最终准绳 | [08](08-alignment-rlhf.md) |\n| 大模型裁判 | **LLM-as-a-judge** | 用强模型给输出打分，便宜但需验证 | [08](08-alignment-rlhf.md) |\n| 拒绝率 / 过度拒绝 | **over-refusal** | 把正常请求也拒掉的比例 | [08](08-alignment-rlhf.md) |\n\n---\n\n## H · 生态与工具\n\n| 中文 | 英文 | 定义 | 详见 |\n|------|------|------|------|\n| 模型卡 / 权重 | **model card / weights** | 模型说明文件与参数文件（safetensors 等） | [11](11-open-source-projects.md) |\n| 哈根脸 | **Hugging Face (HF)** | 最大的模型与数据集托管平台 | [11](11-open-source-projects.md) |\n| 参数高效微调库 | **PEFT**（HF 库名） | LoRA 等方法的官方实现库 | [11](11-open-source-projects.md) |\n| 变换器库 | **Transformers** | HF 的模型加载与推理基础库 | [11](11-open-source-projects.md) |\n| 强化学习库 | **TRL** | HF 的 SFT / DPO / PPO 训练库 | [11](11-open-source-projects.md) |\n| 推理引擎 | **inference engine**（vLLM / SGLang / TGI） | 高吞吐的服务化部署框架 | [11](11-open-source-projects.md) |\n| 服务化 | **serving** | 把模型包装成 API 服务的过程 | [07](07-decoding-and-inference.md) |\n| 智能体 | **agent** | 让模型自主调用工具、多步执行的系统 | — |\n| 工具调用 | **function / tool calling** | 模型输出结构化调用请求，由外部执行 | — |\n| 上下文协议 | **MCP**（Model Context Protocol） | 标准化模型与外部工具的连接协议 | — |\n\n---\n\n## 快速区分：最容易混的六组\n\n| 一组词 | 区别一句话 |\n|--------|------------|\n| 预训练 vs 微调 | 预训练学语言（几 T～几十 T token，无标注）；微调学任务（几千～百万条，有标注） |\n| embedding vs logits | embedding 在**输入侧**（token→向量）；logits 在**输出侧**（向量→打分） |\n| LayerNorm vs BatchNorm | LN 对**每个 token 的特征维**归一化（与 batch 无关）；BN 依赖 batch 统计 |\n| MHA vs GQA vs MQA | 差别只在 **K/V 头数**：各自独立 / 分组共享 / 全部共享 |\n| RLHF vs DPO | RLHF 要 4 个模型 + 在线 RL；DPO 只要 2 个模型 + 离线偏好对 |\n| 量化 vs 蒸馏 vs 剪枝 | 降低精度 / 大教小重新训 / 删结构。只有量化不改结构 |\n\n---\n\n[← 上一章：数学基础](09-math-foundations.md) · [返回总览](README.md) · [下一章：开源项目推荐 →](11-open-source-projects.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -207,6 +365,8 @@ td math, th math{font-size:1em;}
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -216,6 +376,173 @@ td math, th math{font-size:1em;}
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -229,6 +556,17 @@ td math, th math{font-size:1em;}
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -255,15 +593,46 @@ td math, th math{font-size:1em;}
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

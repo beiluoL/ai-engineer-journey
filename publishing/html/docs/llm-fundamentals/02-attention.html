@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-2" title="返回《文档总览》第 2 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">02 · 注意力机制：让每个 token 自己决定&quot;看哪里&quot;</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#21-先看问题rnn-为什么不够用" class="lvl2">2.1 先看问题：RNN 为什么不够用</a><a href="#22-直觉图书馆检索" class="lvl2">2.2 直觉：图书馆检索</a><a href="#23-公式拆解与真实计算" class="lvl2">2.3 公式拆解与真实计算</a><a href="#231-完整公式" class="lvl3">2.3.1 完整公式</a><a href="#232-跑一遍真的demos02selfattentionpy" class="lvl3">2.3.2 跑一遍真的（demos/02_self_attention.py）</a><a href="#233-一个容易忽略的性质注意力是置换等变的" class="lvl3">2.3.3 一个容易忽略的性质：注意力是&amp;quot;置换等变&amp;quot;的</a><a href="#24-为什么必须除以-dk" class="lvl2">2.4 为什么必须除以 √d_k</a><a href="#25-掩码mask两条不同的禁令" class="lvl2">2.5 掩码（Mask）：两条不同的&amp;quot;禁令&amp;quot;</a><a href="#251-padding-mask-别看-pad" class="lvl3">2.5.1 Padding Mask —— 别看 PAD</a><a href="#252-causal-mask-别看未来" class="lvl3">2.5.2 Causal Mask —— 别看未来</a><a href="#26-多头注意力mha并行地看多种关系" class="lvl2">2.6 多头注意力（MHA）：并行地看多种关系</a><a href="#27-复杂度注意力的代价" class="lvl2">2.7 复杂度：注意力的代价</a><a href="#28-常被误解的点" class="lvl2">2.8 常被误解的点</a><a href="#29-动手" class="lvl2">2.9 动手</a><a href="#210-自查问题" class="lvl2">2.10 自查问题</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="02-注意力机制让每个-token-自己决定看哪里">02 · 注意力机制：让每个 token 自己决定&quot;看哪里&quot;</h1>
 <blockquote><p><strong>一句话结论</strong>：注意力机制做的只有一件事——<strong>对序列做加权平均，而权重由&quot;当前 token 想要什么&quot;和&quot;其他 token 能提供什么&quot;的匹配程度决定</strong>。 它解决了 RNN 的两个死穴：不能并行、长距离信息会被压扁。</p></blockquote>
 <p>本章是全书最重要的第一章。Transformer 的其他零件（残差、LayerNorm、FFN、位置编码）都是为了让这一层能稳定地叠很多层而存在的。</p>
@@ -282,8 +421,27 @@ python3 demos/make_figures.py            # 重画 attention-heatmap.png</code></
 <ul class="lvl"><li>Q/K/V 各自扮演什么角色？为什么三个投影不能共用一套？</li><li>写出注意力公式，并说明每一步的张量形状变化。</li><li>为什么除以 √d_k？如果去掉会怎样？（要能从方差角度说）</li><li>Padding mask 和 causal mask 分别解决什么问题？只加一个会出错吗？</li><li>多头注意力为什么&quot;不增加参数量&quot;？它带来了什么好处？</li><li>MHA / MQA / GQA 的差别在哪一层？为什么要关心？</li><li>为什么说自注意力&quot;置换等变&quot;？这引出哪个必需组件？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="01-basics-language-model.html">← 上一章：语言模型基础</a> · <a href="README.html">返回总览</a> · <a href="03-transformer.html">下一章：Transformer 架构 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/02-attention.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/02-attention.md", "name": "02-attention.md", "text": "# 02 · 注意力机制：让每个 token 自己决定\"看哪里\"\n\n> **一句话结论**：注意力机制做的只有一件事——**对序列做加权平均，而权重由\"当前 token 想要什么\"和\"其他 token 能提供什么\"的匹配程度决定**。\n> 它解决了 RNN 的两个死穴：不能并行、长距离信息会被压扁。\n\n本章是全书最重要的第一章。Transformer 的其他零件（残差、LayerNorm、FFN、位置编码）都是为了让这一层能稳定地叠很多层而存在的。\n\n---\n\n## 2.1 先看问题：RNN 为什么不够用\n\n在注意力出现之前，序列建模的主流是 RNN / LSTM：从左到右读，把历史压进一个**固定长度的隐状态** `h_t`。\n\n```text\nRNN:   h1 ──► h2 ──► h3 ──► ... ──► h100\n       ↑每个 h 都要等上一个算完（串行）\n       ↑第 100 步要用第 1 步的信息，得穿过 99 次传递（梯度消失 / 信息被挤压）\n```\n\n| 问题 | 具体表现 |\n|------|----------|\n| 串行 | 第 t 步依赖第 t−1 步，GPU 的并行能力用不上，训练慢 |\n| 信息瓶颈 | 无论前面多长，都被塞进一个固定维度向量；\"第 1 个词\"和\"第 100 个词\"抢同一块带宽 |\n| 长距离依赖退化 | 距离越远，梯度越容易消失（LSTM 缓解但没根治） |\n\n**注意力的回答很直接**：既然隐状态是瓶颈，那就不压缩——**让每个位置直接去\"看\"所有位置，按相关度加权取信息**。代价是从 O(n) 变成 O(n²)，但这笔账在现代硬件上算得过来。\n\n---\n\n## 2.2 直觉：图书馆检索\n\n把注意力想成一次检索：\n\n| 角色 | 类比 | 作用 |\n|------|------|------|\n| **Query（查询）** | 你手里的检索词 | \"我现在需要什么信息\" |\n| **Key（键）** | 每本书的标题/标签 | \"我能提供哪类信息\" |\n| **Value（值）** | 书的正文 | \"实际内容是什么\" |\n\n流程：**用 Query 和每个 Key 比对相似度 → 得到一组权重（和为 1）→ 按权重把 Value 加权求和**。\n\n```text\nQuery:  \"我在找【吃的】\"            (当前 token: 烤)\nKey1:   \"我\"    相似度 0.07\nKey3:   \"北京\"  相似度 0.03\nKey4:   \"吃\"    相似度 0.60   <-- 最相关\nKey6:   \"鸭\"    相似度 0.11\n        ↓ softmax 归一化\n权重:   [0.07, 0.09, 0.03, 0.60, 0.10, 0.11]     和 = 1\n        ↓ 加权求和\n输出 =  0.07·V(我) + 0.09·V(在) + ... + 0.11·V(鸭)\n```\n\n关键点：**Q、K、V 全部来自同一个输入 X**——所以叫 **Self**-Attention（自注意力）。三个不同的线性投影把同一个 X 映射成三种角色：\n\n$$\nQ = XW_Q,\\qquad K = XW_K,\\qquad V = XW_V\n$$\n\n| 矩阵 | 形状 | 作用 |\n|------|------|------|\n| $X$ | $(n, d_{model})$ | n 个 token，每个 d_model 维 |\n| $W_Q, W_K, W_V$ | $(d_{model}, d_k)$ | 学出来的三套投影 |\n| $Q, K, V$ | $(n, d_k)$ | 同一批 token 的三种\"身份\" |\n\n> **面试常问**：为什么 Q/K/V 要分开？如果 K 和 Q 用同一个投影，相似度矩阵就变成对称的（$XWW^TX^T$），\"我关注你\"和\"你关注我\"永远同强度，表达力被削掉一半。V 单独一套，则是因为\"相关性高\"和\"内容该抄多少\"是两件事。\n\n---\n\n## 2.3 公式拆解与真实计算\n\n### 2.3.1 完整公式\n\n$$\n\\operatorname{Attention}(Q,K,V) \\;=\\; \\operatorname{softmax}\\!\\left(\\frac{QK^{\\top}}{\\sqrt{d_k}}\\right)V\n$$\n\n拆成四步看：\n\n| 步 | 运算 | 形状变化 | 含义 |\n|----|------|----------|------|\n| ① | $S = QK^{\\top}$ | $(n,d_k)\\times(d_k,n) \\to (n,n)$ | 两两相似度打分矩阵 |\n| ② | $S / \\sqrt{d_k}$ | $(n,n)$ | 缩放，防止 softmax 过饱和（见 2.4） |\n| ③ | $A = \\operatorname{softmax}(S)$（按行） | $(n,n)$ | 每行是一个概率分布，和为 1 |\n| ④ | $O = AV$ | $(n,n)\\times(n,d_k) \\to (n,d_k)$ | 按权重对 V 加权求和 |\n\n### 2.3.2 跑一遍真的（demos/02_self_attention.py）\n\n6 个 token、d_model=8、d_k=4 的真实运行结果：\n\n![Self-Attention 真实运行输出](assets/term-02_self_attention.png)\n\n三个关键读数：\n\n1. **第 3 段的权重矩阵每行和都是 1.000000** —— softmax 是按行做的（对\"被关注者\"这一维归一化）。\n2. **第 5 段最大误差 2.78e-17** —— 输出确实等于 $\\sum_j A_{0j} V_j$，误差只是浮点舍入。这验证了\"注意力 = 加权平均\"这个本质。\n3. **第 6 段加因果掩码后，上三角全为 0** —— 每行可见范围 `[0..i]`，且行和仍为 1。\n\n同一批数据画成热力图，左右对照能看清掩码做了什么：\n\n![注意力权重矩阵热力图](assets/attention-heatmap.png)\n\n左图（双向）每个位置都能看全句；右图（因果）第 i 行只在 ≤ i 的格子有值——**这就是 Encoder 和 Decoder 的唯一本质区别**。\n\n### 2.3.3 一个容易忽略的性质：注意力是\"置换等变\"的\n\n把输入 token 的顺序打乱，输出会**以同样方式打乱**，但每个位置的数值不变：\n\n$$\n\\operatorname{Attn}(\\pi(X)) = \\pi(\\operatorname{Attn}(X))\n$$\n\n**这意味着自注意力本身完全不知道顺序！** \"我在北京吃烤鸭\"和\"鸭烤吃京北在我\"在这层看来是一样的。所以必须额外注入位置信息——这就是[位置编码](03-transformer.md#34-位置编码把顺序写进向量)存在的原因。\n\n---\n\n## 2.4 为什么必须除以 √d_k\n\n这是面试里区分\"背过公式\"和\"懂了\"的经典问题。\n\n**推导思路**（完整版见 [第 09 章 · Self-Attention 的缩放](09-math-foundations.md)）：\n\n设 $q_i, k_j \\in \\mathbb{R}^{d_k}$ 的各分量独立、均值 0、方差 1，则点积的方差是：\n\n$$\n\\operatorname{Var}\\!\\left(\\sum_{i=1}^{d_k} q_i k_i\\right) = \\sum_{i=1}^{d_k} \\operatorname{Var}(q_i k_i) = d_k\n$$\n\n也就是**点积的典型大小是 $\\sqrt{d_k}$，随维度增长**。而 softmax 的输入一旦数值过大，分布就会极端化：\n\n| softmax 输入尺度 | 分布形态 | 梯度状况 |\n|------------------|----------|----------|\n| 小（~1） | 平滑，各位置都能分到权重 | 梯度良好 |\n| 大（±20） | 接近 one-hot | softmax 饱和区，**梯度 ≈ 0，学不动** |\n\n除以 $\\sqrt{d_k}$ 把点积的方差拉回 1，softmax 就工作在\"有梯度\"的区间。这不是经验技巧，而是**必须做的归一化**。\n\n真实数据对照（`demos/02_self_attention.py` 的输出）：\n\n| 指标 | 未缩放 | 除以 √d_k = 2.0 |\n|------|--------|-----------------|\n| 打分绝对值均值 | 1.457 | 0.729 |\n\n> **补充**：这也是为什么后来出现 QK-Norm、softmax 前加 tanh 等变体——一旦维度继续变大（如 128 以上、或训练不稳定时），缩放系数还需要继续调。\n\n---\n\n## 2.5 掩码（Mask）：两条不同的\"禁令\"\n\n注意力矩阵上叠一个可加性掩码（加 −∞ 或很大的负数），softmax 后对应位置概率为 0。\n\n### 2.5.1 Padding Mask —— 别看 PAD\n\n批处理时长短不一的句子要用 PAD 补齐：\n\n```text\n句子 A: 我 在 北京 吃 烤 鸭 [PAD] [PAD]\n句子 B: 你 好 [PAD] [PAD] [PAD] [PAD] [PAD]\n```\n\n如果不管它，模型会把\"关注 PAD\"学成一个有意义的动作，污染表示。做法：\n\n```python\nscores = scores.masked_fill(pad_mask, -1e9)   # pad_mask: (batch, 1, 1, T)\n```\n\n### 2.5.2 Causal Mask —— 别看未来\n\n解码器生成时，第 i 个位置不能提前看到 i+1：\n\n$$\nM_{ij} = \\begin{cases} 0, & j \\le i \\\\ -\\infty, & j > i \\end{cases}\n$$\n\n```text\n允许位置:               被屏蔽位置:\n1 . . . . .             。 X X X X X\n1 1 . . . .             。 。 X X X X\n1 1 1 . . .             。 。 。 X X X\n1 1 1 1 . .             。 。 。 。 X X\n1 1 1 1 1 .             。 。 。 。 。 X\n1 1 1 1 1 1             。 。 。 。 。 。\n```\n\n为什么必须屏蔽？因为训练时**整个序列一次喂入**，如果不屏蔽，模型在预测第 3 个 token 时能直接\"偷看\"第 4 个 token 的输入——训练损失会降得很漂亮，但推理时根本看不到未来，效果直接崩。这种错误叫 **information leakage / 标签泄漏**。\n\n| 掩码 | 用在哪 | 忽略的对象 |\n|------|--------|------------|\n| Padding mask | Encoder + Decoder | 补齐用的 PAD token |\n| Causal mask | Decoder（包括所有 GPT 系模型） | 当前位置之后的 token |\n| 两者组合 | Decoder 训练时 | PAD + 未来 |\n\n> **坑**：现代推理框架里，同时用两种 mask 容易和 KV Cache 的偏移搞混（缓存长度 ≠ 当前序列长度），表现为\"首 token 正常、后续开始乱说\"。这也是 [第 07 章](07-decoding-and-inference.md) 要处理的问题。\n\n---\n\n## 2.6 多头注意力（MHA）：并行地看多种关系\n\n单个注意力头只能输出**一种**加权平均模式。但语言里的关系是多种多样的：语法主谓、指代、修饰、位置邻近……\n\n**做法**：把 d_model 切成 h 份，每份独立做一次注意力，最后拼回来。\n\n```mermaid\nflowchart TB\n    X[\"X (n × 512)\"] --> S1[\"切成 h=8 份<br/>每份 d_head = 64\"]\n    S1 --> H1[\"头 1: Q1K1V1 → 注意力 → O1\"]\n    S1 --> H2[\"头 2: Q2K2V2 → 注意力 → O2\"]\n    S1 --> H3[\"...\"]\n    S1 --> H8[\"头 8: Q8K8V8 → 注意力 → O8\"]\n    H1 --> C[\"拼接 concat<br/>(n × 512)\"]\n    H2 --> C\n    H3 --> C\n    H8 --> C\n    C --> W[\"输出投影 Wo<br/>(512 × 512)\"]\n    W --> O[\"输出 (n × 512)\"]\n\n    style X fill:#e0f2fe,stroke:#0284c7\n    style W fill:#dbeafe,stroke:#2563eb\n    style O fill:#dcfce7,stroke:#16a34a\n```\n\n维度与参数量（以 d_model=512, h=8 为例）：\n\n| 项 | 计算 | 数量 |\n|----|------|------|\n| d_head | 512 / 8 | 64 |\n| W_Q, W_K, W_V | 各 512×512 | 3 × 262,144 |\n| W_O | 512×512 | 262,144 |\n| 单头方案的参数量 | 512×512 × 3 + W_O | **完全相同** |\n\n**结论**：多头**不增加参数量**，只是把同一块参数预算切成多个\"视角\"。所以多头几乎是免费的午餐——但它让不同头可以分工（真实模型里确实能观察到\"位置头\"\"语法头\"\"指代头\"）。\n\n| 名词 | 含义 | 代表模型 |\n|------|------|----------|\n| MHA（Multi-Head） | 每个头都有自己的 K/V | GPT-2、LLaMA-1 早期 |\n| MQA（Multi-Query） | 所有头**共享一份** K/V | PaLM、Falcon |\n| GQA（Grouped-Query） | 头分成若干组，组内共享 K/V | LLaMA-2/3、Qwen、Mistral |\n\n为什么关心这个？因为它直接决定 **KV Cache 的大小**（[第 07 章](07-decoding-and-inference.md)）：\n\n| 方案 | 头数 : KV 头数 | KV Cache 相对大小 | 生成速度 | 效果 |\n|------|----------------|-------------------|----------|------|\n| MHA | 32 : 32 | 100% | 慢（显存带宽吃紧） | 最好 |\n| GQA | 32 : 8 | 25% | 快 | 接近 MHA |\n| MQA | 32 : 1 | 3% | 最快 | 略有损失 |\n\n> GQA 是当前主流折中：训练时用 MHA 的稳定性，推理时享受 MQA 的省显存。\n\n---\n\n## 2.7 复杂度：注意力的代价\n\n单层的计算量与显存量（n = 序列长度，d = d_model）：\n\n| 项 | 复杂度 | n=4k, d=4096 时的量级 |\n|----|--------|------------------------|\n| QKV 投影 | $O(n \\cdot d^2)$ | 3 × 4096² × 4096 |\n| 注意力打分 QKᵀ | $O(n^2 \\cdot d)$ | 4096² × 4096 |\n| 加权求和 AV | $O(n^2 \\cdot d)$ | 同上 |\n| 注意力矩阵显存 | $O(n^2)$ per head | 4096² × 2 bytes × 32 头 ≈ 1 GB |\n\n**序列长度翻倍，注意力部分开销变 4 倍** —— 这是长上下文（128k、1M）的根本障碍。\n\n主流应对手段：\n\n| 手段 | 思路 | 代表 |\n|------|------|------|\n| FlashAttention | 不把 n×n 矩阵写回显存，分块在 SRAM 里算（**精确**等价，只是省 IO） | 现在几乎所有训练框架默认 |\n| 稀疏/滑窗注意力 | 只算局部窗口 + 少量全局 token | Longformer、Mistral 的 SWA |\n| 线性注意力 / SSM | 换掉 softmax 结构，把复杂度降到 O(n) | Mamba、RWKV（但表达力有取舍） |\n| KV Cache 压缩 | GQA / MLA / 量化 | LLaMA-3、DeepSeek-V2 的 MLA |\n\n> **重要区分**：FlashAttention 不改变数学结果，它优化的是**显存访问**；稀疏注意力和 Mamba 改变的是**计算的内容**，属于模型结构变化。二者不可混为一谈。\n\n---\n\n## 2.8 常被误解的点\n\n| 误解 | 真相 |\n|------|------|\n| \"注意力权重高 = 因果重要\" | 权重是**信息路由**，不代表因果。很多头可以被剪掉而不掉点（冗余） |\n| \"多头就是在多个维度上做 attention\" | 多头是把 d_model 切分给多个独立子空间，每个头有**自己的** W_Q/W_K/W_V |\n| \"FlashAttention 是近似算法\" | 它是精确计算，只是改变了显存读写顺序（tiling + 重算） |\n| \"自注意力能感知顺序\" | 不能。顺序信息全部来自位置编码（或 RoPE 旋转） |\n| \"PAD 不影响结果\" | 不加 padding mask 会污染结果，尤其在短句占比高的 batch 里 |\n| \"缩放就是调超参\" | √d_k 是方差归一化的必然结果，不是可调超参 |\n\n---\n\n## 2.9 动手\n\n```bash\npython3 demos/02_self_attention.py       # 本文件所有数值的真实来源\npython3 demos/make_figures.py            # 重画 attention-heatmap.png\n```\n\n**建议改的三处**：\n\n1. 把 `D_K` 从 4 改成 16、32，观察第 2 段\"未缩放打分均值\"如何随 √d_k 增长 → 亲手验证缩放的必要性。\n2. 把 `np.random.randn(D_MODEL, D_K) * 0.35` 里的 0.35 改成 2.0，观察注意力矩阵退化成接近 one-hot。\n3. 把因果 mask 那段的 `k=1` 改成 `k=2`，理解\"屏蔽两条对角线\"意味着什么（提示：某些训练目标里会用到）。\n\n---\n\n## 2.10 自查问题\n\n1. Q/K/V 各自扮演什么角色？为什么三个投影不能共用一套？\n2. 写出注意力公式，并说明每一步的张量形状变化。\n3. 为什么除以 √d_k？如果去掉会怎样？（要能从方差角度说）\n4. Padding mask 和 causal mask 分别解决什么问题？只加一个会出错吗？\n5. 多头注意力为什么\"不增加参数量\"？它带来了什么好处？\n6. MHA / MQA / GQA 的差别在哪一层？为什么要关心？\n7. 为什么说自注意力\"置换等变\"？这引出哪个必需组件？\n\n---\n\n[← 上一章：语言模型基础](01-basics-language-model.md) · [返回总览](README.md) · [下一章：Transformer 架构 →](03-transformer.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -291,6 +449,8 @@ python3 demos/make_figures.py            # 重画 attention-heatmap.png</code></
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -300,6 +460,173 @@ python3 demos/make_figures.py            # 重画 attention-heatmap.png</code></
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -313,6 +640,17 @@ python3 demos/make_figures.py            # 重画 attention-heatmap.png</code></
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -339,15 +677,46 @@ python3 demos/make_figures.py            # 重画 attention-heatmap.png</code></
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

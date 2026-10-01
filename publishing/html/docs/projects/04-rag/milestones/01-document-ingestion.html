@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-75" title="返回《文档总览》第 75 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 01：Document Ingestion【文档摄入】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-统一的产物document-dataclass" class="lvl3">3.1 统一的产物：Document dataclass</a><a href="#32-格式适配器baseparser-四个实现" class="lvl3">3.2 格式适配器：BaseParser + 四个实现</a><a href="#33-解析器注册表与入口" class="lvl3">3.3 解析器注册表与入口</a><a href="#34-docid-为什么用内容哈希" class="lvl3">3.4 doc_id 为什么用内容哈希</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1windows-产出的-txt-用-utf8-读直接炸" class="lvl3">坑 1：Windows 产出的 txt 用 utf-8 读直接炸</a><a href="#坑-2pdf-提取出-x00后续-embedding-api-直接-400" class="lvl3">坑 2：PDF 提取出 \x00，后续 embedding API 直接 400</a><a href="#坑-3用文件名当-docid同名的两个文件互相覆盖" class="lvl3">坑 3：用文件名当 doc_id，同名的两个文件互相覆盖</a><a href="#坑-4pypdf-把双栏-pdf-拆成左右交错的乱序文本" class="lvl3">坑 4：pypdf 把双栏 PDF 拆成&amp;quot;左右交错&amp;quot;的乱序文本</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-01document-ingestion文档摄入">Project 04 — Chapter 01：Document Ingestion【文档摄入】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/parsers.py</code>（BaseParser + 四个格式适配器）、<code>src/rag/document.py</code>（Document）</p></blockquote>
 <hr/>
@@ -348,8 +487,27 @@ def ingest(path: str | Path) -&gt; Document:
 <hr/>
 <p>回到项目主页：<a href="../README.html">../README.md</a></p>
 <p>下一章：<a href="02-chunking.html">02-chunking.md</a> —— 拿到了整篇干净文本，为什么还要把它切碎？</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/01-document-ingestion.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/01-document-ingestion.md", "name": "01-document-ingestion.md", "text": "# Project 04 — Chapter 01：Document Ingestion【文档摄入】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/parsers.py`（BaseParser + 四个格式适配器）、`src/rag/document.py`（Document）\n\n---\n\n## 1. 本章要解决什么问题\n\n很多人以为 RAG 的第一步是「检索」，其实不是。RAG 的第一步是：**把世界上乱七八糟的文档变成干净文本**。\n\n你的知识库输入不会只有 `.txt`。真实场景里有 PDF、Word、Markdown、网页导出的 HTML……它们长这样：\n\n```text\n你以为：  拿到文档 = 拿到一段干净的字符串\n实际上：  PDF 是排版指令（\"在第 3 页的 (x, y) 画这几个字\"）\n          docx 是压缩包（一坨 XML 打包成 zip）\n          Markdown 是带语法噪音的文本（##、```、[]()）\n```\n\nGarbage in, garbage out【垃圾进，垃圾出】——这句老话在 RAG 里格外贴切：解析阶段丢了一段、乱序了一栏、混进了一页页眉，后面的切分、向量化、检索全都是在放大这个错误，而且**你几乎查不出来**（检索结果\"差不多但不准\"，很难联想到是三个月前某个 PDF 解析坏了）。\n\n本章目标：\n\n> **设计一个格式适配器体系，把 .txt / .md / .pdf / .docx 统一解析成干净文本 + 元数据。**\n\n---\n\n## 2. 为什么需要这个知识\n\nRAG 流水线的第一环决定了整个系统的上限：\n\n```text\n解析质量 → 切分质量 → 向量质量 → 检索质量 → 回答质量\n```\n\n每一环都只能继承上一环的垃圾，无法自救。所以摄入阶段要守住两条底线：\n\n1. **不丢信息**：正文、标题、页码都要留下（页码后面检索溯源要用）。\n2. **不多噪音**：页眉、页脚、乱码、控制字符要在源头清掉，不要留给下游。\n\n同时，格式会不断增加（说不定哪天要支持 epub、HTML）。如果写成一坨 `if ext == \".pdf\": ... elif ext == \".docx\": ...`，每加一种格式就要改老代码。**Java 里这叫开闭原则**：对扩展开放、对修改关闭。用格式适配器（parser per format）来解决。\n\n---\n\n## 3. 核心概念\n\n### 3.1 统一的产物：Document dataclass\n\n不管什么格式，解析器的输出都是同一个结构——这是整条流水线的\"通用货币\"：\n\n```python\n# src/rag/document.py\nfrom dataclasses import dataclass, field\n\n@dataclass\nclass Document:\n    doc_id: str                  # 内容哈希，见 3.3\n    source: str                  # 文件路径 / 来源标识\n    text: str                    # 解析后的干净正文\n    metadata: dict = field(default_factory=dict)\n    # metadata 约定存：format / size_bytes / page_count / parsed_at\n```\n\n**metadata 不是可选项，是检索溯源的生命线。** 检索命中一段文字后，用户会问\"这出自哪里？\"——没有 `source` 和页码，RAG 就成了无出处的一本正经胡说。\n\n### 3.2 格式适配器：BaseParser + 四个实现\n\nJava 里你写过策略模式或 SPI（`java.nio.file.spi.FileSystemProvider` 就是这个味道）：定义接口，每种实现处理一种情况，运行时按 key 选择。**Java 里叫 Parser 接口 + 一组 `@Component` 实现，Python 里用 `ABC` + 注册表字典，思路完全一样：**\n\n```python\n# src/rag/parsers.py\nfrom abc import ABC, abstractmethod\nfrom pathlib import Path\n\nclass BaseParser(ABC):\n    \"\"\"所有格式解析器的抽象基类：输入文件路径，输出 Document。\"\"\"\n\n    supported_extensions: tuple[str, ...] = ()\n\n    @abstractmethod\n    def parse(self, path: Path) -> Document:\n        ...\n\n    @classmethod\n    def supports(cls, path: Path) -> bool:\n        return path.suffix.lower() in cls.supported_extensions\n```\n\n四个实现各管一种格式，各自封装该格式的\"脏活\"：\n\n```python\nimport hashlib\nimport re\nimport time\nfrom dataclasses import dataclass, field\nfrom pathlib import Path\n\nfrom pypdf import PdfReader\nfrom docx import Document as DocxDocument   # python-docx\n\n\ndef _make_doc(path: Path, text: str, extra: dict) -> Document:\n    clean = text.replace(\"\\x00\", \"\").strip()\n    return Document(\n        doc_id=hashlib.sha256(clean.encode(\"utf-8\")).hexdigest()[:16],\n        source=str(path),\n        text=clean,\n        metadata={\n            \"format\": path.suffix.lower().lstrip(\".\"),\n            \"size_bytes\": path.stat().st_size,\n            \"parsed_at\": time.strftime(\"%Y-%m-%d %H:%M:%S\"),\n            **extra,\n        },\n    )\n\n\nclass TxtParser(BaseParser):\n    supported_extensions = (\".txt\",)\n\n    def parse(self, path: Path) -> Document:\n        text = path.read_text(encoding=\"utf-8\", errors=\"strict\")\n        return _make_doc(path, text, {})\n\n\nclass MdParser(BaseParser):\n    supported_extensions = (\".md\", \".markdown\")\n\n    # Markdown 是纯文本的超集，但有两个必须做的预处理：\n    # 1) 保留代码围栏（后续切分时不能按句号切开代码块）\n    # 2) 标题层级是天然语义边界，保留到 metadata 供 02 章使用\n    _HEADING_RE = re.compile(r\"^(#{1,6})\\s+(.*)$\")\n\n    def parse(self, path: Path) -> Document:\n        raw = path.read_text(encoding=\"utf-8\", errors=\"strict\")\n        headings: list[dict] = []\n        for lineno, line in enumerate(raw.splitlines(), start=1):\n            m = self._HEADING_RE.match(line)\n            if m:\n                headings.append({\"level\": len(m.group(1)), \"title\": m.group(2).strip(), \"line\": lineno})\n        return _make_doc(path, raw, {\"headings\": headings})\n\n\nclass PdfParser(BaseParser):\n    supported_extensions = (\".pdf\",)\n\n    def parse(self, path: Path) -> Document:\n        reader = PdfReader(str(path))\n        parts: list[str] = []\n        for i, page in enumerate(reader.pages, start=1):\n            page_text = (page.extract_text() or \"\").replace(\"\\x00\", \"\").strip()\n            parts.append(f\"[第 {i} 页]\\n{page_text}\")   # 页码内联，切分时可携带\n        full = \"\\n\\n\".join(parts)\n        return _make_doc(path, full, {\"page_count\": len(reader.pages)})\n\n\nclass DocxParser(BaseParser):\n    supported_extensions = (\".docx\",)\n\n    def parse(self, path: Path) -> Document:\n        doc = DocxDocument(str(path))\n        lines = [p.text for p in doc.paragraphs if p.text.strip()]\n        return _make_doc(path, \"\\n\\n\".join(lines), {})\n```\n\n![真实运行：md 解析器自动抽出 headings 元数据，txt 解析器没有](../assets/term-ingest-headings.png)\n\n### 3.3 解析器注册表与入口\n\n用注册表代替 if-elif，新增格式 = 新增一个类 + 注册一行，老代码零改动：\n\n```python\nPARSERS: list[type[BaseParser]] = [MdParser, DocxParser, PdfParser, TxtParser]\n\n\ndef ingest(path: str | Path) -> Document:\n    path = Path(path)\n    if not path.is_file():\n        raise FileNotFoundError(f\"文件不存在: {path}\")\n    for parser_cls in PARSERS:\n        if parser_cls.supports(path):\n            return parser_cls().parse(path)\n    raise ValueError(f\"不支持的格式: {path.suffix!r}（支持 .txt/.md/.pdf/.docx）\")\n```\n\n### 3.4 doc_id 为什么用内容哈希\n\nJava 里你可能习惯用 UUID 或自增 ID。但知识库会**重复摄入**同一个文件（重建索引、增量更新），用文件名或 UUID 做主键会产生两条一样的记录。对内容做 SHA-256 后取前 16 位：\n\n- 同一个文件重复摄入 → 同一个 `doc_id` → 天然幂等（upsert 覆盖）；\n- 文件内容改了 → `doc_id` 变化 → 新旧版本可以区分。\n\n**Java 里这类似数据库用 `ON DUPLICATE KEY UPDATE` 依赖业务唯一键，Python 里直接让 ID 从内容派生，更省心。**\n\n---\n\n![真实运行：6 个文件解析成 Document，doc_id 是内容哈希，md 文档还带 headings 元数据](../assets/term-ingest.png)\n\n## 4. 动手实现（设计稿）\n\n以下代码将在 `src/rag/` 落地时实现，现在当设计稿读。目标文件结构：\n\n```text\nsrc/rag/\n├── document.py    # Document dataclass\n├── parsers.py     # BaseParser + Txt/Md/Pdf/Docx + ingest() 入口\n└── __init__.py\n```\n\n关键实现思路（补全上面的骨架）：\n\n1. **TxtParser 的 encoding 兜底**：先尝试 utf-8，捕获 `UnicodeDecodeError` 后回退 `gbk`，再不行回退 `latin-1`（保证永远能读出来，宁可出噪音也别崩）。`errors=\"strict\"` 的版本是教学简化，落地版写成三层回退：\n\n```python\ndef _read_text_fallback(path: Path) -> str:\n    for enc in (\"utf-8\", \"gbk\", \"latin-1\"):\n        try:\n            return path.read_text(encoding=enc)\n        except UnicodeDecodeError:\n            continue\n    raise ValueError(f\"无法解码文件（尝试过 utf-8/gbk/latin-1）: {path}\")\n```\n\n2. **PDF 页眉页脚清洗**：解析完所有页后做一次统计——出现在超过 60% 页面开头/结尾且长度 < 40 字符的行，判定为页眉页脚，整批删掉。这是\"用统计对抗噪音\"，比硬编码页码可靠。\n\n3. **docx 表格**：`python-docx` 的 `doc.paragraphs` 不含表格内容，落地版要遍历 `doc.tables`，把每个单元格用 ` | ` 拼接成行文本，否则表格信息全部丢失。\n\n4. **Markdown 代码围栏标记**：`MdParser` 在 ``` 围栏前后插入哨兵注释，供 02 章的切分器识别\"这段是代码，不许按句号拆\"。\n\n5. **依赖安装**：\n\n```bash\npip install pypdf python-docx\n```\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：Windows 产出的 txt 用 utf-8 读直接炸\n\n- **现象**：`UnicodeDecodeError: 'gbk' codec can't decode`（或反过来 utf-8 报错），文件明明是正常中文文档。\n- **原因**：Windows 记事本/某些老系统默认编码是 gbk，macOS/Linux 默认 utf-8。文本文件**没有自我声明的编码**，扩展名 .txt 不代表 utf-8。\n- **正确做法**：永远显式传 `encoding=`，并做三层回退（utf-8 → gbk → latin-1）或用 `chardet` 探测。**Java 里 `new FileReader(file)` 也踩同一个坑（依赖平台默认编码），所以 Java 17 引入了 `Files.readString(path, Charset)` 强制显式传参——Python 同理，`open()` 不传 encoding 是欠账。**\n\n### 坑 2：PDF 提取出 `\\x00`，后续 embedding API 直接 400\n\n- **现象**：本地解析正常，调 embedding 接口时报 `invalid request`，错误信息完全没提哪个字符有问题。\n- **原因**：某些 PDF 的字体编码表异常，`pypdf` 提取出的文本里混入 null 字符 `\\x00`，部分 API 侧校验会拒绝。\n- **正确做法**：在 `_make_doc` 的统一出口处 `text.replace(\"\\x00\", \"\")`，并且可以做一层更狠的清洗：删掉所有 C0 控制字符（保留 `\\n` 和 `\\t`）。**清洗逻辑放在统一出口，而不是各 parser 里各写一遍——入口多个、出口只有一个，这是防漏的关键。**\n\n### 坑 3：用文件名当 doc_id，同名的两个文件互相覆盖\n\n- **现象**：`notes/README.md` 和 `project-b/README.md` 都叫 README，入库后只剩一条；或者文件改了名，同一段内容被存了两份。\n- **原因**：文件名是\"位置信息\"不是\"内容身份\"，重命名、同名目录都会让它失效。\n- **正确做法**：`doc_id = sha256(清洗后的正文)[:16]`，文件名只放进 `metadata[\"source\"]` 做展示。\n\n### 坑 4：pypdf 把双栏 PDF 拆成\"左右交错\"的乱序文本\n\n- **现象**：解析出的文字内容是对的，但读起来像这样：第一行是左栏前半句，第二行是右栏前半句……检索命中后给模型看，模型的理解完全错乱。\n- **原因**：`extract_text()` 按几何坐标的行序输出，双栏排版在同一行高度上有左右两段文字。\n- **正确做法**：先用 `page.extract_text(extraction_mode=\"layout\")` 尝试保布局模式；仍然乱序就换 `pdfplumber` 按 x 坐标分栏；实在不行只对纯文本型文档做 RAG，扫描件交给 OCR 流水线（超出本章范围，先知道有这条路）。\n\n---\n\n## 6. 自检清单\n\n- [ ] 能说清 RAG 第一步为什么是摄入而不是检索（垃圾进 = 垃圾出）\n- [ ] 能写出 `BaseParser` ABC 并解释它对应 Java 的哪种模式（策略 / SPI）\n- [ ] 四种格式各说出一个解析层面的坑（md 代码围栏 / pdf 双栏 / docx 表格 / txt 编码）\n- [ ] `Document` 的 metadata 里存了什么，检索溯源时分别用在哪里\n- [ ] 能解释 doc_id 用内容哈希而不是文件名/UUID 的理由\n- [ ] 清洗逻辑（控制字符、编码回退）放在统一出口而不是各 parser 内\n\n---\n\n回到项目主页：[../README.md](../README.md)\n\n下一章：[02-chunking.md](02-chunking.md) —— 拿到了整篇干净文本，为什么还要把它切碎？\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -357,6 +515,8 @@ def ingest(path: str | Path) -&gt; Document:
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -366,6 +526,173 @@ def ingest(path: str | Path) -&gt; Document:
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -379,6 +706,17 @@ def ingest(path: str | Path) -&gt; Document:
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -405,15 +743,46 @@ def ingest(path: str | Path) -&gt; Document:
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -98,9 +98,10 @@ ai-engineer-journey/
 | `render_terminal.py` | 把真实 stdout 渲染成终端风格 PNG（截图有据可依） |
 | `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版 |
 | `build_docs_html.py` | **批量渲染**：把全部（或指定子集）Markdown 转成 `publishing/html/docs/` 下的 HTML 树，并自校验链接 |
-| `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航 |
-| `md_to_book_html.py` | 单篇渲染器：自动抽取 h2/h3 生成侧边目录大纲、顶部阅读进度条、每章末尾「上一节 / 下一节」链式导航、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
-| `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（675 个文件 / 12 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html` |
+| `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航、一键复制文档路径 |
+| `md_to_book_html.py` | 单篇渲染器：顶栏（返回总览 / 阅读·源码切换 / 复制 / 下载）、自动抽取 h2/h3 生成侧边目录大纲、阅读进度条与百分比、每章末尾「上一节 / 下一节」链式导航、代码块一键复制、图片灯箱、宽表横滚、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
+| `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（678 个文件 / 12.26 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html` |
+| `verify_pages.js` | **站点交互实测**：用真实 Chromium 走一遍三张页面的交互（返回总览、阅读↔源码切换、灯箱、复制反馈、hash 路由与浏览器前进后退、深链直达），并顺带产出 `publishing/site-assets/` 里的截图 |
 | `latex_mathml.py` | **公式渲染**：构建期把 `$…$` / `$$…$$` 里的 LaTeX 转成浏览器原生 MathML（分数/根式/上下标/矩阵/`\text` 中文混排/`\operatorname`/`\mathbb`/间距与箭头），运行时零依赖 |
 | `verify_math_layout.js` | **公式版式实测**：用真实 Chromium 量「公式是否横排、是否溢出行容器、行内混排是否撑歪行高」，桌面 1280px + 移动 390/768px 三个视口 |
 | `shot_math.js` | 用真实 Chromium 截取公式渲染截图（`llm-fundamentals/assets/math-render-*.png` 的来源） |
@@ -117,15 +118,35 @@ MathML，随页面一起落地——不引 CDN、不塞 KaTeX 字体，断网双
 **代码浏览器**：`publishing/html/ide.html` 打开就是项目列表，点进某一项目后是
 IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）、右侧带语法高亮的代码区
 （标签页、行号、面包屑、底部状态栏），深色主题、响应式，同样零依赖、双击即开。
+顶栏有「⧉ 复制文件」一键复制当前文件的完整内容（`file://` 下 Clipboard API 被拒时
+自动退回 `execCommand`，不会变成一个按不动的假按钮），状态栏可复制文件路径。
+地址栏就是状态：`ide.html#/01-python-ai-cli/README.md` 可以直达某个文件，
+浏览器前进 / 后退也真的能用来在「项目列表 ↔ 项目 ↔ 文件」之间来回走。
 数据源是构建时从仓库真实采集的（不含 `.venv` / `node_modules` / 二进制 / 权重），
 改完代码重跑 `python3 scripts/gen_ide_browser.py` 即可刷新。
 
+![代码浏览器：项目列表，右上角是返回文档总览的入口](publishing/site-assets/site-ide-home.png)
+![复制当前文件：底部提示已复制 README.md（152 行 · 5.0 KB）](publishing/site-assets/site-ide-copy.png)
+
 **本地阅读**：`publishing/html/index.html` 是入口，209 篇文档全部以渲染后的页面打开
 （`publishing/html/docs/…`，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。
+每个章节页的顶栏都有「← 文档总览」，并且**带着该章的锚点回去**（`index.html#ch-47`），
+落回总览里的第 47 章而不是被扔回页面顶部。
+
+![文档总览：209 章、可过滤、每章三个入口（渲染页 / 原始 Markdown / 路径）](publishing/site-assets/site-index.png)
+![章节页顶栏：返回文档总览 + 阅读/源码切换 + 复制/下载](publishing/site-assets/site-chapter-topbar.png)
+![章节页的源码视图：带行号的原始 Markdown，可复制、可下载](publishing/site-assets/site-chapter-source.png)
+
 索引里带紫色 <code>便携版</code> 标签的两篇（`python-practice/07-延伸阅读`、
 `llm-fundamentals/12-tutorials-and-agent`）是 base64 内嵌的自包含单文件，
 存在镜像树的同名 `*.portable.html` 里——图片全在文件内，拷到别处、发给别人、断网都能双击打开，
 是这两篇的便携阅读副本；其余文档想拷走单篇，用 `md_to_book_html.py` 现生成。
+
+**关于「原始 Markdown」**：浏览器不认识 `.md`，双击只会把源码当纯文本摊开，
+而索引里原先那条「原始 .md」链接连文件都找不到（路径按仓库根算，却从 `publishing/html/`
+解析，209 条全是 404）。现在改成打开该文档在渲染页里的**源码视图**：带行号、
+有 Markdown 高亮、可一键复制、可下载成 `.md`，与阅读视图用顶栏的「阅读 / 源码」随时互切
+（快捷键 `S`）。同一页两副面孔，就不用再维护第二棵文件树。
 
 ## 单一事实源
 

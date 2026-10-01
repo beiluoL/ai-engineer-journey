@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-78" title="返回《文档总览》第 78 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 04：Vector Database【向量数据库】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#为什么普通数据库做不了从-on-到-ann" class="lvl3">为什么普通数据库做不了：从 O(N) 到 ANN</a><a href="#三阶段路线" class="lvl3">三阶段路线</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-存储抽象basevectorstore" class="lvl3">3.1 存储抽象：BaseVectorStore</a><a href="#32-阶段-①numpy-暴力余弦" class="lvl3">3.2 阶段 ①：NumPy 暴力余弦</a><a href="#33-metadata-过滤先过滤后搜-vs-先搜后过滤" class="lvl3">3.3 metadata 过滤：先过滤后搜 vs 先搜后过滤</a><a href="#34-阶段-②chromavectorstore" class="lvl3">3.4 阶段 ②：ChromaVectorStore</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1chroma-collection-名字不符合规范报错信息看不懂" class="lvl3">坑 1：Chroma collection 名字不符合规范，报错信息看不懂</a><a href="#坑-2持久化目录被-gitignore-漏掉仓库里塞了半-gb-的向量数据" class="lvl3">坑 2：持久化目录被 .gitignore 漏掉，仓库里塞了半 GB 的向量数据</a><a href="#坑-3维度不一致报错发生在查询而不是入库" class="lvl3">坑 3：维度不一致，报错发生在查询而不是入库</a><a href="#坑-4删除文档时向量和-chunk-元数据不同步" class="lvl3">坑 4：删除文档时向量和 chunk 元数据不同步</a><a href="#坑-5把先搜后过滤当成了正确语义" class="lvl3">坑 5：把&amp;quot;先搜后过滤&amp;quot;当成了正确语义</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a><a href="#7-真实运行截图第十一章补充" class="lvl2">7. 真实运行截图（第十一章补充）</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-04vector-database向量数据库">Project 04 — Chapter 04：Vector Database【向量数据库】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/vector_store.py</code>（<code>BaseVectorStore</code> + <code>InMemoryVectorStore</code> + <code>ChromaVectorStore</code>）</p></blockquote>
 <hr/>
@@ -390,8 +529,27 @@ class ChromaVectorStore(BaseVectorStore):
 <p>上一章：<a href="03-embedding.html">03-embedding.md</a> —— 文本变成了向量，语义第一次可以被计算</p>
 <p>下一章：<a href="05-retrieval.html">05-retrieval.md</a> —— 库建好了，检索链路怎么把&quot;最近的几条&quot;变成模型的上下文？</p>
 <p>回到项目主页：<a href="../README.html">../README.md</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/04-vector-database.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/04-vector-database.md", "name": "04-vector-database.md", "text": "# Project 04 — Chapter 04：Vector Database【向量数据库】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/vector_store.py`（`BaseVectorStore` + `InMemoryVectorStore` + `ChromaVectorStore`）\n\n---\n\n## 1. 本章要解决什么问题\n\nChapter 03 结束时，每个 `Chunk` 都有了自己的向量。现在用户提问，query 也变成了向量——**接下来要在几百上千条文档向量里，找出和 query 向量最近的那几条**。\n\n第一反应往往是：这有什么难的？数据库里存了向量字段，`SELECT ... WHERE ... LIKE` 或者写个循环算相似度不就行了？\n\n```text\n你以为：  向量检索就是把所有向量都比一遍，选最近的\n实际上：  全量比对是 O(N × d)（N 条向量 × d 维），\n          10 万条 × 1024 维的库，每次查询都是几千万次浮点运算，\n          用户等不起，服务器也算不起\n```\n\n用 `LIKE` 更不行——它匹配的是**字符串**，而我们的相似度在**几何空间**里，SQL 的 WHERE 子句根本表达不了\"余弦距离最近\"。这是向量数据库作为一个独立品类存在的根本原因。\n\n本章目标：\n\n> **设计可替换的向量存储层：先手写暴力检索吃透原理，再切到 Chroma 获得持久化与 ANN 能力。**\n\n---\n\n## 2. 为什么需要这个知识\n\n### 为什么普通数据库做不了：从 O(N) 到 ANN\n\n向量检索的本质是**最近邻搜索**【Nearest Neighbor Search】。精确解只有暴力比对 O(N)，于是工业界的答案是 ANN【Approximate Nearest Neighbor，近似最近邻】：**放弃\"绝对最近\"，换取快几个数量级的检索**——召回 top-10 时偶尔漏掉真正第 3 名，但对 RAG 来说\"差不多最近的几条\"完全够用。\n\n主流索引算法里，Chroma 默认使用的 **HNSW**【Hierarchical Navigable Small World，分层可导航小世界图】的直觉一句话就能讲：**把向量组织成一张\"跳表层\"的图——最上层稀疏边长，像高速公路；往下每层更稠密、边更短，像城市道路。查询从高速公路粗定位，再逐层下钻精确逼近，不用遍历所有点就能到达近邻。** 和跳表（skip list）的分层思想同源，数学细节本章不展开。\n\n### 三阶段路线\n\n学习路线和工程路线在这里是同一条：\n\n| 阶段 | 方案 | 定位 |\n|------|------|------|\n| ① 纯 Python：dict + NumPy 暴力余弦 | `InMemoryVectorStore` | **先懂原理**。几百条文档完全够用，且每一步都透明可见 |\n| ② Chroma | `ChromaVectorStore` | `pip install` 即用、本地持久化、自带 HNSW。**个人知识库首选** |\n| ③ Milvus | 生产级 | 分布式、十亿级向量，需要单独部署集群——本章提一句即可，不落地 |\n\n先写阶段 ① 的理由和 P02/P03 一脉相承：**框架当黑盒之前，先用 50 行代码把白盒拆开看一遍。** 否则 Chroma 报一个\"dimension mismatch\"，你连报错在说什么都不知道。\n\n---\n\n## 3. 核心概念\n\n### 3.1 存储抽象：BaseVectorStore\n\n**Java 里你天天写 Repository 接口**：`interface ChunkRepository { void save(...); List<Chunk> search(...); }`，内存实现给测试，JPA 实现给生产。Python 里同一个模式，一个 ABC 三个实现：\n\n```python\n# src/rag/vector_store.py\nfrom abc import ABC, abstractmethod\n\nfrom .chunker import Chunk\n\n\nclass BaseVectorStore(ABC):\n    \"\"\"向量存储抽象：存 (Chunk, vector)，查 top-k。\"\"\"\n\n    @abstractmethod\n    def add(self, chunks: list[Chunk], vectors: list[list[float]],\n            model: str = \"\") -> None:\n        \"\"\"入库。model 记录嵌入模型名，供查询时校验（Chapter 03 坑 1）。\"\"\"\n        ...\n\n    @abstractmethod\n    def search(self, query_vector: list[float], top_k: int = 5,\n               filter: dict | None = None) -> list[dict]:\n        \"\"\"返回 [{chunk, score}, ...]，按相似度降序。filter 为 metadata 过滤。\"\"\"\n        ...\n\n    @abstractmethod\n    def count(self) -> int: ...\n\n    @abstractmethod\n    def clear(self) -> None: ...\n\n    @abstractmethod\n    def delete_document(self, doc_id: str) -> None:\n        \"\"\"删除一个文档的所有 chunk 及其向量。\"\"\"\n        ...\n```\n\n注意 `search` 的返回是 `chunk + score` 的组合——检索结果必须带相似度分数，下游（Chapter 05 的 rerank 和阈值过滤）都要用。\n\n### 3.2 阶段 ①：NumPy 暴力余弦\n\n把余弦相似度亲手算一遍，这个知识就永远是你的了：\n\n```python\nimport numpy as np\n\n\nclass InMemoryVectorStore(BaseVectorStore):\n    model_name = \"\"          # 记录入库时用的嵌入模型\n\n    def __init__(self) -> None:\n        self._chunks: dict[str, Chunk] = {}            # chunk_id -> Chunk\n        self._matrix: np.ndarray | None = None         # (N, dim) 矩阵\n        self._ids: list[str] = []                      # 矩阵第 i 行对应的 chunk_id\n        self._meta: list[dict] = []                    # 与矩阵行对齐的元数据\n\n    def add(self, chunks, vectors, model: str = \"\") -> None:\n        new_rows = np.asarray(vectors, dtype=np.float32)\n        self._matrix = new_rows if self._matrix is None else np.vstack([self._matrix, new_rows])\n        for c in chunks:\n            self._chunks[c.chunk_id] = c\n            self._ids.append(c.chunk_id)\n            self._meta.append(dict(c.metadata))\n        self.model_name = model or self.model_name\n\n    def search(self, query_vector, top_k: int = 5, filter: dict | None = None):\n        if self._matrix is None or len(self._ids) == 0:\n            return []\n\n        q = np.asarray(query_vector, dtype=np.float32)\n        # 归一化后点积 == 余弦相似度\n        q = q / (np.linalg.norm(q) or 1.0)\n        m = self._matrix / (np.linalg.norm(self._matrix, axis=1, keepdims=True) + 1e-9)\n        scores = m @ q                                   # (N,) 一次矩阵乘算完全部相似度\n\n        order = np.argsort(-scores)\n        results = []\n        for i in order:\n            meta = self._meta[i]\n            if filter and not all(meta.get(k) == v for k, v in filter.items()):\n                continue                                  # 先过滤后搜，见 3.3\n            results.append({\n                \"chunk\": self._chunks[self._ids[i]],\n                \"score\": float(scores[i]),\n            })\n            if len(results) >= top_k:\n                break\n        return results\n\n    def count(self) -> int:\n        return len(self._ids)\n\n    def clear(self) -> None:\n        self._chunks.clear(); self._ids.clear(); self._meta.clear(); self._matrix = None\n\n    def delete_document(self, doc_id: str) -> None:\n        keep = [i for i, cid in enumerate(self._ids)\n                if self._chunks[cid].doc_id != doc_id]\n        self._matrix = self._matrix[keep]\n        self._ids = [self._ids[i] for i in keep]\n        self._meta = [self._meta[i] for i in keep]\n        for cid in [c for c, chk in self._chunks.items() if chk.doc_id == doc_id]:\n            del self._chunks[cid]\n```\n\n读懂三个点，这段代码就没白写：\n\n1. `m @ q` 一行就是\"全部向量与 query 的余弦相似度\"——NumPy 把 O(N) 次点积压成一次矩阵乘，这就是几百条文档时\"暴力也够快\"的原因。\n2. 归一化之后点积等价于余弦相似度（Chapter 03 讲过的归一化红利）。\n3. `filter` 在**取 top_k 之前**逐行检查——这正是 3.3 要对比的\"先过滤后搜\"。\n\n### 3.3 metadata 过滤：先过滤后搜 vs 先搜后过滤\n\n需求：只在\"某个 PDF\"里检索。两种做法：\n\n| 顺序 | 做法 | 问题 |\n|------|------|------|\n| 先搜后过滤 | 全库搜 top-50，再按 metadata 筛 | 筛完可能只剩 1 条甚至 0 条——top-50 里根本没有目标文档的内容 |\n| **先过滤后搜** | 先把候选集缩到目标文档，在子集内搜 top-5 | 正确：top-5 一定来自过滤后的集合 |\n\n所以抽象层的约定是：**`filter` 语义 = 先过滤后搜**。Chroma 的 `where` 参数也是这个语义。\n\n**Java 里这就像 SQL 的 `WHERE` 在 `ORDER BY ... LIMIT` 之前生效——你不会先 `LIMIT 5` 再 WHERE，同样的直觉。**\n\n![真实运行：InMemoryVectorStore 的 add / count / search，以及 filter「先过滤后搜」](../assets/term-store.png)\n\n### 3.4 阶段 ②：ChromaVectorStore\n\n```python\nimport chromadb\n\n\nclass ChromaVectorStore(BaseVectorStore):\n    def __init__(self, persist_directory: str = \"./data/chroma\",\n                 collection_name: str = \"rag_chunks\"):\n        self._client = chromadb.PersistentClient(path=persist_directory)\n        self._collection = self._client.get_or_create_collection(\n            name=collection_name,\n            metadata={\"hnsw:space\": \"cosine\"},       # 指定余弦距离\n        )\n\n    def add(self, chunks, vectors, model: str = \"\") -> None:\n        self._collection.upsert(\n            ids=[c.chunk_id for c in chunks],\n            embeddings=[[float(x) for x in v] for v in vectors],\n            documents=[c.text for c in chunks],\n            metadatas=[{**c.metadata, \"_model\": model, \"doc_id\": c.doc_id,\n                        \"index\": c.index} for c in chunks],\n        )\n\n    def search(self, query_vector, top_k: int = 5, filter: dict | None = None):\n        kwargs: dict = {\n            \"query_embeddings\": [[float(x) for x in query_vector]],\n            \"n_results\": top_k,\n            \"include\": [\"documents\", \"metadatas\", \"distances\"],\n        }\n        if filter:\n            kwargs[\"where\"] = filter                  # 先过滤后搜\n        res = self._collection.query(**kwargs)\n        out = []\n        for cid, doc, meta, dist in zip(res[\"ids\"][0], res[\"documents\"][0],\n                                        res[\"metadatas\"][0], res[\"distances\"][0]):\n            chunk = Chunk(chunk_id=cid, doc_id=meta.get(\"doc_id\", \"\"),\n                          text=doc, index=meta.get(\"index\", 0), metadata=meta)\n            out.append({\"chunk\": chunk, \"score\": 1.0 - float(dist)})  # 距离 → 相似度\n        return out\n\n    def count(self) -> int:\n        return self._collection.count()\n\n    def clear(self) -> None:\n        cid = self._collection.name\n        self._client.delete_collection(cid)\n        self._collection = self._client.get_or_create_collection(\n            name=cid, metadata={\"hnsw:space\": \"cosine\"})\n\n    def delete_document(self, doc_id: str) -> None:\n        self._collection.delete(where={\"doc_id\": doc_id})\n```\n\n值得注意的两处：`upsert`（而不是 `add`）让重复入库变成覆盖，呼应 Chapter 01 的内容哈希幂等设计；Chroma 返回的是**距离**，`score = 1 - distance` 换算回相似度，和 `InMemoryVectorStore` 的语义对齐——**这正是先定义抽象层的红利：上层代码对两个实现零感知。**\n\n---\n\n## 4. 动手实现（设计稿）\n\n以下代码将在 `src/rag/vector_store.py` 落地时实现。目标结构：\n\n```text\nsrc/rag/\n├── vector_store.py   # BaseVectorStore / InMemoryVectorStore / ChromaVectorStore\n└── ...\n```\n\n关键实现思路：\n\n1. **存储工厂**，与 Chapter 03 的 embedding 工厂呼应：\n\n```python\ndef create_vector_store(config: dict) -> BaseVectorStore:\n    backend = config.get(\"backend\", \"memory\")\n    if backend == \"memory\":\n        return InMemoryVectorStore()\n    if backend == \"chroma\":\n        return ChromaVectorStore(persist_directory=config.get(\"persist_directory\",\n                                                              \"./data/chroma\"))\n    raise ValueError(f\"未知向量库 backend: {backend!r}\")\n```\n\n2. **查询侧的模型校验**（Chapter 03 坑 1 的防线落地）：入库时模型名存进 metadata 的 `_model` 字段，查询前取出比对，不一致抛 `ValueError`。\n\n2. **端到端串联自测**（用 Fake，不需要 API key）：`ingest → chunk → FakeEmbeddingClient.embed → store.add → store.search(query_vector, filter={\"format\": \"md\"})`，断言结果非空且分数降序。整条链路离线可跑，是后面 05 章真实检索的地基。\n\n4. **依赖**：`pip install chromadb numpy`。\n\n5. **Milvus 提一句**：当向量到千万级、需要多副本和标量混合索引时再上 Milvus（独立部署、gRPC 接入）。个人知识库和单机服务，Chroma 的上限远比想象中高，不要提前优化。\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：Chroma collection 名字不符合规范，报错信息看不懂\n\n- **现象**：`get_or_create_collection(name=\"我的 知识库!\")` 报 `ValueError: Expected collection name ... (3-63 characters, ...)`，一长串正则让人摸不着头脑。\n- **原因**：Chroma 的 collection 名要求：3~63 字符、只允许字母数字和 `-`/`_`、必须以字母或数字开头结尾——中文名、空格、`!`、以 `-` 开头都不行。\n- **正确做法**：用固定英文 snake_case（如 `rag_chunks`），要区分多知识库时用配置里的英文 key 拼接，不要用用户输入的任意字符串当 collection 名。\n\n### 坑 2：持久化目录被 .gitignore 漏掉，仓库里塞了半 GB 的向量数据\n\n- **现象**：`git status` 里冒出 `data/chroma/` 几百个文件；或者反过来，同事 clone 下来发现向量库是空的，\"检索怎么没结果\"。\n- **原因**：默认 `persist_directory=\"./data/chroma\"` 落在项目根目录，而 `.gitignore` 可能没覆盖到（数据被误提交），或覆盖过头把 `data/` 全局忽略导致误以为程序坏了。\n- **正确做法**：把持久化目录约定为 `./data/` 并加入 `.gitignore`；入库写一个\"重建脚本\"（从原始文档全量重建索引）代替提交数据本身——**向量库永远是可再生的派生数据，源文档才是 source of truth，和 Java 项目不把 target/ 提交进 git 是同一个道理。**\n\n### 坑 3：维度不一致，报错发生在查询而不是入库\n\n- **现象**：`InvalidDimensionException: Embedding dimension 1536 does not match collection dimensionality 1024`。更隐蔽的变体：换了 embedding 模型重建索引但没清空旧 collection，检索结果里混着两个模型的向量，分数全是垃圾。\n- **原因**：collection 在第一次写入时就固定了维度；同一模型空间校验通过、跨模型混存时 Chroma 不会替你校验\"是不是同一个模型\"。\n- **正确做法**：入库和查询前都校验模型一致性（见 4.2）；换模型 = 换 collection 名（如 `rag_chunks_bge_m3`）或先 `clear()` 再全量重建。**就像 Java 里改了实体字段结构，老表必须跑 migration——向量空间变了，库必须重建。**\n\n### 坑 4：删除文档时向量和 chunk 元数据不同步\n\n- **现象**：删除某文档后再检索，top 结果里出现\"幽灵 chunk\"——`self._chunks` 里查不到对应的 Chunk，直接 `KeyError`；或者 `count()` 显示的条数和能检索到的条数对不上。\n- **原因**：删除时只删了向量矩阵的行、忘了同步删 `chunks` 字典（或反过来）；自研存储里这种双结构不同步是最常见 bug。\n- **正确做法**：`delete_document` 里对矩阵行、`_ids`、`_meta`、`_chunks` **四处一起删**（见 3.2 实现），并写一个不变量断言测试：`count() == len(_ids) == len(_chunks)`，任何时刻三者必须相等。\n\n### 坑 5：把\"先搜后过滤\"当成了正确语义\n\n- **现象**：指定\"只检索某 PDF\"后，10 次里有 3 次结果为空或混入其他文档——数据明明都在库里。\n- **原因**：实现成了\"全库 top-k 再按 metadata 筛\"（3.3 表格里的第一种），目标文档的内容根本没进 top-k 候选。\n- **正确做法**：过滤条件下沉到检索层（自研实现在打分循环里跳过不匹配行；Chroma 用 `where` 参数），保证 top-k 来自过滤后的子集。\n\n---\n\n## 6. 自检清单\n\n- [ ] 能说清 `LIKE`/全表扫描为什么做不了向量检索，ANN 用什么换了什么\n- [ ] 能用\"高速公路 + 城市道路\"讲一遍 HNSW 的直觉\n- [ ] 亲手实现过 NumPy 版余弦检索，并能解释 `m @ q` 那一行在算什么\n- [ ] 能说清\"先过滤后搜\"和\"先搜后过滤\"的区别及各自的后果\n- [ ] 两个实现（InMemory / Chroma）能在同一个 `BaseVectorStore` 抽象下互换\n- [ ] 知道换 embedding 模型时向量库必须重建，以及 collection 命名规范\n\n---\n\n## 7. 真实运行截图（第十一章补充）\n\n第十一章用 `ChromaVectorStore` 把向量库从内存换成了持久化落盘。两张截图分别展示「Chroma 落盘与重启恢复」和「换模型时的护栏」：\n\n![Chroma 落盘、重启恢复与语义检索](../assets/real-chroma.png)\n\n![Fake vs 真实与换模型护栏](../assets/real-guard.png)\n\n> 关键结论：持久化目录里出现 `_model` sidecar 文件，专门用来在进程重启后恢复 `model_name`，否则 `check_model()` 这道换模型护栏会失效；Chroma 的 metadata 也不收 `list`，入库前要把 `headings` 这类列表压成字符串。\n\n---\n\n上一章：[03-embedding.md](03-embedding.md) —— 文本变成了向量，语义第一次可以被计算\n\n下一章：[05-retrieval.md](05-retrieval.md) —— 库建好了，检索链路怎么把\"最近的几条\"变成模型的上下文？\n\n回到项目主页：[../README.md](../README.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -399,6 +557,8 @@ class ChromaVectorStore(BaseVectorStore):
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -408,6 +568,173 @@ class ChromaVectorStore(BaseVectorStore):
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -421,6 +748,17 @@ class ChromaVectorStore(BaseVectorStore):
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -447,15 +785,46 @@ class ChromaVectorStore(BaseVectorStore):
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

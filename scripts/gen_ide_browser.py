@@ -239,6 +239,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .hd .sub{color:var(--muted);font-size:12.5px}
 .hd .sp{flex:1}
 .hd .hint{color:var(--dim);font-size:12px}
+.hd-note{color:var(--dim);font-size:12px;padding:2px 24px 30px;text-align:center;line-height:1.9}
+.hd .hlink{
+  flex:none;text-decoration:none;display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);
+  font-size:12.5px;color:#cfcfd4;white-space:nowrap;
+}
+.hd .hlink:hover{background:#3d3d43;border-color:var(--accent);color:#fff;text-decoration:none}
+a.iconbtn{text-decoration:none}
+.btn.on-file{border-color:var(--accent2);color:#cfe6ff}
 .grid{padding:22px 24px 40px;display:grid;gap:14px;
   grid-template-columns:repeat(auto-fill,minmax(310px,1fr))}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
@@ -271,7 +280,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .bar .crumb .sep{opacity:.5}
 .bar .sp{flex:1}
 .btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg4);
-  font-size:12px;color:#cfcfd4}
+  font-size:12px;color:#cfcfd4;white-space:nowrap;flex:none}
 .btn:hover{background:#3d3d43;border-color:#5a5a60}
 #burger{display:none}
 .body{flex:1;display:flex;min-height:0}
@@ -342,10 +351,26 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   background:var(--accent2);color:#fff}
 .stbar .sp{flex:1}
 .stbar span{opacity:.92}
+.stbar .copy{
+  opacity:.9;padding:0 6px;border-radius:4px;color:#fff;font-size:11px;
+  border:1px solid rgba(255,255,255,.35);
+}
+.stbar .copy:hover{opacity:1;background:rgba(255,255,255,.16)}
+
+/* 操作反馈 */
+.toast{
+  position:fixed;left:50%;bottom:40px;z-index:120;
+  transform:translate(-50%,10px);opacity:0;pointer-events:none;
+  background:#e6edf3;color:#0d1117;padding:9px 16px;border-radius:10px;
+  font-size:13px;max-width:80vw;text-align:center;transition:.2s;
+  box-shadow:0 12px 34px rgba(0,0,0,.45);
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:860px){
   .grid{grid-template-columns:1fr;padding:16px 14px 34px}
   .hd{padding:12px 14px}
+  .hd .hint{display:none}
   #burger{display:grid}
   .side{position:fixed;top:38px;bottom:24px;left:0;z-index:20;transform:translateX(-100%);
     transition:transform .18s;box-shadow:6px 0 26px rgba(0,0,0,.5);width:84vw;max-width:300px}
@@ -353,6 +378,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   .side .shd{position:fixed;inset:0;background:#000000aa;z-index:19;display:none}
   .side .shd.on{display:block}
   .bar .hint{display:none}
+  .bar{gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 8px}
+  .bar::-webkit-scrollbar{height:0}
+  .bar .iconbtn{flex:none}
+  .bar .crumb{display:none}   /* 必须写 .bar 前缀：桌面的 .bar .crumb 优先级更高 */
 }
 </style>
 </head>
@@ -367,9 +396,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       <div class="sub">__NPROJ__ 个项目 · __NFILE__ 个文件 · __NLINE__ 行真实代码</div>
     </div>
     <div class="sp"></div>
-    <div class="hint">本页把所有源码内嵌进单个 HTML，无后端、可离线双击打开</div>
+    <a class="hlink" href="index.html" title="返回文档总览（publishing/html/index.html）">← 文档总览</a>
   </div>
   <div class="grid" id="grid"></div>
+  <div class="hd-note">所有源码已内嵌进这一个 HTML 文件：无后端、无网络依赖，双击即可离线浏览；
+    进入项目后用「⧉ 复制文件」可整份复制当前代码。</div>
 </div>
 
 <!-- ================= IDE ================= -->
@@ -377,8 +408,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   <div class="bar">
     <button class="iconbtn" id="burger" title="文件树 (Ctrl+B)">☰</button>
     <button class="btn" id="back">‹ 返回项目列表</button>
+    <a class="iconbtn" id="homeTop" href="index.html" title="返回文档总览">⌂</a>
     <div class="crumb" id="crumb"></div>
     <div class="sp"></div>
+    <button class="btn" id="copyFile" title="一键复制当前文件的完整内容（Ctrl/Cmd+Shift+C）">⧉ 复制文件</button>
     <button class="iconbtn" id="foldAll" title="折叠全部">⤡</button>
     <button class="iconbtn" id="expandAll" title="展开全部">⤢</button>
   </div>
@@ -404,7 +437,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     </main>
   </div>
   <div class="stbar">
-    <span id="st-path">—</span><div class="sp"></div>
+    <span id="st-path">—</span>
+    <button class="copy" id="copyPath" title="复制当前文件的仓库相对路径">⧉ 路径</button>
+    <div class="sp"></div>
     <span id="st-lang">—</span><span id="st-lines">—</span><span id="st-size">—</span>
   </div>
 </div>
@@ -634,7 +669,7 @@ function renderTree(){
         + '<span class="ic '+(EXTCLS[extOf(n.name)]||"i-txt")+'">'+esc(extOf(n.name)||".")+'</span>'
         + '<span class="nm">'+esc(n.name)+'</span>'
         + '<span class="cnt" style="margin-left:0">'+esc(dirName(n.path))+' / '+esc(n.name)+'</span>';
-      (function(nd){ row.onclick = function(){ openFile(nd); }; })(n);
+      (function(nd){ row.onclick = function(){ navTo(P.id, nd.path); }; })(n);
       t.appendChild(row);
     });
     return;
@@ -677,7 +712,7 @@ function nodeEl(node, depth){
       + '<span class="ic '+(EXTCLS[extOf(node.name)]||"i-txt")+'">'+esc(extOf(node.name)||"-")+'</span>'
       + '<span class="nm">'+esc(node.name)+'</span>';
     r2.title = node.path;
-    r2.onclick = function(){ openFile(node); };
+    r2.onclick = function(){ navTo(P.id, node.path); };
     box.appendChild(r2);
   }
   return box;
@@ -794,12 +829,83 @@ function renderHome(){
           return '<span class="tag">'+esc(t)+'</span>';
         }).join("")
         + '<span class="num">'+p.files.length+' 文件 · '+p.lines+' 行</span></div>';
-    card.onclick = function(){ openProject(i); };
+    card.onclick = function(){ navTo(p.id, null); };
     g.appendChild(card);
   });
 }
 
-/* ------------------------------------------------------------------ 导航 */
+/* ------------------------------------------------------------------ 提示与剪贴板 */
+var toastEl = document.createElement("div");
+toastEl.className = "toast";
+document.body.appendChild(toastEl);
+var toastTimer;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove("on"); }, 2200);
+}
+/** file:// 下 Clipboard API 有时被拒，必须有 execCommand 兜底，否则「复制」是个假按钮 */
+function copyText(text, msg){
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly","");
+    ta.style.cssText = "position:fixed;top:-1000px;left:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+    document.body.removeChild(ta);
+    toast(ok ? msg : "复制失败：请手动选中后复制");
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+  } else fallback();
+}
+
+/* ------------------------------------------------------------------ 导航：hash 即状态 */
+/* 点击只改 location.hash，UI 全部交给 applyHash 对齐。
+   好处是浏览器前进/后退、刷新、以及从别处深链过来（ide.html#/项目/文件）都自然可用。 */
+function projHash(id, file){
+  return "#" + encodeURI("/" + id + (file ? "/" + file : ""));
+}
+function parseHash(){
+  var h = location.hash.replace(/^#/, "");
+  if(!h) return null;
+  try { h = decodeURIComponent(h); } catch(e){ /* 文件名里有裸 % 时保持原样 */ }
+  if(h.charAt(0) === "/") h = h.slice(1);
+  var i = h.indexOf("/");
+  return i < 0 ? {id:h, file:null} : {id:h.slice(0,i), file:h.slice(i+1)};
+}
+function findProject(id){
+  for(var i=0;i<PROJ.length;i++) if(PROJ[i].id === id) return i;
+  return -1;
+}
+function findFile(node, path){
+  if(!node) return null;
+  if(node.type === "file") return node.path === path ? node : null;
+  for(var i=0;i<node.children.length;i++){
+    var hit = findFile(node.children[i], path);
+    if(hit) return hit;
+  }
+  return null;
+}
+/** 把一个路径写进地址栏（不直接改 UI，UI 由 hashchange → applyHash 驱动） */
+function navTo(projectId, file){
+  var h = projHash(projectId, file);
+  if(location.hash === h) applyHash();       // 同一个 hash 不会再触发 hashchange
+  else location.hash = h;
+}
+
+/* ------------------------------------------------------------------ 视图切换 */
+function showHome(){
+  P = null;
+  document.getElementById("ide").classList.remove("on");
+  document.getElementById("home").style.display = "";
+  document.getElementById("shd").classList.remove("on");
+  document.getElementById("side").classList.remove("on");
+  renderHome();
+}
 function openProject(i){
   P = PROJ[i];
   TABS = []; ACT = -1; FILTER = "";
@@ -812,16 +918,34 @@ function openProject(i){
   document.getElementById("cempty").style.display = "grid";
   renderTabs(); renderCode(); renderTree(); renderCrumb(); renderStatus();
 }
+function applyHash(){
+  var r = parseHash();
+  var pi = r ? findProject(r.id) : -1;
+  if(pi < 0){ showHome(); return; }
+  if(!P || P.id !== PROJ[pi].id) openProject(pi);
+  if(r.file){
+    var node = findFile(TREE, r.file);
+    if(node) openFile(node);      // 文件不存在就只停在项目上，不白屏
+  }
+}
 function goHome(){
-  document.getElementById("ide").classList.remove("on");
-  document.getElementById("home").style.display = "";
-  renderHome();
-  document.getElementById("shd").classList.remove("on");
-  document.getElementById("side").classList.remove("on");
+  if(!location.hash || location.hash === "#"){ showHome(); return; }
+  location.hash = "";
 }
 
 /* ------------------------------------------------------------------ 绑定 */
 document.getElementById("back").onclick = goHome;
+document.getElementById("copyFile").onclick = function(){
+  if(ACT < 0){ toast("先从左栏文件树里打开一个文件，再复制"); return; }
+  var n = TABS[ACT];
+  copyText(n.content, "已复制 " + n.name + "（" + n.content.split("\n").length
+    + " 行 · " + fmtSize(n.size) + "）");
+};
+document.getElementById("copyPath").onclick = function(){
+  if(ACT < 0){ toast("还没有打开文件"); return; }
+  var p = P.dir + "/" + TABS[ACT].path;
+  copyText(p, "已复制路径：" + p);
+};
 document.getElementById("foldAll").onclick = function(){ setFoldAll(true); renderTree(); };
 document.getElementById("expandAll").onclick = function(){ setFoldAll(false); renderTree(); };
 document.getElementById("closeSide").onclick = toggleSide(false);
@@ -840,8 +964,14 @@ document.getElementById("fil").addEventListener("input", function(e){
   FILTER = e.target.value.trim(); renderTree();
 });
 document.addEventListener("keydown", function(e){
-  if((e.ctrlKey||e.metaKey) && (e.key==="b"||e.key==="B")){ e.preventDefault(); toggleSide(); }
-  if(e.key==="Escape" && document.getElementById("ide").classList.contains("on") && ACT<0) goHome();
+  if((e.ctrlKey||e.metaKey) && (e.key==="b"||e.key==="B")){ e.preventDefault(); toggleSide(); return; }
+  if((e.ctrlKey||e.metaKey) && e.shiftKey && (e.key==="c"||e.key==="C")){
+    e.preventDefault(); document.getElementById("copyFile").click(); return;
+  }
+  if(e.key==="Escape" && document.getElementById("ide").classList.contains("on")){
+    if(document.getElementById("side").classList.contains("on")) toggleSide(false)();
+    else if(ACT < 0) goHome();
+  }
 });
 window.addEventListener("resize", function(){
   if(window.innerWidth>860){
@@ -849,8 +979,10 @@ window.addEventListener("resize", function(){
     document.getElementById("shd").classList.remove("on");
   }
 });
+window.addEventListener("hashchange", applyHash);
 
 renderHome();
+applyHash();      // 支持 ide.html#/项目/文件 深链直达
 })();
 </script>
 </body>

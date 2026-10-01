@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-122" title="返回《文档总览》第 122 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么是-nf4-而不是-int4" class="lvl2">1. Why：为什么是 NF4 而不是 int4</a><a href="#2-design三步量化-一步双量化" class="lvl2">2. Design：三步量化 + 一步双量化</a><a href="#3-realrun-evidence来自-demosoutdemo05qloraterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_05_qlora_terminal.txt）</a><a href="#31-blocksize-扫描实测" class="lvl3">3.1 block_size 扫描（实测）</a><a href="#32-nf4-是信息论最优是真的吗和均匀-int4-对拍实测" class="lvl3">3.2 &amp;quot;NF4 是信息论最优&amp;quot;是真的吗？和均匀 int4 对拍（实测）</a><a href="#33-双量化实测划算" class="lvl3">3.3 双量化（实测：划算）</a><a href="#34-显存账本实测" class="lvl3">3.4 显存账本（实测）</a><a href="#35-qlora-真训-vs-lora-真训各-60-步其余完全相同" class="lvl3">3.5 QLoRA 真训 vs LoRA 真训（各 60 步，其余完全相同）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-小模型上-qlora-根本不划算实测-12842" class="lvl3">4.1 小模型上 QLoRA 根本不划算（实测 128.42%）</a><a href="#42-nf4-相对均匀-int4-只赢-545不是碾压实测" class="lvl3">4.2 NF4 相对均匀 int4 只赢 5.45%，不是碾压（实测）</a><a href="#43-qlora-的末步-loss-反而略低但那是噪声实测-00002" class="lvl3">4.3 QLoRA 的末步 loss 反而略低，但那是噪声（实测 −0.0002）</a><a href="#44-双量化的误差必须算进去不能假装免费实现细节" class="lvl3">4.4 双量化的误差必须&amp;quot;算进去&amp;quot;，不能假装免费（实现细节）</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-05-qlora把基座压成-4-bit代价是多少">Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少</h1>
 <p>M04 证明了 LoRA 只动 1/8.5 的参数 —— 但<strong>基座本身没变小</strong>。fp32 的 230,656 个参数还是老老实实躺在显存里。这就是大多数人根本跑不起微调的真正瓶颈：7B 模型光权重就要 28 GB。</p>
 <p>QLoRA 的解法很直接：<strong>把被冻结的基座压成 4 bit，前向时再反量化回 float 参与计算</strong>。</p>
@@ -225,8 +364,27 @@ td math, th math{font-size:1em;}
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ft/quantize.py</code></td><td><code>NF4_LEVELS</code> 码本、<code>quantize_nf4</code>（分块 + 最近邻查表）、<code>dequantize_nf4</code>、<code>quantize_absmax</code>/<code>dequantize_absmax</code>（双量化 8-bit）、<code>quantization_error</code>、<code>nf4_storage_bytes</code></td></tr><tr><td><code>src/ft/qlora.py</code></td><td><code>QLoRALinear</code>（NF4 基座 + fp32 adapter，<code>.data</code> 即时反量化合成）、<code>memory_ledger</code>（显存账本）、<code>training_memory</code>、<code>human_bytes</code></td></tr><tr><td><code>src/ft/inject.py</code></td><td><code>inject_lora(kind=&quot;qlora&quot;)</code>：把 target 位置换成 <code>QLoRALinear</code></td></tr><tr><td><code>demos/demo_05_qlora.py</code></td><td>8 节：码本 / 真实权重量化 / block_size 扫描 / NF4 vs int4 / 双量化 / 显存账本 / QLoRA 真训 / 关键数字</td></tr><tr><td><code>demos/out/demo_05_qlora_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/qlora.svg</code></td><td>本章 NF4 量化/反量化流程图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.4 → <strong>v0.5</strong>，M05 QLoRA 落地。实测：NF4 相对误差 <strong>0.0914</strong>，fp32→NF4+双量化压缩 <strong>7.75×</strong>（0.5159 B/权重），双量化额外省 <strong>8.29%</strong>、误差代价 +0.1012%；block_size 32/64/128/256/1024 → 误差 0.0873/0.0914/0.0950/0.0971/0.1024；NF4 比均匀 int4 误差低 5.45%；QLoRA vs LoRA 末步 loss <strong>6.1880 vs 6.1882</strong>。并诚实记录「小模型上 adapter 106 KB &gt; NF4 基座 82.54 KB（128.42%）」这一负结果。纯 numpy、无 bitsandbytes/peft。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/08-fine-tuning/milestones/05-qlora.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/08-fine-tuning/milestones/05-qlora.md", "name": "05-qlora.md", "text": "# Milestone 05 — QLoRA：把基座压成 4 bit，代价是多少\n\nM04 证明了 LoRA 只动 1/8.5 的参数 —— 但**基座本身没变小**。fp32 的 230,656 个参数还是老老实实躺在显存里。这就是大多数人根本跑不起微调的真正瓶颈：7B 模型光权重就要 28 GB。\n\nQLoRA 的解法很直接：**把被冻结的基座压成 4 bit，前向时再反量化回 float 参与计算**。\n\n```text\ny = x · dequant(W_nf4)  +  (alpha/r) · x · A · B\n    └── 冻结、4 bit ──┘   └── 可训练、fp32 ──┘\n```\n\n**纯 numpy 手写**：NF4 码本、分块 absmax、最近邻查表、双量化、显存账本，全部自己实现（`src/ft/quantize.py`）。没有 `bitsandbytes`。\n\n---\n\n## 1. Why：为什么是 NF4 而不是 int4\n\n一句话讲清 NF4（4-bit NormalFloat）：\n\n> 神经网络权重近似服从**零均值正态分布**。既然分布已知，就不需要像 int8 那样把 `[-1, 1]` 均匀切 256 份，而是**按分位数**切 16 份 —— 让每一份里落进来的权重**数量相同**。信息论上，这让 4 bit 承载的信息量最大。\n\n还有一条不可商榷的约束：**量化只作用于被冻结的基座**。梯度不会流过量化器（那东西不可导），所以**量化误差不会被训练修复**。这也是为什么必须用为\"正态分布权重\"量身定做的码本，而不是粗暴的 int4。\n\n## 2. Design：三步量化 + 一步双量化\n\n1. **分块 absmax 归一化**：每 `block_size`（默认 64）个数一组，除以组内绝对值最大值，压到 `[-1, 1]`。分块是为了挡住离群值 —— 一个特别大的权重参与全局归一化，会把其他所有权重都压成 0。\n2. **映射到 NF4 的 16 个码字**：不是 `round`，而是**最近邻查找**（`argmin |x - c|`），因为码字不等距。\n3. **双量化（可选）**：每个块要存一个 fp32 的 absmax，摊到 `4/64 = 0.0625` 字节/权重，占 NF4（0.5 字节/权重）的 12.5%，很浪费。于是对 absmax **再量化一次**成 8 bit（每 256 个 absmax 共享一个 fp32 scale），压到 1/4。\n\n**存储账：**\n\n| 方案 | 每权重字节数 | 相对 fp32 |\n|---|---|---|\n| fp32 | 4.0000 | 1.00× |\n| fp16 | 2.0000 | 2.00× |\n| NF4（不双量化） | 0.5 + 4/64 = 0.5625 | 7.11× |\n| NF4 + 双量化 | 0.5 + (1+4/256)/64 = 0.5159 | 7.75× |\n\n![M05 NF4 量化 / 反量化流程](../assets/qlora.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_05_qlora_terminal.txt`）\n\n**在真实基座权重上量化：13 个线性层，共 163,840 个权重。**\n\n| 指标 | 实测值 |\n|---|---|\n| NF4 平均相对误差 `‖W−Ŵ‖/‖W‖` | **0.0914** |\n| NF4 平均 MSE | 8.267e-06 |\n| 单层最大绝对误差 | 0.024068 |\n| 各层相对误差 | Wq 0.0915 / Wk 0.0922 / Wv 0.0911 / Wo 0.0903 / W1 0.0919 / W2 0.0916 |\n\n**码本（实测打印）：** 16 个值，相邻电平间距最小 0.0796 / 最大 0.3038（中间密、两头疏 = 按正态分位数切），**零在码本里**（否则 0 权重会被量化成非 0）。\n\n### 3.1 block_size 扫描（实测）\n\n| block_size | 相对误差 | 字节数 | 压缩倍数(vs fp32) |\n|---|---|---|---|\n| 32 | 0.0873 | 102,400 | 6.40× |\n| **64** | **0.0914** | 92,160 | **7.11×** |\n| 128 | 0.0950 | 87,040 | 7.53× |\n| 256 | 0.0971 | 84,480 | 7.76× |\n| 1024 | 0.1024 | 82,560 | 7.94× |\n\n分块越小越准（离群值被关在小块里），代价是 absmax 变多。**QLoRA 论文默认 64 —— 上表可见 64 已经在拐点附近**（32 只再好 4.5%，却多花 11% 的体积）。\n\n### 3.2 \"NF4 是信息论最优\"是真的吗？和均匀 int4 对拍（实测）\n\n| 码本 | 平均相对误差 | 相对 NF4 |\n|---|---|---|\n| NF4（分位数） | **0.0914** | 1.000× |\n| 均匀 int4（linspace） | 0.0967 | 1.058× |\n\n**NF4 误差低 5.45%**。差距不算大，因为本项目的权重是随手初始化 + 120 步预训练出来的，还没长成\"标准正态\"；**真实大模型上差距更大**（这条是推断，不是本机实测）。\n\n### 3.3 双量化（实测：划算）\n\n| 方案 | 字节数 | 每权重 | 压缩倍数 | 平均相对误差 |\n|---|---|---|---|---|\n| fp32 原始 | 655,360 | 4.0000 B | 1.00× | 0.0000 |\n| NF4 单量化 | 92,160 | 0.5625 B | 7.11× | 0.0914 |\n| **NF4 + 双量化** | **84,520** | **0.5159 B** | **7.75×** | 0.0915 |\n\n- 额外省 **7,640 B（8.29%）**\n- 误差代价：相对误差 `0.091448 → 0.091540`（**+0.1012%**）\n\nabsmax 本身是\"尺度\"，精度要求低，8 bit 足够。**省 8.3% 体积，代价万分之几** —— 这笔买卖很划算。\n\n> 实现上有个诚实细节（`src/ft/quantize.py:177`）：双量化后 `qt.absmax` 存的是**已还原的有损版本**，反量化用它 —— 否则测出来的误差会假装双量化是免费的。\n\n### 3.4 显存账本（实测）\n\n| 项目 | 字节 | 人类可读 | 占 fp32 基座 |\n|---|---|---|---|\n| 基座 fp32 | 655,360 | 640.00 KB | 100.00% |\n| 基座 fp16 | 327,680 | 320.00 KB | 50.00% |\n| 基座 NF4（单量化） | 92,160 | 90.00 KB | 14.06% |\n| 基座 NF4 + 双量化 | 84,520 | **82.54 KB** | **12.90%** |\n| adapter fp32 (r=8) | 108,544 | 106.00 KB | 16.56% |\n\n`NF4 相对 fp32 压缩 7.11×`（理论上限 8×，被 absmax 摊薄），`NF4+双量化 7.75×`；NF4 是 fp16 的 **28.12%**。\n\n### 3.5 QLoRA 真训 vs LoRA 真训（各 60 步，其余完全相同）\n\n| 指标 | LoRA（fp32 基座） | QLoRA（NF4 基座） |\n|---|---|---|\n| 首步 loss | 8.2909 | 8.2502 |\n| 末步 loss | 6.1882 | **6.1880** |\n| 前 10 步均值 | 7.3978 | 7.3842 |\n| 后 10 步均值 | 6.0858 | 6.0855 |\n| 耗时 | 3.60 s | 3.60 s |\n| 可训练参数 | 27,136 | 27,136 |\n\n**首步 loss 差 −0.0407**（4-bit 基座一开始就更差，这是量化的直接代价）；**末步 loss 差 −0.0002**（QLoRA 反而略好 —— 60 步尺度下属于噪声）。\n\n![M05 真实运行输出](../assets/term-05-qlora.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 小模型上 QLoRA 根本不划算（实测 128.42%）\n\n这是本章最重要的负结果：\n\n```\nadapter 占 NF4 基座                128.42%   ⚠ 小模型上 adapter 比量化后的基座还大\n```\n\n`d_model=64` 时基座只有 163,840 个权重，量化省下的绝对量有限（640 KB → 82.54 KB），而 adapter 自己就要 106 KB。**你把基座压到 82.54 KB，结果真正的显存大头变成了 adapter。**\n\n量化收益随模型规模**线性增长**。按同一公式外推到 7B（70 亿参数）：这一项会从 **0.66 MB 变成 3.5 GB** —— 那才是 QLoRA 的主场。**注意：7B 的数字是按同一公式外推，不是本机实测**（本机跑不动 7B）。\n\n> 可迁移的经验：**QLoRA 的收益是\"基座越大越值钱\"**。在小模型（<1B）上为了 QLoRA 而 QLoRA，通常是净亏。\n\n### 4.2 NF4 相对均匀 int4 只赢 5.45%，不是碾压（实测）\n\n教科书爱说\"NF4 是信息论最优\"，实测在本项目上只低 **5.45%**（0.0914 vs 0.0967）。原因是本项目的权重还没长成标准正态（随手初始化 + 120 步预训练）。\n\n诚实标注：**这个 5.45% 是小规模、欠训练权重上的实测值**；它印证了设计动机（分位数切分确实更优），但**不能外推说\"真实大模型上也只有 5.45%\"** —— 那里的分布更接近正态，差距应该更大（推断）。\n\n### 4.3 QLoRA 的末步 loss 反而略低，但那是噪声（实测 −0.0002）\n\n末步 6.1880 vs 6.1882，差 0.0002。不要把这个写成\"QLoRA 效果更好\" —— 60 步尺度下这是浮点噪声。真正稳定的信号是**首步差 −0.0407**：那是量化的直接代价，是真实的、可解释的。\n\n### 4.4 双量化的误差必须\"算进去\"，不能假装免费（实现细节）\n\n`quantize_nf4` 在 `double_quant=True` 时会把 `qt.absmax` **替换成反量化后的有损值**（`dequantize_absmax(ac, asc, size)`），而不是继续用无损的 `absmax`。如果偷懒沿用无损值，测出来的误差会**假装双量化是免费的**（误差仍是 0.0914 而不是 0.0915）。差 0.0001，但这 0.0001 就是全部真相。\n\n## 5. Conclusion\n\n1. NF4 = 分块 absmax 归一化 + 最近邻查不等距码本；实测在真实基座上相对误差 **0.0914**（MSE 8.267e-06）。\n2. **block_size 越小越准，64 是拐点**（32 只再好 4.5%，多花 11% 体积）。\n3. NF4 比均匀 int4 误差低 **5.45%**（实测，欠训练权重上）。\n4. **双量化划算**：额外省 **8.29%** 体积，误差代价 **+0.1012%**；fp32 → NF4+双量化总压缩 **7.75×**（0.5159 B/权重）。\n5. **QLoRA vs LoRA 末步 loss 6.1880 vs 6.1882**，可训练参数相同；首步差 −0.0407 是量化的真实代价。\n6. **⚠ 小模型上 QLoRA 不划算**：adapter 106 KB > NF4 基座 82.54 KB（**128.42%**）。7B 上才是 0.66 MB vs 3.5 GB（**按同一公式外推，非实测**）。\n7. 手写实现的意义：因为码本和 absmax 都是自己管的，你才能做\"均匀 int4 vs NF4\"\"单量化 vs 双量化\"这种对拍 —— 用现成库只能拿到一个黑盒数字。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ft/quantize.py` | `NF4_LEVELS` 码本、`quantize_nf4`（分块 + 最近邻查表）、`dequantize_nf4`、`quantize_absmax`/`dequantize_absmax`（双量化 8-bit）、`quantization_error`、`nf4_storage_bytes` |\n| `src/ft/qlora.py` | `QLoRALinear`（NF4 基座 + fp32 adapter，`.data` 即时反量化合成）、`memory_ledger`（显存账本）、`training_memory`、`human_bytes` |\n| `src/ft/inject.py` | `inject_lora(kind=\"qlora\")`：把 target 位置换成 `QLoRALinear` |\n| `demos/demo_05_qlora.py` | 8 节：码本 / 真实权重量化 / block_size 扫描 / NF4 vs int4 / 双量化 / 显存账本 / QLoRA 真训 / 关键数字 |\n| `demos/out/demo_05_qlora_terminal.txt` | 本章所有数字的来源 |\n| `assets/qlora.svg` | 本章 NF4 量化/反量化流程图 |\n\n## 7. Version line\n\nv0.4 → **v0.5**，M05 QLoRA 落地。实测：NF4 相对误差 **0.0914**，fp32→NF4+双量化压缩 **7.75×**（0.5159 B/权重），双量化额外省 **8.29%**、误差代价 +0.1012%；block_size 32/64/128/256/1024 → 误差 0.0873/0.0914/0.0950/0.0971/0.1024；NF4 比均匀 int4 误差低 5.45%；QLoRA vs LoRA 末步 loss **6.1880 vs 6.1882**。并诚实记录「小模型上 adapter 106 KB > NF4 基座 82.54 KB（128.42%）」这一负结果。纯 numpy、无 bitsandbytes/peft。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -234,6 +392,8 @@ td math, th math{font-size:1em;}
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -243,6 +403,173 @@ td math, th math{font-size:1em;}
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -256,6 +583,17 @@ td math, th math{font-size:1em;}
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -282,15 +620,46 @@ td math, th math{font-size:1em;}
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

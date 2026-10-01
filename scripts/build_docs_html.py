@@ -83,7 +83,33 @@ def fixup_paths(page: str, src_dir: str, dst_dir: str) -> str:
     return attr_re.sub(repl, page)
 
 
-def convert_one(src, force=False):
+def split_embedded(page: str):
+    """把页面切成 (数据块之前, 数据块, 数据块之后)。
+
+    内嵌原始 Markdown 的 JSON 里会出现 `href="..."` `[x](y.md)` 这类字面量；
+    如果跟着页面一起过 fixup_paths，markdown 正文会被当成站内链接改写，
+    源码视图里就会显示成被篡改过的路径。所以必须把这一段摘出来单独放回。
+    """
+    i = page.find(conv.MD_SRC_START)
+    j = page.find(conv.MD_SRC_END)
+    if i < 0 or j < 0:
+        return page, "", ""
+    j += len(conv.MD_SRC_END)
+    return page[:i], page[i:j], page[j:]
+
+
+def home_href_for(dst_dir, chno=None):
+    """从产物目录回到 publishing/html/index.html 的相对路径（带该文档的章节锚点）。
+
+    带锚点是有意的：从第 47 章点回总览，应该落回总览里的第 47 章，
+    而不是被扔回页面顶部从头再找一遍。
+    """
+    root = os.path.join(ROOT, "publishing", "html", "index.html")
+    href = os.path.relpath(root, dst_dir).replace(os.sep, "/")
+    return f"{href}#ch-{chno}" if chno else href
+
+
+def convert_one(src, force=False, chapter_of=None):
     dst = out_path(src)
     if not force and os.path.exists(dst) and os.path.getmtime(dst) >= os.path.getmtime(src):
         return "skip"
@@ -91,13 +117,22 @@ def convert_one(src, force=False):
     with open(src, encoding="utf-8") as f:
         md_text = f.read()
     src_dir = os.path.dirname(os.path.abspath(src))
+    dst_dir = os.path.dirname(dst)
+    rel = os.path.relpath(src, ROOT).replace(os.sep, "/")
     body = conv.md_to_html(md_text, src_dir)
     title = None
     m = re.search(r"^#\s+(.*)$", md_text, re.M)
     if m:
         title = m.group(1).strip()
-    page = conv.build_page(title or os.path.basename(src), body)
-    page = fixup_paths(page, src_dir, os.path.dirname(dst))
+    chno = (chapter_of or {}).get(rel)
+    page = conv.build_page(
+        title or os.path.basename(src), body,
+        home_href=home_href_for(dst_dir, chno),
+        home_tip=f"返回《文档总览》第 {chno} 章" if chno else "返回文档总览",
+        md_text=md_text, md_path=rel, md_name=os.path.basename(src))
+    head, data, tail = split_embedded(page)
+    page = (fixup_paths(head, src_dir, dst_dir) + data
+            + fixup_paths(tail, src_dir, dst_dir))
     with open(dst, "w", encoding="utf-8") as f:
         f.write(page)
     return "ok"
@@ -112,6 +147,7 @@ def build_portable():
     """
     import gen_doc_index as idx
     n = 0
+    chmap = idx.chapter_map()
     for rel, port in idx.PORTABLE.items():
         src = os.path.join(ROOT, rel)
         if not os.path.exists(src):
@@ -124,7 +160,13 @@ def build_portable():
         md_text = open(src, encoding="utf-8").read()
         body = conv.md_to_html(md_text, os.path.dirname(os.path.abspath(src)))
         m = re.search(r"^#\s+(.*)$", md_text, re.M)
-        page = conv.build_page(m.group(1).strip() if m else port, body)
+        chno = chmap.get(rel.replace(os.sep, "/"))
+        page = conv.build_page(
+            m.group(1).strip() if m else port, body,
+            home_href=home_href_for(os.path.dirname(dst), chno),
+            home_tip=f"返回《文档总览》第 {chno} 章" if chno else "返回文档总览",
+            md_text=md_text, md_path=rel.replace(os.sep, "/"),
+            md_name=os.path.basename(src))
         with open(dst, "w", encoding="utf-8") as f:
             f.write(page)
         n += 1
@@ -142,6 +184,7 @@ def fix_portable():
     死链的样本。
 
     幂等：目标在源树里不存在时 fixup_paths 原样返回，反复跑结果一致。
+    内嵌的源码数据块同样要摘出来单独放回（否则 markdown 正文里的链接会被改写）。
     """
     n = 0
     for dp, dns, fns in os.walk(OUT_ROOT):
@@ -154,7 +197,9 @@ def fix_portable():
             if not os.path.isdir(src_tree):
                 continue
             text = open(path, encoding="utf-8").read()
-            fixed = fixup_paths(text, src_tree, src_dir)
+            head, data, tail = split_embedded(text)
+            fixed = (fixup_paths(head, src_tree, src_dir) + data
+                     + fixup_paths(tail, src_tree, src_dir))
             if fixed != text:
                 with open(path, "w", encoding="utf-8") as f:
                     f.write(fixed)
@@ -167,15 +212,19 @@ def verify():
 
     这一步不能省——链接改写是大范围自动行为，一旦某个 .md 没被转换（比如被
     EXCLUDE_DIRS 漏掉），整棵链接树就会出现死链，而索引页面本身不会报错。
+
+    注意先剥掉 <script>/<style>：页面现在内嵌了原始 Markdown 的 JSON，
+    里面的 `href="x.md"` 是**markdown 正文的字面量**，不是这个页面的链接关系。
     """
     bad, total = [], 0
+    strip_re = re.compile(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", re.I)
     attr_re = re.compile(r'(?:src|href)="([^"]+)"')
     for dp, dns, fns in os.walk(OUT_ROOT):
         for fn in fns:
             if not fn.endswith(".html"):
                 continue
             path = os.path.join(dp, fn)
-            text = open(path, encoding="utf-8", errors="ignore").read()
+            text = strip_re.sub("", open(path, encoding="utf-8", errors="ignore").read())
             for u in attr_re.findall(text):
                 if u.startswith(("http", "mailto:", "data:", "#")):
                     continue
@@ -195,6 +244,9 @@ def main():
     conv.RELATIVE_IMAGES = True
     conv.REWRITE_MD_LINKS = True
 
+    import gen_doc_index as idx
+    chapter_of = idx.chapter_map()
+
     targets = []
     for src in iter_md():
         rel = os.path.relpath(src, ROOT)
@@ -205,7 +257,7 @@ def main():
     stats = {"ok": 0, "skip": 0}
     t0 = time.time()
     for src in targets:
-        st = convert_one(src, force=force)
+        st = convert_one(src, force=force, chapter_of=chapter_of)
         stats[st] += 1
 
     built = build_portable()

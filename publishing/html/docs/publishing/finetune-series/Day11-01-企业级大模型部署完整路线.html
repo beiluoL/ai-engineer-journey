@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../index.html#ch-170" title="返回《文档总览》第 170 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Day11：企业级大模型部署完整路线</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#你的项目" class="lvl2">你的项目：</a><a href="#第一梯队" class="lvl2">第一梯队</a><a href="#qwen25-qwen3" class="lvl3">Qwen2.5 / Qwen3</a><a href="#第二" class="lvl2">第二：</a><a href="#第三" class="lvl2">第三：</a><a href="#1b3b" class="lvl2">1B～3B</a><a href="#7b8b" class="lvl2">7B～8B</a><a href="#14b" class="lvl2">14B</a><a href="#32b" class="lvl2">32B</a><a href="#70b" class="lvl2">70B</a><a href="#1-hugging-face" class="lvl2">1. Hugging Face</a><a href="#2-modelscope" class="lvl2">2. ModelScope</a><a href="#3-ollama" class="lvl2">3. Ollama</a><a href="#方案a学习个人项目" class="lvl2">方案A：学习/个人项目</a><a href="#入门部署" class="lvl3">入门部署</a><a href="#方案b企业测试环境" class="lvl2">方案B：企业测试环境</a><a href="#方案c生产环境" class="lvl2">方案C：生产环境</a><a href="#服务器配置" class="lvl2">服务器配置</a><a href="#1-nvidia-driver" class="lvl2">1. NVIDIA Driver</a><a href="#2-docker" class="lvl2">2. Docker</a><a href="#3-nvidia-container-toolkit" class="lvl2">3. NVIDIA Container Toolkit</a><a href="#qlora-7b" class="lvl2">QLoRA 7B</a><a href="#qlora-14b" class="lvl2">QLoRA 14B</a><a href="#全量微调" class="lvl2">全量微调</a><a href="#java-ai-knowledge-platform" class="lvl2">Java AI Knowledge Platform</a><a href="#方案1学习推荐" class="lvl2">方案1：学习（推荐）</a><a href="#方案2个人demo上线" class="lvl2">方案2：个人Demo上线</a><a href="#方案3小企业生产" class="lvl2">方案3：小企业生产</a><a href="#day11实战" class="lvl2">Day11-实战</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <p>你的方向调整是对的。</p>
 <p>前面 Day1～Day10 更偏向：</p>
 <blockquote><p>“会做 AI 应用”</p></blockquote>
@@ -784,8 +923,27 @@ LoRA微调
 <p>《从0租一台GPU服务器 → Ubuntu初始化 → Docker → NVIDIA环境 → 下载Qwen → vLLM部署 → Spring Boot调用》</p>
 <p>这一步才是真正“大模型部署能力”。</p>
 <p>你之前的 Java 后端经验会直接用上。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">publishing/finetune-series/Day11-01-企业级大模型部署完整路线.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "publishing/finetune-series/Day11-01-企业级大模型部署完整路线.md", "name": "Day11-01-企业级大模型部署完整路线.md", "text": "你的方向调整是对的。\n\n前面 Day1～Day10 更偏向：\n\n> “会做 AI 应用”\n\n但是如果目标是 **AI Engineer【人工智能工程师】 / 大模型应用开发工程师**，还需要补完整的一条企业链路：\n\n```text\n模型选择\n ↓\n模型下载\n ↓\nGPU服务器选择\n ↓\n环境部署\n ↓\n模型推理服务\n ↓\nAPI网关\n ↓\n业务系统调用\n ↓\n模型微调\n ↓\n模型评测\n ↓\n生产监控\n ↓\n持续迭代\n```\n\n下面我按照：\n\n> **完全小白 → 企业级部署流程**\n\n讲。\n\n---\n\n# Day11：企业级大模型部署完整路线\n\n目标：\n\n部署一个真实的大模型服务：\n\n例如：\n\n```\nQwen2.5-7B-Instruct\n\n↓\n\nGPU服务器\n\n↓\n\nvLLM\n\n↓\n\nOpenAI兼容API\n\n↓\n\nSpring Boot\n\n↓\n\nLangChain4j\n\n↓\n\n你的Agent\n```\n\nQwen 官方也推荐使用 vLLM 作为高性能部署方式，它可以提供 OpenAI API 兼容服务。([GitHub](https://github.com/QwenLM/Qwen3/blob/main/docs/source/deployment/vllm.md?utm_source=chatgpt.com \"Qwen3/docs/source/deployment/vllm.md at main · QwenLM/Qwen3 · GitHub\"))\n\n---\n\n# 第一部分：先理解企业里面的大模型架构\n\n真实公司不会这样：\n\n```\nSpring Boot\n    |\n    |\n  Ollama\n    |\n  Qwen\n```\n\n这个适合个人开发。\n\n企业一般：\n\n```\n                 用户\n\n                  |\n\n                  ↓\n\n\n             Java业务系统\n\n\n                  |\n\n                  ↓\n\n\n             AI Gateway\n\n\n                  |\n\n                  ↓\n\n\n          LLM Serving服务\n\n\n                  |\n\n       +----------+----------+\n\n       |                     |\n\n\n       ↓                     ↓\n\n\n     vLLM                Model\n\n\n       |\n\n       ↓\n\n\n NVIDIA GPU Server\n```\n\n---\n\n核心组件：\n\n|组件|作用|\n|---|---|\n|Qwen/Llama/DeepSeek|模型|\n|vLLM|模型推理服务器|\n|CUDA|GPU计算环境|\n|Docker|部署环境|\n|Nginx|网关|\n|Spring Boot|业务系统|\n|LangChain4j|AI编排|\n\n---\n\n# 第二部分：如何选择大模型？\n\n这是企业第一步。\n\n不要问：\n\n> 哪个模型最大？\n\n应该问：\n\n> 我的业务需要什么？\n\n---\n\n## 你的项目：\n\nJava AI Interview Agent\n\n需求：\n\n- 中文好\n    \n- 代码能力强\n    \n- 推理不错\n    \n- 可以部署\n    \n\n推荐：\n\n---\n\n## 第一梯队\n\n### Qwen2.5 / Qwen3\n\n适合：\n\n中国企业。\n\n优势：\n\n- 中文强\n    \n- 代码强\n    \n- 开源生态成熟\n    \n\n模型地址：\n\nHugging Face：\n\n[https://huggingface.co/Qwen](https://huggingface.co/Qwen)\n\nModelScope：\n\n[https://www.modelscope.cn/models](https://www.modelscope.cn/models)\n\nQwen 官方提供模型和部署说明。([GitHub](https://github.com/QwenLM/Qwen?utm_source=chatgpt.com \"GitHub - QwenLM/Qwen: The official repo of Qwen (通义千问) chat & pretrained large language model proposed by Alibaba Cloud. · GitHub\"))\n\n---\n\n## 第二：\n\nDeepSeek\n\n适合：\n\n- 推理\n    \n- 编程\n    \n- Agent\n    \n\n---\n\n## 第三：\n\nLlama\n\n适合：\n\n国际生态。\n\n---\n\n# 第三部分：模型大小怎么选择？\n\n这是新手最大误区。\n\n不是越大越好。\n\n## 1B～3B\n\n用途：\n\n```\n个人电脑\n边缘设备\n简单Agent\n```\n\n资源：\n\n8GB显存左右\n\n---\n\n## 7B～8B\n\n个人和企业最常用。\n\n例如：\n\n```\nQwen2.5-7B\n```\n\n需要：\n\n量化：\n\n4bit\n\n大约：\n\n8～12GB显存。\n\n---\n\n## 14B\n\n效果明显提升。\n\n需要：\n\n16～24GB显存。\n\n---\n\n## 32B\n\n企业级。\n\n需要：\n\n40GB+显存。\n\n---\n\n## 70B\n\n生产大模型。\n\n需要：\n\n多GPU。\n\n---\n\n# 第四部分：模型在哪里下载？\n\n三个地方：\n\n---\n\n## 1. Hugging Face\n\n全球主流：\n\n[https://huggingface.co](https://huggingface.co/)\n\n例如：\n\n```\nQwen/Qwen2.5-7B-Instruct\n```\n\n下载：\n\n```bash\nhuggingface-cli download \\\nQwen/Qwen2.5-7B-Instruct\n```\n\n---\n\n## 2. ModelScope\n\n国内速度更好：\n\n```bash\nmodelscope download \\\nQwen/Qwen2.5-7B-Instruct\n```\n\n---\n\n## 3. Ollama\n\n开发测试：\n\n```bash\nollama pull qwen2.5:7b\n```\n\n但是：\n\n生产一般不用 Ollama。\n\n---\n\n# 第五部分：服务器怎么选择？\n\n这是重点。\n\n---\n\n## 方案A：学习/个人项目\n\n推荐：\n\n云GPU租赁。\n\n例如：\n\n- AutoDL\n    \n- 云厂商GPU\n    \n- Lambda\n    \n- RunPod\n    \n\n---\n\n配置：\n\n### 入门部署\n\n模型：\n\nQwen2.5-7B INT4\n\n服务器：\n\n```\nCPU:\n8核\n\n内存:\n32GB\n\nGPU:\nRTX4090 24GB\n\n硬盘:\n100GB SSD\n\n系统:\nUbuntu 22.04\n```\n\n可以：\n\n- vLLM\n    \n- RAG\n    \n- Agent\n    \n\n价格：\n\n大约：\n\n```\n1～3元/小时\n```\n\n根据地区和平台变化。\n\n---\n\n## 方案B：企业测试环境\n\n配置：\n\n```\nGPU:\nA10 24GB\n\nCPU:\n16核\n\n内存:\n64GB\n\n磁盘:\n200GB SSD\n```\n\n成本：\n\n大约：\n\n```\n2000～5000元/月\n```\n\n---\n\n## 方案C：生产环境\n\n例如：\n\n1000用户。\n\n可能：\n\n```\nA100 80GB\n\n或者\n\nH100\n```\n\n价格：\n\n```\n几万/月\n```\n\n甚至更高。\n\n---\n\n# 第六部分：GPU显存怎么计算？\n\n核心公式：\n\n```\n模型参数 × 精度\n```\n\n---\n\n例如：\n\n7B模型：\n\n参数：\n\n70亿\n\nFP16:\n\n```\n7B × 2 bytes\n\n≈14GB\n```\n\n实际：\n\n需要：\n\n20GB左右。\n\n---\n\nINT4：\n\n```\n7B × 0.5 bytes\n\n≈3.5GB\n```\n\n实际：\n\n8～10GB。\n\n所以：\n\n量化非常重要。\n\n---\n\n# 第七部分：企业部署环境搭建\n\n假设：\n\nUbuntu GPU服务器。\n\n## 服务器配置\n\nUbuntu:\n\n```\n22.04\n```\n\n安装：\n\n---\n\n## 1. NVIDIA Driver\n\n查看：\n\n```bash\nnvidia-smi\n```\n\n看到：\n\n```\nRTX4090\n\nCUDA\n```\n\n成功。\n\n---\n\n## 2. Docker\n\n安装：\n\n```bash\ncurl -fsSL https://get.docker.com | sh\n```\n\n---\n\n## 3. NVIDIA Container Toolkit\n\n让 Docker 使用 GPU。\n\n---\n\n测试：\n\n```bash\ndocker run \\\n--gpus all \\\nnvidia/cuda:12.2.0-base \\\nnvidia-smi\n```\n\n输出GPU信息。\n\n成功。\n\n---\n\n# 第八部分：使用 vLLM 部署模型\n\n为什么 vLLM？\n\n因为：\n\n- 高吞吐\n    \n- Continuous Batching【连续批处理】\n    \n- KV Cache优化\n    \n- OpenAI API兼容\n    \n\n([GitHub](https://github.com/QwenLM/Qwen3/blob/main/docs/source/deployment/vllm.md?utm_source=chatgpt.com \"Qwen3/docs/source/deployment/vllm.md at main · QwenLM/Qwen3 · GitHub\"))\n\n---\n\n安装：\n\n```bash\npip install vllm\n```\n\n---\n\n启动：\n\n例如：\n\nQwen2.5-7B\n\n```bash\nvllm serve Qwen/Qwen2.5-7B-Instruct \\\n--host 0.0.0.0 \\\n--port 8000\n```\n\nQwen官方示例也是通过 `vllm serve` 提供 API 服务。([GitHub](https://github.com/QwenLM/Qwen3/blob/main/docs/source/deployment/vllm.md?utm_source=chatgpt.com \"Qwen3/docs/source/deployment/vllm.md at main · QwenLM/Qwen3 · GitHub\"))\n\n---\n\n启动后：\n\n接口：\n\n```\nhttp://服务器IP:8000/v1/chat/completions\n```\n\n---\n\n测试：\n\n```bash\ncurl http://localhost:8000/v1/chat/completions \\\n-H \"Content-Type: application/json\" \\\n-d '\n{\n\"model\":\"Qwen2.5-7B-Instruct\",\n\"messages\":[\n{\n\"role\":\"user\",\n\"content\":\"解释HashMap\"\n}\n]\n}\n'\n```\n\n返回：\n\n```json\n{\n\"choices\":[\n{\n\"message\":{\n\"content\":\"...\"\n}\n}\n]\n}\n```\n\n---\n\n# 第九部分：Spring Boot连接\n\n你的 Java 项目：\n\n不用管模型。\n\n只调用：\n\n```\nOpenAI兼容接口\n```\n\n架构：\n\n```\nSpring Boot\n\n      |\n\n      ↓\n\nLangChain4j\n\n      |\n\n      ↓\n\nvLLM API\n\n      |\n\n      ↓\n\nQwen\n```\n\n---\n\n# 第十部分：企业级微调流程\n\n现在进入真正企业流程。\n\n不是：\n\n```\n下载模型\n↓\n\n训练\n```\n\n而是：\n\n```\n业务数据\n\n↓\n\n数据清洗\n\n↓\n\n数据标注\n\n↓\n\nSFT\n\n↓\n\nLoRA/QLoRA\n\n↓\n\n评测\n\n↓\n\n部署\n\n↓\n\nA/B测试\n\n↓\n\n上线\n```\n\n---\n\n# 微调服务器配置\n\n## QLoRA 7B\n\n推荐：\n\n```\nGPU:\nRTX4090 24GB\n\n或者\n\nA10 24GB\n\n\nCPU:\n8核\n\nRAM:\n64GB\n\nSSD:\n200GB\n```\n\n---\n\n## QLoRA 14B\n\n推荐：\n\n```\n48GB GPU\n```\n\n---\n\n## 全量微调\n\n需要：\n\n多张A100/H100。\n\n个人不要考虑。\n\n---\n\n# 第十一部分：你的最终企业级路线\n\n结合你的 Java 背景：\n\n不要走算法训练路线。\n\n走：\n\n# AI Application Engineer\n\n路线：\n\n```\n阶段1\n\nOllama\n本地模型\n\n\n↓\n\n阶段2\n\nvLLM部署\n\n\n↓\n\n阶段3\n\nRAG\n\n\n↓\n\n阶段4\n\nAgent\n\n\n↓\n\n阶段5\n\nLoRA微调\n\n\n↓\n\n阶段6\n\n企业部署\n\n\n↓\n\n阶段7\n\n评测监控\n```\n\n---\n\n# 第十二部分：你的第一个企业级实战项目\n\n建议：\n\n## Java AI Knowledge Platform\n\n架构：\n\n```\n                 用户\n\n                  |\n\n               Vue3\n\n                  |\n\n             Spring Boot\n\n                  |\n\n          LangChain4j Agent\n\n                  |\n\n        +---------+---------+\n\n        |                   |\n\n        ↓                   ↓\n\n\n      Milvus              vLLM\n\n\n        |                   |\n\n\n      RAG              Qwen+LoRA\n\n\n        |\n\n        ↓\n\n     Answer\n```\n\n---\n\n# 预算方案\n\n## 方案1：学习（推荐）\n\n成本：\n\n```\n0～300元/月\n```\n\n使用：\n\n- Colab\n    \n- AutoDL按小时\n    \n- 本地Mac\n    \n\n---\n\n## 方案2：个人Demo上线\n\n成本：\n\n```\n500～1500元/月\n```\n\n配置：\n\n4090/A10。\n\n---\n\n## 方案3：小企业生产\n\n成本：\n\n```\n3000～10000元/月\n```\n\n配置：\n\nA10/A100。\n\n---\n\n# 你下一步应该做：\n\n不要继续理论。\n\n进入：\n\n## Day11-实战\n\n《从0租一台GPU服务器 → Ubuntu初始化 → Docker → NVIDIA环境 → 下载Qwen → vLLM部署 → Spring Boot调用》\n\n这一步才是真正“大模型部署能力”。\n\n你之前的 Java 后端经验会直接用上。"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -793,6 +951,8 @@ LoRA微调
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -802,6 +962,173 @@ LoRA微调
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -815,6 +1142,17 @@ LoRA微调
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -841,15 +1179,46 @@ LoRA微调
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -15,9 +15,6 @@ import re
 import sys
 
 SKIP_DIRS = {".git", ".workbuddy", ".obsidian", ".venv", "node_modules", "__pycache__"}
-# 数据文件：内部是「全仓库源码文本」的转储，里面那些 ../xxx.png 是源 .md 里的相对路径，
-# 离开源目录当然不存在——同一批链接已经在各自源 .md 处查过了，这里再查只会重复报警。
-SKIP_FILES = {"publishing/html/ide.html"}
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 # 代码块与行内代码里的 [x](y) 不是链接，先抹掉再扫，否则像
@@ -27,14 +24,19 @@ INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 # HTML 里的代码块是 <pre><code>，不是 ``` 围栏。两者语法完全不同，
 # 混用会漏报：扫 .html 时若只按围栏剥，<pre> 里的 `[x](y)` 会被当成真链接，
 # 于是像 f"return fn(**args)" 这种代码文本被误报成死链。
-HTML_CODE_RE = re.compile(r"<pre[^>]*>.*?</pre>|<code[^>]*>.*?</code>", re.S)
+#
+# <script>/<style> 也必须剥掉：章节页与代码浏览器把「整份源码 / 整篇 Markdown」
+# 内嵌成了 JSON 数据块，里面的 `[标题](路径.md)` 是**被展示的文本**，不是这个页面
+# 的链接关系。不剥会凭空多出几百条「死链」，把真正的坏链接淹掉。
+HTML_CODE_RE = re.compile(
+    r"<script[\s\S]*?</script>|<style[\s\S]*?</style>"
+    r"|<pre[^>]*>.*?</pre>|<code[^>]*>.*?</code>", re.S | re.I)
 
 
 def strip_code(text: str, is_html: bool = False) -> str:
     if is_html:
         return HTML_CODE_RE.sub("", text)
     return INLINE_CODE_RE.sub("", FENCE_RE.sub("", text))
-
 
 def is_external(target: str) -> bool:
     return target.startswith(("http://", "https://", "mailto:", "data:", "#", "//"))
@@ -49,8 +51,6 @@ def scan(roots):
                 if not name.endswith((".md", ".html")):
                     continue
                 path = os.path.join(dirpath, name)
-                if os.path.relpath(path, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) in SKIP_FILES:
-                    continue
                 is_html = name.endswith(".html")
                 text = open(path, encoding="utf-8", errors="ignore").read()
                 text = strip_code(text, is_html=is_html)

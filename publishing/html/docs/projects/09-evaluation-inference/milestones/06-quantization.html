@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-133" title="返回《文档总览》第 133 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 06 — Quantization：INT8 / INT4 / NF4</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么量化必然有代价以及代价怎么衡量" class="lvl2">1. Why：为什么量化必然有代价，以及代价怎么衡量</a><a href="#2-design三种方案-两套粒度" class="lvl2">2. Design：三种方案 + 两套粒度</a><a href="#3-realrun-evidence来自-demosoutdemo06quantizationterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_06_quantization_terminal.txt）</a><a href="#31-单矩阵上的权重误差与压缩实测" class="lvl3">3.1 单矩阵上的权重误差与压缩（实测）</a><a href="#32-端到端答案区困惑度实测同一-heldout-8-条" class="lvl3">3.2 端到端答案区困惑度（实测，同一 held-out 8 条）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-权重误差最小-端到端最优本章最重要的一条" class="lvl3">4.1 ⭐ 权重误差最小 ≠ 端到端最优（本章最重要的一条）</a><a href="#42-ppl-是-ce-的指数-4088-听起来很大其实-ce-只动了-00418" class="lvl3">4.2 PPL 是 CE 的指数 —— &amp;quot;−4.088%&amp;quot; 听起来很大，其实 CE 只动了 0.0418</a><a href="#43-int4-反而是三者里唯一变差的-但它最正常" class="lvl3">4.3 INT4 反而是三者里唯一&amp;quot;变差&amp;quot;的 —— 但它最&amp;quot;正常&amp;quot;</a><a href="#44-perchannel-的-scale-开销小矩阵上不划算结构性分析" class="lvl3">4.4 per-channel 的 scale 开销：小矩阵上不划算（结构性分析）</a><a href="#45-遍历参数必须绕开-p06-的-moduleparameters它漏掉词嵌入" class="lvl3">4.5 ⚠ 遍历参数必须绕开 P06 的 Module.parameters()（它漏掉词嵌入）</a><a href="#46-ndim-2-的跳过规则-别把-layernorm-也压了" class="lvl3">4.6 ndim &amp;lt; 2 的跳过规则 —— 别把 LayerNorm 也压了</a><a href="#47-fp64-基线-54967621-与-m01-的答案区-ppl-完全一致-这是口径自检" class="lvl3">4.7 FP64 基线 5496.7621 与 M01 的答案区 PPL 完全一致 —— 这是口径自检</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-06-quantizationint8-int4-nf4">Milestone 06 — Quantization：INT8 / INT4 / NF4</h1>
 <p>M05 证明了&quot;训练过的模型比基座好&quot;（10/0/0 稳定）。现在进入后半段主线的第一站：<strong>模型太大，跑不起怎么办？</strong></p>
 <p>P08 的 QLoRA 已经用过 NF4（把<strong>冻结的基座</strong>压成 4 bit 以省显存）。本章的问题更一般：<strong>对任意一张权重矩阵，INT8 / INT4 / NF4 各自要付多少代价？</strong></p>
@@ -257,8 +396,27 @@ for path, parameter in named_parameters(copied):
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/quantize.py</code></td><td><code>QuantizedTensor</code>（codes/scale/shape/bits/granularity + <code>dequantize</code> + <code>storage_bytes</code>）/ <code>quantize_symmetric</code>（INT8/INT4 对称量化，per_tensor / per_channel）/ <code>quantization_error</code>（mse/rmse/mean_abs/max_abs/relative_l2）/ <code>compression_ratio</code> / <code>compare_quantizers</code>（三方案对比）/ <code>quantize_model</code>（深拷贝 + 全模型 PTQ）/ <code>quantize_model_nf4</code> / <code>save_quantized_artifact</code></td></tr><tr><td><code>src/ie/quantize.py:16</code></td><td><code>from ft.inject import named_parameters</code> —— 绕开 P06 <code>Module.parameters()</code> 漏词嵌入的缺陷</td></tr><tr><td><code>src/ie/quantize.py:132</code></td><td><code>if parameter.data.ndim &lt; 2: continue</code> —— 跳过 bias / LayerNorm</td></tr><tr><td><code>src/ie/metrics.py</code></td><td><code>perplexity</code>：端到端 PPL 的测量口径（与 M01 一致）</td></tr><tr><td><code>demos/demo_06_quantization.py</code></td><td>4 节：单矩阵三方案对比 / 端到端量化 / PPL 对比 / 关键结论</td></tr><tr><td><code>demos/out/demo_06_quantization_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>models/base_int8_per_channel.npz</code>、<code>models/base_int4_per_channel.npz</code></td><td>量化产物（codes + scale + 元信息）</td></tr><tr><td><code>assets/quantization.svg</code></td><td>本章量化粒度与三方案对比图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.5 → <strong>v0.6</strong>，M06 量化落地。实测（基准 <code>decoder.proj (64,1024)</code>、65,536 参数、per_channel）：INT8 MSE <strong>7.673e-08</strong> / 压缩 <strong>3.76×</strong>（69,632 B），INT4 <strong>2.520e-05</strong> / <strong>7.11×</strong>（36,864 B），NF4 <strong>5.246e-05</strong> / <strong>7.75×</strong>（33,808 B）；端到端答案区 PPL（同一 held-out 8 条）：FP64 <strong>5496.7621</strong>、INT8 <strong>5495.2057（−0.028%）</strong>、INT4 <strong>5503.2843（+0.119%）</strong>、NF4 <strong>5272.0521（−4.088%，降 224.71）</strong>。⭐ 并诚实记录核心反直觉发现「<strong>权重 MSE 最小不自动等价于端到端 PPL 最优</strong>（NF4 MSE 是 INT8 的 684 倍却端到端最好），量化方案必须在任务集上复测」，以及「PPL 是 CE 的指数，−4.088% 对应 CE 仅 −0.0418」「NF4 的 −4.088% 是异常值，不可推广到真实 7B（推断）」「⚠ 遍历参数须用 P08 <code>ft.inject.named_parameters</code> 绕开 P06 <code>Module.parameters()</code> 漏词嵌入的缺陷（不改 P06）」。纯 numpy，无 bitsandbytes / GPTQ。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/09-evaluation-inference/milestones/06-quantization.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/09-evaluation-inference/milestones/06-quantization.md", "name": "06-quantization.md", "text": "# Milestone 06 — Quantization：INT8 / INT4 / NF4\n\nM05 证明了\"训练过的模型比基座好\"（10/0/0 稳定）。现在进入后半段主线的第一站：**模型太大，跑不起怎么办？**\n\nP08 的 QLoRA 已经用过 NF4（把**冻结的基座**压成 4 bit 以省显存）。本章的问题更一般：**对任意一张权重矩阵，INT8 / INT4 / NF4 各自要付多少代价？**\n\n答案是两条，而且**它们互相矛盾**：\n\n1. 按**权重重建误差**排：INT8 ≫ INT4 > NF4（INT8 最好）。\n2. 按**端到端困惑度**排：NF4 ≫ INT8 > INT4（NF4 最好）。\n\n**权重误差最小的方案，端到端不是最好的。** 这是本章最值得记住的一件事，也是整个 P09 里最有价值的一条实测发现。\n\n**纯 numpy 手写**：对称量化、per-channel scale、NF4 码本复用 P08、存储账本、端到端量化，全部自己实现（`src/ie/quantize.py`）。没有 `bitsandbytes`、没有 `GPTQ`。\n\n---\n\n## 1. Why：为什么量化必然有代价，以及代价怎么衡量\n\n量化的本质是**用 `bits` 个离散码字 + 一个 scale 去表示一片浮点数**：\n\n```text\nŴ = scale × round(W / scale)        # 对称量化（INT8 / INT4）\n```\n\n代价是 `W − Ŵ`。衡量它有两种完全不同的口径：\n\n| 口径 | 指标 | 衡量什么 |\n|---|---|---|\n| **重建误差** | MSE / 相对 L2 | 权重矩阵本身被改了多少 |\n| **任务代价** | 端到端 PPL | 这个改动让模型变笨了多少 |\n\n**直觉是两者正相关，实测不是。** 原因有三条，按重要性排：\n\n1. **量化误差不是白噪声，是结构化噪声。** 它与权重的幅度、分布、离群值位置相关。MSE 只算\"总量\"，不算\"方向\" —— 一个沿着\"输出不敏感方向\"的大误差，可能比一个沿着敏感方向的小误差更无害。\n2. **网络的各层对扰动的敏感度差异极大。** 同一个 MSE，压在 `attn.Wq` 上和压在 `ffn.W2` 上，后果完全不同。\n3. **PPL 是 CE 的指数。** CE 上 0.04 的微小变化，在 PPL 上被放大成 4% 的\"看起来很大\"的变化（见 4.2）。\n\n## 2. Design：三种方案 + 两套粒度\n\n```python\nquantize_symmetric(W, bits, granularity, channel_axis)   # INT8 / INT4：对称 + 最近邻取整\nquantize_nf4(W, block_size, double_quant)                # NF4：复用 P08 的分位数码本\n```\n\n- **INT8 / INT4（对称量化）**：`scale = absmax / (2^(bits-1) − 1)`，`codes = clip(round(W/scale), −qmax, qmax)`。零必须能被表示（对称量化的直接结果）。\n- **NF4**：不等距的 16 个码字，按**标准正态的分位数**切分，用 `argmin|W/absmax − c|` 最近邻查找（不能 `round`，码字不等距）。这是 P08 已经做过的，本章直接复用 `ft.quantize`。\n- **两种粒度**：\n  - `per_tensor`：整张矩阵**一个** scale（4 字节存储开销）。\n  - `per_channel`：沿 `channel_axis` 每个通道一个 scale。对 `decoder.proj (64, 1024)` 就是 **1024 个 fp32 scale = 4,096 字节**。\n\n![M06 量化：per-tensor vs per-channel 粒度对比 + INT8/INT4/NF4 三方案](../assets/quantization.svg)\n\n**端到端量化** `quantize_model`（`src/ie/quantize.py:125`）：深拷贝模型，遍历 `named_parameters`，把**所有 `ndim >= 2` 的参数**替换成\"量化后再反量化\"的值 —— 也就是说**前向仍然用浮点数算**，量化的影响体现在\"权重值被改变了\"。这是**训练后量化（PTQ）的最简形式**，也是隔离\"量化误差\"这一变量的正确做法。\n\n> 注意：这里遍历用的是 **P08 的 `ft.inject.named_parameters`**，不是 P06 的 `Module.parameters()` —— 后者**漏掉了 `token_emb.weight`**（`TokenEmbedding` 没继承 `Module`，`_collect_params` 只认 `Parameter`/`Module`/list/dict）。不改 P06，绕开它（见 4.5）。\n\n## 3. Real-run evidence（来自 `demos/out/demo_06_quantization_terminal.txt`）\n\n### 3.1 单矩阵上的权重误差与压缩（实测）\n\n对比权重：`decoder.proj (64, 1024)`，**65,536 个参数**。粒度 `per_channel`。\n\n| 方案 | MSE | 相对 L2 | 存储 bytes | 相对 fp32 压缩 |\n|---|---|---|---|---|\n| **INT8** | **7.67262816e-08** | 0.003431 | 69,632 | **3.76×** |\n| INT4 | 2.51961847e-05 | 0.062178 | 36,864 | 7.11× |\n| **NF4** | **5.24610312e-05** | 0.089720 | 33,808 | **7.75×** |\n\n存储账（`decoder.proj`，per_channel，轴 = 1024 通道）：\n\n| 方案 | codes | scale | 合计 |\n|---|---|---|---|\n| fp32 原始 | — | — | 262,144 B |\n| INT8 | 65,536 × 1 B | 1,024 × 4 B = 4,096 | **69,632 B** → 3.76× |\n| INT4 | 65,536 × 0.5 B | 4,096 | **36,864 B** → 7.11× |\n| NF4（block=64 + 双量化） | 65,536 × 0.5 B | absmax 二次量化 ≈ 1,040 | **33,808 B** → 7.75× |\n\n**INT8 的 MSE 是 NF4 的 1/684**（7.673e-08 vs 5.246e-05），但压缩倍数只有 3.76× vs 7.75× —— 这就是\"精度换体积\"的经典权衡，到这里为止一切符合直觉。\n\n### 3.2 端到端答案区困惑度（实测，同一 held-out 8 条）\n\n| 方案 | PPL | 相对变化 | PPL 代价 |\n|---|---|---|---|\n| FP64 计算基线 | **5496.7621** | +0.000% | — |\n| INT8 | 5495.2057 | **−0.028%** | −1.5564 |\n| INT4 | 5503.2843 | **+0.119%** | +6.5221 |\n| **NF4** | **5272.0521** | **−4.088%** | **−224.7101** |\n\n**排序完全翻转了。** 权重 MSE 最差的 NF4（是 INT8 的 **684 倍**），端到端 PPL 反而最好（比 FP64 基线还低 224.71）。\n\n![M06 真实运行输出](../assets/term-06-quantization.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 ⭐ 权重误差最小 ≠ 端到端最优（本章最重要的一条）\n\n把两张表并排放：\n\n| 方案 | 权重 MSE | 排名 | 端到端 PPL 变化 | 排名 |\n|---|---|---|---|---|\n| INT8 | **7.673e-08** | 🥇 1 | −0.028% | 🥈 2 |\n| INT4 | 2.520e-05 | 🥈 2 | +0.119% | 🥉 3 |\n| NF4 | **5.246e-05** | 🥉 3 | **−4.088%** | 🥇 1 |\n\n**MSE 排名和 PPL 排名完全相反。** NF4 的权重 MSE 是 INT8 的 **684 倍**（5.24610312e-05 ÷ 7.67262816e-08 = 683.8），端到端却好 224.71 个 PPL 点。\n\n**这意味着：你不能用\"重建误差\"来选量化方案。** 工程上最常见的错误做法就是\"跑几个量化器，选 MSE 最小的那个\"—— 本章实测证明这个选择规则是**错的**。\n\n至于**为什么** NF4 端到端反而更好，诚实地说：\n\n- 可以确定的是：量化误差是**结构化**的，NF4 的误差分布（按分位数切分 → 误差与权重幅度相关）与 INT8/INT4 的均匀量化误差**性质不同**，不只是大小不同；\n- 也可以确定：**NF4 只压到 4 bit**——低比特量化在这个欠训练的玩具模型上可能起到了类似轻微正则/温度缩放的作用；\n- **不能确定的是机制**。PPL 改善只有 −4.088%，在 CE 尺度上只有 **−0.0418**（见 4.2），**完全可能是这批 8 条 held-out 上的偶然**。\n\n> **可迁移的唯一结论：量化方案必须在你的任务集上复测，不能只看重建误差选。** 如果你只记住 P09 的一句话，记这句。\n\n### 4.2 PPL 是 CE 的指数 —— \"−4.088%\" 听起来很大，其实 CE 只动了 0.0418\n\n```\nFP64:  PPL 5496.7621  →  CE = ln(5496.7621) = 8.61196\nNF4:   PPL 5272.0521  →  CE = ln(5272.0521) = 8.57018\nΔCE = −0.04178   （相对变化仅 −0.485%）\nΔPPL = −4.088%   （放大 8.4 倍）\n```\n\n**同一个事实，两个尺度。** `ppl = exp(CE)` 在 CE≈8.6 处的导数是 `exp(8.6)≈5500`，所以 CE 每变 0.01，PPL 就变约 55 —— \"百分比\"被放大了整整一个数量级。\n\n这是 P08 M09 已经埋下的伏笔（\"困惑度下降 88.46% 听起来很猛\"），本章再次撞上。**报量化收益时请同时报 CE（或同时报 PPL 与基线值）**，否则读者会把 −4.088% 误读成\"NF4 让模型脱胎换骨\"—— 实际上模型仍然一个字都说不对（PPL 5272）。\n\n### 4.3 INT4 反而是三者里唯一\"变差\"的 —— 但它最\"正常\"\n\nINT4 的 PPL 是 **+0.119%（+6.5221）**，是三者中唯一变差的。\n\n这其实**符合直觉**：均匀 INT4 只有 16 个电平（qmax=7，即 15 个非零电平 + 零），重建误差 0.062178，压到 7.11×。它既没有 INT8 那么高的精度，也没有 NF4 那种\"按分布定制\"的码本。**它是三者里最\"朴素\"的方案，也是唯一给出\"预期内\"结果的方案。**\n\n对比之下，NF4 的 −4.088% 才是那个**异常值**。所以正确的读法不是\"NF4 真厉害\"，而是\"**这个预训练不足的玩具模型对量化扰动的响应很反常**\"。\n\n诚实标注：**这个反常结论是在 8 条 held-out、d_model=64 的 2 层玩具模型上测出来的。不能推广到真实 7B 模型。** 真实模型上 NF4 与 INT8 的排序大概率会回到\"INT8 更好\"（这是推断，不是实测）。\n\n### 4.4 per-channel 的 scale 开销：小矩阵上不划算（结构性分析）\n\n本章实测全部用 `per_channel`（`decoder.proj` 的 1024 个通道各一个 fp32 scale = 4,096 字节）。\n\n对比两种粒度的**存储账**（结构性计算，非本章实测的精度对比）：\n\n| 粒度 | INT8 存储 | 相对 fp32 | scale 占比 |\n|---|---|---|---|\n| `per_tensor` | 65,536 + **4** = 65,540 B | **4.00×** | 0.006% |\n| `per_channel` | 65,536 + **4,096** = 69,632 B | **3.76×** | **5.88%** |\n\n**per-channel 让 INT8 的压缩比从 4.00× 掉到 3.76×（体积多 6.2%），换的是离群值隔离能力。**\n\n这笔买卖划不划算取决于矩阵形状：**通道数越少越划算**。`decoder.proj (64, 1024)` 有 1024 个通道 → scale 占 5.88%；而 `attn.Wq (64, 64)` 只有 64 个通道 → scale 只占 0.4%。\n\n> 真实大模型上通常是**反过来的**：权重大多接近零均值正态，离群值少，但 Embedding / LM Head 这类矩阵离群值很猛 —— 工业界做法正是**对大多数层用 per-tensor / per-channel，对少数敏感层用 per-group 或保留 fp16**。\n\n### 4.5 ⚠ 遍历参数必须绕开 P06 的 `Module.parameters()`（它漏掉词嵌入）\n\n`quantize_model` 要遍历模型里所有权重。用 P06 自带的 `Module.parameters()` 会**漏掉 `token_emb.weight`**：\n\n```python\n# projects/06-mini-transformer-llm/src/model/autograd.py\ndef parameters(self):\n    for value in self.__dict__.values():\n        params.extend(_collect_params(value))     # 只认 Parameter / Module / list / dict\n```\n\n`TokenEmbedding` 是普通类、没继承 `Module`，于是它抱着的那块 `(1024, 64)` 词嵌入**永远不在参数表里**。对量化的后果是：**一半以上的参数不会被压**（词嵌入 65,536 个参数，和 `decoder.proj` 一样大），压缩比报告会严重虚高。\n\n**本项目不改 P06**，一律用 P08 的 `ft.inject.named_parameters`（遍历任意对象的 `__dict__`，并跳过 `_prev` 这类计算图边）：\n\n```python\nfrom ft.inject import named_parameters        # src/ie/quantize.py:16\nfor path, parameter in named_parameters(copied):\n    if parameter.data.ndim < 2:\n        continue                              # 跳过 bias / LN gamma / beta\n```\n\n顺带一个同源缺陷：P06 的 `Adam` 动量**从不累积**（详见 M05 4.6）。两个缺陷都在 P06，本项目一律\"绕开而不修改\"。\n\n### 4.6 `ndim < 2` 的跳过规则 —— 别把 LayerNorm 也压了\n\n```python\nif parameter.data.ndim < 2: continue\n```\n\n只压二维及以上的矩阵，跳过所有 bias（`b1`/`b2`）和 LayerNorm 的 `gamma`/`beta`。理由：\n\n- **bias 是加性项**，量化它会引入一个**恒定的偏移量**，直接平移整个激活分布 —— 破坏性远大于乘性权重的相对误差；\n- **LayerNorm 的 gamma/beta 是尺度与平移**，同理；\n- 这些张量加起来只占参数的极小部分，压了也省不了什么。\n\n工业界的 PTQ 实现（如 `bitsandbytes`）同样只量化 `nn.Linear` 的 weight。\n\n### 4.7 FP64 基线 5496.7621 与 M01 的答案区 PPL 完全一致 —— 这是口径自检\n\nM01 打印的\"答案区困惑度\"是 **5496.7621**，M06 打印的\"FP64 计算基线\"也是 **5496.7621**。\n\n两个数字来自不同的 demo、不同的代码路径（M01 走 `evaluate()`，M06 走 `perplexity()`），但**同一个 held-out（8 条）、同一个 `batch_size=2`、同一套 fp64 计算**。完全一致说明：\n\n1. 两章的评估口径严格对齐（否则 M06 的\"相对变化\"就没意义）；\n2. `evaluate()` 与 `perplexity()` 在 `use_mask=True` 下是同一个量。\n\n**跨章节数字能对上，是\"数字真实\"最廉价也最有效的自检。** 每次引用别的里程碑的数字时都该做一次。\n\n## 5. Conclusion\n\n1. 量化代价有两个口径：**重建误差（MSE / 相对 L2）** 与 **任务代价（端到端 PPL）**。直觉认为正相关，**实测不相关**。\n2. ⭐ **权重误差最小 ≠ 端到端最优**：NF4 权重 MSE **5.246e-05**（是 INT8 7.673e-08 的 **684 倍**），端到端 PPL 却最好（**−4.088%，降 224.71**）；INT8 权重 MSE 最小，端到端只有 **−0.028%**。**量化方案必须用任务集复测。**\n3. 实测压缩：INT8 **3.76×**（69,632 B）/ INT4 **7.11×**（36,864 B）/ NF4 **7.75×**（33,808 B），基准 `decoder.proj (64,1024)`、65,536 参数、per_channel。\n4. 实测端到端 PPL：FP64 **5496.7621** / INT8 **5495.2057（−0.028%）** / INT4 **5503.2843（+0.119%）** / NF4 **5272.0521（−4.088%）**。\n5. **PPL 是 CE 的指数**：NF4 的 −4.088% 对应 CE 只动 **−0.0418**（相对 0.485%），被放大 8.4 倍。报量化收益必须同时给基线值。\n6. **INT4（+0.119%）是三者中唯一变差的，也是最\"正常\"的** —— NF4 的 −4.088% 才是异常值，且**不可推广到真实 7B**（推断）。\n7. **per-channel 让 INT8 从 4.00× 掉到 3.76×**（scale 占 5.88%），是否划算取决于通道数（结构性分析，非本章实测对比）。\n8. ⚠ **遍历参数必须用 P08 的 `ft.inject.named_parameters`**，绕开 P06 `Module.parameters()` 漏掉 `token_emb.weight` 的已知缺陷（不改 P06）；同理绕过 P06 `Adam` 动量不累积的缺陷。\n9. **只压 `ndim >= 2` 的矩阵** —— bias 与 LayerNorm 的 gamma/beta 是加性/平移项，量化会平移激活分布。\n10. **跨章节自检**：M06 的 FP64 基线 5496.7621 与 M01 的答案区 PPL 完全一致，证明两章评估口径对齐。\n11. 手写实现的意义：因为码本、scale、存储账全是自己管的，我才能同时给出\"权重 MSE\"和\"端到端 PPL\"两个口径并发现它们矛盾 —— 用 `bitsandbytes` 只能拿到一个黑盒结论。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ie/quantize.py` | `QuantizedTensor`（codes/scale/shape/bits/granularity + `dequantize` + `storage_bytes`）/ `quantize_symmetric`（INT8/INT4 对称量化，per_tensor / per_channel）/ `quantization_error`（mse/rmse/mean_abs/max_abs/relative_l2）/ `compression_ratio` / `compare_quantizers`（三方案对比）/ `quantize_model`（深拷贝 + 全模型 PTQ）/ `quantize_model_nf4` / `save_quantized_artifact` |\n| `src/ie/quantize.py:16` | `from ft.inject import named_parameters` —— 绕开 P06 `Module.parameters()` 漏词嵌入的缺陷 |\n| `src/ie/quantize.py:132` | `if parameter.data.ndim < 2: continue` —— 跳过 bias / LayerNorm |\n| `src/ie/metrics.py` | `perplexity`：端到端 PPL 的测量口径（与 M01 一致） |\n| `demos/demo_06_quantization.py` | 4 节：单矩阵三方案对比 / 端到端量化 / PPL 对比 / 关键结论 |\n| `demos/out/demo_06_quantization_terminal.txt` | 本章所有数字的来源 |\n| `models/base_int8_per_channel.npz`、`models/base_int4_per_channel.npz` | 量化产物（codes + scale + 元信息） |\n| `assets/quantization.svg` | 本章量化粒度与三方案对比图 |\n\n## 7. Version line\n\nv0.5 → **v0.6**，M06 量化落地。实测（基准 `decoder.proj (64,1024)`、65,536 参数、per_channel）：INT8 MSE **7.673e-08** / 压缩 **3.76×**（69,632 B），INT4 **2.520e-05** / **7.11×**（36,864 B），NF4 **5.246e-05** / **7.75×**（33,808 B）；端到端答案区 PPL（同一 held-out 8 条）：FP64 **5496.7621**、INT8 **5495.2057（−0.028%）**、INT4 **5503.2843（+0.119%）**、NF4 **5272.0521（−4.088%，降 224.71）**。⭐ 并诚实记录核心反直觉发现「**权重 MSE 最小不自动等价于端到端 PPL 最优**（NF4 MSE 是 INT8 的 684 倍却端到端最好），量化方案必须在任务集上复测」，以及「PPL 是 CE 的指数，−4.088% 对应 CE 仅 −0.0418」「NF4 的 −4.088% 是异常值，不可推广到真实 7B（推断）」「⚠ 遍历参数须用 P08 `ft.inject.named_parameters` 绕开 P06 `Module.parameters()` 漏词嵌入的缺陷（不改 P06）」。纯 numpy，无 bitsandbytes / GPTQ。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -266,6 +424,8 @@ for path, parameter in named_parameters(copied):
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -275,6 +435,173 @@ for path, parameter in named_parameters(copied):
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -288,6 +615,17 @@ for path, parameter in named_parameters(copied):
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -314,15 +652,46 @@ for path, parameter in named_parameters(copied):
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

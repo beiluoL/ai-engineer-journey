@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-137" title="返回《文档总览》第 137 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 10 — KV Cache：显存账本</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么模型有多大不等于要多少显存" class="lvl2">1. Why：为什么&amp;quot;模型有多大&amp;quot;不等于&amp;quot;要多少显存&amp;quot;</a><a href="#2-design一个公式三个视角" class="lvl2">2. Design：一个公式，三个视角</a><a href="#3-realrun-evidence来自-demosoutdemo10kvcacheterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_10_kv_cache_terminal.txt）</a><a href="#31-kv-随序列长度与-batch-线性增长公式外推" class="lvl3">3.1 KV 随序列长度与 batch 线性增长（公式外推）</a><a href="#32-kv-何时超过权重公式外推" class="lvl3">3.2 KV 何时超过权重（公式外推）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-公式里必须是-kvheads不是-nheads-用错会高估-7-倍" class="lvl3">4.1 ⚠ 公式里必须是 kv_heads，不是 n_heads —— 用错会高估 7 倍</a><a href="#42-反超点把显存规划切成两个完全不同的问题" class="lvl3">4.2 反超点把&amp;quot;显存规划&amp;quot;切成两个完全不同的问题</a><a href="#43-总缓存-token-阈值恒定-2655k-这是账本的自检" class="lvl3">4.3 &amp;quot;总缓存 token 阈值&amp;quot;恒定 ≈ 265.5K —— 这是账本的自检</a><a href="#44-与-m08-的-2048-btoken-差整整-28-倍-别混用" class="lvl3">4.4 与 M08 的 2,048 B/token 差整整 28 倍 —— 别混用</a><a href="#45-本章数字全是外推不是实测-但有两个交叉验证" class="lvl3">4.5 本章数字全是外推，不是实测 —— 但有两个交叉验证</a><a href="#46-kv-量化是把账本砍半的最直接手段" class="lvl3">4.6 KV 量化是把账本砍半的最直接手段</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-10-kv-cache显存账本">Milestone 10 — KV Cache：显存账本</h1>
 <p>M07 说 KV Cache 能省时间，M08 说分页能省空间。这一层回答一个更根本的问题：<strong>KV Cache 到底占多少显存？什么时候它会反客为主，成为显存的主体？</strong></p>
 <p>答案是：<strong>它和 <code>batch_size × seq_len</code> 成正比</strong>，而且比例系数大到反直觉 —— 在高并发长上下文下，KV Cache 能轻松超过模型权重本身。</p>
@@ -250,8 +389,27 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/kvbook.py</code></td><td><code>KVArchitecture</code>（<strong><code>layers</code> / <code>kv_heads</code> / <code>head_dim</code> 三字段分离，逼你区分 query 头与 KV 头</strong>）/ <code>bytes_per_token</code> / <code>kv_cache_bytes</code> / <code>memory_table</code>（batch × seq 二维表 + <code>vs_weights</code> 占比）/ <code>sequence_length_to_exceed_weights</code>（反超点）/ <code>model_weight_bytes</code> / <code>qwen7b_reference</code>（从 28 层 / 4 KV 头 / 128 重推 P07 的数字）</td></tr><tr><td><code>src/ie/kvbook.py:23</code></td><td><code>2 * layers * kv_heads * head_dim * dtype_bytes</code> —— 核心公式，<code>kv_heads</code> 而非 <code>n_heads</code></td></tr><tr><td><code>src/ie/kvbook.py:68</code></td><td><code>math.floor(weight_bytes / per_position) + 1</code> —— 反超点（+1 保证&quot;严格超过&quot;）</td></tr><tr><td><code>demos/demo_10_kv_cache.py</code></td><td>3 节：架构与公式 / KV 增长表 / 反超点表</td></tr><tr><td><code>demos/out/demo_10_kv_cache_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/kv-cache.svg</code></td><td>本章 KV 显存增长与反超点图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.9 → <strong>v0.10</strong>，M10 KV Cache 显存账本落地。参考架构 <code>layers=28 / kv_heads=4 / head_dim=128</code>、BF16：每 token <strong>57,344 B</strong>、7B BF16 权重 <strong>14.18 GiB</strong>；增长表显示 <code>batch=16 @ seq=32,768</code> 时 KV 达 <strong>28,672 MiB = 28.000 GiB</strong>，为权重的 <strong>197.46%</strong>（合计 42.18 GiB）；<strong>反超点 batch 1 → seq 265,515 / batch 4 → 66,379 / batch 16 → 16,595 / batch 64 → 4,149</strong>。并诚实记录「⚠ 本章 7B 数字<strong>全部是按架构公式外推、非本机实测</strong>，但与 Project 07 独立算出的 14.18 GiB / 57,344 B 交叉验证一致」「公式必须用 <code>kv_heads</code>（GQA=4），误用 <code>n_heads</code>(=28) 会高估 7 倍 → 401,408 B/token」「<strong>总缓存 token 阈值恒定 ≈ 265,514</strong>（与 batch 无关），是账本自检不变量」「与 M08 的 2,048 B/token 差 28 倍（架构 + dtype 均不同），不可混用」。纯 Python 标准库 + numpy，无 GPU 实测。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/09-evaluation-inference/milestones/10-kv-cache.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/09-evaluation-inference/milestones/10-kv-cache.md", "name": "10-kv-cache.md", "text": "# Milestone 10 — KV Cache：显存账本\n\nM07 说 KV Cache 能省时间，M08 说分页能省空间。这一层回答一个更根本的问题：**KV Cache 到底占多少显存？什么时候它会反客为主，成为显存的主体？**\n\n答案是：**它和 `batch_size × seq_len` 成正比**，而且比例系数大到反直觉 —— 在高并发长上下文下，KV Cache 能轻松超过模型权重本身。\n\n**⚠ 诚实标注（读本章前必看）：本章的 7B 相关数字全部是按架构公式计算的，不是本机实测。** 本机跑不动 7B。这些数字与 Project 07 已经算过的显存账本对齐（7B BF16 权重 14.18 GiB、KV 57,344 B/token）—— 也就是说，这是**两个项目各自独立算出同一个数**的交叉验证，但仍然属于\"外推\"而非\"实测\"。\n\n---\n\n## 1. Why：为什么\"模型有多大\"不等于\"要多少显存\"\n\n一个 7B 模型，BF16 权重 14.18 GiB。直觉是\"买张 24 GB 的卡就够了\"。**这个直觉在高并发长上下文下错得离谱**，因为显存至少要装三样东西：\n\n```text\n总显存 ≈ 权重 + KV Cache + 激活值/临时缓冲\n```\n\n其中 **KV Cache 是唯一一个随请求量线性增长的项**，而且它的系数不小：\n\n```text\nKV bytes/token = 2 × layers × kv_heads × head_dim × dtype_bytes\n```\n\n`2` 是 K 和 V 两份。这个公式里每一项都在\"做大\"它：层数 × KV 头数 × 头维度 × 序列长度 × 批大小。\n\n## 2. Design：一个公式，三个视角\n\n`src/ie/kvbook.py` 只做一件事 —— 把上面那个公式变成可查的账本：\n\n```python\nbytes_per_token(KVArchitecture(layers, kv_heads, head_dim), dtype_bytes)\n    = 2 × layers × kv_heads × head_dim × dtype_bytes\n\nkv_cache_bytes(arch, seq_len, batch_size, dtype_bytes)\n    = bytes_per_token(arch) × seq_len × batch_size\n\nsequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)\n    = floor(weight_bytes / (bytes_per_token × batch_size)) + 1     # KV 反超权重的序列长度\n```\n\n三个视角分别回答：\n\n| 函数 | 回答 |\n|---|---|\n| `bytes_per_token` | 每存 1 个 token 的 KV 要多少字节（**架构常数**） |\n| `memory_table` | 给定 `(batch, seq)`，KV 占多少 GiB、是权重的百分之几 |\n| `sequence_length_to_exceed_weights` | **反超点**：多长的序列会让 KV 超过权重 |\n\n第三个最有决策价值：**反超点之前，显存规划看权重；反超点之后，显存规划看 KV。**\n\n![M10 KV 显存账本：随 seq 与 batch 线性增长，并在高并发下反超权重](../assets/kv-cache.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_10_kv_cache_terminal.txt`）\n\n参考架构（Qwen2-7B 形态，与 P07 对齐）：`layers=28, kv_heads=4, head_dim=128`，BF16（`dtype_bytes=2`）。\n\n```\n  架构                                 layers=28, kv_heads=4, head_dim=128\n  公式                                 2 × layers × kv_heads × head_dim × dtype_bytes\n  BF16 bytes/token                   57,344 B\n  7B BF16 权重                         14.18 GiB\n```\n\n**验算**：`2 × 28 × 4 × 128 × 2 = 57,344` B/token ✓\n\n### 3.1 KV 随序列长度与 batch 线性增长（公式外推）\n\n| batch | seq_len | KV MiB | KV GiB | KV / 权重 |\n|---|---|---|---|---|\n| 1 | 512 | 28.00 | 0.027 | **0.19%** |\n| 1 | 2,048 | 112.00 | 0.109 | 0.77% |\n| 1 | 8,192 | 448.00 | 0.438 | 3.09% |\n| 1 | 32,768 | 1,792.00 | 1.750 | **12.34%** |\n| 4 | 512 | 112.00 | 0.109 | 0.77% |\n| 4 | 2,048 | 448.00 | 0.438 | 3.09% |\n| 4 | 8,192 | 1,792.00 | 1.750 | 12.34% |\n| 4 | 32,768 | 7,168.00 | 7.000 | **49.37%** |\n| 16 | 512 | 448.00 | 0.438 | 3.09% |\n| 16 | 2,048 | 1,792.00 | 1.750 | 12.34% |\n| 16 | 8,192 | 7,168.00 | 7.000 | 49.37% |\n| **16** | **32,768** | **28,672.00** | **28.000** | **197.46%** |\n\n**这张表最值得记住的一行是最后一行**：`batch=16, seq=32,768` 时 KV Cache 达 **28.00 GiB**，是权重（14.18 GiB）的 **197.46%** —— **接近两倍**。\n\n对角线规律很明显：`batch × seq_len` 相同的格子，KV 占比完全相同（`1×2048`、`4×512` 都是 0.77%；`16×512`、`4×2048`、`1×8192`... 等等）。**这直接验证了\"KV ∝ batch × seq_len\"。**\n\n### 3.2 KV 何时超过权重（公式外推）\n\n| batch | 每请求 seq 阈值 | 总缓存 token 阈值 |\n|---|---|---|\n| **1** | **265,515** | 265,515 |\n| 4 | 66,379 | 265,516 |\n| 16 | 16,595 | 265,520 |\n| **64** | **4,149** | 265,536 |\n\n三个读数：\n\n- **单请求（batch=1）要 seq 265,515 才反超** —— 这个长度远超当前任何模型的上下文窗口。**所以\"单人对话\"场景里 KV 永远不是瓶颈**，权重才是。\n- **batch=64 时每请求只要 seq 4,149 就反超** —— 4K 上下文是今天最普通的量级。**高并发下 KV 立刻变成显存主体。**\n- **\"总缓存 token 阈值\"四行几乎恒定（265,515 / 265,516 / 265,520 / 265,536）** —— 这是账本的自检，见 4.3。\n\n![M10 真实运行输出](../assets/term-10-kv-cache.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 ⚠ 公式里必须是 `kv_heads`，不是 `n_heads` —— 用错会高估 7 倍\n\n这是 GQA（Grouped Query Attention）带来的坑。Qwen2-7B 有 **28 个 query 头，但只有 4 个 KV 头**：每 7 个 query 头共享 1 组 K/V。\n\n```text\n正确：2 × 28 层 × 4 KV头 × 128 × 2 B = 57,344 B/token\n错误：2 × 28 层 × 28 头 × 128 × 2 B = 401,408 B/token  ← 高估 7.0 倍\n```\n\n差别是**整整 7 倍**。用错的话，`batch=16, seq=32768` 的 KV 会被算成 196 GiB 而不是 28 GiB —— 你会得出\"这个配置根本不可能\"的错误结论，而实际上一张 A100 80G 是能跑的。\n\n**本项目把 `kv_heads` 单独作为 `KVArchitecture` 的一个字段**（而不是复用 `n_heads`），就是为了逼着写公式的人回答\"这里该用哪个\"。\n\n> 可迁移的经验：**copy 一个显存公式之前，先确认它用的是 `n_heads` 还是 `n_kv_heads`。** 网上大量的估算脚本是 MHA 时代写的，在 GQA / MQA 模型上会系统性高估。\n\n### 4.2 反超点把\"显存规划\"切成两个完全不同的问题\n\n| 场景 | 显存主体 | 优化方向 |\n|---|---|---|\n| batch=1，seq < 265K | **权重**（14.18 GiB） | 量化权重（M06）、模型切分 |\n| batch=64，seq > 4,149 | **KV Cache**（可达权重的 2 倍） | 分页（M08）、KV 量化、MQA/GQA、卸载、前缀共享 |\n\n**这两类问题的解法几乎不重叠**：量化权重对 KV 一点用没有（KV 是运行时产生的激活，不是权重）；分页对权重一点用没有。\n\n具体到 `batch=16, seq=32,768`：`14.18 + 28.00 = 42.18 GiB`。这个配置在 A100 80GB 上可行，在 24 GB 的卡（A10 / RTX 4090）上**绝无可能** —— 而如果只看权重，你会以为 24 GB 绰绰有余。\n\n> 可迁移的经验：**做容量规划时，先算反超点，再决定优化什么。** 盲目量化权重是最常见的时间浪费。\n\n### 4.3 \"总缓存 token 阈值\"恒定 ≈ 265.5K —— 这是账本的自检\n\n四行的\"总缓存 token 阈值\"是 `265,515 / 265,516 / 265,520 / 265,536`，**几乎完全相同**。这不是巧合：\n\n```text\n总阈值 = 每请求 seq 阈值 × batch\n       ≈ (weight_bytes / (bytes_per_token × batch)) × batch\n       = weight_bytes / bytes_per_token\n       = 15,225,659,064 / 57,344 = 265,514      ← 与 batch 无关\n```\n\n**\"KV 超过权重所需的总缓存 token 数\"是一个与 batch 无关的量** —— 它只取决于\"权重大\"和\"每个 token 的 KV 大\"两个量。微小差异（265,515 ~ 265,536）全部来自 `+1` 的取整在乘 batch 后被放大。\n\n这个恒等式是**账本正确性的自检**：如果哪天四行差别很大，说明公式或取整写错了。\n\n这和 M08 的\"池守恒 8+24=32\"、M09 的\"busy 恒为 110\"是同一类思路 —— **找一个策略/参数无关的不变量，用它验证计算。**\n\n### 4.4 与 M08 的 2,048 B/token 差整整 28 倍 —— 别混用\n\n| | M08（玩具模型） | M10（7B 参考） |\n|---|---|---|\n| 架构 | `layers=2, heads=4, head_dim=16` | `layers=28, kv_heads=4, head_dim=128` |\n| dtype | **fp64**（`dtype_bytes=8`，与 P06 模型一致） | **BF16**（`dtype_bytes=2`） |\n| B/token | **2,048** | **57,344** |\n| 比值 | — | **恰好 28 倍** |\n\n`57,344 / 2,048 = 28.0`，正好是 `(28 层 / 2 层) × (128 / 16) × (2 B / 8 B)` 的乘积。\n\n两个数字都对，但**属于不同的模型、不同的 dtype**。引用时必须带上口径 —— 这也是为什么 M08 的文档里专门标了\"本章 `dtype_bytes=8` 与 M10 的 BF16 不可直接对比\"。\n\n### 4.5 本章数字全是外推，不是实测 —— 但有两个交叉验证\n\n必须说清楚可信度来源：\n\n- **不是本机实测**：本机（`d_model=64` 的玩具模型）跑不动 7B，也拿不到真实 GPU 显存读数。\n- **与 P07 交叉验证**：Project 07 的显存账本**独立算过**同样的两个数 —— 7B BF16 权重 **14.18 GiB**、KV **57,344 B/token**。两个项目用各自的代码得出同一个结果，说明公式和参数没有抄错。\n- **与 M08 交叉验证**：同一公式在玩具架构上给出 2,048 B/token，与 M08 一致。\n\n所以本章数字应读作\"**按架构公式外推，且与 P07 独立计算结果一致**\"，而不是\"实测\"。**`memory_table` 里那些 GiB 数字，是真机上应该出现的值，不是本机观测到的值。**\n\n### 4.6 KV 量化是把账本砍半的最直接手段\n\n公式里 `dtype_bytes` 是线性项，所以：\n\n| KV dtype | bytes/token | 相对 BF16 |\n|---|---|---|\n| FP16 / BF16 | 57,344 | 1.00× |\n| **INT8 / FP8** | **28,672** | **0.50×** |\n| INT4 | 14,336 | 0.25× |\n\n**KV 从 BF16 压到 INT8，显存直接减半** —— 反超点也会相应翻倍（batch=64 时从 seq 4,149 抬到 8,298）。\n\n而且 KV 量化比权重量化**更容易**：KV 是运行时产生的激活，可以用\"校准集\"确定量化范围，也可以按通道/按头做粒度。工业界（vLLM、TensorRT-LLM）已经把 FP8 KV 作为标准选项。\n\n**但要注意**：本章账本**没有**包含 KV 量化，表里全是 BF16。这是刻意的 —— 先给出一个干净的基准，量化是可以叠加在上面的独立变量。\n\n## 5. Conclusion\n\n1. KV 显存公式：`2 × layers × kv_heads × head_dim × dtype_bytes × seq_len × batch_size`。参考架构（28 层 / 4 KV 头 / head_dim 128 / BF16）→ **57,344 B/token**。\n2. **KV ∝ batch × seq_len**：表里的对角线（`batch×seq` 相同 → 占比相同）直接验证了这一点。\n3. 实测（**公式外推**）：`batch=16, seq=32,768` → KV **28.00 GiB**，达权重的 **197.46%**（权重 14.18 GiB，合计 42.18 GiB —— A100 80G 可行，24 GB 卡不行）。\n4. **反超点**：batch 1 → **seq 265,515**（单人对话永远碰不到）；batch 4 → 66,379；batch 16 → **16,595**；batch 64 → **4,149**（高并发下 4K 上下文即反超）。\n5. ⚠ **公式里必须用 `kv_heads`（GQA=4），用 `n_heads`（=28）会高估 7 倍**（401,408 vs 57,344）。\n6. **反超点把显存规划切成两个问题**：之前优化权重（量化、切分），之后优化 KV（分页、KV 量化、GQA、前缀共享）—— 两类解法几乎不重叠。\n7. **\"总缓存 token 阈值\"恒定 ≈ 265,514**（`weight_bytes / bytes_per_token`，与 batch 无关）—— 账本自检不变量。\n8. **与 M08 的 2,048 B/token 差 28 倍**（架构 + dtype 都不同），引用必须带口径。\n9. ⚠ **全部数字是公式外推，非本机实测**；但与 P07 独立算出的 14.18 GiB / 57,344 B 交叉验证一致。\n10. **KV 量化到 INT8 可直接减半**（反超点翻倍），且比权重量化更容易 —— 本章账本为干净基准，未叠加该变量。\n11. 手写实现的意义：因为公式是自己写的，我才能把它拆成\"架构常数 × 序列 × 批\"三段并做对角线自检 —— 用现成的显存计算器只能拿到一个总数，无法验证。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ie/kvbook.py` | `KVArchitecture`（**`layers` / `kv_heads` / `head_dim` 三字段分离，逼你区分 query 头与 KV 头**）/ `bytes_per_token` / `kv_cache_bytes` / `memory_table`（batch × seq 二维表 + `vs_weights` 占比）/ `sequence_length_to_exceed_weights`（反超点）/ `model_weight_bytes` / `qwen7b_reference`（从 28 层 / 4 KV 头 / 128 重推 P07 的数字） |\n| `src/ie/kvbook.py:23` | `2 * layers * kv_heads * head_dim * dtype_bytes` —— 核心公式，`kv_heads` 而非 `n_heads` |\n| `src/ie/kvbook.py:68` | `math.floor(weight_bytes / per_position) + 1` —— 反超点（+1 保证\"严格超过\"） |\n| `demos/demo_10_kv_cache.py` | 3 节：架构与公式 / KV 增长表 / 反超点表 |\n| `demos/out/demo_10_kv_cache_terminal.txt` | 本章所有数字的来源 |\n| `assets/kv-cache.svg` | 本章 KV 显存增长与反超点图 |\n\n## 7. Version line\n\nv0.9 → **v0.10**，M10 KV Cache 显存账本落地。参考架构 `layers=28 / kv_heads=4 / head_dim=128`、BF16：每 token **57,344 B**、7B BF16 权重 **14.18 GiB**；增长表显示 `batch=16 @ seq=32,768` 时 KV 达 **28,672 MiB = 28.000 GiB**，为权重的 **197.46%**（合计 42.18 GiB）；**反超点 batch 1 → seq 265,515 / batch 4 → 66,379 / batch 16 → 16,595 / batch 64 → 4,149**。并诚实记录「⚠ 本章 7B 数字**全部是按架构公式外推、非本机实测**，但与 Project 07 独立算出的 14.18 GiB / 57,344 B 交叉验证一致」「公式必须用 `kv_heads`（GQA=4），误用 `n_heads`(=28) 会高估 7 倍 → 401,408 B/token」「**总缓存 token 阈值恒定 ≈ 265,514**（与 batch 无关），是账本自检不变量」「与 M08 的 2,048 B/token 差 28 倍（架构 + dtype 均不同），不可混用」。纯 Python 标准库 + numpy，无 GPU 实测。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -259,6 +417,8 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -268,6 +428,173 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -281,6 +608,17 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -307,15 +645,46 @@ sequence_length_to_exceed_weights(arch, weight_bytes, batch_size, dtype_bytes)
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

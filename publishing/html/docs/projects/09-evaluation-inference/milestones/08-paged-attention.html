@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-135" title="返回《文档总览》第 135 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Milestone 08 — PagedAttention：按需分配 KV 物理块</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-why为什么分页能同时解决三件事" class="lvl2">1. Why：为什么&amp;quot;分页&amp;quot;能同时解决三件事</a><a href="#2-design块池-block-table-refcount" class="lvl2">2. Design：块池 + block table + refcount</a><a href="#3-realrun-evidence来自-demosoutdemo08pagedattentionterminaltxt" class="lvl2">3. Real-run evidence（来自 demos/out/demo_08_paged_attention_terminal.txt）</a><a href="#31-显存账实测" class="lvl3">3.1 显存账（实测）</a><a href="#32-block-table-演化实测全量" class="lvl3">3.2 Block table 演化（实测全量）</a><a href="#33-池守恒与共享实测" class="lvl3">3.3 池守恒与共享（实测）</a><a href="#4-踩坑-反直觉发现" class="lvl2">4. 踩坑 / 反直觉发现</a><a href="#41-这是块级账本不是真实-gpu-显存分配" class="lvl3">4.1 ⚠ 这是块级账本，不是真实 GPU 显存分配</a><a href="#42-shareprefix-强制要求前缀按完整-block-对齐-这是安全约束不是偷懒" class="lvl3">4.2 share_prefix 强制要求前缀按完整 block 对齐 —— 这是安全约束不是偷懒</a><a href="#43-release-必须按-refcount-归零才真回收-否则共享会变成悬空引用" class="lvl3">4.3 release 必须按 refcount 归零才真回收 —— 否则共享会变成悬空引用</a><a href="#44-checkinvariants-的五条断言-池记账必须有自检" class="lvl3">4.4 check_invariants 的五条断言 —— 池记账必须有自检</a><a href="#45-blocksize-是个真实的权衡按同一公式推算" class="lvl3">4.5 block_size 是个真实的权衡（按同一公式推算）</a><a href="#46-分页省下的-719-里绝大部分是不再按-maxlen-预留" class="lvl3">4.6 分页省下的 71.9% 里，绝大部分是&amp;quot;不再按 max_len 预留&amp;quot;</a><a href="#5-conclusion" class="lvl2">5. Conclusion</a><a href="#6-code-map" class="lvl2">6. Code map</a><a href="#7-version-line" class="lvl2">7. Version line</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="milestone-08-pagedattention按需分配-kv-物理块">Milestone 08 — PagedAttention：按需分配 KV 物理块</h1>
 <p>M07 证明了 KV Cache 能省掉重复计算（实测 2.20×）。但 KV Cache 引入了一个新问题：<strong>它要占显存，而且占多少事先不知道。</strong></p>
 <p>朴素做法是&quot;按 <code>max_seq_len</code> 给每条序列预留一整块连续显存&quot;。这个做法有三种浪费：</p>
@@ -271,8 +410,27 @@ physical = block_table[request_id][logical]
 <table><thead><tr><th>文件</th><th>职责</th></tr></thead><tbody><tr><td><code>src/ie/paged.py</code></td><td><code>PagedKVCache</code>：<code>allocate</code> / <code>_take_blocks</code> / <code>append</code>（按需取块 + token 位写入）/ <code>share_prefix</code>（refcount++，<strong>强制 block 对齐</strong>）/ <code>release</code>（refcount--，归零才回池并清零）/ <code>preempt</code>（选块数最多者，<code>protected</code> 保护被共享者）/ <code>physical_block</code>（<code>divmod</code> 地址换算）/ <code>stats</code>（用量与碎片率）/ <code>check_invariants</code>（五条池不变量）</td></tr><tr><td><code>src/ie/paged.py:66</code></td><td><code>if prefix_tokens % block_size: raise ValueError(...)</code> —— 未对齐共享显式拒绝</td></tr><tr><td><code>src/ie/paged.py:81</code></td><td><code>if self.refcounts[block] == 0:</code> —— refcount 归零才真正回收</td></tr><tr><td><code>src/ie/paged.py:143</code></td><td><code>memory_comparison</code>：连续 vs 分页的浪费率与节省率</td></tr><tr><td><code>demos/demo_08_paged_attention.py</code></td><td>3 节：显存账对比 / block table 演化 / 池守恒与共享</td></tr><tr><td><code>demos/out/demo_08_paged_attention_terminal.txt</code></td><td>本章所有数字的来源</td></tr><tr><td><code>assets/paged-attention.svg</code></td><td>本章 block table 与块分配图</td></tr></tbody></table>
 <h2 id="7-version-line">7. Version line</h2><nav class="sec-nav"><a class="sn prev" href="#6-code-map"><span class="sn-label">← 上一节</span><span class="sn-name">6. Code map</span></a><span class="sn empty"><span class="sn-label">下一节 →</span><span class="sn-name">文档结尾</span></span></nav>
 <p>v0.7 → <strong>v0.8</strong>，M08 PagedAttention 落地。实测（4 条序列 <code>[9,17,33,62]</code>、<code>max_len=128</code>、<code>block_size=8</code>、池 32 块、2,048 B/token）：连续预分配 <strong>1024.0 KiB</strong>（浪费 <strong>76.4%</strong>）vs 分页 <strong>288.0 KiB</strong>（浪费 <strong>16.0%</strong>），<strong>节省 71.9%</strong>；block table 完整演化（A:9→[0,1]、B:17→[2,3,4]、C:33→[5..9]、D:62→[10..17]、释放 B 回收 3 块、<strong>E 共享 A 前缀块 [0]</strong> 后为 [0,2]、抢占 D 回收 8 块）；<strong>池守恒 已用 8 + 空闲 24 = 32</strong>，<strong>逻辑引用 9 / 物理块 8，共享引用 1</strong>，五条不变量 <code>True</code>。并诚实记录「⚠ 块级账本非真实 GPU 分配，<code>blocks</code> 为 <code>uint8</code> 占位、2,048 B/token 按公式算出；本章 <code>dtype_bytes=8</code>（fp64）与 M10 的 BF16 不可直接对比」「分页最大收益是按需分配语义而非分块动作（736 KiB 中 690 KiB 来自取消 max_len 预留）」「<code>share_prefix</code> 强制 block 对齐、<code>release</code> 按 refcount 归零才回收」。纯 numpy、无 vLLM。配图 1 张手写 SVG + 1 张真实终端截图。</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/09-evaluation-inference/milestones/08-paged-attention.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/09-evaluation-inference/milestones/08-paged-attention.md", "name": "08-paged-attention.md", "text": "# Milestone 08 — PagedAttention：按需分配 KV 物理块\n\nM07 证明了 KV Cache 能省掉重复计算（实测 2.20×）。但 KV Cache 引入了一个新问题：**它要占显存，而且占多少事先不知道。**\n\n朴素做法是\"按 `max_seq_len` 给每条序列预留一整块连续显存\"。这个做法有三种浪费：\n\n| 浪费类型 | 具体表现 | 后果 |\n|---|---|---|\n| **内部碎片** | 序列实际长 9，却预留了 128 | 每条序列浪费 `(max_len − 实际长度)` |\n| **预留浪费** | 到底会生成多长，请求进来时不知道 | 只能按最坏情况预留 |\n| **无法共享** | 两条序列有相同前缀（system prompt、few-shot），各存一份 | 前缀重复存储 |\n\nPagedAttention 的解法来自操作系统：**把 KV Cache 切成固定大小的物理块（block），用一张 block table 把\"逻辑第 i 块\"映射到\"某个物理块\"，按需分配。**\n\n**纯 numpy 手写**：块池、block table、引用计数、前缀共享、抢占、不变量检查，全部自己实现（`src/ie/paged.py`）。不引入 vLLM。\n\n---\n\n## 1. Why：为什么\"分页\"能同时解决三件事\n\n**内部碎片**：浪费从\"预留长度 − 实际长度\"降到\"块大小 − (实际长度 mod 块大小)\"，**上限是 1 个块**。\n\n**预留浪费**：不需要预留 —— 生成一个 token 就申请一个 slot，块满了再申请下一个块。显存占用**随实际生成长度线性增长**，而不是按最坏情况一次性占满。\n\n**前缀共享**：两条序列的相同前缀可以**指向同一个物理块**，靠**引用计数（refcount）**管理生命周期。这是连续分配根本做不到的 —— 连续内存里两个序列的前缀必须在两个不同的地址。共享带来的收益在多轮对话、长 system prompt、beam search 场景下极其可观。\n\n**代价**要说清楚：注意力 kernel 不能再假设 K/V 是连续的，必须按 block table 做** gather**。这是 PagedAttention 唯一的性能代价，也是为什么真实实现需要专门的 CUDA kernel。\n\n## 2. Design：块池 + block table + refcount\n\n```python\nclass PagedKVCache:\n    blocks       # (num_blocks, block_size, token_bytes) 物理块池\n    free_blocks  # 空闲块号列表\n    block_table  # request_id -> [物理块号, ...]   逻辑块 i → 物理块\n    lengths      # request_id -> 已存 token 数\n    refcounts    # 每个物理块被多少个请求引用\n```\n\n核心操作：\n\n| 操作 | 行为 |\n|---|---|\n| `append(id, n)` | 按需取块，写入 token 位；`physical = table[logical]`，`offset = pos % block_size` |\n| `share_prefix(src, tgt, n)` | 复制 src 的前 `n/block_size` 个块号，`refcounts[block] += 1` |\n| `release(id)` | 逐块 `refcounts -= 1`，归 0 才真正回池（并 `fill(0)` 清零） |\n| `preempt(protected)` | 选\"块数最多、长度最长\"的请求释放，回收它的块 |\n| `check_invariants()` | 五条池不变量（见 4.4） |\n\n地址换算就是两个除法 —— 这是整个设计的精髓：\n\n```python\nlogical, offset = divmod(token_position, block_size)\nphysical = block_table[request_id][logical]\n# 真实数据在 blocks[physical, offset]\n```\n\n![M08 PagedAttention：block table 映射与块分配演化](../assets/paged-attention.svg)\n\n## 3. Real-run evidence（来自 `demos/out/demo_08_paged_attention_terminal.txt`）\n\n配置：`KV bytes/token = 2,048`（`2 × layers=2 × heads=4 × head_dim=16 × dtype_bytes=8`），`num_blocks=32`，`block_size=8`，`max_seq_len=128`，四条序列长度 `[9, 17, 33, 62]`。\n\n### 3.1 显存账（实测）\n\n```\n  KV bytes/token                     2,048\n  序列长度                               [9, 17, 33, 62]\n  连续预分配                              1024.0 KiB\n  分页按需分配                             288.0 KiB\n  浪费率                                76.4% → 16.0%\n  节省                                 71.9%\n```\n\n拆解（按公式还原）：\n\n| 口径 | 计算 | 结果 |\n|---|---|---|\n| 有效 token | `9+17+33+62 = 121` × 2,048 B | 242 KiB |\n| 连续预分配 | `4 × 128` × 2,048 B | **1,024 KiB**（浪费 782 KiB，**76.4%**） |\n| 分页按需 | `(2+3+5+8) 块 × 8` × 2,048 B | **288 KiB**（浪费 46 KiB，**16.0%**） |\n| 节省 | `1 − 288/1024` | **71.9%** |\n\n分页后剩余的 46 KiB 浪费，全部来自\"每条序列最后一块没填满\"：`A` 用 9/16、`B` 17/24、`C` 33/40、`D` 62/64 —— **合计 23 个空 slot，正是 PagedAttention 理论上限\"每条序列浪费 < 1 块 × 序列数\"的体现**。\n\n### 3.2 Block table 演化（实测全量）\n\n```\n  操作                                        block_table                                                                                 空闲块\n  ----------------------------------------  ------------------------------------------------------------------------------------------  ---\n  加入 A:9                                    {'A': [0, 1]}                                                                                30\n  加入 B:17                                   {'A': [0, 1], 'B': [2, 3, 4]}                                                                27\n  加入 C:33                                   {'A': [0, 1], 'B': [2, 3, 4], 'C': [5, 6, 7, 8, 9]}                                          22\n  加入 D:62                                   {'A': [0, 1], 'B': [2, 3, 4], 'C': [5, 6, 7, 8, 9], 'D': [10, 11, 12, 13, 14, 15, 16, 17]}   14\n  释放 B                                      {'A': [0, 1], 'C': [5, 6, 7, 8, 9], 'D': [10, 11, 12, 13, 14, 15, 16, 17]}                   17\n  E 共享 A 前缀块 [0]                            {'A': [0, 1], 'C': [5, 6, 7, 8, 9], 'D': [10, 11, 12, 13, 14, 15, 16, 17], 'E': [0, 2]}      16\n  抢占 D，回收 [10, 11, 12, 13, 14, 15, 16, 17]  {'A': [0, 1], 'C': [5, 6, 7, 8, 9], 'E': [0, 2]}                                             24\n```\n\n**逐行发生了什么：**\n\n- `A:9` → `ceil(9/8) = 2` 块；`B:17` → 3 块；`C:33` → 5 块；`D:62` → 8 块。空闲从 32 一路降到 14。\n- **释放 B**：`[2,3,4]` 回到池里，空闲 14 → 17。\n- **`E` 共享 `A` 的前缀块 `[0]`**（`A` 的前 8 个 token），然后 `append(E, 7)` → `E` 长度 15 → 需要 2 块，还差 1 块，从池里取到刚回收的 **块 2** → `E: [0, 2]`。**块 0 被 `A` 和 `E` 同时引用，物理上只存了一份。**\n- **抢占 `D`**（`protected={\"A\",\"E\"}`）：候选是 `C` 和 `D`，`D` 占 8 块最多 → 被选中，回收 `[10..17]` 共 8 块，空闲 16 → 24。\n\n### 3.3 池守恒与共享（实测）\n\n```\n  物理块                                已用 8 + 空闲 24 = 32\n  逻辑引用 / 物理块                         9 / 8\n  共享引用                               1\n  池不变量                               True\n```\n\n- **已用 8 + 空闲 24 = 32**：池完全守恒，没有块丢失也没有块重复。\n- **逻辑引用 9 / 物理块 8**：`A` 2 + `C` 5 + `E` 2 = 9 条逻辑引用，指向 8 个不同物理块 `{0,1,2,5,6,7,8,9}` —— **多出来的那 1 条就是块 0 的共享引用**。这一行是\"前缀共享真的生效了\"的直接证据。\n- **池不变量 `True`**：五条断言全过（见 4.4）。\n\n![M08 真实运行输出](../assets/term-08-paged-attention.png)\n\n## 4. 踩坑 / 反直觉发现\n\n### 4.1 ⚠ 这是块级账本，不是真实 GPU 显存分配\n\n必须诚实标注：\n\n- `blocks` 是一个 `np.zeros((32, 8, 2048), dtype=np.uint8)` 的**占位数组**（约 512 KiB），`append` 只往 `blocks[physical, offset, 0]` 写一个 `position % 256` 的标记字节。**它记录\"这个 slot 归谁\"，不存真正的 K/V 张量。**\n- 因此 `2048 B/token` 是**按架构公式算出来的**（`2 × 2 × 4 × 16 × 8`），不是本机实测的显存占用。\n- 同理，M08 的 `dtype_bytes=8`（fp64，与 P06 模型的 dtype 一致），而 **M10 算 7B 时用的是 `dtype_bytes=2`（BF16）** —— 两章 dtype 不同，**不可直接对比**。\n\n所以本章的结论应读作：\"**块分配策略**把浪费率从 76.4% 压到 16.0%，节省 71.9%\"。这个结论对策略本身成立；**具体 KiB 数字是本例参数下的账本结果，不是 7B 上的实测。**\n\n### 4.2 `share_prefix` 强制要求前缀按完整 block 对齐 —— 这是安全约束不是偷懒\n\n```python\nif prefix_tokens % block_size:\n    raise ValueError(\"为避免写时复制歧义，共享前缀必须按完整 block 对齐\")\n```\n\n原因：如果共享了\"半个块\"，那么 `E` 往这个块的第 5~8 个 slot 写入自己的 token 时，会**直接改到 `A` 的数据** —— 因为它们是同一块物理内存。\n\n真实 vLLM 的处理是 **copy-on-write**：共享块被写入时先复制一份再改。本项目选择**直接拒绝未对齐的共享**，理由：\n\n- 演示的目标是\"把共享与引用计数的机制讲清楚\"，CoW 会引入大量分支；\n- 拒绝比\"静默写坏\"安全得多 —— 这是一个**会静默产生错误结果**的操作（和 M07 的 `max_len` 越界同类）。\n\n> 可迁移的经验：**当\"部分共享\"的正确实现复杂时，先做成显式拒绝。** 报错比给错答案好。\n\n### 4.3 `release` 必须按 refcount 归零才真回收 —— 否则共享会变成悬空引用\n\n```python\nfor block in self.block_table.pop(request_id):\n    self.refcounts[block] -= 1\n    if self.refcounts[block] == 0:      # 只有没人引用了才回池\n        self.blocks[block].fill(0)\n        released.append(block)\n        self.free_blocks.append(block)\n```\n\n如果 `release(A)` 不看 refcount 就把块 0 塞回空闲列表，那么 `E` 的 block table 里还写着 `[0, 2]`，而块 0 可能已经被分配给别的请求 —— **悬空引用 + 数据错乱**，且不会报错。\n\n实测印证：`preempt` 时 `protected={\"A\", \"E\"}` 把 `A` 保护起来，正是因为 `E` 共享着 `A` 的块 0。**释放共享者之前必须先释放（或保护）被共享者** —— 这个顺序约束是 refcount 机制绕不开的。\n\n### 4.4 `check_invariants` 的五条断言 —— 池记账必须有自检\n\n```python\nreturn (\n    not (used & free)                              # ① 一个块不能同时是\"已用\"和\"空闲\"\n    and used | free == set(range(self.num_blocks)) # ② 已用 ∪ 空闲 = 全部块（没有丢失）\n    and used == tables                             # ③ 已用集合 == 所有 block_table 引用的块\n    and len(self.free_blocks) == len(free)         # ④ 空闲列表无重复\n    and np.all(self.refcounts >= 0)                # ⑤ refcount 不为负\n)\n```\n\n实测全部通过（`True`）。第 ② 条最重要：**它保证\"块池守恒\"**，也就是终端里那行\"已用 8 + 空闲 24 = 32\"。\n\n这类自检在分配器代码里是**必需品**。块泄漏（分配了没释放）和块重复释放（同一块进了两次空闲列表）都不会立刻崩溃，只会在几百个请求之后表现为\"显存不足\"或\"数据错乱\"—— 到那时已经无法定位。\n\n### 4.5 `block_size` 是个真实的权衡（按同一公式推算）\n\n本章用 `block_size=8`，vLLM 默认 16。用同一批序列长度 `[9, 17, 33, 62]` 推算：\n\n| block_size | 分配 slot | 内部碎片 | block table 条目数 |\n|---|---|---|---|\n| **8** | 144 | 23 token（**16.0%**） | 18 |\n| 16 | 160 | 39 token（24.4%） | 10 |\n\n**块越小越省显存，但 block table 越长**（调度和 kernel launch 的开销越大）。\n\n本例选 8 有两个原因：一是让碎片对比更明显（16.0% vs 76.4%），二是池只有 32 个块，块号要在终端里看得清。\n\n> 注意：**这张对比表是按公式推算的，不是本章 demo 的实测输出**（demo 只跑了 `block_size=8`）。\n\n### 4.6 分页省下的 71.9% 里，绝大部分是\"不再按 max_len 预留\"\n\n拆开看：连续预分配浪费 782 KiB，分页浪费 46 KiB，**省下的 736 KiB 里只有 46 KiB 是\"块内碎片\"的改善，其余 690 KiB 全部来自\"不再按 `max_seq_len=128` 预留\"**。\n\n也就是说：**PagedAttention 最大的收益不是\"分块\"这个动作本身，而是\"按需分配\"这个语义。** 分块只是让按需分配在注意力 kernel 里可行的手段。\n\n这条很容易被讲反。如果只把 `max_seq_len` 从 128 调小到 64，连续预分配也能省一半 —— 但那样就得拒绝所有超过 64 的请求，而分页不需要做这个妥协。\n\n## 5. Conclusion\n\n1. PagedAttention = **固定大小物理块 + block table 映射 + 按需分配**，地址换算就是 `divmod(pos, block_size)`。\n2. 实测（4 条序列 `[9,17,33,62]`、`max_len=128`、`block=8`、2,048 B/token）：连续预分配 **1024.0 KiB**（浪费 **76.4%**）→ 分页 **288.0 KiB**（浪费 **16.0%**），**节省 71.9%**。\n3. 分页后剩余的 16.0% 浪费**全部来自\"每条序列最后一块没填满\"**（23 个空 slot），正是理论上限\"每条 < 1 块\"的体现。\n4. **前缀共享实测生效**：`E` 共享 `A` 的块 0 → 逻辑引用 **9** / 物理块 **8**，**共享引用 1**。\n5. **池守恒**：已用 **8** + 空闲 **24** = **32**；五条不变量全部 `True`。\n6. ⚠ **诚实标注：这是块级账本，不是真实 GPU 分配** —— `blocks` 是 `uint8` 占位数组，2,048 B/token 按公式算出；且本章 `dtype_bytes=8`（fp64）与 M10 的 BF16（2）**不可直接对比**。\n7. `share_prefix` **强制 block 对齐**（避免写坏共享块；真实实现用 CoW）；`release` **按 refcount 归零才回收**（否则悬空引用）；`preempt` 必须 `protected` 住被共享者。\n8. **分页最大的收益是\"按需分配\"语义，不是\"分块\"动作本身**（省下的 736 KiB 里 690 KiB 来自取消 `max_len` 预留）。\n9. 手写实现的意义：因为块池、refcount、不变量都是自己的代码，我能把\"共享到底省了几块\"打印成一个数字（`逻辑引用 9 / 物理块 8`）—— 用 vLLM 只能看到 `GPU blocks: 32` 这类聚合指标。\n\n## 6. Code map\n\n| 文件 | 职责 |\n|---|---|\n| `src/ie/paged.py` | `PagedKVCache`：`allocate` / `_take_blocks` / `append`（按需取块 + token 位写入）/ `share_prefix`（refcount++，**强制 block 对齐**）/ `release`（refcount--，归零才回池并清零）/ `preempt`（选块数最多者，`protected` 保护被共享者）/ `physical_block`（`divmod` 地址换算）/ `stats`（用量与碎片率）/ `check_invariants`（五条池不变量） |\n| `src/ie/paged.py:66` | `if prefix_tokens % block_size: raise ValueError(...)` —— 未对齐共享显式拒绝 |\n| `src/ie/paged.py:81` | `if self.refcounts[block] == 0:` —— refcount 归零才真正回收 |\n| `src/ie/paged.py:143` | `memory_comparison`：连续 vs 分页的浪费率与节省率 |\n| `demos/demo_08_paged_attention.py` | 3 节：显存账对比 / block table 演化 / 池守恒与共享 |\n| `demos/out/demo_08_paged_attention_terminal.txt` | 本章所有数字的来源 |\n| `assets/paged-attention.svg` | 本章 block table 与块分配图 |\n\n## 7. Version line\n\nv0.7 → **v0.8**，M08 PagedAttention 落地。实测（4 条序列 `[9,17,33,62]`、`max_len=128`、`block_size=8`、池 32 块、2,048 B/token）：连续预分配 **1024.0 KiB**（浪费 **76.4%**）vs 分页 **288.0 KiB**（浪费 **16.0%**），**节省 71.9%**；block table 完整演化（A:9→[0,1]、B:17→[2,3,4]、C:33→[5..9]、D:62→[10..17]、释放 B 回收 3 块、**E 共享 A 前缀块 [0]** 后为 [0,2]、抢占 D 回收 8 块）；**池守恒 已用 8 + 空闲 24 = 32**，**逻辑引用 9 / 物理块 8，共享引用 1**，五条不变量 `True`。并诚实记录「⚠ 块级账本非真实 GPU 分配，`blocks` 为 `uint8` 占位、2,048 B/token 按公式算出；本章 `dtype_bytes=8`（fp64）与 M10 的 BF16 不可直接对比」「分页最大收益是按需分配语义而非分块动作（736 KiB 中 690 KiB 来自取消 max_len 预留）」「`share_prefix` 强制 block 对齐、`release` 按 refcount 归零才回收」。纯 numpy、无 vLLM。配图 1 张手写 SVG + 1 张真实终端截图。\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -280,6 +438,8 @@ physical = block_table[request_id][logical]
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -289,6 +449,173 @@ physical = block_table[request_id][logical]
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -302,6 +629,17 @@ physical = block_table[request_id][logical]
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -328,15 +666,46 @@ physical = block_table[request_id][logical]
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../../../index.html#ch-77" title="返回《文档总览》第 77 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">Project 04 — Chapter 03：Embedding【文本向量化】</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#1-本章要解决什么问题" class="lvl2">1. 本章要解决什么问题</a><a href="#2-为什么需要这个知识" class="lvl2">2. 为什么需要这个知识</a><a href="#embedding-是什么" class="lvl3">Embedding 是什么</a><a href="#两个基本属性" class="lvl3">两个基本属性</a><a href="#查询与文档要同一种语言" class="lvl3">查询与文档要&amp;quot;同一种语言&amp;quot;</a><a href="#3-核心概念" class="lvl2">3. 核心概念</a><a href="#31-嵌入模型选型" class="lvl3">3.1 嵌入模型选型</a><a href="#32-接口抽象延续-p02p03-的-fakeclient-模式" class="lvl3">3.2 接口抽象：延续 P02/P03 的 FakeClient 模式</a><a href="#33-真实实现siliconflow-httpx-异步" class="lvl3">3.3 真实实现：SiliconFlow + httpx 异步</a><a href="#34-离线实现fakeembeddingclient" class="lvl3">3.4 离线实现：FakeEmbeddingClient</a><a href="#4-动手实现设计稿" class="lvl2">4. 动手实现（设计稿）</a><a href="#5-踩坑清单" class="lvl2">5. 踩坑清单</a><a href="#坑-1查询和文档用了不同的嵌入模型检索结果看似正常实则全错" class="lvl3">坑 1：查询和文档用了不同的嵌入模型，检索结果看似正常实则全错</a><a href="#坑-2批量太大触发-429重试又立刻打过去雪崩" class="lvl3">坑 2：批量太大触发 429，重试又立刻打过去，雪崩</a><a href="#坑-3文本超过模型最大输入8192-token请求直接-400" class="lvl3">坑 3：文本超过模型最大输入（8192 token），请求直接 400</a><a href="#坑-4api-返回的向量顺序和输入不一致" class="lvl3">坑 4：API 返回的向量顺序和输入不一致</a><a href="#6-自检清单" class="lvl2">6. 自检清单</a><a href="#7-真实运行截图第十一章补充" class="lvl2">7. 真实运行截图（第十一章补充）</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="project-04-chapter-03embedding文本向量化">Project 04 — Chapter 03：Embedding【文本向量化】</h1>
 <blockquote><p>状态：✅ 已成文（文档先行，作为 src/ 落地设计依据） 对应代码：<code>src/rag/embedding.py</code>（<code>BaseEmbeddingClient</code> + <code>SiliconFlowEmbeddingClient</code> + <code>FakeEmbeddingClient</code>）</p></blockquote>
 <hr/>
@@ -347,8 +486,27 @@ query_vector = await client.embed_one(question)</code></pre>
 <hr/>
 <p>上一章：<a href="02-chunking.html">02-chunking.md</a> —— 把文档切成大小合适、边界完整的块</p>
 <p>下一章：<a href="04-vector-database.html">04-vector-database.md</a> —— 几十万条向量，怎么在毫秒内找到最近的那些？</p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">projects/04-rag/milestones/03-embedding.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "projects/04-rag/milestones/03-embedding.md", "name": "03-embedding.md", "text": "# Project 04 — Chapter 03：Embedding【文本向量化】\n\n> 状态：✅ 已成文（文档先行，作为 src/ 落地设计依据）\n> 对应代码：`src/rag/embedding.py`（`BaseEmbeddingClient` + `SiliconFlowEmbeddingClient` + `FakeEmbeddingClient`）\n\n---\n\n## 1. 本章要解决什么问题\n\nChapter 02 结束时，我们手里是一堆干净的 `Chunk`。现在来了一个用户问题：\"RAG 为什么要 overlap？\"\n\n问题来了：**计算机怎么判断\"这个问题\"和\"那个块\"是在说同一件事？**\n\n字符串匹配不行——问题里没有\"overlap\"这个词的块（比如某块写\"相邻块之间的重复区域是为了……\"）照样是正确答案。关键词匹配也不行——同义词、改写、中英混说，关键词永远追不上。\n\n答案是把文本变成**向量**，让\"意思接近\"变成\"距离接近\"，然后用数学比较：\n\n```text\n你以为：  机器读懂了文本的含义\n实际上：  机器只是把文本压成一个高维坐标点，\n          训练让\"语义相近的文本\"落在相邻的位置——\n          \"读懂\"是幻觉，\"可计算的相近\"才是真的\n```\n\n本章目标：\n\n> **设计一个可替换的 embedding 客户端体系：真实 API + 离线 Fake，统一走批量异步接口。**\n\n---\n\n## 2. 为什么需要这个知识\n\n### Embedding 是什么\n\nEmbedding【嵌入/向量化】把一段文本映射成一个**定长向量**（比如 1024 个浮点数），由一个预训练的嵌入模型完成。它的核心性质：\n\n> **哈希是\"精确相等\"的指纹，embedding 是\"语义相似\"的指纹。**\n\n- SHA-256（Chapter 01 用过）：内容变一个比特，指纹完全不同——它能回答\"这两段文本一模一样吗\"。\n- Embedding：两段说得差不多的话，向量在空间里很接近——它能回答\"这两段文本意思接近吗\"。\n\n这是本章必须建立的核心直觉：**我们第一次拥有了\"语义\"的可运算表示。**\n\n### 两个基本属性\n\n1. **维度**：不同模型的向量维度不同（bge-m3 是 1024，OpenAI text-embedding-3-small 是 1536）。维度本身没有优劣，但**同一张向量表里必须全是同一个模型、同一个维度**。\n2. **归一化**：多数嵌入模型输出已做 L2 归一化（模长为 1）。归一化之后，余弦相似度和欧氏距离可以互相换算，用哪个距离度量都等价。落地时可以用模长验证一下模型输出是否已归一化。\n\n### 查询与文档要\"同一种语言\"\n\n用户 query 也要被 embed 成向量，再去和文档向量比距离。**查询和文档必须用同一个嵌入模型**——不同模型的向量空间互不相通（第 5 节详述）。\n\n---\n\n## 3. 核心概念\n\n### 3.1 嵌入模型选型\n\n| 模型 | 维度 | 说明 |\n|------|------|------|\n| BAAI/bge-m3 | 1024 | 中文最强开源系之一，多语言、支持长文本（8192 token），SiliconFlow 可直接调 |\n| BAAI/bge-large-zh-v1.5 | 1024 | 中文专用老将，轻量、稳定 |\n| OpenAI text-embedding-3-small | 1536 | 效果好、贵一点；国内直连不稳 |\n| SiliconFlow API 托管的 bge 系列 | 1024 | 国内 API 访问稳定、价格低，**本章首选** |\n\n一个必须点明的坑：**DeepSeek 没有 embedding API。** DeepSeek 只提供 chat 模型——很多人\"用 DeepSeek 做 RAG\"时想当然以为它家也有 embedding，没有。RAG 里 LLM 负责生成，embedding 是另一家的事（本项目：SiliconFlow 托管的 bge 系列做嵌入，LLM 另选）。\n\n### 3.2 接口抽象：延续 P02/P03 的 FakeClient 模式\n\nP02/P03 已经建立了\"接口 + 多实现\"的模式：`BaseLLMClient` 抽象，真实客户端和 `FakeLLMClient` 互换。embedding 沿用同一套思路：\n\n```python\n# src/rag/embedding.py\nfrom abc import ABC, abstractmethod\n\nclass BaseEmbeddingClient(ABC):\n    \"\"\"嵌入客户端抽象。注意：接口是批量的。\"\"\"\n\n    model_name: str = \"\"\n    dim: int = 0\n\n    @abstractmethod\n    async def embed(self, texts: list[str]) -> list[list[float]]:\n        \"\"\"一批文本 → 一批向量，顺序与输入一一对应。\"\"\"\n        ...\n\n    async def embed_one(self, text: str) -> list[float]:\n        return (await self.embed([text]))[0]\n```\n\n**为什么接口是批量 `embed(texts: list[str])` 而不是单个 `embed_one(text: str)`？** 一句话向量化一次 HTTP 往返，1000 个块就是 1000 次请求——限流、延迟全爆。批量接口一次往返处理几十上百条，这是 embedding 和 chat 最大的接口差异。`embed_one` 只是批量的单元素便捷方法。\n\n**Java 里这就是典型的\"接口 + 多实现 + 依赖注入\"**：`EmbeddingClient` 接口，`@Profile(\"prod\")` 的真实实现和 `@Profile(\"test\")` 的 Fake 实现，上层 `VectorStore` 只依赖接口。Python 里没有容器帮你注入，但同样的模式靠\"构造函数传入实现\"手工达成——**Java 里叫 DI，Python 里叫\"把依赖当参数传\"，是同一个设计**。\n\n### 3.3 真实实现：SiliconFlow + httpx 异步\n\n```python\nimport asyncio\n\nimport httpx\n\n\nclass SiliconFlowEmbeddingClient(BaseEmbeddingClient):\n    model_name = \"BAAI/bge-m3\"\n    dim = 1024\n\n    BASE_URL = \"https://api.siliconflow.cn/v1/embeddings\"\n    BATCH_SIZE = 32          # 单请求最多多少条文本\n    MAX_RETRIES = 3\n\n    def __init__(self, api_key: str, batch_size: int = 32):\n        self.api_key = api_key\n        self.batch_size = batch_size\n\n    async def embed(self, texts: list[str]) -> list[list[float]]:\n        vectors: list[list[float]] | None = None\n        for i in range(0, len(texts), self.batch_size):\n            batch = [t[:8000] for t in texts[i:i + self.batch_size]]  # 超长截断，见 5.3\n            batch_vectors = await self._embed_batch_with_retry(batch)\n            vectors = batch_vectors if vectors is None else vectors + batch_vectors\n        assert vectors is not None\n        return vectors\n\n    async def _embed_batch_with_retry(self, batch: list[str]) -> list[list[float]]:\n        delay = 1.0\n        for attempt in range(1, self.MAX_RETRIES + 1):\n            try:\n                return await self._embed_batch(batch)\n            except RateLimitError:\n                if attempt == self.MAX_RETRIES:\n                    raise\n                await asyncio.sleep(delay)          # 指数退避：1s → 2s → 4s\n                delay *= 2\n\n    async def _embed_batch(self, batch: list[str]) -> list[list[float]]:\n        async with httpx.AsyncClient(timeout=30) as client:\n            resp = await client.post(\n                self.BASE_URL,\n                headers={\"Authorization\": f\"Bearer {self.api_key}\"},\n                json={\"model\": self.model_name, \"input\": batch},\n            )\n        if resp.status_code == 429:\n            raise RateLimitError(\"embedding 触发限流\")\n        resp.raise_for_status()\n        data = sorted(resp.json()[\"data\"], key=lambda d: d[\"index\"])  # 按 index 还原顺序！\n        return [item[\"embedding\"] for item in data]\n\n\nclass RateLimitError(Exception):\n    pass\n```\n\n两个容易忽略的细节：**响应里按 `index` 字段重新排序**（有的服务不保证返回顺序与请求一致），以及**限流用指数退避重试**而不是立刻重试。\n\n### 3.4 离线实现：FakeEmbeddingClient\n\n```python\nimport hashlib\nimport struct\n\n\nclass FakeEmbeddingClient(BaseEmbeddingClient):\n    \"\"\"确定性哈希向量：同样的文本永远得到同样的向量，离线可跑、零成本。\"\"\"\n\n    model_name = \"fake-hash\"\n    dim = 64\n\n    def __init__(self, dim: int = 64):\n        self.dim = dim\n\n    async def embed(self, texts: list[str]) -> list[list[float]]:\n        return [self._hash_vector(t) for t in texts]\n\n    def _hash_vector(self, text: str) -> list[float]:\n        raw = hashlib.sha256(text.encode(\"utf-8\")).digest()\n        # 扩展 digest 到 dim * 4 字节，解包成 float32\n        buf = (raw * ((self.dim * 4 // len(raw)) + 1))[: self.dim * 4]\n        floats = struct.unpack(f\"<{self.dim}f\", buf)\n        # 归一化到单位向量\n        norm = sum(f * f for f in floats) ** 0.5 or 1.0\n        return [f / norm for f in floats]\n```\n\n**为什么测试绝不能调真实 API？** 三个理由，每个都足以单独成立：\n\n1. **慢**：单测要秒级跑完，真实 API 一次几百毫秒起步，批量更是几十秒——没人愿意跑一个 5 分钟的测试套件。\n2. **花钱**：每次 CI 都烧 API 费用，测试失败重跑更是双倍烧。\n3. **不稳定**：限流、网络抖动、模型静默升级，都会让\"昨天绿的测试今天红\"——测试的意义就是排除这些外部变量。\n\nFake 的\"语义\"当然为零（哈希向量与语义无关，相同文本相同向量、不同文本近似随机），但它能验证：**接口契约（批量、顺序、维度）、向量库的存取与排序、RAG 流水线的串联**。这些是测试目标，\"语义准不准\"是评测目标，不是单测目标。\n\n---\n\n![真实运行：FakeEmbeddingClient 离线产出 64 维单位向量，字面越近余弦越大](../assets/term-embed.png)\n\n## 4. 动手实现（设计稿）\n\n以下代码将在 `src/rag/embedding.py` 落地时实现。目标结构：\n\n```text\nsrc/rag/\n├── embedding.py   # BaseEmbeddingClient / SiliconFlowEmbeddingClient / FakeEmbeddingClient\n└── ...\n```\n\n关键实现思路（在上面的骨架上补全）：\n\n1. **客户端工厂**，按配置选择实现——上层代码（第 04 章的入库流水线）只依赖 `BaseEmbeddingClient`：\n\n```python\ndef create_embedding_client(config: dict) -> BaseEmbeddingClient:\n    provider = config.get(\"provider\", \"fake\")\n    if provider == \"siliconflow\":\n        return SiliconFlowEmbeddingClient(api_key=config[\"api_key\"])\n    if provider == \"fake\":\n        return FakeEmbeddingClient()\n    raise ValueError(f\"未知 embedding provider: {provider!r}\")\n```\n\n2. **入库用批量、查询用单条**：\n\n```python\n# 入库：所有 chunk 一次性批量\nvectors = await client.embed([c.text for c in chunks])\n\n# 查询：单条\nquery_vector = await client.embed_one(question)\n```\n\n3. **入库时把模型名记进 metadata**：`store.add(chunks, vectors, model=client.model_name)`，查询前校验\"当前查询模型 == 入库模型\"（第 5 节坑 1 的防线）。\n\n4. **浮点精度**：向量在内存里是 Python float（float64），落库和传输统一转 float32——`struct.unpack` 的格式串、Chroma 的存储、NumPy 的 `dtype=np.float32`，全链路 float32，省一半空间且和 API 返回精度一致。\n\n5. **依赖**：`pip install httpx`（P02/P03 已装）。\n\n---\n\n## 5. 踩坑清单\n\n### 坑 1：查询和文档用了不同的嵌入模型，检索结果看似正常实则全错\n\n- **现象**：入库用的是 bge-m3，后来换了 text-embedding-3 做 query（或者代码里两处硬编码了不同模型名），检索仍能返回结果，但相关性完全是噪声——top-1 和 top-5 没有区别。\n- **原因**：不同模型把文本映射到**不同的向量空间**，1024 维的两套坐标之间没有任何对齐关系，跨模型算余弦相似度 = 拿北京的经纬度在上海找路。\n- **正确做法**：模型名是向量库元数据的一部分，入库时记录、查询时校验，不一致直接抛异常拒绝服务，而不是默默返回错结果。\n\n### 坑 2：批量太大触发 429，重试又立刻打过去，雪崩\n\n- **现象**：批量入库时疯狂报 429 Too Many Requests，重试也全是 429，最后整个任务失败。\n- **原因**：batch_size 或并发数超过服务商配额（SiliconFlow 对 bge 系列有 RPM/TPM 限制）；且失败后立刻重试，限流窗口还没过。\n- **正确做法**：三件套——batch_size 调小（32 是安全起点）、失败后**指数退避**（1s→2s→4s）、大批量任务控制并发（顺序分批而不是 `asyncio.gather` 全量并发）。**Java 里 Resilience4j 的 RateLimiter + Retry 干的就是这两件事，Python 里手写 `asyncio.sleep` 的退避循环。**\n\n### 坑 3：文本超过模型最大输入（8192 token），请求直接 400\n\n- **现象**：某几条 chunk 特别长（Chapter 02 里\"段落极长退化\"漏网的），embedding 请求报 400，整批入库失败。\n- **原因**：嵌入模型有最大输入长度（bge-m3 是 8192 token），超长文本服务端拒绝；一条坏文本毁掉整批请求。\n- **正确做法**：客户端层统一截断（`t[:8000]` 字符级别粗截，留足安全余量）；更讲究的做法是 Chapter 02 的切分参数保证 chunk 不超限——但**客户端的防御性截断仍然要有**，不能信任上游。\n\n### 坑 4：API 返回的向量顺序和输入不一致\n\n- **现象**：批量入库后，块和向量错位——检索命中的块和它的向量对不上号，症状是\"检索结果驴唇不对马嘴\"，且完全稳定复现不了是哪一步错的。\n- **原因**：部分服务的响应数组不保证与请求顺序一致，靠 `data[].index` 字段标识原位置；不排序直接 zip 就会错位。\n- **正确做法**：`sorted(data, key=lambda d: d[\"index\"])` 后再取 embedding（见 3.3 代码）。**这和 Java 里 `parallelStream` 之后不保证顺序、要靠 `forEachOrdered` 是同一类教训：并行/批量操作的结果要显式对回顺序。**\n\n---\n\n## 6. 自检清单\n\n- [ ] 能用一句话说清哈希指纹与 embedding 指纹的区别（精确相等 vs 语义相似）\n- [ ] 能说出批量接口 `embed(texts)` 的设计理由，以及入库/查询各自的调用方式\n- [ ] 记住了 DeepSeek 没有 embedding API，嵌入和生成是两个供应商两件事\n- [ ] 能解释为什么单测必须用 Fake 而不是真实 API（慢/花钱/不稳定）\n- [ ] 知道 429 的三件套对策：调小批量、指数退避、控制并发\n- [ ] 知道入库要记录模型名、查询要校验模型一致性\n\n---\n\n## 7. 真实运行截图（第十一章补充）\n\n第十一章用百炼 `text-embedding-v3` 把本章的离线替身换成了真实服务，两个截图直接把「批量上限」与「真实链路」可视化：\n\n![探测百炼单批上限](../assets/real-batch-limit.png)\n\n![真实 embedding 与批量请求](../assets/real-embed.png)\n\n> 关键结论：`batch_size` 不是全局常数 —— 百炼的单批上限是 10，第 11 条会直接报 `400 batch size is invalid`；21 个 chunk 按 batch_size=10 只发 3 次 HTTP，真实返回 1024 维向量。\n\n---\n\n上一章：[02-chunking.md](02-chunking.md) —— 把文档切成大小合适、边界完整的块\n\n下一章：[04-vector-database.md](04-vector-database.md) —— 几十万条向量，怎么在毫秒内找到最近的那些？\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -356,6 +514,8 @@ query_vector = await client.embed_one(question)</code></pre>
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -365,6 +525,173 @@ query_vector = await client.embed_one(question)</code></pre>
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -378,6 +705,17 @@ query_vector = await client.embed_one(question)</code></pre>
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -404,15 +742,46 @@ query_vector = await client.embed_one(question)</code></pre>
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

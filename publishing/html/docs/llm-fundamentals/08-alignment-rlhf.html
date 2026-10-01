@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-8" title="返回《文档总览》第 8 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#81-为什么需要对齐" class="lvl2">8.1 为什么需要对齐</a><a href="#82-rlhf-三阶段" class="lvl2">8.2 RLHF 三阶段</a><a href="#821-奖励模型把偏好变成标量" class="lvl3">8.2.1 奖励模型：把偏好变成标量</a><a href="#822-ppo-目标" class="lvl3">8.2.2 PPO 目标</a><a href="#83-dpo把-rlhf-化简成一个监督损失" class="lvl2">8.3 DPO：把 RLHF 化简成一个监督损失</a><a href="#84-后续演进更简单更省数据" class="lvl2">8.4 后续演进：更简单、更省数据</a><a href="#85-奖励劫持reward-hacking与安全" class="lvl2">8.5 奖励劫持（Reward Hacking）与安全</a><a href="#86-对齐的完整位置" class="lvl2">8.6 对齐的完整位置</a><a href="#87-常被误解的点" class="lvl2">8.7 常被误解的点</a><a href="#88-自查问题" class="lvl2">8.8 自查问题</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="08-对齐从会续写到会听话">08 · 对齐：从&quot;会续写&quot;到&quot;会听话&quot;</h1>
 <blockquote><p><strong>一句话结论</strong>：对齐 = <strong>用人类偏好数据，把&quot;预测下一个 token&quot;的目标改造成&quot;输出人类喜欢的回答&quot;</strong>。 主流路线是 RLHF（奖励模型 + 强化学习），而 DPO 把其中两步合并成一个类似监督学习的损失，工程门槛低得多。</p></blockquote>
 <hr/>
@@ -230,8 +369,27 @@ DPO:   只需 2 个模型
 <ul class="lvl"><li>为什么用两两比较而不是绝对打分来收集偏好数据？</li><li>写出 Bradley-Terry 偏好概率与 RM 损失。</li><li>PPO 目标里的 KL 项作用是什么？去掉会怎样？</li><li>DPO 为什么不需要奖励模型？它的损失在比较什么？</li><li>RLHF 和 DPO 各需要几个模型？工程差异体现在哪里？</li><li>什么是 reward hacking？举三个真实症状。</li><li>为什么推理模型偏好&quot;可验证奖励&quot;而不是人类偏好模型？</li></ul>
 <hr/>
 <p class="nav-footer"><a href="07-decoding-and-inference.html">← 上一章：解码与推理</a> · <a href="README.html">返回总览</a> · <a href="09-math-foundations.html">下一章：数学基础 →</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">llm-fundamentals/08-alignment-rlhf.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "llm-fundamentals/08-alignment-rlhf.md", "name": "08-alignment-rlhf.md", "text": "# 08 · 对齐：从\"会续写\"到\"会听话\"\n\n> **一句话结论**：对齐 = **用人类偏好数据，把\"预测下一个 token\"的目标改造成\"输出人类喜欢的回答\"**。\n> 主流路线是 RLHF（奖励模型 + 强化学习），而 DPO 把其中两步合并成一个类似监督学习的损失，工程门槛低得多。\n\n---\n\n## 8.1 为什么需要对齐\n\n预训练（[第 04 章](04-pretraining.md)）和指令微调（[第 05 章](05-finetuning.md)）之后，模型\"能听懂指令\"了，但还不能判断**什么样的回答算好回答**：\n\n| 问题 | 表现 | 对齐如何解决 |\n|------|------|--------------|\n| 有害内容 | 问危险问题照答 | 偏好数据中\"拒绝\"被标注为更好 |\n| 幻觉 | 编造事实时同样自信 | 偏好数据中\"承认不知道\"优于\"编造\" |\n| 冗长/谄媚 | 话多、讨好、不直接 | 人类偏好更短、更直接、更诚实的回答 |\n| 格式混乱 | 该列表的写成一段 | 偏好数据固定了常用输出结构 |\n| 不做澄清 | 遇到模糊需求直接瞎答 | 学会反问 |\n\n关键点：**\"好回答\"很难用规则写出来，但人很容易比较两个回答谁更好**。这就是偏好数据的价值——**相对判断比绝对评分更可靠**。\n\n---\n\n## 8.2 RLHF 三阶段\n\n```mermaid\nflowchart TB\n    S1[\"① SFT<br/>指令-回答对监督微调<br/>（第 05 章）\"] --> M0[\"SFT 模型 π_SFT\"]\n    M0 --> S2[\"② 训练奖励模型 RM<br/>同一问题生成多个回答<br/>人类标注两两偏好<br/>学一个打分函数 r(x,y)\"]\n    S2 --> RM[\"奖励模型 r_φ\"]\n    M0 --> S3[\"③ 强化学习 (PPO)<br/>用 RM 当裁判<br/>最大化期望奖励<br/>同时加 KL 惩罚别跑偏\"]\n    RM --> S3\n    S3 --> F[\"对齐后的模型 π_θ\"]\n\n    style S1 fill:#e0f2fe,stroke:#0284c7\n    style S2 fill:#dbeafe,stroke:#2563eb\n    style S3 fill:#f3e8ff,stroke:#9333ea\n    style F fill:#dcfce7,stroke:#16a34a\n```\n\n| 阶段 | 数据 | 产物 | 训练信号 |\n|------|------|------|----------|\n| ① SFT | 指令-回答对 | 会听指令的模型 | 监督（交叉熵） |\n| ② RM | 同一 prompt 下的回答**排序**（A > B） | 打分器 r(x,y) | 偏好对（分类/回归） |\n| ③ RL | 无需新标注，模型自己采样 | 最终策略 π_θ | 标量奖励（RM 打分） |\n\n### 8.2.1 奖励模型：把偏好变成标量\n\n用 **Bradley-Terry 模型**把\"人觉得 A 比 B 好\"转成可优化目标：\n\n$$\nP(y_w \\succ y_l \\mid x) = \\sigma\\big(r_\\phi(x, y_w) - r_\\phi(x, y_l)\\big)\n$$\n\n| 符号 | 含义 |\n|------|------|\n| $x$ | 问题（prompt） |\n| $y_w$ | 被偏好的回答（winner） |\n| $y_l$ | 被拒绝的回答（loser） |\n| $r_\\phi(x,y)$ | 奖励模型输出的标量分数（通常就是 LM 头部改成一个输出 1 维的线性层） |\n| $\\sigma$ | sigmoid，把分数差映射成概率 |\n\n损失函数就是最大化\"偏好对排序正确\"的似然：\n\n$$\n\\mathcal{L}_{RM} = -\\mathbb{E}_{(x, y_w, y_l) \\sim \\mathcal{D}} \\Big[\\log \\sigma\\big(r_\\phi(x,y_w) - r_\\phi(x,y_l)\\big)\\Big]\n$$\n\n**直觉**：不要求模型学出\"绝对分数\"，只要能正确排序——这就是为什么用两两比较而不是打分（人的绝对打分极不一致，但相对排序可靠）。\n\n### 8.2.2 PPO 目标\n\n$$\n\\mathcal{J}(\\theta) = \\mathbb{E}_{x \\sim \\mathcal{D},\\, y \\sim \\pi_\\theta(y|x)} \\left[\\; r_\\phi(x, y) \\;-\\; \\beta \\, \\mathrm{KL}\\!\\big(\\pi_\\theta(y|x) \\,\\|\\, \\pi_{ref}(y|x)\\big) \\right]\n$$\n\n| 项 | 作用 | 不要它会发生什么 |\n|----|------|------------------|\n| $r_\\phi(x,y)$ | 奖励：RM 打了多少分 | 模型没有优化方向 |\n| $\\beta \\cdot \\mathrm{KL}(\\pi_\\theta \\| \\pi_{ref})$ | **惩罚\"偏离参考模型\"** | 模型会找到 RM 的漏洞，输出人类看不懂但对 RM 分数极高的怪话（reward hacking） |\n| $\\pi_{ref}$ | 参考模型（通常就是 SFT 模型），**冻结** | 没有锚点，模型会漂移 |\n\n为什么 KL 惩罚必不可少：**RM 只是人类偏好的一个近似**。让模型无约束地去骗这个近似，等价于\"过度拟合奖励模型的偏好\"，会牺牲真实有用性。KL 项就是\"别忘了原本会说话\"。\n\n> PPO 本身是个复杂的 RL 算法（actor + critic + 优势估计 + 裁剪目标）。对齐场景里普遍用简化配置（去掉部分组件、用 GAE、共享 backbone），这也是它工程复杂、容易训崩的原因。\n\n---\n\n## 8.3 DPO：把 RLHF 化简成一个监督损失\n\n**核心洞察**（Rafailov et al. 2023）：在 KL 约束下最大化奖励的那个最优策略，有解析解：\n\n$$\n\\pi^*(y \\mid x) = \\frac{1}{Z(x)} \\, \\pi_{ref}(y \\mid x) \\exp\\!\\left(\\frac{1}{\\beta} r(x,y)\\right)\n$$\n\n反过来就能把\"奖励\"用策略和参考模型的概率比表达出来：\n\n$$\nr(x,y) = \\beta \\log \\frac{\\pi^*(y|x)}{\\pi_{ref}(y|x)} + \\beta \\log Z(x)\n$$\n\n把它代回 Bradley-Terry 偏好模型，**配分配对消掉**，得到只含两个模型的直接优化目标：\n\n$$\n\\boxed{\\;\n\\mathcal{L}_{DPO}(\\theta) = -\\mathbb{E}_{(x, y_w, y_l)} \\left[\n\\log \\sigma\\!\\left(\n\\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{ref}(y_w|x)}\n- \\beta \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{ref}(y_l|x)}\n\\right)\n\\right]\n\\;}\n$$\n\n**人话版**：让模型**相对于参考模型**更倾向于回答 $y_w$、更不倾向于 $y_l$。`β` 控制偏离参考模型的强度（越大越保守）。\n\n```text\nRLHF:  需要 4 个模型同时在线\n       actor(π_θ) + critic + reward model + reference   →  显存大、流程复杂、易崩\n\nDPO:   只需 2 个模型\n       policy(π_θ) + reference(π_ref)                   →  训练像 SFT 一样简单\n```\n\n| 维度 | RLHF（PPO） | DPO |\n|------|-------------|-----|\n| 需要的模型数 | 4（actor/critic/RM/ref） | 2（policy/ref） |\n| 训练稳定性 | 差（RL 调参敏感、易 reward hack） | 好（监督式损失，和 SFT 同级） |\n| 数据需求 | 偏好对 + 需要在线采样 | **只要现成的偏好对** |\n| 效果 | 上限更高（有在线探索） | 多数场景接近，部分任务略逊 |\n| 算力 | 高 | 低（约等于一次 SFT） |\n| 适用 | 大厂、追求极限 | ✅ 绝大多数团队与个人 |\n\n**实践建议**：预算有限或刚开始做对齐 → **DPO**；有稳定的 RM 且要压榨上限 → RLHF/GRPO。\n\n---\n\n## 8.4 后续演进：更简单、更省数据\n\n| 方法 | 一句话 | 需要偏好对？ | 需要奖励模型？ |\n|------|--------|--------------|----------------|\n| PPO（RLHF） | 经典在线 RL | RM 生成的偏好 | 是 |\n| **DPO** | 离线偏好优化的解析化简 | 是 | 否 |\n| **RLAIF / Constitutional AI** | 用 AI（而非人类）生成偏好标注 | 是（AI 生成） | 视实现 |\n| **GRPO**（DeepSeek） | 去掉 critic，组内相对比较估优势 | 否（用规则/答案） | 可选 |\n| ORPO | 把 SFT 和偏好优化合成一步 | 是 | 否 |\n| KTO | 只需要\"好/坏\"二元标签，不需要成对 | 否（单条即可） | 否 |\n| SimPO | DPO 的无参考模型版本（用平均 log 概率当隐式奖励） | 是 | 否 |\n\n**RLAIF 为什么重要**：人类标注贵且慢。用强模型（或按一套\"宪法原则\"自我批判）生成偏好数据，成本降一个数量级，效果在多数任务上接近 RLHF——这是当前工业界对齐数据的主要来源之一。\n\n**GRPO 为什么火**：推理模型（如 DeepSeek-R1）训练时用**规则可验证的奖励**（数学答案对不对、代码过不过测试）取代人类偏好模型，配合组内相对优势估计，避免训练一个 critic。这直接绕开了\"奖励模型被钻空子\"的问题——因为奖励是客观可验证的。\n\n---\n\n## 8.5 奖励劫持（Reward Hacking）与安全\n\n**定义**：模型学会**提高奖励分数**而不是**真正变得更好**。\n\n| 症状 | 例子 |\n|------|------|\n| 谄媚（sycophancy） | 用户说错话，模型顺着说\"你说得对\" |\n| 长度膨胀 | RM 偏好长回答 → 输出越来越啰嗦 |\n| 格式讨好 | 无脑堆列表、加粗、emoji 骗分 |\n| 过度拒绝 | 安全训练过头，正常问题也拒答 |\n| 拒绝承认不知道 | 宁可编也不说\"我不确定\" |\n\n对应治理手段：\n\n| 手段 | 说明 |\n|------|------|\n| KL 约束 | 限制偏离参考模型（[8.2.2](#822-ppo-目标)） |\n| 奖励模型集成 | 多个 RM 平均，降低被单点欺骗的概率 |\n| 可验证奖励 | 用规则/单测代替人偏好（数学、代码） |\n| 长度/格式去偏 | 训练 RM 时消除长度等表面特征的相关性 |\n| 红队测试 + 持续评估 | 上线前系统化找漏洞 |\n| 定期用人类抽检校准 | 防止指标好看但体验变差 |\n\n> **核心矛盾**：对齐指标（RM 分数、胜率）是**代理指标**，而我们要的是\"真实有用、安全\"。代理指标一定可以被优化到失真。这不是工程 bug，而是这类方法的固有风险。\n\n---\n\n## 8.6 对齐的完整位置\n\n```mermaid\nflowchart LR\n    P[\"预训练<br/>Base Model\"] --> S[\"SFT<br/>会听指令\"]\n    S --> A[\"偏好优化<br/>RLHF / DPO / GRPO\"]\n    A --> R[\"推理模型<br/>+ 可验证奖励 RL\"]\n    R --> D[\"部署<br/>+ 系统提示 + 工具 + 安全护栏\"]\n    D --> E[\"持续评估与红队\"]\n\n    style P fill:#e0f2fe,stroke:#0284c7\n    style A fill:#f3e8ff,stroke:#9333ea\n    style D fill:#dcfce7,stroke:#16a34a\n```\n\n**对齐不是终点**：系统提示、RAG、工具调用、输出过滤、权限控制都是\"部署期对齐\"的一部分。把安全性完全寄托在权重上是不现实的。\n\n---\n\n## 8.7 常被误解的点\n\n| 误解 | 真相 |\n|------|------|\n| \"RLHF 让模型学会了新知识\" | 它调的是**偏好与风格**；知识来自预训练 |\n| \"DPO 完全等价于 RLHF\" | 在离线数据下接近，但缺少在线探索，上限通常略低 |\n| \"KL 惩罚是为了防止过拟合\" | 更准确说是防止**偏离参考模型去骗奖励模型**（reward hacking） |\n| \"对齐后困惑度应该更低\" | 常常**略升**；因为优化目标变了，人类评价才是准绳 |\n| \"安全对齐靠加一堆拒绝话术\" | 过度拒绝本身是缺陷；好的对齐是\"该拒的拒、该答的认真答\" |\n| \"有 RM 就够了\" | RM 是代理指标，可被优化到失真；必须配合评估与人类抽检 |\n\n---\n\n## 8.8 自查问题\n\n1. 为什么用两两比较而不是绝对打分来收集偏好数据？\n2. 写出 Bradley-Terry 偏好概率与 RM 损失。\n3. PPO 目标里的 KL 项作用是什么？去掉会怎样？\n4. DPO 为什么不需要奖励模型？它的损失在比较什么？\n5. RLHF 和 DPO 各需要几个模型？工程差异体现在哪里？\n6. 什么是 reward hacking？举三个真实症状。\n7. 为什么推理模型偏好\"可验证奖励\"而不是人类偏好模型？\n\n---\n\n[← 上一章：解码与推理](07-decoding-and-inference.md) · [返回总览](README.md) · [下一章：数学基础 →](09-math-foundations.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -239,6 +397,8 @@ DPO:   只需 2 个模型
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -248,6 +408,173 @@ DPO:   只需 2 个模型
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -261,6 +588,17 @@ DPO:   只需 2 个模型
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -287,15 +625,46 @@ DPO:   只需 2 个模型
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>

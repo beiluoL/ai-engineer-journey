@@ -57,9 +57,10 @@ li{margin:.3em 0;}
 .book-scrim{display:none;}
 .book-fab, .book-top{display:none;}
 @media (min-width:1000px){
-  .container{margin-left:296px; max-width:1180px; padding:32px 30px 90px;}
+  .container{margin-left:296px; max-width:1180px; padding:28px 30px 90px;}
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:280px;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:280px;
+    top:var(--bar);                      /* 顶栏是 sticky 的，侧栏必须让出它的高度 */
     background:var(--bg); border-right:1px solid var(--border); z-index:40;
   }
   .book-side-head{
@@ -77,8 +78,9 @@ li{margin:.3em 0;}
 }
 @media (max-width:999px){
   .book-side{
-    display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0; width:80%;
-    max-width:300px; background:var(--bg); border-right:1px solid var(--border); z-index:60;
+    display:flex; flex-direction:column; position:fixed; left:0; bottom:0; width:80%;
+    top:var(--bar); max-width:300px; background:var(--bg);
+    border-right:1px solid var(--border); z-index:60;
     transform:translateX(-102%); transition:transform .22s ease;
   }
   .book-side.open{transform:translateX(0);}
@@ -156,10 +158,146 @@ math mtext.tx{
 }
 /* 表格单元格里的公式：单元格可能很窄，允许自身横滚而不是撑破表格 */
 td math, th math{font-size:1em;}
+
+:root{ --bar:46px; }
+html{scroll-behavior:smooth;}
+h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
+
+/* ---------- 顶栏：返回总览 + 标题 + 视图切换 + 复制/下载 + 进度 ---------- */
+.book-bar{
+  position:sticky; top:0; z-index:65; height:var(--bar);
+  display:flex; align-items:center; gap:10px; padding:0 14px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.bb-back{
+  flex:none; display:inline-flex; align-items:center; gap:5px; padding:5px 11px;
+  border:1px solid var(--border); border-radius:8px; font-size:12.5px; color:var(--fg);
+  text-decoration:none; white-space:nowrap;
+}
+.bb-back:hover{border-color:var(--accent); color:var(--accent); text-decoration:none; background:var(--code-bg);}
+.bb-title{
+  font-size:13.5px; font-weight:600; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.bb-sep{color:var(--border); flex:none;}
+.bb-right{margin-left:auto; display:flex; align-items:center; gap:8px; flex:none;}
+.bb-seg{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+/* 必须显式写：hidden 属性靠 UA 的 display:none，而类选择器的 display:flex
+   会把它盖掉——没有 MD 源码时「阅读/源码」开关会照样显示成一个假按钮。 */
+.bb-seg[hidden],.bb-btn[hidden]{display:none;}
+.bb-seg button{padding:4px 11px; font-size:12.5px; color:var(--muted);}
+.bb-seg button.on{background:var(--accent); color:#fff; font-weight:600;}
+.bb-btn{
+  padding:5px 11px; font-size:12.5px; border:1px solid var(--border);
+  border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
+}
+.bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  min-width:36px; text-align:right;}
+
+/* ---------- 源码视图 ---------- */
+.src-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:9px 12px; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:8px; background:var(--code-bg);
+}
+.src-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px;}
+.src-meta{color:var(--muted); font-size:12px;}
+.src-pre{
+  margin:0; padding:10px 0; background:var(--code-bg);
+  border:1px solid var(--border); border-radius:8px; overflow:auto;
+}
+.src-pre code{display:block; background:none; padding:0;
+  font-size:12.6px; line-height:1.62;}
+.src-line{display:flex;}
+.src-line .no{
+  flex:none; width:56px; padding-right:12px; text-align:right;
+  color:var(--muted); opacity:.7; user-select:none;
+}
+.src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
+.md-h{color:#0550ae; font-weight:700;}
+.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
+.md-quote{color:#57606a; font-style:italic;}
+.md-link{color:#0969da; text-decoration:underline;}
+.md-b{font-weight:700;}
+.md-list{color:#cf222e;}
+@media (prefers-color-scheme: dark){
+  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
+  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
+}
+/* 源码视图下收起阅读用的外框，让代码占满宽度 */
+body.src-mode .book-side,
+body.src-mode .book-fab{display:none !important;}
+body.src-mode .container{margin-left:auto; margin-right:auto; max-width:1180px;}
+body.src-mode .doc-view{display:none;}
+
+/* ---------- 代码块复制 ---------- */
+.code-wrap{position:relative;}
+.code-wrap .cp{
+  position:absolute; top:6px; right:8px; opacity:0; transition:opacity .15s;
+  font-size:11.5px; padding:3px 8px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg); color:var(--muted);
+}
+.code-wrap:hover .cp,.code-wrap .cp:focus{opacity:1;}
+.code-wrap .cp:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ---------- 宽表格横滚 ---------- */
+.table-wrap{overflow-x:auto; margin:1.2em 0;}
+.table-wrap table{margin:0;}
+
+/* ---------- 图片灯箱 ---------- */
+.doc-view figure img{cursor:zoom-in;}
+.lightbox{
+  position:fixed; inset:0; z-index:200; display:none; padding:26px;
+  align-items:center; justify-content:center; background:rgba(9,12,16,.9);
+  cursor:zoom-out;
+}
+.lightbox.on{display:flex;}
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
+.lightbox .lb-x{
+  position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
+  color:#fff; background:none; border:none; cursor:pointer; opacity:.8;
+}
+.lightbox .lb-x:hover{opacity:1;}
+
+/* ---------- 操作提示 ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; z-index:300;
+  transform:translate(-50%,10px); opacity:0; pointer-events:none;
+  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  font-size:13px; max-width:82vw; text-align:center; transition:.2s;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.toast.on{opacity:1; transform:translate(-50%,0);}
+@media (prefers-color-scheme: dark){
+  .toast{background:#e6edf3; color:#0d1117;}
+}
+
+/* 移动端：顶栏只留最必要的东西 */
+@media (max-width:640px){
+  .bb-title,.bb-pct,.bb-sep{display:none;}
+  .bb-right{gap:6px;}
+  .bb-btn{padding:5px 9px;}
+}
 </style>
 </head>
 <body>
 <div class="book-progress"></div>
+<header class="book-bar">
+  <a class="bb-back" href="../../index.html#ch-201" title="返回《文档总览》第 201 章">← 文档总览</a>
+  <span class="bb-sep">|</span>
+  <span class="bb-title">全仓库体检报告 · 2026-09-30</span>
+  <div class="bb-right">
+    <div class="bb-seg" id="bbSeg" >
+      <button class="on" data-view="doc" title="阅读视图">阅读</button>
+      <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
+    </div>
+    <button class="bb-btn" id="bbCopy" type="button"  title="复制本文 Markdown 原文">复制 .md</button>
+    <button class="bb-btn" id="bbDl" type="button"  title="下载原始 .md 文件">下载</button>
+    <span class="bb-pct" id="bbPct">0%</span>
+  </div>
+</header>
 <aside class="book-side">
   <div class="book-side-head">目录大纲<button data-close aria-label="关闭目录">&times;</button></div>
   <nav class="book-toc"><a href="#0-一句话结论" class="lvl2">0. 一句话结论</a><a href="#1-体检方法可复现" class="lvl2">1. 体检方法（可复现）</a><a href="#2-现状盘点" class="lvl2">2. 现状盘点</a><a href="#21-规模" class="lvl3">2.1 规模</a><a href="#22-项目矩阵y-表示齐备-表示缺失" class="lvl3">2.2 项目矩阵（Y 表示齐备，- 表示缺失）</a><a href="#23-测试实跑1180-项全绿" class="lvl3">2.3 测试实跑（1180 项，全绿）</a><a href="#24-安全与链接基线" class="lvl3">2.4 安全与链接基线</a><a href="#3-发现清单" class="lvl2">3. 发现清单</a><a href="#p0-阻断级1-项" class="lvl3">P0 — 阻断级（1 项）</a><a href="#p1-影响复现3-项" class="lvl3">P1 — 影响复现（3 项）</a><a href="#p2-文档漂移按-contributing-5这些视为-bug" class="lvl3">P2 — 文档漂移（按 CONTRIBUTING §5，这些「视为 bug」）</a><a href="#p3-资产与规范6-项" class="lvl3">P3 — 资产与规范（6 项）</a><a href="#4-补充建议清单可直接照着做" class="lvl2">4. 补充建议清单（可直接照着做）</a><a href="#5-不建议做的事" class="lvl2">5. 不建议做的事</a><a href="#附复现本期体检" class="lvl2">附：复现本期体检</a></nav>
@@ -167,6 +305,7 @@ td math, th math{font-size:1em;}
 <div class="book-scrim"></div>
 <button class="book-fab">☰ 目录</button>
 <main class="container">
+<div class="doc-view" id="docView">
 <h1 id="全仓库体检报告-20260930">全仓库体检报告 · 2026-09-30</h1>
 <blockquote><p>体检对象：<code>ai-engineer-journey</code> @ <strong><code>2014d85</code></strong> 全部数字来自当场执行的真实命令，原始输出存档在 <a href="../../../../audit/assets/audit-run.txt"><code>assets/audit-run.txt</code></a> 与 <a href="../../../../audit/assets/tests-run.txt"><code>assets/tests-run.txt</code></a>。</p><p><strong>口径说明</strong>：本报告描述的是 <code>2014d85</code> 那一刻的状态。报告自身连同体检脚本一共新增了 9 个文件（2 篇文档 + 4 张截图 + 2 份原始输出 + 1 个脚本），因此把报告提交上去之后， 「跟踪文件 / Markdown / 配图 / 链接」这几个总数会比下表各多出对应的一点点。 这是审计报告的固有自指效应，不是数据失真 —— 需要最新数字时重跑 <code>scripts/audit.py</code> 即可。</p></blockquote>
 <hr/>
@@ -251,8 +390,27 @@ $P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-
     --out audit/assets/audit-01-skeleton.png --title &quot;bash — python3 scripts/audit.py&quot;</code></pre>
 <hr/>
 <p class="nav-footer"><a href="README.html">← 返回体检档案</a></p>
+</div>
+<div class="src-view" id="srcView" hidden>
+  <div class="src-head">
+    <span class="src-path">audit/2026-09-30-health-check.md</span>
+    <span class="src-meta" id="srcMeta"></span>
+    <span class="bb-right">
+      <button class="bb-btn" id="srcCopy" type="button">复制全文</button>
+      <button class="bb-btn" id="srcDl" type="button">下载 .md</button>
+    </span>
+  </div>
+  <pre class="src-pre"><code id="srcCode"></code></pre>
+</div>
 </main>
 <button class="book-top">↑ 顶部</button>
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" type="button" aria-label="关闭">&times;</button>
+  <img alt=""/>
+</div>
+<!--MD-SRC-START-->
+<script id="md-src" type="application/json">{"path": "audit/2026-09-30-health-check.md", "name": "2026-09-30-health-check.md", "text": "# 全仓库体检报告 · 2026-09-30\n\n> 体检对象：`ai-engineer-journey` @ **`2014d85`**\n> 全部数字来自当场执行的真实命令，原始输出存档在 [`assets/audit-run.txt`](assets/audit-run.txt) 与 [`assets/tests-run.txt`](assets/tests-run.txt)。\n>\n> **口径说明**：本报告描述的是 `2014d85` 那一刻的状态。报告自身连同体检脚本一共新增了\n> 9 个文件（2 篇文档 + 4 张截图 + 2 份原始输出 + 1 个脚本），因此把报告提交上去之后，\n> 「跟踪文件 / Markdown / 配图 / 链接」这几个总数会比下表各多出对应的一点点。\n> 这是审计报告的固有自指效应，不是数据失真 —— 需要最新数字时重跑 `scripts/audit.py` 即可。\n\n---\n\n## 0. 一句话结论\n\n**骨架是完整的，质量底线守住了，但「新克隆者能不能跑起来」和「CI 到底守住了什么」这两件事上没有对齐。**\n\n- 守住的部分：1180 项测试全绿、859 条相对链接零死链、零硬编码密钥、333 张配图里 325 张有引用（无占位图、无来源不明图片）。\n- 没对齐的部分：**1 个阻断级缺口（P07 无正文）**、**3 项会让复现失败的欠账（CI 只门禁 2/10 项目、P04/P05 无 `.env.example`、P04 证据链未入库）**，外加 11 项文档漂移与规范漂移。\n\n体检结论：`ERROR 1 · WARN 15 · INFO 11`。\n\n---\n\n## 1. 体检方法（可复现）\n\n```bash\npython3 scripts/audit.py --quick          # 8 项检查：规模 / 骨架 / 证据链 / 配图 / 漂移 / 交叉引用 / 密钥\npython3 scripts/audit.py --tests          # 额外实跑全部项目测试（约 85 秒）\n```\n\n![仓库健康体检 · 规模概览与项目骨架](assets/audit-01-skeleton.png)\n\n上图这一屏就把问题暴露出来了：`07-open-source-llm` 的 `MI`（milestone 数）是 **0**，而 `04-rag` / `05-agent-mcp` 的 `ENV` 列是空的。\n\n> **写体检工具时踩到的一个坑，值得单独记一句**：孤儿图检测最初扫描仓库里**所有**文本文件。\n> 结果本报告的归档 `assets/audit-run.txt` 里原样抄了一遍 `[INFO] 孤儿图: .../site-pandas.png`，\n> 工具就把这行当成了「该图被引用」，**8 个孤儿图瞬间全部消失**。\n> 修法：引用来源只扫 `.md / .html / .py / .yml / .json / .ipynb`，不扫 `.txt`。\n> 教训——**观测工具的输出一旦进了被观测范围，就会污染观测结果**；这类自指污染不会报错，只会让数字悄悄变好看。\n\n---\n\n## 2. 现状盘点\n\n### 2.1 规模\n\n| 项 | 数量 |\n|----|------|\n| git 跟踪文件 | 1,052 |\n| Markdown | 197 篇 / 85,830 行 |\n| Python | 340 个 / 49,999 行 |\n| 配图 | 287 PNG + 46 SVG |\n\n### 2.2 项目矩阵（`Y` 表示齐备，`-` 表示缺失）\n\n| 项目 | README | Milestones | src | 测试数 | 依赖声明 | `.env.example` |\n|------|:---:|---:|:---:|---:|:---:|:---:|\n| 01-python-ai-cli | Y | 10 | Y | 6 | 不需要¹ | Y |\n| 02-engineering-ai-assistant | Y | 10 | Y | 33 | Y | Y |\n| 03-ai-application | Y | 9 | Y | 61 | Y | Y |\n| 04-rag | Y | 17 | Y | 197 | Y | **-** |\n| 05-agent-mcp | Y | 10 | Y | 244 | Y | **-** |\n| 06-mini-transformer-llm | Y | 10 | Y | 150 | Y | 不需要² |\n| **07-open-source-llm** | Y | **0** | Y | **0** | **-** | 不需要³ |\n| 08-fine-tuning | Y | 9 | Y | 189 | Y | 不需要² |\n| 09-evaluation-inference | Y | 11 | Y | 229 | Y | 不需要² |\n| 10-tiny-llm-capstone | Y | 11 | Y | 71 | Y | 不需要² |\n\n¹ P01 是纯标准库教学项目（`import` 只有 `pkgdemo` 等本地包），按 CONTRIBUTING §4「v0.1 允许零依赖标准库实现」豁免。\n² P06 / P08 / P09 / P10 走纯 numpy 手写路线，不调外部 API，因此没有 Key 需求。\n³ P07 的 `pipelines/` 需要 `DEEPSEEK_API_KEY`，但确实没有 `.env.example` —— 见 §3 第 3 条。\n\n### 2.3 测试实跑（1180 项，全绿）\n\n![全量测试实跑汇总](assets/audit-04-tests.png)\n\n合计 **1180 项全绿，0 failed**。这个数字值得单独强调：它是本仓库最硬的质量资产。\n\n> 表末两行是本期人工补充的 CI 现状说明，不是工具输出。同一批数字已用\n> `python3 scripts/audit.py --tests` 独立复跑一次核对（87 秒，逐项一致，`全部通过 ✓`），\n> 所以结论不依赖某个临时脚本。\n\n### 2.4 安全与链接基线\n\n![文档漂移、交叉引用、密钥与死链检查](assets/audit-03-links.png)\n\n这一屏是全仓库最让人放心的部分：**零硬编码密钥、零 `.env`/`.key` 入库、859 条相对链接零死链零坏图**。\n`check_links.py --strict` 也挂在 CI 上，属于「已经守住、不需要额外投入」的底线。\n\n---\n\n## 3. 发现清单\n\n### P0 — 阻断级（1 项）\n\n#### 3.1 `projects/07-open-source-llm/milestones/` 为空\n\n- **现象**：目录存在但 0 个 `.md`。ROADMAP 承诺 9 个 Milestone，实际一条正文都没有。\n- **不是偷懒，是被资源卡住**：本机 M1 磁盘余量 ~15 GB，而 Qwen2.5-7B 的 bf16 权重就要 14.18 GiB。项目已拆成两条线，`pipelines/` 那条（调用 / 参数 / 显存账本）**已真实跑通并产出 6 张终端截图**，`notebooks/` 那条在等 Colab GPU。\n- **后果**：这是全仓库唯一的 `ERROR`。它让 ROADMAP 里「9 个 Milestone」的进度表（✅/🔶/⬜）失去正文支撑 —— 读者点进去是空的。同时它也是唯一没有单元测试的项目，而 P07 的 `pipelines/llm_client/` 是有真实逻辑的（参数账本、KV Cache 估算、usage 守恒校验）。\n- **建议（两条路，推荐先做 B）**：\n  - **A（等资源）**：等你在 Colab 跑完 `p07_colab.ipynb` / `p07_finetune_java_interview.ipynb`，回收输出后再写 milestone。缺点：无限期挂起，且 P07 会一直是仓库里唯一没有正文的项目。\n  - **B（推荐，立即可做）**：把 `pipelines/` 已跑通的 6 条线**直接落成 6 篇 milestone 正文**（M01 调用 / M02 流式 / M03 生成参数 / M04 参数量对账 / M05 显存账本 / M06 Java 面试助手应用），把剩下 3 条（HF 生态 / BPE 细节 / 量化）在正文里明确标注为「待 GPU 资源，当前不可复现」。这样 P07 从「🔴 空目录」变成「🟡 6/9 文档就绪、3/9 明确挂起」，ROADMAP 的进度表才立得住。\n  - **顺带**：给 `pipelines/llm_client/` 补最小单测（参数账本与 usage 守恒都是纯算术，不需要网络即可断言），补上 `pyproject.toml`。\n\n### P1 — 影响复现（3 项）\n\n#### 3.2 CI 只门禁 2/10 个项目：1180 项测试里只有 39 项被 CI 跑\n\n- **现象**：`.github/workflows/ci.yml` 只跑 `01-python-ai-cli`（unittest 6 项）与 `02-engineering-ai-assistant`（pytest 33 项）。**3 / 4 / 5 / 6 / 8 / 9 / 10 共 7 个项目、1141 项测试完全不进 CI。**\n- **风险**：CI 流水线显示绿色，容易被读成「全仓库健康」，实际它只覆盖了 3.3% 的测试。本仓库所有项目都刻意做到了**离线可跑**（Fake/InMemory 客户端 + 真实链路分离），所以加进去没有技术障碍。单次耗时也很可控：P08 最慢，34.8 s。\n- **建议**：在 `ci.yml` 里按 `working-directory` 逐个补 step。P01/P02 步骤保留，新增 7 个。若担心总时长，可用 `matrix` 并行，或把 P08 单独放一个 job。验收：GitHub Actions 一次运行能打印出 1180 项测试结果。\n\n#### 3.3 P04 / P05 没有 `.env.example`，README 也没说要配什么\n\n- **现象**：两个项目的代码都读外部凭据（`DASHSCOPE_API_KEY`、`DEEPSEEK_API_KEY`），但仓库里既没有 `.env.example`，项目 README 里也**一个字都没提环境准备**。\n- **对比**：P01 / P02 / P03 都有规范的 `.env.example`（内含 `your-api-key-here` 占位 + `DEEPSEEK_BASE_URL` 等）。\n- **后果**：新克隆者跑 P04 的 embedding 链路会直接拿到 KeyError/401，且不知道要去哪配。这也是 CONTRIBUTING §4 明写的要求（「引入第三方库时同步给 `requirements.txt` + `.env.example`」）。\n- **建议**：补两个 `.env.example`（`DASHSCOPE_API_KEY` / `DASHSCOPE_BASE_URL`、`DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DEFAULT_MODEL`），并在两个 README 加一节「环境准备」。验收：`git ls-files | grep env.example` 能列出 5 个项目。\n\n#### 3.4 P04 的 demo 输出全部未入库，证据链与其余 9 个项目不一致\n\n- **现象**：`projects/04-rag/.gitignore` 里有一行 `demos/out/`，导致本地 24 个输出文件**一个都没入库**；而 01 / 02 / 03 / 05 / 06 / 07 / 08 / 09 / 10 **全部入库**（P05 入库 14 个、P01 9 个……）。\n- **后果**：P04 文档里引用的实测数字（`recall@1 87.5%`、阈值校准曲线等）在克隆后的仓库里**无法被复核**，也无法重渲染截图。这与 P10 确立的原则直接冲突：*「`demos/out/*_terminal.txt` 必须入库，它是文档里所有数字的唯一来源」*。\n- **建议**：二选一并写进 CONTRIBUTING，不要两套政策并存。推荐**改成与其余项目一致**（删掉那行 ignore、把 24 个输出入库），因为 P04 是本仓库图最多的项目（44 张），证据权重最高。验收：`git ls-files projects/04-rag | grep -c 'demos/out/'` 大于 0。\n\n### P2 — 文档漂移（按 CONTRIBUTING §5，这些「视为 bug」）\n\n| # | 位置 | 声称 | 实际 |\n|---|------|------|------|\n| 3.5 | `PROGRESS.md` Project 02 行 | `assets 共 23 张` | **25 张** |\n| 3.6 | `PROGRESS.md` Project 03 行 | `assets 共 18 张` | **20 张** |\n| 3.7 | `README.md` 结构树第 75 行 | `exercises/ # 01-basic 已有题，02/03/04 待播种` | **4 个目录都已播种**（各 2 个文件） |\n| 3.8 | `projects/07-open-source-llm/pipelines/README.md` | 3 处引用 `workflows/` 目录（第 5 / 16 / 266 行） | **该目录不存在**（`ls` 报 No such file） |\n| 3.9 | `README.md` §基础知识层 + `ROADMAP.md` 附节 | 「两者**互相引用**，不重复正文」 | 双向真实相对链接 **0 条**（`llm-fundamentals → projects/` 0，反向 0） |\n| 3.10 | `CONTRIBUTING.md` §1 | 「**所有知识**只维护在 `projects/*/milestones/`」；禁止清单含 `curriculum/` `labs/` `knowledge/` `assessments/` | `llm-fundamentals/` 是事实上的第二棵知识树，**不在豁免清单里**，措辞与之直接冲突 |\n| 3.11 | `CONTRIBUTING.md` §6 | 「是否推送由维护者当场决定；未明确授权时不推送」 | 实际执行的是 origin + gitee 双推，两者矛盾 |\n| 3.12 | `CONTRIBUTING.md` §6 | 「里程碑打 tag」 | `git tag` **0 个** |\n\n**建议**：3.5–3.9 是纯修数字/改措辞，一次提交可清完；3.10 / 3.11 需要在 CONTRIBUTING 里补第 3 条豁免（把 `llm-fundamentals/` 写成「已批准的例外：理论层只讲为什么，不复制 milestone 正文」）并重写推送条款；3.12 要么给已完成的 P08/P09/P10 补 tag，要么把这条规则删掉（**规则写了不执行，比没写更有害**，因为后来者会以为它在执行）。\n\n### P3 — 资产与规范（6 项）\n\n#### 3.13 7 个项目主页零配图\n\n`projects/{04-rag, 05-agent-mcp, 06-mini-transformer-llm, 07-open-source-llm, 08-fine-tuning, 09-evaluation-inference, 10-tiny-llm-capstone}/README.md` 一篇图都没有。这 7 个恰好是最\"重\"的项目。项目主页是读者进入任何项目的**第一落点**，而仓库的硬约定是「所有文档必须配图」。\n\n**建议**：每个主页补 1 张——优先复用已有资产里的**架构图 SVG**（P06–P10 各有 9–11 张手写 SVG），或用现成的终端截图拼一张 montage。不要新造图，避免又产生一批没人引用的孤儿图。\n\n![配图与孤儿图体检结果](assets/audit-02-images.png)\n\n#### 3.14 4 张无人引用的网站截图（约 833 KB）\n\n`site-django.png` 56 KB、`site-fastapi.png` 124 KB、`site-pandas.png` 116 KB、`site-pytorch2.png` 537 KB —— `git grep` 全仓库零命中。**建议**：确认是否留给后续文章；若无用途则删除。**不建议直接删**，先确认。\n\n#### 3.15 4 个 `diagram8-*.svg` 不是孤儿，但容易被误删\n\n它们与同名 `.png` 成对存在（`diagram8-decision.svg` ↔ `.png`），是渲染 PNG 前保留的矢量源文件。体检脚本把它们标为「未被引用」，实际是**有意保留**。**建议**：在 `publishing/tutorials/README.md` 的「配图规范」里补一行「SVG 矢量源文件与 PNG 成品并存，不入引用表」，否则下一轮体检或清理时大概率被当垃圾删掉。\n\n#### 3.16 配图命名规范漂移\n\nCONTRIBUTING §2 规定配图前缀为 `site-* / term-* / colab-* / diagram-*`。实际：\n\n- `llm-fundamentals/assets/`：`attention-heatmap.png`、`kv-cache-memory.png`、`positional-encoding.png`、`scaling-law.png`、`softmax-temperature.png`、`lora-params.png` —— 6 张全部无前缀。\n- `projects/06–10/assets/*.svg`：描述性命名（如 `model-serving.svg`），亦无前缀。\n\n**建议**：与其强行改名（会产生大量链接变更风险），不如**放宽规范**：在 CONTRIBUTING §2 补一句「教学用示意图允许描述性命名，但同一目录内必须唯一且格式统一」。规范要服务一致性，不是制造改造工作量。\n\n#### 3.17 错题本几乎空着\n\n`mistakes/` 只有 1 条记录（2026-09-15）。而**实际踩过的坑远不止一个**——仅在项目工作日志里就能捞出几十条，例如：\n\n- P06 的 `Tensor.__init__` 把 `_backward` 设成实例属性，**遮蔽**子类同名方法 → 梯度校验静默返回 1.0、loss 不降且不报错（最阴的一类静默失败）\n- P06 的 `Module.parameters()` 漏掉整个词嵌入（`TokenEmbedding` 未继承 `Module`）→ 少算 65,536 参数\n- P06 的 Adam 动量从未累积（`step()` 里 m/v 是局部变量）\n- ASCII 双引号内嵌中文引号 → Python `SyntaxError`（llm-fundamentals 4 个脚本同时中招）\n- macOS 的 `HTTP_PROXY` 拦截 localhost → 本地服务测不通\n\n`mistakes/README.md` 自己写着「教程让人看懂，错误记录让人真正掌握」。**这是 Track 1（我是否真的学会）的一部分，但它现在是空的。** 建议：先补 5 条最有价值的（上面前三条 + 中文引号 + HTTP_PROXY），每条按既定 7 段式写。\n\n#### 3.18 只有 2/10 个项目有自测清单，Track 1 无法执行\n\nPROGRESS 把「学习进度」列为 Track 1 并声明「文档就绪 ≠ 已掌握」，判定规则是「做完题 → 能讲清为什么 → 才由你本人打勾」。但：\n\n- `LEARNING.md`（自测清单）**只有 P02、P03 有**。\n- `exercises/`（题库）**只有 P01、P02、P03 有**。\n\n也就是说，**P04–P10 这 7 个项目（占仓库 63% 的里程碑、最多的代码）根本没有自测手段**，Track 1 对它们完全是空转。\n\n**建议**：这是本报告里**对你的学习收益 highest-leverage 的一项**。不必一次做满 7 个，建议按「你已经学完哪个就补哪个」的顺序，每个项目先做 10 道判断题 + 5 道动手题（P02/P03 的 LEARNING.md 已有成熟模板可复制）。验收：PROGRESS 的 Track 1 表格里，7 个「⬜ 未开始」至少有 1 个能开始。\n\n---\n\n## 4. 补充建议清单（可直接照着做）\n\n按「先修会误导人的，再修会拦住人的，最后修锦上添花的」排序。\n\n| 序 | 事项 | 动作 | 验收标准 | 量级 |\n|:--:|------|------|----------|------|\n| 1 | P07 无正文（P0） | 把 `pipelines/` 已跑通的 6 条线落成 6 篇 milestone，其余 3 条标注「待 GPU」 | `ls projects/07-open-source-llm/milestones/*.md` ≥ 6 | 中 |\n| 2 | CI 形同虚设（P1） | `ci.yml` 补 7 个项目的 pytest step | Actions 日志能见到 1180 项测试 | 小 |\n| 3 | 文档漂移 3.5–3.9 | 改 2 处数字、1 处结构树描述、3 处 `workflows/` 引用、交叉引用措辞 | `python3 scripts/audit.py` 的 WARN 减少 5 条 | 小 |\n| 4 | P04/P05 无法复现（P1） | 补 2 个 `.env.example` + 2 段「环境准备」 | `git ls-files \\| grep -c env.example` = 5 | 小 |\n| 5 | P04 证据链（P1） | 取消 `demos/out/` 忽略、24 个输出入库 | P04 输出入库数 > 0 | 小 |\n| 6 | CONTRIBUTING 与现实冲突 3.10–3.12 | 补 `llm-fundamentals` 豁免条款、重写推送条款、给 P08–P10 补 tag（或删掉该规则） | 规则与实际一致，无「写了不执行」的条款 | 小 |\n| 7 | 项目主页零配图 3.13 | 7 个主页各配 1 张（优先复用已有 SVG/截图） | audit 的「项目主页零配图」WARN 归零 | 中 |\n| 8 | 错题本空置 3.17 | 补 5 条真实踩坑记录 | `ls mistakes/*.md \\| wc -l` ≥ 6 | 中 |\n| 9 | Track 1 空转 3.18 | 按已学进度，给 P04–P10 补 `LEARNING.md` + 题 | Track 1 至少有 3 个项目能开始 | **大（但收益最高）** |\n| 10 | 资产清理 3.14 / 3.15 / 3.16 | 确认 4 张无用截图后再删；补 SVG 源文件说明；放宽命名规范 | audit 的 INFO 项有明确处置意见 | 小 |\n\n---\n\n## 5. 不建议做的事\n\n- **不要把 `llm-fundamentals/` 合并进 `projects/`**。两者定位不同（理论层 vs 实践层），合并成本高且会让 milestone 正文变成大杂烩。正确解法是补交叉引用（建议：llm-fundamentals 每章末尾加一行「对应实践项目」，同时给 P06/P08/P10 的 README 加一行「理论背景见 llm-fundamentals 第 N 章」）。\n- **不要为了统一命名规范去批量重命名配图**。333 张图里任何一次改名都要同步文档引用，风险远大于收益。放宽规范即可。\n- **不要直接删那 4 张 `site-*.png`**。先确认没有留给后续文章，再走删除流程。\n\n---\n\n## 附：复现本期体检\n\n```bash\ncd ai-engineer-journey\npython3 scripts/audit.py > audit/assets/audit-run.txt              # 体检（本报告 §1/§3 的证据）\npython3 scripts/audit.py --tests | tail -16 | tee audit/assets/tests-run.txt  # 全量测试（§2.3）\npython3 scripts/check_links.py --strict                            # 死链坏图\n```\n\n截图渲染（需要带 Pillow 的解释器）：\n\n```bash\nP=/Users/beiluo/.workbuddy/binaries/python/envs/default/bin/python\n$P scripts/render_terminal.py <(sed -n '1,28p'  audit/assets/audit-run.txt) \\\n    --out audit/assets/audit-01-skeleton.png --title \"bash — python3 scripts/audit.py\"\n```\n\n---\n\n[← 返回体检档案](README.md)\n"}</script>
+<!--MD-SRC-END-->
 <script>
 (function(){
   var side = document.querySelector('.book-side');
@@ -260,6 +418,8 @@ $P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-
   var links = [].slice.call(document.querySelectorAll('.book-toc a'));
   var bar = document.querySelector('.book-progress');
   var topBtn = document.querySelector('.book-top');
+  var pct = document.getElementById('bbPct');
+  var lb = document.getElementById('lightbox');
 
   function close(){ side.classList.remove('open'); scrim.classList.remove('show'); }
   document.querySelector('.book-fab').addEventListener('click', function(){
@@ -269,6 +429,173 @@ $P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-
   var cl = document.querySelector('.book-side-head button');
   if(cl) cl.addEventListener('click', close);
   links.forEach(function(a){ a.addEventListener('click', close); });
+
+  /* ---------- 复制的三种通道：Clipboard API → execCommand → 提示手动 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('on'); }, 2000);
+  }
+  function copyText(text, msg){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? msg : '复制失败：请手动选中后复制');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, fallback);
+    } else fallback();
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- 原始 Markdown 源码视图 ---------- */
+  var srcHost = document.getElementById('md-src');
+  var MD = null;
+  if(srcHost){
+    try { MD = JSON.parse(srcHost.textContent); } catch(e){ MD = null; }
+  }
+  if(!MD){
+    ['bbSeg','bbCopy','bbDl'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    var sf = document.getElementById('srcView');
+    if(sf) sf.hidden = true;
+  }
+
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 单行 Markdown 高亮：一次正则扫完（分多次 replace 会互相吃掉对方插入的标签） */
+  function hlMdLine(line, inFence){
+    var out = escHtml(line);
+    if(inFence) return '<span class="md-code">' + out + '</span>';
+    if(/^\s{0,3}#{1,6}\s/.test(line)) return '<span class="md-h">' + out + '</span>';
+    if(/^\s{0,3}>/.test(line)) return '<span class="md-quote">' + out + '</span>';
+    out = out.replace(/(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]\n]*\]\([^)\n]*\))/g,
+      function(m, c, b, l){
+        if(c) return '<span class="md-code">' + c + '</span>';
+        if(b) return '<span class="md-b">' + b + '</span>';
+        return '<span class="md-link">' + l + '</span>';
+      });
+    if(/^\s{0,3}([-*+]|\d+\.)\s/.test(line)) out = '<span class="md-list">' + out + '</span>';
+    return out;
+  }
+  var srcRendered = false;
+  function renderSrc(){
+    if(!MD || srcRendered) return;
+    var lines = MD.text.split('\n'), buf = [], fence = false;
+    for(var i=0;i<lines.length;i++){
+      buf.push('<div class="src-line"><span class="no">' + (i+1) + '</span>'
+        + '<span class="tx">' + hlMdLine(lines[i], fence) + '</span></div>');
+      if(/^\s*```/.test(lines[i])) fence = !fence;
+    }
+    document.getElementById('srcCode').innerHTML = buf.join('');
+    document.getElementById('srcMeta').textContent =
+      lines.length + ' 行 · ' + (MD.text.length / 1024).toFixed(1) + ' KB';
+    srcRendered = true;
+  }
+  function setView(view){
+    var wantSrc = view === 'src';
+    if(wantSrc && !MD) return;
+    document.body.classList.toggle('src-mode', wantSrc);
+    document.getElementById('docView').hidden = wantSrc;
+    document.getElementById('srcView').hidden = !wantSrc;
+    [].forEach.call(document.querySelectorAll('#bbSeg button'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-view') === view);
+    });
+    var base = location.href.split('#')[0];
+    try {
+      // 只在「地址栏和当前视图不一致」时才动 URL：不然从章节锚点切回阅读视图，
+      // 会顺手把 #某小节 抹掉。刻意用 replaceState（不新增历史），
+      // 所以下面的 hashchange 对视图切换是幂等的、不会来回打架。
+      if(wantSrc){ if(location.hash !== '#src') history.replaceState(null, '', base + '#src'); }
+      else if(location.hash === '#src') history.replaceState(null, '', base);
+    } catch(e){}
+    if(wantSrc){ renderSrc(); window.scrollTo({top:0}); }
+    else { onScroll(); }
+  }
+  var seg = document.getElementById('bbSeg');
+  if(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(b) setView(b.getAttribute('data-view'));
+    });
+  }
+  var copyBtn = document.getElementById('bbCopy');
+  if(copyBtn) copyBtn.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制 Markdown 原文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var dlBtn = document.getElementById('bbDl');
+  if(dlBtn) dlBtn.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+  var srcCopy = document.getElementById('srcCopy');
+  if(srcCopy) srcCopy.addEventListener('click', function(){
+    if(MD) copyText(MD.text, '已复制全文（' + MD.text.split('\n').length + ' 行）');
+  });
+  var srcDl = document.getElementById('srcDl');
+  if(srcDl) srcDl.addEventListener('click', function(){
+    if(MD) download(MD.name, MD.text);
+  });
+
+  /* ---------- 正文增强：代码块复制 / 宽表横滚 / 图片灯箱 ---------- */
+  var docView = document.getElementById('docView');
+  if(docView){
+    [].forEach.call(docView.querySelectorAll('pre'), function(pre){
+      if(pre.parentNode && pre.parentNode.classList.contains('code-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'cp'; btn.textContent = '复制';
+      btn.setAttribute('aria-label', '复制这段代码');
+      btn.addEventListener('click', function(){
+        var code = pre.querySelector('code');
+        copyText(code ? code.textContent : pre.textContent, '已复制代码块');
+      });
+      wrap.appendChild(btn);
+    });
+    [].forEach.call(docView.querySelectorAll('table'), function(tb){
+      if(tb.parentNode && tb.parentNode.classList.contains('table-wrap')) return;
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      tb.parentNode.insertBefore(w, tb);
+      w.appendChild(tb);
+    });
+  }
+  if(lb){
+    var lbImg = lb.querySelector('img');
+    [].forEach.call(document.querySelectorAll('.doc-view .figure img, .doc-view img'), function(img){
+      img.addEventListener('click', function(){
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt || '';
+        lb.classList.add('on');
+      });
+    });
+    lb.addEventListener('click', function(){ lb.classList.remove('on'); });
+    lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+    var lbX = lb.querySelector('.lb-x');
+    if(lbX) lbX.addEventListener('click', function(){ lb.classList.remove('on'); });
+  }
 
   function active(){
     var best = null;
@@ -282,6 +609,17 @@ $P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-
     links.forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href') === '#' + best.id);
     });
+  }
+  function gotoSec(delta){
+    if(!links.length) return;
+    var cur = -1;
+    links.forEach(function(a, i){
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if(el && el.getBoundingClientRect().top <= 140) cur = i;
+    });
+    var nx = Math.max(0, Math.min(links.length - 1, cur + delta));
+    var el = document.getElementById(links[nx].getAttribute('href').slice(1));
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); close(); }
   }
   // 行间公式自适应：窄屏上先按容器宽度缩小字号，缩到 9px 仍放不下才交给横向滚动。
   // 不这么做时，长公式（如 DPO 的 J(θ) 全式）在 390px 视口下会是「一屏只看到半条」。
@@ -308,15 +646,46 @@ $P scripts/render_terminal.py &lt;(sed -n &#x27;1,28p&#x27;  audit/assets/audit-
     clearTimeout(rt); rt = setTimeout(fitMath, 150);
   });
 
-  window.addEventListener('scroll', function(){
+  function onScroll(){
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var p = h > 0 ? window.pageYOffset / h : 0;
     bar.style.width = (p * 100).toFixed(2) + '%';
+    if(pct) pct.textContent = Math.round(p * 100) + '%';
     topBtn.classList.toggle('show', window.pageYOffset > 500);
-    active();
-  }, {passive:true});
+    if(!document.body.classList.contains('src-mode')) active();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
   topBtn.addEventListener('click', function(){
     window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- 键盘：贴近阅读器的习惯，不与浏览器快捷键抢 ---------- */
+  document.addEventListener('keydown', function(e){
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if(e.key === '[') { e.preventDefault(); gotoSec(-1); }
+    else if(e.key === ']') { e.preventDefault(); gotoSec(1); }
+    else if(e.key === 't' || e.key === 'T') window.scrollTo({top:0, behavior:'smooth'});
+    else if((e.key === 's' || e.key === 'S') && MD)
+      setView(document.body.classList.contains('src-mode') ? 'doc' : 'src');
+    else if(e.key === 'Escape'){
+      if(lb) lb.classList.remove('on');
+      if(side.classList.contains('open')) close();
+    }
+  });
+
+  /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
+  onScroll();
+  if(MD && location.hash === '#src') setView('src');
+  // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
+  // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
+  window.addEventListener('hashchange', function(){
+    if(!MD) return;
+    var wantSrc = location.hash === '#src';
+    if(wantSrc === document.body.classList.contains('src-mode')) return;
+    setView(wantSrc ? 'src' : 'doc');
   });
 })();
 </script>
