@@ -103,6 +103,37 @@ def convert_one(src, force=False):
     return "ok"
 
 
+def fix_portable():
+    """把 docs 树里 *.portable.html 的「源树资源」链接重新算一遍相对路径。
+
+    背景（2026-10-01 收编时踩到）：那两篇 base64 自包含便携版原本躺在
+    publishing/html/ 根目录，那时页面里的 `08-alignment-rlhf.md` 之类站内链接
+    是相对 publishing/html/ 算的——本来就是死链，只是压根不在 docs 树里、
+    verify() 扫不到所以没人发现。收进 docs/ 镜像树后它们和渲染版同构了，
+    链接应该改成回指源树。这一步必须做，否则进 docs 树就变成一页带 30 多条
+    死链的样本。
+
+    幂等：目标在源树里不存在时 fixup_paths 原样返回，反复跑结果一致。
+    """
+    n = 0
+    for dp, dns, fns in os.walk(OUT_ROOT):
+        for fn in fns:
+            if not fn.endswith(".portable.html"):
+                continue
+            path = os.path.join(dp, fn)
+            src_dir = os.path.dirname(path)                    # 便携版所在（docs 树内）
+            src_tree = os.path.join(ROOT, os.path.relpath(src_dir, OUT_ROOT))
+            if not os.path.isdir(src_tree):
+                continue
+            text = open(path, encoding="utf-8").read()
+            fixed = fixup_paths(text, src_tree, src_dir)
+            if fixed != text:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(fixed)
+                n += 1
+    return n
+
+
 def verify():
     """自校验：产物里所有指向 .html 的相对链接都必须真实存在。
 
@@ -149,6 +180,8 @@ def main():
         st = convert_one(src, force=force)
         stats[st] += 1
 
+    fixed = fix_portable()
+    print(f"便携版链接重算：修正 {fixed} 个文件")
     checked, bad = verify()
     print(f"转换完成：新生成 {stats['ok']} 篇，跳过（已是最新）{stats['skip']} 篇"
           f"，耗时 {round(time.time() - t0, 1)}s")

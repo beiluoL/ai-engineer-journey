@@ -36,6 +36,15 @@ THEMES = [
 
 DOCS_DIR = os.path.join(OUT_DIR, "docs")
 
+# 手工保留的「自包含便携版」：图片 base64 内嵌，双击即离线可读，发给别人不用带附件目录。
+# 它们也放在 docs/ 镜像树里（用户要求收进 docs），但**刻意用 .portable.html 后缀**——
+# 渲染产物的文件名是 <源文件名>.html，同名就会被下一次 build_docs_html.py 全量重跑覆盖掉。
+PORTABLE = {
+    "python-practice/07-延伸阅读.md": "python-practice/07-延伸阅读.portable.html",
+    "llm-fundamentals/12-tutorials-and-agent.md":
+        "llm-fundamentals/12-tutorials-and-agent.portable.html",
+}
+
 
 def rendered_html_path(rel_md):
     """某篇 .md 对应的渲染页路径；未转换则返回 None。
@@ -121,6 +130,7 @@ def collect():
 def build_html(data):
     total = 0
     total_rendered = 0
+    total_portable = 0
     theme_blocks = []
     nav_items = []
 
@@ -157,6 +167,16 @@ def build_html(data):
                     extra = (
                         f'<a class="md-link" href="{href_md}"'
                         f'title="原始 Markdown 源文档">.md</a>')
+                    port = PORTABLE.get(rel_fwd)
+                    if port:
+                        href_portable = urllib.parse.quote(
+                            os.path.relpath(
+                                os.path.join(DOCS_DIR, port), OUT_DIR), safe="/")
+                        extra += (
+                            f' <a class="md-link portable" href="{href_portable}"'
+                            f'title="自包含便携版：图片 base64 内嵌，双击即可离线阅读">'
+                            f'便携版</a>')
+                        total_portable += 1  # 已渲染 + 附加一个便携版入口
                     theme_rendered += 1
                     total_rendered += 1
                 else:
@@ -184,6 +204,9 @@ def build_html(data):
             f'      <li><a href="#{sec_id}">{html.escape(name)} '
             f'<span class="cnt">{theme_rendered}/{theme_count}</span></a></li>')
 
+    portable_note = (
+        f' · 其中 {total_portable} 篇另附<b>自包含便携版</b>（图片已内嵌，可离线双击打开）'
+        if total_portable else "")
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     nav = "\n".join(nav_items)
     body = "\n".join(theme_blocks)
@@ -253,6 +276,8 @@ def build_html(data):
   a.md-link, span.md-link {{ font-size:12px; color:#6b7280; text-decoration:none;
     border:1px solid var(--line); background:#f9fafb; padding:1px 7px; border-radius:999px; white-space:nowrap; }}
   a.md-link:hover {{ background:#eef2f7; color:var(--ink); }}
+  a.md-link.portable {{ color:#7c3aed; border-color:#ede9fe; background:#faf5ff; }}
+  a.md-link.portable:hover {{ background:#f3e8ff; color:#6d28d9; }}
   .empty {{ color:var(--muted); font-size:14px; padding:30px; text-align:center; }}
   @media (max-width:760px) {{
     .layout {{ grid-template-columns:1fr; }}
@@ -263,7 +288,7 @@ def build_html(data):
 <body>
 <header class="top">
   <h1>AI 工程师之旅 · 文档索引</h1>
-  <div class="sub">ai-engineer-journey 仓库全部文档 · 按主题与目录层级组织 · 点击打开<b>渲染后的页面</b>（{total_rendered}/{total} 篇已生成）</div>
+  <div class="sub">ai-engineer-journey 仓库全部文档 · 按主题与目录层级组织 · 点击打开<b>渲染后的页面</b>（{total_rendered}/{total} 篇已生成）{portable_note}</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="过滤文档（按标题或路径，例如 12、rag、微调）…" oninput="filterDocs()"/>
     <span class="meta" id="counter">共 {total} 篇</span>
@@ -305,6 +330,24 @@ function filterDocs() {{
 </body>
 </html>'''
 
+def verify_index():
+    """索引自校验：每条 a.doc / 便携版链接指向的文件必须真实存在。
+
+    和 build_docs_html.verify() 的分工：那边校验「渲染产物内部的链接」，
+    这边校验「索引本身有没有指到空处」。索引是入口，指错了整站都进不去。
+    """
+    bad, total = [], 0
+    with open(OUT_FILE, encoding="utf-8") as f:
+        text = f.read()
+    for tag in ("a class=\"doc\" href=\"", "class=\"md-link portable\" href=\""):
+        for u in re.findall(re.escape(tag) + r'([^"]+)"', text):
+            total += 1
+            local = urllib.parse.unquote(u).replace("/", os.sep)
+            if not os.path.exists(os.path.join(OUT_DIR, local)):
+                bad.append(u)
+    return total, bad
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     data = collect()
@@ -313,6 +356,11 @@ def main():
         f.write(html_out)
     print(f"已生成: {OUT_FILE}")
     print(f"文档总数: {html_out.count('class=\"doc\"')}")
+    checked, bad = verify_index()
+    print(f"索引校验：检查 {checked} 条链接，失效 {len(bad)} 条")
+    for u in bad[:20]:
+        print("  死链:", u)
+    return 1 if bad else 0
 
 if __name__ == "__main__":
     main()

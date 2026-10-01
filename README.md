@@ -103,7 +103,10 @@ ai-engineer-journey/
 
 **本地阅读**：`publishing/html/index.html` 是入口，209 篇文档全部以渲染后的页面打开
 （`publishing/html/docs/…`，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。
-只想拷走单篇看重点文档的，用 `md_to_book_html.py` 生成 base64 内嵌的单文件版。
+索引里带紫色 <code>便携版</code> 标签的两篇（`python-practice/07-延伸阅读`、
+`llm-fundamentals/12-tutorials-and-agent`）是 base64 内嵌的自包含单文件，
+存在镜像树的同名 `*.portable.html` 里——图片全在文件内，拷到别处、发给别人、断网都能双击打开，
+是这两篇的便携阅读副本；其余文档想拷走单篇，用 `md_to_book_html.py` 现生成。
 
 ## 单一事实源
 
