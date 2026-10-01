@@ -15,6 +15,9 @@ import re
 import sys
 
 SKIP_DIRS = {".git", ".workbuddy", ".obsidian", ".venv", "node_modules", "__pycache__"}
+# 数据文件：内部是「全仓库源码文本」的转储，里面那些 ../xxx.png 是源 .md 里的相对路径，
+# 离开源目录当然不存在——同一批链接已经在各自源 .md 处查过了，这里再查只会重复报警。
+SKIP_FILES = {"publishing/html/ide.html"}
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 # 代码块与行内代码里的 [x](y) 不是链接，先抹掉再扫，否则像
@@ -46,6 +49,8 @@ def scan(roots):
                 if not name.endswith((".md", ".html")):
                     continue
                 path = os.path.join(dirpath, name)
+                if os.path.relpath(path, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) in SKIP_FILES:
+                    continue
                 is_html = name.endswith(".html")
                 text = open(path, encoding="utf-8", errors="ignore").read()
                 text = strip_code(text, is_html=is_html)

@@ -184,6 +184,7 @@ PAGE = """<!DOCTYPE html>
     <span class="brand-sub" id="brandSub">__TOTAL__ 章 / __RENDERED__ 篇已渲染</span>
   </div>
   <div class="topbar-right">
+    <a class="ide-link" href="ide.html" title="代码浏览器：15 个项目 / 675 个源码文件，单文件离线打开">⌘ 代码浏览器</a>
     <nav class="crumb" id="crumb"><span class="crumb-no">第 1 章</span><span class="crumb-t">目录</span></nav>
     <label class="jump">
       <select id="jump" aria-label="跳转到章节">
@@ -268,6 +269,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
 .brand-title{font-weight:650; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .brand-sub{color:var(--muted); font-size:12px;}
 .topbar-right{margin-left:auto; display:flex; align-items:center; gap:10px;}
+.ide-link{padding:6px 12px;border-radius:7px;border:1px solid #2f6ea8;background:#123a5c;color:#cfe6ff;text-decoration:none;font-size:12.5px;white-space:nowrap}
+.ide-link:hover{background:#17497a;border-color:#4a9fe0;color:#fff}
 .crumb{display:flex; align-items:center; gap:8px; min-width:0; color:var(--muted); font-size:12.5px;}
 .crumb-no{background:var(--accent-soft); color:#0969da; border-radius:999px; padding:2px 9px;
   font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap;}
