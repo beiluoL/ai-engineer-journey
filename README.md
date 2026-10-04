@@ -113,7 +113,7 @@ ai-engineer-journey/
 | `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版 |
 | `build_docs_html.py` | **批量渲染**：把全部（或指定子集）Markdown 转成 `publishing/html/docs/` 下的 HTML 树，并自校验链接 |
 | `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、卡片即时过滤、**全站全文搜索**、每章底部上一章 / 下一章链式导航、一键复制文档路径、主题开关 |
-| `gen_search_index.py` | **构建期全文索引**：从 `projects/*/milestones/` 的 Markdown 抽出 209 篇 / 4728 个**小节**（h1–h3 标题 + 其下正文），产出 `publishing/html/search-data.js`（`window.__SEARCH__ = …`，1.94 MB）。写死成 JS 而非 JSON，是因为 `file://` 下 `fetch()` 读本地文件会被 CORS 拦掉。`--verify` 逐条校验每个小节锚点都能在渲染页里命中 |
+| `gen_search_index.py` | **构建期全文索引**：把全部 Markdown 抽出 210 篇 / 4732 个**小节**（h1–h3 标题 + 其下正文），产出 `publishing/html/search-data.js`（`window.__SEARCH__ = …`，1.94 MB）。写死成 JS 而非 JSON，是因为 `file://` 下 `fetch()` 读本地文件会被 CORS 拦掉。`--verify` 逐条校验 4522 个小节锚点都能在渲染页里命中 |
 | `md_to_book_html.py` | 单篇渲染器：顶栏（返回总览 / 回到该章锚点 / 全站搜索 / 阅读·源码切换 / 复制 / 下载 / 主题）、自动抽取 h2/h3 生成侧边目录大纲、阅读进度条与百分比、每章末尾「上一节 / 下一节」链式导航、代码块一键复制、图片灯箱、宽表横滚、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
 | `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（678 个文件 / 12.26 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html`；深色 / 浅色（VSCode Light+ 同色）双皮肤，主题跟随系统 |
 | `verify_pages.js` | **站点交互实测**：用真实 Chromium 走一遍三张页面的交互（返回总览、阅读↔源码切换、灯箱、复制反馈、hash 路由与浏览器前进后退、深链直达），并顺带产出 `publishing/site-assets/` 里的截图 |
@@ -144,12 +144,12 @@ IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）
 ![代码浏览器：项目列表，右上角是返回文档总览的入口](publishing/site-assets/site-ide-home.png)
 ![复制当前文件：底部提示已复制 README.md（152 行 · 5.0 KB）](publishing/site-assets/site-ide-copy.png)
 
-**本地阅读**：`publishing/html/index.html` 是入口，209 篇文档全部以渲染后的页面打开
+**本地阅读**：`publishing/html/index.html` 是入口，210 篇文档全部以渲染后的页面打开
 （`publishing/html/docs/…`，与源目录同构；图片按相对路径指回源树，零外部依赖、双击即开）。
 每个章节页的顶栏都有「← 文档总览」，并且**带着该章的锚点回去**（`index.html#ch-47`），
 落回总览里的第 47 章而不是被扔回页面顶部。
 
-![文档总览：209 章、可过滤、每章三个入口（渲染页 / 原始 Markdown / 路径）](publishing/site-assets/site-index.png)
+![文档总览：210 章、可过滤、每章三个入口（渲染页 / 原始 Markdown / 路径）](publishing/site-assets/site-index.png)
 ![章节页顶栏：返回文档总览 + 阅读/源码切换 + 复制/下载](publishing/site-assets/site-chapter-topbar.png)
 ![章节页的源码视图：带行号的原始 Markdown，可复制、可下载](publishing/site-assets/site-chapter-source.png)
 
@@ -160,7 +160,7 @@ IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）
 
 **关于「原始 Markdown」**：浏览器不认识 `.md`，双击只会把源码当纯文本摊开，
 而索引里原先那条「原始 .md」链接连文件都找不到（路径按仓库根算，却从 `publishing/html/`
-解析，209 条全是 404）。现在改成打开该文档在渲染页里的**源码视图**：带行号、
+解析，整批全是 404）。现在改成打开该文档在渲染页里的**源码视图**：带行号、
 有 Markdown 高亮、可一键复制、可下载成 `.md`，与阅读视图用顶栏的「阅读 / 源码」随时互切
 （快捷键 `S`）。同一页两副面孔，就不用再维护第二棵文件树。
 
@@ -168,7 +168,7 @@ IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）
 这类多词组合按 AND 收窄（单词命中 30 条 → 多词只剩 14 个小节），结果精确到**小节**——
 每条给出「第 N 章 · 篇名 · 小节标题 + 上下文片段 + 关键词高亮」，
 回车直接打开对应渲染页并**落在那一节**（如 `docs/llm-fundamentals/02-attention.html#27-复杂度注意力的代价`）。
-索引在**构建期**生成：209 篇 / 4728 个小节 / 1.94 MB，写成 `search-data.js` 用 `<script src>` 注入，
+索引在**构建期**生成：210 篇 / 4732 个小节 / 1.94 MB，写成 `search-data.js` 用 `<script src>` 注入，
 所以 `file://` 双击打开就能用——**断网、零后端、零外部依赖**。地址栏也支持深链：`index.html#q=注意力机制`。
 
 ![全站全文搜索：多词按 AND 组合，结果精确到小节并高亮](publishing/site-assets/site-search-panel.png)

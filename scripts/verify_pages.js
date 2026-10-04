@@ -97,12 +97,23 @@ function check(name, cond, extra) {
 
   /* ---------------- 2. 索引页 ---------------- */
   console.log('\n[2] 索引页 index.html');
+
+  // 章节总数不写死：从站内唯一的数据源（搜索索引 docs 行）取，
+  // 否则仓库每加一篇文档，这里和 README 就得跟着改一轮数字。
+  const DOC_TOTAL = (() => {
+    const w = {};
+    new Function('window',
+      fs.readFileSync(path.join(ROOT, 'publishing/html/search-data.js'), 'utf8'))(w);
+    return w.__SEARCH__.docs.length;
+  })();
+
   await page.goto(HTML + '/index.html', { waitUntil: 'load' });
   await page.waitForTimeout(400);
-  check('章节卡 = 209', await page.locator('section.chapter').count() === 209);
+  check('章节卡 = ' + DOC_TOTAL,
+    await page.locator('section.chapter').count() === DOC_TOTAL);
 
   const mdLinks = await page.locator('a.btn:has-text("原始 Markdown")').count();
-  check('209 条「原始 Markdown」入口', mdLinks === 209, String(mdLinks));
+  check(DOC_TOTAL + ' 条「原始 Markdown」入口', mdLinks === DOC_TOTAL, String(mdLinks));
   const broken = await page.evaluate(() => {
     const bad = [];
     document.querySelectorAll('a.btn').forEach(a => {
