@@ -166,12 +166,23 @@ def collect():
 # --------------------------------------------------------------------------
 # 页面模板：占位符替换，避免 f-string 里满屏 {{ }}
 # --------------------------------------------------------------------------
+# 主题首屏脚本：必须在 <head> 里、CSS 之前**同步**执行。放到 body 末尾的话，
+# 深色系统上会先渲染一屏浅色再跳成深色（闪白）。docs/*.html 与 ide.html 里有
+# 同一份逻辑，三处共用 localStorage 键 `aij-theme`。
+THEME_BOOT = """(function(){try{
+var s=localStorage.getItem('aij-theme');
+var sys=!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+var dark=(s==='dark')||((!s||s==='auto')&&sys);
+document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+}catch(e){}})();"""
+
 PAGE = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>AI 工程师之旅 · 文档总览</title>
+<script>/*__THEMEBOOT__*/</script>
 <style>__CSS__</style>
 </head>
 <body>
@@ -185,6 +196,7 @@ PAGE = """<!DOCTYPE html>
   </div>
   <div class="topbar-right">
     <a class="ide-link" href="ide.html" title="代码浏览器：15 个项目 / 675 个源码文件，单文件离线打开">⌘ 代码浏览器</a>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="切换主题">🌗</button>
     <nav class="crumb" id="crumb"><span class="crumb-no">第 1 章</span><span class="crumb-t">目录</span></nav>
     <label class="jump">
       <select id="jump" aria-label="跳转到章节">
@@ -211,14 +223,19 @@ PAGE = """<!DOCTYPE html>
       先从「项目总览」看清全局，再逐章进入理论基础、练手练习、实战项目与发布产物。
       左侧目录可折叠跳转到任意一章，每章底部自动给出上一章 / 下一章。</p>
       <div class="hero-toolbar">
-        <input id="q" type="search" placeholder="过滤章节（可按标题、路径或正文关键词，快捷键 /）…"/>
+        <div class="sw">
+          <input id="q" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="搜索全部 __TOTAL__ 篇正文（标题 / 正文 / 代码，可空格分隔多词，快捷键 /）…"
+                 aria-label="全站全文搜索" aria-controls="searchPanel" aria-expanded="false"/>
+          <div class="search-panel" id="searchPanel" hidden></div>
+        </div>
         <span class="meta" id="counter">共 __TOTAL__ 章</span>
       </div>
       <div class="hero-stats">
         <span><b>__TOTAL__</b> 章</span>
         <span><b>__RENDERED__</b> 篇已渲染</span>
         <span><b>__PORTABLE__</b> 篇带自包含便携版</span>
-        <span>每章可切「阅读 / 源码」，源码可复制、可下载</span>
+        <span>全站正文可全文检索（构建期索引 · 零后端 · 断网可用）</span>
       </div>
     </section>
 
@@ -241,10 +258,40 @@ PAGE = """<!DOCTYPE html>
 
 CSS = """
 :root{
-  --bg:#f6f8fa; --panel:#ffffff; --ink:#1f2328; --muted:#656d76;
+  --bg:#f6f8fa; --panel:#ffffff; --ink:#1f2328; --ink-2:#3d444d; --muted:#656d76;
   --line:#d8dee4; --accent:#0969da; --accent-soft:#ddf4ff; --chip:#eaeef2;
+  --accent-ink:#0969da; --accent-deep:#0757b5;
+  --topbar-bg:rgba(255,255,255,.9); --input-bg:#ffffff;
+  --hair:#eef1f4; --hover-line:#b6d7ff; --row-bg:#fbfcfd; --excerpt:#57606a;
+  --mark-bg:#fff3a3; --mark-fg:#3d2c00;
+  --prog-a:#0969da; --prog-b:#54aeff;
+  --ide-bg:#123a5c; --ide-bd:#2f6ea8; --ide-fg:#cfe6ff; --ide-hbg:#17497a; --ide-hbd:#4a9fe0;
+  --portable:#7c3aed; --portable-bg:#faf5ff; --portable-bd:#e9d5ff;
+  --portable-hbg:#f3e8ff; --portable-hfg:#6d28d9;
+  --toast-bg:#1f2328; --toast-fg:#fff;
   --shadow:0 1px 2px rgba(27,31,36,.06), 0 8px 24px rgba(27,31,36,.06);
+  --shadow-lg:0 12px 40px rgba(27,31,36,.16);
+  --scrim:rgba(27,31,36,.28); --ring:rgba(9,105,218,.10);
   --topbar:56px;
+}
+/* 深色主题。只有这一份深色变量——「跟随系统」由 head 里的内联脚本换算成
+   显式的 data-theme，纯 CSS 侧就不用再复制一份 media query 声明块。
+   同一条规则用在 docs/*.html 与 ide.html，三处共用 localStorage 键 aij-theme。 */
+html[data-theme="dark"]{
+  --bg:#0d1117; --panel:#161b22; --ink:#e6edf3; --ink-2:#c9d1d9; --muted:#8b949e;
+  --line:#30363d; --accent:#4493f8; --accent-soft:#12365e; --chip:#21262d;
+  --accent-ink:#6cb6ff; --accent-deep:#388bfd;
+  --topbar-bg:rgba(13,17,23,.92); --input-bg:#0d1117;
+  --hair:#21262d; --hover-line:#1f6feb; --row-bg:#12181f; --excerpt:#9da7b3;
+  --mark-bg:#6b5300; --mark-fg:#ffeaa7;
+  --prog-a:#4493f8; --prog-b:#1f6feb;
+  --ide-bg:#0d419d; --ide-bd:#1f6feb; --ide-fg:#cae8ff; --ide-hbg:#1158c7; --ide-hbd:#388bfd;
+  --portable:#a371f7; --portable-bg:#1c1430; --portable-bd:#3d2a63;
+  --portable-hbg:#26193f; --portable-hfg:#c9a6ff;
+  --toast-bg:#e6edf3; --toast-fg:#0d1117;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4);
+  --shadow-lg:0 14px 44px rgba(0,0,0,.6);
+  --scrim:rgba(1,4,9,.62); --ring:rgba(68,147,248,.18);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;}
@@ -258,30 +305,36 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
 /* 阅读进度条 */
 .progress{position:fixed; inset:0 0 auto 0; height:3px; background:transparent; z-index:80;}
 .progress::after{content:""; display:block; height:100%; width:var(--p,0%);
-  background:linear-gradient(90deg,#0969da,#54aeff); transition:width .1s linear;}
+  background:linear-gradient(90deg,var(--prog-a),var(--prog-b)); transition:width .1s linear;}
 
 /* 顶部导航 */
 .topbar{
   position:sticky; top:0; z-index:60; height:var(--topbar);
   display:flex; align-items:center; gap:12px; padding:0 18px;
-  background:rgba(255,255,255,.9); backdrop-filter:blur(8px);
+  background:var(--topbar-bg); backdrop-filter:blur(8px);
   border-bottom:1px solid var(--line);
 }
 .brand{display:flex; flex-direction:column; line-height:1.25; min-width:0;}
 .brand-title{font-weight:650; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .brand-sub{color:var(--muted); font-size:12px;}
 .topbar-right{margin-left:auto; display:flex; align-items:center; gap:10px;}
-.ide-link{padding:6px 12px;border-radius:7px;border:1px solid #2f6ea8;background:#123a5c;color:#cfe6ff;text-decoration:none;font-size:12.5px;white-space:nowrap}
-.ide-link:hover{background:#17497a;border-color:#4a9fe0;color:#fff}
+.ide-link{padding:6px 12px;border-radius:7px;border:1px solid var(--ide-bd);background:var(--ide-bg);color:var(--ide-fg);text-decoration:none;font-size:12.5px;white-space:nowrap}
+.ide-link:hover{background:var(--ide-hbg);border-color:var(--ide-hbd);color:#fff}
 .crumb{display:flex; align-items:center; gap:8px; min-width:0; color:var(--muted); font-size:12.5px;}
-.crumb-no{background:var(--accent-soft); color:#0969da; border-radius:999px; padding:2px 9px;
+.crumb-no{background:var(--accent-soft); color:var(--accent-ink); border-radius:999px; padding:2px 9px;
   font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap;}
 .crumb-t{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:34vw;}
 .jump select{
-  height:32px; border:1px solid var(--line); border-radius:8px; background:#fff;
+  height:32px; border:1px solid var(--line); border-radius:8px; background:var(--input-bg);
   color:var(--ink); font-size:13px; padding:0 8px; max-width:180px;
 }
 .icon-btn{display:none;}
+.theme-btn{
+  flex:none; width:32px; height:32px; padding:0; cursor:pointer; line-height:1;
+  border:1px solid var(--line); border-radius:8px; background:var(--input-bg);
+  color:var(--ink); font-size:14px;
+}
+.theme-btn:hover{border-color:var(--accent); color:var(--accent);}
 
 /* 侧栏目录 */
 .layout{display:grid; grid-template-columns:272px minmax(0,1fr); align-items:start; gap:0;}
@@ -291,7 +344,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
   padding:14px 16px 10px; font-size:12px; letter-spacing:.06em; color:var(--muted); text-transform:uppercase;}
 .toc-count{background:var(--chip); border-radius:999px; padding:1px 8px; text-transform:none; letter-spacing:0;}
 .toc-scroll{overflow:auto; padding:0 10px 24px; scrollbar-width:thin;}
-.toc-group{border-bottom:1px solid #eef1f4;}
+.toc-group{border-bottom:1px solid var(--hair);}
 .toc-group > summary{
   cursor:pointer; list-style:none; padding:9px 8px; border-radius:8px;
   font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:6px; user-select:none;
@@ -303,13 +356,13 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
 .toc-group > summary .cnt{margin-left:auto; color:var(--muted); font-weight:400; font-size:11.5px;}
 .toc-list{list-style:none; margin:2px 0 10px; padding:0 0 0 12px; border-left:1px solid var(--line);}
 .toc-link{
-  display:block; padding:5px 8px; border-radius:6px; color:#3d444d;
+  display:block; padding:5px 8px; border-radius:6px; color:var(--ink-2);
   font-size:13px; text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.toc-link:hover{background:var(--accent-soft); color:#0969da;}
+.toc-link:hover{background:var(--accent-soft); color:var(--accent-ink);}
 .toc-link .tn{color:var(--muted); font-variant-numeric:tabular-nums; margin-right:6px; font-size:11.5px;}
-.toc-link.active{background:var(--accent-soft); color:#0969da; font-weight:600;}
-.toc-link.active .tn{color:#0969da;}
+.toc-link.active{background:var(--accent-soft); color:var(--accent-ink); font-weight:600;}
+.toc-link.active .tn{color:var(--accent-ink);}
 .toc-link.hidden{display:none;}
 
 /* 正文 */
@@ -318,13 +371,37 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
   padding:26px 24px; margin-bottom:22px; box-shadow:var(--shadow);}
 .hero h1{margin:0 0 8px; font-size:24px;}
 .hero-desc{margin:0 0 14px; color:var(--muted);}
-.hero-toolbar{display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;}
-.hero-toolbar input{
-  flex:1; min-width:200px; padding:8px 12px; border:1px solid var(--line);
-  border-radius:8px; font-size:14px; background:#fff; color:var(--ink);
+.hero-toolbar{display:flex; gap:10px; align-items:flex-start; margin-bottom:14px; flex-wrap:wrap;}
+.sw{position:relative; flex:1; min-width:230px;}
+.sw input{
+  width:100%; padding:8px 12px; border:1px solid var(--line);
+  border-radius:8px; font-size:14px; background:var(--input-bg); color:var(--ink);
 }
-.hero-toolbar input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
-.hero-toolbar .meta{color:var(--muted); font-size:13px; white-space:nowrap;}
+.sw input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+.hero-toolbar .meta{color:var(--muted); font-size:13px; white-space:nowrap; padding-top:9px;}
+
+/* 全站全文搜索：结果面板（构建期索引 + 纯前端检索，零后端） */
+.search-panel{
+  position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:70;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  box-shadow:var(--shadow); max-height:min(64vh, 540px); overflow:auto;
+}
+.search-panel[hidden]{display:none;}
+.sp-head{
+  position:sticky; top:0; z-index:1; background:var(--panel);
+  padding:9px 14px; border-bottom:1px solid var(--line);
+  font-size:12.5px; color:var(--muted);
+}
+.sp-head b{color:var(--accent); font-variant-numeric:tabular-nums;}
+.sp-tip{margin-left:8px; opacity:.85;}
+.sp-item{display:block; padding:10px 14px; border-bottom:1px solid var(--line); color:inherit;}
+.sp-item:last-child{border-bottom:none;}
+.sp-item:hover,.sp-item:focus{background:var(--accent-soft); outline:none;}
+.sp-doc{display:block; font-size:11.5px; color:var(--muted); margin-bottom:2px;}
+.sp-sec{display:block; font-size:13.5px; font-weight:600; color:var(--ink); margin-bottom:3px;}
+.sp-snip{display:block; font-size:12.5px; color:var(--muted); line-height:1.65;}
+.search-panel mark{background:var(--mark-bg); color:var(--mark-fg); border-radius:3px; padding:0 1px;}
+
 .hero-stats{display:flex; flex-wrap:wrap; gap:10px;}
 .hero-stats span{background:var(--chip); border-radius:8px; padding:5px 11px; font-size:12.5px; color:var(--muted);}
 .hero-stats b{color:var(--ink); font-variant-numeric:tabular-nums;}
@@ -334,12 +411,12 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
   padding:20px 22px; margin-bottom:16px; scroll-margin-top:calc(var(--topbar) + 14px);
   transition:border-color .18s, box-shadow .18s, transform .18s;
 }
-.chapter:hover{border-color:#b6d7ff; box-shadow:var(--shadow); transform:translateY(-1px);}
-.chapter.active{border-color:var(--accent); box-shadow:0 0 0 3px rgba(9,105,218,.10);}
+.chapter:hover{border-color:var(--hover-line); box-shadow:var(--shadow); transform:translateY(-1px);}
+.chapter.active{border-color:var(--accent); box-shadow:0 0 0 3px var(--ring);}
 .ch-head{display:flex; gap:14px; align-items:flex-start;}
 .ch-no{
   flex:none; min-width:44px; text-align:center; padding:5px 8px; border-radius:9px;
-  background:var(--accent-soft); color:#0969da; font-size:13px; font-weight:700;
+  background:var(--accent-soft); color:var(--accent-ink); font-size:13px; font-weight:700;
   font-variant-numeric:tabular-nums; line-height:1.3;
 }
 .ch-hd{min-width:0;}
@@ -349,28 +426,28 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size
 .ch-meta{margin:0; color:var(--muted); font-size:12.5px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
 .ch-meta .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--chip);
   border-radius:5px; padding:1px 6px;}
-.ch-excerpt{margin:10px 0 0 58px; color:#57606a; font-size:14px; border-left:3px solid var(--line);
+.ch-excerpt{margin:10px 0 0 58px; color:var(--excerpt); font-size:14px; border-left:3px solid var(--line);
   padding-left:12px;}
 .ch-actions{margin:14px 0 0 58px; display:flex; flex-wrap:wrap; gap:8px;}
 .btn{
   display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px;
-  border:1px solid var(--line); background:#fff; color:var(--ink); font-size:13px; text-decoration:none;
+  border:1px solid var(--line); background:var(--input-bg); color:var(--ink); font-size:13px; text-decoration:none;
 }
 .btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft); text-decoration:none;}
 .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
-.btn.primary:hover{background:#0757b5; color:#fff;}
-.btn.portable{color:#7c3aed; border-color:#e9d5ff; background:#faf5ff;}
-.btn.portable:hover{background:#f3e8ff; color:#6d28d9; border-color:#7c3aed;}
+.btn.primary:hover{background:var(--accent-deep); color:#fff;}
+.btn.portable{color:var(--portable); border-color:var(--portable-bd); background:var(--portable-bg);}
+.btn.portable:hover{background:var(--portable-hbg); color:var(--portable-hfg); border-color:var(--portable);}
 .btn.copy{font:inherit; font-size:13px; cursor:pointer;}
-.chip-demo{background:#faf5ff; color:#7c3aed; border:1px solid #e9d5ff; border-radius:999px; padding:0 6px;}
+.chip-demo{background:var(--portable-bg); color:var(--portable); border:1px solid var(--portable-bd); border-radius:999px; padding:0 6px;}
 
 /* 轻量提示条（复制反馈） */
 .toast{
   position:fixed; left:50%; bottom:26px; z-index:120;
   transform:translate(-50%,10px); opacity:0; pointer-events:none;
-  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  background:var(--toast-bg); color:var(--toast-fg); padding:9px 16px; border-radius:10px;
   font-size:13px; max-width:80vw; text-align:center; transition:.2s;
-  box-shadow:0 10px 30px rgba(27,31,36,.3);
+  box-shadow:0 10px 30px var(--scrim);
 }
 .toast.on{opacity:1; transform:translate(-50%,0);}
 kbd{background:var(--chip); border:1px solid var(--line); border-bottom-width:2px;
@@ -380,7 +457,7 @@ kbd{background:var(--chip); border:1px solid var(--line); border-bottom-width:2p
 .chapter-nav{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; margin-left:58px;}
 .chapter-nav .nav-card{
   display:block; padding:11px 13px; border:1px solid var(--line); border-radius:10px;
-  background:#fbfcfd; text-decoration:none; color:var(--ink); min-width:0;
+  background:var(--row-bg); text-decoration:none; color:var(--ink); min-width:0;
 }
 .chapter-nav .nav-card:hover{border-color:var(--accent); background:var(--accent-soft);}
 .chapter-nav .nav-card.next{text-align:right;}
@@ -394,7 +471,7 @@ kbd{background:var(--chip); border:1px solid var(--line); border-bottom-width:2p
 }
 .site-foot p{margin:0; max-width:70ch;}
 .top-btn{
-  margin-left:auto; border:1px solid var(--line); background:#fff; color:var(--ink);
+  margin-left:auto; border:1px solid var(--line); background:var(--input-bg); color:var(--ink);
   border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer;
 }
 .top-btn:hover{border-color:var(--accent); color:var(--accent);}
@@ -404,16 +481,16 @@ kbd{background:var(--chip); border:1px solid var(--line); border-bottom-width:2p
 @media (max-width:900px){
   .layout{grid-template-columns:1fr;}
   .icon-btn{display:inline-flex; align-items:center; justify-content:center;
-    width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:15px;}
+    width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:var(--input-bg); font-size:15px;}
   .crumb-t{display:none;}
   .jump select{max-width:120px;}
   .sidebar{
     position:fixed; top:var(--topbar); bottom:0; left:0; z-index:70; width:78%; max-width:300px;
     height:auto; transform:translateX(-102%); transition:transform .22s ease;
-    box-shadow:0 12px 40px rgba(27,31,36,.16);
+    box-shadow:var(--shadow-lg);
   }
   .sidebar.open{transform:translateX(0);}
-  .scrim{position:fixed; inset:0; background:rgba(27,31,36,.28); z-index:65; display:none;}
+  .scrim{position:fixed; inset:0; background:var(--scrim); z-index:65; display:none;}
   .scrim.show{display:block;}
   .content{padding:18px 14px 70px;}
   .ch-excerpt,.ch-actions,.chapter-nav{margin-left:0;}
@@ -423,7 +500,10 @@ kbd{background:var(--chip); border:1px solid var(--line); border-bottom-width:2p
 }
 """
 
-JS = """
+# JS 段用 raw 字符串：里面全是正则转义（\u0001 / \s / \+ / [\]\\]），
+# 非 raw 时 Python 会先吃一层反斜杠（\u0001 变控制字符、\] 变 ]），
+# 产物里的正则静默损坏——页面不报错，只是高亮和分词悄悄失灵。
+JS = r"""
 (function(){
   var chapters = Array.prototype.slice.call(document.querySelectorAll('.chapter'));
   var links = Array.prototype.slice.call(document.querySelectorAll('.toc-link'));
@@ -523,25 +603,164 @@ JS = """
     window.scrollTo({top:0, behavior:'smooth'});
   });
 
-  // 搜索过滤（章节标题、摘要、路径）
+  // ---------------------------------------------------------------------
+  // 搜索：① 即时过滤章节卡片（不依赖索引）② 全站正文全文检索（构建期索引）
+  // ---------------------------------------------------------------------
   var q = document.getElementById('q');
   var counter = document.getElementById('counter');
   var brandSub = document.getElementById('brandSub');
+  var panel = document.getElementById('searchPanel');
   if(brandSub) brandSub.dataset.orig = brandSub.textContent;
+
+  function filterChapters(){
+    var s = q.value.trim().toLowerCase(), shown = 0;
+    chapters.forEach(function(section, i){
+      var txt = (section.textContent + ' ' + section.dataset.k).toLowerCase();
+      var ok = !s || txt.indexOf(s) !== -1;
+      section.style.display = ok ? '' : 'none';
+      if(ok) shown++;
+      links[i].classList.toggle('hidden', !ok);
+    });
+    counter.textContent = s ? ('匹配 ' + shown + ' / ' + chapters.length) : ('共 ' + chapters.length + ' 章');
+    if(brandSub) brandSub.textContent = s
+      ? (shown + ' / ' + chapters.length + ' 章')
+      : brandSub.dataset.orig;
+  }
+
+  /* ---------- 全站正文检索（索引按需加载） ---------- */
+  var SEC = null, SEC_LOADING = false;
+
+  function loadIndex(){
+    if(SEC || SEC_LOADING) return;
+    SEC_LOADING = true;
+    var el = document.createElement('script');
+    el.src = 'search-data.js';
+    el.onload = function(){
+      SEC_LOADING = false;
+      SEC = window.__SEARCH__ || null;
+      if(!SEC) showPanel('<div class="sp-head">索引已加载，但没有读到数据</div>');
+      else if(q.value.trim()) runSearch();
+    };
+    el.onerror = function(){
+      SEC_LOADING = false;
+      showPanel('<div class="sp-head">没有找到搜索索引 search-data.js'
+        + '<span class="sp-tip">先跑 <code>python3 scripts/gen_search_index.py</code> 生成</span></div>');
+    };
+    document.head.appendChild(el);
+  }
+  // 空闲预热：用户第一次敲键盘时索引通常已就绪，省掉「正在载入」的等待感。
+  // 用 <script src> 而不是 fetch —— file:// 下 fetch 本地 JSON 会被 CORS 拦掉。
+  if(window.requestIdleCallback) requestIdleCallback(loadIndex, {timeout:2500});
+  else setTimeout(loadIndex, 1500);
+
+  function escHtml(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  function rxEsc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  // 高亮：先在原文上打一对占位符，再整体转义，最后把占位符换回 <mark>。
+  // 若反过来「先转义再替换」，关键词里含 & < > 时就和转义后的正文对不上，高亮整段失效。
+  function mark(text, terms){
+    var re = new RegExp('(' + terms.map(rxEsc).join('|') + ')', 'gi');
+    return escHtml(String(text).replace(re, '\u0001$1\u0002'))
+      .replace(/\u0001/g, '<mark>').replace(/\u0002/g, '</mark>');
+  }
+  function snippet(text, terms){
+    if(!text) return '';
+    var lower = text.toLowerCase(), pos = -1;
+    for(var i=0;i<terms.length;i++){
+      var p = lower.indexOf(terms[i]);
+      if(p >= 0 && (pos < 0 || p < pos)) pos = p;
+    }
+    if(pos < 0) pos = 0;
+    var start = Math.max(0, pos - 30), end = Math.min(text.length, pos + 90);
+    return mark((start > 0 ? '…' : '') + text.slice(start, end)
+      + (end < text.length ? '…' : ''), terms);
+  }
+  function showPanel(html){
+    if(!panel) return;
+    panel.innerHTML = html;
+    panel.hidden = false;
+    q.setAttribute('aria-expanded', 'true');
+  }
+  function hidePanel(){
+    if(!panel) return;
+    panel.hidden = true;
+    panel.innerHTML = '';
+    q.setAttribute('aria-expanded', 'false');
+  }
+
+  var MAX_HITS = 30;
+  function renderHits(hits, terms, raw){
+    if(!hits.length){
+      showPanel('<div class="sp-head">没有找到「' + escHtml(raw) + '」'
+        + '<span class="sp-tip">试试更短的关键词；空格分隔的多个词要求同时命中</span></div>');
+      return;
+    }
+    var secs = SEC.secs, docs = SEC.docs, out = [];
+    out.push('<div class="sp-head">正文命中 <b>' + hits.length + '</b> 个小节'
+      + (hits.length > MAX_HITS ? '（显示前 ' + MAX_HITS + ' 条）' : '')
+      + '<span class="sp-tip">点条目在新标签打开对应小节</span></div>');
+    for(var k=0;k<hits.length && k<MAX_HITS;k++){
+      var s = secs[hits[k].i], d = docs[s[0]];
+      var url = d[2] + (s[1] ? '#' + encodeURIComponent(s[1]) : '');
+      out.push('<a class="sp-item" href="' + escHtml(url) + '" target="_blank" rel="noopener">'
+        + '<span class="sp-doc">第 ' + d[3] + ' 章 · ' + escHtml(d[1]) + '</span>'
+        + (s[2] ? '<span class="sp-sec">' + mark(s[2], terms) + '</span>' : '')
+        + '<span class="sp-snip">' + snippet(s[3], terms) + '</span>'
+        + '</a>');
+    }
+    showPanel(out.join(''));
+  }
+
+  function runSearch(){
+    var raw = q.value.trim();
+    if(!raw){ hidePanel(); return; }
+    if(!SEC){
+      showPanel('<div class="sp-head">正在载入搜索索引…</div>');
+      loadIndex(); return;
+    }
+    var terms = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    if(!terms.length){ hidePanel(); return; }
+    var secs = SEC.secs, hits = [];
+    for(var i=0;i<secs.length;i++){
+      var s = secs[i], head = s[2].toLowerCase(), body = s[3].toLowerCase();
+      var score = 0, ok = true, lo = -1, hi = -1;
+      for(var t=0;t<terms.length;t++){
+        var term = terms[t];
+        var hp = head.indexOf(term), bp = body.indexOf(term);
+        if(hp < 0 && bp < 0){ ok = false; break; }
+        if(hp >= 0) score += 150 - Math.min(hp, 80);      // 命中标题权重最高
+        if(bp >= 0){
+          score += 30;
+          var p = bp, cnt = 0;
+          while(p >= 0 && cnt < 8){ cnt++; p = body.indexOf(term, p + term.length); }
+          score += cnt * 4;                               // 出现次数
+          if(lo < 0 || bp < lo) lo = bp;
+          if(bp > hi) hi = bp;
+        }
+      }
+      if(!ok) continue;
+      // 多词落点越集中，越可能是「整段在讲这件事」，而不是零散撞词
+      if(terms.length > 1 && lo >= 0) score += Math.max(0, 60 - Math.min((hi - lo) / 12, 60));
+      if(s[1] && head.indexOf(terms[0]) >= 0) score += 40;  // 有锚点 → 能直达小节
+      hits.push({i:i, score:score, pos:lo < 0 ? 0 : lo});
+    }
+    hits.sort(function(a,b){ return b.score - a.score || a.pos - b.pos; });
+    renderHits(hits, terms, raw);
+  }
+
   if(q){
-    q.addEventListener('input', function(){
-      var s = q.value.trim().toLowerCase(), shown = 0;
-      chapters.forEach(function(section, i){
-        var txt = (section.textContent + ' ' + section.dataset.k).toLowerCase();
-        var ok = !s || txt.indexOf(s) !== -1;
-        section.style.display = ok ? '' : 'none';
-        if(ok) shown++;
-        links[i].classList.toggle('hidden', !ok);
-      });
-      counter.textContent = s ? ('匹配 ' + shown + ' / ' + chapters.length) : ('共 ' + chapters.length + ' 章');
-      if(brandSub) brandSub.textContent = s
-        ? (shown + ' / ' + chapters.length + ' 章')
-        : brandSub.dataset.orig;
+    q.addEventListener('input', function(){ filterChapters(); runSearch(); });
+    q.addEventListener('focus', function(){ if(q.value.trim()) runSearch(); });
+    q.addEventListener('keydown', function(e){
+      if(e.key !== 'Enter') return;
+      var first = panel && panel.querySelector('.sp-item');
+      if(first){ e.preventDefault(); first.click(); }
+    });
+    document.addEventListener('click', function(e){
+      if(!panel.hidden && e.target !== q && !panel.contains(e.target)) hidePanel();
     });
   }
 
@@ -577,7 +796,7 @@ JS = """
     });
   });
 
-  /* ---------- 快捷键：/ 聚焦搜索，Esc 清空 ---------- */
+  /* ---------- 快捷键：/ 聚焦搜索，Esc 清空并收起结果 ---------- */
   document.addEventListener('keydown', function(e){
     if(e.metaKey || e.ctrlKey || e.altKey) return;
     if(e.key === '/' && q && document.activeElement !== q){
@@ -585,8 +804,27 @@ JS = """
     } else if(e.key === 'Escape' && q && document.activeElement === q){
       q.value = '';
       q.dispatchEvent(new Event('input'));
+      hidePanel();
       q.blur();
     }
+  });
+
+  // 深链 #q=关键词：从章节页顶栏的「搜索」入口过来时，直接带词落在这里。
+  // 章节页拿不到索引，所以搜索统一由总览页承接，避免两处各维护一套。
+  function applyQueryHash(){
+    var h = window.location.hash;
+    if(h.indexOf('#q=') !== 0 || !q) return;
+    var term = '';
+    try { term = decodeURIComponent(h.slice(3).replace(/\+/g, ' ')); } catch(err){ term = h.slice(3); }
+    if(!term) return;
+    q.value = term;
+    filterChapters();
+    loadIndex();
+    runSearch();
+  }
+  applyQueryHash();
+  window.addEventListener('hashchange', function(){
+    if(window.location.hash.indexOf('#q=') === 0) applyQueryHash();
   });
 
   // 首屏定位：带 #ch-xx 直接落到该章
@@ -603,6 +841,45 @@ JS = """
     var el = document.getElementById(h.slice(1));
     if(el) go(el, true);
   });
+
+  /* ---------- 主题：跟随系统 / 浅色 / 深色 三态循环 ---------- */
+  // 首屏那一下由 head 里的内联脚本完成（否则深色系统上会先闪一屏白），
+  // 这里只负责切换与记忆。localStorage 键 `aij-theme` 与 docs/*.html、
+  // ide.html 共用——三处必须一致，否则从章节页点回总览会跳色。
+  var themeBtn = document.getElementById('themeBtn');
+  var THEME_ICON = {auto:'🌗', light:'☀️', dark:'🌙'};
+  var THEME_NAME = {auto:'跟随系统', light:'浅色', dark:'深色'};
+
+  function themePref(){
+    try { return localStorage.getItem('aij-theme') || 'auto'; } catch(e){ return 'auto'; }
+  }
+  function themeIsDark(p){
+    var sys = !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    return p === 'dark' || (p === 'auto' && sys);
+  }
+  function applyTheme(p){
+    if(p !== 'light' && p !== 'dark') p = 'auto';
+    document.documentElement.setAttribute('data-theme', themeIsDark(p) ? 'dark' : 'light');
+    if(themeBtn){
+      themeBtn.textContent = THEME_ICON[p];
+      themeBtn.title = '主题：' + THEME_NAME[p] + '（点击切换）';
+    }
+  }
+  if(themeBtn){
+    applyTheme(themePref());
+    themeBtn.addEventListener('click', function(){
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(themePref()) + 1) % order.length];
+      try { localStorage.setItem('aij-theme', next); } catch(e){}
+      applyTheme(next);
+    });
+    if(window.matchMedia){
+      var mq = matchMedia('(prefers-color-scheme: dark)');
+      var onSys = function(){ if(themePref() === 'auto') applyTheme('auto'); };
+      if(mq.addEventListener) mq.addEventListener('change', onSys);
+      else if(mq.addListener) mq.addListener(onSys);
+    }
+  }
 })();
 """
 
@@ -708,7 +985,7 @@ def build_html(data):
             f'<button class="btn copy" type="button" data-path="{html.escape(rel)}" '
             f'title="复制该文档在仓库里的相对路径">⧉ 路径</button>')
         if not c["rendered"]:
-            actions.insert(0, '<span class="btn" style="color:#656d76;cursor:default">尚未渲染</span>')
+            actions.insert(0, '<span class="btn" style="color:var(--muted);cursor:default">尚未渲染</span>')
 
         prev_c = chapters[i - 2] if i >= 2 else None
         next_c = chapters[i] if i < len(chapters) else None
@@ -747,6 +1024,7 @@ def build_html(data):
             f'    </section>')
 
     page = (PAGE
+            .replace("/*__THEMEBOOT__*/", THEME_BOOT)
             .replace("__CSS__", CSS)
             .replace("__JS__", JS)
             .replace("__TOC__", toc)

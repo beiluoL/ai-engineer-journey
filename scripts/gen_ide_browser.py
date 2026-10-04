@@ -207,6 +207,14 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI 工程师之旅 · 代码浏览器</title>
+<!-- 主题首屏脚本：必须同步跑在 CSS 之前，否则深色/浅色会先闪一下。
+     三页（index.html / docs/*.html / 本页）共用 localStorage 键 aij-theme。 -->
+<script>(function(){try{
+var s=localStorage.getItem('aij-theme');
+var sys=!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+var dark=(s==='dark')||((!s||s==='auto')&&sys);
+document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+}catch(e){}})();</script>
 <style>
 :root{
   --bg:#1f1f20; --bg2:#252526; --bg3:#2d2d30; --bg4:#333336;
@@ -215,7 +223,52 @@ TEMPLATE = r"""<!DOCTYPE html>
   --k:#c586c0; --s:#ce9178; --c:#6a9955; --n:#b5cea8; --fn:#dcdcaa;
   --kw:#569cd6; --ty:#4ec9b0; --num:#b5cea8; --var:#9cdcfe;
   --sel:#04395e; --sel-fg:#ffffff; --hover:#2a2d2e;
+  --scroll:#4a4a4f; --scroll-h:#5f5f66;
+  --card-hover:#5a5a60; --hair:#333338;
+  --tag-bg:#33333a; --tag-fg:#b9b9c0; --tag-bd:#3e3e46; --tag-n:#8b949e;
+  --tag-py-bg:#2c4a2c22; --tag-py-fg:#89d185; --tag-py-bd:#3c6b3c;
+  --btn-fg:#cfcfd4; --hlink-hbg:#3d3d43; --field-bg:#1b1b1c;
+  --sel-count:#9dc6ee; --ic-dir:#c09553;
+  --tab-hover:#2f2f31; --tab-x:#48484e; --tab-fg:#a8a8ae;
+  --ln:#5a5a60; --code-hover:#ffffff0a; --code-hover-ln:#1c1c1d;
+  --t-op:#d4d4d4; --t-tag:#4ec9b0; --t-attr:#9cdcfe; --t-bool:#569cd6;
+  --t-h:#569cd6; --t-h3:#4fc1ff; --t-mdcode:#b5cea8; --t-mdcode-bg:#1b1b1c;
+  --t-link:#4ec9b0; --t-quote:#a5a5a5;
+  --toast-bg:#e6edf3; --toast-fg:#0d1117;
+  --shd:rgba(0,0,0,.67);
+  --hd-bg:rgba(31,31,32,.94); --card-shadow:0 8px 22px rgba(0,0,0,.35);
+  --i-py:#4b8bbe; --i-java:#e76f51; --i-js:#e5c07b; --i-md:#8ab4f8;
+  --i-json:#cbcb41; --i-yaml:#d1a04a; --i-sh:#89d185; --i-html:#e8825a;
+  --i-css:#8ab4f8; --i-txt:#9aa0a6; --i-toml:#a5a5a5;
+  --logo-a:#7c5cff; --logo-b:#4da3ff;
   --mono:"SF Mono",SFMono-Regular,Menlo,Monaco,"Cascadia Mono","JetBrains Mono",Consolas,"Liberation Mono",monospace;
+}
+/* 浅色皮肤（VSCode Light+）。IDE 默认深色是行业惯例，但站点其余两页会跟随
+   系统/手动偏好——这里给同一套 aij-theme 键，避免从文档页点进来跳色。 */
+html[data-theme="light"]{
+  --bg:#ffffff; --bg2:#f3f3f3; --bg3:#ececec; --bg4:#e4e4e4;
+  --border:#d4d4d4; --fg:#1f1f1f; --muted:#6b6b6b; --dim:#8a8a8a;
+  --accent:#005fb8; --accent2:#0e639c;
+  --k:#af00db; --s:#a31515; --c:#008000; --n:#098658; --fn:#795e26;
+  --kw:#0000ff; --ty:#267f99; --num:#098658; --var:#001080;
+  --sel:#add6ff; --sel-fg:#000000; --hover:#e8e8e8;
+  --scroll:#c1c1c1; --scroll-h:#a8a8a8;
+  --card-hover:#c4c4c4; --hair:#e5e5e5;
+  --tag-bg:#ececec; --tag-fg:#3b3b3b; --tag-bd:#d4d4d4; --tag-n:#6b6b6b;
+  --tag-py-bg:#e3f3e0; --tag-py-fg:#2e7d32; --tag-py-bd:#a5d6a7;
+  --btn-fg:#3b3b3b; --hlink-hbg:#e2e2e2; --field-bg:#ffffff;
+  --sel-count:#005fb8; --ic-dir:#b8860b;
+  --tab-hover:#ececec; --tab-x:#c9c9c9; --tab-fg:#3b3b3b;
+  --ln:#a6a6a6; --code-hover:#00000008; --code-hover-ln:#f2f2f2;
+  --t-op:#000000; --t-tag:#267f99; --t-attr:#001080; --t-bool:#0000ff;
+  --t-h:#0000ff; --t-h3:#0451a5; --t-mdcode:#098658; --t-mdcode-bg:#f3f3f3;
+  --t-link:#267f99; --t-quote:#6b6b6b;
+  --toast-bg:#1f1f1f; --toast-fg:#ffffff;
+  --shd:rgba(0,0,0,.32);
+  --hd-bg:rgba(255,255,255,.92); --card-shadow:0 8px 22px rgba(31,31,32,.14);
+  --i-py:#3572a5; --i-java:#b07219; --i-js:#b8860b; --i-md:#0969da;
+  --i-json:#9a8c00; --i-yaml:#a06000; --i-sh:#2e7d32; --i-html:#c0392b;
+  --i-css:#0969da; --i-txt:#6b6b6b; --i-toml:#6b6b6b;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -224,16 +277,16 @@ body{margin:0;background:var(--bg);color:var(--fg);
   overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 ::-webkit-scrollbar{width:11px;height:11px}
-::-webkit-scrollbar-thumb{background:#4a4a4f;border-radius:6px;border:2px solid transparent;background-clip:content-box}
-::-webkit-scrollbar-thumb:hover{background:#5f5f66;background-clip:content-box}
+::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:6px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--scroll-h);background-clip:content-box}
 ::-webkit-scrollbar-track{background:transparent}
 
 /* ---------- 项目列表 ---------- */
 #home{height:100%;overflow:auto}
 .hd{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;
-  padding:14px 24px;background:rgba(31,31,32,.94);backdrop-filter:blur(8px);
+  padding:14px 24px;background:var(--hd-bg);backdrop-filter:blur(8px);
   border-bottom:1px solid var(--border)}
-.hd .logo{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#7c5cff);
+.hd .logo{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--logo-a),var(--logo-b));
   display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
 .hd h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.3px}
 .hd .sub{color:var(--muted);font-size:12.5px}
@@ -243,31 +296,31 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .hd .hlink{
   flex:none;text-decoration:none;display:inline-flex;align-items:center;gap:5px;
   padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);
-  font-size:12.5px;color:#cfcfd4;white-space:nowrap;
+  font-size:12.5px;color:var(--btn-fg);white-space:nowrap;
 }
-.hd .hlink:hover{background:#3d3d43;border-color:var(--accent);color:#fff;text-decoration:none}
+.hd .hlink:hover{background:var(--hlink-hbg);border-color:var(--accent);color:var(--fg);text-decoration:none}
 a.iconbtn{text-decoration:none}
-.btn.on-file{border-color:var(--accent2);color:#cfe6ff}
+.btn.on-file{border-color:var(--accent2);color:var(--sel-count)}
 .grid{padding:22px 24px 40px;display:grid;gap:14px;
   grid-template-columns:repeat(auto-fill,minmax(310px,1fr))}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
   padding:15px 16px 14px;cursor:pointer;transition:.16s;position:relative;overflow:hidden;text-align:left}
-.card:hover{border-color:#5a5a60;transform:translateY(-2px);
-  box-shadow:0 8px 22px rgba(0,0,0,.35)}
+.card:hover{border-color:var(--card-hover);transform:translateY(-2px);
+  box-shadow:var(--card-shadow)}
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .card .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .card .ic{width:26px;height:26px;flex:none;border-radius:7px;display:grid;place-items:center;
-  font-size:11px;font-weight:700;background:#3a3a3f;color:#fff;letter-spacing:-.3px}
+  font-size:11px;font-weight:700;background:var(--tag-bd);color:var(--fg);letter-spacing:-.3px}
 .card h3{margin:0;font-size:14.5px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .open{color:var(--accent);font-size:12px;opacity:0;transition:.16s;flex:none}
 .card:hover .open{opacity:1}
 .card p{margin:0 0 11px;color:var(--muted);font-size:12.5px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
 .card .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-  padding-top:10px;border-top:1px solid #333338}
-.tag{font-size:11px;padding:2px 7px;border-radius:20px;background:#33333a;color:#b9b9c0;border:1px solid #3e3e46}
-.tag.py{background:#2c4a2c22;color:#89d185;border-color:#3c6b3c}
-.tag.n{color:#8b949e}
+  padding-top:10px;border-top:1px solid var(--hair)}
+.tag{font-size:11px;padding:2px 7px;border-radius:20px;background:var(--tag-bg);color:var(--tag-fg);border:1px solid var(--tag-bd)}
+.tag.py{background:var(--tag-py-bg);color:var(--tag-py-fg);border-color:var(--tag-py-bd)}
+.tag.n{color:var(--tag-n)}
 .card .num{margin-left:auto;color:var(--dim);font-size:11.5px;font-family:var(--mono)}
 
 /* ---------- IDE ---------- */
@@ -280,8 +333,9 @@ a.iconbtn{text-decoration:none}
 .bar .crumb .sep{opacity:.5}
 .bar .sp{flex:1}
 .btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg4);
-  font-size:12px;color:#cfcfd4;white-space:nowrap;flex:none}
-.btn:hover{background:#3d3d43;border-color:#5a5a60}
+  font-size:12px;color:var(--btn-fg);white-space:nowrap;flex:none}
+.btn:hover{background:var(--hlink-hbg);border-color:var(--card-hover)}
+.theme-btn{width:30px;padding:5px 0;text-align:center;font-size:12px}
 #burger{display:none}
 .body{flex:1;display:flex;min-height:0}
 .side{flex:none;width:290px;min-height:0;display:flex;flex-direction:column;
@@ -293,7 +347,7 @@ a.iconbtn{text-decoration:none}
 .iconbtn:hover{background:var(--bg4);color:var(--fg)}
 .search{padding:0 10px 8px}
 .search input{width:100%;padding:6px 9px;border-radius:6px;border:1px solid var(--border);
-  background:#1b1b1c;color:var(--fg);font-size:12.5px;outline:none}
+  background:var(--field-bg);color:var(--fg);font-size:12.5px;outline:none}
 .search input:focus{border-color:var(--accent2)}
 .tree{flex:1;overflow:auto;padding:0 6px 14px;font-size:13px}
 .row{display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:5px;cursor:pointer;
@@ -305,12 +359,12 @@ a.iconbtn{text-decoration:none}
 .row.open>.chev{transform:rotate(90deg)}
 .row .nm{overflow:hidden;text-overflow:ellipsis}
 .row .cnt{margin-left:auto;font-size:10.5px;color:var(--dim);font-family:var(--mono)}
-.row.sel .cnt{color:#9dc6ee}
+.row.sel .cnt{color:var(--sel-count)}
 .row .ic{width:15px;flex:none;text-align:center;font-size:10px;font-weight:700;letter-spacing:-.5px}
-.row .ic.dir{color:#c09553;font-size:13px}
-.i-py{color:#4b8bbe}.i-java{color:#e76f51}.i-js{color:#e5c07b}.i-md{color:#8ab4f8}
-.i-json{color:#cbcb41}.i-yaml{color:#d1a04a}.i-sh{color:#89d185}.i-html{color:#e8825a}
-.i-css{color:#8ab4f8}.i-txt{color:#9aa0a6}.i-csv{color:#9aa0a6}.i-toml{color:#a5a5a5}
+.row .ic.dir{color:var(--ic-dir);font-size:13px}
+.i-py{color:var(--i-py)}.i-java{color:var(--i-java)}.i-js{color:var(--i-js)}.i-md{color:var(--i-md)}
+.i-json{color:var(--i-json)}.i-yaml{color:var(--i-yaml)}.i-sh{color:var(--i-sh)}.i-html{color:var(--i-html)}
+.i-css{color:var(--i-css)}.i-txt{color:var(--i-txt)}.i-csv{color:var(--i-txt)}.i-toml{color:var(--i-toml)}
 .kids{display:none}
 .kids.show{display:block}
 
@@ -318,35 +372,35 @@ a.iconbtn{text-decoration:none}
 .tabs{flex:none;display:flex;height:35px;overflow-x:auto;background:var(--bg2);
   border-bottom:1px solid var(--border);scrollbar-width:none}
 .tabs::-webkit-scrollbar{height:0}
-.tab{display:flex;align-items:center;gap:7px;padding:0 10px 0 12px;font-size:12.5px;color:#a8a8ae;
+.tab{display:flex;align-items:center;gap:7px;padding:0 10px 0 12px;font-size:12.5px;color:var(--tab-fg);
   border-right:1px solid var(--border);cursor:pointer;white-space:nowrap;flex:none;max-width:230px}
-.tab:hover{background:#2f2f31;color:var(--fg)}
-.tab.act{background:var(--bg);color:#fff;border-top:1px solid var(--accent);padding-top:0}
+.tab:hover{background:var(--tab-hover);color:var(--fg)}
+.tab.act{background:var(--bg);color:var(--fg);border-top:1px solid var(--accent);padding-top:0}
 .tab .ic{font-weight:700;font-size:10px;letter-spacing:-.5px;opacity:.9}
 .tab .x{opacity:0;border-radius:4px;padding:0 3px}
 .tab:hover .x{opacity:.7}
-.tab .x:hover{opacity:1;background:#48484e}
+.tab .x:hover{opacity:1;background:var(--tab-x)}
 .code{flex:1;overflow:auto;padding:8px 0 40px;font-family:var(--mono);font-size:12.8px;line-height:1.62}
 .cl{display:flex;min-width:min-content}
-.cl:hover{background:#ffffff08}
-.cl .ln{flex:none;width:52px;padding-right:14px;text-align:right;color:#5a5a60;
+.cl:hover{background:var(--code-hover)}
+.cl .ln{flex:none;width:52px;padding-right:14px;text-align:right;color:var(--ln);
   user-select:none;position:sticky;left:0;background:var(--bg)}
-.cl:hover .ln{background:#1c1c1d}
+.cl:hover .ln{background:var(--code-hover-ln)}
 .cl .ct{white-space:pre-wrap;word-break:break-word;padding-right:20px;flex:1}
 .c-empty{flex:1;display:grid;place-items:center;color:var(--dim);font-size:13.5px;text-align:center;line-height:2}
 .c-empty .big{font-size:34px;opacity:.35;margin-bottom:6px}
 .t-kw{color:var(--kw)}.t-str{color:var(--s)}.t-com{color:var(--c);font-style:italic}
 .t-num{color:var(--num)}.t-fn{color:var(--fn)}.t-type{color:var(--ty)}.t-var{color:var(--var)}
-.t-dec{color:var(--k)}.t-op{color:#d4d4d4}.t-tag{color:#4ec9b0}.t-attr{color:#9cdcfe}
-.t-key{color:#9cdcfe}.t-bool{color:#569cd6}.t-plain{color:var(--fg)}
-.t-h1{color:#569cd6;font-size:1.28em;font-weight:700;display:block;padding:.28em 0 .18em}
-.t-h2{color:#569cd6;font-size:1.16em;font-weight:700;display:block;padding:.24em 0 .14em}
-.t-h3{color:#4fc1ff;font-size:1.06em;font-weight:700;display:block;padding:.2em 0 .1em}
+.t-dec{color:var(--k)}.t-op{color:var(--t-op)}.t-tag{color:var(--t-tag)}.t-attr{color:var(--t-attr)}
+.t-key{color:var(--t-attr)}.t-bool{color:var(--t-bool)}.t-plain{color:var(--fg)}
+.t-h1{color:var(--t-h);font-size:1.28em;font-weight:700;display:block;padding:.28em 0 .18em}
+.t-h2{color:var(--t-h);font-size:1.16em;font-weight:700;display:block;padding:.24em 0 .14em}
+.t-h3{color:var(--t-h3);font-size:1.06em;font-weight:700;display:block;padding:.2em 0 .1em}
 .md .cl .ct p{margin:0}
-.t-mdcode{color:#b5cea8;background:#1b1b1c;border-radius:4px;padding:0 5px}
-.t-link{color:#4ec9b0;text-decoration:underline}
-.t-quote{color:#a5a5a5;font-style:italic}
-.t-head{color:#569cd6;font-weight:700}
+.t-mdcode{color:var(--t-mdcode);background:var(--t-mdcode-bg);border-radius:4px;padding:0 5px}
+.t-link{color:var(--t-link);text-decoration:underline}
+.t-quote{color:var(--t-quote);font-style:italic}
+.t-head{color:var(--t-h);font-weight:700}
 .stbar{flex:none;height:24px;display:flex;align-items:center;gap:14px;padding:0 12px;font-size:11.5px;
   background:var(--accent2);color:#fff}
 .stbar .sp{flex:1}
@@ -361,7 +415,7 @@ a.iconbtn{text-decoration:none}
 .toast{
   position:fixed;left:50%;bottom:40px;z-index:120;
   transform:translate(-50%,10px);opacity:0;pointer-events:none;
-  background:#e6edf3;color:#0d1117;padding:9px 16px;border-radius:10px;
+  background:var(--toast-bg);color:var(--toast-fg);padding:9px 16px;border-radius:10px;
   font-size:13px;max-width:80vw;text-align:center;transition:.2s;
   box-shadow:0 12px 34px rgba(0,0,0,.45);
 }
@@ -375,7 +429,7 @@ a.iconbtn{text-decoration:none}
   .side{position:fixed;top:38px;bottom:24px;left:0;z-index:20;transform:translateX(-100%);
     transition:transform .18s;box-shadow:6px 0 26px rgba(0,0,0,.5);width:84vw;max-width:300px}
   .side.on{transform:none}
-  .side .shd{position:fixed;inset:0;background:#000000aa;z-index:19;display:none}
+  .side .shd{position:fixed;inset:0;background:var(--shd);z-index:19;display:none}
   .side .shd.on{display:block}
   .bar .hint{display:none}
   .bar{gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 8px}
@@ -397,6 +451,7 @@ a.iconbtn{text-decoration:none}
     </div>
     <div class="sp"></div>
     <a class="hlink" href="index.html" title="返回文档总览（publishing/html/index.html）">← 文档总览</a>
+    <button class="btn theme-btn" type="button" aria-label="切换主题">🌗</button>
   </div>
   <div class="grid" id="grid"></div>
   <div class="hd-note">所有源码已内嵌进这一个 HTML 文件：无后端、无网络依赖，双击即可离线浏览；
@@ -414,6 +469,7 @@ a.iconbtn{text-decoration:none}
     <button class="btn" id="copyFile" title="一键复制当前文件的完整内容（Ctrl/Cmd+Shift+C）">⧉ 复制文件</button>
     <button class="iconbtn" id="foldAll" title="折叠全部">⤡</button>
     <button class="iconbtn" id="expandAll" title="展开全部">⤢</button>
+    <button class="btn theme-btn" type="button" aria-label="切换主题">🌗</button>
   </div>
   <div class="body">
     <aside class="side" id="side">
@@ -658,7 +714,7 @@ function renderTree(){
   if(FILTER){
     var hits = findHits(TREE, FILTER);
     if(!hits.length){
-      t.innerHTML = '<div style="padding:14px 10px;color:#6a6a70;font-size:12.5px">没有匹配 “'+esc(FILTER)+'” 的文件</div>';
+      t.innerHTML = '<div style="padding:14px 10px;color:var(--dim);font-size:12.5px">没有匹配 “'+esc(FILTER)+'” 的文件</div>';
       return;
     }
     hits.sort(function(a,b){ return a.path<b.path?-1:1; });
@@ -983,6 +1039,44 @@ window.addEventListener("hashchange", applyHash);
 
 renderHome();
 applyHash();      // 支持 ide.html#/项目/文件 深链直达
+
+/* ------------------------------------------------------------------ 主题 */
+/* 首屏由 head 里的内联脚本完成（否则会闪一屏错色），这里只做切换与记忆。
+   localStorage 键 aij-theme 与 index.html、docs/*.html 共用——三处保持一致，
+   从文档页点进来才不会跳色。首页头部与 IDE 顶栏各有一个按钮，一起处理。 */
+var THEME_ICON = {auto:'🌗', light:'☀️', dark:'🌙'};
+var THEME_NAME = {auto:'跟随系统', light:'浅色', dark:'深色'};
+
+function themePref(){
+  try { return localStorage.getItem('aij-theme') || 'auto'; } catch(e){ return 'auto'; }
+}
+function themeIsDark(p){
+  var sys = !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  return p === 'dark' || (p === 'auto' && sys);
+}
+function applyTheme(p){
+  if(p !== 'light' && p !== 'dark') p = 'auto';
+  document.documentElement.setAttribute('data-theme', themeIsDark(p) ? 'dark' : 'light');
+  [].forEach.call(document.querySelectorAll('.theme-btn'), function(b){
+    b.textContent = THEME_ICON[p];
+    b.title = '主题：' + THEME_NAME[p] + '（点击切换）';
+  });
+}
+[].forEach.call(document.querySelectorAll('.theme-btn'), function(b){
+  b.onclick = function(){
+    var order = ['auto', 'light', 'dark'];
+    var next = order[(order.indexOf(themePref()) + 1) % order.length];
+    try { localStorage.setItem('aij-theme', next); } catch(e){}
+    applyTheme(next);
+  };
+});
+applyTheme(themePref());
+if(window.matchMedia){
+  var tmq = matchMedia('(prefers-color-scheme: dark)');
+  var tOn = function(){ if(themePref() === 'auto') applyTheme('auto'); };
+  if(tmq.addEventListener) tmq.addEventListener('change', tOn);
+  else if(tmq.addListener) tmq.addListener(tOn);
+}
 })();
 </script>
 </body>

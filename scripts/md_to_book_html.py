@@ -552,13 +552,24 @@ PAGE_CSS = """
   --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --accent:#0969da;
   --code-bg:#f6f8fa; --border:#d0d7de; --quote-bg:#f6f8fa;
   --table-alt:rgba(0,0,0,.025);
+  --surface:#ffffff;
+  --warn:#b35900;
+  --toast-bg:#1f2328; --toast-fg:#fff;
+  --md-h:#0550ae; --md-code-fg:#0a3069; --md-code-bg:rgba(175,184,193,.22);
+  --md-quote:#57606a; --md-link:#0969da; --md-list:#cf222e;
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
-    --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
-    --table-alt:rgba(255,255,255,.03);
-  }
+/* 深色主题只此一份：原来那个「跟随系统」的 @media 块已合并进来 ——「跟随系统」
+   改由 head 里的内联脚本换算成显式的 data-theme，CSS 侧就不用把同一套值写两遍。
+   localStorage 键 aij-theme 与 index.html、ide.html 共用，三处表现必须一致。 */
+html[data-theme="dark"]{
+  --bg:#0d1117; --fg:#e6edf3; --muted:#9da7b3; --accent:#4493f8;
+  --code-bg:#161b22; --border:#30363d; --quote-bg:#161b22;
+  --table-alt:rgba(255,255,255,.03);
+  --surface:#161b22;
+  --warn:#e8a33d;
+  --toast-bg:#e6edf3; --toast-fg:#0d1117;
+  --md-h:#79c0ff; --md-code-fg:#a5d6ff; --md-code-bg:rgba(110,118,129,.3);
+  --md-quote:#9da7b3; --md-link:#4493f8; --md-list:#ff7b72;
 }
 *{box-sizing:border-box}
 body{
@@ -586,7 +597,7 @@ blockquote{border-left:4px solid var(--border); margin:1.1em 0; padding:.3em 1em
   color:var(--muted); background:var(--quote-bg); border-radius:0 6px 6px 0;}
 blockquote p{margin:.4em 0;}
 .figure{margin:1.6em 0; text-align:center;}
-.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:#fff;}
+.figure img{max-width:100%; border:1px solid var(--border); border-radius:8px; background:var(--surface);}
 .figure figcaption{color:var(--muted); font-size:.85em; margin-top:.6em;}
 .mermaid-svg{margin:1.6em 0; text-align:center;}
 .mermaid-svg svg{max-width:100%; height:auto;}
@@ -596,7 +607,7 @@ ul.lvl, ol.lvl{margin:.6em 0; padding-left:1.6em;}
 li{margin:.3em 0;}
 .nav-footer{margin-top:2.2em; padding-top:1em; border-top:1px solid var(--border);
   color:var(--muted); font-size:.92em;}
-.img-missing{color:#b35900; font-weight:600;}
+.img-missing{color:var(--warn); font-weight:600;}
 """.strip()
 
 
@@ -750,6 +761,13 @@ h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
   border-radius:8px; color:var(--fg); background:transparent; cursor:pointer;
 }
 .bb-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--code-bg);}
+.bb-search{white-space:nowrap;}
+.bb-icon{
+  flex:none; width:28px; height:28px; padding:0; cursor:pointer; line-height:1;
+  border:1px solid var(--border); border-radius:8px; background:transparent;
+  color:var(--fg); font-size:13px;
+}
+.bb-icon:hover{border-color:var(--accent); color:var(--accent);}
 .bb-pct{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
   min-width:36px; text-align:right;}
 
@@ -773,16 +791,12 @@ h1,h2,h3,h4,h5,h6{scroll-margin-top:calc(var(--bar) + 16px);}
   color:var(--muted); opacity:.7; user-select:none;
 }
 .src-line .tx{white-space:pre-wrap; word-break:break-word; flex:1; padding-right:16px;}
-.md-h{color:#0550ae; font-weight:700;}
-.md-code{color:#0a3069; background:rgba(175,184,193,.22); border-radius:3px;}
-.md-quote{color:#57606a; font-style:italic;}
-.md-link{color:#0969da; text-decoration:underline;}
+.md-h{color:var(--md-h); font-weight:700;}
+.md-code{color:var(--md-code-fg); background:var(--md-code-bg); border-radius:3px;}
+.md-quote{color:var(--md-quote); font-style:italic;}
+.md-link{color:var(--md-link); text-decoration:underline;}
 .md-b{font-weight:700;}
-.md-list{color:#cf222e;}
-@media (prefers-color-scheme: dark){
-  .md-h{color:#79c0ff;} .md-code{color:#a5d6ff;} .md-quote{color:#9da7b3;}
-  .md-link{color:#4493f8;} .md-list{color:#ff7b72;}
-}
+.md-list{color:var(--md-list);}
 /* 源码视图下收起阅读用的外框，让代码占满宽度 */
 body.src-mode .book-side,
 body.src-mode .book-fab{display:none !important;}
@@ -811,7 +825,7 @@ body.src-mode .doc-view{display:none;}
   cursor:zoom-out;
 }
 .lightbox.on{display:flex;}
-.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:#fff;
+.lightbox img{max-width:100%; max-height:100%; border-radius:8px; background:var(--surface);
   box-shadow:0 20px 60px rgba(0,0,0,.55); cursor:default;}
 .lightbox .lb-x{
   position:absolute; top:12px; right:18px; font-size:26px; line-height:1;
@@ -823,14 +837,11 @@ body.src-mode .doc-view{display:none;}
 .toast{
   position:fixed; left:50%; bottom:26px; z-index:300;
   transform:translate(-50%,10px); opacity:0; pointer-events:none;
-  background:#1f2328; color:#fff; padding:9px 16px; border-radius:10px;
+  background:var(--toast-bg); color:var(--toast-fg); padding:9px 16px; border-radius:10px;
   font-size:13px; max-width:82vw; text-align:center; transition:.2s;
   box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
 .toast.on{opacity:1; transform:translate(-50%,0);}
-@media (prefers-color-scheme: dark){
-  .toast{background:#e6edf3; color:#0d1117;}
-}
 
 /* 移动端：顶栏只留最必要的东西 */
 @media (max-width:640px){
@@ -1108,6 +1119,35 @@ EXTRA_JS = """
   /* ---------- 首屏：进度、深链（#src 进入源码视图） ---------- */
   onScroll();
   if(MD && location.hash === '#src') setView('src');
+
+  /* ---------- 小节深链：等图片撑完高度后重新落位 ---------- */
+  // 浏览器是按「目标那一刻」的布局把页面滚到锚点的。这一页有几张 loading="lazy"
+  // 的大图，滚过去之后它们才开始加载、把后面的内容整体顶下去——实测目标小节会
+  // 跑到视口下方约 1000px，用户以为「跳错了」。所以要在「高度还可能变」的这段时间
+  // 里反复落位几次（约 1 秒）。跳过视图锚点 #src——那是切视图，不是段落定位。
+  var anchorTimer = null;
+  function fixAnchor(){
+    var raw = location.hash.replace(/^#/, '');
+    if(!raw || raw === 'src') return;
+    var el = null;
+    try { el = document.getElementById(decodeURIComponent(raw)); } catch(e){ el = null; }
+    if(!el) el = document.getElementById(raw);
+    if(el) el.scrollIntoView({block:'start', behavior:'instant'});
+  }
+  function settleAnchor(){
+    if(!location.hash || location.hash === '#src') return;
+    clearInterval(anchorTimer);
+    var n = 0;
+    anchorTimer = setInterval(function(){
+      fixAnchor();
+      if(++n >= 6) clearInterval(anchorTimer);
+    }, 180);
+  }
+  window.addEventListener('load', settleAnchor);
+  // 同页换 hash（点「上一节/下一节」、或从别处带锚点跳进来）不会触发 load，
+  // 但 lazy 图片照样会撑高页面，所以这里也要落位。
+  window.addEventListener('hashchange', settleAnchor);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(settleAnchor);
   // 同一页面里 hash 变成 #src（浏览器前进/后退、或从别处带着 #src 跳进来）也要认，
   // 否则只有「首次加载」生效。其余 hash 是章节锚点，不归视图管辖，直接放过。
   window.addEventListener('hashchange', function(){
@@ -1116,6 +1156,44 @@ EXTRA_JS = """
     if(wantSrc === document.body.classList.contains('src-mode')) return;
     setView(wantSrc ? 'src' : 'doc');
   });
+
+  /* ---------- 主题：跟随系统 / 浅色 / 深色 三态循环 ---------- */
+  // 首屏由 head 里的内联脚本完成（否则深色系统上会闪一屏白），这里只做切换与记忆。
+  // localStorage 键 aij-theme 与 index.html、ide.html 共用，三处必须一致。
+  var themeBtn = document.getElementById('themeBtn');
+  var THEME_ICON = {auto:'🌗', light:'☀️', dark:'🌙'};
+  var THEME_NAME = {auto:'跟随系统', light:'浅色', dark:'深色'};
+
+  function themePref(){
+    try { return localStorage.getItem('aij-theme') || 'auto'; } catch(e){ return 'auto'; }
+  }
+  function themeIsDark(p){
+    var sys = !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    return p === 'dark' || (p === 'auto' && sys);
+  }
+  function applyTheme(p){
+    if(p !== 'light' && p !== 'dark') p = 'auto';
+    document.documentElement.setAttribute('data-theme', themeIsDark(p) ? 'dark' : 'light');
+    if(themeBtn){
+      themeBtn.textContent = THEME_ICON[p];
+      themeBtn.title = '主题：' + THEME_NAME[p] + '（点击切换）';
+    }
+  }
+  if(themeBtn){
+    applyTheme(themePref());
+    themeBtn.addEventListener('click', function(){
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(themePref()) + 1) % order.length];
+      try { localStorage.setItem('aij-theme', next); } catch(e){}
+      applyTheme(next);
+    });
+    if(window.matchMedia){
+      var mq = matchMedia('(prefers-color-scheme: dark)');
+      var onSys = function(){ if(themePref() === 'auto') applyTheme('auto'); };
+      if(mq.addEventListener) mq.addEventListener('change', onSys);
+      else if(mq.addListener) mq.addListener(onSys);
+    }
+  }
 })();
 """
 
@@ -1127,12 +1205,23 @@ H_TAG_RE = re.compile(r'<h([23])\s+id="([^"]+)">(.*?)</h\1>', re.S)
 MD_SRC_START = "<!--MD-SRC-START-->"
 MD_SRC_END = "<!--MD-SRC-END-->"
 
+# 主题首屏脚本：必须在 <head> 里、CSS 之前同步执行，否则深色系统上会先渲染
+# 一屏浅色再跳成深色（闪白）。index.html 与 ide.html 里有同一份，三处共用
+# localStorage 键 `aij-theme`。
+THEME_BOOT = """(function(){try{
+var s=localStorage.getItem('aij-theme');
+var sys=!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+var dark=(s==='dark')||((!s||s==='auto')&&sys);
+document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+}catch(e){}})();"""
+
 PAGE_TMPL = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>__TITLE__</title>
+<script>/*__THEMEBOOT__*/</script>
 <style>/*__CSS__*/</style>
 </head>
 <body>
@@ -1142,6 +1231,8 @@ PAGE_TMPL = """<!DOCTYPE html>
   <span class="bb-sep">|</span>
   <span class="bb-title">__TITLE__</span>
   <div class="bb-right">
+    <button class="bb-icon" id="themeBtn" type="button" aria-label="切换主题">🌗</button>
+    /*__SEARCHBTN__*/
     <div class="bb-seg" id="bbSeg" __SEGHIDDEN__>
       <button class="on" data-view="doc" title="阅读视图">阅读</button>
       <button data-view="src" title="查看原始 Markdown（快捷键 S）">源码</button>
@@ -1271,10 +1362,21 @@ def build_page(title: str, body: str, home_href: str = "index.html",
     body = inject_section_nav(body, secs)
 
     hidden = "" if md_text else "hidden"
+
+    # 全站搜索由「文档总览」页统一承接：索引只维护一份（search-data.js），
+    # 章节页不再自建一套。回链本来就带着 index.html 的目录层级，复用它即可。
+    search_btn = ""
+    if home_href:
+        base = home_href.split("#", 1)[0]
+        search_btn = (f'<a class="bb-btn bb-search" href="{escape(base)}#q=" '
+                      f'title="全站搜索：跳回文档总览并输入关键词">搜索</a>')
+
     # 顺序有讲究：__MDSRC__ 必须最后替换。它是「把整篇 md 塞进模板」，
     # 若先塞，正文里偶尔出现的 __JS__ 之类的字面量会被后续替换误伤。
     return (PAGE_TMPL.replace("/*__CSS__*/", PAGE_CSS + EXTRA_CSS + CHROME_CSS)
+                     .replace("/*__THEMEBOOT__*/", THEME_BOOT)
                      .replace("/*__TOC__*/", toc_html)
+                     .replace("/*__SEARCHBTN__*/", search_btn)
                      .replace("__BODY__", body)
                      .replace("__TITLE__", escape(title))
                      .replace("__HOME__", escape(home_href))

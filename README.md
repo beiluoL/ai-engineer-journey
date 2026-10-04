@@ -98,10 +98,12 @@ ai-engineer-journey/
 | `render_terminal.py` | 把真实 stdout 渲染成终端风格 PNG（截图有据可依） |
 | `md_to_tutorial_html.py` | 教程 Markdown → HTML 同款排版 |
 | `build_docs_html.py` | **批量渲染**：把全部（或指定子集）Markdown 转成 `publishing/html/docs/` 下的 HTML 树，并自校验链接 |
-| `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、搜索过滤、每章底部上一章 / 下一章链式导航、一键复制文档路径 |
-| `md_to_book_html.py` | 单篇渲染器：顶栏（返回总览 / 阅读·源码切换 / 复制 / 下载）、自动抽取 h2/h3 生成侧边目录大纲、阅读进度条与百分比、每章末尾「上一节 / 下一节」链式导航、代码块一键复制、图片灯箱、宽表横滚、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
-| `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（678 个文件 / 12.26 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html` |
+| `gen_doc_index.py` | 把全部文档重排成「第 1 章…第 N 章」的文档式总览页 `publishing/html/index.html`：左侧可折叠目录大纲、滚动高亮当前章节、章节下拉快跳、卡片即时过滤、**全站全文搜索**、每章底部上一章 / 下一章链式导航、一键复制文档路径、主题开关 |
+| `gen_search_index.py` | **构建期全文索引**：从 `projects/*/milestones/` 的 Markdown 抽出 209 篇 / 4728 个**小节**（h1–h3 标题 + 其下正文），产出 `publishing/html/search-data.js`（`window.__SEARCH__ = …`，1.94 MB）。写死成 JS 而非 JSON，是因为 `file://` 下 `fetch()` 读本地文件会被 CORS 拦掉。`--verify` 逐条校验每个小节锚点都能在渲染页里命中 |
+| `md_to_book_html.py` | 单篇渲染器：顶栏（返回总览 / 回到该章锚点 / 全站搜索 / 阅读·源码切换 / 复制 / 下载 / 主题）、自动抽取 h2/h3 生成侧边目录大纲、阅读进度条与百分比、每章末尾「上一节 / 下一节」链式导航、代码块一键复制、图片灯箱、宽表横滚、移动端目录抽屉；`--relative-images` 走 base64 内嵌的自包含单文件版 |
+| `gen_ide_browser.py` | **代码浏览器**：把 10 个项目 + 4 个练手项目 + `scripts/` 的真实源码（678 个文件 / 12.26 万行）全部内嵌，产出一个自包含单文件 IDE 界面 `publishing/html/ide.html`；深色 / 浅色（VSCode Light+ 同色）双皮肤，主题跟随系统 |
 | `verify_pages.js` | **站点交互实测**：用真实 Chromium 走一遍三张页面的交互（返回总览、阅读↔源码切换、灯箱、复制反馈、hash 路由与浏览器前进后退、深链直达），并顺带产出 `publishing/site-assets/` 里的截图 |
+| `verify_features.js` | **全文搜索 + 主题实测**：真实 Chromium 上 28 项断言——索引预热与小节数、面板可见性、命中高亮、多词是否真的 AND、无结果提示、回车落小节、锚点在视口内、`#q=` 深链、三页主题一致性、移动端面板不溢出 |
 | `latex_mathml.py` | **公式渲染**：构建期把 `$…$` / `$$…$$` 里的 LaTeX 转成浏览器原生 MathML（分数/根式/上下标/矩阵/`\text` 中文混排/`\operatorname`/`\mathbb`/间距与箭头），运行时零依赖 |
 | `verify_math_layout.js` | **公式版式实测**：用真实 Chromium 量「公式是否横排、是否溢出行容器、行内混排是否撑歪行高」，桌面 1280px + 移动 390/768px 三个视口 |
 | `shot_math.js` | 用真实 Chromium 截取公式渲染截图（`llm-fundamentals/assets/math-render-*.png` 的来源） |
@@ -117,7 +119,7 @@ MathML，随页面一起落地——不引 CDN、不塞 KaTeX 字体，断网双
 
 **代码浏览器**：`publishing/html/ide.html` 打开就是项目列表，点进某一项目后是
 IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）、右侧带语法高亮的代码区
-（标签页、行号、面包屑、底部状态栏），深色主题、响应式，同样零依赖、双击即开。
+（标签页、行号、面包屑、底部状态栏），深色 / 浅色双皮肤、响应式，同样零依赖、双击即开。
 顶栏有「⧉ 复制文件」一键复制当前文件的完整内容（`file://` 下 Clipboard API 被拒时
 自动退回 `execCommand`，不会变成一个按不动的假按钮），状态栏可复制文件路径。
 地址栏就是状态：`ide.html#/01-python-ai-cli/README.md` 可以直达某个文件，
@@ -147,6 +149,30 @@ IDE 布局——左侧可折叠文件树（支持筛选、展开/折叠全部）
 解析，209 条全是 404）。现在改成打开该文档在渲染页里的**源码视图**：带行号、
 有 Markdown 高亮、可一键复制、可下载成 `.md`，与阅读视图用顶栏的「阅读 / 源码」随时互切
 （快捷键 `S`）。同一页两副面孔，就不用再维护第二棵文件树。
+
+**全站全文搜索**：总览页顶部的搜索框搜的是**全站正文**，不只是标题。输入「注意力 缩放」
+这类多词组合按 AND 收窄（单词命中 30 条 → 多词只剩 14 个小节），结果精确到**小节**——
+每条给出「第 N 章 · 篇名 · 小节标题 + 上下文片段 + 关键词高亮」，
+回车直接打开对应渲染页并**落在那一节**（如 `docs/llm-fundamentals/02-attention.html#27-复杂度注意力的代价`）。
+索引在**构建期**生成：209 篇 / 4728 个小节 / 1.94 MB，写成 `search-data.js` 用 `<script src>` 注入，
+所以 `file://` 双击打开就能用——**断网、零后端、零外部依赖**。地址栏也支持深链：`index.html#q=注意力机制`。
+
+![全站全文搜索：多词按 AND 组合，结果精确到小节并高亮](publishing/site-assets/site-search-panel.png)
+![移动端 390px 视口：搜索面板不溢出](publishing/site-assets/site-search-mobile.png)
+
+**主题**：三张页面（文档总览 / 章节页 / 代码浏览器）共用同一个开关，右上角一键在
+**跟随系统 → 浅色 → 深色**之间循环，选择记在 `localStorage`（键 `aij-theme`），下次打开还是那一套。
+主题在 `<head>` 里用一段内联脚本**先于 CSS** 定好，不会出现「先白屏再变黑」的闪烁。
+此前章节页跟随系统深色、总览页却固定浅色——从深色章节页点「返回总览」会闪一屏白；现在三页同色。
+
+![深色：文档总览](publishing/site-assets/site-index-dark.png)
+![浅色：文档总览](publishing/site-assets/site-index-light.png)
+![深色：章节页（顶栏主题开关与总览页同一个）](publishing/site-assets/site-chapter-dark.png)
+![浅色：代码浏览器（VSCode Light+ 皮肤，语法高亮同步换色）](publishing/site-assets/site-ide-light-code.png)
+
+**小节深链会「二次落位」**：目标小节里的图片是 `loading="lazy"`，浏览器按点击那一刻的布局落位，
+图片随后加载会把内容顶下去（实测能偏 991px）。现在 `load` / `hashchange` / 字体就绪后
+各触发一次周期性重新落位，锚点稳稳停在视口顶端。
 
 ## 单一事实源
 
