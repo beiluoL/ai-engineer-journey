@@ -1,6 +1,20 @@
+<div align="right">
+  <strong>简体中文</strong> · <a href="README.en.md">English</a>
+</div>
+
 # AI Engineer Journey
 
-> **Project First — 通过连续项目逐步构建 AI Engineer 能力**
+**Project First：通过 10 个连续项目，从 Python 与 LLM API 逐步实践 RAG、Agent、微调、评估与部署。**
+
+[项目路线](#10-个项目路线) · [学习进度](PROGRESS.md) · [路线图](ROADMAP.md)
+
+- 围绕项目、里程碑、代码练习和运行证据组织学习。
+- 路线从 Python AI CLI 延伸到 Tiny LLM 综合项目。
+- 内容生产与学习掌握度分别记录，文档完成不等于能力掌握。
+
+**技术栈 / 主题：** Python · FastAPI · RAG · MCP · PyTorch · Transformer · LoRA / QLoRA
+
+---
 
 ## 项目定位
 
